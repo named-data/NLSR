@@ -10,6 +10,13 @@ struct name_prefix
 	int length;
 };
 
+struct ndn_neighbor
+{
+	struct name_prefix *neighbor;
+	int face;
+	int status;
+};
+
 struct nlsr
 {
 
@@ -37,5 +44,11 @@ void process_command_ccnneighbor(char *command);
 void process_conf_command(char *command);
 int readConfigFile(const char *filename);
 
+void add_name_prefix_to_npl(struct name_prefix *name_prefix);
+void print_name_prefix_from_npl(void);
+
+
+void add_adjacent_to_adl(struct ndn_neighbor *nbr);
+void print_adjacent_from_adl(void);
 
 #endif
