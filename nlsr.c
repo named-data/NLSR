@@ -203,7 +203,7 @@ main(int argc, char *argv[])
 	nlsr=(struct nlsr *)malloc(sizeof(struct nlsr));
 
 	nlsr->adl=hashtb_create(200, &param_adl);
-	nlsr->npl = hashtb_create(200, &param_npl);
+	nlsr->npl = hashtb_create(sizeof(struct name_prefix), &param_npl);
 	nlsr->in_interest.p = &incoming_interest;
 	nlsr->in_content.p = &incoming_content;
 	nlsr->is_synch_init=1;

@@ -4,6 +4,12 @@
 #define LSA_ADJ_TYPE 1
 #define LSA_NAME_TYPE 2
 
+struct name_prefix
+{
+	char *name;
+	int length;
+};
+
 struct nlsr
 {
 
