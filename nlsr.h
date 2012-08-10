@@ -15,7 +15,8 @@ struct ndn_neighbor
 	struct name_prefix *neighbor;
 	int face;
 	int status;
-	int lsdb_version;
+	int last_lsdb_version;
+	struct hashtb *lsa_update_queue;
 };
 
 struct nlsr
@@ -51,5 +52,8 @@ void print_name_prefix_from_npl(void);
 
 void add_adjacent_to_adl(struct ndn_neighbor *nbr);
 void print_adjacent_from_adl(void);
+
+
+void nlsr_destroy( void );
 
 #endif

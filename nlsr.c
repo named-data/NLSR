@@ -160,8 +160,9 @@ process_command_ccnneighbor(char *command)
 	memcpy(nbr->neighbor->name,rtr_name,strlen(rtr_name)+1);
 	nbr->neighbor->length=strlen(rtr_name)+1;
 	nbr->face=face_id;
-	nbr->status=0;
-	nbr->lsdb_version=0;	
+	nbr->status=0;	
+
+	
 
 	add_adjacent_to_adl(nbr);
 	print_adjacent_from_adl();
@@ -306,7 +307,10 @@ add_adjacent_to_adl(struct ndn_neighbor *nbr)
 	hnbr->neighbor->length=nbr->neighbor->length;
 	hnbr->face=nbr->face;
 	hnbr->status=nbr->status;
-	hnbr->lsdb_version=nbr->lsdb_version;
+	hnbr->last_lsdb_version=0;
+
+	struct hashtb_param param_luq = {0};
+	hnbr->lsa_update_queue=hashtb_create(200, &param_luq);
 	
     	hashtb_end(e);
 
@@ -331,13 +335,47 @@ print_adjacent_from_adl(void)
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		printf("Neighbor: %s Length: %d Face: %d Status: %d Lsdb Version: %d\n",nbr->neighbor->name,nbr->neighbor->length,nbr->face, nbr->status, nbr->lsdb_version);	
+		printf("Neighbor: %s Length: %d Face: %d Status: %d LSDB Version: %d \n",nbr->neighbor->name,nbr->neighbor->length,nbr->face, nbr->status, nbr->last_lsdb_version);	
 		hashtb_next(e);		
 	}
 
 	hashtb_end(e);
 
 	printf("\n");
+}
+
+
+void 
+nlsr_destroy( void )
+{
+
+	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
+
+	int i, element;
+	struct ndn_neighbor *nbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->adl, e);
+	element=hashtb_n(nlsr->adl);
+
+	for(i=0;i<element;i++)
+	{
+		nbr=e->data;
+		hashtb_destroy(&nbr->lsa_update_queue);	
+		hashtb_next(e);		
+	}
+	hashtb_end(e);
+
+	
+
+	hashtb_destroy(&nlsr->adl);
+	hashtb_destroy(&nlsr->npl);
+	ccn_schedule_destroy(&nlsr->sched);
+	ccn_destroy(&nlsr->ccn);
+	free(nlsr);
+
 }
 
 
@@ -410,11 +448,7 @@ main(int argc, char *argv[])
 
 	}
 	
-	hashtb_destroy(&nlsr->adl);
-	hashtb_destroy(&nlsr->npl);
-	ccn_schedule_destroy(&nlsr->sched);
-	ccn_destroy(&nlsr->ccn);
-	free(nlsr);
+	nlsr_destroy();
 
 	return 0;
 }
