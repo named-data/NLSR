@@ -109,3 +109,5 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 
     return CCN_UPCALL_RESULT_OK;
 }
+
+/*  --- */

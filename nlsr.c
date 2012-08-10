@@ -407,8 +407,6 @@ main(int argc, char *argv[])
         	res = ccn_run(nlsr->ccn, 500);
 
 	}
-
-	
 	
 	hashtb_destroy(&nlsr->adl);
 	hashtb_destroy(&nlsr->npl);
