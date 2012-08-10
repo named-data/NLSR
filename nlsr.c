@@ -160,7 +160,8 @@ process_command_ccnneighbor(char *command)
 	memcpy(nbr->neighbor->name,rtr_name,strlen(rtr_name)+1);
 	nbr->neighbor->length=strlen(rtr_name)+1;
 	nbr->face=face_id;
-	nbr->status=0;	
+	nbr->status=0;
+	nbr->lsdb_version=0;	
 
 	add_adjacent_to_adl(nbr);
 	print_adjacent_from_adl();
@@ -305,6 +306,7 @@ add_adjacent_to_adl(struct ndn_neighbor *nbr)
 	hnbr->neighbor->length=nbr->neighbor->length;
 	hnbr->face=nbr->face;
 	hnbr->status=nbr->status;
+	hnbr->lsdb_version=nbr->lsdb_version;
 	
     	hashtb_end(e);
 
@@ -329,7 +331,7 @@ print_adjacent_from_adl(void)
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		printf("Neighbor: %s Length: %d Face: %d Status: %d\n",nbr->neighbor->name,nbr->neighbor->length,nbr->face, nbr->status);	
+		printf("Neighbor: %s Length: %d Face: %d Status: %d Lsdb Version: %d\n",nbr->neighbor->name,nbr->neighbor->length,nbr->face, nbr->status, nbr->lsdb_version);	
 		hashtb_next(e);		
 	}
 

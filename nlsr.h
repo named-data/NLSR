@@ -15,6 +15,7 @@ struct ndn_neighbor
 	struct name_prefix *neighbor;
 	int face;
 	int status;
+	int lsdb_version;
 };
 
 struct nlsr
