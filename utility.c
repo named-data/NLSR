@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
+#include <time.h>
 #include <assert.h>
 #ifdef HAVE_CONFIG_H
 #include <config.h>
