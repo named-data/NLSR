@@ -145,16 +145,25 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 
 	if(!strcmp((char *)comp_ptr1,"lsdb"))
 	{
-		//send_hello_response_content(selfp,info);
+		process_incoming_interest_lsdb(selfp,info);
 	}
-	else if(!strcmp((char *)comp_ptr1,"lsa"))
-	{
-		//process_iHaveUpdate_incoming_interest(selfp,info);	
-	}
-	else if(!strcmp((char *)comp_ptr1,"lsaupdate"))
-	{
-		//process_sendlsdb_incoming_interest(selfp,info);	
-	}
+
+
+}
+
+
+void 
+process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info *info)
+{
+	printf("process_incoming_interest_lsdb called \n");
+	
+	int i,m;
+	struct upcalldata *data=selfp->data;
+
+	m=data->n_excl;
+	for(i=0; i<m; i++)
+		printf("%s ",ccn_charbuf_as_string(data->excl[i]));
+
 
 }
 
@@ -199,7 +208,27 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 		ccn_name_append_str(name,lsdb_str);
 		ccn_name_append_str(name,rnumstr);
 
-		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),NULL);	
+		/* adding filter */
+		unsigned char bf_all[9] = { 3, 1, 'A', 0, 0, 0, 0, 0, 0xFF };
+		struct ccn_charbuf *templ = NULL;
+		templ = ccn_charbuf_create();
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
+		ccn_charbuf_append_closer(templ); /* </Name> */
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
+
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Bloom, CCN_DTAG);
+		ccn_charbuf_append_tt(templ, sizeof(bf_all), CCN_BLOB);
+		ccn_charbuf_append(templ, bf_all, sizeof(bf_all));
+		ccn_charbuf_append_closer(templ);
+
+
+		ccn_charbuf_append_closer(templ); /* </Exclude> */
+		//answer_passive(templ);
+		ccn_charbuf_append_closer(templ); /* </Interest> */
+		
+
+		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);	
 		if ( res >= 0 )
 			printf("Interest sending Successfull .... \n");	
 		ccn_charbuf_destroy(&name);
