@@ -133,7 +133,7 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
 		if( res == 0)
 		{
-			nlsr_position=res;
+			nlsr_position=i;
 			break;
 		}	
 	}
@@ -166,7 +166,8 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 	struct ccn_charbuf *name;
 	long int rnum;
 	char rnumstr[20];
-	char lsdb[5];
+	char lsdb_str[5];
+	char nlsr_str[5];
 
 	int res,i;
 	int adl_element;
@@ -174,8 +175,11 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 	rnum=random();
 	memset(&rnumstr,0,20);
 	sprintf(rnumstr,"%ld",rnum);
-	memset(&lsdb,0,5);
-	sprintf(lsdb,"lsdb");
+	memset(&nlsr_str,0,5);
+	sprintf(nlsr_str,"nlsr");
+	memset(&lsdb_str,0,5);
+	sprintf(lsdb_str,"lsdb");
+	
 
 	struct ndn_neighbor *nbr;
 
@@ -188,10 +192,11 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		printf("Sending interest for name prefix:%s/%s/%s\n",nbr->neighbor->name,lsdb,rnumstr);	
+		printf("Sending interest for name prefix:%s/%s/%s/%s\n",nbr->neighbor->name,nlsr_str,lsdb_str,rnumstr);	
 		name=ccn_charbuf_create();
 		res=ccn_name_from_uri(name,nbr->neighbor->name);
-		ccn_name_append_str(name,lsdb);
+		ccn_name_append_str(name,nlsr_str);
+		ccn_name_append_str(name,lsdb_str);
 		ccn_name_append_str(name,rnumstr);
 
 		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),NULL);	
