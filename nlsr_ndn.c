@@ -39,7 +39,7 @@ incoming_interest(struct ccn_closure *selfp,
 		printf("%s\n",ccn_charbuf_as_string(c));
 		ccn_charbuf_destroy(&c);
 
-		//process_incoming_interest(selfp, info);
+		process_incoming_interest(selfp, info);
 		
 		/* 
 	    	struct ccn_charbuf *data=ccn_charbuf_create();
@@ -110,4 +110,103 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
     return CCN_UPCALL_RESULT_OK;
 }
 
-/*  --- */
+void 
+process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *info)
+{
+	printf("process_incoming_interest called \n");
+
+
+	struct ccn_charbuf*c;
+	c=ccn_charbuf_create();
+	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
+	printf("%s\n",ccn_charbuf_as_string(c));
+	ccn_charbuf_destroy(&c);
+
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	int res,i;
+	int nlsr_position=0;
+	int name_comps=(int)info->interest_comps->n;
+	
+	for(i=0;i<name_comps;i++)
+	{
+		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
+		if( res == 0)
+		{
+			nlsr_position=res;
+			break;
+		}	
+	}
+
+	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
+
+
+	printf("Det= %s \n",comp_ptr1);
+
+	if(!strcmp((char *)comp_ptr1,"lsdb"))
+	{
+		//send_hello_response_content(selfp,info);
+	}
+	else if(!strcmp((char *)comp_ptr1,"lsa"))
+	{
+		//process_iHaveUpdate_incoming_interest(selfp,info);	
+	}
+	else if(!strcmp((char *)comp_ptr1,"lsaupdate"))
+	{
+		//process_sendlsdb_incoming_interest(selfp,info);	
+	}
+
+}
+
+int
+send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
+        struct ccn_scheduled_event *ev, int flags)
+{
+
+	struct ccn_charbuf *name;
+	long int rnum;
+	char rnumstr[20];
+	char lsdb[5];
+
+	int res,i;
+	int adl_element;
+
+	rnum=random();
+	memset(&rnumstr,0,20);
+	sprintf(rnumstr,"%ld",rnum);
+	memset(&lsdb,0,5);
+	sprintf(lsdb,"lsdb");
+
+	struct ndn_neighbor *nbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->adl, e);
+	adl_element=hashtb_n(nlsr->adl);
+
+	for(i=0;i<adl_element;i++)
+	{
+		nbr=e->data;
+		printf("Sending interest for name prefix:%s/%s/%s\n",nbr->neighbor->name,lsdb,rnumstr);	
+		name=ccn_charbuf_create();
+		res=ccn_name_from_uri(name,nbr->neighbor->name);
+		ccn_name_append_str(name,lsdb);
+		ccn_name_append_str(name,rnumstr);
+
+		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),NULL);	
+		if ( res >= 0 )
+			printf("Interest sending Successfull .... \n");	
+		ccn_charbuf_destroy(&name);
+	
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 60000000, &send_lsdb_interest, NULL, 0);
+
+	return 0;
+
+}
+

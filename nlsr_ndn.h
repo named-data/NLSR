@@ -1,7 +1,10 @@
 #ifndef _NLSR_NDN_H_
 #define _NLSR_NDN_H_
 
+int send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
+
 enum ccn_upcall_res incoming_interest(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info);
+void process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *info);
 
 
 enum ccn_upcall_res incoming_content(struct ccn_closure* selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info* info);

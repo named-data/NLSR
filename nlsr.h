@@ -26,6 +26,7 @@ struct nlsr
 	struct ccn_closure in_content;
 	struct ccn_schedule *sched;
     	struct ccn_scheduled_event *event;
+	struct ccn_scheduled_event *event_send_lsdb_interest;
 
 	struct hashtb *adl;
 	struct hashtb *npl;

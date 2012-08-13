@@ -441,6 +441,8 @@ main(int argc, char *argv[])
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
 
+	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 60000000, &send_lsdb_interest, NULL, 0);
+
 	while(1)
 	{
 		ccn_schedule_run(nlsr->sched);
