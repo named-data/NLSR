@@ -157,14 +157,6 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 {
 	printf("process_incoming_interest_lsdb called \n");
 	
-	int i,m;
-	//struct upcalldata *data=selfp->data;
-
-	//m=data->n_excl;
-	//for(i=0; i<m; i++)
-		printf("%s ",ccn_charbuf_as_string(selfp->data));
-
-
 }
 
 int
