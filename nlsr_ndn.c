@@ -157,6 +157,43 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 {
 	printf("process_incoming_interest_lsdb called \n");
 	
+	int l;
+	struct ccn_charbuf *exclbase, *comp;
+	exclbase=ccn_charbuf_create();
+	comp=ccn_charbuf_create();
+	size_t size;
+	struct ccn_buf_decoder *d, *decoder;
+
+	l = info->pi->offset[CCN_PI_E_Exclude] - info->pi->offset[CCN_PI_B_Exclude];
+	if (l > 0) 
+	{
+		comp = NULL;
+		size = 0;
+		exclbase = info->interest_ccnb + info->pi->offset[CCN_PI_B_Exclude];
+		d = ccn_buf_decoder_start(&decoder, exclbase, l);
+		if (ccn_buf_match_dtag(d, CCN_DTAG_Exclude)) 
+		{
+			ccn_buf_advance(d);
+			if (ccn_buf_match_dtag(d, CCN_DTAG_Any))
+				ccn_buf_advance_past_element(d);
+			if (ccn_buf_match_dtag(d, CCN_DTAG_Component)) 
+			{
+				ccn_buf_advance(d);
+				ccn_buf_match_blob(d, &comp, &size);
+				ccn_buf_check_close(d);
+			}
+			ccn_buf_check_close(d);
+		}
+		if (d->decoder.state < 0)
+			printf("Parse Failed\n");
+		if (comp != NULL)
+			printf("No Number in Exclusion Filter\n");
+			
+		/* Now comp points to the start of your potential number, and size is its length */
+	}
+
+	
+	
 }
 
 int
@@ -189,6 +226,7 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
     	
     	hashtb_start(nlsr->adl, e);
 	adl_element=hashtb_n(nlsr->adl);
+	int mynumber=15;
 
 	for(i=0;i<adl_element;i++)
 	{
@@ -200,26 +238,23 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 		ccn_name_append_str(name,lsdb_str);
 		ccn_name_append_str(name,rnumstr);
 
-		/* adding filter */
-		unsigned char bf_all[9] = { 3, 1, 'A', 0, 0, 0, 0, 0, 0xFF };
-		struct ccn_charbuf *templ = NULL;
-		templ = ccn_charbuf_create();
-		ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
-		ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
-		ccn_charbuf_append_closer(templ); /* </Name> */
-		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
-
-		ccn_charbuf_append_tt(templ, CCN_DTAG_Bloom, CCN_DTAG);
-		ccn_charbuf_append_tt(templ, sizeof(bf_all), CCN_BLOB);
-		ccn_charbuf_append(templ, bf_all, sizeof(bf_all));
-		ccn_charbuf_append_closer(templ);
-
-
-		ccn_charbuf_append_closer(templ); /* </Exclude> */
-		//answer_passive(templ);
-		ccn_charbuf_append_closer(templ); /* </Interest> */
+		/* adding Exclusion filter */
 		
-
+		struct ccn_charbuf *templ;
+		templ = ccn_charbuf_create();
+		
+		struct ccn_charbuf *c;
+		c = ccn_charbuf_create();
+		
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
+		ccnb_tagged_putf(templ, CCN_DTAG_Any, "");
+		ccn_charbuf_reset(c);
+		ccn_charbuf_putf(c, "%u", (unsigned)mynumber);
+		ccnb_append_tagged_blob(templ, CCN_DTAG_Component, c->buf, c->length);
+		ccn_charbuf_append_closer(templ); /* </Exclude> */
+	
+		/* Adding Exclusion filter done */
+				
 		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);	
 		if ( res >= 0 )
 			printf("Interest sending Successfull .... \n");	
