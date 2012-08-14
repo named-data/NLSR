@@ -158,11 +158,12 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 	printf("process_incoming_interest_lsdb called \n");
 	
 	int l;
-	struct ccn_charbuf *exclbase, *comp;
-	exclbase=ccn_charbuf_create();
-	comp=ccn_charbuf_create();
+	const unsigned char *exclbase;
 	size_t size;
-	struct ccn_buf_decoder *d, *decoder;
+	struct ccn_buf_decoder decoder;
+	struct ccn_buf_decoder *d;
+	const unsigned char *comp;	
+
 
 	l = info->pi->offset[CCN_PI_E_Exclude] - info->pi->offset[CCN_PI_B_Exclude];
 	if (l > 0) 
