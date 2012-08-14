@@ -16,6 +16,7 @@
 #include <ccn/signing.h>
 #include <ccn/schedule.h>
 #include <ccn/hashtb.h>
+#include <ccn/bloom.h>
 
 #include "nlsr.h"
 #include "nlsr_ndn.h"
@@ -243,22 +244,32 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 		
 		struct ccn_charbuf *templ;
 		templ = ccn_charbuf_create();
-		
+
 		struct ccn_charbuf *c;
 		c = ccn_charbuf_create();
-		
+
+
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
+		ccn_charbuf_append_closer(templ); /* </Name> */
+
 		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
 		ccnb_tagged_putf(templ, CCN_DTAG_Any, "");
 		ccn_charbuf_reset(c);
 		ccn_charbuf_putf(c, "%u", (unsigned)mynumber);
 		ccnb_append_tagged_blob(templ, CCN_DTAG_Component, c->buf, c->length);
 		ccn_charbuf_append_closer(templ); /* </Exclude> */
+
+		ccn_charbuf_append_closer(templ); /* </Interest> */
 	
 		/* Adding Exclusion filter done */
 				
-		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);	
+		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
+			
 		if ( res >= 0 )
 			printf("Interest sending Successfull .... \n");	
+		//ccn_charbuf_destroy(&c);
+		ccn_charbuf_destroy(&templ);
 		ccn_charbuf_destroy(&name);
 	
 		hashtb_next(e);		
