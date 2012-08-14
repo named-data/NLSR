@@ -186,10 +186,10 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 			}
 			ccn_buf_check_close(d);
 		}
-		if (d->decoder.state < 0)
-			printf("Parse Failed\n");
+		//if (d->decoder.state < 0)
+			//printf("Parse Failed\n");
 		if (comp != NULL)
-			printf("No Number in Exclusion Filter\n");
+			printf("Number in Exclusion Filter is %s\n",comp);
 			
 		/* Now comp points to the start of your potential number, and size is its length */
 	}
@@ -252,15 +252,14 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 		ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
 		ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
 		ccn_charbuf_append_closer(templ); /* </Name> */
-
 		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
 		ccnb_tagged_putf(templ, CCN_DTAG_Any, "");
 		ccn_charbuf_reset(c);
 		ccn_charbuf_putf(c, "%u", (unsigned)mynumber);
 		ccnb_append_tagged_blob(templ, CCN_DTAG_Component, c->buf, c->length);
 		ccn_charbuf_append_closer(templ); /* </Exclude> */
-
 		ccn_charbuf_append_closer(templ); /* </Interest> */
+
 	
 		/* Adding Exclusion filter done */
 				
@@ -268,7 +267,7 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 			
 		if ( res >= 0 )
 			printf("Interest sending Successfull .... \n");	
-		//ccn_charbuf_destroy(&c);
+		ccn_charbuf_destroy(&c);
 		ccn_charbuf_destroy(&templ);
 		ccn_charbuf_destroy(&name);
 	
