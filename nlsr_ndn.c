@@ -275,6 +275,11 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 	for(i=0;i<name_comps;i++)
 	{
 		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
+
+
+		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);				
+		printf("%s \n",comp_ptr1);
+
 		if( res == 0)
 		{
 			nlsr_position=i;
