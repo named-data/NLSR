@@ -123,7 +123,8 @@ process_incoming_content(struct ccn_closure* selfp, struct ccn_upcall_info* info
 
 	struct ccn_charbuf*c;
 	c=ccn_charbuf_create();
-	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
+	//ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
+	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
 	printf("%s\n",ccn_charbuf_as_string(c));
 	ccn_charbuf_destroy(&c);
 
@@ -165,7 +166,16 @@ process_incoming_content_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info*
 	size_t length;
 	ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E_Content]-info->pco->offset[CCN_PCO_B_Content], info->pco, &content_data, &length);
 
-	printf(" Content Data: %s \n",content_data);
+
+	if ( !strcmp((char *)content_data,"NACK"))
+	{
+		printf("NACK received for LSDB request. Do nothing \n");
+	}
+	else
+	{
+		// Do the LSDB processing here 
+
+	}
 
 
 }
@@ -176,8 +186,73 @@ process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall
 {
 	printf("process_incoming_timed_out_interest called \n");
 
+	struct ccn_charbuf*c;
+	c=ccn_charbuf_create();
+	//ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
+	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
+	printf("%s\n",ccn_charbuf_as_string(c));
+	ccn_charbuf_destroy(&c);
+
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	int res,i;
+	int nlsr_position=0;
+	int name_comps=(int)info->interest_comps->n;
+	
+	for(i=0;i<name_comps;i++)
+	{
+		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
+		if( res == 0)
+		{
+			nlsr_position=i;
+			break;
+		}	
+	}
+
+	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
+
+
+	printf("Det= %s \n",comp_ptr1);
+
+	if(!strcmp((char *)comp_ptr1,"lsdb"))
+	{
+		process_incoming_timed_out_interest_lsdb(selfp,info);
+	}
 }
 
+
+void 
+process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+{
+	printf("process_incoming_timed_out_interest_lsdb called \n");
+
+		
+	int res,i;
+	int nlsr_position=0;
+	int name_comps=(int)info->interest_comps->n;
+
+	//const unsigned char *comp_ptr1;
+	//size_t comp_size;
+	
+	for(i=0;i<name_comps;i++)
+	{
+		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
+		if( res == 0)
+		{
+			nlsr_position=i;
+			break;
+		}	
+	}	
+
+
+	struct ccn_charbuf*c;
+	c=ccn_charbuf_create();
+	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
+	printf("%s\n",ccn_charbuf_as_string(c));
+	ccn_charbuf_destroy(&c);
+	
+	
+}
 
 void 
 process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *info)
@@ -282,8 +357,7 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 	    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 
 		ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
-		//ccn_name_append_str(name,nlsr->lsdb->version);
-
+		ccn_name_append_str(name,nlsr->lsdb->version);
 		
 		sp.template_ccnb=ccn_charbuf_create();
 		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
@@ -292,6 +366,9 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
         	ccn_charbuf_append_closer(sp.template_ccnb);		   
 
 		res= ccn_sign_content(nlsr->ccn, data, name, &sp, "NACK", strlen("NACK")); 
+		if(res >= 0)
+			printf("Signing Content is successful \n");
+
 	    	res=ccn_put(nlsr->ccn,data->buf,data->length);
 		
 		if(res >= 0)
