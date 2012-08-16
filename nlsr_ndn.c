@@ -86,13 +86,6 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 		ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E],0);
 		printf("%s\n",ccn_charbuf_as_string(c));
 		ccn_charbuf_destroy(&c);
-
-		printf("Content Received for name: ");  
-		struct ccn_charbuf*cc;
-		cc=ccn_charbuf_create();
-		ccn_uri_append(cc,info->content_ccnb,info->pco->offset[CCN_PCO_E],0);
-		printf("%s\n",ccn_charbuf_as_string(cc));
-		ccn_charbuf_destroy(&cc);
 	
 		process_incoming_content(selfp, info);
 
@@ -177,6 +170,13 @@ process_incoming_content_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info*
 
 	}
 
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	int res;
+
+	res=ccn_name_comp_get(info->content_ccnb, info->content_comps,info->interest_comps->n-1,&comp_ptr1, &comp_size);
+
+	printf("Database Version: %s \n",(char *)comp_ptr1);
 
 }
 
@@ -275,11 +275,6 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 	for(i=0;i<name_comps;i++)
 	{
 		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
-
-
-		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);				
-		printf("%s \n",comp_ptr1);
-
 		if( res == 0)
 		{
 			nlsr_position=i;
@@ -288,8 +283,7 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 	}
 
 	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
-
-
+	
 	printf("Det= %s \n",comp_ptr1);
 
 	if(!strcmp((char *)comp_ptr1,"lsdb"))
