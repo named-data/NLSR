@@ -87,21 +87,25 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 		printf("%s\n",ccn_charbuf_as_string(c));
 		ccn_charbuf_destroy(&c);
 
-		//process_incoming_content(selfp, info);
+		printf("Content Received for name: ");  
+		struct ccn_charbuf*cc;
+		cc=ccn_charbuf_create();
+		ccn_uri_append(cc,info->content_ccnb,info->pco->offset[CCN_PCO_E],0);
+		printf("%s\n",ccn_charbuf_as_string(cc));
+		ccn_charbuf_destroy(&cc);
+	
+		process_incoming_content(selfp, info);
+
 	    break;
         case CCN_UPCALL_INTEREST_TIMED_OUT:
-          /*  printf("Interest timed out \n"); 
+          	printf("Interest timed out \n"); 
+		struct ccn_charbuf*ic;
+		ic=ccn_charbuf_create();
+		ccn_uri_append(ic,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
+		printf("%s\n",ccn_charbuf_as_string(ic));
+		ccn_charbuf_destroy(&ic);	    
+		process_incoming_timed_out_interest(selfp,info);
 
-		const unsigned char *comp_ptr;
-		size_t comp_size;
-		int res;
-		
-		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,2,&comp_ptr, &comp_size);
-
-		printf("Parsed Interest: %s size: %d Size of name prefix: %d\n",comp_ptr,(int)comp_size,(int)info->interest_comps->n);
-	   */
-	    
-		//process_timed_out_interest(selfp,info);
 	    break;
         default:
             fprintf(stderr, "Unexpected response of kind %d\n", kind);
@@ -110,6 +114,23 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 
     return CCN_UPCALL_RESULT_OK;
 }
+
+
+void 
+process_incoming_content(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+{
+	printf("process_incoming_content called \n");
+
+}
+
+
+void 
+process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+{
+	printf("process_incoming_timed_out_interest called \n");
+
+}
+
 
 void 
 process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *info)
@@ -158,7 +179,7 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 {
 	printf("process_incoming_interest_lsdb called \n");
 	
-	int l;
+	int l, res;
 	const unsigned char *exclbase;
 	size_t size;
 	struct ccn_buf_decoder decoder;
@@ -201,12 +222,34 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 	printf (" dbcmp = %d \n",dbcmp);	
 
 	if(dbcmp > 0)
+	{
 		printf("Has Updated database (Older: %s New: %s)\n",comp,nlsr->lsdb->version);
+	}
 	else 
+	{
 		printf("Data base is not updated than the older one (Older: %s New: %s)\n",comp,nlsr->lsdb->version);
+		printf("Sending NACK Content back.....\n");
 
-	
-	
+		struct ccn_charbuf *data=ccn_charbuf_create();
+	    	struct ccn_charbuf *name=ccn_charbuf_create();
+	    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
+
+		ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
+		ccn_name_append_str(name,nlsr->lsdb->version);
+		
+		sp.template_ccnb=ccn_charbuf_create();
+		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
+		ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
+                sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+        	ccn_charbuf_append_closer(sp.template_ccnb);		   
+
+		res= ccn_sign_content(nlsr->ccn, data, name, &sp, "NACK", strlen("NACK")); 
+	    	res=ccn_put(nlsr->ccn,data->buf,data->length);
+            	ccn_charbuf_destroy(&data);
+		ccn_charbuf_destroy(&sp.template_ccnb);		
+
+	}
+
 }
 
 int
