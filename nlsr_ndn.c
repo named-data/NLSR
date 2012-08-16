@@ -188,13 +188,20 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 			}
 			ccn_buf_check_close(d);
 		}
-		if (d->decoder.state < 0)
-			printf("Parse Failed\n");
+		//if (d->decoder.state < 0)
+			//printf("Parse Failed\n");
 		if (comp != NULL)
 			printf("Number in Exclusion Filter is %s\n",comp);
 			
 		/* Now comp points to the start of your potential number, and size is its length */
 	}
+
+	int dbcmp=strncmp(nlsr->lsdb->version,(char *)comp,16);
+	
+	if(dbcmp > 0)
+		printf("Has Updated database (Older: %s New: %s)",comp,nlsr->lsdb->version);
+	else 
+		printf("Data base is not updated than the older one (Older: %s New: %s)",comp,nlsr->lsdb->version);
 
 	
 	
@@ -230,7 +237,7 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
     	
     	hashtb_start(nlsr->adl, e);
 	adl_element=hashtb_n(nlsr->adl);
-	int mynumber=15;
+	//int mynumber=15;
 
 	for(i=0;i<adl_element;i++)
 	{
@@ -257,7 +264,8 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
 		ccnb_tagged_putf(templ, CCN_DTAG_Any, "");
 		ccn_charbuf_reset(c);
-		ccn_charbuf_putf(c, "%u", (unsigned)mynumber);
+		//ccn_charbuf_putf(c, "%u", (unsigned)mynumber);
+		ccn_charbuf_putf(c, "%s", nbr->last_lsdb_version);
 		ccnb_append_tagged_blob(templ, CCN_DTAG_Component, c->buf, c->length);
 		ccn_charbuf_append_closer(templ); /* </Exclude> */
 		ccn_charbuf_append_closer(templ); /* </Interest> */

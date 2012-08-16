@@ -396,6 +396,11 @@ main(int argc, char *argv[])
 	nlsr->npl = hashtb_create(sizeof(struct name_prefix), &param_npl);
 	nlsr->in_interest.p = &incoming_interest;
 	nlsr->in_content.p = &incoming_content;
+
+	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase *));
+	nlsr->lsdb->version=(char *)malloc(16);
+	nlsr->lsdb->version="0000000000000000";
+
 	nlsr->is_synch_init=1;
 	nlsr->nlsa_id=0;
 

@@ -19,6 +19,12 @@ struct ndn_neighbor
 	struct hashtb *lsa_update_queue;
 };
 
+struct linkStateDatabase
+{
+	char *version;
+	struct hashtb *db;
+};
+
 struct nlsr
 {
 
@@ -33,6 +39,8 @@ struct nlsr
 
 	struct ccn *ccn;
 	char *router_name;
+
+	struct linkStateDatabase *lsdb;
 
 	int is_synch_init;
 	int nlsa_id;
