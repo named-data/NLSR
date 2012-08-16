@@ -197,11 +197,13 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 	}
 
 	int dbcmp=strncmp(nlsr->lsdb->version,(char *)comp,16);
-	
+
+	printf (" dbcmp = %d \n",dbcmp);	
+
 	if(dbcmp > 0)
-		printf("Has Updated database (Older: %s New: %s)",comp,nlsr->lsdb->version);
+		printf("Has Updated database (Older: %s New: %s)\n",comp,nlsr->lsdb->version);
 	else 
-		printf("Data base is not updated than the older one (Older: %s New: %s)",comp,nlsr->lsdb->version);
+		printf("Data base is not updated than the older one (Older: %s New: %s)\n",comp,nlsr->lsdb->version);
 
 	
 	
