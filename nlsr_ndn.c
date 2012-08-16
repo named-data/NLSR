@@ -234,8 +234,10 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 	    	struct ccn_charbuf *name=ccn_charbuf_create();
 	    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 
-		ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
+		//ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
 		//ccn_name_append_str(name,nlsr->lsdb->version);
+
+		ccn_uri_append(name,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
 		
 		sp.template_ccnb=ccn_charbuf_create();
 		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
