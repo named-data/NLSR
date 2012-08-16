@@ -21,6 +21,7 @@
 #include "nlsr.h"
 #include "nlsr_ndn.h"
 #include "utility.h"
+#include "nlsr_adl.h"
 
 enum ccn_upcall_res 
 incoming_interest(struct ccn_closure *selfp,
@@ -168,15 +169,16 @@ process_incoming_content_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info*
 	{
 		// Do the LSDB processing here 
 
+		const unsigned char *comp_ptr1;
+		size_t comp_size;
+		int res;
+
+		res=ccn_name_comp_get(info->content_ccnb, info->content_comps,info->interest_comps->n-1,&comp_ptr1, &comp_size);
+		printf("Received Database Version: %s \n",(char *)comp_ptr1);
+
 	}
 
-	const unsigned char *comp_ptr1;
-	size_t comp_size;
-	int res;
-
-	res=ccn_name_comp_get(info->content_ccnb, info->content_comps,info->interest_comps->n-1,&comp_ptr1, &comp_size);
-
-	printf("Database Version: %s \n",(char *)comp_ptr1);
+	
 
 }
 
@@ -245,13 +247,26 @@ process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_u
 	}	
 
 
-	struct ccn_charbuf*c;
-	c=ccn_charbuf_create();
-	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
-	printf("%s\n",ccn_charbuf_as_string(c));
-	ccn_charbuf_destroy(&c);
+	struct ccn_charbuf *nbr;
+	nbr=ccn_charbuf_create();
+
 	
-	
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	for(i=0;i<nlsr_position;i++)
+	{
+		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);
+		//printf("%s \n",comp_ptr1);
+		ccn_charbuf_append_string(nbr,"/");
+		ccn_charbuf_append_string(nbr,(const char *)comp_ptr1);	
+	}
+
+	ccn_charbuf_append_string(nbr,"\0");	
+	printf("Interest Timed out for Neighbor: %s\n",ccn_charbuf_as_string(nbr));
+
+	update_adjacent_status_to_adl(nbr,1);
+
+	ccn_charbuf_destroy(&nbr);	
 }
 
 void 
@@ -356,7 +371,7 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 	    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 
 		ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
-		ccn_name_append_str(name,"0000000000000001");
+		//ccn_name_append_str(name,"0000000000000001");
 		
 		sp.template_ccnb=ccn_charbuf_create();
 		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);

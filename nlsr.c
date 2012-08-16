@@ -20,6 +20,7 @@
 #include "nlsr.h"
 #include "nlsr_ndn.h"
 #include "utility.h"
+#include "nlsr_adl.h"
 
 
 struct option longopts[] =
@@ -158,7 +159,7 @@ process_command_ccnneighbor(char *command)
 	nbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
 	nbr->neighbor->name=(char *)malloc(strlen(rtr_name)+1);
 	memcpy(nbr->neighbor->name,rtr_name,strlen(rtr_name)+1);
-	nbr->neighbor->length=strlen(rtr_name)+1;
+	nbr->neighbor->length=strlen(rtr_name);
 	nbr->face=face_id;
 	nbr->status=0;	
 
@@ -276,68 +277,6 @@ print_name_prefix_from_npl(void)
 	{
 		np=e->data;
 		printf("Name Prefix: %s and Length: %d \n",np->name,np->length);	
-		hashtb_next(e);		
-	}
-
-	hashtb_end(e);
-
-	printf("\n");
-}
-
-void
-add_adjacent_to_adl(struct ndn_neighbor *nbr)
-{
-	printf("\nadd_adjacent_to_adl called\n");
-	printf("Neighbor: %s Length: %d Face: %d Status: %d\n",nbr->neighbor->name,nbr->neighbor->length,nbr->face, nbr->status);
-
-	struct ndn_neighbor *hnbr=(struct ndn_neighbor *)malloc(sizeof(struct ndn_neighbor*));
-	
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee; 	
-    	int res;
-
-   	hashtb_start(nlsr->adl, e);
-    	res = hashtb_seek(e, nbr->neighbor->name , nbr->neighbor->length, 0);
-   
-	hnbr = e->data;
-
-	hnbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
-	hnbr->neighbor->name=(char *)malloc(nbr->neighbor->length);
-	memcpy(hnbr->neighbor->name,nbr->neighbor->name,nbr->neighbor->length);
-	hnbr->last_lsdb_version=(char *)malloc(16);
-
-	hnbr->neighbor->length=nbr->neighbor->length;
-	hnbr->face=nbr->face;
-	hnbr->status=nbr->status;
-	hnbr->last_lsdb_version="0000000000000000";
-
-	struct hashtb_param param_luq = {0};
-	hnbr->lsa_update_queue=hashtb_create(200, &param_luq);
-	
-    	hashtb_end(e);
-
-	printf("\n");
-
-
-}
-
-void
-print_adjacent_from_adl(void)
-{
-	printf("print_adjacent_from_adl called \n");	
-	int i, adl_element;
-	struct ndn_neighbor *nbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	
-    	hashtb_start(nlsr->adl, e);
-	adl_element=hashtb_n(nlsr->adl);
-
-	for(i=0;i<adl_element;i++)
-	{
-		nbr=e->data;
-		printf("Neighbor: %s Length: %d Face: %d Status: %d LSDB Version: %s \n",nbr->neighbor->name,nbr->neighbor->length,nbr->face, nbr->status, nbr->last_lsdb_version);	
 		hashtb_next(e);		
 	}
 

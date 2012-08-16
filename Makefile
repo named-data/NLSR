@@ -7,7 +7,7 @@ PROGRAMS = nlsr
 all: $(PROGRAMS)
 
 nlsr: nlsr.c nlsr_ndn.c utility.c
-	$(CC) $(CFLAGS) nlsr.c nlsr_ndn.c utility.c -o nlsr $(LIBS)
+	$(CC) $(CFLAGS) nlsr.c nlsr_adl.c nlsr_ndn.c utility.c -o nlsr $(LIBS)
 
 clean:
 	rm -f *.o

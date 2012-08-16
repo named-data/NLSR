@@ -60,8 +60,7 @@ void add_name_prefix_to_npl(struct name_prefix *name_prefix);
 void print_name_prefix_from_npl(void);
 
 
-void add_adjacent_to_adl(struct ndn_neighbor *nbr);
-void print_adjacent_from_adl(void);
+
 
 
 void nlsr_destroy( void );
