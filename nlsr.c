@@ -304,10 +304,12 @@ add_adjacent_to_adl(struct ndn_neighbor *nbr)
 	hnbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
 	hnbr->neighbor->name=(char *)malloc(nbr->neighbor->length);
 	memcpy(hnbr->neighbor->name,nbr->neighbor->name,nbr->neighbor->length);
+	hnbr->last_lsdb_version=(char *)malloc(16);
+
 	hnbr->neighbor->length=nbr->neighbor->length;
 	hnbr->face=nbr->face;
 	hnbr->status=nbr->status;
-	hnbr->last_lsdb_version=0;
+	hnbr->last_lsdb_version="0000000000000000";
 
 	struct hashtb_param param_luq = {0};
 	hnbr->lsa_update_queue=hashtb_create(200, &param_luq);
@@ -335,7 +337,7 @@ print_adjacent_from_adl(void)
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		printf("Neighbor: %s Length: %d Face: %d Status: %d LSDB Version: %d \n",nbr->neighbor->name,nbr->neighbor->length,nbr->face, nbr->status, nbr->last_lsdb_version);	
+		printf("Neighbor: %s Length: %d Face: %d Status: %d LSDB Version: %s \n",nbr->neighbor->name,nbr->neighbor->length,nbr->face, nbr->status, nbr->last_lsdb_version);	
 		hashtb_next(e);		
 	}
 
@@ -395,6 +397,7 @@ main(int argc, char *argv[])
 	nlsr->in_interest.p = &incoming_interest;
 	nlsr->in_content.p = &incoming_content;
 	nlsr->is_synch_init=1;
+	nlsr->nlsa_id=0;
 
 	struct ccn_charbuf *router_prefix;	
     	
@@ -441,7 +444,7 @@ main(int argc, char *argv[])
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
 
-	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 60000000, &send_lsdb_interest, NULL, 0);
+	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 1000000, &send_lsdb_interest, NULL, 0);
 
 	while(1)
 	{

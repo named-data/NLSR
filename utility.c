@@ -27,6 +27,21 @@ char * getLocalTimeStamp(void)
 	return timestamp;
 }
 
+char * getGmTimeStamp(void)
+{
+	char *timestamp = (char *)malloc(sizeof(char) * 16);
+	time_t gtime;
+	gtime=time(NULL);
+	struct tm *tm;
+	tm=gmtime(&gtime);
+  
+	sprintf(timestamp, "%04d%02d%02d%02d%02d%02d", tm->tm_year+1900, tm->tm_mon+1, 
+		tm->tm_mday, tm->tm_hour, tm->tm_min, tm->tm_sec);
+
+	return timestamp;
+}
+
+
 char * 
 nth_named_component(const char *name_prefix, int n)
 {

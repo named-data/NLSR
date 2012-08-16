@@ -15,7 +15,7 @@ struct ndn_neighbor
 	struct name_prefix *neighbor;
 	int face;
 	int status;
-	int last_lsdb_version;
+	char *last_lsdb_version;
 	struct hashtb *lsa_update_queue;
 };
 
@@ -35,6 +35,7 @@ struct nlsr
 	char *router_name;
 
 	int is_synch_init;
+	int nlsa_id;
 };
 
 struct nlsr *nlsr;

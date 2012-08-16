@@ -182,12 +182,14 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 			{
 				ccn_buf_advance(d);
 				ccn_buf_match_blob(d, &comp, &size);
-				ccn_buf_check_close(d);
+				ccn_buf_check_close(d);			
+				
+				
 			}
 			ccn_buf_check_close(d);
 		}
-		//if (d->decoder.state < 0)
-			//printf("Parse Failed\n");
+		if (d->decoder.state < 0)
+			printf("Parse Failed\n");
 		if (comp != NULL)
 			printf("Number in Exclusion Filter is %s\n",comp);
 			
@@ -276,7 +278,7 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 
 	hashtb_end(e);
 
-	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 60000000, &send_lsdb_interest, NULL, 0);
+	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 300000000, &send_lsdb_interest, NULL, 0);
 
 	return 0;
 
