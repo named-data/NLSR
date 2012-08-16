@@ -121,6 +121,53 @@ process_incoming_content(struct ccn_closure* selfp, struct ccn_upcall_info* info
 {
 	printf("process_incoming_content called \n");
 
+	struct ccn_charbuf*c;
+	c=ccn_charbuf_create();
+	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
+	printf("%s\n",ccn_charbuf_as_string(c));
+	ccn_charbuf_destroy(&c);
+
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	int res,i;
+	int nlsr_position=0;
+	int name_comps=(int)info->interest_comps->n;
+	
+	for(i=0;i<name_comps;i++)
+	{
+		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
+		if( res == 0)
+		{
+			nlsr_position=i;
+			break;
+		}	
+	}
+
+	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
+
+
+	printf("Det= %s \n",comp_ptr1);
+
+	if(!strcmp((char *)comp_ptr1,"lsdb"))
+	{
+		process_incoming_content_lsdb(selfp,info);
+	}
+
+}
+
+
+void 
+process_incoming_content_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+{
+	printf("process_incoming_content_lsdb called \n");
+
+	const unsigned char *content_data;
+	size_t length;
+	ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E_Content]-info->pco->offset[CCN_PCO_B_Content], info->pco, &content_data, &length);
+
+	printf(" Content Data: %s \n",content_data);
+
+
 }
 
 
@@ -234,10 +281,9 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 	    	struct ccn_charbuf *name=ccn_charbuf_create();
 	    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 
-		//ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
+		ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
 		//ccn_name_append_str(name,nlsr->lsdb->version);
 
-		ccn_uri_append(name,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
 		
 		sp.template_ccnb=ccn_charbuf_create();
 		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);

@@ -21,6 +21,7 @@ void process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_u
 
 enum ccn_upcall_res incoming_content(struct ccn_closure* selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info* info);
 void process_incoming_content(struct ccn_closure* selfp, struct ccn_upcall_info* info);
+void process_incoming_content_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info* info);
 
 #endif
 
