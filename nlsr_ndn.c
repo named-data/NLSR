@@ -245,6 +245,10 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 
 		res= ccn_sign_content(nlsr->ccn, data, name, &sp, "NACK", strlen("NACK")); 
 	    	res=ccn_put(nlsr->ccn,data->buf,data->length);
+		
+		if(res >= 0)
+			printf("Sending NACK Content is successful \n");
+
             	ccn_charbuf_destroy(&data);
 		ccn_charbuf_destroy(&sp.template_ccnb);		
 
@@ -331,7 +335,7 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 
 	hashtb_end(e);
 
-	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 300000000, &send_lsdb_interest, NULL, 0);
+	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 60000000, &send_lsdb_interest, NULL, 0);
 
 	return 0;
 
