@@ -21,6 +21,7 @@
 #include "nlsr_ndn.h"
 #include "utility.h"
 #include "nlsr_adl.h"
+#include "nlsr_lsdb.h"
 
 
 struct option longopts[] =
@@ -319,15 +320,14 @@ nlsr_destroy( void )
 
 }
 
-
-int 
-main(int argc, char *argv[])
+void
+init_nlsr(void)
 {
-    	int res;
-    	char *config_file;
-	int daemon_mode;
 	struct hashtb_param param_adl = {0};
 	struct hashtb_param param_npl = {0};
+
+	struct hashtb_param param_adj_lsdb = {0};
+	struct hashtb_param param_name_lsdb = {0};
 	
 	nlsr=(struct nlsr *)malloc(sizeof(struct nlsr));
 
@@ -340,10 +340,23 @@ main(int argc, char *argv[])
 	nlsr->lsdb->version=(char *)malloc(16);
 	nlsr->lsdb->version="0000000000000000";
 
+	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct adj_lsa), &param_adj_lsdb);
+	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct name_lsa), &param_name_lsdb);
+
 	nlsr->is_synch_init=1;
 	nlsr->nlsa_id=0;
 
+}
+
+int 
+main(int argc, char *argv[])
+{
+    	int res;
+    	char *config_file;
+	int daemon_mode;
 	struct ccn_charbuf *router_prefix;	
+
+	init_nlsr();
     	
 	while ((res = getopt_long(argc, argv, "df:h", longopts, 0)) != -1) 
 	{

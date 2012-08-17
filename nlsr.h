@@ -22,7 +22,8 @@ struct ndn_neighbor
 struct linkStateDatabase
 {
 	char *version;
-	struct hashtb *db;
+	struct hashtb *adj_lsdb;
+	struct hashtb *name_lsdb;
 };
 
 struct nlsr
@@ -48,6 +49,7 @@ struct nlsr
 
 struct nlsr *nlsr;
 
+void init_nlsr(void);
 
 void ndn_rtr_gettime(const struct ccn_gettime *self, struct ccn_timeval *result);
 void process_command_router_name(char *command);
