@@ -98,13 +98,12 @@ update_adjacent_status_to_adl(struct ccn_charbuf *nbr, int status)
     	struct hashtb_enumerator *e = &ee;
 
 	hashtb_start(nlsr->adl, e);
-   	//res = hashtb_seek(e, nbr->buf, nbr->length, 0);
-	res = hashtb_seek(e, name,strlen(name) , 0);
+   	res = hashtb_seek(e, nbr->buf, nbr->length, 0);
 
 	//printf("Nbr: %s Length:%d\n",nbr->buf, (int)nbr->length);
-	printf("Nbr: %s Length: %d\n",name, (int) strlen(name));	
+	
 
-	assert( res == HT_OLD_ENTRY);
+	//assert( res == HT_OLD_ENTRY);
 
 	nnbr=e->data;
 	nnbr->status=status;
@@ -126,13 +125,11 @@ update_adjacent_lsdb_version_to_adl(struct ccn_charbuf *nbr, char *version)
     	struct hashtb_enumerator *e = &ee;
 
 	hashtb_start(nlsr->adl, e);
-   	//res = hashtb_seek(e, nbr->buf, nbr->length, 0);
 	res = hashtb_seek(e, name,strlen(name) , 0);
-	
-	//printf("Nbr: %s Length:%d\n",nbr->buf, (int)nbr->length);
-	printf("Nbr: %s Length: %d\n",name, (int) strlen(name));
 
-	assert( res == HT_OLD_ENTRY);
+	//printf("Nbr: %s Length:%d\n",nbr->buf, (int)nbr->length);
+
+	//assert( res == HT_OLD_ENTRY);
 
 	nnbr=e->data;
 	memcpy(nnbr->last_lsdb_version,version,strlen(version)+1);
