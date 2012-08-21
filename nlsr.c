@@ -250,14 +250,17 @@ add_name_prefix_to_npl(struct name_prefix *np)
    	hashtb_start(nlsr->npl, e);
     	res = hashtb_seek(e, np->name, strlen(np->name), 0);
 
-	assert(res == HT_NEW_ENTRY);   
+	if(res == HT_NEW_ENTRY)
+	{   
 
-	hnp = e->data;
-	hnp->name=(char *)malloc(np->length);
-    	memcpy(hnp->name,np->name,np->length);
-	hnp->length=np->length;
+		hnp = e->data;
+		hnp->name=(char *)malloc(np->length);
+    		memcpy(hnp->name,np->name,np->length);
+		hnp->length=np->length;
+	}
+    	
+	hashtb_end(e);
 
-    	hashtb_end(e);
 
 	printf("\n");
 

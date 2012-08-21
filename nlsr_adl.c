@@ -37,23 +37,25 @@ add_adjacent_to_adl(struct ndn_neighbor *nbr)
    	hashtb_start(nlsr->adl, e);
     	res = hashtb_seek(e, nbr->neighbor->name , nbr->neighbor->length, 0);
 
-	assert (res == HT_NEW_ENTRY);
+	if(res == HT_NEW_ENTRY )
+	{
    
-	hnbr = e->data;
+		hnbr = e->data;
 
-	hnbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
-	hnbr->neighbor->name=(char *)malloc(nbr->neighbor->length);
-	memcpy(hnbr->neighbor->name,nbr->neighbor->name,nbr->neighbor->length);
-	hnbr->last_lsdb_version=(char *)malloc(15);
+		hnbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
+		hnbr->neighbor->name=(char *)malloc(nbr->neighbor->length);
+		memcpy(hnbr->neighbor->name,nbr->neighbor->name,nbr->neighbor->length);
+		hnbr->last_lsdb_version=(char *)malloc(15);
 
-	hnbr->neighbor->length=nbr->neighbor->length;
-	hnbr->face=nbr->face;
-	hnbr->status=nbr->status;
-	memcpy(hnbr->last_lsdb_version,"00000000000000",14);
-	memcpy(hnbr->last_lsdb_version+strlen(hnbr->last_lsdb_version),"\0",1);
+		hnbr->neighbor->length=nbr->neighbor->length;
+		hnbr->face=nbr->face;
+		hnbr->status=nbr->status;
+		memcpy(hnbr->last_lsdb_version,"00000000000000",14);
+		memcpy(hnbr->last_lsdb_version+strlen(hnbr->last_lsdb_version),"\0",1);
 
-	struct hashtb_param param_luq = {0};
-	hnbr->lsa_update_queue=hashtb_create(200, &param_luq);
+		struct hashtb_param param_luq = {0};
+		hnbr->lsa_update_queue=hashtb_create(200, &param_luq);
+	}
 	
     	hashtb_end(e);
 
@@ -102,10 +104,11 @@ update_adjacent_status_to_adl(struct ccn_charbuf *nbr, int status)
    	res = hashtb_seek(e, nbr->buf, nbr->length, 0);
 	
 
-	assert( res == HT_OLD_ENTRY);
-
-	nnbr=e->data;
-	nnbr->status=status;
+	if (res == HT_OLD_ENTRY)
+	{
+		nnbr=e->data;
+		nnbr->status=status;
+	}
 	
 	hashtb_end(e);
 }
@@ -125,10 +128,10 @@ update_adjacent_lsdb_version_to_adl(struct ccn_charbuf *nbr, char *version)
 	hashtb_start(nlsr->adl, e);
 	res = hashtb_seek(e, nbr->buf, nbr->length, 0);
 
-	assert( res == HT_OLD_ENTRY);
-
-	nnbr=e->data;
-	memcpy(nnbr->last_lsdb_version,version,strlen(version)+1);
-	
+	if( res == HT_OLD_ENTRY )
+	{
+		nnbr=e->data;
+		memcpy(nnbr->last_lsdb_version,version,strlen(version)+1);
+	}
 	hashtb_end(e);
 }
