@@ -196,8 +196,8 @@ process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall
 	printf("%s\n",ccn_charbuf_as_string(c));
 	ccn_charbuf_destroy(&c);
 
-	const unsigned char *comp_ptr1;
-	size_t comp_size;
+	//const unsigned char *comp_ptr1;
+	//size_t comp_size;
 	int res,i;
 	int nlsr_position=0;
 	int name_comps=(int)info->interest_comps->n;
@@ -212,12 +212,13 @@ process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall
 		}	
 	}
 
-	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
+	//res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
 
 
-	printf("Det= %s \n",comp_ptr1);
+	//printf("Det= %s \n",comp_ptr1);
 
-	if(!strcmp((char *)comp_ptr1,"lsdb"))
+	//if(!strcmp((char *)comp_ptr1,"lsdb"))
+	if(ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,nlsr_position+1,"lsdb") == 0)
 	{
 		process_incoming_timed_out_interest_lsdb(selfp,info);
 	}
