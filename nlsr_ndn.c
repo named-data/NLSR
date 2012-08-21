@@ -261,7 +261,7 @@ process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_u
 		ccn_charbuf_append_string(nbr,(const char *)comp_ptr1);	
 	}
 
-	ccn_charbuf_append_string(nbr,"\0");	
+	//ccn_charbuf_append_string(nbr,"\0");	
 	printf("Interest Timed out for Neighbor: %s\n",ccn_charbuf_as_string(nbr));
 
 	update_adjacent_status_to_adl(nbr,1);
