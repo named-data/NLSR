@@ -109,6 +109,10 @@ update_adjacent_status_to_adl(struct ccn_charbuf *nbr, int status)
 		nnbr=e->data;
 		nnbr->status=status;
 	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
 	
 	hashtb_end(e);
 }
@@ -133,5 +137,10 @@ update_adjacent_lsdb_version_to_adl(struct ccn_charbuf *nbr, char *version)
 		nnbr=e->data;
 		memcpy(nnbr->last_lsdb_version,version,strlen(version)+1);
 	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+	
 	hashtb_end(e);
 }
