@@ -99,6 +99,8 @@ update_adjacent_status_to_adl(struct ccn_charbuf *nbr, int status)
 	hashtb_start(nlsr->adl, e);
    	res = hashtb_seek(e, nbr->buf, nbr->length, 0);
 
+	printf("Nbr: %s Length:%d\n",nbr->buf, (int)nbr->length);
+
 	assert( res == HT_OLD_ENTRY);
 
 	nnbr=e->data;
@@ -121,6 +123,8 @@ update_adjacent_lsdb_version_to_adl(struct ccn_charbuf *nbr, char *version)
 
 	hashtb_start(nlsr->adl, e);
    	res = hashtb_seek(e, nbr->buf, nbr->length, 0);
+	
+	printf("Nbr: %s Length:%d\n",nbr->buf, (int)nbr->length);
 
 	assert( res == HT_OLD_ENTRY);
 
