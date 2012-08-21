@@ -42,20 +42,10 @@ add_adjacent_to_adl(struct ndn_neighbor *nbr)
    
 		hnbr = e->data;
 		hnbr->neighbor=ccn_charbuf_create();
-		//res=ccn_name_from_uri(hnbr->neighbor,ccn_charbuf_as_string(nbr->neighbor));
 		ccn_charbuf_append_string(hnbr->neighbor,ccn_charbuf_as_string(nbr->neighbor));
-		
-		//hnbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
-		//hnbr->neighbor->name=(char *)malloc(nbr->neighbor->length);
-		//memcpy(hnbr->neighbor->name,nbr->neighbor->name,nbr->neighbor->length);
-		//hnbr->neighbor->name[nbr->neighbor->length]='\0';
-		//hnbr->last_lsdb_version=(char *)malloc(15);
-		//hnbr->neighbor->length=nbr->neighbor->length;
 
 		hnbr->face=nbr->face;
 		hnbr->status=nbr->status;
-		//memcpy(hnbr->last_lsdb_version,"00000000000000",14);
-		//memcpy(hnbr->last_lsdb_version+strlen(hnbr->last_lsdb_version),"\0",1);
 		hnbr->last_lsdb_version=0;
 
 		struct hashtb_param param_luq = {0};

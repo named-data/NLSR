@@ -157,12 +157,7 @@ process_command_ccnneighbor(char *command)
 	}
 
 	struct ndn_neighbor *nbr=(struct ndn_neighbor *)malloc(sizeof(struct ndn_neighbor*));
-	//nbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
-	//nbr->neighbor->name=(char *)malloc(strlen(rtr_name)+1);
-	//memcpy(nbr->neighbor->name,rtr_name,strlen(rtr_name)+1);
-	//nbr->neighbor->length=strlen(rtr_name);
 	nbr->neighbor=ccn_charbuf_create();
-	//ccn_name_from_uri(nbr->neighbor,rtr_name);
 	ccn_charbuf_append_string(nbr->neighbor,rtr_name);
 	nbr->face=face_id;
 	nbr->status=0;	
@@ -315,6 +310,7 @@ nlsr_destroy( void )
 	{
 		nbr=e->data;
 		hashtb_destroy(&nbr->lsa_update_queue);	
+		ccn_charbuf_destroy(&nbr->neighbor);
 		hashtb_next(e);		
 	}
 	hashtb_end(e);
