@@ -432,12 +432,12 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		printf("Sending interest for name prefix:%s/%s/%s\n",nbr->neighbor->name,nlsr_str,lsdb_str);	
+		//printf("Sending interest for name prefix:%s/%s/%s\n",nbr->neighbor->name,nlsr_str,lsdb_str);	
 		name=ccn_charbuf_create();
 		res=ccn_name_from_uri(name,nbr->neighbor->name);
 		ccn_name_append_str(name,nlsr_str);
 		ccn_name_append_str(name,lsdb_str);
-		//ccn_name_append_str(name,rnumstr);
+		printf("Sending interest for name prefix:%s\n",ccn_name_as_string(name));
 
 		/* adding Exclusion filter */
 		
