@@ -355,17 +355,21 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 		/* Now comp points to the start of your potential number, and size is its length */
 	}
 
-	int dbcmp=strncmp(nlsr->lsdb->version,(char *)comp,16);
+	int excl_db_version=atoi((char *)comp);
+	int dbcmp=nlsr->lsdb->version-excl_db_version;
+	//int dbcmp=strncmp(nlsr->lsdb->version,(char *)comp,16);
+
+	
 
 	printf (" dbcmp = %d \n",dbcmp);	
 
 	if(dbcmp > 0)
 	{
-		printf("Has Updated database (Older: %s New: %s)\n",comp,nlsr->lsdb->version);
+		printf("Has Updated database (Older: %s New: %ld)\n",comp,nlsr->lsdb->version);
 	}
 	else 
 	{
-		printf("Data base is not updated than the older one (Older: %s New: %s)\n",comp,nlsr->lsdb->version);
+		printf("Data base is not updated than the older one (Older: %s New: %ld)\n",comp,nlsr->lsdb->version);
 		printf("Sending NACK Content back.....\n");
 
 		struct ccn_charbuf *data=ccn_charbuf_create();
@@ -432,12 +436,12 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		printf("Sending interest for name prefix:%s/%s/%s/%s\n",nbr->neighbor->name,nlsr_str,lsdb_str,rnumstr);	
+		printf("Sending interest for name prefix:%s/%s/%s\n",nbr->neighbor->name,nlsr_str,lsdb_str);	
 		name=ccn_charbuf_create();
 		res=ccn_name_from_uri(name,nbr->neighbor->name);
 		ccn_name_append_str(name,nlsr_str);
 		ccn_name_append_str(name,lsdb_str);
-		ccn_name_append_str(name,rnumstr);
+		//ccn_name_append_str(name,rnumstr);
 
 		/* adding Exclusion filter */
 		

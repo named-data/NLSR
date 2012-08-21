@@ -15,13 +15,13 @@ struct ndn_neighbor
 	struct name_prefix *neighbor;
 	int face;
 	int status;
-	char *last_lsdb_version;
+	long int last_lsdb_version;
 	struct hashtb *lsa_update_queue;
 };
 
 struct linkStateDatabase
 {
-	char *version;
+	long int version;
 	struct hashtb *adj_lsdb;
 	struct hashtb *name_lsdb;
 };

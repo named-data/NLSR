@@ -342,8 +342,9 @@ init_nlsr(void)
 	nlsr->in_content.p = &incoming_content;
 
 	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase *));
-	nlsr->lsdb->version=(char *)malloc(16);
-	nlsr->lsdb->version="0000000000000000";
+	//nlsr->lsdb->version=(char *)malloc(16);
+	//nlsr->lsdb->version="0000000000000000";
+	nlsr->lsdb->version=0;
 
 	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct adj_lsa), &param_adj_lsdb);
 	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct name_lsa), &param_name_lsdb);
