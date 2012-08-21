@@ -256,7 +256,6 @@ process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_u
 	for(i=0;i<nlsr_position;i++)
 	{
 		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);
-		//printf("%s \n",comp_ptr1);
 		ccn_charbuf_append_string(nbr,"/");
 		ccn_charbuf_append_string(nbr,(const char *)comp_ptr1);	
 	}
@@ -430,12 +429,12 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		printf("Sending interest for name prefix:%s/%s/%s/%s\n",nbr->neighbor->name,nlsr_str,lsdb_str,rnumstr);	
+		printf("Sending interest for name prefix:%s/%s/%s\n",nbr->neighbor->name,nlsr_str,lsdb_str);	
 		name=ccn_charbuf_create();
 		res=ccn_name_from_uri(name,nbr->neighbor->name);
 		ccn_name_append_str(name,nlsr_str);
 		ccn_name_append_str(name,lsdb_str);
-		ccn_name_append_str(name,rnumstr);
+		//ccn_name_append_str(name,rnumstr);
 
 		/* adding Exclusion filter */
 		
@@ -453,7 +452,8 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 		ccnb_tagged_putf(templ, CCN_DTAG_Any, "");
 		ccn_charbuf_reset(c);
 		//ccn_charbuf_putf(c, "%u", (unsigned)mynumber);
-		ccn_charbuf_putf(c, "%s", nbr->last_lsdb_version);
+		//ccn_charbuf_putf(c, "%s", nbr->last_lsdb_version);
+		ccn_charbuf_putf(c, "%ld", nbr->last_lsdb_version);
 		ccnb_append_tagged_blob(templ, CCN_DTAG_Component, c->buf, c->length);
 		ccn_charbuf_append_closer(templ); /* </Exclude> */
 		ccn_charbuf_append_closer(templ); /* </Interest> */

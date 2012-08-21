@@ -311,7 +311,8 @@ nlsr_destroy( void )
 	hashtb_end(e);
 
 	
-
+	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
+	hashtb_destroy(&nlsr->lsdb->name_lsdb);
 	hashtb_destroy(&nlsr->adl);
 	hashtb_destroy(&nlsr->npl);
 	ccn_schedule_destroy(&nlsr->sched);
