@@ -45,6 +45,7 @@ add_adjacent_to_adl(struct ndn_neighbor *nbr)
 		hnbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
 		hnbr->neighbor->name=(char *)malloc(nbr->neighbor->length);
 		memcpy(hnbr->neighbor->name,nbr->neighbor->name,nbr->neighbor->length);
+		hnbr->neighbor->name[nbr->neighbor->length]='\0';
 		//hnbr->last_lsdb_version=(char *)malloc(15);
 
 		hnbr->neighbor->length=nbr->neighbor->length;
