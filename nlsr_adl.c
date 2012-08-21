@@ -100,7 +100,7 @@ update_adjacent_status_to_adl(struct ccn_charbuf *nbr, int status)
 	hashtb_start(nlsr->adl, e);
    	res = hashtb_seek(e, nbr->buf, nbr->length, 0);
 
-	assert( res == HT_OLD_ENTRY);
+	//assert( res == HT_OLD_ENTRY);
 
 	nnbr=e->data;
 	nnbr->status=status;
@@ -123,12 +123,10 @@ update_adjacent_lsdb_version_to_adl(struct ccn_charbuf *nbr, long int version)
 	hashtb_start(nlsr->adl, e);
    	res = hashtb_seek(e, nbr->buf, nbr->length, 0);
 
-	assert( res == HT_OLD_ENTRY);
+	//assert( res == HT_OLD_ENTRY);
 
 	nnbr=e->data;
 	nnbr->last_lsdb_version=version;
-	
-	//memcpy(nnbr->last_lsdb_version,version,strlen(version)+1);
-	
+		
 	hashtb_end(e);
 }
