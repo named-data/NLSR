@@ -249,7 +249,9 @@ add_name_prefix_to_npl(struct name_prefix *np)
 
    	hashtb_start(nlsr->npl, e);
     	res = hashtb_seek(e, np->name, strlen(np->name), 0);
-   
+
+	assert(res == HT_NEW_ENTRY);   
+
 	hnp = e->data;
 	hnp->name=(char *)malloc(np->length);
     	memcpy(hnp->name,np->name,np->length);
@@ -353,7 +355,7 @@ main(int argc, char *argv[])
 {
     	int res;
     	char *config_file;
-	int daemon_mode;
+	//int daemon_mode;
 	struct ccn_charbuf *router_prefix;	
 
 	init_nlsr();
@@ -363,7 +365,7 @@ main(int argc, char *argv[])
         	switch (res) 
 		{
 			case 'd':
-				daemon_mode = 1;
+				//daemon_mode = 1;
 				break;
 			case 'f':
 				config_file = optarg;

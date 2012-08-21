@@ -174,6 +174,7 @@ process_incoming_content_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info*
 		int res;
 
 		res=ccn_name_comp_get(info->content_ccnb, info->content_comps,info->interest_comps->n-1,&comp_ptr1, &comp_size);
+		if ( res >=0)
 		printf("Received Database Version: %s \n",(char *)comp_ptr1);
 
 	}
