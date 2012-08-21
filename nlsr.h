@@ -12,7 +12,8 @@ struct name_prefix
 
 struct ndn_neighbor
 {
-	struct name_prefix *neighbor;
+	//struct name_prefix *neighbor;
+	struct ccn_charbuf *neighbor;
 	int face;
 	int status;
 	long int last_lsdb_version;
