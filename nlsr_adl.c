@@ -116,15 +116,18 @@ update_adjacent_lsdb_version_to_adl(struct ccn_charbuf *nbr, char *version)
 	printf("update_adjacent_status_to_adl called \n");
 
 	int res;
+	char *name=ccn_charbuf_as_string(nbr);
 	struct ndn_neighbor *nnbr;
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee;
 
 	hashtb_start(nlsr->adl, e);
-   	res = hashtb_seek(e, nbr->buf, nbr->length, 0);
+   	//res = hashtb_seek(e, nbr->buf, nbr->length, 0);
+	res = hashtb_seek(e, name,strlen(name) , 0);
 	
-	printf("Nbr: %s Length:%d\n",nbr->buf, (int)nbr->length);
+	//printf("Nbr: %s Length:%d\n",nbr->buf, (int)nbr->length);
+	printf("Nbr: %s Length: %d\n",name, (int) strlen(name));
 
 	assert( res == HT_OLD_ENTRY);
 
