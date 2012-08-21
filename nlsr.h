@@ -21,7 +21,7 @@ struct ndn_neighbor
 
 struct linkStateDatabase
 {
-	char *version;
+	long int version;
 	struct hashtb *adj_lsdb;
 	struct hashtb *name_lsdb;
 };
