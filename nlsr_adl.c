@@ -42,14 +42,11 @@ add_adjacent_to_adl(struct ndn_neighbor *nbr)
 	hnbr->neighbor=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
 	hnbr->neighbor->name=(char *)malloc(nbr->neighbor->length);
 	memcpy(hnbr->neighbor->name,nbr->neighbor->name,nbr->neighbor->length);
-	//hnbr->last_lsdb_version=(char *)malloc(15);
 
 	hnbr->neighbor->length=nbr->neighbor->length;
 	hnbr->face=nbr->face;
 	hnbr->status=nbr->status;
 	hnbr->last_lsdb_version=0;
-	//memcpy(hnbr->last_lsdb_version,"00000000000000",14);
-	//memcpy(hnbr->last_lsdb_version+strlen(hnbr->last_lsdb_version),"\0",1);
 
 	struct hashtb_param param_luq = {0};
 	hnbr->lsa_update_queue=hashtb_create(200, &param_luq);

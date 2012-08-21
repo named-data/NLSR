@@ -432,9 +432,12 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		printf("Sending interest for name prefix:%s/%s/%s\n",nbr->neighbor->name,nlsr_str,lsdb_str);	
+
+		char *prefix=(char *)malloc(nbr->neighbor->length);
+		memcpy(prefix,nbr->neighbor->name,nbr->neighbor->length);		
+		printf("Sending interest for name prefix:%s/%s/%s\n",prefix,nlsr_str,lsdb_str);	
 		name=ccn_charbuf_create();
-		res=ccn_name_from_uri(name,nbr->neighbor->name);
+		res=ccn_name_from_uri(name,prefix);
 		ccn_name_append_str(name,nlsr_str);
 		ccn_name_append_str(name,lsdb_str);
 		//ccn_name_append_str(name,rnumstr);
@@ -471,8 +474,10 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 		ccn_charbuf_destroy(&c);
 		ccn_charbuf_destroy(&templ);
 		ccn_charbuf_destroy(&name);
+		free(prefix);
 	
-		hashtb_next(e);		
+		hashtb_next(e);	
+	
 	}
 
 	hashtb_end(e);
