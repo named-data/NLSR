@@ -12,7 +12,6 @@ struct name_prefix
 
 struct ndn_neighbor
 {
-	//struct name_prefix *neighbor;
 	struct ccn_charbuf *neighbor;
 	int face;
 	int status;
@@ -45,7 +44,7 @@ struct nlsr
 	struct linkStateDatabase *lsdb;
 
 	int is_synch_init;
-	int nlsa_id;
+	long int nlsa_id;
 };
 
 struct nlsr *nlsr;

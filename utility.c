@@ -61,6 +61,12 @@ nth_named_component(const char *name_prefix, int n)
 
 	return component;
 
+}
 
-
+long int 
+get_current_time_sec(void)
+{
+	struct timeval now;
+	gettimeofday(&now,NULL);
+	return now.tv_sec;
 }

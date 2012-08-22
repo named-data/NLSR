@@ -314,10 +314,29 @@ nlsr_destroy( void )
 		hashtb_next(e);		
 	}
 	hashtb_end(e);
-
-	
-
 	hashtb_destroy(&nlsr->adl);
+
+	/* Destroying every element in Name LSDB Hash Table */
+	hashtb_start(nlsr->adl, e);
+	element=hashtb_n(nlsr->lsdb->name_lsdb);
+
+	struct nlsa *name_lsa;
+
+	for(i=0;i<element;i++)
+	{
+		name_lsa=e->data;	
+		ccn_charbuf_destroy(&name_lsa->name_prefix);
+		ccn_charbuf_destroy(&name_lsa->header->orig_router);
+		free(name_lsa->header);
+		free(name_lsa);
+		hashtb_next(e);		
+	}
+	hashtb_end(e);
+
+	hashtb_destroy(&nlsr->lsdb->name_lsdb);
+
+	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
+
 	hashtb_destroy(&nlsr->npl);
 	ccn_schedule_destroy(&nlsr->sched);
 	ccn_destroy(&nlsr->ccn);
@@ -342,12 +361,10 @@ init_nlsr(void)
 	nlsr->in_content.p = &incoming_content;
 
 	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase *));
-	//nlsr->lsdb->version=(char *)malloc(16);
-	//nlsr->lsdb->version="0000000000000000";
 	nlsr->lsdb->version=0;
 
-	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct adj_lsa), &param_adj_lsdb);
-	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct name_lsa), &param_name_lsdb);
+	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), &param_adj_lsdb);
+	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), &param_name_lsdb);
 
 	nlsr->is_synch_init=1;
 	nlsr->nlsa_id=0;
@@ -408,6 +425,7 @@ main(int argc, char *argv[])
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
 
 	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 1000000, &send_lsdb_interest, NULL, 0);
+	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 500000, &initial_build_name_lsa, NULL, 0);
 
 	while(1)
 	{
