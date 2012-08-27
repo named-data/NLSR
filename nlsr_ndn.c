@@ -524,15 +524,15 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	struct ccn_charbuf *c=ccn_charbuf_create();
 	ccn_charbuf_reset(c);
 	ccn_charbuf_putf(c, "%ld", nlsr->lsdb_synch_interval);
-	ccn_charbuf_append_string(data,ccn_charbuf_as_string(c));	   
+	//ccn_charbuf_append_string(data,ccn_charbuf_as_string(c));	   
 
-	res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info", strlen("info")); 
+	res= ccn_sign_content(nlsr->ccn, data, name, &sp, c->buf, c->length); 
 	if(res >= 0)
 		printf("Signing Content is successful \n");
 
     	res=ccn_put(nlsr->ccn,data->buf,data->length);		
 	if(res >= 0)
-		printf("Sending NACK Content is successful \n");
+		printf("Sending Info Content is successful \n");
 
 	ccn_charbuf_destroy(&data);
 	ccn_charbuf_destroy(&c);

@@ -143,13 +143,14 @@ initial_build_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_sch
 
 		struct ccn_charbuf *name;
 		name=ccn_charbuf_create();
+		
 		ccn_charbuf_append_string(name,np->name);
 		build_name_lsa(name_lsa,name);
 		install_name_lsa(name_lsa);
 
-		//ccn_charbuf_destroy(&name_lsa->header->orig_router);
+		ccn_charbuf_destroy(&name_lsa->header->orig_router);
 		free(name_lsa->header);
-		//ccn_charbuf_destroy(&name_lsa->name_prefix);
+		ccn_charbuf_destroy(&name_lsa->name_prefix);
 		free(name_lsa);
 		ccn_charbuf_destroy(&name);
 	
