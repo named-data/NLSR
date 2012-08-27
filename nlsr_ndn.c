@@ -521,8 +521,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
 	ccn_charbuf_append_closer(sp.template_ccnb);	
 
-	
-	res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info", strlen("info")); 
+	res= ccn_sign_content(nlsr->ccn, data, name, &sp,"info",strlen("info") ); 
 	if(res >= 0)
 		printf("Signing Content is successful \n");
 
@@ -532,6 +531,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 
 	ccn_charbuf_destroy(&data);
 	ccn_charbuf_destroy(&name);
+	//ccn_charbuf_destroy(&c);
 	ccn_charbuf_destroy(&sp.template_ccnb);
 
 }
