@@ -33,7 +33,7 @@ struct nlsa_header
 	long int orig_time;
 	long int ls_id;
 	struct ccn_charbuf *orig_router;
-	unsigned char isValid;
+	unsigned int isValid;
 
 };
 

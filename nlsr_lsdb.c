@@ -68,17 +68,19 @@ install_name_lsa(struct nlsa *new_name_lsa)
 		name_lsa = e->data;
 
 		name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header *));
-		name_lsa->header->orig_router=ccn_charbuf_create();
+	
 	
 		name_lsa->header->ls_type=new_name_lsa->header->ls_type;
 		name_lsa->header->orig_time=new_name_lsa->header->orig_time;
 		name_lsa->header->ls_id=new_name_lsa->header->ls_id;
+		
+		name_lsa->header->orig_router=ccn_charbuf_create();
 		ccn_charbuf_append_string(name_lsa->header->orig_router,ccn_charbuf_as_string(new_name_lsa->header->orig_router));	
 		name_lsa->header->isValid=new_name_lsa->header->isValid;
 
 		name_lsa->name_prefix=ccn_charbuf_create();	
-		//ccn_charbuf_append_string(name_lsa->name_prefix,ccn_charbuf_as_string(new_name_lsa->name_prefix));
-		ccn_charbuf_append_charbuf(name_lsa->name_prefix,new_name_lsa->name_prefix);
+		ccn_charbuf_append_string(name_lsa->name_prefix,ccn_charbuf_as_string(new_name_lsa->name_prefix));
+		//ccn_charbuf_append_charbuf(name_lsa->name_prefix,new_name_lsa->name_prefix);
 	}
 	else if(res == HT_OLD_ENTRY)
 	{
@@ -138,6 +140,9 @@ initial_build_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_sch
 		name_lsa=build_name_lsa(name);
 		install_name_lsa(name_lsa);
 
+		ccn_charbuf_destroy(&name_lsa->header->orig_router);
+		ccn_charbuf_destroy(&name_lsa->name_prefix);
+		free(name_lsa->header);
 		free(name_lsa);
 		ccn_charbuf_destroy(&name);
 	
@@ -161,7 +166,7 @@ print_name_lsa(struct nlsa *name_lsa)
 	printf("	LS Type			 :	%d\n",name_lsa->header->ls_type);
 	printf("	LS Id			 :	%ld\n",name_lsa->header->ls_id);
 	printf("	Origination Time	 :	%ld\n",name_lsa->header->orig_time);
-	printf("	Is Valid 		 :	%d\n",name_lsa->header->isValid);
+	printf("	Is Valid 		 :	%u\n",name_lsa->header->isValid);
 
 	printf("	LSA Data			\n");
 	printf("		Name Prefix:	 	:	%s\n",ccn_charbuf_as_string(name_lsa->name_prefix));
