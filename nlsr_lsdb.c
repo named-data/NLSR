@@ -20,6 +20,7 @@
 #include "nlsr.h"
 #include "nlsr_lsdb.h"
 #include "utility.h"
+#include "nlsr_ndn.h"
 
 void
 make_name_lsa_key(struct ccn_charbuf *key, struct ccn_charbuf *orig_router, unsigned int ls_type, long int nlsa_id, long int orig_time)
@@ -160,6 +161,8 @@ initial_build_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_sch
 	hashtb_end(e);
 
 	print_name_lsdb();
+
+	//nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
 
 	return 0;
 }

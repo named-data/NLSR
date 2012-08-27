@@ -519,7 +519,7 @@ main(int argc, char *argv[])
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
 
-	nlsr->event_build_name_lsa = ccn_schedule_event(nlsr->sched, 500000, &initial_build_name_lsa, NULL, 0);
+	nlsr->event_build_name_lsa = ccn_schedule_event(nlsr->sched, 500, &initial_build_name_lsa, NULL, 0);
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1000000, &send_info_interest, NULL, 0);
 	
 

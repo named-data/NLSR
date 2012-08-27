@@ -476,7 +476,6 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 	    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 
 		ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
-		//ccn_name_append_str(name,"0000000000000001");
 		
 		sp.template_ccnb=ccn_charbuf_create();
 		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
@@ -514,9 +513,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
     	struct ccn_charbuf *name=ccn_charbuf_create();
     	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 
-	//ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
-	ccn_uri_append(name,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
-	
+	ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]);	
+
 	sp.template_ccnb=ccn_charbuf_create();
 	ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
 	ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
