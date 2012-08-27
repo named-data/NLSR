@@ -45,7 +45,7 @@ struct nlsa
 
 
 int initial_build_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
-struct nlsa * build_name_lsa(struct ccn_charbuf *name_prefix);
+void build_name_lsa(struct nlsa *name_lsa, struct ccn_charbuf *name_prefix);
 void install_name_lsa(struct nlsa *new_name_lsa);
 void make_name_lsa_key(struct ccn_charbuf *key, struct ccn_charbuf *orig_router, unsigned int ls_type, long int nlsa_id, long int orig_time);
 void print_name_lsdb(void);

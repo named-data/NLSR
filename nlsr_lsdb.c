@@ -95,14 +95,14 @@ install_name_lsa(struct nlsa *new_name_lsa)
 	
 }
 
-struct nlsa *
-build_name_lsa(struct ccn_charbuf *name_prefix)
+void 
+build_name_lsa(struct nlsa *name_lsa, struct ccn_charbuf *name_prefix)
 {
 	printf("build_name_lsa called \n");
-	struct nlsa *name_lsa=(struct nlsa*)malloc(sizeof(struct nlsa *));
+	//struct nlsa *name_lsa=(struct nlsa*)malloc(sizeof(struct nlsa *));
 
-	name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header *));
-	name_lsa->header->orig_router=ccn_charbuf_create();
+	//name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header *));
+	//name_lsa->header->orig_router=ccn_charbuf_create();
 	
 	name_lsa->header->ls_type=LS_TYPE_NAME;
 	name_lsa->header->orig_time=get_current_time_microsec();
@@ -112,11 +112,11 @@ build_name_lsa(struct ccn_charbuf *name_prefix)
 	ccn_charbuf_append_string(name_lsa->header->orig_router,nlsr->router_name);	
 	name_lsa->header->isValid=1;
 
-	name_lsa->name_prefix=ccn_charbuf_create();	
+	//name_lsa->name_prefix=ccn_charbuf_create();	
 	ccn_charbuf_append_string(name_lsa->name_prefix,ccn_charbuf_as_string(name_prefix));
 	//ccn_charbuf_append_charbuf(name_lsa->name_prefix,name_prefix);
 
-	return name_lsa;
+	//return name_lsa;
 }
 
 int 
@@ -136,11 +136,15 @@ initial_build_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_sch
 	{
 		np=e->data;
 
-		struct nlsa *name_lsa;
+		struct nlsa *name_lsa=(struct nlsa*)malloc(sizeof(struct nlsa *));
+		name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header *));
+		name_lsa->header->orig_router=ccn_charbuf_create();
+		name_lsa->name_prefix=ccn_charbuf_create();
+
 		struct ccn_charbuf *name;
 		name=ccn_charbuf_create();
 		ccn_charbuf_append_string(name,np->name);
-		name_lsa=build_name_lsa(name);
+		build_name_lsa(name_lsa,name);
 		install_name_lsa(name_lsa);
 
 		ccn_charbuf_destroy(&name_lsa->header->orig_router);
