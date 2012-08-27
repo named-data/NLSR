@@ -55,6 +55,7 @@ incoming_interest(struct ccn_closure *selfp,
 	    	struct ccn_charbuf*c;
 		c=ccn_charbuf_create();
 		ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
+		ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
 		//ccn_name_chop(c,NULL,-1);
 		printf("%s\n",ccn_charbuf_as_string(c));
 		ccn_charbuf_destroy(&c);
@@ -374,7 +375,8 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 
 	struct ccn_charbuf*c;
 	c=ccn_charbuf_create();
-	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
+	//ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name]-info->pi->offset[CCN_PI_B_Name],0);
+	ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
 	printf("%s\n",ccn_charbuf_as_string(c));
 	ccn_charbuf_destroy(&c);
 
@@ -512,8 +514,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
     	struct ccn_charbuf *name=ccn_charbuf_create();
     	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 
-	ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
-	
+	//ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
+	ccn_uri_append(name,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
 	
 	sp.template_ccnb=ccn_charbuf_create();
 	ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
@@ -521,12 +523,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
 	ccn_charbuf_append_closer(sp.template_ccnb);	
 
-	struct ccn_charbuf *c=ccn_charbuf_create();
-	ccn_charbuf_reset(c);
-	ccn_charbuf_putf(c, "%ld", nlsr->lsdb_synch_interval);
-	//ccn_charbuf_append_string(data,ccn_charbuf_as_string(c));	   
-
-	res= ccn_sign_content(nlsr->ccn, data, name, &sp, c->buf, c->length); 
+	
+	res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info", strlen("info")); 
 	if(res >= 0)
 		printf("Signing Content is successful \n");
 
@@ -535,7 +533,6 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		printf("Sending Info Content is successful \n");
 
 	ccn_charbuf_destroy(&data);
-	ccn_charbuf_destroy(&c);
 	ccn_charbuf_destroy(&name);
 	ccn_charbuf_destroy(&sp.template_ccnb);
 
