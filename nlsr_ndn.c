@@ -22,6 +22,24 @@
 #include "nlsr_ndn.h"
 #include "utility.h"
 #include "nlsr_adl.h"
+#include "nlsr_lsdb.h"
+
+int
+appendLifetime(struct ccn_charbuf *cb, int lifetime) 
+{
+	unsigned char buf[sizeof(int32_t)];
+	int32_t dreck = lifetime << 12;
+	int pos = sizeof(int32_t);
+	int res = 0;
+	while (dreck > 0 && pos > 0) 
+	{
+		pos--;
+		buf[pos] = dreck & 255;
+		dreck = dreck >> 8;
+	}
+	res |= ccnb_append_tagged_blob(cb, CCN_DTAG_InterestLifetime, buf+pos, sizeof(buf)-pos);
+	return res;
+}
 
 enum ccn_upcall_res 
 incoming_interest(struct ccn_closure *selfp,
@@ -147,6 +165,10 @@ process_incoming_content(struct ccn_closure* selfp, struct ccn_upcall_info* info
 	{
 		process_incoming_content_lsdb(selfp,info);
 	}
+	if(!strcmp((char *)comp_ptr1,"info"))
+	{
+		process_incoming_content_info(selfp,info);
+	}
 
 }
 
@@ -183,6 +205,21 @@ process_incoming_content_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info*
 
 }
 
+
+
+void 
+process_incoming_content_info(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+{
+	printf("process_incoming_content_info called \n");
+
+	const unsigned char *content_data;
+	size_t length;
+	ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E_Content]-info->pco->offset[CCN_PCO_B_Content], info->pco, &content_data, &length);
+
+	printf("Info Value: %s \n",(char *)content_data);
+	
+
+}
 
 void 
 process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall_info* info)
@@ -221,6 +258,10 @@ process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall
 	if(ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,nlsr_position+1,"lsdb") == 0)
 	{
 		process_incoming_timed_out_interest_lsdb(selfp,info);
+	}
+	else if(ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,nlsr_position+1,"info") == 0)
+	{
+		process_incoming_timed_out_interest_info(selfp,info);
 	}
 }
 
@@ -272,6 +313,60 @@ process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_u
 }
 
 void 
+process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+{
+
+	printf("process_incoming_timed_out_interest_info called \n");
+
+	int res,i;
+	int nlsr_position=0;
+	int name_comps=(int)info->interest_comps->n;
+
+	for(i=0;i<name_comps;i++)
+	{
+		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
+		if( res == 0)
+		{
+			nlsr_position=i;
+			break;
+		}	
+	}
+	
+	struct ccn_charbuf *nbr;
+	nbr=ccn_charbuf_create();
+
+	
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	for(i=0;i<nlsr_position;i++)
+	{
+		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);
+		//printf("%s \n",comp_ptr1);
+		ccn_charbuf_append_string(nbr,"/");
+		ccn_charbuf_append_string(nbr,(const char *)comp_ptr1);	
+	}
+
+	ccn_charbuf_append_string(nbr,"\0");	
+	printf("Info Interest Timed out for Neighbor: %s\n",ccn_charbuf_as_string(nbr));
+
+	update_adjacent_timed_out_to_adl(nbr,1);
+	int timed_out=get_timed_out_number(nbr);
+	if(timed_out<nlsr->interest_retry && timed_out>0) // use configured variables 
+	{
+		printf("Neighbor: %s Info Interest Timed Out: %d times\n",ccn_charbuf_as_string(nbr),timed_out);
+		send_info_interest_to_neighbor(nbr);
+	}
+	else
+	{
+		printf("Neighbor: %s Info Interest Timed Out: %d times\n",ccn_charbuf_as_string(nbr),timed_out);
+		nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 1, &install_adj_lsa, NULL, 0);
+	}
+
+	ccn_charbuf_destroy(&nbr);
+}
+
+
+void 
 process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *info)
 {
 	printf("process_incoming_interest called \n");
@@ -307,8 +402,10 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 	{
 		process_incoming_interest_lsdb(selfp,info);
 	}
-
-
+	if(!strcmp((char *)comp_ptr1,"info"))
+	{
+		process_incoming_interest_info(selfp,info);
+	}
 }
 
 
@@ -395,9 +492,52 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 			printf("Sending NACK Content is successful \n");
 
             	ccn_charbuf_destroy(&data);
+		ccn_charbuf_destroy(&name);
 		ccn_charbuf_destroy(&sp.template_ccnb);		
 
 	}
+
+}
+
+
+void 
+process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info *info)
+{
+	printf("process_incoming_interest_info called \n");
+	int res;
+
+	printf("Sending Info Content back.....\n");
+
+	struct ccn_charbuf *data=ccn_charbuf_create();
+    	struct ccn_charbuf *name=ccn_charbuf_create();
+    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
+
+	ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
+	
+	
+	sp.template_ccnb=ccn_charbuf_create();
+	ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
+	ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
+	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+	ccn_charbuf_append_closer(sp.template_ccnb);	
+
+	struct ccn_charbuf *c=ccn_charbuf_create();
+	ccn_charbuf_reset(c);
+	ccn_charbuf_putf(c, "%ld", nlsr->lsdb_synch_interval);
+	ccn_charbuf_append_string(data,ccn_charbuf_as_string(c));	   
+
+	res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info", strlen("info")); 
+	if(res >= 0)
+		printf("Signing Content is successful \n");
+
+    	res=ccn_put(nlsr->ccn,data->buf,data->length);		
+	if(res >= 0)
+		printf("Sending NACK Content is successful \n");
+
+	ccn_charbuf_destroy(&data);
+	ccn_charbuf_destroy(&c);
+	ccn_charbuf_destroy(&name);
+	ccn_charbuf_destroy(&sp.template_ccnb);
 
 }
 
@@ -487,3 +627,158 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 
 }
 
+
+int
+send_info_interest(struct ccn_schedule *sched, void *clienth,
+        struct ccn_scheduled_event *ev, int flags)
+{
+
+	struct ccn_charbuf *name;
+	long int rnum;
+	char rnumstr[20];
+	char info_str[5];
+	char nlsr_str[5];
+
+	int res,i;
+	int adl_element;
+	int scope = 2;  //no further than the next host
+
+	rnum=random();
+	memset(&rnumstr,0,20);
+	sprintf(rnumstr,"%ld",rnum);
+	memset(&nlsr_str,0,5);
+	sprintf(nlsr_str,"nlsr");
+	memset(&info_str,0,5);
+	sprintf(info_str,"info");
+	
+
+	struct ndn_neighbor *nbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->adl, e);
+	adl_element=hashtb_n(nlsr->adl);
+	//int mynumber=15;
+
+	for(i=0;i<adl_element;i++)
+	{
+		nbr=e->data;
+		printf("Sending interest for name prefix:%s/%s/%s\n",ccn_charbuf_as_string(nbr->neighbor),nlsr_str,info_str);	
+		name=ccn_charbuf_create();
+		res=ccn_name_from_uri(name,ccn_charbuf_as_string(nbr->neighbor));
+		ccn_name_append_str(name,nlsr_str);
+		ccn_name_append_str(name,info_str);
+		//ccn_name_append_str(name,rnumstr);
+
+		/* adding Exclusion filter */
+		
+		struct ccn_charbuf *templ;
+		templ = ccn_charbuf_create();
+
+//		struct ccn_charbuf *c;
+//		c = ccn_charbuf_create();
+
+
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
+		ccn_charbuf_append_closer(templ); /* </Name> */
+//		ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
+//		ccnb_tagged_putf(templ, CCN_DTAG_Any, "");
+//		ccn_charbuf_reset(c);
+//		//ccn_charbuf_putf(c, "%u", (unsigned)mynumber);
+//		//ccn_charbuf_putf(c, "%s", nbr->last_lsdb_version);
+//		ccn_charbuf_putf(c, "%u", (unsigned)nbr->last_lsdb_version);
+//		ccnb_append_tagged_blob(templ, CCN_DTAG_Component, c->buf, c->length);
+//		ccn_charbuf_append_closer(templ); /* </Exclude> */
+		ccnb_tagged_putf(templ, CCN_DTAG_Scope, "%d", scope);
+		appendLifetime(templ,nlsr->interest_resend_time);
+		ccn_charbuf_append_closer(templ); /* </Interest> */
+
+
+		/* Adding Exclusion filter done */
+				
+		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
+			
+		if ( res >= 0 )
+			printf("Interest sending Successfull .... \n");	
+//		ccn_charbuf_destroy(&c);
+		ccn_charbuf_destroy(&templ);
+		ccn_charbuf_destroy(&name);
+	
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+	//nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 20000000, &send_info_interest, NULL, 0);
+
+	return 0;
+
+}
+
+
+void 
+send_info_interest_to_neighbor(struct ccn_charbuf *nbr)
+{
+
+	struct ccn_charbuf *name;
+	long int rnum;
+	char rnumstr[20];
+	char info_str[5];
+	char nlsr_str[5];
+
+	int res;
+	int scope = 2;  //no further than the next host
+
+	rnum=random();
+	memset(&rnumstr,0,20);
+	sprintf(rnumstr,"%ld",rnum);
+	memset(&nlsr_str,0,5);
+	sprintf(nlsr_str,"nlsr");
+	memset(&info_str,0,5);
+	sprintf(info_str,"info");
+	
+	printf("Sending interest for name prefix:%s/%s/%s\n",ccn_charbuf_as_string(nbr),nlsr_str,info_str);	
+	name=ccn_charbuf_create();
+	res=ccn_name_from_uri(name,ccn_charbuf_as_string(nbr));
+	ccn_name_append_str(name,nlsr_str);
+	ccn_name_append_str(name,info_str);
+	//ccn_name_append_str(name,rnumstr);
+
+	/* adding Exclusion filter */
+		
+	struct ccn_charbuf *templ;
+	templ = ccn_charbuf_create();
+
+//	struct ccn_charbuf *c;
+//	c = ccn_charbuf_create();
+
+
+	ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
+	ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
+	ccn_charbuf_append_closer(templ); /* </Name> */
+//	ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
+//	ccnb_tagged_putf(templ, CCN_DTAG_Any, "");
+//	ccn_charbuf_reset(c);
+//	//ccn_charbuf_putf(c, "%u", (unsigned)mynumber);
+//	//ccn_charbuf_putf(c, "%s", nbr->last_lsdb_version);
+//	ccn_charbuf_putf(c, "%u", (unsigned)nbr->last_lsdb_version);
+//	ccnb_append_tagged_blob(templ, CCN_DTAG_Component, c->buf, c->length);
+//	ccn_charbuf_append_closer(templ); /* </Exclude> */
+	ccnb_tagged_putf(templ, CCN_DTAG_Scope, "%d", scope);
+	appendLifetime(templ,15);
+	ccn_charbuf_append_closer(templ); /* </Interest> */
+
+
+	/* Adding Exclusion filter done */
+				
+	res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
+			
+	if ( res >= 0 )
+		printf("Interest sending Successfull .... \n");	
+//	ccn_charbuf_destroy(&c);
+	ccn_charbuf_destroy(&templ);
+	ccn_charbuf_destroy(&name);
+
+}

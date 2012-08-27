@@ -29,16 +29,17 @@ make_name_lsa_key(struct ccn_charbuf *key, struct ccn_charbuf *orig_router, unsi
 
 	struct ccn_charbuf *c=ccn_charbuf_create();
 	ccn_charbuf_reset(c);
-	ccn_charbuf_putf(c, "%d", (unsigned)ls_type);
+	ccn_charbuf_putf(c, "%d", ls_type);
 	ccn_charbuf_append_string(key,ccn_charbuf_as_string(c));
 	
 	ccn_charbuf_reset(c);
-	ccn_charbuf_putf(c, "%d", (unsigned)nlsa_id);
+	ccn_charbuf_putf(c, "%ld", nlsa_id);
 	ccn_charbuf_append_string(key,ccn_charbuf_as_string(c));
 	
 	ccn_charbuf_reset(c);
-	ccn_charbuf_putf(c, "%ld", (unsigned)orig_time);
+	ccn_charbuf_putf(c, "%ld", orig_time);
 	ccn_charbuf_append_string(key,ccn_charbuf_as_string(c));
+	//ccn_charbuf_append_string(key,orig_time);	
 
 	ccn_charbuf_destroy(&c);
 
@@ -104,7 +105,9 @@ build_name_lsa(struct ccn_charbuf *name_prefix)
 	name_lsa->header->orig_router=ccn_charbuf_create();
 	
 	name_lsa->header->ls_type=LS_TYPE_NAME;
-	name_lsa->header->orig_time=get_current_time_sec();
+	name_lsa->header->orig_time=get_current_time_microsec();
+	//name_lsa->header->orig_time=(char *)malloc(strlen(get_current_time_microsec())+1);
+	//memcpy(name_lsa->header->orig_time,get_current_time_microsec(),strlen(get_current_time_microsec())+1);
 	name_lsa->header->ls_id=++nlsr->nlsa_id;
 	ccn_charbuf_append_string(name_lsa->header->orig_router,nlsr->router_name);	
 	name_lsa->header->isValid=1;
@@ -166,7 +169,7 @@ print_name_lsa(struct nlsa *name_lsa)
 	printf("	LS Type			 :	%d\n",name_lsa->header->ls_type);
 	printf("	LS Id			 :	%ld\n",name_lsa->header->ls_id);
 	printf("	Origination Time	 :	%ld\n",name_lsa->header->orig_time);
-	printf("	Is Valid 		 :	%u\n",name_lsa->header->isValid);
+	printf("	Is Valid 		 :	%d\n",name_lsa->header->isValid);
 
 	printf("	LSA Data			\n");
 	printf("		Name Prefix:	 	:	%s\n",ccn_charbuf_as_string(name_lsa->name_prefix));
@@ -198,4 +201,16 @@ print_name_lsdb(void)
 
 	hashtb_end(e);
 
+}
+
+
+int 
+install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+{
+	printf("install_adj_lsa called \n");
+
+	ev = ccn_schedule_event(nlsr->sched, 1000000, &install_adj_lsa, NULL, 0);
+
+	return 0;
+	
 }

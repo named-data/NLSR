@@ -51,4 +51,7 @@ void make_name_lsa_key(struct ccn_charbuf *key, struct ccn_charbuf *orig_router,
 void print_name_lsdb(void);
 void print_name_lsa(struct nlsa *name_lsa);
 
+
+int install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
+
 #endif

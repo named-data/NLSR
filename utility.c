@@ -70,3 +70,14 @@ get_current_time_sec(void)
 	gettimeofday(&now,NULL);
 	return now.tv_sec;
 }
+
+
+long int 
+get_current_time_microsec(void)
+{
+	struct timeval now; 
+	gettimeofday(&now, NULL);
+	long int microSec=1000000*now.tv_sec+now.tv_usec;
+	return microSec;
+
+}

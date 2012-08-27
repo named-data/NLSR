@@ -5,5 +5,6 @@ char * getLocalTimeStamp(void);
 char * getGmTimeStamp(void);
 char * nth_named_component(const char *name_prefix, int n);
 long int get_current_time_sec(void);
+long int get_current_time_microsec(void);
 
 #endif

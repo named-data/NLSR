@@ -175,6 +175,82 @@ process_command_ccnneighbor(char *command)
 }
 
 void 
+process_command_lsdb_synch_interval(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( lsdb-synch-interval secs )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *secs;
+	long int seconds;
+	
+	secs=strtok_r(command,sep,&rem);
+	if(secs==NULL)
+	{
+		printf(" Wrong Command Format ( lsdb-synch-interval secs)\n");
+		return;
+	}
+
+	seconds=atoi(secs);
+	nlsr->lsdb_synch_interval=seconds;
+
+}
+
+
+void 
+process_command_interest_retry(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( interest-retry number )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *secs;
+	long int seconds;
+	
+	secs=strtok_r(command,sep,&rem);
+	if(secs==NULL)
+	{
+		printf(" Wrong Command Format ( interest-retry number)\n");
+		return;
+	}
+
+	seconds=atoi(secs);
+	nlsr->interest_retry=seconds;
+
+}
+
+void 
+process_command_interest_resend_time(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( interest-resend-time secs )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *secs;
+	long int seconds;
+	
+	secs=strtok_r(command,sep,&rem);
+	if(secs==NULL)
+	{
+		printf(" Wrong Command Format ( interest-resend-time secs)\n");
+		return;
+	}
+
+	seconds=atoi(secs);
+	nlsr->interest_resend_time=seconds;
+
+}
+
+void 
 process_conf_command(char *command)
 {
 	const char *separators=" \t\n";
@@ -197,6 +273,18 @@ process_conf_command(char *command)
 	else if(!strcmp(cmd_type,"ccnname") )
 	{
 		process_command_ccnname(remainder);
+	}
+	else if(!strcmp(cmd_type,"lsdb-synch-interval") )
+	{
+		process_command_lsdb_synch_interval(remainder);
+	}
+	else if(!strcmp(cmd_type,"interest-retry") )
+	{
+		process_command_interest_retry(remainder);
+	}
+	else if(!strcmp(cmd_type,"interest-resend-time") )
+	{
+		process_command_interest_resend_time(remainder);
 	}
 	else
 	{
@@ -368,6 +456,13 @@ init_nlsr(void)
 
 	nlsr->is_synch_init=1;
 	nlsr->nlsa_id=0;
+	nlsr->adj_build_flag=0;
+	nlsr->adj_build_count=0;	
+
+	nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
+	nlsr->interest_retry = INTEREST_RETRY;
+	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
+	
 
 }
 
@@ -424,8 +519,9 @@ main(int argc, char *argv[])
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
 
-	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 1000000, &send_lsdb_interest, NULL, 0);
-	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 500000, &initial_build_name_lsa, NULL, 0);
+	nlsr->event_build_name_lsa = ccn_schedule_event(nlsr->sched, 500000, &initial_build_name_lsa, NULL, 0);
+	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1000000, &send_info_interest, NULL, 0);
+	
 
 	while(1)
 	{
