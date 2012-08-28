@@ -60,6 +60,18 @@ static struct ccn_gettime ndn_rtr_ticker = {
     NULL
 };
 
+void
+my_lock(void)
+{
+	nlsr->semaphor=1;
+}
+
+void 
+my_unlock(void)
+{
+	nlsr->semaphor=0;
+}
+
 void 
 process_command_router_name(char *command)
 {
@@ -160,7 +172,7 @@ process_command_ccnneighbor(char *command)
 	nbr->neighbor=ccn_charbuf_create();
 	ccn_charbuf_append_string(nbr->neighbor,rtr_name);
 	nbr->face=face_id;
-	nbr->status=0;	
+	nbr->status=NBR_DOWN;	
 
 	
 
@@ -462,6 +474,8 @@ init_nlsr(void)
 	nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
 	nlsr->interest_retry = INTEREST_RETRY;
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
+
+	nlsr->semaphor=0;
 	
 
 }
@@ -519,14 +533,17 @@ main(int argc, char *argv[])
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
 
-	nlsr->event_build_name_lsa = ccn_schedule_event(nlsr->sched, 500, &initial_build_name_lsa, NULL, 0);
+	nlsr->event_build_name_lsa = ccn_schedule_event(nlsr->sched, 100, &initial_build_name_lsa, NULL, 0);
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1000000, &send_info_interest, NULL, 0);
 	
 
 	while(1)
 	{
-		ccn_schedule_run(nlsr->sched);
-        	res = ccn_run(nlsr->ccn, 500);
+		if(nlsr->semaphor !=1)
+		{
+			ccn_schedule_run(nlsr->sched);
+        		res = ccn_run(nlsr->ccn, 500);
+		}
 
 	}
 	

@@ -45,6 +45,7 @@ enum ccn_upcall_res
 incoming_interest(struct ccn_closure *selfp,
         enum ccn_upcall_kind kind, struct ccn_upcall_info *info)
 {
+	my_lock();
     
     switch (kind) {
         case CCN_UPCALL_FINAL:
@@ -87,6 +88,7 @@ incoming_interest(struct ccn_closure *selfp,
             break;
     }
 
+	my_unlock();
     return CCN_UPCALL_RESULT_OK;
 }
 
@@ -95,6 +97,7 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
         enum ccn_upcall_kind kind, struct ccn_upcall_info* info)
 {
 
+	my_lock();
 
     switch(kind) {
         case CCN_UPCALL_FINAL:
@@ -125,6 +128,7 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
             return CCN_UPCALL_RESULT_ERR;
     }
 
+	my_unlock();
     return CCN_UPCALL_RESULT_OK;
 }
 
@@ -218,6 +222,47 @@ process_incoming_content_info(struct ccn_closure* selfp, struct ccn_upcall_info*
 	ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E_Content]-info->pco->offset[CCN_PCO_B_Content], info->pco, &content_data, &length);
 
 	printf("Info Value: %s \n",(char *)content_data);
+
+
+	int res,i;
+	int nlsr_position=0;
+	int name_comps=(int)info->interest_comps->n;
+
+	for(i=0;i<name_comps;i++)
+	{
+		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
+		if( res == 0)
+		{
+			nlsr_position=i;
+			break;
+		}	
+	}
+	
+	struct ccn_charbuf *nbr;
+	nbr=ccn_charbuf_create();
+
+	
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	for(i=0;i<nlsr_position;i++)
+	{
+		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);
+		//printf("%s \n",comp_ptr1);
+		ccn_charbuf_append_string(nbr,"/");
+		ccn_charbuf_append_string(nbr,(const char *)comp_ptr1);	
+	}
+
+	ccn_charbuf_append_string(nbr,"\0");	
+	printf("Info Content received for Neighbor: %s\n",ccn_charbuf_as_string(nbr));
+	
+	update_adjacent_timed_out_zero_to_adl(nbr);
+	update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
+
+	print_adjacent_from_adl();
+
+	nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 1, &install_adj_lsa, NULL, 0);
+
+	ccn_charbuf_destroy(&nbr);	
 	
 
 }
@@ -308,7 +353,7 @@ process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_u
 	ccn_charbuf_append_string(nbr,"\0");	
 	printf("Interest Timed out for Neighbor: %s\n",ccn_charbuf_as_string(nbr));
 
-	update_adjacent_status_to_adl(nbr,1);
+	//update_adjacent_status_to_adl(nbr,1);
 
 	ccn_charbuf_destroy(&nbr);	
 }
@@ -351,6 +396,9 @@ process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_u
 	printf("Info Interest Timed out for Neighbor: %s\n",ccn_charbuf_as_string(nbr));
 
 	update_adjacent_timed_out_to_adl(nbr,1);
+
+	print_adjacent_from_adl();	
+
 	int timed_out=get_timed_out_number(nbr);
 	if(timed_out<nlsr->interest_retry && timed_out>0) // use configured variables 
 	{
@@ -540,7 +588,7 @@ int
 send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
         struct ccn_scheduled_event *ev, int flags)
 {
-
+	my_lock();
 	struct ccn_charbuf *name;
 	long int rnum;
 	char rnumstr[20];
@@ -618,6 +666,7 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth,
 
 	nlsr->event_send_lsdb_interest = ccn_schedule_event(nlsr->sched, 60000000, &send_lsdb_interest, NULL, 0);
 
+	my_unlock();
 	return 0;
 
 }
@@ -628,6 +677,7 @@ send_info_interest(struct ccn_schedule *sched, void *clienth,
         struct ccn_scheduled_event *ev, int flags)
 {
 
+	my_lock();
 	struct ccn_charbuf *name;
 	long int rnum;
 	char rnumstr[20];
@@ -708,6 +758,7 @@ send_info_interest(struct ccn_schedule *sched, void *clienth,
 
 	//nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 20000000, &send_info_interest, NULL, 0);
 
+	my_unlock();
 	return 0;
 
 }
@@ -717,6 +768,7 @@ void
 send_info_interest_to_neighbor(struct ccn_charbuf *nbr)
 {
 
+	my_lock();
 	struct ccn_charbuf *name;
 	long int rnum;
 	char rnumstr[20];
@@ -775,5 +827,7 @@ send_info_interest_to_neighbor(struct ccn_charbuf *nbr)
 //	ccn_charbuf_destroy(&c);
 	ccn_charbuf_destroy(&templ);
 	ccn_charbuf_destroy(&name);
+
+	my_unlock();
 
 }

@@ -1,6 +1,9 @@
 #ifndef _NLSR_ADL_H_
 #define _NLSR_ADL_H_
 
+#define NBR_ACTIVE 1
+#define NBR_DOWN 0
+
 void add_adjacent_to_adl(struct ndn_neighbor *nbr);
 void print_adjacent_from_adl(void);
 void update_adjacent_status_to_adl(struct ccn_charbuf *nbr, int status);

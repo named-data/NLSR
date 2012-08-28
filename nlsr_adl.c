@@ -103,7 +103,11 @@ update_adjacent_status_to_adl(struct ccn_charbuf *nbr, int status)
 	if (res == HT_OLD_ENTRY)
 	{
 		nnbr=e->data;
-		nnbr->status=status;
+		if ( nnbr->status!=status )
+		{
+			nnbr->status=status;
+			nlsr->adj_build_flag++;
+		}
 	}
 	else if(res == HT_NEW_ENTRY)
 	{

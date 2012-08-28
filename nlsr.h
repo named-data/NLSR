@@ -58,6 +58,8 @@ struct nlsr
 	long int lsdb_synch_interval;
 	int interest_retry;
 	long int interest_resend_time;
+
+	int semaphor;
 	
 };
 
@@ -78,7 +80,8 @@ int readConfigFile(const char *filename);
 void add_name_prefix_to_npl(struct name_prefix *name_prefix);
 void print_name_prefix_from_npl(void);
 
-
+void my_lock(void);
+void my_unlock(void);
 
 
 

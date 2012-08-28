@@ -123,6 +123,7 @@ build_name_lsa(struct nlsa *name_lsa, struct ccn_charbuf *name_prefix)
 int 
 initial_build_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
+	my_lock();	
 	printf("initial_build_name_lsa called \n");	
 	int i, npl_element;
 	struct name_prefix *np;
@@ -161,9 +162,9 @@ initial_build_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_sch
 	hashtb_end(e);
 
 	print_name_lsdb();
-
+	
+	my_unlock();
 	//nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
-
 	return 0;
 }
 
@@ -215,10 +216,13 @@ print_name_lsdb(void)
 int 
 install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
+	my_lock();
+		
 	printf("install_adj_lsa called \n");
 
 	ev = ccn_schedule_event(nlsr->sched, 1000000, &install_adj_lsa, NULL, 0);
 
+	my_unlock();
 	return 0;
 	
 }
