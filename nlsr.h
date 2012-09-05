@@ -7,6 +7,9 @@
 #define INTEREST_RETRY 3
 #define INTEREST_RESEND_TIME 15
 
+#define NBR_DOWN 0
+#define NBR_ACTIVE 1
+
 struct name_prefix
 {
 	char *name;
@@ -15,17 +18,20 @@ struct name_prefix
 
 struct ndn_neighbor
 {
-	struct ccn_charbuf *neighbor;
+	struct name_prefix *neighbor;
 	int face;
 	int status;
-	long int last_lsdb_version;
+	char * last_lsdb_version;
 	int info_interest_timed_out;
-	struct hashtb *lsa_update_queue;
+	long int lsdb_synch_interval;
+	long int last_lsdb_requested;
+	int is_lsdb_send_interest_scheduled;
+	int metric;
 };
 
 struct linkStateDatabase
 {
-	long int version;
+	char  * version;
 	struct hashtb *adj_lsdb;
 	struct hashtb *name_lsdb;
 };
@@ -46,7 +52,7 @@ struct nlsr
 	struct hashtb *npl;
 
 	struct ccn *ccn;
-	char *router_name;
+	struct name_prefix *router_name;
 
 	struct linkStateDatabase *lsdb;
 
@@ -54,6 +60,8 @@ struct nlsr
 	long int nlsa_id;
 	int adj_build_flag;
 	long int adj_build_count;
+	int is_build_adj_lsa_sheduled;
+	int is_send_lsdb_interest_scheduled;
 
 	long int lsdb_synch_interval;
 	int interest_retry;
@@ -77,7 +85,7 @@ void process_command_interest_resend_time(char *command);
 void process_conf_command(char *command);
 int readConfigFile(const char *filename);
 
-void add_name_prefix_to_npl(struct name_prefix *name_prefix);
+void add_name_prefix_to_npl(struct name_prefix *np);
 void print_name_prefix_from_npl(void);
 
 void my_lock(void);

@@ -10,6 +10,13 @@
 #include <config.h>
 #endif
 
+#include <ccn/ccn.h>
+#include <ccn/uri.h>
+#include <ccn/keystore.h>
+#include <ccn/signing.h>
+#include <ccn/schedule.h>
+#include <ccn/hashtb.h>
+
 #include "utility.h"
 
 
@@ -81,3 +88,18 @@ get_current_time_microsec(void)
 	return microSec;
 
 }
+
+char *
+get_current_timestamp_micro(void)
+{
+	struct timeval now; 
+	gettimeofday(&now, NULL);
+
+	char *microSec=(char *)malloc(20);
+	sprintf(microSec,"%ld%06ld",now.tv_sec,(long int)now.tv_usec);
+	microSec[strlen(microSec)]='\0';
+
+	return microSec;
+
+}
+

@@ -19,9 +19,9 @@
 
 #include "nlsr.h"
 #include "nlsr_ndn.h"
-#include "utility.h"
-#include "nlsr_adl.h"
 #include "nlsr_lsdb.h"
+#include "nlsr_adl.h"
+#include "utility.h"
 
 
 struct option longopts[] =
@@ -90,9 +90,11 @@ process_command_router_name(char *command)
 		printf(" Wrong Command Format ( router-name /router/name )\n");
 		return;
 	}
-	nlsr->router_name=(char *)malloc(strlen(rtr_name)+1);
-	memcpy(nlsr->router_name,rtr_name,strlen(rtr_name)+1);	
-	printf("Router Name: %s\n",nlsr->router_name);
+	
+	nlsr->router_name->name=(char *)malloc(strlen(rtr_name)+1);
+	memcpy(nlsr->router_name->name,rtr_name,strlen(rtr_name)+1);
+	nlsr->router_name->length=strlen(rtr_name)+1;
+
 }
 
 void 
@@ -106,28 +108,25 @@ process_command_ccnname(char *command)
 	}
 	char *rem;
 	const char *sep=" \t\n";
-	char *name_prefix;
-	name_prefix=strtok_r(command,sep,&rem);
-	if(name_prefix==NULL)
+	char *name;
+	name=strtok_r(command,sep,&rem);
+	if(name==NULL)
 	{
 		printf(" Wrong Command Format ( ccnname /name/prefix/ )\n");
 		return;
 	}
 
-	printf("Name Prefix: %s \n",name_prefix);
+	printf("Name Prefix: %s \n",name);
 
-	struct name_prefix *np=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
-	np->name=(char *)malloc(strlen(name_prefix)+1);
-	memcpy(np->name,name_prefix,strlen(name_prefix)+1);
-	np->length=strlen(name_prefix)+1;
-
+	struct name_prefix *np=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	np->name=(char *)malloc(strlen(name)+1);
+	memcpy(np->name,name,strlen(name)+1);
+	np->length=strlen(name)+1;
+	
 	add_name_prefix_to_npl(np);
-	/* Debugging Purpose */
-	print_name_prefix_from_npl();
 
-	free(np->name);
 	free(np);
-
+	
 		
 }
 
@@ -168,22 +167,14 @@ process_command_ccnneighbor(char *command)
 		return;
 	}
 
-	struct ndn_neighbor *nbr=(struct ndn_neighbor *)malloc(sizeof(struct ndn_neighbor*));
-	nbr->neighbor=ccn_charbuf_create();
-	ccn_charbuf_append_string(nbr->neighbor,rtr_name);
-	nbr->face=face_id;
-	nbr->status=NBR_DOWN;	
+	struct name_prefix *np=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	np->name=(char *)malloc(strlen(rtr_name)+1);
+	memcpy(np->name,rtr_name,strlen(rtr_name)+1);
+	np->length=strlen(rtr_name)+1;
 
-	
+	add_adjacent_to_adl(np,face_id);
 
-	add_adjacent_to_adl(nbr);
-	print_adjacent_from_adl();
-
-	//free(nbr->neighbor->name);
-	ccn_charbuf_destroy(&nbr->neighbor);
-	free(nbr->neighbor);
-	free(nbr);
-
+	free(np);
 }
 
 void 
@@ -340,22 +331,22 @@ add_name_prefix_to_npl(struct name_prefix *np)
 	printf("\nadd_name_prefix called\n");
 	printf("Name Prefix: %s and length: %d \n",np->name,np->length);
 
-	struct name_prefix *hnp=(struct name_prefix *)malloc(sizeof(struct name_prefix *));
+	struct name_prefix *hnp=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
     	int res;
 
    	hashtb_start(nlsr->npl, e);
-    	res = hashtb_seek(e, np->name, strlen(np->name), 0);
+    	res = hashtb_seek(e, np->name, np->length, 0);
 
 	if(res == HT_NEW_ENTRY)
 	{   
 
 		hnp = e->data;
-		hnp->name=(char *)malloc(np->length);
-    		memcpy(hnp->name,np->name,np->length);
 		hnp->length=np->length;
+		hnp->name=(char *)malloc(np->length);
+		memcpy(hnp->name,np->name,np->length);
 	}
     	
 	hashtb_end(e);
@@ -395,52 +386,81 @@ void
 nlsr_destroy( void )
 {
 
+	printf("Freeing Allocated Memory....\n");	
 	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
 
 	int i, element;
-	struct ndn_neighbor *nbr;
-
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee;
     	
-    	hashtb_start(nlsr->adl, e);
+	/*destroying NAME LSDB */
+	struct nlsr *name_lsa;
+	hashtb_start(nlsr->lsdb->name_lsdb, e);
+	element=hashtb_n(nlsr->lsdb->name_lsdb);
+
+	for(i=0;i<element;i++)
+	{
+		name_lsa=e->data;
+		free(name_lsa);	
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);    	
+	hashtb_destroy(&nlsr->lsdb->name_lsdb);
+
+
+	/*destroying ADJ LSDB */
+	struct alsr *adj_lsa;
+	hashtb_start(nlsr->lsdb->adj_lsdb, e);
+	element=hashtb_n(nlsr->lsdb->adj_lsdb);
+
+	for(i=0;i<element;i++)
+	{
+		adj_lsa=e->data;
+		free(adj_lsa);	
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	
+
+	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
+
+	/* Destroying NPL */
+	struct ccn_charbuf *np;
+	hashtb_start(nlsr->npl, e);
+	element=hashtb_n(nlsr->npl);
+
+	for(i=0;i<element;i++)
+	{
+		np=e->data;	
+		free(np);
+		hashtb_next(e);		
+	}
+	hashtb_end(e);
+	hashtb_destroy(&nlsr->npl);
+
+	/* Destroying ADL */
+	struct ndn_neighbor *nbr;
+	hashtb_start(nlsr->adl, e);
 	element=hashtb_n(nlsr->adl);
 
 	for(i=0;i<element;i++)
 	{
 		nbr=e->data;
-		hashtb_destroy(&nbr->lsa_update_queue);	
-		ccn_charbuf_destroy(&nbr->neighbor);
+		free(nbr);	
 		hashtb_next(e);		
 	}
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->adl);
 
-	/* Destroying every element in Name LSDB Hash Table */
-	hashtb_start(nlsr->adl, e);
-	element=hashtb_n(nlsr->lsdb->name_lsdb);
 
-	struct nlsa *name_lsa;
-
-	for(i=0;i<element;i++)
-	{
-		name_lsa=e->data;	
-		ccn_charbuf_destroy(&name_lsa->name_prefix);
-		ccn_charbuf_destroy(&name_lsa->header->orig_router);
-		free(name_lsa->header);
-		free(name_lsa);
-		hashtb_next(e);		
-	}
-	hashtb_end(e);
-
-	hashtb_destroy(&nlsr->lsdb->name_lsdb);
-
-	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
-
-	hashtb_destroy(&nlsr->npl);
+	
 	ccn_schedule_destroy(&nlsr->sched);
 	ccn_destroy(&nlsr->ccn);
 	free(nlsr);
+
+	printf("Finished freeing allocated memory\n");
 
 }
 
@@ -456,20 +476,29 @@ init_nlsr(void)
 	nlsr=(struct nlsr *)malloc(sizeof(struct nlsr));
 
 	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), &param_adl);
-	nlsr->npl = hashtb_create(sizeof(struct name_prefix), &param_npl);
+	nlsr->npl = hashtb_create(sizeof(struct name_prefix ), &param_npl);
+	
 	nlsr->in_interest.p = &incoming_interest;
 	nlsr->in_content.p = &incoming_content;
 
-	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase *));
-	nlsr->lsdb->version=0;
+	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase ));
+	char *time_stamp=get_current_timestamp_micro();
+	nlsr->lsdb->version=(char *)malloc(strlen(time_stamp)+1);
+	memcpy(nlsr->lsdb->version,time_stamp,strlen(time_stamp)+1);
+	memset(nlsr->lsdb->version,'0',strlen(time_stamp));
+	
 
 	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), &param_adj_lsdb);
 	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), &param_name_lsdb);
 
+	nlsr->router_name=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+
 	nlsr->is_synch_init=1;
 	nlsr->nlsa_id=0;
 	nlsr->adj_build_flag=0;
-	nlsr->adj_build_count=0;	
+	nlsr->adj_build_count=0;
+	nlsr->is_build_adj_lsa_sheduled=0;
+	nlsr->is_send_lsdb_interest_scheduled=0;	
 
 	nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
 	nlsr->interest_retry = INTEREST_RETRY;
@@ -486,7 +515,7 @@ main(int argc, char *argv[])
     	int res;
     	char *config_file;
 	//int daemon_mode;
-	struct ccn_charbuf *router_prefix;	
+		
 
 	init_nlsr();
     	
@@ -513,17 +542,18 @@ main(int argc, char *argv[])
 		{
 			fprintf(stderr,"Could not connect to ccnd\n");
 			exit(1);
-		}	
-	router_prefix=ccn_charbuf_create();	
-	res=ccn_name_from_uri(router_prefix,nlsr->router_name);		
+		}
+	struct ccn_charbuf *router_prefix;	
+	router_prefix=ccn_charbuf_create();
+	res=ccn_name_from_uri(router_prefix,nlsr->router_name->name);		
 	if(res<0)
 		{
-			fprintf(stderr, "Bad ccn URI: %s\n",nlsr->router_name);
+			fprintf(stderr, "Bad ccn URI: %s\n",nlsr->router_name->name);
 			exit(1);
 		}
 
 	ccn_name_append_str(router_prefix,"nlsr");
-	nlsr->in_interest.data=nlsr->router_name;
+	nlsr->in_interest.data=nlsr->router_name->name;
 	res=ccn_set_interest_filter(nlsr->ccn,router_prefix,&nlsr->in_interest);
 	if ( res < 0 )
 		{
@@ -531,16 +561,28 @@ main(int argc, char *argv[])
 			exit(1);
 		}
 
-	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
-
-	nlsr->event_build_name_lsa = ccn_schedule_event(nlsr->sched, 100, &initial_build_name_lsa, NULL, 0);
-	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1000000, &send_info_interest, NULL, 0);
+	/* Debugging purpose */	
+	print_name_prefix_from_npl();
+	print_adjacent_from_adl();
 	
+	printf("\n");
+	printf("Router Name: %s\n",nlsr->router_name->name);
+	printf("Time in MicroSec: %s \n",get_current_timestamp_micro());
+	printf("LSDB Version: %s\n",nlsr->lsdb->version);
+	printf("\n");
+
+	build_and_install_name_lsas();
+	print_name_lsdb();	
+
+	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
+	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 500, &send_info_interest, NULL, 0);	
+
+
 
 	while(1)
 	{
-		if(nlsr->semaphor !=1)
-		{
+		if(nlsr->semaphor == 0)
+		{	
 			ccn_schedule_run(nlsr->sched);
         		res = ccn_run(nlsr->ccn, 500);
 		}
