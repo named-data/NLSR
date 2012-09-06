@@ -49,26 +49,7 @@ char * getGmTimeStamp(void)
 }
 
 
-char * 
-nth_named_component(const char *name_prefix, int n)
-{
 
-	int i;
-	char * seps="/";
-	char *rem=NULL;
-	char *component;
-
-	char *prefix=(char *)malloc(strlen(name_prefix)+1);
-	memcpy(prefix,name_prefix,strlen(name_prefix)+1);
-
-	component=strtok_r(prefix,seps,&rem);
-
-	for(i=1;i<n;i++)
-		component=strtok_r(NULL,seps,&rem);
-
-	return component;
-
-}
 
 long int 
 get_current_time_sec(void)
@@ -79,27 +60,16 @@ get_current_time_sec(void)
 }
 
 
-long int 
-get_current_time_microsec(void)
-{
-	struct timeval now; 
-	gettimeofday(&now, NULL);
-	long int microSec=1000000*now.tv_sec+now.tv_usec;
-	return microSec;
-
-}
-
-char *
-get_current_timestamp_micro(void)
+void
+get_current_timestamp_micro(char * microSec)
 {
 	struct timeval now; 
 	gettimeofday(&now, NULL);
 
-	char *microSec=(char *)malloc(20);
+	//char *microSec=(char *)malloc(20);
 	sprintf(microSec,"%ld%06ld",now.tv_sec,(long int)now.tv_usec);
-	microSec[strlen(microSec)]='\0';
-
-	return microSec;
+	//microSec[strlen(microSec)]='\0';
+	//return microSec;
 
 }
 

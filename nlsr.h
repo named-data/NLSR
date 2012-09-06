@@ -1,14 +1,10 @@
 #ifndef _NLSR_H_
 #define _NLSR_H_
 
-#define LSA_ADJ_TYPE 1
-#define LSA_NAME_TYPE 2
+
 #define LSDB_SYNCH_INTERVAL 300
 #define INTEREST_RETRY 3
 #define INTEREST_RESEND_TIME 15
-
-#define NBR_DOWN 0
-#define NBR_ACTIVE 1
 
 struct name_prefix
 {
@@ -16,24 +12,11 @@ struct name_prefix
 	int length;
 };
 
-struct ndn_neighbor
-{
-	struct name_prefix *neighbor;
-	int face;
-	int status;
-	char * last_lsdb_version;
-	int info_interest_timed_out;
-	long int lsdb_synch_interval;
-	long int last_lsdb_requested;
-	int is_lsdb_send_interest_scheduled;
-	int metric;
-};
-
 struct linkStateDatabase
 {
-	char  * version;
-	struct hashtb *adj_lsdb;
 	struct hashtb *name_lsdb;
+	struct hashtb *adj_lsdb;
+	char *lsdb_version;
 };
 
 struct nlsr
@@ -51,10 +34,12 @@ struct nlsr
 	struct hashtb *adl;
 	struct hashtb *npl;
 
-	struct ccn *ccn;
-	struct name_prefix *router_name;
-
 	struct linkStateDatabase *lsdb;
+
+	struct ccn *ccn;
+	char *router_name;
+
+	
 
 	int is_synch_init;
 	long int nlsa_id;
@@ -73,26 +58,16 @@ struct nlsr
 
 struct nlsr *nlsr;
 
-void init_nlsr(void);
-
-void ndn_rtr_gettime(const struct ccn_gettime *self, struct ccn_timeval *result);
-void process_command_router_name(char *command);
-void process_command_ccnname(char *command);
 void process_command_ccnneighbor(char *command);
+void process_command_ccnname(char *command);
 void process_command_lsdb_synch_interval(char *command);
 void process_command_interest_retry(char *command);
 void process_command_interest_resend_time(char *command);
 void process_conf_command(char *command);
 int readConfigFile(const char *filename);
 
-void add_name_prefix_to_npl(struct name_prefix *np);
-void print_name_prefix_from_npl(void);
-
-void my_lock(void);
-void my_unlock(void);
-
-
-
+void init_nlsr(void);
 void nlsr_destroy( void );
+void nlsr_stop_signal_handler(int sig);
 
 #endif
