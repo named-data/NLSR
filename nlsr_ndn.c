@@ -960,6 +960,9 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 {
 	printf("send_lsdb_interest called \n");	
 
+	if(flags == CCN_SCHEDULE_CANCEL)
+		return -1;
+
 	int i, adl_element;
 	struct ndn_neighbor *nbr;
 

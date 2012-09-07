@@ -69,7 +69,7 @@ nlsr_stop_signal_handler(int sig)
 {
 	signal(sig, SIG_IGN);
  	nlsr_destroy();	
-	exit(0);
+//	exit(0);
 }
 
 void 
@@ -336,12 +336,13 @@ nlsr_destroy( void )
 {
 
 	printf("Freeing Allocated Memory....\n");	
+
+	
 	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
 	hashtb_destroy(&nlsr->npl);
 	hashtb_destroy(&nlsr->adl);	
 	hashtb_destroy(&nlsr->lsdb->name_lsdb);
 	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
-	
 	
 	ccn_schedule_destroy(&nlsr->sched);
 	ccn_destroy(&nlsr->ccn);
@@ -374,6 +375,7 @@ init_nlsr(void)
 		perror("SIGTERM install error\n");
 		exit(1);
 	}
+
 
 	nlsr=(struct nlsr *)malloc(sizeof(struct nlsr));
 	
@@ -479,10 +481,14 @@ main(int argc, char *argv[])
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
 
 	while(1)
-	{	
-		ccn_schedule_run(nlsr->sched);
-        	res = ccn_run(nlsr->ccn, 500);
+	{
+		if (nlsr->sched)
+			ccn_schedule_run(nlsr->sched);
+        if (nlsr->ccn)
+			res = ccn_run(nlsr->ccn, 500);
 
+		if (!(nlsr->sched && nlsr->ccn))
+				break;
 	}
 
 
