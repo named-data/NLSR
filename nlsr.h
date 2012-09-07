@@ -19,6 +19,12 @@ struct linkStateDatabase
 	char *lsdb_version;
 };
 
+struct pneding_interest
+{
+	char *int_name;
+	int timed_out;
+};
+
 struct nlsr
 {
 
@@ -30,9 +36,12 @@ struct nlsr
 	struct ccn_scheduled_event *event_send_info_interest;
 	struct ccn_scheduled_event *event_build_name_lsa;
 	struct ccn_scheduled_event *event_build_adj_lsa;
+	struct ccn_scheduled_event *event_calculate_route;
 
 	struct hashtb *adl;
 	struct hashtb *npl;
+	struct hashtb *pit_alsa;
+	struct hashtb *map;
 
 	struct linkStateDatabase *lsdb;
 
@@ -47,6 +56,7 @@ struct nlsr
 	long int adj_build_count;
 	int is_build_adj_lsa_sheduled;
 	int is_send_lsdb_interest_scheduled;
+	int is_route_calculation_scheduled;
 
 	long int lsdb_synch_interval;
 	int interest_retry;

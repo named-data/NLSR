@@ -390,7 +390,7 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 
 		//printf("Content Data to be sent: %s \n",raw_data);		
 
-		if( nlsr->adj_build_count == 0 || nlsr->is_build_adj_lsa_sheduled == 1 || strlen((char *)raw_data) == 0 )
+		if( nlsr->is_build_adj_lsa_sheduled == 1 || strlen((char *)raw_data) == 0 )
 		{
 			 res= ccn_sign_content(nlsr->ccn, data, name, &sp, "WAIT" , strlen("WAIT"));
 		}
@@ -754,6 +754,11 @@ process_incoming_content_lsa(struct ccn_closure *selfp, struct ccn_upcall_info* 
 	ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E_Content]-info->pco->offset[CCN_PCO_B_Content], info->pco, &ptr, &length);
 	//printf("Content data Received: %s\n",ptr);
 
+	
+
+	
+	
+
 	printf("LSA Data\n");
 
 	if( strlen((char *) ptr ) > 0 )
@@ -828,6 +833,14 @@ process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall
 	{
 		process_incoming_timed_out_interest_info(selfp,info);
 	}
+	if(ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,nlsr_position+1,"lsdb") == 0)
+	{
+		process_incoming_timed_out_interest_lsdb(selfp,info);
+	}
+	if(ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,nlsr_position+1,"lsa") == 0)
+	{
+		process_incoming_timed_out_interest_lsa(selfp,info);
+	}
 }
 
 void
@@ -865,6 +878,19 @@ process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_u
 	free(nbr);
 
 
+}
+
+void
+process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+{
+	printf("process_incoming_timed_out_interest_lsdb called \n");
+}
+
+void
+process_incoming_timed_out_interest_lsa(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+{
+	printf("process_incoming_timed_out_interest_lsa called \n");
+	
 }
 
 int
@@ -961,7 +987,9 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 	printf("send_lsdb_interest called \n");	
 
 	if(flags == CCN_SCHEDULE_CANCEL)
-		return -1;
+	{
+ 	 	return -1;
+	}
 
 	int i, adl_element;
 	struct ndn_neighbor *nbr;
@@ -1158,8 +1186,8 @@ send_interest_for_adj_lsa(struct name_prefix *nbr, char *orig_router, char *ls_t
 	memset(&lsa_str,0,5);
 	sprintf(lsa_str,"lsa");
 
-	char *int_name=(char *)malloc(nbr->length + strlen(ls_type)+strlen(orig_router)+strlen(nlsr_str)+strlen(lsa_str)+3);
-	memset(int_name,0,nbr->length +strlen(ls_type)+ strlen(orig_router)+strlen(nlsr_str)+strlen(lsa_str)+3);
+	char *int_name=(char *)malloc(nbr->length + strlen(ls_type)+strlen(orig_router)+strlen(nlsr_str)+strlen(lsa_str)+3+strlen(ls_type)+1);
+	memset(int_name,0,nbr->length +strlen(ls_type)+ strlen(orig_router)+strlen(nlsr_str)+strlen(lsa_str)+3+strlen(ls_type)+1);
 
 	memcpy(int_name+strlen(int_name),nbr->name,nbr->length);
 	memcpy(int_name+strlen(int_name),"/",1);
@@ -1169,16 +1197,15 @@ send_interest_for_adj_lsa(struct name_prefix *nbr, char *orig_router, char *ls_t
 	memcpy(int_name+strlen(int_name),"/",1);
 	memcpy(int_name+strlen(int_name),ls_type,strlen(ls_type));
 	memcpy(int_name+strlen(int_name),orig_router,strlen(orig_router));
-
+	memcpy(int_name+strlen(int_name),"/",1);
+	memcpy(int_name+strlen(int_name),ls_type,strlen(ls_type));
 
 	struct ccn_charbuf *name;	
 	name=ccn_charbuf_create();
 
 
 	ccn_name_from_uri(name,int_name);
-	ccn_name_append_str(name,ls_type);
 	
-
 	/* adding InterestLifeTime and InterestScope filter */
 
 	struct ccn_charbuf *templ;
@@ -1196,16 +1223,16 @@ send_interest_for_adj_lsa(struct name_prefix *nbr, char *orig_router, char *ls_t
 	ccn_charbuf_append_closer(templ); /* </Interest> */
 	/* Adding InterestLifeTime and InterestScope filter done */
 
-	printf("Sending ADJ LSA interest on name prefix : %s/%s/%s%s/%s/\n",nbr->name,nlsr_str,lsa_str,orig_router,ls_type);
+	printf("Sending ADJ LSA interest on name prefix : %s\n",int_name);
 
 	res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
 
 	if ( res >= 0 )
+	{
 		printf("ADJ LSA interest sending Successfull .... \n");	
+	}
 	
 	ccn_charbuf_destroy(&templ);
 	ccn_charbuf_destroy(&name);
 	free(int_name);
 }
-
-

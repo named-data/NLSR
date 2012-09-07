@@ -69,7 +69,7 @@ nlsr_stop_signal_handler(int sig)
 {
 	signal(sig, SIG_IGN);
  	nlsr_destroy();	
-//	exit(0);
+	//exit(0);
 }
 
 void 
@@ -336,13 +336,14 @@ nlsr_destroy( void )
 {
 
 	printf("Freeing Allocated Memory....\n");	
-
 	
 	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
 	hashtb_destroy(&nlsr->npl);
 	hashtb_destroy(&nlsr->adl);	
 	hashtb_destroy(&nlsr->lsdb->name_lsdb);
 	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
+	hashtb_destroy(&nlsr->pit_alsa);
+	
 	
 	ccn_schedule_destroy(&nlsr->sched);
 	ccn_destroy(&nlsr->ccn);
@@ -351,7 +352,6 @@ nlsr_destroy( void )
 	free(nlsr->lsdb);
 	free(nlsr->router_name);
 	free(nlsr);
-
 
 	printf("Finished freeing allocated memory\n");
 
@@ -377,14 +377,15 @@ init_nlsr(void)
 		exit(1);
 	}
 
-
 	nlsr=(struct nlsr *)malloc(sizeof(struct nlsr));
 	
 	struct hashtb_param param_adl = {0};
 	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), &param_adl);
 	struct hashtb_param param_npl = {0};
 	nlsr->npl = hashtb_create(sizeof(struct name_prefix), &param_npl);
-	
+	struct hashtb_param param_pit_alsa = {0};	
+	nlsr->pit_alsa = hashtb_create(sizeof(struct pneding_interest), &param_pit_alsa);
+
 	nlsr->in_interest.p = &incoming_interest;
 	nlsr->in_content.p = &incoming_content;
 
@@ -401,6 +402,8 @@ init_nlsr(void)
 	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), &param_adj_lsdb);
 	struct hashtb_param param_name_lsdb = {0};
 	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), &param_name_lsdb);
+	
+	
 
 
 	nlsr->is_synch_init=1;
@@ -408,7 +411,8 @@ init_nlsr(void)
 	nlsr->adj_build_flag=0;
 	nlsr->adj_build_count=0;
 	nlsr->is_build_adj_lsa_sheduled=0;
-	nlsr->is_send_lsdb_interest_scheduled=0;	
+	nlsr->is_send_lsdb_interest_scheduled=0;
+	nlsr->is_route_calculation_scheduled=0;	
 
 	nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
 	nlsr->interest_retry = INTEREST_RETRY;
@@ -482,17 +486,23 @@ main(int argc, char *argv[])
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
 
 	while(1)
-	{
-		if (nlsr->sched)
+	{	
+		if( nlsr->sched != NULL )
+		{
 			ccn_schedule_run(nlsr->sched);
-        if (nlsr->ccn)
-			res = ccn_run(nlsr->ccn, 500);
+		}
+		if(nlsr->ccn != NULL)
+		{
+        		res = ccn_run(nlsr->ccn, 500);
+		}
 
 		if (!(nlsr->sched && nlsr->ccn))
-				break;
+		{	      
+			break;
+		}
+
 	}
 
-			//nlsr_destroy();
 	return 0;
 }
 

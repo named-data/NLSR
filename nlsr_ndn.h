@@ -23,6 +23,8 @@ void process_incoming_content_lsa(struct ccn_closure *selfp, struct ccn_upcall_i
 
 void process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall_info* info);
 void process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_upcall_info* info);
+void process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info* info);
+void process_incoming_timed_out_interest_lsa(struct ccn_closure* selfp, struct ccn_upcall_info* info);
 
 int send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
 void send_info_interest_to_neighbor(struct name_prefix *nbr);

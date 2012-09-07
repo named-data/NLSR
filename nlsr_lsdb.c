@@ -23,6 +23,7 @@
 #include "utility.h"
 #include "nlsr_npl.h"
 #include "nlsr_adl.h"
+#include "nlsr_route.h"
 
 void
 set_new_lsdb_version(void)
@@ -511,9 +512,13 @@ install_adj_lsa(struct alsa * adj_lsa)
 		}
 
 	}
-
     	hashtb_end(e);
 
+	if ( !nlsr->is_route_calculation_scheduled )
+	{
+		nlsr->event_calculate_route = ccn_schedule_event(nlsr->sched, 1000000, &route_calculate, NULL, 0);
+		nlsr->is_route_calculation_scheduled=1;
+	}
 	free(key);
 }
 
