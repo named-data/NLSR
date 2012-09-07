@@ -352,6 +352,7 @@ nlsr_destroy( void )
 	free(nlsr->router_name);
 	free(nlsr);
 
+
 	printf("Finished freeing allocated memory\n");
 
 }
@@ -491,8 +492,7 @@ main(int argc, char *argv[])
 				break;
 	}
 
-
-	nlsr_destroy();
+			//nlsr_destroy();
 	return 0;
 }
 
