@@ -4,7 +4,8 @@
 #define EMPTY_PARENT -12345
 #define INF_DISTANCE 2147483647
 
-#define NO_NEXT_HOP -4321
+#define NO_NEXT_HOP -12345
+#define NO_MAPPING_NUM -1
 
 struct map_entry
 {

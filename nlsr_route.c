@@ -351,7 +351,7 @@ get_mapping_no(char *router)
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
     	int res;
-	int ret=-1;
+	int ret;
 
    	hashtb_start(nlsr->map, e);
     	res = hashtb_seek(e, router, strlen(router), 0);
@@ -364,6 +364,7 @@ get_mapping_no(char *router)
 	else if(res == HT_NEW_ENTRY)
 	{
 		hashtb_delete(e);
+		ret=NO_MAPPING_NUM;
 	}
 
 	hashtb_end(e);	
@@ -592,6 +593,30 @@ print_routing_table(void)
 void 
 do_old_routing_table_updates()
 {
-		
+	printf("do_old_routing_table_updates called\n");
+	int i, rt_element;
+	int mapping_no;	
+
+	struct routing_table_entry *rte;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->routing_table, e);
+	rt_element=hashtb_n(nlsr->routing_table);
+
+	for(i=0;i<rt_element;i++)
+	{
+		rte=e->data;
+		mapping_no=get_mapping_no(rte->dest_router);
+		if ( mapping_no == NO_MAPPING_NUM)
+		{		
+			delete_orig_router_from_npt(rte->dest_router,rte->next_hop_face);
+			hashtb_delete(e);
+		}
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);	
 }
 

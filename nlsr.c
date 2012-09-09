@@ -359,7 +359,7 @@ nlsr_destroy( void )
 	for(i=0;i<npt_element;i++)
 	{
 		ne=e->data;
-		hashtb_destroy(&ne->next_hop_table);	
+		hashtb_destroy(&ne->name_list);	
 		hashtb_next(e);		
 	}
 
