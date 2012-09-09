@@ -26,6 +26,10 @@
 #include "utility.h"
 #include "nlsr_npl.h"
 #include "nlsr_adl.h"
+#include "nlsr_npt.h"
+#include "nlsr_route.h"
+
+
 
 struct option longopts[] =
 {
@@ -343,7 +347,25 @@ nlsr_destroy( void )
 	hashtb_destroy(&nlsr->lsdb->name_lsdb);
 	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
 	hashtb_destroy(&nlsr->pit_alsa);
-	
+	hashtb_destroy(&nlsr->routing_table);
+
+
+	int i, npt_element;
+	struct npt_entry *ne;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	hashtb_start(nlsr->npt, e);
+	npt_element=hashtb_n(nlsr->npt);
+	for(i=0;i<npt_element;i++)
+	{
+		ne=e->data;
+		hashtb_destroy(&ne->next_hop_table);	
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	hashtb_destroy(&nlsr->npt);
+
 	
 	ccn_schedule_destroy(&nlsr->sched);
 	ccn_destroy(&nlsr->ccn);
@@ -385,6 +407,10 @@ init_nlsr(void)
 	nlsr->npl = hashtb_create(sizeof(struct name_prefix), &param_npl);
 	struct hashtb_param param_pit_alsa = {0};	
 	nlsr->pit_alsa = hashtb_create(sizeof(struct pneding_interest), &param_pit_alsa);
+	struct hashtb_param param_npt = {0};	
+	nlsr->npt = hashtb_create(sizeof(struct npt_entry), &param_npt);
+	struct hashtb_param param_rte = {0};	
+	nlsr->routing_table = hashtb_create(sizeof(struct routing_table_entry), &param_rte);
 
 	nlsr->in_interest.p = &incoming_interest;
 	nlsr->in_content.p = &incoming_content;
@@ -427,7 +453,7 @@ main(int argc, char *argv[])
 {
     	int res;
     	char *config_file;
-	//int daemon_mode;
+	int daemon_mode;
 
 	init_nlsr();	
     	
@@ -436,7 +462,7 @@ main(int argc, char *argv[])
         	switch (res) 
 		{
 			case 'd':
-				//daemon_mode = 1;
+				daemon_mode = 1;
 				break;
 			case 'f':
 				config_file = optarg;
@@ -495,7 +521,6 @@ main(int argc, char *argv[])
 		{
         		res = ccn_run(nlsr->ccn, 500);
 		}
-
 		if (!(nlsr->sched && nlsr->ccn))
 		{	      
 			break;

@@ -22,6 +22,7 @@
 #include "nlsr.h"
 #include "nlsr_route.h"
 #include "nlsr_lsdb.h"
+#include "nlsr_npt.h"
 
 int
 route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
@@ -31,12 +32,18 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 	if( ! nlsr->is_build_adj_lsa_sheduled )
 	{
 		/* Calculate Route here */
-		
+		print_routing_table();
+		print_npt();		
+
 		struct hashtb_param param_me = {0};
 		nlsr->map = hashtb_create(sizeof(struct map_entry), &param_me);
 		make_map();
 		assign_mapping_number();		
 		print_map();
+
+		 
+		do_old_routing_table_updates();
+	
 
 		int i;
 		int **adj_matrix;
@@ -56,7 +63,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		
 		print_all_path_from_source(parent,source);
 
-	
+		
 		
 		for(i = 0; i < map_element; i++)
 		{
@@ -453,4 +460,147 @@ void print_adj_matrix(int **adj_matrix, int map_element)
 	}
 }
 
+int 
+get_next_hop(char *dest_router)
+{
+	struct routing_table_entry *rte;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res,ret;
+
+   	hashtb_start(nlsr->routing_table, e);
+    	res = hashtb_seek(e, dest_router, strlen(dest_router), 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		rte=e->data;
+		ret=rte->next_hop_face;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+		ret=NO_NEXT_HOP;
+	}
+
+	hashtb_end(e);	
+
+	return ret;
+}
+
+void
+add_next_hop_router(char *dest_router)
+{
+	if ( strcmp(dest_router,nlsr->router_name)== 0)
+	{
+		return ;
+	}
+
+	struct routing_table_entry *rte=(struct routing_table_entry *)malloc(sizeof(struct routing_table_entry));
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->routing_table, e);
+    	res = hashtb_seek(e, dest_router, strlen(dest_router), 0);
+
+	if( res == HT_NEW_ENTRY )
+	{
+		rte=e->data;
+		rte->dest_router=(char *)malloc(strlen(dest_router)+1);
+		memset(rte->dest_router,0,strlen(dest_router)+1);
+		memcpy(rte->dest_router,dest_router,strlen(dest_router));
+		rte->next_hop_face=NO_NEXT_HOP;
+	}
+	hashtb_end(e);
+
+}
+
+void 
+add_next_hop_from_lsa_adj_body(char *body, int no_link)
+{
+
+	int i=0;
+	char *lsa_data=(char *)malloc(strlen(body)+1);
+	memset(	lsa_data,0,strlen(body)+1);
+	memcpy(lsa_data,body,strlen(body)+1);
+	char *sep="|";
+	char *rem;
+	char *rtr_id;
+	char *length;
+	char *face;
+	char *metric;
+
+	if(no_link >0 )
+	{
+		rtr_id=strtok_r(lsa_data,sep,&rem);
+		length=strtok_r(NULL,sep,&rem);
+		face=strtok_r(NULL,sep,&rem);
+		metric=strtok_r(NULL,sep,&rem);
+
+		//printf("		Link %d	 	\n",i+1);
+		//printf("		Neighbor		 : %s	\n",rtr_id);
+		//printf("		Neighbor Length		 : %s	\n",length);
+		//printf("		Connecting Face		 : %s	\n",face);
+		//printf("		Metric			 : %s	\n",metric);
+
+		add_next_hop_router(rtr_id);
+
+		for(i=1;i<no_link;i++)
+		{
+			rtr_id=strtok_r(NULL,sep,&rem);
+			length=strtok_r(NULL,sep,&rem);
+			face=strtok_r(NULL,sep,&rem);
+			metric=strtok_r(NULL,sep,&rem);
+			//printf("		Link %d	 	\n",i+1);
+			//printf("		Neighbor		 : %s	\n",rtr_id);
+			//printf("		Neighbor Length		 : %s	\n",length);
+			//printf("		Connecting Face		 : %s	\n",face);
+			//printf("		Metric			 : %s	\n",metric);
+
+			add_next_hop_router(rtr_id);
+	
+		}
+	}
+
+	free(lsa_data);
+
+
+}
+
+void 
+print_routing_table(void)
+{
+	printf("\n");
+	printf("print_routing_table called\n");
+	int i, rt_element;
+	
+	struct routing_table_entry *rte;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->routing_table, e);
+	rt_element=hashtb_n(nlsr->routing_table);
+
+	for(i=0;i<rt_element;i++)
+	{
+		printf("----------Routing Table Entry %d------------------\n",i+1);
+		rte=e->data;
+		printf(" Destination Router: %s \n",rte->dest_router);
+		rte->next_hop_face == NO_NEXT_HOP ? printf(" Next Hop Face: NO_NEXT_HOP \n") : printf(" Next Hop Face: %d \n", rte->next_hop_face);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+	printf("\n");
+}
+
+void 
+do_old_routing_table_updates()
+{
+	
+}
 

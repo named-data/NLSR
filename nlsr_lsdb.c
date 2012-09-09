@@ -24,6 +24,7 @@
 #include "nlsr_npl.h"
 #include "nlsr_adl.h"
 #include "nlsr_route.h"
+#include "nlsr_npt.h"
 
 void
 set_new_lsdb_version(void)
@@ -191,7 +192,26 @@ install_name_lsa(struct nlsa *name_lsa)
 
 		printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 		set_new_lsdb_version();	
-		printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);		
+		printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);	
+
+		int next_hop=get_next_hop(new_name_lsa->header->orig_router->name);
+		if ( next_hop == NO_NEXT_HOP )
+		{
+			int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,NO_FACE);
+			if ( check == HT_NEW_ENTRY )
+			{
+				printf("Added in npt \n");
+			}
+		}
+		else 
+		{
+			int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,next_hop);
+			if ( check == HT_NEW_ENTRY )
+			{
+				printf("Added in npt \n");
+			}
+
+		}
 
 	}
 	else if(res == HT_OLD_ENTRY)
@@ -482,7 +502,9 @@ install_adj_lsa(struct alsa * adj_lsa)
 		set_new_lsdb_version();	
 		printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 
+		add_next_hop_router(new_adj_lsa->header->orig_router->name);
 
+		add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
 	}
 	else if(res == HT_OLD_ENTRY)
 	{
@@ -508,6 +530,8 @@ install_adj_lsa(struct alsa * adj_lsa)
 			printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 			set_new_lsdb_version();	
 			printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+
+			add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
 
 		}
 

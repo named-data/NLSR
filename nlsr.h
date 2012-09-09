@@ -42,6 +42,8 @@ struct nlsr
 	struct hashtb *npl;
 	struct hashtb *pit_alsa;
 	struct hashtb *map;
+	struct hashtb *npt;
+	struct hashtb *routing_table;
 
 	struct linkStateDatabase *lsdb;
 
