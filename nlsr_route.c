@@ -350,7 +350,8 @@ get_mapping_no(char *router)
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
-    	int res,ret;
+    	int res;
+	int ret=-1;
 
    	hashtb_start(nlsr->map, e);
     	res = hashtb_seek(e, router, strlen(router), 0);
@@ -539,11 +540,6 @@ add_next_hop_from_lsa_adj_body(char *body, int no_link)
 		face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
-		//printf("		Link %d	 	\n",i+1);
-		//printf("		Neighbor		 : %s	\n",rtr_id);
-		//printf("		Neighbor Length		 : %s	\n",length);
-		//printf("		Connecting Face		 : %s	\n",face);
-		//printf("		Metric			 : %s	\n",metric);
 
 		add_next_hop_router(rtr_id);
 
@@ -553,11 +549,6 @@ add_next_hop_from_lsa_adj_body(char *body, int no_link)
 			length=strtok_r(NULL,sep,&rem);
 			face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
-			//printf("		Link %d	 	\n",i+1);
-			//printf("		Neighbor		 : %s	\n",rtr_id);
-			//printf("		Neighbor Length		 : %s	\n",length);
-			//printf("		Connecting Face		 : %s	\n",face);
-			//printf("		Metric			 : %s	\n",metric);
 
 			add_next_hop_router(rtr_id);
 	
@@ -601,6 +592,6 @@ print_routing_table(void)
 void 
 do_old_routing_table_updates()
 {
-	
+		
 }
 
