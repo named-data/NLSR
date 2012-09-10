@@ -79,7 +79,7 @@ void process_command_interest_resend_time(char *command);
 void process_conf_command(char *command);
 int readConfigFile(const char *filename);
 
-void init_nlsr(void);
+int init_nlsr(void);
 void nlsr_destroy( void );
 void nlsr_stop_signal_handler(int sig);
 

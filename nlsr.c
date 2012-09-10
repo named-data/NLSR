@@ -30,6 +30,20 @@
 #include "nlsr_route.h"
 
 
+#define ON_ERROR_DESTROY(resval) \
+{           \
+    if ((resval) < 0) { \
+        nlsr_destroy(); \
+    } \
+}
+
+
+#define ON_ERROR_EXIT(resval) \
+{           \
+    if ((resval) < 0) { \
+        exit(-1); \
+    } \
+}
 
 struct option longopts[] =
 {
@@ -73,7 +87,6 @@ nlsr_stop_signal_handler(int sig)
 {
 	signal(sig, SIG_IGN);
  	nlsr_destroy();	
-	//exit(0);
 }
 
 void 
@@ -382,23 +395,23 @@ nlsr_destroy( void )
 }
 
 
-void
+int 
 init_nlsr(void)
 {
 	if (signal(SIGQUIT, nlsr_stop_signal_handler ) == SIG_ERR) 
 	{
 		perror("SIGQUIT install error\n");
-		exit(1);
+		return -1;
 	}
 	if (signal(SIGTERM, nlsr_stop_signal_handler ) == SIG_ERR) 
 	{
 		perror("SIGTERM install error\n");
-		exit(1);
+		return -1;
     	}
  	if (signal(SIGINT, nlsr_stop_signal_handler ) == SIG_ERR)
 	{
 		perror("SIGTERM install error\n");
-		exit(1);
+		return -1;
 	}
 
 	nlsr=(struct nlsr *)malloc(sizeof(struct nlsr));
@@ -447,18 +460,21 @@ init_nlsr(void)
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
 
 	nlsr->semaphor=0;
+
+	return 0;
 }
 
 
 int 
 main(int argc, char *argv[])
 {
-    	int res;
+    	int res, ret;
     	char *config_file;
 	int daemon_mode;
 
-	init_nlsr();	
-    	
+	ret=init_nlsr();	
+    	ON_ERROR_EXIT(ret);
+
 	while ((res = getopt_long(argc, argv, "df:h", longopts, 0)) != -1) 
 	{
         	switch (res) 
@@ -481,7 +497,7 @@ main(int argc, char *argv[])
 	if(ccn_connect(nlsr->ccn, NULL) == -1)
 	{
 		fprintf(stderr,"Could not connect to ccnd\n");
-		exit(1);
+		ON_ERROR_DESTROY(-1);
 	}
 	struct ccn_charbuf *router_prefix;	
 	router_prefix=ccn_charbuf_create(); 
@@ -489,7 +505,7 @@ main(int argc, char *argv[])
 	if(res<0)
 	{
 		fprintf(stderr, "Bad ccn URI: %s\n",nlsr->router_name);
-		exit(1);
+		ON_ERROR_DESTROY(res);
 	}
 
 	ccn_name_append_str(router_prefix,"nlsr");
@@ -498,7 +514,7 @@ main(int argc, char *argv[])
 	if ( res < 0 )
 	{
 		fprintf(stderr,"Failed to register interest for router\n");
-		exit(1);
+		ON_ERROR_DESTROY(res);
 	}
 	ccn_charbuf_destroy(&router_prefix);
 	
