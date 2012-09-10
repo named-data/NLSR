@@ -340,7 +340,9 @@ nlsr_destroy( void )
 {
 
 	printf("Freeing Allocated Memory....\n");	
-	
+	/* Destroying all face created by nlsr in CCND */
+	destroy_all_face_by_nlsr();	
+
 	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
 	hashtb_destroy(&nlsr->npl);
 	hashtb_destroy(&nlsr->adl);	

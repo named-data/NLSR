@@ -23,6 +23,7 @@
 #include "nlsr_route.h"
 #include "nlsr_lsdb.h"
 #include "nlsr_npt.h"
+#include "nlsr_adl.h"
 
 int
 route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
@@ -37,11 +38,12 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 
 		struct hashtb_param param_me = {0};
 		nlsr->map = hashtb_create(sizeof(struct map_entry), &param_me);
+		nlsr->rev_map = hashtb_create(sizeof(struct map_entry), &param_me);
 		make_map();
 		assign_mapping_number();		
 		print_map();
+		print_rev_map();
 
-		 
 		do_old_routing_table_updates();
 	
 
@@ -63,8 +65,11 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		
 		print_all_path_from_source(parent,source);
 
-		
-		
+		print_all_next_hop(parent,source);		
+
+		update_routing_table_with_new_route(parent,source);
+
+
 		for(i = 0; i < map_element; i++)
 		{
 			free(adj_matrix[i]);
@@ -72,6 +77,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		free(parent);
 		free(adj_matrix);
 		hashtb_destroy(&nlsr->map);
+		hashtb_destroy(&nlsr->rev_map);
 		
 	}
 	nlsr->is_route_calculation_scheduled=0;
@@ -160,6 +166,53 @@ print_all_path_from_source(long int *parent,long int source)
 
 }
 
+void 
+print_all_next_hop(long int *parent,long int source)
+{
+	int i, map_element;
+	struct map_entry *me;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->map, e);
+	map_element=hashtb_n(nlsr->map);
+
+	for(i=0;i<map_element;i++)
+	{
+		me=e->data;
+		if(me->mapping != source)
+		{
+			
+			printf("Dest: %d Next Hop: %ld\n",me->mapping,get_next_hop_from_calculation(parent,me->mapping,source));
+		}
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+}
+
+long int
+get_next_hop_from_calculation(long int *parent, long int dest,long int source)
+{
+	long int next_hop;
+	while ( parent[dest] != EMPTY_PARENT )
+	{
+		next_hop=dest;
+		dest=parent[dest];
+
+	}
+
+	if ( dest != source )
+	{
+		next_hop=NO_NEXT_HOP;	
+	}
+	
+	return next_hop;
+	
+}
+
 void
 print_path(long int *parent, long int dest)
 {
@@ -245,6 +298,7 @@ assign_mapping_number(void)
 	{
 		me=e->data;
 		me->mapping=i;
+		add_rev_map_entry(i,me->router);
 		hashtb_next(e);		
 	}
 
@@ -372,6 +426,86 @@ get_mapping_no(char *router)
 	return ret;
 
 }
+
+
+void 
+add_rev_map_entry(long int mapping_number, char *router)
+{
+
+	struct map_entry *me=(struct map_entry*)malloc(sizeof(struct map_entry ));
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->rev_map, e);
+    	res = hashtb_seek(e, &mapping_number, sizeof(mapping_number), 0);
+
+	if(res == HT_NEW_ENTRY)
+	{
+		me=e->data;
+		me->router=(char *)malloc(strlen(router)+1);
+		memset(me->router,0,strlen(router)+1);
+		memcpy(me->router,router,strlen(router));
+		me->mapping=mapping_number;
+	}
+
+	hashtb_end(e);
+	
+}
+
+
+
+char * 
+get_router_from_rev_map(long int mapping_number)
+{
+
+	struct map_entry *me;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->rev_map, e);
+    	res = hashtb_seek(e, &mapping_number, sizeof(mapping_number), 0);
+
+	if(res == HT_OLD_ENTRY)
+	{
+		me=e->data;
+		hashtb_end(e);
+		return me->router;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+		hashtb_end(e);
+	}
+	
+	return NULL;
+}
+
+void
+print_rev_map(void)
+{
+	int i, map_element;
+	struct map_entry *me;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->map, e);
+	map_element=hashtb_n(nlsr->map);
+
+	for(i=0;i<map_element;i++)
+	{
+		me=e->data;
+		printf("Mapping Number: %d Router: %s  \n",me->mapping,me->router);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+}
+
 
 void
 assign_adj_matrix_for_lsa(struct alsa *adj_lsa, int **adj_matrix)
@@ -618,5 +752,52 @@ do_old_routing_table_updates()
 	}
 
 	hashtb_end(e);	
+}
+
+void 
+update_routing_table_with_new_route(long int *parent, long int source)
+{
+	printf("update_routing_table_with_new_route called\n");
+	int i, map_element;
+	struct map_entry *me;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->rev_map, e);
+	map_element=hashtb_n(nlsr->rev_map);
+
+	for(i=0;i<map_element;i++)
+	{
+		me=e->data;
+		if(me->mapping != source)
+		{
+			
+			char *orig_router=get_router_from_rev_map(me->mapping);
+			if (orig_router != NULL )
+			{
+				int next_hop_router_num=get_next_hop_from_calculation(parent,me->mapping,source);
+				//printf(" Next hop router Num: %d ",next_hop_router_num);
+				if ( next_hop_router_num == NO_NEXT_HOP )
+				{
+					update_npt_with_new_route(orig_router,NO_FACE);
+					printf ("\nOrig_router: %s Next Hop Face: %d \n",orig_router,NO_FACE);
+				}
+				else 
+				{
+					char *next_hop_router=get_router_from_rev_map(next_hop_router_num);
+					//printf("Next hop router name: %s \n",next_hop_router);
+					int next_hop_face=get_next_hop_face_from_adl(next_hop_router);
+					update_npt_with_new_route(orig_router,next_hop_face);
+
+					printf ("Orig_router: %s Next Hop Face: %d \n",orig_router,next_hop_face);
+
+				}
+			}
+		}
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
 }
 

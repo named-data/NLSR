@@ -221,3 +221,104 @@ delete_orig_router_from_npt(char *orig_router,int next_hop_face)
 	}
 	hashtb_end(e);	
 }
+
+
+void 
+update_npt_with_new_route(char * orig_router,int next_hop_face)
+{
+	int res;
+	struct npt_entry *ne;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->npt, e);
+	res = hashtb_seek(e, orig_router, strlen(orig_router), 0);
+
+	if ( res == HT_OLD_ENTRY )
+	{
+		ne=e->data;
+
+		if ( next_hop_face != ne->next_hop_face )
+		{
+			int j, nl_element;
+			struct name_list_entry *nle;		
+			struct hashtb_enumerator eenle;
+    			struct hashtb_enumerator *enle = &eenle;
+
+			hashtb_start(ne->name_list, enle);
+			nl_element=hashtb_n(ne->name_list);	
+
+			for (j=0;j<nl_element;j++)
+			{
+				nle=enle->data;
+				if (ne->next_hop_face != NO_FACE )
+				{
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG , ne->next_hop_face);
+				}
+				if (next_hop_face != NO_FACE )
+				{
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG , next_hop_face);
+				}
+				hashtb_next(enle);
+			}
+			hashtb_end(enle);
+			ne->next_hop_face=next_hop_face;	
+		}
+		
+	}
+	else if ( res == HT_NEW_ENTRY )
+	{
+		hashtb_delete(e);
+	}
+	hashtb_end(e);
+}
+
+void 
+destroy_all_face_by_nlsr(void)
+{
+	int i, npt_element;
+	
+	struct npt_entry *ne;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->npt, e);
+	npt_element=hashtb_n(nlsr->npt);
+
+	for(i=0;i<npt_element;i++)
+	{
+		//printf("\n");
+		//printf("----------NPT ENTRY %d------------------\n",i+1);
+		ne=e->data;
+		//printf(" Origination Router: %s \n",ne->orig_router);
+		//ne->next_hop_face == NO_FACE ? printf(" Next Hop Face: NO_NEXT_HOP \n") : printf(" Next Hop Face: %d \n", ne->next_hop_face);
+		
+		int j, nl_element;
+		struct name_list_entry *nle;		
+		struct hashtb_enumerator eenle;
+    		struct hashtb_enumerator *enle = &eenle;
+
+		hashtb_start(ne->name_list, enle);
+		nl_element=hashtb_n(ne->name_list);	
+
+		for (j=0;j<nl_element;j++)
+		{
+			nle=enle->data;
+			if ( ne->next_hop_face != NO_FACE)
+			{
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG , ne->next_hop_face);
+			}
+			//printf(" Name Prefix: %s \n",nle->name);
+			hashtb_next(enle);
+		}
+		hashtb_end(enle);
+			
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+	printf("\n");
+}

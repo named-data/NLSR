@@ -21,6 +21,7 @@
 #include "nlsr_npl.h"
 #include "nlsr_adl.h"
 #include "utility.h"
+#include "nlsr_npt.h"
 
 void 
 add_nbr_to_adl(struct name_prefix *new_nbr,int face)
@@ -630,6 +631,34 @@ adjust_adjacent_last_lsdb_requested_to_adl(char *nbr, long int sec)
 
 	hashtb_end(e);
 
+}
+
+int 
+get_next_hop_face_from_adl(char *nbr)
+{
+	int res;
+	int connecting_face=NO_FACE;
+	struct ndn_neighbor *nnbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		nnbr=e->data;
+		connecting_face=nnbr->face;
+		
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+	return connecting_face;
 }
 
 

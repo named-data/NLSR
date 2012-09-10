@@ -39,4 +39,5 @@ void update_adjacent_last_lsdb_requested_to_adl(char *nbr, long int timestamp);
 void set_is_lsdb_send_interest_scheduled_to_zero(char *nbr);
 void update_adjacent_lsdb_version_to_adl(struct name_prefix *nbr, char *version);
 void adjust_adjacent_last_lsdb_requested_to_adl(char *nbr, long int sec);
+int get_next_hop_face_from_adl(char *nbr);
 #endif

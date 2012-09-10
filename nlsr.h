@@ -42,6 +42,7 @@ struct nlsr
 	struct hashtb *npl;
 	struct hashtb *pit_alsa;
 	struct hashtb *map;
+	struct hashtb *rev_map;
 	struct hashtb *npt;
 	struct hashtb *routing_table;
 

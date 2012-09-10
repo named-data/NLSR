@@ -36,6 +36,9 @@ void sort_queue_by_distance(long int *Q,long int *dist,long int start,long int e
 int is_not_explored(long int *Q, long int u,long int start, long int element);
 void print_path(long int *parent, long int dest);
 void print_all_path_from_source(long int *parent,long int source);
+void add_rev_map_entry(long int mapping_number, char *router);
+void print_rev_map(void);
+char * get_router_from_rev_map(long int mapping_number);
 
 /* Routing Table Relates function */
 
@@ -44,5 +47,9 @@ void add_next_hop_router(char *dest_router);
 void add_next_hop_from_lsa_adj_body(char *body, int no_link);
 void print_routing_table(void);
 void do_old_routing_table_updates();
+void update_routing_table_with_new_route(long int *parent, long int source);
+
+long int get_next_hop_from_calculation(long int *parent, long int dest,long int source);
+void print_all_next_hop(long int *parent,long int source);
 
 #endif
