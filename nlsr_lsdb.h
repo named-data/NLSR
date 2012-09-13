@@ -54,6 +54,7 @@ void print_name_lsdb(void);
 void build_and_install_others_name_lsa(char *orig_router,int ls_type,long int ls_id,char *orig_time, int isValid,char *np);
 void build_others_name_lsa(struct nlsa *name_lsa, char *orig_router,int ls_type,long int ls_id, char *orig_time, int isValid, char *np);
 void make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id);
+int refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
 
 int build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
 void build_adj_lsa(struct alsa * adj_lsa);

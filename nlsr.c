@@ -34,6 +34,7 @@
 {           \
     if ((resval) < 0) { \
         nlsr_destroy(); \
+	exit(1);\
     } \
 }
 
@@ -41,7 +42,7 @@
 #define ON_ERROR_EXIT(resval) \
 {           \
     if ((resval) < 0) { \
-        exit(-1); \
+        exit(1); \
     } \
 }
 
@@ -81,12 +82,24 @@ static struct ccn_gettime ndn_rtr_ticker = {
     NULL
 };
 
+void
+nlsr_lock(void)
+{
+	nlsr->semaphor=NLSR_LOCKED;
+}
+
+void
+nlsr_unlock(void)
+{
+	nlsr->semaphor=NLSR_UNLOCKED;
+}
 
 void 
 nlsr_stop_signal_handler(int sig)
 {
 	signal(sig, SIG_IGN);
- 	nlsr_destroy();	
+ 	nlsr_destroy();
+	exit(0);	
 }
 
 void 
@@ -220,7 +233,10 @@ process_command_lsdb_synch_interval(char *command)
 	}
 
 	seconds=atoi(secs);
-	nlsr->lsdb_synch_interval=seconds;
+	if ( seconds >= 120 && seconds <= 3600 )
+	{
+		nlsr->lsdb_synch_interval=seconds;
+	}
 
 }
 
@@ -235,18 +251,21 @@ process_command_interest_retry(char *command)
 	}
 	char *rem;
 	const char *sep=" \t\n";
-	char *secs;
-	long int seconds;
+	char *retry;
+	long int retry_number;
 	
-	secs=strtok_r(command,sep,&rem);
-	if(secs==NULL)
+	retry=strtok_r(command,sep,&rem);
+	if(retry==NULL)
 	{
 		printf(" Wrong Command Format ( interest-retry number)\n");
 		return;
 	}
 
-	seconds=atoi(secs);
-	nlsr->interest_retry=seconds;
+	retry_number=atoi(retry);
+	if ( retry_number >= 1 && retry_number<=10 )
+	{
+		nlsr->interest_retry=retry_number;
+	}
 
 }
 
@@ -271,8 +290,10 @@ process_command_interest_resend_time(char *command)
 	}
 
 	seconds=atoi(secs);
-	nlsr->interest_resend_time=seconds;
-
+	if ( seconds <= 60 && seconds >= 1 )
+	{
+		nlsr->interest_resend_time=seconds;
+	}
 }
 
 
@@ -459,7 +480,7 @@ init_nlsr(void)
 	nlsr->interest_retry = INTEREST_RETRY;
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
 
-	nlsr->semaphor=0;
+	nlsr->semaphor=NLSR_UNLOCKED;
 
 	return 0;
 }
@@ -470,7 +491,7 @@ main(int argc, char *argv[])
 {
     	int res, ret;
     	char *config_file;
-	int daemon_mode;
+	//int daemon_mode;
 
 	ret=init_nlsr();	
     	ON_ERROR_EXIT(ret);
@@ -480,7 +501,7 @@ main(int argc, char *argv[])
         	switch (res) 
 		{
 			case 'd':
-				daemon_mode = 1;
+				//daemon_mode = 1;
 				break;
 			case 'f':
 				config_file = optarg;
@@ -528,20 +549,24 @@ main(int argc, char *argv[])
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
+	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
 
 	while(1)
 	{	
-		if( nlsr->sched != NULL )
+		if ( nlsr->semaphor == NLSR_UNLOCKED  )
 		{
-			ccn_schedule_run(nlsr->sched);
-		}
-		if(nlsr->ccn != NULL)
-		{
-        		res = ccn_run(nlsr->ccn, 500);
-		}
-		if (!(nlsr->sched && nlsr->ccn))
-		{	      
-			break;
+			if( nlsr->sched != NULL )
+			{
+				ccn_schedule_run(nlsr->sched);
+			}
+			if(nlsr->ccn != NULL)
+			{
+        			res = ccn_run(nlsr->ccn, 500);
+			}
+			if (!(nlsr->sched && nlsr->ccn))
+			{	      
+				break;
+			}
 		}
 
 	}

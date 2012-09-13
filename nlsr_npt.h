@@ -17,6 +17,7 @@ struct name_list_entry
 
 
 int add_npt_entry(char *orig_router, char *name_prefix, int face);
+int delete_npt_entry(char *orig_router, char *name_prefix);
 void print_npt(void);
 void delete_orig_router_from_npt(char *orig_router,int next_hop_face);
 void update_npt_with_new_route(char * orig_router,int next_hop_face);

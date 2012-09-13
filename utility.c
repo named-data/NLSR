@@ -65,11 +65,33 @@ get_current_timestamp_micro(char * microSec)
 {
 	struct timeval now; 
 	gettimeofday(&now, NULL);
-
-	//char *microSec=(char *)malloc(20);
 	sprintf(microSec,"%ld%06ld",now.tv_sec,(long int)now.tv_usec);
-	//microSec[strlen(microSec)]='\0';
-	//return microSec;
+}
 
+
+long int
+get_time_diff(char *time1, char *time2)
+{
+	long int diff_secs;
+
+	long int time1_in_sec,	time2_in_sec;
+
+	char *time1_sec=(char *)malloc(strlen(time1)-6+1);
+	memset(time1_sec,0,strlen(time1)-6+1);
+	memcpy(time1_sec,time1,strlen(time1)-6);
+
+	char *time2_sec=(char *)malloc(strlen(time2)-6+1);
+	memset(time2_sec,0,strlen(time2)-6+1);
+	memcpy(time2_sec,time2,strlen(time2)-6);
+
+	time1_in_sec=strtol(time1_sec,NULL,10);
+	time2_in_sec=strtol(time2_sec,NULL,10);
+
+	diff_secs=time1_in_sec-time2_in_sec;
+
+	free(time1_sec);
+	free(time2_sec);
+
+	return diff_secs;
 }
 

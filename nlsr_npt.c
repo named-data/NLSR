@@ -126,6 +126,59 @@ add_npt_entry(char *orig_router, char *name_prefix, int face)
 	return res;
 }
 
+int 
+delete_npt_entry(char *orig_router, char *name_prefix)
+{
+	if ( strcmp(orig_router,nlsr->router_name)== 0)
+	{
+		return -1;
+	}
+
+	struct npt_entry *ne;
+	
+	int res,res_nle;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    
+
+   	hashtb_start(nlsr->npt, e);
+    	res = hashtb_seek(e, orig_router, strlen(orig_router), 0);
+
+	if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+		return -1;
+	}
+	else if (res == HT_OLD_ENTRY)
+	{
+		ne=e->data;
+
+		struct hashtb_enumerator eenle;
+    		struct hashtb_enumerator *enle = &eenle;
+
+		hashtb_start(ne->name_list, enle);
+		res_nle = hashtb_seek(enle, name_prefix, strlen(name_prefix), 0);
+
+		if(res_nle == HT_NEW_ENTRY )
+		{
+			hashtb_delete(enle);
+		}
+		else if(res_nle == HT_OLD_ENTRY )
+		{
+			if (ne->next_hop_face != NO_FACE )
+			{
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)name_prefix, OP_UNREG, ne->next_hop_face);
+			}
+			hashtb_delete(enle);
+		}
+
+		hashtb_end(enle);
+	}
+	
+	hashtb_end(e);
+
+	return 0;
+}
 
 void 
 print_npt(void)
@@ -289,11 +342,7 @@ destroy_all_face_by_nlsr(void)
 
 	for(i=0;i<npt_element;i++)
 	{
-		//printf("\n");
-		//printf("----------NPT ENTRY %d------------------\n",i+1);
 		ne=e->data;
-		//printf(" Origination Router: %s \n",ne->orig_router);
-		//ne->next_hop_face == NO_FACE ? printf(" Next Hop Face: NO_NEXT_HOP \n") : printf(" Next Hop Face: %d \n", ne->next_hop_face);
 		
 		int j, nl_element;
 		struct name_list_entry *nle;		
@@ -310,7 +359,7 @@ destroy_all_face_by_nlsr(void)
 			{
 				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG , ne->next_hop_face);
 			}
-			//printf(" Name Prefix: %s \n",nle->name);
+			//printf(" Name Prefix: %s Face: %d \n",nle->name,ne->next_hop_face);
 			hashtb_next(enle);
 		}
 		hashtb_end(enle);

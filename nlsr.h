@@ -5,6 +5,8 @@
 #define LSDB_SYNCH_INTERVAL 300
 #define INTEREST_RETRY 3
 #define INTEREST_RESEND_TIME 15
+#define NLSR_LOCKED 1
+#define NLSR_UNLOCKED 0
 
 struct name_prefix
 {
@@ -78,6 +80,9 @@ void process_command_interest_retry(char *command);
 void process_command_interest_resend_time(char *command);
 void process_conf_command(char *command);
 int readConfigFile(const char *filename);
+
+void nlsr_lock(void);
+void nlsr_unlock(void);
 
 int init_nlsr(void);
 void nlsr_destroy( void );

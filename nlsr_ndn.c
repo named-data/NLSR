@@ -192,7 +192,9 @@ enum ccn_upcall_res
 incoming_interest(struct ccn_closure *selfp,
         enum ccn_upcall_kind kind, struct ccn_upcall_info *info)
 {
-    
+
+    nlsr_lock();    
+
     switch (kind) {
         case CCN_UPCALL_FINAL:
             break;
@@ -212,6 +214,8 @@ incoming_interest(struct ccn_closure *selfp,
         default:
             break;
     }
+
+     nlsr_unlock();
 
     return CCN_UPCALL_RESULT_OK;
 }
@@ -502,6 +506,7 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
         enum ccn_upcall_kind kind, struct ccn_upcall_info* info)
 {
 
+     nlsr_lock();
 
     switch(kind) {
         case CCN_UPCALL_FINAL:
@@ -531,8 +536,11 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 	    break;
         default:
             fprintf(stderr, "Unexpected response of kind %d\n", kind);
-            return CCN_UPCALL_RESULT_ERR;
+            //return CCN_UPCALL_RESULT_ERR;
+	    break;
     }
+    
+     nlsr_unlock();
 
     return CCN_UPCALL_RESULT_OK;
 }
@@ -896,6 +904,13 @@ process_incoming_timed_out_interest_lsa(struct ccn_closure* selfp, struct ccn_up
 int
 send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
+	if(flags == CCN_SCHEDULE_CANCEL)
+	{
+ 	 	return -1;
+	}
+
+         nlsr_lock();
+
 	printf("send_info_interest called \n");
 	printf("\n");
 
@@ -915,6 +930,8 @@ send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 		hashtb_next(e);		
 	}
 	hashtb_end(e);
+
+	 nlsr_unlock();
 
 	return 0;
 }
@@ -991,6 +1008,8 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
  	 	return -1;
 	}
 
+	 nlsr_lock();
+
 	int i, adl_element;
 	struct ndn_neighbor *nbr;
 
@@ -1023,6 +1042,8 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 
 	hashtb_end(e);
 	nlsr->event_send_lsdb_interest= ccn_schedule_event(nlsr->sched, 30000000, &send_lsdb_interest, NULL, 0);
+
+	 nlsr_unlock();
 
 	return 0;
 }

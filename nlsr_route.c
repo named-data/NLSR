@@ -28,6 +28,14 @@
 int
 route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
+
+	if(flags == CCN_SCHEDULE_CANCEL)
+	{
+ 	 	return -1;
+	}
+
+	nlsr_lock();
+
 	printf("route_calculate called\n");
 
 	if( ! nlsr->is_build_adj_lsa_sheduled )
@@ -69,6 +77,8 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 
 		update_routing_table_with_new_route(parent,source);
 
+		print_routing_table();
+		print_npt();
 
 		for(i = 0; i < map_element; i++)
 		{
@@ -81,6 +91,8 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		
 	}
 	nlsr->is_route_calculation_scheduled=0;
+
+	nlsr_unlock();
 
 	return 0;
 }
@@ -696,6 +708,32 @@ add_next_hop_from_lsa_adj_body(char *body, int no_link)
 }
 
 void 
+update_routing_table(char * dest_router,int next_hop_face)
+{
+	int res;
+	struct routing_table_entry *rte;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->routing_table, e);
+	res = hashtb_seek(e, dest_router, strlen(dest_router), 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		rte=e->data;
+		rte->next_hop_face=next_hop_face;
+	}
+	else if ( res == HT_OLD_ENTRY )
+	{
+		hashtb_delete(e);
+	}
+	
+	hashtb_end(e);
+	
+}
+
+void 
 print_routing_table(void)
 {
 	printf("\n");
@@ -789,7 +827,7 @@ update_routing_table_with_new_route(long int *parent, long int source)
 					//printf("Next hop router name: %s \n",next_hop_router);
 					int next_hop_face=get_next_hop_face_from_adl(next_hop_router);
 					update_npt_with_new_route(orig_router,next_hop_face);
-
+					update_routing_table(orig_router,next_hop_face);
 					printf ("Orig_router: %s Next Hop Face: %d \n",orig_router,next_hop_face);
 
 				}
