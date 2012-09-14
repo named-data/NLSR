@@ -10,6 +10,7 @@
 #define LSA_REFRESH_TIME 600
 #define ROUTER_DEAD_INTERVAL 900
 
+
 struct name_prefix
 {
 	char *name;
@@ -23,7 +24,7 @@ struct linkStateDatabase
 	char *lsdb_version;
 };
 
-struct pneding_interest
+struct pending_interest
 {
 	char *int_name;
 	int timed_out;

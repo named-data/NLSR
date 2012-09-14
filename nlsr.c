@@ -442,7 +442,7 @@ init_nlsr(void)
 	struct hashtb_param param_npl = {0};
 	nlsr->npl = hashtb_create(sizeof(struct name_prefix), &param_npl);
 	struct hashtb_param param_pit_alsa = {0};	
-	nlsr->pit_alsa = hashtb_create(sizeof(struct pneding_interest), &param_pit_alsa);
+	nlsr->pit_alsa = hashtb_create(sizeof(struct pending_interest), &param_pit_alsa);
 	struct hashtb_param param_npt = {0};	
 	nlsr->npt = hashtb_create(sizeof(struct npt_entry), &param_npt);
 	struct hashtb_param param_rte = {0};	
