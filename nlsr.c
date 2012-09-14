@@ -479,6 +479,9 @@ init_nlsr(void)
 	nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
 	nlsr->interest_retry = INTEREST_RETRY;
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
+	nlsr->lsa_refresh_time=LSA_REFRESH_TIME;
+	nlsr->router_dead_interval=ROUTER_DEAD_INTERVAL;
+
 
 	nlsr->semaphor=NLSR_UNLOCKED;
 

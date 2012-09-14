@@ -70,7 +70,7 @@ get_current_timestamp_micro(char * microSec)
 
 
 long int
-get_time_diff(char *time1, char *time2)
+get_time_diff(const char *time1, const char *time2)
 {
 	long int diff_secs;
 

@@ -173,6 +173,11 @@ delete_npt_entry(char *orig_router, char *name_prefix)
 		}
 
 		hashtb_end(enle);
+
+		if ( hashtb_n(ne->name_list) == 0 )
+		{
+			hashtb_delete(e);
+		}
 	}
 	
 	hashtb_end(e);

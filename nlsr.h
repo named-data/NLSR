@@ -7,6 +7,8 @@
 #define INTEREST_RESEND_TIME 15
 #define NLSR_LOCKED 1
 #define NLSR_UNLOCKED 0
+#define LSA_REFRESH_TIME 600
+#define ROUTER_DEAD_INTERVAL 900
 
 struct name_prefix
 {
@@ -66,6 +68,8 @@ struct nlsr
 	long int lsdb_synch_interval;
 	int interest_retry;
 	long int interest_resend_time;
+	long int lsa_refresh_time;
+	long int router_dead_interval;
 
 	int semaphor;
 	

@@ -1151,10 +1151,111 @@ get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId)
 	hashtb_end(e);
 }
 
+int 
+delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+{
+	printf("delete_name_lsa called \n");
+	
+	if(flags == CCN_SCHEDULE_CANCEL)
+	{
+ 	 	return -1;
+	}
+
+
+
+	nlsr_lock();
+
+	printf("LSA Key: %s \n",(char *)ev->evdata);
+
+	struct nlsa *nlsa;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+	 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->name_lsdb, e);
+    	res = hashtb_seek(e, (char *)ev->evdata, strlen((char *)ev->evdata), 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		nlsa=e->data;
+		delete_npt_entry(nlsa->header->orig_router->name, nlsa->name_prefix->name);
+		hashtb_delete(e);
+	}
+	else if( res == HT_OLD_ENTRY )
+	{
+		nlsa=e->data;	
+		delete_npt_entry(nlsa->header->orig_router->name, nlsa->name_prefix->name);
+		hashtb_delete(e);
+	}
+	hashtb_end(e);
+	
+	
+	printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+	set_new_lsdb_version();	
+	printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+	
+	//print_name_lsdb();
+	
+	nlsr_unlock();
+
+	return 0;
+}
+
+int 
+delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+{
+	printf("delete_adj_lsa called \n");
+	
+	if(flags == CCN_SCHEDULE_CANCEL)
+	{
+ 	 	return -1;
+	}
+	nlsr_lock();
+
+	printf("LSA Key: %s \n",(char *)ev->evdata);
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->adj_lsdb, e);
+    	res = hashtb_seek(e, (char *)ev->evdata, strlen((char *)ev->evdata), 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		hashtb_delete(e);
+	}
+	else if( res == HT_OLD_ENTRY )
+	{
+		hashtb_delete(e);
+	}
+	hashtb_end(e);
+
+	printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+	set_new_lsdb_version();	
+	printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+
+	if ( !nlsr->is_route_calculation_scheduled)
+	{
+		nlsr->event_calculate_route = ccn_schedule_event(nlsr->sched, 1000000, &route_calculate, NULL, 0);
+		nlsr->is_route_calculation_scheduled=1;
+	}
+
+	//print_adj_lsdb();
+
+	nlsr_unlock();
+
+	return 0;
+}
+
 void
 refresh_name_lsdb(void)
 {
 	printf("refresh_name_lsdb called \n");
+
+	//int lsa_change_count=0;
 
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
@@ -1176,7 +1277,58 @@ refresh_name_lsdb(void)
 		name_lsa=e->data;
 
 		lsa_life_time=get_time_diff(time_stamp,name_lsa->header->orig_time);
-		printf("LSA Life Time: %ld \n",lsa_life_time);			
+		printf("LSA Life Time: %ld \n",lsa_life_time);	
+		
+		if ( strcmp(name_lsa->header->orig_router->name,nlsr->router_name) == 0)
+		{
+			if ( lsa_life_time > nlsr->lsa_refresh_time )
+			{
+				printf("Own Name LSA need to be refrshed\n");
+				char *current_time_stamp=(char *)malloc(20);
+				memset(current_time_stamp,0,20);
+				get_current_timestamp_micro(current_time_stamp);
+
+				free(name_lsa->header->orig_time);
+				name_lsa->header->orig_time=(char *)malloc(strlen(current_time_stamp)+1); //free 
+				memset(name_lsa->header->orig_time,0,strlen(current_time_stamp)+1);
+				memcpy(name_lsa->header->orig_time,current_time_stamp,strlen(current_time_stamp)+1);
+	
+				free(current_time_stamp);
+
+				printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+				set_new_lsdb_version();	
+				printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);				
+
+				print_name_lsdb();
+				//lsa_change_count++;
+			}	
+		}
+		else 
+		{
+			if ( lsa_life_time > nlsr->router_dead_interval )
+			{
+				printf("Others Name LSA need to be deleted\n");
+
+				char lst[2];
+				memset(lst,0,2);
+				sprintf(lst,"%d",name_lsa->header->ls_type);	
+
+				char lsid[10];
+				memset(lsid,0,10);
+				sprintf(lsid,"%ld",name_lsa->header->ls_id);
+	
+	
+				char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
+				memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
+
+
+				make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);	
+				printf("Key:%s Length:%d\n",key,(int)strlen(key));
+				
+				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_name_lsa, (void *)key, 0);
+				//lsa_change_count++;
+			}
+		}
 
 		hashtb_next(e);		
 	}
@@ -1184,13 +1336,15 @@ refresh_name_lsdb(void)
 	hashtb_end(e);
 	
 	free(time_stamp);
+
 	
 }
 
-int
+void
 refresh_adj_lsdb(void)
 {
 	printf("refresh_adj_lsdb called \n");
+
 
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
@@ -1214,14 +1368,54 @@ refresh_adj_lsdb(void)
 		lsa_life_time=get_time_diff(time_stamp,adj_lsa->header->orig_time);
 		printf("LSA Life Time: %ld \n",lsa_life_time);			
 
+		if ( strcmp(adj_lsa->header->orig_router->name,nlsr->router_name) == 0)
+		{
+			if ( lsa_life_time > nlsr->lsa_refresh_time )
+			{
+				printf("Own Adj LSA need to be refrshed\n");
+
+				char *current_time_stamp=(char *)malloc(20);
+				memset(current_time_stamp,0,20);
+				get_current_timestamp_micro(current_time_stamp);
+
+				free(adj_lsa->header->orig_time);
+				adj_lsa->header->orig_time=(char *)malloc(strlen(current_time_stamp)+1); //free 
+				memset(adj_lsa->header->orig_time,0,strlen(current_time_stamp)+1);
+				memcpy(adj_lsa->header->orig_time,current_time_stamp,strlen(current_time_stamp)+1);
+	
+				free(current_time_stamp);
+
+
+				printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+				set_new_lsdb_version();	
+				printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+
+				print_adj_lsdb();
+			}	
+		}
+		else 
+		{
+			if ( lsa_life_time > nlsr->router_dead_interval )
+			{
+				printf("Others Adj LSA need to be deleted\n");
+				
+				char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
+				memset(key,0,adj_lsa->header->orig_router->length+2);
+				make_adj_lsa_key(key,adj_lsa);
+				printf("Adjacent LSA key: %s \n",key);				
+
+				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_adj_lsa, (void *)key, 0);
+			}
+		}
+
+		
+
 		hashtb_next(e);		
 	}
 
 	hashtb_end(e);
 	
 	free(time_stamp);
-
-	return 0;
 }
 
 int
@@ -1233,18 +1427,14 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 	}
 
 	nlsr_lock();
+
 	printf("refresh_lsdb called \n");
 	
 	refresh_name_lsdb();
 	refresh_adj_lsdb();
 
-	if ( !nlsr->is_route_calculation_scheduled )
-	{
-		nlsr->event_calculate_route = ccn_schedule_event(nlsr->sched, 1000000, &route_calculate, NULL, 0);
-		nlsr->is_route_calculation_scheduled=1;
-	}
-
 	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
+	
 	nlsr_unlock();
 	return 0;
 }
