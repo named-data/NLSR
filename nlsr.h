@@ -10,6 +10,11 @@
 #define LSA_REFRESH_TIME 600
 #define ROUTER_DEAD_INTERVAL 900
 
+#define LINK_METRIC 10
+
+#define NAME_LSA_VALID 1
+#define NAME_LSA_INVALID 0
+
 
 struct name_prefix
 {

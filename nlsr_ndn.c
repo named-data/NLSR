@@ -892,6 +892,30 @@ void
 process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info* info)
 {
 	printf("process_incoming_timed_out_interest_lsdb called \n");
+
+	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	get_nbr(nbr,selfp,info);
+
+	printf("LSDB Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+
+	int interst_timed_out_num=get_lsdb_interest_timed_out_number(nbr);
+
+	if( interst_timed_out_num < nlsr->interest_retry )
+	{
+		update_lsdb_interest_timed_out_to_adl(nbr,1);
+	}
+	else
+	{
+		update_lsdb_interest_timed_out_zero_to_adl(nbr);
+		update_adjacent_status_to_adl(nbr,NBR_DOWN);
+		if(!nlsr->is_build_adj_lsa_sheduled)
+		{
+			nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 1000, &build_and_install_adj_lsa, NULL, 0);
+			nlsr->is_build_adj_lsa_sheduled=1;		
+		}
+	}
+	free(nbr->name);
+	free(nbr);
 }
 
 void
@@ -1030,7 +1054,7 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 				long int time_diff=get_nbr_time_diff_lsdb_req(nbr->neighbor->name);	
 				printf("Time since last time LSDB requested : %ld Seconds for Neighbor: %s \n",time_diff,nbr->neighbor->name);		
 
-				if(time_diff>=get_lsdb_synch_interval(nbr->neighbor->name))
+				if( time_diff >= ( get_lsdb_synch_interval(nbr->neighbor->name) + get_nbr_random_time_component(nbr->neighbor->name) ) )
 				{
 					nbr->is_lsdb_send_interest_scheduled=1;
 					send_lsdb_interest_to_nbr(nbr->neighbor);

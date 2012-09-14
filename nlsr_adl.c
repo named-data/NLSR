@@ -47,8 +47,10 @@ add_nbr_to_adl(struct name_prefix *new_nbr,int face)
 		nbr->face=face;
 		nbr->status=NBR_DOWN;
 		nbr->info_interest_timed_out=0;
-		nbr->lsdb_synch_interval=300;
-		nbr->metric=10;
+		nbr->lsdb_interest_timed_out=0;
+		nbr->lsdb_random_time_component=(int)(LSDB_SYNCH_INTERVAL/2);
+		nbr->lsdb_synch_interval=LSDB_SYNCH_INTERVAL;
+		nbr->metric=LINK_METRIC;
 		nbr->is_lsdb_send_interest_scheduled=0;
 		
 
@@ -82,7 +84,9 @@ print_adjacent(struct ndn_neighbor *nbr)
 	printf("	LSDB Version: %s \n",nbr->last_lsdb_version);
 	printf("	Info Version: %s \n",nbr->last_info_version);
 	printf("	Info Interest Timed Out : %d \n",nbr->info_interest_timed_out);
+	printf("	LSDB Interest Timed Out : %d \n",nbr->lsdb_interest_timed_out);
 	printf("	LSDB Synch Interval     : %ld \n",nbr->lsdb_synch_interval);
+	printf("	LSDB Random Time comp   : %d \n",nbr->lsdb_random_time_component);
 	printf("	Las Time LSDB Requested: %ld \n",nbr->last_lsdb_requested);
 	printf("	IS_lsdb_send_interest_scheduled : %d \n",nbr->is_lsdb_send_interest_scheduled);
 
@@ -175,6 +179,34 @@ get_timed_out_number(struct name_prefix *nbr)
 	return ret;	
 }
 
+int 
+get_lsdb_interest_timed_out_number(struct name_prefix *nbr)
+{
+	printf("get_timed_out_number called \n");
+
+	int res,ret=-1;
+	struct ndn_neighbor *nnbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+	res = hashtb_seek(e, nbr->name, nbr->length, 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		nnbr=e->data;
+		ret=nnbr->lsdb_interest_timed_out;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+
+	return ret;	
+}
 
 void 
 update_adjacent_timed_out_to_adl(struct name_prefix *nbr, int increment)
@@ -209,6 +241,43 @@ update_adjacent_timed_out_zero_to_adl(struct name_prefix *nbr)
 	printf("update_adjacent_timed_out_zero_to_adl called \n");
 	int time_out_number=get_timed_out_number(nbr);
 	update_adjacent_timed_out_to_adl(nbr,-time_out_number);
+
+}
+
+
+void 
+update_lsdb_interest_timed_out_to_adl(struct name_prefix *nbr, int increment)
+{
+	printf("update_adjacent_timed_out_to_adl called \n");
+
+	int res;
+	struct ndn_neighbor *nnbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+	res = hashtb_seek(e, nbr->name, nbr->length, 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		nnbr=e->data;
+		nnbr->lsdb_interest_timed_out += increment;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+}
+
+void 
+update_lsdb_interest_timed_out_zero_to_adl(struct name_prefix *nbr)
+{
+	printf("update_adjacent_timed_out_zero_to_adl called \n");
+	int time_out_number=get_lsdb_interest_timed_out_number(nbr);
+	update_lsdb_interest_timed_out_to_adl(nbr,-time_out_number);
 
 }
 
@@ -265,6 +334,7 @@ update_lsdb_synch_interval_to_adl(struct name_prefix *nbr, long int interval)
 		if ( nnbr->lsdb_synch_interval!= interval )
 		{
 			nnbr->lsdb_synch_interval=interval;
+			nnbr->lsdb_random_time_component=(int)(interval/2);
 
 		}
 	}
@@ -450,6 +520,38 @@ get_nbr_last_lsdb_requested(char *nbr)
 	hashtb_end(e);
 
 	return last_lsdb_requested;
+}
+
+
+int 
+get_nbr_random_time_component(char *nbr)
+{
+	printf("get_timed_out_number called \n");
+
+	int time=0;
+
+	int res;
+	struct ndn_neighbor *nnbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
+
+	if (res == HT_OLD_ENTRY)
+	{
+		nnbr=e->data;
+		time=nnbr->lsdb_random_time_component * nnbr->lsdb_interest_timed_out;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+
+	return time;
 }
 
 long int 

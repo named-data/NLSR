@@ -173,9 +173,6 @@ install_name_lsa(struct nlsa *name_lsa)
 
 		if(res == HT_NEW_ENTRY )
 		{
-				
-	
-		
 		
 			printf("New Name LSA... Adding to LSDB\n");
 			new_name_lsa = e->data;
@@ -232,9 +229,13 @@ install_name_lsa(struct nlsa *name_lsa)
 		else if(res == HT_OLD_ENTRY)
 		{
 			new_name_lsa=e->data;
-			if(strcmp(name_lsa->header->orig_time,new_name_lsa->header->orig_time)<=0)
+			if(strcmp(name_lsa->header->orig_time,new_name_lsa->header->orig_time)<0)
 			{
-				printf("Older/Duplicate Adj LSA. Discarded...\n");
+				printf("Older Adj LSA. Discarded...\n");
+			}
+			else if( strcmp(name_lsa->header->orig_time,new_name_lsa->header->orig_time) == 0 )
+			{
+				printf("Duplicate Adj LSA. Discarded...\n");
 			}
 			else 
 			{
@@ -1283,17 +1284,40 @@ refresh_name_lsdb(void)
 		{
 			if ( lsa_life_time > nlsr->lsa_refresh_time )
 			{
-				printf("Own Name LSA need to be refrshed\n");
-				char *current_time_stamp=(char *)malloc(20);
-				memset(current_time_stamp,0,20);
-				get_current_timestamp_micro(current_time_stamp);
+				if ( name_lsa->header->isValid == NAME_LSA_VALID )					
+				{
+					printf("Own Name LSA need to be refrshed\n");
+					char *current_time_stamp=(char *)malloc(20);
+					memset(current_time_stamp,0,20);
+					get_current_timestamp_micro(current_time_stamp);
 
-				free(name_lsa->header->orig_time);
-				name_lsa->header->orig_time=(char *)malloc(strlen(current_time_stamp)+1); //free 
-				memset(name_lsa->header->orig_time,0,strlen(current_time_stamp)+1);
-				memcpy(name_lsa->header->orig_time,current_time_stamp,strlen(current_time_stamp)+1);
+					free(name_lsa->header->orig_time);
+					name_lsa->header->orig_time=(char *)malloc(strlen(current_time_stamp)+1); //free 
+					memset(name_lsa->header->orig_time,0,strlen(current_time_stamp)+1);
+					memcpy(name_lsa->header->orig_time,current_time_stamp,strlen(current_time_stamp)+1);
 	
-				free(current_time_stamp);
+					free(current_time_stamp);
+				}
+				else 
+				{
+					char lst[2];
+					memset(lst,0,2);
+					sprintf(lst,"%d",name_lsa->header->ls_type);	
+
+					char lsid[10];
+					memset(lsid,0,10);
+					sprintf(lsid,"%ld",name_lsa->header->ls_id);
+	
+	
+					char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
+					memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
+
+
+					make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);	
+					printf("Key:%s Length:%d\n",key,(int)strlen(key));
+				
+					nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_name_lsa, (void *)key, 0);
+				}
 
 				printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 				set_new_lsdb_version();	
