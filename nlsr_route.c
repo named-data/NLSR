@@ -419,6 +419,13 @@ get_mapping_no(char *router)
     	int res;
 	int ret;
 
+	int n = hashtb_n(nlsr->map);
+
+	if ( n < 1)
+	{
+		return NO_MAPPING_NUM;
+	}
+
    	hashtb_start(nlsr->map, e);
     	res = hashtb_seek(e, router, strlen(router), 0);
 
@@ -762,6 +769,37 @@ print_routing_table(void)
 	printf("\n");
 }
 
+
+int
+delete_empty_rte(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+{
+	printf("delete_empty_rte called\n");
+	printf("Router: %s \n",(char *)ev->evdata);
+	if(flags == CCN_SCHEDULE_CANCEL)
+	{
+ 	 	return -1;
+	}
+
+	int res;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->routing_table, e);
+	res = hashtb_seek(e, (char *)ev->evdata, strlen((char *)ev->evdata), 0);
+	
+	if ( res == HT_OLD_ENTRY )
+	{
+		hashtb_delete(e);
+	}
+	else if ( res == HT_NEW_ENTRY )
+	{
+		hashtb_delete(e);
+	}
+
+	return 0;
+}
+
+
 void 
 do_old_routing_table_updates()
 {
@@ -784,7 +822,10 @@ do_old_routing_table_updates()
 		if ( mapping_no == NO_MAPPING_NUM)
 		{		
 			delete_orig_router_from_npt(rte->dest_router,rte->next_hop_face);
-			hashtb_delete(e);
+			char *router=(char *)malloc(strlen(rte->dest_router)+1);
+			memset(router,0,strlen(rte->dest_router)+1);
+			memcpy(router,rte->dest_router,strlen(rte->dest_router)+1);
+			nlsr->event = ccn_schedule_event(nlsr->sched, 1, &delete_empty_rte, (void *)router , 0);
 		}
 		hashtb_next(e);		
 	}
