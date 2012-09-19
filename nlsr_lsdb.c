@@ -204,6 +204,9 @@ install_name_lsa(struct nlsa *name_lsa)
 			printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);	
 
 			int next_hop=get_next_hop(new_name_lsa->header->orig_router->name);
+
+			//printf("Next hop: %d \n",next_hop);
+
 			if ( next_hop == NO_NEXT_HOP )
 			{
 				int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,NO_FACE);
@@ -1427,7 +1430,6 @@ refresh_adj_lsdb(void)
 				memset(key,0,adj_lsa->header->orig_router->length+2);
 				make_adj_lsa_key(key,adj_lsa);
 				printf("Adjacent LSA key: %s \n",key);				
-
 				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_adj_lsa, (void *)key, 0);
 			}
 		}

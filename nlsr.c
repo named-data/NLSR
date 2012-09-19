@@ -139,6 +139,10 @@ process_command_ccnneighbor(char *command)
 		return;
 	}
 
+	if ( rtr_name[strlen(rtr_name)-1] == '/' )
+	{
+		rtr_name[strlen(rtr_name)-1]='\0';
+	}
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	nbr->name=(char *)malloc(strlen(rtr_name)+1);
 	memset(nbr->name,0,strlen(rtr_name)+1);
@@ -172,6 +176,9 @@ process_command_ccnname(char *command)
 
 	printf("Name Prefix: %s \n",name);
 
+	if ( name[strlen(name)-1] == '/' )
+		name[strlen(name)-1]='\0';
+
 	struct name_prefix *np=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	np->name=(char *)malloc(strlen(name)+1);
 	memset(np->name,0,strlen(name)+1);
@@ -204,6 +211,9 @@ process_command_router_name(char *command)
 		return;
 	}
 	
+
+	if ( rtr_name[strlen(rtr_name)-1] == '/' )
+		rtr_name[strlen(rtr_name)-1]='\0';
 
 	nlsr->router_name=(char *)malloc(strlen(rtr_name)+1);
 	memset(nlsr->router_name,0,strlen(rtr_name)+1);
@@ -297,6 +307,61 @@ process_command_interest_resend_time(char *command)
 }
 
 
+void 
+process_command_lsa_refresh_time(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( lsa-refresh-time secs )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *secs;
+	long int seconds;
+	
+	secs=strtok_r(command,sep,&rem);
+	if(secs==NULL)
+	{
+		printf(" Wrong Command Format ( lsa-refresh-time secs)\n");
+		return;
+	}
+
+	seconds=atoi(secs);
+	if ( seconds >= 240 && seconds <= 3600 )
+	{
+		nlsr->lsa_refresh_time=seconds;
+	}
+
+}
+
+void 
+process_command_router_dead_interval(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( router-dead-interval secs )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *secs;
+	long int seconds;
+	
+	secs=strtok_r(command,sep,&rem);
+	if(secs==NULL)
+	{
+		printf(" Wrong Command Format ( router-dead-interval secs)\n");
+		return;
+	}
+
+	seconds=atoi(secs);
+	if ( seconds >= 360 && seconds <= 5400 )
+	{
+		nlsr->router_dead_interval=seconds;
+	}
+
+}
 
 void 
 process_conf_command(char *command)
@@ -334,7 +399,15 @@ process_conf_command(char *command)
 	{
 		process_command_interest_resend_time(remainder);
 	}
-	else
+	else if(!strcmp(cmd_type,"lsa-refresh-time") )
+	{
+		process_command_lsa_refresh_time(remainder);
+	}
+	else if(!strcmp(cmd_type,"router-dead-interval") )
+	{
+		process_command_router_dead_interval(remainder);
+	}
+	else 
 	{
 		printf("Wrong configuration Command %s \n",cmd_type);
 	}
@@ -361,7 +434,8 @@ readConfigFile(const char *filename)
 		len=strlen(buf);
 		if(buf[len-1] == '\n')
 		buf[len-1]='\0';
-		process_conf_command(buf);	
+		if ( buf[0] != '#' && buf[0] != '!') 
+			process_conf_command(buf);	
 	}
 
 	fclose(cfg);
