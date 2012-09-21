@@ -17,9 +17,15 @@ struct map_entry
 struct routing_table_entry
 {
 	char *dest_router;
+	//int next_hop_face;
+	struct hashtb *face_list;
+};
+
+struct face_list_entry
+{
 	int next_hop_face;
-}
-;
+	int route_cost;
+};
 
 int route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
 void make_map(void);
@@ -31,7 +37,7 @@ void make_adj_matrix(int **adj_matrix,int map_element);
 void init_adj_matrix(int **adj_matrix,int map_element);
 void print_adj_matrix(int **adj_matrix, int map_element);
 int get_mapping_no(char *router);
-void calculate_path(int **adj_matrix, long int *parent, long int V, long int S);
+void calculate_path(int **adj_matrix, long int *parent,long int *dist, long int V, long int S);
 void sort_queue_by_distance(long int *Q,long int *dist,long int start,long int element);
 int is_not_explored(long int *Q, long int u,long int start, long int element);
 void print_path(long int *parent, long int dest);
@@ -42,14 +48,17 @@ char * get_router_from_rev_map(long int mapping_number);
 
 /* Routing Table Relates function */
 
-int get_next_hop(char *dest_router);
+int get_next_hop(char *dest_router,int *faces, int *route_costs);
+int get_number_of_next_hop(char *dest_router);
 void add_next_hop_router(char *dest_router);
 void add_next_hop_from_lsa_adj_body(char *body, int no_link);
 void print_routing_table(void);
 void do_old_routing_table_updates();
-void update_routing_table_with_new_route(long int *parent, long int source);
+void clear_old_routing_table();
+void update_routing_table_with_new_route(long int *parent,long int *dist, long int source);
 
 long int get_next_hop_from_calculation(long int *parent, long int dest,long int source);
 void print_all_next_hop(long int *parent,long int source);
+int does_face_exist_for_router(char *dest_router, int face_id);
 
 #endif

@@ -203,13 +203,14 @@ install_name_lsa(struct nlsa *name_lsa)
 			set_new_lsdb_version();	
 			printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);	
 
-			int next_hop=get_next_hop(new_name_lsa->header->orig_router->name);
+			//struct hashtb *face_list;
+			int num_next_hop=get_number_of_next_hop(new_name_lsa->header->orig_router->name);
 
 			//printf("Next hop: %d \n",next_hop);
 
-			if ( next_hop == NO_NEXT_HOP )
+			if ( num_next_hop < 0 )
 			{
-				int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,NO_FACE);
+				int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,NO_NEXT_HOP,NULL,NULL);
 				if ( check == HT_NEW_ENTRY )
 				{
 					printf("Added in npt \n");
@@ -217,16 +218,26 @@ install_name_lsa(struct nlsa *name_lsa)
 			}
 			else 
 			{
-				int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,next_hop);
+				int *faces=malloc(num_next_hop*sizeof(int));
+				int *route_costs=malloc(num_next_hop*sizeof(int));			
+				int next_hop=get_next_hop(new_name_lsa->header->orig_router->name,faces,route_costs);
+				printf("Printing from install_name_lsa \n");
+				int j;
+				for(j=0;j<num_next_hop;j++)
+					printf("Face: %d Route Cost: %d \n",faces[j],route_costs[j]);
+				int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,next_hop,faces,route_costs);
 				if ( check == HT_NEW_ENTRY )
 				{
 					printf("Added in npt \n");
 				}
+				free(faces);
+				free(route_costs);
 
 			}
+			
 
 		
-		free(time_stamp);
+			free(time_stamp);
 
 		}
 		else if(res == HT_OLD_ENTRY)
@@ -295,10 +306,12 @@ install_name_lsa(struct nlsa *name_lsa)
 
 					if( is_npt_update == 1 )
 					{
-						int next_hop=get_next_hop(new_name_lsa->header->orig_router->name);
-						if ( next_hop == NO_NEXT_HOP )
+						//struct hashtb *face_list;
+						int num_next_hop=get_number_of_next_hop(new_name_lsa->header->orig_router->name);
+						if ( num_next_hop < 0 )
 						{
-							int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,NO_FACE);
+							
+							int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,NO_NEXT_HOP,NULL,NULL);
 							if ( check == HT_NEW_ENTRY )
 							{
 								printf("Added in npt \n");
@@ -306,12 +319,24 @@ install_name_lsa(struct nlsa *name_lsa)
 						}
 						else 
 						{
-							int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,next_hop);
+							int *faces=malloc(num_next_hop*sizeof(int));
+							int *route_costs=malloc(num_next_hop*sizeof(int));			
+							int next_hop=get_next_hop(new_name_lsa->header->orig_router->name,faces,route_costs);
+							printf("Printing from install_name_lsa \n");
+							int j;
+							for(j=0;j<num_next_hop;j++)
+								printf("Face: %d Route Cost: %d \n",faces[j],route_costs[j]);
+							
+							int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,next_hop,faces,route_costs);
 							if ( check == HT_NEW_ENTRY )
 							{
 								printf("Added in npt \n");
 							}
+							free(faces);
+							free(route_costs);
+							
 						}
+						
 					}
 				}
 			}
@@ -379,7 +404,7 @@ build_and_install_others_name_lsa(char *orig_router,int ls_type,long int ls_id,c
 	print_name_lsa(name_lsa);
 	install_name_lsa(name_lsa);
 	print_name_lsdb();
-
+	print_npt();
 	
 	free(name_lsa->header->orig_router->name);
 	free(name_lsa->header->orig_router);
@@ -587,8 +612,8 @@ install_adj_lsa(struct alsa * adj_lsa)
 			set_new_lsdb_version();	
 			printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 
+			
 			add_next_hop_router(new_adj_lsa->header->orig_router->name);
-
 			add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
 		}
 		else if(res == HT_OLD_ENTRY)

@@ -7,7 +7,8 @@ struct npt_entry
 {
 	char *orig_router;
 	struct hashtb *name_list;
-	int next_hop_face;
+	//int next_hop_face;
+	struct hashtb *face_list;
 };
 
 struct name_list_entry
@@ -16,11 +17,12 @@ struct name_list_entry
 };
 
 
-int add_npt_entry(char *orig_router, char *name_prefix, int face);
+int add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, int *route_costs);
 int delete_npt_entry(char *orig_router, char *name_prefix);
 void print_npt(void);
-void delete_orig_router_from_npt(char *orig_router,int next_hop_face);
-void update_npt_with_new_route(char * orig_router,int next_hop_face);
+void delete_orig_router_from_npt(char *orig_router);
+//void update_npt_with_new_route(char * orig_router,int next_hop_face);
+void update_npt_with_new_route();
 void destroy_all_face_by_nlsr(void);
 
 #endif
