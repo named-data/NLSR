@@ -1,7 +1,6 @@
 CC = cc
-CFLAGS = -g -Wall 
-#-Wpointer-arith -Wreturn-type -Wstrict-prototypes
-LIBS = -lccn -lcrypto
+CFLAGS = -g -Wall -Wpointer-arith -Wreturn-type -Wstrict-prototypes
+LIBS = -lcrypto -lccn
 
 PROGRAMS = nlsr
 

@@ -733,6 +733,7 @@ process_incoming_content_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info*
 		struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 		get_nbr(nbr,selfp,info);
 		update_lsdb_interest_timed_out_zero_to_adl(nbr);
+		free(nbr);
 	}
 }
 

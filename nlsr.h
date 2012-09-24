@@ -9,6 +9,7 @@
 #define NLSR_UNLOCKED 0
 #define LSA_REFRESH_TIME 1800
 #define ROUTER_DEAD_INTERVAL 3600
+#define MULTI_PATH_FACE_NUM 0
 
 #define LINK_METRIC 10
 
@@ -76,6 +77,7 @@ struct nlsr
 	long int interest_resend_time;
 	long int lsa_refresh_time;
 	long int router_dead_interval;
+	long int multi_path_face_num;
 
 	int semaphor;
 	

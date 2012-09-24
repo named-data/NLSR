@@ -256,7 +256,7 @@ install_name_lsa(struct nlsa *name_lsa)
 				if ( name_lsa->header->isValid == 0 )
 				{
 					// have to call to delete npt table entry
-					delete_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name);
+					delete_npt_entry_by_router_and_name_prefix(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name);
 				
 					if ( strcmp(name_lsa->header->orig_router->name,nlsr->router_name)!= 0)
 					{
@@ -281,7 +281,7 @@ install_name_lsa(struct nlsa *name_lsa)
 					if ( strcmp(new_name_lsa->name_prefix->name,name_lsa->name_prefix->name) != 0 )
 					{
 						is_npt_update=1;
-						delete_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name);
+						delete_npt_entry_by_router_and_name_prefix(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name);
 					}
 
 					// copying LSA content with header
@@ -1221,13 +1221,11 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 	if( res == HT_OLD_ENTRY )
 	{
 		nlsa=e->data;
-		delete_npt_entry(nlsa->header->orig_router->name, nlsa->name_prefix->name);
+		delete_npt_entry_by_router_and_name_prefix(nlsa->header->orig_router->name, nlsa->name_prefix->name);
 		hashtb_delete(e);
 	}
-	else if( res == HT_OLD_ENTRY )
+	else if( res == HT_NEW_ENTRY )
 	{
-		nlsa=e->data;	
-		delete_npt_entry(nlsa->header->orig_router->name, nlsa->name_prefix->name);
 		hashtb_delete(e);
 	}
 	hashtb_end(e);

@@ -56,8 +56,8 @@ int get_number_of_next_hop(char *dest_router);
 void add_next_hop_router(char *dest_router);
 void add_next_hop_from_lsa_adj_body(char *body, int no_link);
 void print_routing_table(void);
-void do_old_routing_table_updates();
-void clear_old_routing_table();
+void do_old_routing_table_updates(void);
+void clear_old_routing_table(void);
 void update_routing_table_with_new_route(long int *parent,long int *dist, long int source);
 
 long int get_next_hop_from_calculation(long int *parent, long int dest,long int source);

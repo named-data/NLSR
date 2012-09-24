@@ -364,6 +364,34 @@ process_command_router_dead_interval(char *command)
 }
 
 void 
+process_command_multi_path_face_num(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( multi-path-face-num n )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *num;
+	long int number;
+	
+	num=strtok_r(command,sep,&rem);
+	if(num==NULL)
+	{
+		printf(" Wrong Command Format ( multi-path-face-num n)\n");
+		return;
+	}
+
+	number=atoi(num);
+	if ( number >= 0 && number <= 60 )
+	{
+		nlsr->multi_path_face_num=number;
+	}
+
+}
+
+void 
 process_conf_command(char *command)
 {
 	const char *separators=" \t\n";
@@ -406,6 +434,10 @@ process_conf_command(char *command)
 	else if(!strcmp(cmd_type,"router-dead-interval") )
 	{
 		process_command_router_dead_interval(remainder);
+	}
+	else if(!strcmp(cmd_type,"multi-path-face-num") )
+	{
+		process_command_multi_path_face_num(remainder);
 	}
 	else 
 	{
@@ -457,6 +489,9 @@ nlsr_destroy( void )
 	hashtb_destroy(&nlsr->lsdb->name_lsdb);
 	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
 	hashtb_destroy(&nlsr->pit_alsa);
+
+	//To Do: has to destroy the face_list one by one 	
+
 	hashtb_destroy(&nlsr->routing_table);
 
 
@@ -469,7 +504,8 @@ nlsr_destroy( void )
 	for(i=0;i<npt_element;i++)
 	{
 		ne=e->data;
-		hashtb_destroy(&ne->name_list);	
+		hashtb_destroy(&ne->name_list);
+		hashtb_destroy(&ne->face_list);	
 		hashtb_next(e);		
 	}
 
@@ -555,6 +591,7 @@ init_nlsr(void)
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
 	nlsr->lsa_refresh_time=LSA_REFRESH_TIME;
 	nlsr->router_dead_interval=ROUTER_DEAD_INTERVAL;
+	nlsr->multi_path_face_num=MULTI_PATH_FACE_NUM;
 
 
 	nlsr->semaphor=NLSR_UNLOCKED;
