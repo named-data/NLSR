@@ -248,7 +248,7 @@ update_adjacent_timed_out_zero_to_adl(struct name_prefix *nbr)
 void 
 update_lsdb_interest_timed_out_to_adl(struct name_prefix *nbr, int increment)
 {
-	printf("update_adjacent_timed_out_to_adl called \n");
+	printf("update_lsdb_interest_timed_out_to_adl called \n");
 
 	int res;
 	struct ndn_neighbor *nnbr;
@@ -257,18 +257,24 @@ update_lsdb_interest_timed_out_to_adl(struct name_prefix *nbr, int increment)
     	struct hashtb_enumerator *e = &ee;
 
 	hashtb_start(nlsr->adl, e);
+
+	//printf("Neighbor: %s , Length: %d \n",nbr->name, nbr->length);
+
 	res = hashtb_seek(e, nbr->name, nbr->length, 0);
 
 	if( res == HT_OLD_ENTRY )
 	{
+		//printf("Old Neighbor\n");
 		nnbr=e->data;
 		nnbr->lsdb_interest_timed_out += increment;
+		//printf("lsdb_interest_timed_out: %d \n",nnbr->lsdb_interest_timed_out);
 	}
 	else if(res == HT_NEW_ENTRY)
 	{
 		hashtb_delete(e);
 	}
 
+	//print_adjacent_from_adl();		
 	hashtb_end(e);
 }
 
@@ -375,6 +381,7 @@ no_active_nbr(void)
 int
 is_adj_lsa_build(void)
 {
+	//print_adjacent_from_adl();
 	int ret=0;
 
 	int nbr_count=0;	
@@ -395,8 +402,9 @@ is_adj_lsa_build(void)
 		{
 			nbr_count++;
 		}
-		else if (nbr->info_interest_timed_out >= nlsr->interest_retry)
+		else if ( (nbr->status == 0) && (nbr->info_interest_timed_out >= nlsr->interest_retry || nbr->lsdb_interest_timed_out >= nlsr->interest_retry))
 		{
+			//printf(" In Status: 0  info_interest_timed_out= %d and lsdb_interest_timed_out= %d\n",nbr->info_interest_timed_out,nbr->lsdb_interest_timed_out);
 			nbr_count++;
 		}
 		hashtb_next(e);		

@@ -587,34 +587,40 @@ install_adj_lsa(struct alsa * adj_lsa)
 
 
 
-		if(res == HT_NEW_ENTRY )
+		if(res == HT_NEW_ENTRY)
 		{
-			printf("New ADJ LSA... Adding to LSDB\n");
-			new_adj_lsa = e->data;
+			if ( adj_lsa->no_link > 0)
+			{
+				printf("New ADJ LSA... Adding to LSDB\n");
+				new_adj_lsa = e->data;
 
-			new_adj_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
-			new_adj_lsa->header->ls_type=adj_lsa->header->ls_type;
-			new_adj_lsa->header->orig_time=(char *)malloc(strlen(adj_lsa->header->orig_time)+1);
-			memcpy(new_adj_lsa->header->orig_time,adj_lsa->header->orig_time,strlen(adj_lsa->header->orig_time)+1);		
+				new_adj_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
+				new_adj_lsa->header->ls_type=adj_lsa->header->ls_type;
+				new_adj_lsa->header->orig_time=(char *)malloc(strlen(adj_lsa->header->orig_time)+1);
+				memcpy(new_adj_lsa->header->orig_time,adj_lsa->header->orig_time,strlen(adj_lsa->header->orig_time)+1);		
 
-			new_adj_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
-			new_adj_lsa->header->orig_router->name=(char *)malloc(adj_lsa->header->orig_router->length);
-			memcpy(new_adj_lsa->header->orig_router->name,adj_lsa->header->orig_router->name,adj_lsa->header->orig_router->length);
-			new_adj_lsa->header->orig_router->length=adj_lsa->header->orig_router->length;
+				new_adj_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+				new_adj_lsa->header->orig_router->name=(char *)malloc(adj_lsa->header->orig_router->length);
+				memcpy(new_adj_lsa->header->orig_router->name,adj_lsa->header->orig_router->name,adj_lsa->header->orig_router->length);
+				new_adj_lsa->header->orig_router->length=adj_lsa->header->orig_router->length;
 
-			new_adj_lsa->no_link=adj_lsa->no_link;
+				new_adj_lsa->no_link=adj_lsa->no_link;
 		
-			new_adj_lsa->body=(char *)malloc(strlen(adj_lsa->body)+1);
-			memset(new_adj_lsa->body,0,strlen(adj_lsa->body)+1);
-			memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);
+				new_adj_lsa->body=(char *)malloc(strlen(adj_lsa->body)+1);
+				memset(new_adj_lsa->body,0,strlen(adj_lsa->body)+1);
+				memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);
+			
+				add_next_hop_router(new_adj_lsa->header->orig_router->name);
+				add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
+			}
+			else 
+			{
+				hashtb_delete(e);
+			}
 
 			printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 			set_new_lsdb_version();	
 			printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
-
-			
-			add_next_hop_router(new_adj_lsa->header->orig_router->name);
-			add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
 		}
 		else if(res == HT_OLD_ENTRY)
 		{
@@ -625,24 +631,30 @@ install_adj_lsa(struct alsa * adj_lsa)
 			}
 			else
 			{
-				new_adj_lsa = e->data;
 
-				free(new_adj_lsa->header->orig_time);
-				new_adj_lsa->header->orig_time=(char *)malloc(strlen(adj_lsa->header->orig_time)+1);
-				memcpy(new_adj_lsa->header->orig_time,adj_lsa->header->orig_time,strlen(adj_lsa->header->orig_time)+1);
+				if ( adj_lsa->no_link > 0)
+				{				
+					new_adj_lsa = e->data;
 
-				new_adj_lsa->no_link=adj_lsa->no_link;
+					free(new_adj_lsa->header->orig_time);
+					new_adj_lsa->header->orig_time=(char *)malloc(strlen(adj_lsa->header->orig_time)+1);
+					memcpy(new_adj_lsa->header->orig_time,adj_lsa->header->orig_time,strlen(adj_lsa->header->orig_time)+1);
+
+					new_adj_lsa->no_link=adj_lsa->no_link;
 				
-				new_adj_lsa->body=(char *)malloc(strlen(adj_lsa->body)+1);
-				memset(new_adj_lsa->body,0,strlen(adj_lsa->body)+1);
-				memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);
+					new_adj_lsa->body=(char *)malloc(strlen(adj_lsa->body)+1);
+					memset(new_adj_lsa->body,0,strlen(adj_lsa->body)+1);
+					memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);
 
+					add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
+				}
+				else
+				{
+					hashtb_delete(e);
+				}
 				printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 				set_new_lsdb_version();	
 				printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
-
-				add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
-
 			}
 	
 		}

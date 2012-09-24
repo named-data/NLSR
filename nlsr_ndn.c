@@ -712,6 +712,7 @@ process_incoming_content_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info*
 		update_adjacent_lsdb_version_to_adl(nbr,lsdb_version);
 		printf("New LSDB Version of Neighbor: %s is :%s\n",nbr->name,get_nbr_lsdb_version(nbr->name));
 
+		update_lsdb_interest_timed_out_zero_to_adl(nbr);
 
 		free(lsdb_version);
 		free(nbr);	
@@ -723,12 +724,15 @@ process_incoming_content_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info*
 		long int interval=get_lsdb_synch_interval(nbr->name);
 		adjust_adjacent_last_lsdb_requested_to_adl(nbr->name,(long int)interval/2);
 
-
+		update_lsdb_interest_timed_out_zero_to_adl(nbr);
 		free(nbr);
 	}
 	else 
 	{
 		printf("NACK Content Received\n");
+		struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+		get_nbr(nbr,selfp,info);
+		update_lsdb_interest_timed_out_zero_to_adl(nbr);
 	}
 }
 
@@ -898,15 +902,14 @@ process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_u
 
 	printf("LSDB Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
 
+	update_lsdb_interest_timed_out_to_adl(nbr,1);
+
 	int interst_timed_out_num=get_lsdb_interest_timed_out_number(nbr);
 
-	if( interst_timed_out_num < nlsr->interest_retry )
+	printf("Interest Timed out number : %d Interest Retry: %d \n",interst_timed_out_num,nlsr->interest_retry);
+
+	if( interst_timed_out_num >= nlsr->interest_retry )
 	{
-		update_lsdb_interest_timed_out_to_adl(nbr,1);
-	}
-	else
-	{
-		update_lsdb_interest_timed_out_zero_to_adl(nbr);
 		update_adjacent_status_to_adl(nbr,NBR_DOWN);
 		if(!nlsr->is_build_adj_lsa_sheduled)
 		{
