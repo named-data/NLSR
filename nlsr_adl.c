@@ -381,7 +381,6 @@ no_active_nbr(void)
 int
 is_adj_lsa_build(void)
 {
-	//print_adjacent_from_adl();
 	int ret=0;
 
 	int nbr_count=0;	
@@ -404,7 +403,6 @@ is_adj_lsa_build(void)
 		}
 		else if ( (nbr->status == 0) && (nbr->info_interest_timed_out >= nlsr->interest_retry || nbr->lsdb_interest_timed_out >= nlsr->interest_retry))
 		{
-			//printf(" In Status: 0  info_interest_timed_out= %d and lsdb_interest_timed_out= %d\n",nbr->info_interest_timed_out,nbr->lsdb_interest_timed_out);
 			nbr_count++;
 		}
 		hashtb_next(e);		

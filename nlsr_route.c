@@ -72,13 +72,32 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		long int *parent=(long int *)malloc(map_element * sizeof(long int));
 		long int *dist=(long int *)malloc(map_element * sizeof(long int));
 
-		calculate_path(adj_matrix,parent,dist, map_element, source);
+		int num_link=get_no_link_from_adj_matrix(adj_matrix, map_element ,source);
 		
-		print_all_path_from_source(parent,source);
+		if ( num_link == 0 )
+		{	
+			calculate_path(adj_matrix,parent,dist, map_element, source);		
+			print_all_path_from_source(parent,source);
+			print_all_next_hop(parent,source);		
+			update_routing_table_with_new_route(parent, dist,source);
+		}
+		else
+		{
+			long int *links=(long int *)malloc(num_link*sizeof(long int));
+			long int *link_costs=(long int *)malloc(num_link*sizeof(long int));
+			get_links_from_adj_matrix(adj_matrix, map_element , links, link_costs, source);
+			for ( i=0 ; i < num_link; i++)
+			{
+				adjust_adj_matrix(adj_matrix, map_element,source,links[i],link_costs[i]);
+				calculate_path(adj_matrix,parent,dist, map_element, source);		
+				print_all_path_from_source(parent,source);
+				print_all_next_hop(parent,source);		
+				update_routing_table_with_new_route(parent, dist,source);
+			}
 
-		print_all_next_hop(parent,source);		
-
-		update_routing_table_with_new_route(parent, dist,source);
+			free(links);
+			free(link_costs);
+		}
 
 		update_npt_with_new_route();
 
@@ -119,40 +138,42 @@ calculate_path(int **adj_matrix, long int *parent,long int *dist ,long int V, lo
 		Q[i]=i;
 	} 
 
-	dist[S]=0;
-	sort_queue_by_distance(Q,dist,head,V);
-
-	while (head < V )
+	if ( S != NO_MAPPING_NUM )
 	{
-		u=Q[head];
-		if(dist[u] == INF_DISTANCE)
-		{
-			break;
-		}
+		dist[S]=0;
+		sort_queue_by_distance(Q,dist,head,V);
 
-		for(v=0 ; v <V; v++)
+		while (head < V )
 		{
-			if( adj_matrix[u][v] > 0 ) //
+			u=Q[head];
+			if(dist[u] == INF_DISTANCE)
 			{
-				if ( is_not_explored(Q,v,head+1,V) )
+				break;
+			}
+
+			for(v=0 ; v <V; v++)
+			{
+				if( adj_matrix[u][v] > 0 ) //
 				{
-					
-					if( dist[u] + adj_matrix[u][v] <  dist[v])
+					if ( is_not_explored(Q,v,head+1,V) )
 					{
-						dist[v]=dist[u] + adj_matrix[u][v] ;
-						parent[v]=u;
-					}	
+					
+						if( dist[u] + adj_matrix[u][v] <  dist[v])
+						{
+							dist[v]=dist[u] + adj_matrix[u][v] ;
+							parent[v]=u;
+						}	
+
+					}
 
 				}
 
 			}
 
+			head++;
+			sort_queue_by_distance(Q,dist,head,V);
 		}
-
-		head++;
-		sort_queue_by_distance(Q,dist,head,V);
 	}
-
 	free(Q);
 	//free(dist);	
 }
@@ -169,17 +190,19 @@ print_all_path_from_source(long int *parent,long int source)
     	hashtb_start(nlsr->map, e);
 	map_element=hashtb_n(nlsr->map);
 
-	for(i=0;i<map_element;i++)
+	if ( source != NO_MAPPING_NUM)
 	{
-		me=e->data;
-		if(me->mapping != source)
+		for(i=0;i<map_element;i++)
 		{
-			print_path(parent,(long int)me->mapping);
-			printf("\n");
+			me=e->data;
+			if(me->mapping != source)
+			{
+				print_path(parent,(long int)me->mapping);
+				printf("\n");
+			}
+			hashtb_next(e);		
 		}
-		hashtb_next(e);		
 	}
-
 	hashtb_end(e);
 
 }
@@ -336,6 +359,8 @@ make_map(void)
     	
     	hashtb_start(nlsr->lsdb->adj_lsdb, e);
 	adj_lsdb_element=hashtb_n(nlsr->lsdb->adj_lsdb);
+
+	add_map_entry(nlsr->router_name);
 
 	for(i=0;i<adj_lsdb_element;i++)
 	{
@@ -621,6 +646,55 @@ void print_adj_matrix(int **adj_matrix, int map_element)
 	}
 }
 
+
+int 
+get_no_link_from_adj_matrix(int **adj_matrix,long int V, long int S)
+{
+	int no_link=0;
+	int i;
+
+	for(i=0;i<V;i++)
+	{	
+		if ( adj_matrix[S][i] > 0 )
+		{
+			no_link++;
+		}
+	}
+	return no_link;
+}
+
+void 
+get_links_from_adj_matrix(int **adj_matrix, long int V ,long int *links, long int *link_costs,long int S)
+{
+	int i,j;
+	j=0;
+	for (i=0; i <V; i++)
+	{
+		if ( adj_matrix[S][i] > 0 )
+		{
+			links[j]=i;
+			link_costs[j]=adj_matrix[S][i];
+			j++;
+		}
+	}
+}
+
+void adjust_adj_matrix(int **adj_matrix, long int V, long int S, long int link,long int link_cost)
+{
+	int i;
+	for ( i = 0; i < V; i++ )
+	{
+		if ( i == link )
+		{
+			adj_matrix[S][i]=link_cost;
+		}
+		else 
+		{
+			adj_matrix[S][i]=0;
+		}
+	}
+
+}
 
 int 
 get_number_of_next_hop(char *dest_router)
