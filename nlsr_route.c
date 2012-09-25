@@ -81,7 +81,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 			print_all_next_hop(parent,source);		
 			update_routing_table_with_new_route(parent, dist,source);
 		}
-		else if ( (num_link != 0) && (nlsr->multi_path_face_num >= 1 ) )
+		else if ( (num_link != 0) && (nlsr->multi_path_face_num > 1 ) )
 		{
 			long int *links=(long int *)malloc(num_link*sizeof(long int));
 			long int *link_costs=(long int *)malloc(num_link*sizeof(long int));
