@@ -74,14 +74,14 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 
 		int num_link=get_no_link_from_adj_matrix(adj_matrix, map_element ,source);
 		
-		if ( (num_link == 0) || (nlsr->multi_path_face_num == 0 ) )
+		if ( (num_link == 0) || (nlsr->multi_path_face_num <= 1 ) )
 		{	
 			calculate_path(adj_matrix,parent,dist, map_element, source);		
 			print_all_path_from_source(parent,source);
 			print_all_next_hop(parent,source);		
 			update_routing_table_with_new_route(parent, dist,source);
 		}
-		else if ( (num_link != 0) && (nlsr->multi_path_face_num != 0 ) )
+		else if ( (num_link != 0) && (nlsr->multi_path_face_num >= 1 ) )
 		{
 			long int *links=(long int *)malloc(num_link*sizeof(long int));
 			long int *link_costs=(long int *)malloc(num_link*sizeof(long int));

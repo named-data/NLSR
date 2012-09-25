@@ -233,6 +233,7 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 				{
 					if( is_neighbor(nle->name) == 0 )
 					{
+						printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);
 					}
 				}
@@ -240,6 +241,7 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 				{
 					if ( num_face-nlsr->multi_path_face_num > 0 && is_neighbor(orig_router) == 0 )
 					{
+						printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);
 					}
 				}
@@ -337,6 +339,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 				{
 					if( is_neighbor(nle->name) == 0 )
 					{
+						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}
@@ -344,6 +347,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 				{
 					if ( num_face-nlsr->multi_path_face_num > 0 && is_neighbor(orig_router) == 0 )
 					{
+						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}
@@ -727,6 +731,7 @@ clean_old_fib_entries_from_npt(void)
 						//delete all the fib entries here
 						if( is_neighbor(nle->name) == 0 )
 						{
+							printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
 							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
 						}						
 		
@@ -925,6 +930,7 @@ destroy_faces_by_orig_router(char *orig_router)
 				{
 					if( is_neighbor(nle->name) == 0 )
 					{
+						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}
@@ -932,6 +938,7 @@ destroy_faces_by_orig_router(char *orig_router)
 				{
 					if ( num_face-nlsr->multi_path_face_num > 0 && is_neighbor(orig_router) == 0 )
 					{
+						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}
