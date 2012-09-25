@@ -303,6 +303,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 
 		if( get_adjacent_status(nbr) == 0 && get_timed_out_number(nbr)>=nlsr->interest_retry )
 		{
+			update_adjacent_timed_out_zero_to_adl(nbr);
 			send_info_interest_to_neighbor(nbr);
 		}
 
