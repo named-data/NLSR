@@ -204,7 +204,7 @@ writeLogg(const char *source_file, const char *function, const int line, const c
 		{            
 			struct timeval t;
 			gettimeofday(&t, NULL);
-			fprintf(fp,"%ld.%06u - %s, %s, %d:",(long)t.tv_sec , (unsigned)t.tv_usec , source_file , function , line);        
+			fprintf(fp,"%ld.%06u - %s, %s, %d :",(long)t.tv_sec , (unsigned)t.tv_usec , source_file , function , line);        
 			va_list args;
 			va_start(args, format);
 			vfprintf(fp, format, args);

@@ -541,7 +541,8 @@ void
 nlsr_destroy( void )
 {
 
-	printf("Freeing Allocated Memory....\n");	
+	printf("Freeing Allocated Memory....\n");
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Freeing Allocated Memory....\n");	
 	/* Destroying all face created by nlsr in CCND */
 	destroy_all_face_by_nlsr();	
 
@@ -584,6 +585,7 @@ nlsr_destroy( void )
 	free(nlsr);
 
 	printf("Finished freeing allocated memory\n");
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Finished freeing allocated memory\n");
 
 }
 
@@ -721,12 +723,15 @@ main(int argc, char *argv[])
 	if ( res < 0 )
 	{
 		fprintf(stderr,"Failed to register interest for router\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Failed to register interest for router\n");
 		ON_ERROR_DESTROY(res);
 	}
 	ccn_charbuf_destroy(&router_prefix);
 	
 	printf("Router Name : %s\n",nlsr->router_name);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Router Name : %s\n",nlsr->router_name);
 	printf("lsdb_version: %s\n",nlsr->lsdb->lsdb_version);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"lsdb_version: %s\n",nlsr->lsdb->lsdb_version);
 
 	print_name_prefix_from_npl();
 	print_adjacent_from_adl();
