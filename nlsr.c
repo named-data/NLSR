@@ -4,12 +4,14 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <assert.h>
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 #include <sys/types.h>
 #include <signal.h>
+
 
 
 
@@ -100,6 +102,38 @@ nlsr_stop_signal_handler(int sig)
 	signal(sig, SIG_IGN);
  	nlsr_destroy();
 	exit(0);	
+}
+
+void  
+daemonize_nlsr(void)
+{
+	int ret;
+	pid_t process_id = 0;
+	pid_t sid = 0;
+	process_id = fork();
+	if (process_id < 0)
+	{
+		printf("fork failed!\n");
+		ON_ERROR_DESTROY(process_id);
+	}
+	if (process_id > 0)
+	{
+		printf("Process daemonized. Process id: %d \n", process_id);
+		ret=process_id;
+		exit(0);
+	}
+	
+	umask(0);
+	sid = setsid();
+	if(sid < 0)
+	{
+		ON_ERROR_DESTROY(sid);		
+	}
+	
+	chdir("/");	
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 }
 
 void 
@@ -392,6 +426,30 @@ process_command_multi_path_face_num(char *command)
 }
 
 void 
+process_command_logdir(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( logdir /path/to/logdir )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *dir;
+
+	dir=strtok_r(command,sep,&rem);
+	if(dir==NULL)
+	{
+		printf(" Wrong Command Format ( logdir /path/to/logdir/ )\n");
+		return;
+	}
+	
+	nlsr->logDir=(char *)malloc(strlen(dir)+1);
+	memset(nlsr->logDir,0,strlen(dir)+1);
+	memcpy(nlsr->logDir,dir,strlen(dir));
+}
+
+void 
 process_conf_command(char *command)
 {
 	const char *separators=" \t\n";
@@ -438,6 +496,10 @@ process_conf_command(char *command)
 	else if(!strcmp(cmd_type,"multi-path-face-num") )
 	{
 		process_command_multi_path_face_num(remainder);
+	}
+	else if(!strcmp(cmd_type,"logdir") )
+	{
+			process_command_logdir(remainder);
 	}
 	else 
 	{
@@ -605,17 +667,16 @@ main(int argc, char *argv[])
 {
     	int res, ret;
     	char *config_file;
-	//int daemon_mode;
+	int daemon_mode=0;
 
-	ret=init_nlsr();	
-    	ON_ERROR_EXIT(ret);
+	
 
 	while ((res = getopt_long(argc, argv, "df:h", longopts, 0)) != -1) 
 	{
         	switch (res) 
 		{
 			case 'd':
-				//daemon_mode = 1;
+				daemon_mode = 1;
 				break;
 			case 'f':
 				config_file = optarg;
@@ -626,12 +687,22 @@ main(int argc, char *argv[])
 		}
     	}
 
+	ret=init_nlsr();	
+    	ON_ERROR_EXIT(ret);
 	readConfigFile(config_file);
-
+	
+	if ( daemon_mode == 1 )
+	{
+		daemonize_nlsr();
+	}
+	
+	startLogging(nlsr->logDir);
+	
 	nlsr->ccn=ccn_create();
 	if(ccn_connect(nlsr->ccn, NULL) == -1)
 	{
 		fprintf(stderr,"Could not connect to ccnd\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Could not connect to ccnd\n");
 		ON_ERROR_DESTROY(-1);
 	}
 	struct ccn_charbuf *router_prefix;	
@@ -640,6 +711,7 @@ main(int argc, char *argv[])
 	if(res<0)
 	{
 		fprintf(stderr, "Bad ccn URI: %s\n",nlsr->router_name);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Bad ccn URI: %s\n",nlsr->router_name);
 		ON_ERROR_DESTROY(res);
 	}
 

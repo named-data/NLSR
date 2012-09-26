@@ -78,6 +78,7 @@ struct nlsr
 	long int lsa_refresh_time;
 	long int router_dead_interval;
 	long int multi_path_face_num;
+	char *logDir;
 
 	int semaphor;
 	
