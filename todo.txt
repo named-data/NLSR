@@ -3,7 +3,7 @@ To Do:
 1. Add commenting facility in .conf file -- done, commenting character # or !
 2. Adding configuration command of lsa-refresh-time and router-dead-interval  --- done
 3. Adding trailing "/" remover from the commands if has any -- done 
-4. Multi Path Route Calculation -- done
-5. Writing Log so that need minimal change to status page script --doing
-6. Adding a fib entry for origination router itself -- done
+4. Multi Path Route Calculation
+5. Writing Log so that need minimal change to status page script
+6. Adding a fib entry for origination router itself 
 6. Providing api to add/delete link/name prefix
