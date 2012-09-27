@@ -370,10 +370,10 @@ write_log_for_name_lsa(struct nlsa *name_lsa)
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"-----------Name LSA Content---------------\n");
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Router: %s\n",name_lsa->header->orig_router->name);
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Router Length:	%d\n",name_lsa->header->orig_router->length);
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LS Type			 :	%d\n",name_lsa->header->ls_type);
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LS Id			 :	%ld\n",name_lsa->header->ls_id);
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Time	 :	%s\n",name_lsa->header->orig_time);
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Is Valid 		 :	%d\n",name_lsa->header->isValid);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LS Type:	%d\n",name_lsa->header->ls_type);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LS Id:	%ld\n",name_lsa->header->ls_id);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Time:	%s\n",name_lsa->header->orig_time);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Is Valid:	%d\n",name_lsa->header->isValid);
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LSA Data			\n");
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Name Prefix: %s\n",name_lsa->name_prefix->name);
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Name Prefix Length:	%d\n",name_lsa->name_prefix->length);
@@ -745,10 +745,10 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 		metric=strtok_r(NULL,sep,&rem);
 
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Link %d	 	\n",i+1);
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Neighbor		 : %s	\n",rtr_id);
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Neighbor Length		 : %s	\n",length);
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face		 : %s	\n",face);
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Metric			 : %s	\n",metric);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router: %s	\n",rtr_id);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router Length: %s	\n",length);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Metric: %s	\n",metric);
 
 
 		for(i=1;i<no_link;i++)
@@ -758,10 +758,10 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 			face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Link %d	 	\n",i+1);
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Neighbor		 : %s	\n",rtr_id);
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Neighbor Length		 : %s	\n",length);
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face		 : %s	\n",face);
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Metric			 : %s	\n",metric);
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router: %s	\n",rtr_id);
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router Length: %s	\n",length);
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Metric: %s	\n",metric);
 
 		}
 	}
@@ -774,12 +774,12 @@ void
 write_log_for_adj_lsa(struct alsa * adj_lsa)
 {
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"-----------Adj LSA Content---------------\n");
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Router       :	%s\n",adj_lsa->header->orig_router->name);
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Router Length:	%d\n",adj_lsa->header->orig_router->length);
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LS Type			 :	%d\n",adj_lsa->header->ls_type);
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Time	 :	%s\n",adj_lsa->header->orig_time);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Router: %s\n",adj_lsa->header->orig_router->name);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Router Length: %d\n",adj_lsa->header->orig_router->length);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LS Type:	%d\n",adj_lsa->header->ls_type);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Origination Time: %s\n",adj_lsa->header->orig_time);
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Lsa Data:\n");
-	writeLogg(__FILE__,__FUNCTION__,__LINE__,"		No of Link	: %d\n",adj_lsa->no_link);
+	writeLogg(__FILE__,__FUNCTION__,__LINE__,"		No of Link: %d\n",adj_lsa->no_link);
 
 	write_log_for_adj_lsa_body(adj_lsa->body,adj_lsa->no_link);
 	
