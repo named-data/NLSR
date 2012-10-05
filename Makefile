@@ -11,7 +11,7 @@ NLSR_SRCS=nlsr.c nlsr_ndn.c nlsr_npl.c  nlsr_adl.c nlsr_lsdb.c nlsr_route.c nlsr
 all: $(PROGRAMS)
 
 nlsr: $(NLSR_SRCS)
-	$(CC) $(CFLAGS) $(NLSR_SRCS) -o nlsr $(LIBS)
+	$(CC) $(CFLAGS) $(NLSR_SRCS) -o nlsr $(LIBS) -lm
 
 install: $(PROGRAMS)
 	cp $(PROGRAMS) $(INSTALL_PATH)
