@@ -962,6 +962,8 @@ send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 
 	 nlsr_unlock();
 
+	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &send_info_interest, NULL, 0);
+
 	return 0;
 }
 

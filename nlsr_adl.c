@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<string.h>
 #include<stdlib.h>
+#include<math.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
@@ -548,7 +549,7 @@ get_nbr_random_time_component(char *nbr)
 	if (res == HT_OLD_ENTRY)
 	{
 		nnbr=e->data;
-		time=nnbr->lsdb_random_time_component * nnbr->lsdb_interest_timed_out;
+		time=nnbr->lsdb_random_time_component * (int)pow(-1,nnbr->lsdb_interest_timed_out+1);
 	}
 	else if(res == HT_NEW_ENTRY)
 	{
