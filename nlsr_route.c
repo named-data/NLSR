@@ -56,6 +56,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		do_old_routing_table_updates();
 		clear_old_routing_table();	
 		print_routing_table();
+		print_npt();
 
 		int i;
 		int **adj_matrix;

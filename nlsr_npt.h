@@ -2,6 +2,7 @@
 #define _NLSR_NPT_H_
 
 #define NO_FACE -12345
+#define ZERO_FACE 0
 
 struct npt_entry
 {

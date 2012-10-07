@@ -91,14 +91,17 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 			for ( i=0; i < num_face ; i++)
 			{
 				int face=faces[i];
-				res_fle = hashtb_seek(ef, &face, sizeof(face), 0);
-				
-				if ( res_fle == HT_NEW_ENTRY )
+				if ( face != NO_FACE && face != ZERO_FACE)
 				{
-					struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
-					fle=ef->data;
-					fle->next_hop_face=face;
-					fle->route_cost=route_costs[i];
+					res_fle = hashtb_seek(ef, &face, sizeof(face), 0);
+				
+					if ( res_fle == HT_NEW_ENTRY )
+					{
+						struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
+						fle=ef->data;
+						fle->next_hop_face=face;
+						fle->route_cost=route_costs[i];
+					}
 				}
 		
 			}
@@ -144,16 +147,18 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 			for ( i=0; i< num_face ; i ++)
 			{
 				int face=faces[i];
-				res_fle = hashtb_seek(ef, &face, sizeof(face), 0);
-				
-				if ( res_fle == HT_NEW_ENTRY )
+				if ( face != NO_FACE && face != ZERO_FACE)
 				{
-					struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
-					fle=ef->data;
-					fle->next_hop_face=face;
-					fle->route_cost=route_costs[i];
+					res_fle = hashtb_seek(ef, &face, sizeof(face), 0);
+				
+					if ( res_fle == HT_NEW_ENTRY )
+					{
+						struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
+						fle=ef->data;
+						fle->next_hop_face=face;
+						fle->route_cost=route_costs[i];
+					}
 				}
-		
 			}
 			hashtb_end(ef);
 		}
@@ -229,24 +234,28 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 			
 			for( j=first_face; j>= last_face; j--)
 			{
-				if ( j == last_face )
+				//printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
+				//printf("Orig Router: %s \n",orig_router);
+				//printf("Name Prefix: %s \n",nle->name);
+				//printf("Is neighbor Orig Router: %d \n",is_neighbor(orig_router));
+				//printf("Is neighbor Name Prefix: %d \n",is_neighbor(nle->name));
+
+				if ( is_neighbor(orig_router) == 0 )
 				{
-					if( is_neighbor(nle->name) == 0 )
-					{
-						printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
-						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);
-					}
+					printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);	
 				}
 				else 
 				{
-					if ( num_face-nlsr->multi_path_face_num > 0 && is_neighbor(orig_router) == 0 )
+					if ( j == last_face && is_neighbor(nle->name)==0)
 					{
 						printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);
 					}
 				}
 			}
-
+			
+			
 			hashtb_next(enle);
 		}
 		hashtb_end(enle);
@@ -335,22 +344,21 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 
 			for( j=first_face; j>= last_face; j--)
 			{
-				if ( j == last_face )
+
+				if ( is_neighbor(orig_router) == 0 )
 				{
-					if( is_neighbor(nle->name) == 0 )
-					{
-						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
-					}
+					printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
 				}
 				else 
 				{
-					if ( num_face-nlsr->multi_path_face_num > 0 && is_neighbor(orig_router) == 0 )
+					if ( j == last_face && is_neighbor(nle->name)==0)
 					{
 						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}
+				
 			}
 			
 			
@@ -729,6 +737,9 @@ clean_old_fib_entries_from_npt(void)
 						nle=enle->data;
 
 						//delete all the fib entries here
+						printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
+
+						
 						if( is_neighbor(nle->name) == 0 )
 						{
 							printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
@@ -926,17 +937,14 @@ destroy_faces_by_orig_router(char *orig_router)
 			
 			for( j=first_face; j>= last_face; j--)
 			{
-				if ( j == last_face )
+				if ( is_neighbor(orig_router) == 0 )
 				{
-					if( is_neighbor(nle->name) == 0 )
-					{
-						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
-					}
+					printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
 				}
 				else 
 				{
-					if ( num_face-nlsr->multi_path_face_num > 0 && is_neighbor(orig_router) == 0 )
+					if ( j == last_face && is_neighbor(nle->name)==0)
 					{
 						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
