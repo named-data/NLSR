@@ -29,10 +29,10 @@ $sudo make install
 			      /           \
 			     /             \
 		       face7/               \ face10
-		   ---------		   ---------			---------
+		   ---------		   	---------			---------
 		   |	   |face8   face11 |	   |face13	face7	|	|
 		   |	   |---------------|	   |--------------------|	|
-		   ---------		   ---------			---------
+		   ---------			---------			---------
 	/ndn/memphis.edu/pollux		/ndn/memphis.edu/mira		/ndn/memphis.edu/sirius
 		
 
