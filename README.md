@@ -96,7 +96,7 @@ write log file to /home/nlsrLog/ directory.
 
 router-name /ndn/memphis.edu/castor
 ccnneighbor /ndn/memphis.edu/mira face10
-ccnneighbor /ndn/memphis.edu/pollux face7
+ccnneighbor /ndn/memphis.edu/pollux face9
 ccnname /ndn/memphis.edu/cslab/netlab
 ccnname /ndn/memphis.edu/cslab/wisemanet
 
