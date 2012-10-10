@@ -105,7 +105,7 @@ interest-retry 3
 interest-resend-time 10
 lsa-refresh-time 1800
 router-dead-interval 3600
-multi-path-face-num 2 
-logdir /home/NLSR2.0 
+multi-path-face-num 2
+logdir /home/nlsrLog/ 
 
 !-----Configuration file ends here
