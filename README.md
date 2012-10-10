@@ -94,11 +94,11 @@ write log file to /home/nlsrLog/ directory.
 
 #-----Configuration file starts here
 
-router-name /ndn/memphis.edu/netlab/macbook/
-ccnneighbor /ndn/memphis.edu/dunhall/castor face9
-ccnneighbor /ndn/memphis.edu/netlab/pollux face11
-ccnname /ndn/memphis.edu/patterson
-ccnname /ndn/memphis.edu/houston/
+router-name /ndn/memphis.edu/castor
+ccnneighbor /ndn/memphis.edu/mira face10
+ccnneighbor /ndn/memphis.edu/pollux face7
+ccnname /ndn/memphis.edu/cslab/netlab
+ccnname /ndn/memphis.edu/cslab/wisemanet
 
 lsdb-synch-interval 350
 interest-retry 3 
