@@ -20,17 +20,17 @@ $sudo make install
 	For the explanation of configuring NLSR, we will consider following network topology.
 
 
-				---------
-				|       |
-				|       |  /ndn/memphis.edu/castor
-				---------
-			face9	/       \ face11
-			       /         \
-			      /           \
-			     /             \
-		       face7/               \ face10
+                                ---------
+                                |       |
+                                |       |  /ndn/memphis.edu/castor
+                                ---------
+                           face9/       \ face11
+                               /         \
+                              /           \
+                             /             \
+                       face7/               \ face10
 		   ---------               ---------                    ---------
-		   |       |face8   face11 |       |face13	face7	|       |
+		   |       |face8   face11 |       |face13         face7|       |
 		   |       |---------------|       |--------------------|       |
 		   ---------               ---------                    ---------
 	/ndn/memphis.edu/pollux		/ndn/memphis.edu/mira		/ndn/memphis.edu/sirius
