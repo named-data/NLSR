@@ -92,7 +92,7 @@ write log file to /home/nlsrLog/ directory.
 /ndn/memphis.edu/cslab/netlab and /ndn/memphis.edu/cslab/wisemanet. Configuration file for 
 /ndn/memphis.edu/castor will look like below 
 
-#-----Configuration file starts here
+!-----Configuration file starts here
 
 router-name /ndn/memphis.edu/castor
 ccnneighbor /ndn/memphis.edu/mira face10
@@ -108,4 +108,4 @@ router-dead-interval 3600
 multi-path-face-num 2 
 logdir /home/NLSR2.0 
 
-#-----Configuration file ends here
+!-----Configuration file ends here
