@@ -21,18 +21,18 @@ $sudo make install
 
 
 				---------
-				|	|
-				|	|  /ndn/memphis.edu/castor
+				|       |
+				|       |  /ndn/memphis.edu/castor
 				---------
 			face9	/       \ face11
 			       /         \
 			      /           \
 			     /             \
 		       face7/               \ face10
-		   ---------		   	---------			---------
-		   |	   |face8   face11 |	   |face13	face7	|	|
-		   |	   |---------------|	   |--------------------|	|
-		   ---------			---------			---------
+		   ---------               ---------                    ---------
+		   |       |face8   face11 |       |face13	face7	|       |
+		   |       |---------------|       |--------------------|       |
+		   ---------               ---------                    ---------
 	/ndn/memphis.edu/pollux		/ndn/memphis.edu/mira		/ndn/memphis.edu/sirius
 		
 
