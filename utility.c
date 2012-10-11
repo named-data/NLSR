@@ -71,9 +71,14 @@ get_current_time_sec(void)
 void
 get_current_timestamp_micro(char * microSec)
 {
+	time_t gtime;
+	gtime=time(NULL);
+	struct tm *tm;
+	tm=localtime(&gtime);
+	
 	struct timeval now; 
 	gettimeofday(&now, NULL);
-	sprintf(microSec,"%ld%06ld",now.tv_sec,(long int)now.tv_usec);
+	sprintf(microSec,"%ld%06ld",now.tv_sec-tm->tm_gmtoff,(long int)now.tv_usec);
 }
 
 
