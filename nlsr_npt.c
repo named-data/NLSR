@@ -369,10 +369,12 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 
 		hashtb_end(enle);
 
+		/*
 		if ( hashtb_n(ne->name_list) == 0 )
 		{
 			hashtb_delete(e);
 		}
+		*/
 	}
 	
 	hashtb_end(e);
