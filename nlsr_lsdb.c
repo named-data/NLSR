@@ -1434,6 +1434,13 @@ refresh_name_lsdb(void)
 				if ( name_lsa->header->isValid == NAME_LSA_VALID )					
 				{
 					printf("Own Name LSA need to be refrshed\n");
+
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name lsa\n");
+					write_log_for_name_lsa(name_lsa);
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
+					
+
 					char *current_time_stamp=(char *)malloc(20);
 					memset(current_time_stamp,0,20);
 					get_current_timestamp_micro(current_time_stamp);
@@ -1442,6 +1449,11 @@ refresh_name_lsdb(void)
 					name_lsa->header->orig_time=(char *)malloc(strlen(current_time_stamp)+1); //free 
 					memset(name_lsa->header->orig_time,0,strlen(current_time_stamp)+1);
 					memcpy(name_lsa->header->orig_time,current_time_stamp,strlen(current_time_stamp)+1);
+
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Adding name lsa\n");
+					write_log_for_name_lsa(name_lsa);
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
 	
 					free(current_time_stamp);
 				}
@@ -1545,6 +1557,11 @@ refresh_adj_lsdb(void)
 			{
 				printf("Own Adj LSA need to be refrshed\n");
 
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting adj lsa\n");
+				write_log_for_adj_lsa(adj_lsa);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," adj_lsa_end\n");
+
 				char *current_time_stamp=(char *)malloc(20);
 				memset(current_time_stamp,0,20);
 				get_current_timestamp_micro(current_time_stamp);
@@ -1556,6 +1573,10 @@ refresh_adj_lsdb(void)
 	
 				free(current_time_stamp);
 
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Adding adj lsa\n");
+				write_log_for_adj_lsa(adj_lsa);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," adj_lsa_end\n");
 
 				printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 				set_new_lsdb_version();	
