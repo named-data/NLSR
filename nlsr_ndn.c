@@ -45,8 +45,11 @@ appendLifetime(struct ccn_charbuf *cb, int lifetime)
 void 
 get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp, struct ccn_upcall_info *info)
 {
+	if ( nlsr->debugging )
+		printf("get_nbr called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_nbr called\n");
 
-	printf("get_nbr called\n");
 	int res,i;
 	int nlsr_position=0;
 	int name_comps=(int)info->interest_comps->n;
@@ -88,7 +91,11 @@ get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp, struct ccn_upcall_inf
 	memcpy(nbr->name,neighbor,strlen(neighbor)+1);
 	nbr->length=strlen(neighbor)+1;
 
-	printf("Neighbor: %s Length: %d\n",nbr->name,nbr->length);
+	if ( nlsr->debugging )
+		printf("Neighbor: %s Length: %d\n",nbr->name,nbr->length);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor: %s Length: %d\n",nbr->name,nbr->length);
+
 	
 
 }
@@ -97,7 +104,13 @@ void
 get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, struct ccn_upcall_info *info, int offset)
 {
 
-	printf("get_lsa_identifier called\n");
+	//printf("get_lsa_identifier called\n");
+
+	if ( nlsr->debugging )
+		printf("get_lsa_identifier called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_lsa_identifier called\n");
+	
 	int res,i;
 	int nlsr_position=0;
 	int name_comps=(int)info->interest_comps->n;
@@ -140,7 +153,12 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, struct c
 	memcpy(lsaId->name,neighbor,strlen(neighbor)+1);
 	lsaId->length=strlen(neighbor)+1;
 
-	printf("LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length-1);
+	if ( nlsr->debugging )
+		printf("LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length-1);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length-1);
+
+	//printf("LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length-1);
 
 
 }
@@ -200,11 +218,20 @@ incoming_interest(struct ccn_closure *selfp,
             break;
         case CCN_UPCALL_INTEREST:
 		// printing the name prefix for which it received interest
-            	printf("Interest Received for name: "); 
+		if ( nlsr->debugging )
+            		printf("Interest Received for name: "); 
+		if ( nlsr->detailed_logging )
+            		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Received for name: ");
+		
 	    	struct ccn_charbuf*c;
 		c=ccn_charbuf_create();
 		ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E_Name],0);
-		printf("%s\n",ccn_charbuf_as_string(c));
+
+		if ( nlsr->debugging )
+			printf("%s\n",ccn_charbuf_as_string(c));
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"%s\n",ccn_charbuf_as_string(c));
+
 		ccn_charbuf_destroy(&c);
 
 		process_incoming_interest(selfp, info);
@@ -225,7 +252,11 @@ incoming_interest(struct ccn_closure *selfp,
 void 
 process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *info)
 {
-	printf("process_incoming_interest called \n");
+	if ( nlsr->debugging )
+		printf("process_incoming_interest called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_interest called \n");
+	
 	const unsigned char *comp_ptr1;
 	size_t comp_size;
 	int res,i;
@@ -244,7 +275,7 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 
 	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
 
-	printf("Det= %s \n",comp_ptr1);
+	//printf("Det= %s \n",comp_ptr1);
 
 	if(!strcmp((char *)comp_ptr1,"info"))
 	{
@@ -263,9 +294,18 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 void 
 process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info *info)
 {
-	printf("process_incoming_interest_info called \n");
+	if ( nlsr->debugging )
+	{
+		printf("process_incoming_interest_info called \n");
+		printf("Sending Info Content back.....\n");
+	}
+	if ( nlsr->detailed_logging )
+	{
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_interest_info called \n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending Info Content back.....\n");
+	}
+	
 
-	printf("Sending Info Content back.....\n");
 	int res;
 	struct ccn_charbuf *data=ccn_charbuf_create();
     	struct ccn_charbuf *name=ccn_charbuf_create();
@@ -287,18 +327,33 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 
 		res= ccn_sign_content(nlsr->ccn, data, name, &sp, raw_data,strlen(raw_data)); 
 		if(res >= 0)
-			printf("Signing Content is successful \n");
+		{
+			if ( nlsr->debugging )
+				printf("Signing info Content is successful \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing info Content is successful \n");
 
+		}
     		res=ccn_put(nlsr->ccn,data->buf,data->length);		
 		if(res >= 0)
-		printf("Sending Info Content is successful \n");
-
-		printf("Info Content sending done....\n");
+		{
+			if ( nlsr->debugging )
+				printf("Sending Info Content is successful \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending info Content is successful \n");
+		}
+		
 
 
 		struct name_prefix *nbr=(struct name_prefix * )malloc(sizeof(struct name_prefix *));
 		get_lsa_identifier(nbr,selfp,info,-1);
-		printf("Neighbor : %s Length : %d Status : %d\n",nbr->name,nbr->length,get_adjacent_status(nbr));
+
+		if ( nlsr->debugging )
+			printf("Neighbor : %s Length : %d Status : %d\n",nbr->name,nbr->length,get_adjacent_status(nbr));
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor : %s Length : %d Status : %d\n",nbr->name,nbr->length,get_adjacent_status(nbr));		
+
+		//printf("Neighbor : %s Length : %d Status : %d\n",nbr->name,nbr->length,get_adjacent_status(nbr));
 
 
 		if( get_adjacent_status(nbr) == 0 && get_timed_out_number(nbr)>=nlsr->interest_retry )
@@ -321,7 +376,13 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 void 
 process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info *info)
 {
-	printf("process_incoming_interest_lsdb called \n");
+	//printf("process_incoming_interest_lsdb called \n");
+
+	if ( nlsr->debugging )
+		printf("process_incoming_interest_lsdb called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_interest_lsdb called \n");
+	
 
 	int l,res;
 	const unsigned char *exclbase;
@@ -355,15 +416,26 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 		}
 		if (comp != NULL)
 		{
-			printf("LSDB Version in Exclusion Filter is %s\n",comp);
-			printf("LSDB Version of own NLSR is: %s \n",nlsr->lsdb->lsdb_version);
+			if ( nlsr->debugging )
+			{
+				printf("LSDB Version in Exclusion Filter is %s\n",comp);
+				printf("LSDB Version of own NLSR is: %s \n",nlsr->lsdb->lsdb_version);
+			}
+			if ( nlsr->detailed_logging )
+			{
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSDB Version in Exclusion Filter is %s\n",comp);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSDB Version of own NLSR is: %s \n",nlsr->lsdb->lsdb_version);
+			}
 			dbcmp=strcmp(nlsr->lsdb->lsdb_version,(char *)comp);
 		}
 		/* Now comp points to the start of your potential number, and size is its length */
 	}
 	else
 	{
-		printf("LSDB Version in Exclusion Filter is: None Added\n");
+		if ( nlsr->debugging )
+			printf("LSDB Version in Exclusion Filter is: None Added\n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSDB Version in Exclusion Filter is: None Added\n");
 		dbcmp=1;		
 
 	}
@@ -383,9 +455,16 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 
 	if(dbcmp>0)
 	{
-		printf("Has Updated Database than Neighbor\n");
-		printf("Sending LSDB Summary of Updated LSDB Content...\n");			
-
+		if ( nlsr->debugging )
+		{
+			printf("Has Updated Database than Neighbor\n");
+			printf("Sending LSDB Summary of Updated LSDB Content...\n");			
+		}
+		if ( nlsr->detailed_logging )
+		{
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Has Updated Database than Neighbor\n");
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending LSDB Summary of Updated LSDB Content...\n");	
+		}
 		ccn_name_append_str(name,nlsr->lsdb->lsdb_version);
 
 		struct ccn_charbuf *lsdb_data=ccn_charbuf_create();
@@ -403,29 +482,59 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 		{
 			res= ccn_sign_content(nlsr->ccn, data, name, &sp, raw_data , strlen(raw_data));
 		}
+
 		if(res >= 0)
-			printf("Signing LSDB Summary of Updated LSDB Content is successful \n");
+		{
+			if ( nlsr->debugging )
+				printf("Signing LSDB Summary of Updated LSDB Content is successful  \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing LSDB Summary of Updated LSDB Content is successful  \n");
+		}		
 
 	    	res=ccn_put(nlsr->ccn,data->buf,data->length);
 
 		if(res >= 0)
-			printf("Sending LSDB Summary of Updated LSDB Content is successful \n");
+		{
+			if ( nlsr->debugging )
+				printf("Sending LSDB Summary of Updated LSDB Content is successful  \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending LSDB Summary of Updated LSDB Content is successful  \n");
+		}
 		
 		ccn_charbuf_destroy(&lsdb_data);
 	}
 	else
 	{
-		printf("Does not have Updated Database than Neighbor\n");
-		
-		printf("Sending NACK Content.....\n");	
+		if ( nlsr->debugging )
+		{
+			printf("Does not have Updated Database than Neighbor\n");		
+			printf("Sending NACK Content.....\n");	
+		}
+		if ( nlsr->detailed_logging )
+		{
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Does not have Updated Database than Neighbor\n");		
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending NACK Content.....\n");
+		}
+
 		res= ccn_sign_content(nlsr->ccn, data, name, &sp, "NACK", strlen("NACK")); 
+
 		if(res >= 0)
-			printf("Signing NACK Content is successful \n");
+		{
+			if ( nlsr->debugging )
+				printf("Signing NACK Content is successful  \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing NACK Content is successful  \n");
+		}
 
 	    	res=ccn_put(nlsr->ccn,data->buf,data->length);
 
 		if(res >= 0)
-			printf("Sending NACK Content is successful \n");
+		{
+			if ( nlsr->debugging )
+				printf("Sending NACK Content is successful  \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending NACK Content is successful  \n");
+		}
 
 		
 	}
@@ -441,26 +550,35 @@ process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info
 void 
 process_incoming_interest_lsa(struct ccn_closure *selfp, struct ccn_upcall_info *info)
 {
-	printf("process_incoming_interest_lsa called \n");
+	if ( nlsr->debugging )
+		printf("process_incoming_interest_lsa called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_interest_lsa called \n");
 
 	int res;
 
 	struct name_prefix *lsaId=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	get_lsa_identifier(lsaId,selfp,info,0);
 
-	printf("LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length);
+	//printf("LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length);
 	int ls_type=get_ls_type(selfp, info);
 
 	struct ccn_charbuf *lsa_data=ccn_charbuf_create();
 
 	if ( ls_type == LS_TYPE_NAME )
 	{
-		printf("Interest Received for NAME LSA\n");
+		if ( nlsr->debugging )
+			printf("Interest Received for NAME LSA \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Received for NAME LSA \n");
 		get_name_lsa_data(lsa_data,lsaId);
 	}
 	else if ( ls_type == LS_TYPE_ADJ )
 	{
-		printf("Interest Received for ADJ LSA\n");
+		if ( nlsr->debugging )
+			printf("Interest Received for ADJ LSA \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Received for ADJ LSA \n");
 		get_adj_lsa_data(lsa_data,lsaId);
 	}
 
@@ -483,12 +601,24 @@ process_incoming_interest_lsa(struct ccn_closure *selfp, struct ccn_upcall_info 
         ccn_charbuf_append_closer(sp.template_ccnb);
 
 	res= ccn_sign_content(nlsr->ccn, data, name, &sp, raw_data , strlen(raw_data)); 
+
 	if(res >= 0)
-		printf("Signing LSA Content is successful \n");
+	{
+		if ( nlsr->debugging )
+			printf("Signing LSA Content is successful  \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing LSA Content is successful  \n");
+	}
 
 	res=ccn_put(nlsr->ccn,data->buf,data->length);
+
 	if(res >= 0)
-		printf("Sending LSA Content is successful \n");
+	{
+		if ( nlsr->debugging )
+			printf("Sending LSA Content is successful  \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending LSA Content is successful  \n");
+	}
 
 
 
@@ -513,23 +643,41 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
         case CCN_UPCALL_FINAL:
             break;
         case CCN_UPCALL_CONTENT:
-            	printf("Content Received for Name: ");  
+		if ( nlsr->debugging )
+			printf("Content Received for Name: "); 
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Content Received for Name: ");
+    
 		struct ccn_charbuf*c;
 		c=ccn_charbuf_create();
 		ccn_uri_append(c,info->interest_ccnb,info->pi->offset[CCN_PI_E],0);
-		printf("%s\n",ccn_charbuf_as_string(c));
+		if ( nlsr->debugging )
+			printf("%s\n",ccn_charbuf_as_string(c));
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"%s\n",ccn_charbuf_as_string(c));
+
 		ccn_charbuf_destroy(&c);
 
 		process_incoming_content(selfp,info);
 
 	    break;
         case CCN_UPCALL_INTEREST_TIMED_OUT:
-		printf("Interest Timed Out Received for Name: ");
+		//printf("Interest Timed Out Received for Name: ");
+		if ( nlsr->debugging )
+			printf("Interest Timed Out Received for Name:  "); 
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Timed Out Received for Name: ");
 		
 		struct ccn_charbuf*ito;
 		ito=ccn_charbuf_create();
 		ccn_uri_append(ito,info->interest_ccnb,info->pi->offset[CCN_PI_E],0);
-		printf("%s\n",ccn_charbuf_as_string(ito));
+
+		if ( nlsr->debugging )
+			printf("%s\n",ccn_charbuf_as_string(ito));
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"%s\n",ccn_charbuf_as_string(ito));
+
+		//printf("%s\n",ccn_charbuf_as_string(ito));
 		ccn_charbuf_destroy(&ito);
 
 		process_incoming_timed_out_interest(selfp,info);
@@ -537,7 +685,10 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 	    break;
         default:
             fprintf(stderr, "Unexpected response of kind %d\n", kind);
-            //return CCN_UPCALL_RESULT_ERR;
+	    if ( nlsr->debugging )
+		printf("Unexpected response of kind %d\n", kind);
+	    if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Unexpected response of kind %d\n", kind);
 	    break;
     }
     
@@ -550,7 +701,11 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 void 
 process_incoming_content(struct ccn_closure *selfp, struct ccn_upcall_info* info)
 {
-	printf("process_incoming_content called \n");
+	//printf("process_incoming_content called \n");
+	if ( nlsr->debugging )
+		printf("process_incoming_content called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content called \n");
 
 	const unsigned char *comp_ptr1;
 	size_t comp_size;
@@ -570,7 +725,7 @@ process_incoming_content(struct ccn_closure *selfp, struct ccn_upcall_info* info
 
 	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
 
-	printf("Det= %s \n",comp_ptr1);
+	//printf("Det= %s \n",comp_ptr1);
 
 	if(!strcmp((char *)comp_ptr1,"info"))
 	{
@@ -591,12 +746,19 @@ process_incoming_content(struct ccn_closure *selfp, struct ccn_upcall_info* info
 void 
 process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info* info)
 {
-	printf("process_incoming_content_info called \n");
+	//printf("process_incoming_content_info called \n");
+	if ( nlsr->debugging )
+		printf("process_incoming_content_info called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_info called \n");
 
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	get_nbr(nbr,selfp,info);
 
-	printf("Info Content Received For Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+	if ( nlsr->debugging )
+		printf("Info Content Received For Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Content Received For Neighbor: %s Length:%d\n",nbr->name,nbr->length);
 
 
 	const unsigned char *ptr;
@@ -617,13 +779,19 @@ process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info*
 
 	if(!nlsr->is_build_adj_lsa_sheduled)
 	{
-		printf("Scheduling Build and Install Adj LSA...\n");
+		if ( nlsr->debugging )
+			printf("Scheduling Build and Install Adj LSA...\n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Scheduling Build and Install Adj LSA...\n");
 		nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 100000, &build_and_install_adj_lsa, NULL, 0);
 		nlsr->is_build_adj_lsa_sheduled=1;		
 	}
 	else
 	{
-		printf("Build and Install Adj LSA already scheduled\n");
+		if ( nlsr->debugging )
+			printf("Build and Install Adj LSA already scheduled\n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Build and Install Adj LSA already scheduled\n");
 	}
 
 
@@ -636,7 +804,10 @@ process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info*
 void 
 process_incoming_content_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info* info)
 {
-	printf("process_incoming_content_lsdb called \n");
+	if ( nlsr->debugging )
+		printf("process_incoming_content_lsdb called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_lsdb called \n");
 
 	const unsigned char *ptr;
 	size_t length;

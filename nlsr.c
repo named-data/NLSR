@@ -113,7 +113,7 @@ daemonize_nlsr(void)
 	process_id = fork();
 	if (process_id < 0)
 	{
-		printf("fork failed!\n");
+		printf("Daemonization failed!\n");
 		ON_ERROR_DESTROY(process_id);
 	}
 	if (process_id > 0)
@@ -450,6 +450,56 @@ process_command_logdir(char *command)
 }
 
 void 
+process_command_detailed_log(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( detailed-log on/off )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *on_off;
+
+	on_off=strtok_r(command,sep,&rem);
+	if(on_off==NULL)
+	{
+		printf(" Wrong Command Format ( detailed-log on/off )\n");
+		return;
+	}
+	
+	if ( strcmp(on_off,"ON") == 0  || strcmp(on_off,"on") == 0)
+	{
+		nlsr->detailed_logging=1;
+	}
+}
+
+void 
+process_command_debug(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( debug on/off )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *on_off;
+
+	on_off=strtok_r(command,sep,&rem);
+	if(on_off==NULL)
+	{
+		printf(" Wrong Command Format ( debug on/off )\n");
+		return;
+	}
+	
+	if ( strcmp(on_off,"ON") == 0 || strcmp(on_off,"on") == 0 )
+	{
+		nlsr->debugging=1;
+	}
+}
+
+void 
 process_conf_command(char *command)
 {
 	const char *separators=" \t\n";
@@ -501,6 +551,14 @@ process_conf_command(char *command)
 	{
 			process_command_logdir(remainder);
 	}
+	else if(!strcmp(cmd_type,"detailed-log") )
+	{
+			process_command_detailed_log(remainder);
+	}
+	else if(!strcmp(cmd_type,"debug") )
+	{
+			process_command_debug(remainder);
+	}
 	else 
 	{
 		printf("Wrong configuration Command %s \n",cmd_type);
@@ -540,8 +598,10 @@ readConfigFile(const char *filename)
 void 
 nlsr_destroy( void )
 {
-
-	printf("Freeing Allocated Memory....\n");
+	if ( nlsr->debugging )
+	{
+		printf("Freeing Allocated Memory....\n");
+	}	
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Freeing Allocated Memory....\n");	
 	/* Destroying all face created by nlsr in CCND */
 	destroy_all_face_by_nlsr();	
@@ -583,8 +643,10 @@ nlsr_destroy( void )
 	free(nlsr->lsdb);
 	free(nlsr->router_name);
 	free(nlsr);
-
-	printf("Finished freeing allocated memory\n");
+	if ( nlsr->debugging )
+	{
+		printf("Finished freeing allocated memory\n");
+	}
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Finished freeing allocated memory\n");
 
 }
@@ -649,6 +711,9 @@ init_nlsr(void)
 	nlsr->is_build_adj_lsa_sheduled=0;
 	nlsr->is_send_lsdb_interest_scheduled=0;
 	nlsr->is_route_calculation_scheduled=0;	
+
+	nlsr->detailed_logging=0;
+	nlsr->debugging=0;
 
 	nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
 	nlsr->interest_retry = INTEREST_RETRY;
@@ -728,9 +793,11 @@ main(int argc, char *argv[])
 	}
 	ccn_charbuf_destroy(&router_prefix);
 	
-	printf("Router Name : %s\n",nlsr->router_name);
+	if ( nlsr->debugging )
+		printf("Router Name : %s\n",nlsr->router_name);
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Router Name : %s\n",nlsr->router_name);
-	printf("lsdb_version: %s\n",nlsr->lsdb->lsdb_version);
+	if ( nlsr->debugging )
+		printf("lsdb_version: %s\n",nlsr->lsdb->lsdb_version);
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"lsdb_version: %s\n",nlsr->lsdb->lsdb_version);
 
 	print_name_prefix_from_npl();

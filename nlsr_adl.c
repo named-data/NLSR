@@ -75,31 +75,59 @@ add_nbr_to_adl(struct name_prefix *new_nbr,int face)
 void 
 print_adjacent(struct ndn_neighbor *nbr)
 {
-	printf("print_adjacent called\n");
-	printf("--------Neighbor---------------------------\n");
-	printf("	Neighbor: %s \n",nbr->neighbor->name);
-	printf("	Length  : %d \n",nbr->neighbor->length);
-	printf("	Face    : %d \n",nbr->face);
-	printf("	Metric    : %d \n",nbr->metric);
-	printf("	Status  : %d \n",nbr->status);
-	printf("	LSDB Version: %s \n",nbr->last_lsdb_version);
-	printf("	Info Version: %s \n",nbr->last_info_version);
-	printf("	Info Interest Timed Out : %d \n",nbr->info_interest_timed_out);
-	printf("	LSDB Interest Timed Out : %d \n",nbr->lsdb_interest_timed_out);
-	printf("	LSDB Synch Interval     : %ld \n",nbr->lsdb_synch_interval);
-	printf("	LSDB Random Time comp   : %d \n",nbr->lsdb_random_time_component);
-	printf("	Las Time LSDB Requested: %ld \n",nbr->last_lsdb_requested);
-	printf("	IS_lsdb_send_interest_scheduled : %d \n",nbr->is_lsdb_send_interest_scheduled);
+	if ( nlsr->debugging )
+	{
+		printf("print_adjacent called\n");
+		printf("--------Neighbor---------------------------\n");
+		printf("	Neighbor: %s \n",nbr->neighbor->name);
+		printf("	Length  : %d \n",nbr->neighbor->length);
+		printf("	Face    : %d \n",nbr->face);
+		printf("	Metric    : %d \n",nbr->metric);
+		printf("	Status  : %d \n",nbr->status);
+		printf("	LSDB Version: %s \n",nbr->last_lsdb_version);
+		printf("	Info Version: %s \n",nbr->last_info_version);
+		printf("	Info Interest Timed Out : %d \n",nbr->info_interest_timed_out);
+		printf("	LSDB Interest Timed Out : %d \n",nbr->lsdb_interest_timed_out);
+		printf("	LSDB Synch Interval     : %ld \n",nbr->lsdb_synch_interval);
+		printf("	LSDB Random Time comp   : %d \n",nbr->lsdb_random_time_component);
+		printf("	Las Time LSDB Requested: %ld \n",nbr->last_lsdb_requested);
+		printf("	IS_lsdb_send_interest_scheduled : %d \n",nbr->is_lsdb_send_interest_scheduled);
 
-	printf("\n");
+		printf("\n");
+	}
+
+	if ( nlsr->detailed_logging )
+	{
+		
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"print_adjacent called\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"--------Neighbor---------------------------\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Neighbor: %s \n",nbr->neighbor->name);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Length  : %d \n",nbr->neighbor->length);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Face    : %d \n",nbr->face);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Metric    : %d \n",nbr->metric);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Status  : %d \n",nbr->status);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LSDB Version: %s \n",nbr->last_lsdb_version);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Info Version: %s \n",nbr->last_info_version);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Info Interest Timed Out : %d \n",nbr->info_interest_timed_out);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LSDB Interest Timed Out : %d \n",nbr->lsdb_interest_timed_out);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LSDB Synch Interval     : %ld \n",nbr->lsdb_synch_interval);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	LSDB Random Time comp   : %d \n",nbr->lsdb_random_time_component);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	Las Time LSDB Requested: %ld \n",nbr->last_lsdb_requested);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"	IS_lsdb_send_interest_scheduled : %d \n",nbr->is_lsdb_send_interest_scheduled);
+
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
+	}
 
 }
 
 void
 print_adjacent_from_adl(void)
 {
-
-	printf("print_adjacent_from_adl called \n");	
+	if ( nlsr->debugging )
+		printf("print_adjacent_from_adl called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"print_adjacent_from_adl called \n");		
+	
 	int i, adl_element;
 	struct ndn_neighbor *nbr;
 
@@ -123,7 +151,11 @@ print_adjacent_from_adl(void)
 int 
 get_adjacent_status(struct name_prefix *nbr)
 {
-	printf("get_adjacent_status called \n");
+
+	if ( nlsr->debugging )
+		printf("get_adjacent_status called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_adjacent_status called \n");
 
 	int res;
 	int status=-1;
@@ -154,7 +186,12 @@ get_adjacent_status(struct name_prefix *nbr)
 int 
 get_timed_out_number(struct name_prefix *nbr)
 {
-	printf("get_timed_out_number called \n");
+
+	if ( nlsr->debugging )
+		printf("get_timed_out_number called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_timed_out_number called \n");
+
 
 	int res,ret=-1;
 	struct ndn_neighbor *nnbr;
@@ -183,7 +220,11 @@ get_timed_out_number(struct name_prefix *nbr)
 int 
 get_lsdb_interest_timed_out_number(struct name_prefix *nbr)
 {
-	printf("get_timed_out_number called \n");
+
+	if ( nlsr->debugging )
+		printf("get_lsdb_interest_timed_out_number called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_lsdb_interest_timed_out_number called \n");
 
 	int res,ret=-1;
 	struct ndn_neighbor *nnbr;
@@ -212,7 +253,10 @@ get_lsdb_interest_timed_out_number(struct name_prefix *nbr)
 void 
 update_adjacent_timed_out_to_adl(struct name_prefix *nbr, int increment)
 {
-	printf("update_adjacent_timed_out_to_adl called \n");
+	if ( nlsr->debugging )
+		printf("update_adjacent_timed_out_to_adl called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_timed_out_to_adl called \n");
 
 	int res;
 	struct ndn_neighbor *nnbr;
@@ -239,7 +283,11 @@ update_adjacent_timed_out_to_adl(struct name_prefix *nbr, int increment)
 void 
 update_adjacent_timed_out_zero_to_adl(struct name_prefix *nbr)
 {
-	printf("update_adjacent_timed_out_zero_to_adl called \n");
+	if ( nlsr->debugging )
+		printf("update_adjacent_timed_out_zero_to_adl called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_timed_out_zero_to_adl called \n");
+	
 	int time_out_number=get_timed_out_number(nbr);
 	update_adjacent_timed_out_to_adl(nbr,-time_out_number);
 
@@ -249,7 +297,10 @@ update_adjacent_timed_out_zero_to_adl(struct name_prefix *nbr)
 void 
 update_lsdb_interest_timed_out_to_adl(struct name_prefix *nbr, int increment)
 {
-	printf("update_lsdb_interest_timed_out_to_adl called \n");
+	if ( nlsr->debugging )
+		printf("update_lsdb_interest_timed_out_to_adl called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_lsdb_interest_timed_out_to_adl called \n");
 
 	int res;
 	struct ndn_neighbor *nnbr;
@@ -282,7 +333,11 @@ update_lsdb_interest_timed_out_to_adl(struct name_prefix *nbr, int increment)
 void 
 update_lsdb_interest_timed_out_zero_to_adl(struct name_prefix *nbr)
 {
-	printf("update_adjacent_timed_out_zero_to_adl called \n");
+	if ( nlsr->debugging )
+		printf("update_adjacent_timed_out_zero_to_adl called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_timed_out_zero_to_adl called\n");
+	
 	int time_out_number=get_lsdb_interest_timed_out_number(nbr);
 	update_lsdb_interest_timed_out_to_adl(nbr,-time_out_number);
 
@@ -291,7 +346,10 @@ update_lsdb_interest_timed_out_zero_to_adl(struct name_prefix *nbr)
 void 
 update_adjacent_status_to_adl(struct name_prefix *nbr, int status)
 {
-	printf("update_adjacent_status_to_adl called \n");
+	if ( nlsr->debugging )
+		printf("update_adjacent_status_to_adl called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_status_to_adl called \n");
 
 	int res;
 	struct ndn_neighbor *nnbr;
@@ -323,7 +381,10 @@ update_adjacent_status_to_adl(struct name_prefix *nbr, int status)
 void 
 update_lsdb_synch_interval_to_adl(struct name_prefix *nbr, long int interval)
 {
-	printf("uupdate_lsdb_synch_interval_to_adl called \n");
+	if ( nlsr->debugging )
+		printf("update_lsdb_synch_interval_to_adl called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_lsdb_synch_interval_to_adl called \n");
 
 	int res;
 	struct ndn_neighbor *nnbr;
@@ -467,7 +528,10 @@ get_active_nbr_adj_data(struct ccn_charbuf *c)
 long int
 get_nbr_time_diff_lsdb_req(char *nbr)
 {
-	printf("get_nbr_time_diff_lsdb_req called \n");
+	if ( nlsr->debugging )
+		printf("get_nbr_time_diff_lsdb_req called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_nbr_time_diff_lsdb_req called\n");
 
 	long int time_diff=get_lsdb_synch_interval(nbr)+1;	
 	int res;
@@ -501,7 +565,10 @@ get_nbr_time_diff_lsdb_req(char *nbr)
 long int 
 get_nbr_last_lsdb_requested(char *nbr)
 {
-	printf("get_timed_out_number called \n");
+	if ( nlsr->debugging )
+		printf("get_timed_out_number called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_timed_out_number called\n");
 
 	long int last_lsdb_requested=0;
 
@@ -533,7 +600,10 @@ get_nbr_last_lsdb_requested(char *nbr)
 int 
 get_nbr_random_time_component(char *nbr)
 {
-	printf("get_timed_out_number called \n");
+	if ( nlsr->debugging )
+		printf("get_nbr_random_time_component called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_nbr_random_time_component called\n");
 
 	int time=0;
 
@@ -564,7 +634,10 @@ get_nbr_random_time_component(char *nbr)
 long int 
 get_lsdb_synch_interval(char *nbr)
 {
-	printf("get_lsdb_synch_interval called \n");
+	if ( nlsr->debugging )
+		printf("get_lsdb_synch_interval called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_lsdb_synch_interval called \n");
 
 	long int lsdb_synch_interval=300;	
 
@@ -597,7 +670,10 @@ get_lsdb_synch_interval(char *nbr)
 char *
 get_nbr_lsdb_version(char *nbr)
 {
-	printf("get_timed_out_number called \n");
+	if ( nlsr->debugging )
+		printf("get_nbr_lsdb_version called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_nbr_lsdb_version called \n");
 
 	char *version=NULL;
 
@@ -630,7 +706,10 @@ get_nbr_lsdb_version(char *nbr)
 void 
 update_adjacent_last_lsdb_requested_to_adl(char *nbr, long int timestamp)
 {
-	printf("update_adjacent_last_lsdb_requested_to_adl called \n");
+	if ( nlsr->debugging )
+		printf("update_adjacent_last_lsdb_requested_to_adl called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_last_lsdb_requested_to_adl called \n");
 
 	int res;
 	struct ndn_neighbor *nnbr;
@@ -658,7 +737,11 @@ update_adjacent_last_lsdb_requested_to_adl(char *nbr, long int timestamp)
 void 
 set_is_lsdb_send_interest_scheduled_to_zero(char *nbr)
 {
-	printf("set_is_lsdb_send_interest_scheduled_to_zero called \n");
+	if ( nlsr->debugging )
+		printf("set_is_lsdb_send_interest_scheduled_to_zero called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"set_is_lsdb_send_interest_scheduled_to_zero called\n");
+
 
 	int res;
 	struct ndn_neighbor *nnbr;
@@ -685,7 +768,10 @@ set_is_lsdb_send_interest_scheduled_to_zero(char *nbr)
 void 
 update_adjacent_lsdb_version_to_adl(struct name_prefix *nbr, char *version)
 {
-	printf("update_adjacent_timed_out_to_adl called \n");
+	if ( nlsr->debugging )
+		printf("update_adjacent_timed_out_to_adl called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_timed_out_to_adl called\n");
 
 	int res;
 	struct ndn_neighbor *nnbr;
@@ -717,6 +803,12 @@ void
 adjust_adjacent_last_lsdb_requested_to_adl(char *nbr, long int sec)
 {
 	printf("update_adjacent_last_lsdb_requested_to_adl called \n");
+
+	if ( nlsr->debugging )
+		printf("update_adjacent_last_lsdb_requested_to_adl called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_last_lsdb_requested_to_adl called\n");
+
 
 	int res;
 	struct ndn_neighbor *nnbr;
