@@ -25,6 +25,7 @@
 #include "nlsr_fib.h"
 #include "nlsr_route.h"
 #include "nlsr_adl.h"
+#include "utility.h"
 
 int
 add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, int *route_costs)
@@ -242,14 +243,22 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 
 				if ( is_neighbor(orig_router) == 0 )
 				{
-					printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
+					if ( nlsr->debugging )
+						printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);	
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
+					//printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
 					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);	
 				}
 				else 
 				{
 					if ( j == last_face && is_neighbor(nle->name)==0)
 					{
-						printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
+						if ( nlsr->debugging )
+							printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);	
+						if ( nlsr->detailed_logging )
+							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
+						//printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);
 					}
 				}
@@ -347,14 +356,20 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 
 				if ( is_neighbor(orig_router) == 0 )
 				{
-					printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
+					if ( nlsr->debugging )
+						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);	
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
 				}
 				else 
 				{
 					if ( j == last_face && is_neighbor(nle->name)==0)
 					{
-						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
+						if ( nlsr->debugging )
+							printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);	
+						if ( nlsr->detailed_logging )
+							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}
@@ -385,8 +400,17 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 void 
 print_npt(void)
 {
-	printf("\n");
-	printf("print_npt called\n\n");
+
+	if ( nlsr->debugging )
+	{
+		printf("\n");
+		printf("print_npt called\n");
+	}
+	if ( nlsr->detailed_logging )
+	{
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"print_npt called\n");
+	}
 	int i, npt_element;
 	
 	struct npt_entry *ne;
@@ -399,10 +423,21 @@ print_npt(void)
 
 	for(i=0;i<npt_element;i++)
 	{
-		printf("\n");
-		printf("----------NPT ENTRY %d------------------\n",i+1);
+		if ( nlsr->debugging )
+		{
+			printf("\n");
+			printf("----------NPT ENTRY %d------------------\n",i+1);
+		}
+		if ( nlsr->detailed_logging )
+		{
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"----------NPT ENTRY %d------------------\n",i+1);
+		}
 		ne=e->data;
-		printf(" Origination Router: %s \n",ne->orig_router);
+		if ( nlsr->debugging )
+			printf(" Origination Router: %s \n",ne->orig_router);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__," Origination Router: %s \n",ne->orig_router);
 		//ne->next_hop_face == NO_FACE ? printf(" Next Hop Face: NO_NEXT_HOP \n") : printf(" Next Hop Face: %d \n", ne->next_hop_face);
 		
 		int j, nl_element,face_list_element;
@@ -416,7 +451,10 @@ print_npt(void)
 		for (j=0;j<nl_element;j++)
 		{
 			nle=enle->data;
-			printf(" Name Prefix: %s \n",nle->name);
+			if ( nlsr->debugging )
+				printf(" Name Prefix: %s \n",nle->name);
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Name Prefix: %s \n",nle->name);
 			hashtb_next(enle);
 		}
 		hashtb_end(enle);
@@ -430,14 +468,21 @@ print_npt(void)
 		face_list_element=hashtb_n(ne->face_list);
 		if ( face_list_element <= 0 )
 		{
-			printf(" 	Face: No Face \n");
+			if ( nlsr->debugging )
+				printf(" 	Face: No Face \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: No Face \n");
+			
 		}
 		else
 		{
 			for(j=0;j<face_list_element;j++)
 			{
 				fle=ef->data;
-				printf(" 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
+				if ( nlsr->debugging )
+					printf(" 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
 				hashtb_next(ef);	
 			}
 		}
@@ -510,9 +555,18 @@ delete_orig_router_from_npt(char *orig_router)
 void
 add_face_to_npt_by_face_id(char *dest_router, int face_id, int route_cost)
 {
-	printf("add_face_to_npt_by_face_id called\n");
+	if ( nlsr->debugging )
+	{
+		printf("add_face_to_npt_by_face_id called\n");
+		printf("Dest Router: %s Face: %d Route_cost: %d \n",dest_router, face_id, route_cost);
+	}
+	if ( nlsr->detailed_logging )
+	{
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"add_face_to_npt_by_face_id called\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Dest Router: %s Face: %d Route_cost: %d \n",dest_router, face_id, route_cost);
+	}
 
-	printf("Dest Router: %s Face: %d Route_cost: %d \n",dest_router, face_id, route_cost);
+	
 	int res,res1;
 	struct npt_entry *ne;
 
@@ -524,7 +578,11 @@ add_face_to_npt_by_face_id(char *dest_router, int face_id, int route_cost)
 
 	if ( res == HT_OLD_ENTRY )
 	{
-		printf("Dest Router Found \n");
+		if ( nlsr->debugging )
+			printf("Dest Router Found \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Dest Router Found \n");
+	
 		ne=e->data;
 		
 		struct hashtb_enumerator eef;
@@ -535,7 +593,10 @@ add_face_to_npt_by_face_id(char *dest_router, int face_id, int route_cost)
 
 		if ( res1 == HT_OLD_ENTRY )
 		{
-			printf("Face Found \n");
+			if ( nlsr->debugging )
+				printf("Face Found \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Face Found \n");
 			struct face_list_entry *fle;//=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
 			fle=ef->data;
 			fle->next_hop_face=face_id;
@@ -543,7 +604,10 @@ add_face_to_npt_by_face_id(char *dest_router, int face_id, int route_cost)
 		}
 		else if ( res1 == HT_NEW_ENTRY )
 		{
-			printf("Face Not Found \n");
+			if ( nlsr->debugging )
+				printf("Face Not Found \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Face Not Found \n");
 			struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
 			fle=ef->data;
 			fle->next_hop_face=face_id;
@@ -564,7 +628,10 @@ add_face_to_npt_by_face_id(char *dest_router, int face_id, int route_cost)
 void
 add_new_fib_entries_to_npt(void)
 {
-	printf("add_new_fib_entries_to_npt called\n");
+	if ( nlsr->debugging )
+		printf("add_new_fib_entries_to_npt called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"add_new_fib_entries_to_npt called\n");
 	int i,j, rt_element,face_list_element;
 	
 	struct routing_table_entry *rte;
@@ -588,7 +655,10 @@ add_new_fib_entries_to_npt(void)
 		face_list_element=hashtb_n(rte->face_list);
 		if ( face_list_element <= 0 )
 		{
-			printf(" 	Face: No Face \n");
+			if ( nlsr->debugging )
+				printf(" 	Face: No Face \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: No Face \n");
 		}
 		else
 		{
@@ -612,7 +682,10 @@ add_new_fib_entries_to_npt(void)
 void
 delete_face_from_npt_by_face_id(char *dest_router, int face_id)
 {
-	printf("delete_face_from_npt_by_face_id called\n");
+	if ( nlsr->debugging )
+		printf("delete_face_from_npt_by_face_id\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_face_from_npt_by_face_id\n");
 
 	int res,res1;
 	struct npt_entry *ne;
@@ -661,10 +734,17 @@ delete_old_face_from_npt(struct ccn_schedule *sched, void *clienth, struct ccn_s
 	
 	nlsr_lock();
 
-	printf("delete_old_face_from_npt called\n");
+	if ( nlsr->debugging )
+		printf("delete_old_face_from_npt\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_old_face_from_npt\n");
+	
 	if ( ev->evdata != NULL )
-	{	
-		printf("Event Data: %s \n",(char *)ev->evdata);	
+	{		
+		if ( nlsr->debugging )
+			printf("Event Data: %s \n",(char *)ev->evdata);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Event Data: %s \n",(char *)ev->evdata);
 		char *sep="|";
 		char *rem;
 		char *orig_router;
@@ -678,7 +758,11 @@ delete_old_face_from_npt(struct ccn_schedule *sched, void *clienth, struct ccn_s
 		orig_router=strtok_r(face_data,sep,&rem);
 		faceid=strtok_r(NULL,sep,&rem);
 		face_id=atoi(faceid);
-		printf("Orig Router: %s Face: %d \n",orig_router,face_id);
+
+		if ( nlsr->debugging )
+			printf("Orig Router: %s Face: %d \n",orig_router,face_id);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Orig Router: %s Face: %d \n",orig_router,face_id);
 
 		delete_face_from_npt_by_face_id(orig_router,face_id);		
 	}
@@ -692,7 +776,11 @@ void
 clean_old_fib_entries_from_npt(void)
 {
 	
-	printf("clean_old_fib_entries_from_npt called\n\n");
+	
+	if ( nlsr->debugging )
+		printf("clean_old_fib_entries_from_npt called\n\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"clean_old_fib_entries_from_npt called\n\n");
 	int i, npt_element;
 	
 	struct npt_entry *ne;
@@ -717,7 +805,11 @@ clean_old_fib_entries_from_npt(void)
 		face_list_element=hashtb_n(ne->face_list);
 		if ( face_list_element <= 0 )
 		{
-			printf(" 	Face: No Face \n");
+			if ( nlsr->debugging )
+				printf(" 	Face: No Face \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: No Face \n");
+			
 		}
 		else
 		{
@@ -739,12 +831,15 @@ clean_old_fib_entries_from_npt(void)
 						nle=enle->data;
 
 						//delete all the fib entries here
-						printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
 
-						
+						//printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
+
 						if( is_neighbor(nle->name) == 0 )
 						{
-							printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
+							if ( nlsr->debugging )
+								printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
+							if ( nlsr->detailed_logging )
+								writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
 							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
 						}						
 		
@@ -941,14 +1036,20 @@ destroy_faces_by_orig_router(char *orig_router)
 			{
 				if ( is_neighbor(orig_router) == 0 )
 				{
-					printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
+					if ( nlsr->debugging )
+						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
 				}
 				else 
 				{
 					if ( j == last_face && is_neighbor(nle->name)==0)
 					{
-						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
+						if ( nlsr->debugging )
+							printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
+						if ( nlsr->detailed_logging )
+							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}

@@ -19,6 +19,7 @@
 
 #include "nlsr.h"
 #include "nlsr_npl.h"
+#include "utility.h"
 
 
 void 
@@ -50,7 +51,10 @@ add_name_to_npl(struct name_prefix *np)
 void
 print_name_prefix_from_npl(void)
 {
-	printf("print_name_prefix_from_npl called \n");	
+	if ( nlsr->debugging )
+		printf("print_name_prefix_from_npl called \n");	
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"print_name_prefix_from_npl called\n");
 	int i, npl_element;
 	struct name_prefix *np;
 
@@ -63,7 +67,10 @@ print_name_prefix_from_npl(void)
 	for(i=0;i<npl_element;i++)
 	{
 		np=e->data;
-		printf("Name Prefix: %s and Length: %d \n",np->name,np->length);	
+		if ( nlsr->debugging )
+			printf("Name Prefix: %s and Length: %d \n",np->name,np->length);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Name Prefix: %s and Length: %d \n",np->name,np->length);	
 		hashtb_next(e);		
 	}
 

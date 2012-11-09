@@ -1,19 +1,21 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
-#include <signal.h>
-
-
-
 
 #include <ccn/ccn.h>
 #include <ccn/uri.h>
@@ -595,6 +597,75 @@ readConfigFile(const char *filename)
 	return 0;
 }
 
+
+int
+nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
+{
+	struct timeval timeout;
+	if ( time_out_micro_sec < 0 )
+	{
+		timeout.tv_sec=1;
+		timeout.tv_usec=0;
+	}
+	else
+	{
+		time_out_micro_sec=(long int)time_out_micro_sec*0.4;
+		timeout.tv_sec=time_out_micro_sec / 1000000;
+		timeout.tv_usec=time_out_micro_sec % 1000000;
+	}
+
+	
+	int fd;
+	int nread;
+	int result;
+	fd_set testfds;
+	unsigned int client_len;
+	int client_sockfd;
+	char recv_buffer[1024];
+	bzero(recv_buffer,1024);
+	struct sockaddr_un client_address;
+
+	testfds=nlsr->readfds;
+	result = select(FD_SETSIZE, &testfds, NULL,NULL, &timeout);
+	
+	for(fd = 0; fd < FD_SETSIZE; fd++) 
+	{
+		if(FD_ISSET(fd,&testfds)) 
+		{
+			if ( fd == ccn_fd )
+			{
+				return 0;
+			}			
+			else if(fd == nlsr->nlsr_api_server_sock_fd)
+			{
+				client_len = sizeof(client_address);
+				client_sockfd = accept(nlsr->nlsr_api_server_sock_fd,(struct sockaddr *)&client_address, &client_len);
+				FD_SET(client_sockfd, &nlsr->readfds);
+			}
+			else
+			{   
+					
+				ioctl(fd, FIONREAD, &nread);
+				if(nread == 0) 
+				{
+					close(fd);
+					FD_CLR(fd, &nlsr->readfds);
+				}
+				else 
+				{
+					recv(fd, recv_buffer, 1024, 0);
+					printf("Received Data from NLSR API cleint: %s \n",recv_buffer);
+					close(fd);
+					FD_CLR(fd, &nlsr->readfds);
+					free(recv_buffer);
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 void 
 nlsr_destroy( void )
 {
@@ -651,6 +722,31 @@ nlsr_destroy( void )
 
 }
 
+
+void
+init_api_server(int ccn_fd)
+{
+	int server_sockfd;
+	int server_len;
+	struct sockaddr_un server_address;
+	
+	unlink("/tmp/nlsr_api_server_socket");
+	server_sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+
+	int flags = fcntl(server_sockfd, F_GETFL, 0);
+	fcntl(server_sockfd, F_SETFL, O_NONBLOCK|flags);
+
+	server_address.sun_family = AF_UNIX;
+	strcpy(server_address.sun_path, "/tmp/nlsr_api_server_socket");
+	server_len = sizeof(server_address);
+	bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
+	listen(server_sockfd, 100);
+	FD_ZERO(&nlsr->readfds);
+	FD_SET(server_sockfd, &nlsr->readfds);
+	FD_SET(ccn_fd, &nlsr->readfds);
+	nlsr->nlsr_api_server_sock_fd=server_sockfd;
+
+}
 
 int 
 init_nlsr(void)
@@ -721,8 +817,6 @@ init_nlsr(void)
 	nlsr->lsa_refresh_time=LSA_REFRESH_TIME;
 	nlsr->router_dead_interval=ROUTER_DEAD_INTERVAL;
 	nlsr->multi_path_face_num=MULTI_PATH_FACE_NUM;
-
-
 	nlsr->semaphor=NLSR_UNLOCKED;
 
 	return 0;
@@ -766,12 +860,16 @@ main(int argc, char *argv[])
 	startLogging(nlsr->logDir);
 	
 	nlsr->ccn=ccn_create();
-	if(ccn_connect(nlsr->ccn, NULL) == -1)
+	int ccn_fd=ccn_connect(nlsr->ccn, NULL);
+	if(ccn_fd == -1)
 	{
 		fprintf(stderr,"Could not connect to ccnd\n");
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Could not connect to ccnd\n");
 		ON_ERROR_DESTROY(-1);
 	}
+
+	init_api_server(ccn_fd);
+	
 	struct ccn_charbuf *router_prefix;	
 	router_prefix=ccn_charbuf_create(); 
 	res=ccn_name_from_uri(router_prefix,nlsr->router_name);		
@@ -809,17 +907,20 @@ main(int argc, char *argv[])
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
 	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
 
+	
 	while(1)
 	{	
 		if ( nlsr->semaphor == NLSR_UNLOCKED  )
 		{
 			if( nlsr->sched != NULL )
 			{
-				ccn_schedule_run(nlsr->sched);
+				long int micro_sec=ccn_schedule_run(nlsr->sched);
+				res=nlsr_api_server_poll(micro_sec,ccn_fd);
+				ON_ERROR_DESTROY(res);
 			}
 			if(nlsr->ccn != NULL)
 			{
-        			res = ccn_run(nlsr->ccn, 500);
+        			res = ccn_run(nlsr->ccn, 0);
 			}
 			if (!(nlsr->sched && nlsr->ccn))
 			{	      
@@ -828,6 +929,7 @@ main(int argc, char *argv[])
 		}
 
 	}
+	
 
 	return 0;
 }

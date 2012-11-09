@@ -83,6 +83,9 @@ struct nlsr
 	int debugging;
 
 	int semaphor;
+
+	int nlsr_api_server_sock_fd;
+	fd_set readfds;
 	
 };
 
