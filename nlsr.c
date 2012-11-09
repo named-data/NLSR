@@ -597,6 +597,18 @@ readConfigFile(const char *filename)
 	return 0;
 }
 
+char *
+process_api_client_command(char *command)
+{
+	char *msg;
+	msg=(char *)malloc(100);	
+	memset(msg,100,0);
+	strcpy(msg,"Action Carried Out for NLSR Api Client");
+
+	
+
+	return msg;
+}
 
 int
 nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
@@ -655,9 +667,11 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 				{
 					recv(fd, recv_buffer, 1024, 0);
 					printf("Received Data from NLSR API cleint: %s \n",recv_buffer);
+					char *msg=process_api_client_command(recv_buffer);
+					send(fd, msg, strlen(msg),0);
+					free(msg);
 					close(fd);
 					FD_CLR(fd, &nlsr->readfds);
-					free(recv_buffer);
 				}
 			}
 		}

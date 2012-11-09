@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 	struct sockaddr_un address;
 	int result;
 	int byteSend;
-
+	
 	int command_len=0;
 	int i;
 
@@ -36,6 +36,9 @@ int main(int argc, char *argv[])
 		usage(argv[0]);
 	if ( strcmp(argv[2],"neighbor") == 0 && argc <5 )
 		usage(argv[0]);
+
+	char recv_buffer[1024];
+	bzero(recv_buffer,1024);
 
 	for(i=1;i<argc;i++)
 		command_len+=(strlen(argv[i])+1);
@@ -58,8 +61,10 @@ int main(int argc, char *argv[])
 		perror("oops nlsrc ");
 		exit(1);
 	}
-	printf("Data to send: %s \n",command);
+	printf("Command to send: %s \n",command);
 	byteSend=send(sockfd, command, strlen(command),0);
+	recv(sockfd, recv_buffer, 1024, 0);
+	printf("%s\n",recv_buffer);
 	free(command);
 	close(sockfd);
 	exit(0);
