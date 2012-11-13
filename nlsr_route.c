@@ -71,7 +71,8 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 			adj_matrix[i] = malloc(map_element * sizeof(int));
 		}
 		make_adj_matrix(adj_matrix,map_element);
-		print_adj_matrix(adj_matrix,map_element);
+		if ( nlsr->debugging )
+			print_adj_matrix(adj_matrix,map_element);
 
 		long int source=get_mapping_no(nlsr->router_name);
 		long int *parent=(long int *)malloc(map_element * sizeof(long int));
@@ -202,8 +203,18 @@ print_all_path_from_source(long int *parent,long int source)
 			me=e->data;
 			if(me->mapping != source)
 			{
-				print_path(parent,(long int)me->mapping);
-				printf("\n");
+				
+				if ( nlsr->debugging )
+				{
+					print_path(parent,(long int)me->mapping);
+					printf("\n");
+				}
+				if ( nlsr->detailed_logging )
+				{
+					print_path(parent,(long int)me->mapping);
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
+				}
+				
 			}
 			hashtb_next(e);		
 		}
@@ -266,7 +277,6 @@ print_path(long int *parent, long int dest)
 {
 	if (parent[dest] != EMPTY_PARENT )
 		print_path(parent,parent[dest]);
-
 	printf(" %ld",dest);
 }
 
@@ -987,7 +997,10 @@ print_routing_table(void)
 
 	hashtb_end(e);
 
-	printf("\n");
+	if ( nlsr->debugging )
+		printf("\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
 }
 
 

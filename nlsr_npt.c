@@ -494,7 +494,10 @@ print_npt(void)
 
 	hashtb_end(e);
 
-	printf("\n");
+	if ( nlsr->debugging )
+		printf("\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
 }
 
 void
@@ -1091,5 +1094,8 @@ destroy_all_face_by_nlsr(void)
 
 	hashtb_end(e);
 
-	printf("\n");
+	if ( nlsr->debugging )
+		printf("\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
 }

@@ -21,6 +21,7 @@ struct ndn_neighbor
 };
 
 void add_nbr_to_adl(struct name_prefix *new_nbr,int face);
+void delete_nbr_from_adl(struct name_prefix *nbr);
 void print_adjacent(struct ndn_neighbor *nbr);
 void print_adjacent_from_adl(void);
 int get_adjacent_status(struct name_prefix *nbr);

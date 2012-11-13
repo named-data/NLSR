@@ -603,9 +603,109 @@ process_api_client_command(char *command)
 	char *msg;
 	msg=(char *)malloc(100);	
 	memset(msg,100,0);
-	strcpy(msg,"Action Carried Out for NLSR Api Client");
+	//strcpy(msg,"Action Carried Out for NLSR Api Client");
 
+	const char *sep=" \t\n";
+	char *rem=NULL;
+	char *cmd_type=NULL;
+	char *op_type=NULL;
+	char *name=NULL;
+	char *face=NULL;
+	int face_id;
+	int res;
+
+	op_type=strtok_r(command,sep,&rem);
+	cmd_type=strtok_r(NULL,sep,&rem);
+	name=strtok_r(NULL,sep,&rem);
+	if ( name[strlen(name)-1] == '/' )
+		name[strlen(name)-1]='\0';
+
+	struct name_prefix *np=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	np->name=(char *)malloc(strlen(name)+1);
+	memset(np->name,0,strlen(name)+1);
+	memcpy(np->name,name,strlen(name)+1);
+	np->length=strlen(name)+1;
+
+	if ( strcmp(cmd_type,"name")!= 0 )
+	{
+		face=strtok_r(NULL,sep,&rem);
+		sscanf(face,"face%d",&face_id);
+	}
 	
+	if ( strcmp(cmd_type,"name")== 0 )
+	{
+		if ( strcmp(op_type,"del") == 0 ) 
+		{
+			res=does_name_exist_in_npl(np);
+			if ( res == 0)
+			{
+				sprintf(msg,"Name %s does not exist !!",name);
+			}
+			else
+			{
+				long int ls_id=get_lsa_id_from_npl(np);
+				if ( ls_id != 0 )
+				{
+					make_name_lsa_invalid(np,LS_TYPE_NAME,ls_id);
+					sprintf(msg,"Name %s has been deleted and Advertised.",name);
+				}
+				else 
+				{
+					sprintf(msg,"Name %s does not have an Name LSA yet !!",name);
+				}
+			}			
+		}
+		else if ( strcmp(op_type,"add") == 0 )
+		{
+			res=does_name_exist_in_npl(np);
+			if ( res == 0)
+			{
+				add_name_to_npl(np);
+				build_and_install_single_name_lsa(np);
+				sprintf(msg,"Name %s has been added to advertise.",name);
+			}
+			else
+			{
+				sprintf(msg,"Name %s has already been advertised from this router !!",name);
+			}
+		} 
+	}
+	else if ( strcmp(cmd_type,"neighbor") == 0 )
+	{
+		if ( strcmp(op_type,"del") == 0 ) 
+		{
+			res=is_neighbor(np->name);
+			if ( res == 0)
+			{
+				sprintf(msg,"Neighbor %s does not exist !!",name);
+			}
+			else
+			{
+				update_adjacent_status_to_adl(np,NBR_DOWN);
+				delete_nbr_from_adl(np);
+				if(!nlsr->is_build_adj_lsa_sheduled)
+				{
+					nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 1000, &build_and_install_adj_lsa, NULL, 0);
+					nlsr->is_build_adj_lsa_sheduled=1;		
+				}
+				sprintf(msg,"Neighbor %s has been deleted from adjacency list.",name);	
+			}
+		}
+		else if ( strcmp(op_type,"add") == 0 )
+		{
+			res=is_neighbor(np->name);
+			if ( res == 0 )
+			{
+				add_nbr_to_adl(np,face_id);
+				sprintf(msg,"Neighbor %s has been added to adjacency list.",name);
+			}
+			else
+			{
+				sprintf(msg,"Neighbor %s already exists in adjacency list.",name);
+			}
+		}
+	}
+		
 
 	return msg;
 }
@@ -786,7 +886,7 @@ init_nlsr(void)
 	struct hashtb_param param_adl = {0};
 	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), &param_adl);
 	struct hashtb_param param_npl = {0};
-	nlsr->npl = hashtb_create(sizeof(struct name_prefix), &param_npl);
+	nlsr->npl = hashtb_create(sizeof(struct name_prefix_list_entry), &param_npl);
 	struct hashtb_param param_pit_alsa = {0};	
 	nlsr->pit_alsa = hashtb_create(sizeof(struct pending_interest), &param_pit_alsa);
 	struct hashtb_param param_npt = {0};	
