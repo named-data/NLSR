@@ -379,17 +379,10 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 			
 			
 
-			hashtb_delete(enle);
+			//hashtb_delete(enle); has to delete later
 		}
 
 		hashtb_end(enle);
-
-		/*
-		if ( hashtb_n(ne->name_list) == 0 )
-		{
-			hashtb_delete(e);
-		}
-		*/
 	}
 	
 	hashtb_end(e);
@@ -533,9 +526,7 @@ delete_orig_router_from_npt(char *orig_router)
 				for (j=0;j<nl_element;j++)
 				{
 					nle=enle->data;
-					
 					delete_npt_entry_by_router_and_name_prefix(ne->orig_router,nle->name);		
-	
 					hashtb_next(enle);
 				}
 				hashtb_end(enle);				
