@@ -12,6 +12,9 @@
 #include <sys/un.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -54,6 +57,7 @@ struct option longopts[] =
 {
     { "daemon",      no_argument,       NULL, 'd'},
     { "config_file", required_argument, NULL, 'f'},
+    { "api_port",    required_argument, NULL, 'p'},
     { "help",        no_argument,       NULL, 'h'},
     { 0 }
 };
@@ -66,6 +70,7 @@ usage(char *progname)
 	NDN routing....\n\
 	-d, --daemon        Run in daemon mode\n\
 	-f, --config_file   Specify configuration file name\n\
+	-p, --api_port      port where api client will connect\n\
 	-h, --help          Display this help message\n", progname);
 
     exit(1);
@@ -735,7 +740,7 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 	int client_sockfd;
 	char recv_buffer[1024];
 	bzero(recv_buffer,1024);
-	struct sockaddr_un client_address;
+	struct sockaddr_in client_address;
 
 	testfds=nlsr->readfds;
 	result = select(FD_SETSIZE, &testfds, NULL,NULL, &timeout);
@@ -820,7 +825,9 @@ nlsr_destroy( void )
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->npt);
 
-	
+
+	close(nlsr->nlsr_api_server_sock_fd);	
+
 	ccn_schedule_destroy(&nlsr->sched);
 	ccn_destroy(&nlsr->ccn);
 
@@ -842,16 +849,21 @@ init_api_server(int ccn_fd)
 {
 	int server_sockfd;
 	int server_len;
-	struct sockaddr_un server_address;
+	struct sockaddr_in server_address;
 	
-	unlink("/tmp/nlsr_api_server_socket");
-	server_sockfd = socket(AF_UNIX, SOCK_STREAM, 0);
+	//unlink("/tmp/nlsr_api_server_socket");
+	server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	int flags = fcntl(server_sockfd, F_GETFL, 0);
 	fcntl(server_sockfd, F_SETFL, O_NONBLOCK|flags);
 
-	server_address.sun_family = AF_UNIX;
-	strcpy(server_address.sun_path, "/tmp/nlsr_api_server_socket");
+	//server_address.sun_family = AF_UNIX;
+	//strcpy(server_address.sun_path, "/tmp/nlsr_api_server_socket");
+
+	server_address.sin_family = AF_INET;
+	server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server_address.sin_port = nlsr->api_port;
+
 	server_len = sizeof(server_address);
 	bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
 	listen(server_sockfd, 100);
@@ -933,6 +945,8 @@ init_nlsr(void)
 	nlsr->multi_path_face_num=MULTI_PATH_FACE_NUM;
 	nlsr->semaphor=NLSR_UNLOCKED;
 
+	nlsr->api_port=API_PORT;
+
 	return 0;
 }
 
@@ -943,10 +957,11 @@ main(int argc, char *argv[])
     	int res, ret;
     	char *config_file;
 	int daemon_mode=0;
+	int port=0;
 
 	
 
-	while ((res = getopt_long(argc, argv, "df:h", longopts, 0)) != -1) 
+	while ((res = getopt_long(argc, argv, "df:p:h", longopts, 0)) != -1) 
 	{
         	switch (res) 
 		{
@@ -956,6 +971,9 @@ main(int argc, char *argv[])
 			case 'f':
 				config_file = optarg;
 				break;
+			case 'p':
+				port = atoi(optarg);
+				break;
 			case 'h':
 			default:
 				usage(argv[0]);
@@ -964,8 +982,11 @@ main(int argc, char *argv[])
 
 	ret=init_nlsr();	
     	ON_ERROR_EXIT(ret);
+
+	if ( port !=0 )
+		nlsr->api_port=port;
+
 	readConfigFile(config_file);
-	
 	if ( daemon_mode == 1 )
 	{
 		daemonize_nlsr();
