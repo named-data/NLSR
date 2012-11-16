@@ -850,15 +850,17 @@ init_api_server(int ccn_fd)
 	int server_sockfd;
 	int server_len;
 	struct sockaddr_in server_address;
-	
-	//unlink("/tmp/nlsr_api_server_socket");
+	unsigned int yes=1;	
+
 	server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	int flags = fcntl(server_sockfd, F_GETFL, 0);
 	fcntl(server_sockfd, F_SETFL, O_NONBLOCK|flags);
 
-	//server_address.sun_family = AF_UNIX;
-	//strcpy(server_address.sun_path, "/tmp/nlsr_api_server_socket");
+	if (setsockopt(server_sockfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) 
+	{
+       		ON_ERROR_DESTROY(-1);
+       	}
 
 	server_address.sin_family = AF_INET;
 	server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
