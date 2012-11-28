@@ -839,38 +839,69 @@ process_incoming_content_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info*
 			orig_router=strtok_r(NULL,sep,&rem);
 			lst=strtok_r(NULL,sep,&rem);
 			ls_type=atoi(lst);
-			printf("Orig Router: %s ls Type: %d",orig_router,ls_type);			
+
+			if ( nlsr->debugging )
+				printf("Orig Router: %s ls Type: %d",orig_router,ls_type);
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Orig Router: %s ls Type: %d",orig_router,ls_type);
+		
 
 			if(ls_type == LS_TYPE_NAME)
 			{
 				lsid=strtok_r(NULL,sep,&rem);
 				ls_id=atoi(lsid);
 				orig_time=strtok_r(NULL,sep,&rem);
-				printf(" LS Id: %ld  Orig Time: %s\n",ls_id ,orig_time);
+
+				if ( nlsr->debugging )
+					printf(" LS Id: %ld  Orig Time: %s\n",ls_id ,orig_time);
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," LS Id: %ld  Orig Time: %s\n",ls_id ,orig_time);
+
+				
 				int is_new_name_lsa=check_is_new_name_lsa(orig_router,lst,lsid,orig_time);
 				if ( is_new_name_lsa == 1 )
 				{
-					printf("New NAME LSA.....\n");
+					if ( nlsr->debugging )
+						printf("New NAME LSA.....\n");
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"New NAME LSA.....\n");
+					
 					send_interest_for_name_lsa(nbr,orig_router,lst,lsid);	
 				}
 				else 
 				{
-					printf("Name LSA already exists in LSDB\n");
+					if ( nlsr->debugging )
+						printf("Name LSA already exists in LSDB\n");
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Name LSA already exists in LSDB\n");
+					
 				}
 			}
 			else
 			{
 				orig_time=strtok_r(NULL,sep,&rem);
-				printf(" Orig Time: %s\n",orig_time);
+
+				if ( nlsr->debugging )
+					printf(" Orig Time: %s\n",orig_time);
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Orig Time: %s\n",orig_time);
+				
+
 				int is_new_adj_lsa=check_is_new_adj_lsa(orig_router,lst,orig_time);
 				if ( is_new_adj_lsa == 1 )
 				{
-					printf("New ADJ LSA.....\n");
+					if ( nlsr->debugging )
+						printf("New Adj LSA.....\n");
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Adj LSA.....\n");
 					send_interest_for_adj_lsa(nbr,orig_router,lst);
 				}
 				else
 				{
-					printf("ADJ LSA already exists in LSDB\n");
+					if ( nlsr->debugging )
+						printf("Adj LSA already exists in LSDB\n");
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Adj LSA already exists in LSDB\n");
 				}
 			}
 
@@ -880,9 +911,17 @@ process_incoming_content_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info*
 		memset(lsdb_version,0,20);
 		get_lsdb_version(lsdb_version,selfp,info);
 
-		printf("Old LSDB Version of Neighbor: %s is :%s\n",nbr->name,get_nbr_lsdb_version(nbr->name));		
+		if ( nlsr->debugging )
+			printf("Old LSDB Version of Neighbor: %s is :%s\n",nbr->name,get_nbr_lsdb_version(nbr->name));
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Old LSDB Version of Neighbor: %s is :%s\n",nbr->name,get_nbr_lsdb_version(nbr->name));
+
 		update_adjacent_lsdb_version_to_adl(nbr,lsdb_version);
-		printf("New LSDB Version of Neighbor: %s is :%s\n",nbr->name,get_nbr_lsdb_version(nbr->name));
+		
+		if ( nlsr->debugging )
+			printf("New LSDB Version of Neighbor: %s is :%s\n",nbr->name,get_nbr_lsdb_version(nbr->name));
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"New LSDB Version of Neighbor: %s is :%s\n",nbr->name,get_nbr_lsdb_version(nbr->name));
 
 		update_lsdb_interest_timed_out_zero_to_adl(nbr);
 
@@ -901,7 +940,11 @@ process_incoming_content_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info*
 	}
 	else 
 	{
-		printf("NACK Content Received\n");
+		
+		if ( nlsr->debugging )
+			printf("NACK Content Received\n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"NACK Content Received\n");
 		struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 		get_nbr(nbr,selfp,info);
 		update_lsdb_interest_timed_out_zero_to_adl(nbr);
@@ -913,7 +956,12 @@ process_incoming_content_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info*
 void 
 process_incoming_content_lsa(struct ccn_closure *selfp, struct ccn_upcall_info* info)
 {
-	printf("process_incoming_content_lsa called \n");
+	
+
+	if ( nlsr->debugging )
+		printf("process_incoming_content_lsa called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_lsa called \n");	
 
 	char *sep="|";
 	char *rem;
@@ -942,9 +990,10 @@ process_incoming_content_lsa(struct ccn_closure *selfp, struct ccn_upcall_info* 
 	
 
 	
-	
-
-	printf("LSA Data\n");
+	if ( nlsr->debugging )
+		printf("LSA Data \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Data\n");	
 
 	if( strlen((char *) ptr ) > 0 )
 	{
@@ -953,13 +1002,17 @@ process_incoming_content_lsa(struct ccn_closure *selfp, struct ccn_upcall_info* 
 		orl=strtok_r(NULL,sep,&rem);
 		orig_router_length=atoi(orl);
 
-		printf("	Orig Router Name  : %s\n",orig_router);
-		printf("	Orig Router Length: %d\n",orig_router_length);
+		if ( nlsr->debugging )
+		{
+			printf("	Orig Router Name  : %s\n",orig_router);
+			printf("	Orig Router Length: %d\n",orig_router_length);
+		}
 
 		lst=strtok_r(NULL,sep,&rem);		
 		ls_type=atoi(lst);
 
-		printf("	LS Type  : %d\n",ls_type);
+		if ( nlsr->debugging )
+			printf("	LS Type  : %d\n",ls_type);
 
 		if ( ls_type == LS_TYPE_NAME )
 		{
@@ -971,11 +1024,14 @@ process_incoming_content_lsa(struct ccn_closure *selfp, struct ccn_upcall_info* 
 			np=strtok_r(NULL,sep,&rem);
 			np_length=strtok_r(NULL,sep,&rem);
 			name_length=atoi(np_length);
-			printf("	LS ID  : %ld\n",ls_id);
-			printf("	isValid  : %d\n",isValid);
-			printf("	Name Prefix : %s\n",np);
-			printf("	Orig Time   : %s\n",orig_time);
-			printf("	Name Prefix length: %d\n",name_length);
+			if ( nlsr->debugging )
+			{
+				printf("	LS ID  : %ld\n",ls_id);
+				printf("	isValid  : %d\n",isValid);
+				printf("	Name Prefix : %s\n",np);
+				printf("	Orig Time   : %s\n",orig_time);
+				printf("	Name Prefix length: %d\n",name_length);
+			}
 
 			build_and_install_others_name_lsa(orig_router,ls_type,ls_id,orig_time,isValid,np);
 
@@ -987,9 +1043,11 @@ process_incoming_content_lsa(struct ccn_closure *selfp, struct ccn_upcall_info* 
 			no_link=atoi(num_link);
 			data=rem;
 
-			printf("	No Link  : %d\n",no_link);
-			printf("	Data  : %s\n",data);
-
+			if ( nlsr->debugging )
+			{
+				printf("	No Link  : %d\n",no_link);
+				printf("	Data  : %s\n",data);
+			}
 			build_and_install_others_adj_lsa(orig_router,ls_type,orig_time,no_link,data);
 		}
 	}
@@ -999,7 +1057,13 @@ process_incoming_content_lsa(struct ccn_closure *selfp, struct ccn_upcall_info* 
 void
 process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall_info* info)
 {
-	printf("process_incoming_timed_out_interest called \n");
+	
+
+	if ( nlsr->debugging )
+		printf("process_incoming_timed_out_interest called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_timed_out_interest called \n");
+
 	int res,i;
 	int nlsr_position=0;
 	int name_comps=(int)info->interest_comps->n;
@@ -1031,27 +1095,38 @@ process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall
 void
 process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_upcall_info* info)
 {
-	printf("process_incoming_timed_out_interest_info called \n");
+	
+	if ( nlsr->debugging )
+		printf("process_incoming_timed_out_interest_info called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_timed_out_interest_info called \n");
 
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	get_nbr(nbr,selfp,info);
 
-	printf("Info Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+	if ( nlsr->debugging )
+		printf("Info Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+	
 
 
 	update_adjacent_timed_out_to_adl(nbr,1);
 	print_adjacent_from_adl();	
 	int timed_out=get_timed_out_number(nbr);
 
+	if ( nlsr->debugging )
+		printf("Neighbor: %s Info Interest Timed Out: %d times\n",nbr->name,timed_out);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor: %s Info Interest Timed Out: %d times\n",nbr->name,timed_out);
+
 
 	if(timed_out<nlsr->interest_retry && timed_out>0) // use configured variables 
 	{
-		printf("Neighbor: %s Info Interest Timed Out: %d times\n",nbr->name,timed_out);
 		send_info_interest_to_neighbor(nbr);
 	}
 	else
-	{
-		printf("Neighbor: %s Info Interest Timed Out: %d times\n",nbr->name,timed_out);		
+	{		
 		update_adjacent_status_to_adl(nbr,NBR_DOWN);
 		if(!nlsr->is_build_adj_lsa_sheduled)
 		{
@@ -1068,18 +1143,30 @@ process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_u
 void
 process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_upcall_info* info)
 {
-	printf("process_incoming_timed_out_interest_lsdb called \n");
+	if ( nlsr->debugging )
+		printf("process_incoming_timed_out_interest_lsdb called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_timed_out_interest_lsdb called \n");
 
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	get_nbr(nbr,selfp,info);
 
-	printf("LSDB Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+	if ( nlsr->debugging )
+		printf("LSDB Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSDB Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+	
 
 	update_lsdb_interest_timed_out_to_adl(nbr,1);
 
 	int interst_timed_out_num=get_lsdb_interest_timed_out_number(nbr);
 
-	printf("Interest Timed out number : %d Interest Retry: %d \n",interst_timed_out_num,nlsr->interest_retry);
+	if ( nlsr->debugging )
+		printf("Interest Timed out number : %d Interest Retry: %d \n",interst_timed_out_num,nlsr->interest_retry);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Timed out number : %d Interest Retry: %d \n",interst_timed_out_num,nlsr->interest_retry);
+
+	
 
 	if( interst_timed_out_num >= nlsr->interest_retry )
 	{
@@ -1097,7 +1184,10 @@ process_incoming_timed_out_interest_lsdb(struct ccn_closure* selfp, struct ccn_u
 void
 process_incoming_timed_out_interest_lsa(struct ccn_closure* selfp, struct ccn_upcall_info* info)
 {
-	printf("process_incoming_timed_out_interest_lsa called \n");
+	if ( nlsr->debugging )
+		printf("process_incoming_timed_out_interest_lsa called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_timed_out_interest_lsa called \n");
 	
 }
 
@@ -1111,8 +1201,15 @@ send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 
          nlsr_lock();
 
-	printf("send_info_interest called \n");
-	printf("\n");
+	if ( nlsr->debugging )
+		printf("send_info_interest called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_info_interest called \n");
+
+	if ( nlsr->debugging )
+		printf("\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
 
 	int adl_element,i;
 	struct ndn_neighbor *nbr;
@@ -1141,7 +1238,12 @@ send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 void 
 send_info_interest_to_neighbor(struct name_prefix *nbr)
 {
-	printf("send_info_interest_to_neighbor called \n");
+
+	if ( nlsr->debugging )
+		printf("send_info_interest_to_neighbor called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_info_interest_to_neighbor called \n");
+
 
 	int res;
 	char info_str[5];
@@ -1186,12 +1288,20 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 		ccn_charbuf_append_closer(templ); /* </Interest> */
 		/* Adding InterestLifeTime and InterestScope filter done */
 	
-		printf("Sending info interest on name prefix : %s \n",int_name);
+		if ( nlsr->debugging )
+			printf("Sending info interest on name prefix : %s \n",int_name);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending info interest on name prefix : %s \n",int_name);
 
 		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
 
 		if ( res >= 0 )
-			printf("Info interest sending Successfull .... \n");	
+		{
+			if ( nlsr->debugging )
+				printf("Info interest sending Successfull .... \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info interest sending Successfull .... \n");
+		}	
 		ccn_charbuf_destroy(&templ);
 	}
 	ccn_charbuf_destroy(&name);
@@ -1203,7 +1313,10 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 int 
 send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
-	printf("send_lsdb_interest called \n");	
+	if ( nlsr->debugging )
+		printf("send_lsdb_interest called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_lsdb_interest called \n");	
 
 	if(flags == CCN_SCHEDULE_CANCEL)
 	{
@@ -1229,8 +1342,12 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 		{	
 			if(nbr->is_lsdb_send_interest_scheduled == 0)
 			{
-				long int time_diff=get_nbr_time_diff_lsdb_req(nbr->neighbor->name);	
-				printf("Time since last time LSDB requested : %ld Seconds for Neighbor: %s \n",time_diff,nbr->neighbor->name);		
+				long int time_diff=get_nbr_time_diff_lsdb_req(nbr->neighbor->name);
+				if ( nlsr->debugging )
+					printf("Time since last time LSDB requested : %ld Seconds for Neighbor: %s \n",time_diff,nbr->neighbor->name);
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Time since last time LSDB requested : %ld Seconds for Neighbor: %s \n",time_diff,nbr->neighbor->name);	
+						
 
 				if( time_diff >= ( get_lsdb_synch_interval(nbr->neighbor->name) + get_nbr_random_time_component(nbr->neighbor->name) ) )
 				{
@@ -1253,14 +1370,21 @@ send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 void 
 send_lsdb_interest_to_nbr(struct name_prefix *nbr)
 {
-	printf("send_lsdb_interest_to_nbr called \n");	
+	if ( nlsr->debugging )
+		printf("send_lsdb_interest_to_nbr called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_lsdb_interest_to_nbr called \n");
 
 	char *last_lsdb_version=get_nbr_lsdb_version(nbr->name);
 
 	if(last_lsdb_version !=NULL)
 	{
-		printf("Last LSDB Version: %s \n",last_lsdb_version);
+		
 
+		if ( nlsr->debugging )
+			printf("Last LSDB Version: %s \n",last_lsdb_version);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Last LSDB Version: %s \n",last_lsdb_version);
 
 		struct ccn_charbuf *name;
 		int res;
@@ -1272,7 +1396,11 @@ send_lsdb_interest_to_nbr(struct name_prefix *nbr)
 		memset(&lsdb_str,0,5);
 		sprintf(lsdb_str,"lsdb");		
 		//make and send interest with exclusion filter as last_lsdb_version
-		printf("Sending interest for name prefix:%s/%s/%s\n",nbr->name,nlsr_str,lsdb_str);	
+		if ( nlsr->debugging )
+			printf("Sending interest for name prefix:%s/%s/%s\n",nbr->name,nlsr_str,lsdb_str);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending interest for name prefix:%s/%s/%s\n",nbr->name,nlsr_str,lsdb_str);
+			
 		name=ccn_charbuf_create();
 		res=ccn_name_from_uri(name,nbr->name);
 
@@ -1315,7 +1443,10 @@ send_lsdb_interest_to_nbr(struct name_prefix *nbr)
 
 			if ( res >= 0 )
 			{
-				printf("Interest sending Successfull .... \n");	
+				if ( nlsr->debugging )
+					printf("Interest sending Successfull .... \n");
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest sending Successfull .... \n");	
 				update_adjacent_last_lsdb_requested_to_adl(nbr->name,get_current_time_sec());
 
 			}
@@ -1330,7 +1461,10 @@ send_lsdb_interest_to_nbr(struct name_prefix *nbr)
 void 
 send_interest_for_name_lsa(struct name_prefix *nbr, char *orig_router, char *ls_type, char *ls_id)
 {
-	printf("send_interest_for_name_lsa called\n");
+	if ( nlsr->debugging )
+		printf("send_interest_for_name_lsa called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_interest_for_name_lsa called\n");
 
 	int res;
 	char lsa_str[5];
@@ -1381,13 +1515,22 @@ send_interest_for_name_lsa(struct name_prefix *nbr, char *orig_router, char *ls_
 	ccn_charbuf_append_closer(templ); /* </Interest> */
 	/* Adding InterestLifeTime and InterestScope filter done */
 
-	printf("Sending NAME LSA interest on name prefix : %s/%s/%s\n",int_name,ls_type,ls_id);
+	if ( nlsr->debugging )
+		printf("Sending NAME LSA interest on name prefix : %s/%s/%s\n",int_name,ls_type,ls_id);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending NAME LSA interest on name prefix : %s/%s/%s\n",int_name,ls_type,ls_id);
+
 
 	res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
 
 	if ( res >= 0 )
-		printf("NAME LSA interest sending Successfull .... \n");	
+	{
+		if ( nlsr->debugging )
+			printf("NAME LSA interest sending Successfull .... \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"NAME LSA interest sending Successfull .... \n");
 	
+	}	
 	ccn_charbuf_destroy(&templ);
 	ccn_charbuf_destroy(&name);
 	free(int_name);
@@ -1398,7 +1541,10 @@ send_interest_for_name_lsa(struct name_prefix *nbr, char *orig_router, char *ls_
 void 
 send_interest_for_adj_lsa(struct name_prefix *nbr, char *orig_router, char *ls_type)
 {
-	printf("send_interest_for_adj_lsa called\n");
+	if ( nlsr->debugging )
+		printf("send_interest_for_name_lsa called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_interest_for_name_lsa called\n");
 
 	int res;
 	char lsa_str[5];
@@ -1446,13 +1592,19 @@ send_interest_for_adj_lsa(struct name_prefix *nbr, char *orig_router, char *ls_t
 	ccn_charbuf_append_closer(templ); /* </Interest> */
 	/* Adding InterestLifeTime and InterestScope filter done */
 
-	printf("Sending ADJ LSA interest on name prefix : %s\n",int_name);
+	if ( nlsr->debugging )
+		printf("Sending ADJ LSA interest on name prefix : %s\n",int_name);
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending ADJ LSA interest on name prefix : %s\n",int_name);
 
 	res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
 
 	if ( res >= 0 )
 	{
-		printf("ADJ LSA interest sending Successfull .... \n");	
+		if ( nlsr->debugging )
+			printf("ADJ LSA interest sending Successfull .... \n");	
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"ADJ LSA interest sending Successfull .... \n");	
 	}
 	
 	ccn_charbuf_destroy(&templ);

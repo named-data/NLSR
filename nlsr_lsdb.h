@@ -47,6 +47,7 @@ struct nlsa
 
 void set_new_lsdb_version(void);
 void build_and_install_name_lsas(void);
+void build_and_install_single_name_lsa(struct name_prefix *np);
 void build_name_lsa(struct nlsa *name_lsa, struct name_prefix *np);
 void install_name_lsa(struct nlsa *name_lsa);
 void print_name_lsa(struct nlsa *name_lsa);
@@ -80,5 +81,7 @@ int check_is_new_adj_lsa(char *orig_router,char *lst,char *orig_time);
 
 void get_name_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId);
 void get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId);
+
+void make_name_lsa_invalid(struct name_prefix *np,int ls_type, long int ls_id);
 
 #endif

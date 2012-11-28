@@ -25,6 +25,7 @@
 #include "nlsr_npt.h"
 #include "nlsr_adl.h"
 #include "nlsr_fib.h"
+#include "utility.h"
 
 int
 route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
@@ -37,7 +38,10 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 
 	nlsr_lock();
 
-	printf("route_calculate called\n");
+	if ( nlsr->debugging )
+		printf("route_calculate called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"route_calculate called\n");
 
 	if( ! nlsr->is_build_adj_lsa_sheduled )
 	{
@@ -67,7 +71,8 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 			adj_matrix[i] = malloc(map_element * sizeof(int));
 		}
 		make_adj_matrix(adj_matrix,map_element);
-		print_adj_matrix(adj_matrix,map_element);
+		if ( nlsr->debugging )
+			print_adj_matrix(adj_matrix,map_element);
 
 		long int source=get_mapping_no(nlsr->router_name);
 		long int *parent=(long int *)malloc(map_element * sizeof(long int));
@@ -198,8 +203,18 @@ print_all_path_from_source(long int *parent,long int source)
 			me=e->data;
 			if(me->mapping != source)
 			{
-				print_path(parent,(long int)me->mapping);
-				printf("\n");
+				
+				if ( nlsr->debugging )
+				{
+					print_path(parent,(long int)me->mapping);
+					printf("\n");
+				}
+				if ( nlsr->detailed_logging )
+				{
+					print_path(parent,(long int)me->mapping);
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
+				}
+				
 			}
 			hashtb_next(e);		
 		}
@@ -225,8 +240,10 @@ print_all_next_hop(long int *parent,long int source)
 		me=e->data;
 		if(me->mapping != source)
 		{
-			
-			printf("Dest: %d Next Hop: %ld\n",me->mapping,get_next_hop_from_calculation(parent,me->mapping,source));
+			if ( nlsr->debugging )
+				printf("Dest: %d Next Hop: %ld\n",me->mapping,get_next_hop_from_calculation(parent,me->mapping,source));
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Dest: %d Next Hop: %ld\n",me->mapping,get_next_hop_from_calculation(parent,me->mapping,source));
 		}
 		hashtb_next(e);		
 	}
@@ -260,7 +277,6 @@ print_path(long int *parent, long int dest)
 {
 	if (parent[dest] != EMPTY_PARENT )
 		print_path(parent,parent[dest]);
-
 	printf(" %ld",dest);
 }
 
@@ -316,7 +332,10 @@ print_map(void)
 	for(i=0;i<map_element;i++)
 	{
 		me=e->data;
-		printf("Router: %s Mapping Number: %d \n",me->router,me->mapping);
+		if ( nlsr->debugging )
+			printf("Router: %s Mapping Number: %d \n",me->router,me->mapping);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Router: %s Mapping Number: %d \n",me->router,me->mapping);
 		hashtb_next(e);		
 	}
 
@@ -550,7 +569,10 @@ print_rev_map(void)
 	for(i=0;i<map_element;i++)
 	{
 		me=e->data;
-		printf("Mapping Number: %d Router: %s  \n",me->mapping,me->router);
+		if ( nlsr->debugging )
+			printf("Mapping Number: %d Router: %s  \n",me->mapping,me->router);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Mapping Number: %d Router: %s  \n",me->mapping,me->router);
 		hashtb_next(e);		
 	}
 
@@ -911,8 +933,10 @@ update_routing_table(char * dest_router,int next_hop_face, int route_cost)
 void 
 print_routing_table(void)
 {
-	printf("\n");
-	printf("print_routing_table called\n");
+	if ( nlsr->debugging )
+		printf("print_routing_table called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"print_routing_table called\n");
 	int i,j, rt_element,face_list_element;
 	
 	struct routing_table_entry *rte;
@@ -925,9 +949,19 @@ print_routing_table(void)
 
 	for(i=0;i<rt_element;i++)
 	{
-		printf("----------Routing Table Entry %d------------------\n",i+1);
+		if ( nlsr->debugging )
+			printf("----------Routing Table Entry %d------------------\n",i+1);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"----------Routing Table Entry %d------------------\n",i+1);
+		
 		rte=e->data;
-		printf(" Destination Router: %s \n",rte->dest_router);
+
+		if ( nlsr->debugging )
+			printf(" Destination Router: %s \n",rte->dest_router);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__," Destination Router: %s \n",rte->dest_router);
+
+		
 		//rte->next_hop_face == NO_NEXT_HOP ? printf(" Next Hop Face: NO_NEXT_HOP \n") : printf(" Next Hop Face: %d \n", rte->next_hop_face);
 
 		struct face_list_entry *fle;
@@ -939,14 +973,20 @@ print_routing_table(void)
 		face_list_element=hashtb_n(rte->face_list);
 		if ( face_list_element <= 0 )
 		{
-			printf(" 	Face: No Face \n");
+			if ( nlsr->debugging )
+				printf(" 	Face: No Face \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: No Face \n");
 		}
 		else
 		{
 			for(j=0;j<face_list_element;j++)
 			{
 				fle=ef->data;
-				printf(" 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
+				if ( nlsr->debugging )
+					printf(" 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
 				hashtb_next(ef);	
 			}
 		}
@@ -957,21 +997,32 @@ print_routing_table(void)
 
 	hashtb_end(e);
 
-	printf("\n");
+	if ( nlsr->debugging )
+		printf("\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
 }
 
 
 int
 delete_empty_rte(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
-	printf("delete_empty_rte called\n");
-	printf("Router: %s \n",(char *)ev->evdata);
+	if ( nlsr->debugging )
+	{
+		printf("delete_empty_rte called\n");
+		printf("Router: %s \n",(char *)ev->evdata);
+	}
+	if ( nlsr->detailed_logging )
+	{
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_empty_rte called\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Router: %s \n",(char *)ev->evdata);
+		//writeLogg(__FILE__,__FUNCTION__,__LINE__,"print_routing_table called\n");
+	}
+	
 	if(flags == CCN_SCHEDULE_CANCEL)
 	{
  	 	return -1;
 	}
-
-	//struct routing_table_entry *rte;
 	int res;
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee;
@@ -981,16 +1032,6 @@ delete_empty_rte(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled
 	
 	if ( res == HT_OLD_ENTRY )
 	{
-		//rte=e->data;
-
-		/*		
-	
-		if ( (rte->next_hop_face != NO_FACE  || rte->next_hop_face != NO_NEXT_HOP) && is_neighbor(ev->evdata)==0 )
-		{
-			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)ev->evdata, OP_UNREG, rte->next_hop_face);
-		}
-
-		*/
 		hashtb_delete(e);
 	}
 	else if ( res == HT_NEW_ENTRY )
@@ -1006,7 +1047,10 @@ delete_empty_rte(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled
 void 
 clear_old_routing_table(void)
 {
-	printf("clear_old_routing_table called\n");
+	if ( nlsr->debugging )
+		printf("clear_old_routing_table called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"clear_old_routing_table called\n");
 	int i,rt_element;
 	
 	struct routing_table_entry *rte;
@@ -1034,7 +1078,11 @@ clear_old_routing_table(void)
 void 
 do_old_routing_table_updates(void)
 {
-	printf("do_old_routing_table_updates called\n");
+	if ( nlsr->debugging )
+		printf("do_old_routing_table_updates called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"do_old_routing_table_updates called\n");
+	
 	int i, rt_element;
 	int mapping_no;	
 
@@ -1069,7 +1117,10 @@ do_old_routing_table_updates(void)
 void 
 update_routing_table_with_new_route(long int *parent, long int *dist,long int source)
 {
-	printf("update_routing_table_with_new_route called\n");
+	if ( nlsr->debugging )
+		printf("update_routing_table_with_new_route called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_routing_table_with_new_route called\n");
 	int i, map_element;
 	struct map_entry *me;
 
@@ -1093,7 +1144,10 @@ update_routing_table_with_new_route(long int *parent, long int *dist,long int so
 				if ( next_hop_router_num == NO_NEXT_HOP )
 				{
 					//update_npt_with_new_route(orig_router,NO_FACE);
-					printf ("\nOrig_router: %s Next Hop Face: %d \n",orig_router,NO_FACE);
+					if ( nlsr->debugging )
+						printf ("Orig_router: %s Next Hop Face: %d \n",orig_router,NO_FACE);
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Orig_router: %s Next Hop Face: %d \n",orig_router,NO_FACE);
 				}
 				else 
 				{
@@ -1102,7 +1156,11 @@ update_routing_table_with_new_route(long int *parent, long int *dist,long int so
 					int next_hop_face=get_next_hop_face_from_adl(next_hop_router);
 					//update_npt_with_new_route(orig_router,next_hop_face);
 					update_routing_table(orig_router,next_hop_face,dist[me->mapping]);
-					printf ("Orig_router: %s Next Hop Face: %d \n",orig_router,next_hop_face);
+					if ( nlsr->debugging )
+						printf ("Orig_router: %s Next Hop Face: %d \n",orig_router,next_hop_face);
+					if ( nlsr->detailed_logging )
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Orig_router: %s Next Hop Face: %d \n",orig_router,next_hop_face);
+					
 
 				}
 			}

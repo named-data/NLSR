@@ -1,19 +1,24 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <sys/types.h>
-#include <signal.h>
-
-
-
 
 #include <ccn/ccn.h>
 #include <ccn/uri.h>
@@ -52,6 +57,7 @@ struct option longopts[] =
 {
     { "daemon",      no_argument,       NULL, 'd'},
     { "config_file", required_argument, NULL, 'f'},
+    { "api_port",    required_argument, NULL, 'p'},
     { "help",        no_argument,       NULL, 'h'},
     { 0 }
 };
@@ -64,6 +70,7 @@ usage(char *progname)
 	NDN routing....\n\
 	-d, --daemon        Run in daemon mode\n\
 	-f, --config_file   Specify configuration file name\n\
+	-p, --api_port      port where api client will connect\n\
 	-h, --help          Display this help message\n", progname);
 
     exit(1);
@@ -595,6 +602,189 @@ readConfigFile(const char *filename)
 	return 0;
 }
 
+char *
+process_api_client_command(char *command)
+{
+	char *msg;
+	msg=(char *)malloc(100);	
+	memset(msg,100,0);
+	//strcpy(msg,"Action Carried Out for NLSR Api Client");
+
+	const char *sep=" \t\n";
+	char *rem=NULL;
+	char *cmd_type=NULL;
+	char *op_type=NULL;
+	char *name=NULL;
+	char *face=NULL;
+	int face_id;
+	int res;
+
+	op_type=strtok_r(command,sep,&rem);
+	cmd_type=strtok_r(NULL,sep,&rem);
+	name=strtok_r(NULL,sep,&rem);
+	if ( name[strlen(name)-1] == '/' )
+		name[strlen(name)-1]='\0';
+
+	struct name_prefix *np=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	np->name=(char *)malloc(strlen(name)+1);
+	memset(np->name,0,strlen(name)+1);
+	memcpy(np->name,name,strlen(name)+1);
+	np->length=strlen(name)+1;
+
+	if ( strcmp(cmd_type,"name")!= 0 )
+	{
+		face=strtok_r(NULL,sep,&rem);
+		sscanf(face,"face%d",&face_id);
+	}
+	
+	if ( strcmp(cmd_type,"name")== 0 )
+	{
+		if ( strcmp(op_type,"del") == 0 ) 
+		{
+			res=does_name_exist_in_npl(np);
+			if ( res == 0)
+			{
+				sprintf(msg,"Name %s does not exist !!",name);
+			}
+			else
+			{
+				long int ls_id=get_lsa_id_from_npl(np);
+				if ( ls_id != 0 )
+				{
+					make_name_lsa_invalid(np,LS_TYPE_NAME,ls_id);
+					sprintf(msg,"Name %s has been deleted and Advertised.",name);
+				}
+				else 
+				{
+					sprintf(msg,"Name %s does not have an Name LSA yet !!",name);
+				}
+			}			
+		}
+		else if ( strcmp(op_type,"add") == 0 )
+		{
+			res=does_name_exist_in_npl(np);
+			if ( res == 0)
+			{
+				add_name_to_npl(np);
+				build_and_install_single_name_lsa(np);
+				sprintf(msg,"Name %s has been added to advertise.",name);
+			}
+			else
+			{
+				sprintf(msg,"Name %s has already been advertised from this router !!",name);
+			}
+		} 
+	}
+	else if ( strcmp(cmd_type,"neighbor") == 0 )
+	{
+		if ( strcmp(op_type,"del") == 0 ) 
+		{
+			res=is_neighbor(np->name);
+			if ( res == 0)
+			{
+				sprintf(msg,"Neighbor %s does not exist !!",name);
+			}
+			else
+			{
+				update_adjacent_status_to_adl(np,NBR_DOWN);
+				delete_nbr_from_adl(np);
+				if(!nlsr->is_build_adj_lsa_sheduled)
+				{
+					nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 1000, &build_and_install_adj_lsa, NULL, 0);
+					nlsr->is_build_adj_lsa_sheduled=1;		
+				}
+				sprintf(msg,"Neighbor %s has been deleted from adjacency list.",name);	
+			}
+		}
+		else if ( strcmp(op_type,"add") == 0 )
+		{
+			res=is_neighbor(np->name);
+			if ( res == 0 )
+			{
+				add_nbr_to_adl(np,face_id);
+				sprintf(msg,"Neighbor %s has been added to adjacency list.",name);
+			}
+			else
+			{
+				sprintf(msg,"Neighbor %s already exists in adjacency list.",name);
+			}
+		}
+	}
+		
+
+	return msg;
+}
+
+int
+nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
+{
+	struct timeval timeout;
+	if ( time_out_micro_sec < 0 )
+	{
+		timeout.tv_sec=1;
+		timeout.tv_usec=0;
+	}
+	else
+	{
+		time_out_micro_sec=(long int)time_out_micro_sec*0.4;
+		timeout.tv_sec=time_out_micro_sec / 1000000;
+		timeout.tv_usec=time_out_micro_sec % 1000000;
+	}
+
+	
+	int fd;
+	int nread;
+	int result;
+	fd_set testfds;
+	unsigned int client_len;
+	int client_sockfd;
+	char recv_buffer[1024];
+	bzero(recv_buffer,1024);
+	struct sockaddr_in client_address;
+
+	testfds=nlsr->readfds;
+	result = select(FD_SETSIZE, &testfds, NULL,NULL, &timeout);
+	
+	for(fd = 0; fd < FD_SETSIZE; fd++) 
+	{
+		if(FD_ISSET(fd,&testfds)) 
+		{
+			if ( fd == ccn_fd )
+			{
+				return 0;
+			}			
+			else if(fd == nlsr->nlsr_api_server_sock_fd)
+			{
+				client_len = sizeof(client_address);
+				client_sockfd = accept(nlsr->nlsr_api_server_sock_fd,(struct sockaddr *)&client_address, &client_len);
+				FD_SET(client_sockfd, &nlsr->readfds);
+			}
+			else
+			{   
+					
+				ioctl(fd, FIONREAD, &nread);
+				if(nread == 0) 
+				{
+					close(fd);
+					FD_CLR(fd, &nlsr->readfds);
+				}
+				else 
+				{
+					recv(fd, recv_buffer, 1024, 0);
+					printf("Received Data from NLSR API cleint: %s \n",recv_buffer);
+					char *msg=process_api_client_command(recv_buffer);
+					send(fd, msg, strlen(msg),0);
+					free(msg);
+					close(fd);
+					FD_CLR(fd, &nlsr->readfds);
+				}
+			}
+		}
+	}
+
+	return 0;
+}
+
 void 
 nlsr_destroy( void )
 {
@@ -635,7 +825,9 @@ nlsr_destroy( void )
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->npt);
 
-	
+
+	close(nlsr->nlsr_api_server_sock_fd);	
+
 	ccn_schedule_destroy(&nlsr->sched);
 	ccn_destroy(&nlsr->ccn);
 
@@ -651,6 +843,38 @@ nlsr_destroy( void )
 
 }
 
+
+void
+init_api_server(int ccn_fd)
+{
+	int server_sockfd;
+	int server_len;
+	struct sockaddr_in server_address;
+	unsigned int yes=1;	
+
+	server_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+
+	int flags = fcntl(server_sockfd, F_GETFL, 0);
+	fcntl(server_sockfd, F_SETFL, O_NONBLOCK|flags);
+
+	if (setsockopt(server_sockfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) 
+	{
+       		ON_ERROR_DESTROY(-1);
+       	}
+
+	server_address.sin_family = AF_INET;
+	server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server_address.sin_port = nlsr->api_port;
+
+	server_len = sizeof(server_address);
+	bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
+	listen(server_sockfd, 100);
+	FD_ZERO(&nlsr->readfds);
+	FD_SET(server_sockfd, &nlsr->readfds);
+	FD_SET(ccn_fd, &nlsr->readfds);
+	nlsr->nlsr_api_server_sock_fd=server_sockfd;
+
+}
 
 int 
 init_nlsr(void)
@@ -676,7 +900,7 @@ init_nlsr(void)
 	struct hashtb_param param_adl = {0};
 	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), &param_adl);
 	struct hashtb_param param_npl = {0};
-	nlsr->npl = hashtb_create(sizeof(struct name_prefix), &param_npl);
+	nlsr->npl = hashtb_create(sizeof(struct name_prefix_list_entry), &param_npl);
 	struct hashtb_param param_pit_alsa = {0};	
 	nlsr->pit_alsa = hashtb_create(sizeof(struct pending_interest), &param_pit_alsa);
 	struct hashtb_param param_npt = {0};	
@@ -721,9 +945,9 @@ init_nlsr(void)
 	nlsr->lsa_refresh_time=LSA_REFRESH_TIME;
 	nlsr->router_dead_interval=ROUTER_DEAD_INTERVAL;
 	nlsr->multi_path_face_num=MULTI_PATH_FACE_NUM;
-
-
 	nlsr->semaphor=NLSR_UNLOCKED;
+
+	nlsr->api_port=API_PORT;
 
 	return 0;
 }
@@ -735,10 +959,11 @@ main(int argc, char *argv[])
     	int res, ret;
     	char *config_file;
 	int daemon_mode=0;
+	int port=0;
 
 	
 
-	while ((res = getopt_long(argc, argv, "df:h", longopts, 0)) != -1) 
+	while ((res = getopt_long(argc, argv, "df:p:h", longopts, 0)) != -1) 
 	{
         	switch (res) 
 		{
@@ -748,6 +973,9 @@ main(int argc, char *argv[])
 			case 'f':
 				config_file = optarg;
 				break;
+			case 'p':
+				port = atoi(optarg);
+				break;
 			case 'h':
 			default:
 				usage(argv[0]);
@@ -756,8 +984,11 @@ main(int argc, char *argv[])
 
 	ret=init_nlsr();	
     	ON_ERROR_EXIT(ret);
+
+	if ( port !=0 )
+		nlsr->api_port=port;
+
 	readConfigFile(config_file);
-	
 	if ( daemon_mode == 1 )
 	{
 		daemonize_nlsr();
@@ -766,12 +997,16 @@ main(int argc, char *argv[])
 	startLogging(nlsr->logDir);
 	
 	nlsr->ccn=ccn_create();
-	if(ccn_connect(nlsr->ccn, NULL) == -1)
+	int ccn_fd=ccn_connect(nlsr->ccn, NULL);
+	if(ccn_fd == -1)
 	{
 		fprintf(stderr,"Could not connect to ccnd\n");
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Could not connect to ccnd\n");
 		ON_ERROR_DESTROY(-1);
 	}
+
+	init_api_server(ccn_fd);
+	
 	struct ccn_charbuf *router_prefix;	
 	router_prefix=ccn_charbuf_create(); 
 	res=ccn_name_from_uri(router_prefix,nlsr->router_name);		
@@ -809,17 +1044,20 @@ main(int argc, char *argv[])
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
 	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
 
+	
 	while(1)
 	{	
 		if ( nlsr->semaphor == NLSR_UNLOCKED  )
 		{
 			if( nlsr->sched != NULL )
 			{
-				ccn_schedule_run(nlsr->sched);
+				long int micro_sec=ccn_schedule_run(nlsr->sched);
+				res=nlsr_api_server_poll(micro_sec,ccn_fd);
+				ON_ERROR_DESTROY(res);
 			}
 			if(nlsr->ccn != NULL)
 			{
-        			res = ccn_run(nlsr->ccn, 500);
+        			res = ccn_run(nlsr->ccn, 0);
 			}
 			if (!(nlsr->sched && nlsr->ccn))
 			{	      
@@ -828,6 +1066,7 @@ main(int argc, char *argv[])
 		}
 
 	}
+	
 
 	return 0;
 }

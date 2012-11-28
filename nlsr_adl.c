@@ -378,6 +378,35 @@ update_adjacent_status_to_adl(struct name_prefix *nbr, int status)
 	hashtb_end(e);
 }
 
+
+void 
+delete_nbr_from_adl(struct name_prefix *nbr)
+{
+	if ( nlsr->debugging )
+		printf("delete_nbr_from_adl called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_nbr_from_adl called \n");
+
+	int res;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+   	res = hashtb_seek(e, nbr->name, nbr->length, 0);
+
+
+	if (res == HT_OLD_ENTRY)
+	{
+		hashtb_delete(e);	
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+}
+
 void 
 update_lsdb_synch_interval_to_adl(struct name_prefix *nbr, long int interval)
 {

@@ -16,6 +16,8 @@
 #define NAME_LSA_VALID 1
 #define NAME_LSA_INVALID 0
 
+#define API_PORT 9696
+
 
 struct name_prefix
 {
@@ -83,6 +85,10 @@ struct nlsr
 	int debugging;
 
 	int semaphor;
+
+	int nlsr_api_server_sock_fd;
+	fd_set readfds;
+	int api_port;
 	
 };
 
