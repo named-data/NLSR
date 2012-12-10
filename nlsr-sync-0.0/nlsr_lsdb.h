@@ -87,5 +87,6 @@ void make_name_lsa_invalid(struct name_prefix *np,int ls_type, long int ls_id);
 void write_name_lsdb_to_repo(char *slice_prefix);
 void write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id);
 void make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long int ls_id,char *orig_time,char *slice_prefix);
+void write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id);
 
 #endif

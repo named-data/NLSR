@@ -731,14 +731,14 @@ process_incoming_content(struct ccn_closure *selfp, struct ccn_upcall_info* info
 	{
 		process_incoming_content_info(selfp,info);
 	}
-	if(!strcmp((char *)comp_ptr1,"lsdb"))
+	/*if(!strcmp((char *)comp_ptr1,"lsdb"))
 	{
 		process_incoming_content_lsdb(selfp,info);
 	}
 	if(!strcmp((char *)comp_ptr1,"lsa"))
 	{
 		process_incoming_content_lsa(selfp,info);
-	}
+	}*/
 
 }
 

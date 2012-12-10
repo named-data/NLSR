@@ -28,6 +28,7 @@
 #include "nlsr.h"
 #include "nlsr_sync.h"
 #include "nlsr_lsdb.h"
+#include "utility.h"
 
 int 
 get_lsa_position(struct ccn_charbuf * ccnb, struct ccn_indexbuf *comps)
@@ -173,6 +174,101 @@ get_content_by_content_name(char *content_name)
 	return (char *)ptr;
 }
 
+void 
+process_incoming_sync_content_lsa(char *content_data)
+{
+
+
+	if ( nlsr->debugging )
+		printf("process_incoming_sync_content_lsa called \n");
+	//if ( nlsr->detailed_logging )
+		//writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_lsa called \n");	
+
+	char *sep="|";
+	char *rem;
+	char *orig_router;
+	char *orl;
+	int orig_router_length;
+	char *lst;
+	int ls_type;
+	char *lsid;
+	long int ls_id;
+	char *isvld;
+	int isValid;
+	char *num_link;
+	int no_link;
+	char *np;
+	char *np_length;
+	int name_length;
+	char *data;
+	char *orig_time;
+
+	
+	if ( nlsr->debugging )
+		printf("LSA Data \n");
+	//if ( nlsr->detailed_logging )
+	//	writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Data\n");	
+
+	if( strlen(content_data ) > 0 )
+	{
+
+		orig_router=strtok_r((char *)content_data,sep,&rem);
+		orl=strtok_r(NULL,sep,&rem);
+		orig_router_length=atoi(orl);
+
+		if ( nlsr->debugging )
+		{
+			printf("	Orig Router Name  : %s\n",orig_router);
+			printf("	Orig Router Length: %d\n",orig_router_length);
+		}
+
+		lst=strtok_r(NULL,sep,&rem);		
+		ls_type=atoi(lst);
+
+		if ( nlsr->debugging )
+			printf("	LS Type  : %d\n",ls_type);
+
+		if ( ls_type == LS_TYPE_NAME )
+		{
+			lsid=strtok_r(NULL,sep,&rem);
+			ls_id=atoi(lsid);
+			orig_time=strtok_r(NULL,sep,&rem);
+			isvld=strtok_r(NULL,sep,&rem);
+			isValid=atoi(isvld);
+			np=strtok_r(NULL,sep,&rem);
+			np_length=strtok_r(NULL,sep,&rem);
+			name_length=atoi(np_length);
+			if ( nlsr->debugging )
+			{
+				printf("	LS ID  : %ld\n",ls_id);
+				printf("	isValid  : %d\n",isValid);
+				printf("	Name Prefix : %s\n",np);
+				printf("	Orig Time   : %s\n",orig_time);
+				printf("	Name Prefix length: %d\n",name_length);
+			}
+
+			build_and_install_others_name_lsa(orig_router,ls_type,ls_id,orig_time,isValid,np);
+
+			print_name_lsdb();
+
+		}
+		else if ( ls_type == LS_TYPE_ADJ )
+		{
+			orig_time=strtok_r(NULL,sep,&rem);
+			num_link=strtok_r(NULL,sep,&rem);
+			no_link=atoi(num_link);
+			data=rem;
+
+			if ( nlsr->debugging )
+			{
+				printf("	No Link  : %d\n",no_link);
+				printf("	Data  : %s\n",data);
+			}
+			build_and_install_others_adj_lsa(orig_router,ls_type,orig_time,no_link,data);
+		}
+	}
+}
+
 void
 process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf *components)
 {
@@ -186,6 +282,10 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	int ls_type;
 	long int ls_id=0;
 
+	char *time_stamp=(char *)malloc(20);
+	memset(time_stamp,0,20);
+	get_current_timestamp_micro(time_stamp);
+
 	struct ccn_charbuf *uri = ccn_charbuf_create();
 	ccn_uri_append(uri, content_name->buf, content_name->length, 0);	
 
@@ -195,28 +295,40 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 	res=ccn_name_comp_get(content_name->buf, components,lsa_position+1,&lst, &comp_size);
 	
-	printf("Ls Type: %s\n",lst);
+	//printf("Ls Type: %s\n",lst);
 	ls_type=atoi((char *)lst);
 	if(ls_type == LS_TYPE_NAME)
 	{
+		
 		res=ccn_name_comp_get(content_name->buf, components,lsa_position+2,&lsid, &comp_size);
 		ls_id=atoi((char *)lsid);
 		res=ccn_name_comp_get(content_name->buf, components,lsa_position+3,&origtime, &comp_size);
 		get_name_part(orig_router,content_name,components,3);
-		printf("Ls ID: %s\nOrig Time: %s\nOrig Router: %s\n",lsid,origtime,orig_router->name);
 
-		int is_new_name_lsa=check_is_new_name_lsa(orig_router->name,(char *)lst,(char *)lsid,(char *)origtime);
-		if ( is_new_name_lsa == 1 )
+		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
+
+		//printf("Ls ID: %s\nOrig Time: %s\nOrig Router: %s\n",lsid,origtime,orig_router->name);
+
+		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )
 		{
-			printf("New NAME LSA.....\n");	
-			char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
-			printf("Content Data: %s \n",content_data);
+			int is_new_name_lsa=check_is_new_name_lsa(orig_router->name,(char *)lst,(char *)lsid,(char *)origtime);
+			if ( is_new_name_lsa == 1 )
+			{
+				printf("New NAME LSA.....\n");	
+				char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				printf("Content Data: %s \n",content_data);
+				process_incoming_sync_content_lsa(content_data);
+			}
+			else 
+			{
+				printf("Name LSA / Newer Name LSA already xists in LSDB\n");
+				char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				printf("Content Data: %s \n",content_data);
+			}
 		}
 		else 
 		{
-			printf("Name LSA / Newer Name LSA already xists in LSDB\n");
-			char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
-			printf("Content Data: %s \n",content_data);
+			printf("Lsa is older than Router LSA refresh time/ Dead Interval\n");
 		}
 	}
 	else if(ls_type == LS_TYPE_ADJ)
@@ -224,22 +336,33 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 		res=ccn_name_comp_get(content_name->buf, components,lsa_position+2,&origtime, &comp_size);
 		get_name_part(orig_router,content_name,components,2);
 		printf("Orig Time: %s\nOrig Router: %s\n",origtime,orig_router->name);
-	
-		int is_new_adj_lsa=check_is_new_adj_lsa(orig_router->name,(char *)lst,(char *)origtime);
-		if ( is_new_adj_lsa == 1 )
-		{
-			printf("New Adj LSA.....\n");	
-			char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
-			printf("Content Data: %s \n",content_data);			
-		}
-		else
-		{
 
-			printf("Adj LSA / Newer Adj LSA already exists in LSDB\n");
-			char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
-			printf("Content Data: %s \n",content_data);
-		}
+		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 
+		//printf("Ls ID: %s\nOrig Time: %s\nOrig Router: %s\n",lsid,origtime,orig_router->name);
+
+		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
+		{
+			int is_new_adj_lsa=check_is_new_adj_lsa(orig_router->name,(char *)lst,(char *)origtime);
+			if ( is_new_adj_lsa == 1 )
+			{
+				printf("New Adj LSA.....\n");	
+				char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				printf("Content Data: %s \n",content_data);
+				process_incoming_sync_content_lsa(content_data);			
+			}
+			else
+			{
+
+				printf("Adj LSA / Newer Adj LSA already exists in LSDB\n");
+				char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				printf("Content Data: %s \n",content_data);
+			}
+		}
+		else 
+		{
+			printf("Lsa is older than Router LSA refresh time/ Dead Interval\n");
+		}
 	}
 
 	ccn_charbuf_destroy(&uri);

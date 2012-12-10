@@ -69,9 +69,6 @@ void
 make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long int ls_id,char *orig_time,char *slice_prefix)
 {
 	
-	
-	//printf("Orig Router: %s LS Type: %d LS Id: %ld\n",orig_router,ls_type,ls_id);
-
 	char lst[2];
 	memset(lst,0,2);
 	sprintf(lst,"%d",ls_type);	
@@ -88,7 +85,22 @@ make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long in
 	memcpy(key+strlen(key),orig_time,strlen(orig_time));
 	memcpy(key+strlen(key),orig_router,strlen(orig_router));
 	
-	//printf("Key: %s\n",key);
+}
+
+void 
+make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *orig_time,char *slice_prefix)
+{
+	
+	char lst[2];
+	memset(lst,0,2);
+	sprintf(lst,"%d",ls_type);	
+	memcpy(key+strlen(key),slice_prefix,strlen(slice_prefix));
+	memcpy(key+strlen(key),"/",1);
+	memcpy(key+strlen(key),lst,strlen(lst));
+	memcpy(key+strlen(key),"/",1);
+	memcpy(key+strlen(key),orig_time,strlen(orig_time));
+	memcpy(key+strlen(key),orig_router,strlen(orig_router));
+	
 }
 
 void 
@@ -668,6 +680,32 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 			build_adj_lsa(adj_lsa);
 			install_adj_lsa(adj_lsa);
 
+			char lst[2];
+			memset(lst,2,0);
+			sprintf(lst,"%d",LS_TYPE_ADJ);			
+
+			char *repo_con_name=(char *)malloc(strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);
+			memset(repo_con_name,strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5,0);	
+			make_adj_lsa_prefix_for_repo(repo_con_name, adj_lsa->header->orig_router->name,LS_TYPE_ADJ,adj_lsa->header->orig_time,nlsr->slice_prefix);
+
+			printf("Adj LSA Repo Key: %s \n",repo_con_name);
+			
+			char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
+			memset(key,0,adj_lsa->header->orig_router->length+2);
+			make_adj_lsa_key(key,adj_lsa);
+
+			struct name_prefix *lsaid=(struct name_prefix *)malloc(sizeof(struct name_prefix));
+			lsaid->name=(char *)malloc(strlen(key)+1);
+			memset(lsaid->name,strlen(key)+1,0);
+			memcpy(lsaid->name,key,strlen(key));
+			lsaid->length=strlen(key)+1;
+
+		
+			//write_adj_lsa_to_repo(repo_key, lsaid);
+			
+			//free(key);
+			//free(repo_con_name);
+
 			free(adj_lsa->header->orig_router->name);
 			free(adj_lsa->header->orig_router);
 			free(adj_lsa->header->orig_time);
@@ -741,11 +779,11 @@ build_adj_lsa(struct alsa * adj_lsa)
 
 
 
-	if( !nlsr->is_send_lsdb_interest_scheduled )
+	/*if( !nlsr->is_send_lsdb_interest_scheduled )
 	{	
 		nlsr->event_send_lsdb_interest= ccn_schedule_event(nlsr->sched, 1000, &send_lsdb_interest, NULL, 0);
 		nlsr->is_send_lsdb_interest_scheduled=1;
-	}
+	}*/
 
 	nlsr->adj_build_count++;
 
@@ -2019,6 +2057,21 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 	
 	nlsr_unlock();
 	return 0;
+}
+
+void
+write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
+{
+	printf("Content Preifx: %s\n",repo_content_prefix);
+
+	
+	struct ccn_charbuf *lsa_data=ccn_charbuf_create();		
+	get_adj_lsa_data(lsa_data,lsa_id);
+	printf("Name LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+
+	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
+
+	ccn_charbuf_destroy(&lsa_data);
 }
 
 void

@@ -1067,8 +1067,8 @@ main(int argc, char *argv[])
 	//write_data_to_repo();
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
-	//nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
-	//nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
+	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
+	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
 
 	
 	while(1)
