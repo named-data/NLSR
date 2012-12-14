@@ -38,6 +38,8 @@
 #include "nlsr_npt.h"
 #include "nlsr_route.h"
 #include "nlsr_sync.h"
+#include "nlsr_face.h"
+#include "nlsr_fib.h"
 
 
 #define ON_ERROR_DESTROY(resval) \
@@ -156,7 +158,8 @@ process_command_ccnneighbor(char *command)
 	}
 	char *rem;
 	const char *sep=" \t\n";
-	char *rtr_name,*face;
+	char *rtr_name;
+	//char *face;
 
 	rtr_name=strtok_r(command,sep,&rem);
 	if(rtr_name==NULL)
@@ -165,7 +168,7 @@ process_command_ccnneighbor(char *command)
 		return;
 	}
 
-	face=strtok_r(NULL,sep,&rem);
+	/*face=strtok_r(NULL,sep,&rem);
 	if(face==NULL)
 	{
 		printf(" Wrong Command Format ( ccnneighbor router_name faceX)\n");
@@ -181,7 +184,7 @@ process_command_ccnneighbor(char *command)
 	{
 		printf(" Wrong Command Format ( ccnneighbor router_name faceX) where X is integer\n");
 		return;
-	}
+	}*/
 
 	if ( rtr_name[strlen(rtr_name)-1] == '/' )
 	{
@@ -199,10 +202,13 @@ process_command_ccnneighbor(char *command)
 	get_host_name_from_command_string(nbr_name,nbr->name,0);
 	printf("Hostname of neighbor: %s ",nbr_name->name);
 
-	struct sockaddr_in *ip=get_ip_from_hostname(nbr_name->name);
-	printf("IP Address: %s \n",inet_ntoa( ip->sin_addr ));
 
-	add_nbr_to_adl(nbr,face_id,inet_ntoa( ip->sin_addr ));
+	char *ip_addr=(char *)malloc(13);
+	memset(ip_addr,13,0);
+	get_ip_from_hostname_02(nbr_name->name,ip_addr);
+	printf("IP Address: %s \n",ip_addr);
+
+	add_nbr_to_adl(nbr,0,ip_addr);
 	
 
 	free(nbr->name);
@@ -711,6 +717,33 @@ readConfigFile(const char *filename)
 	return 0;
 }
 
+
+void
+add_faces_for_nbrs(void)
+{	
+	int i, adl_element;
+	struct ndn_neighbor *nbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->adl, e);
+	adl_element=hashtb_n(nlsr->adl);
+
+	for(i=0;i<adl_element;i++)
+	{
+		nbr=e->data;
+		int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr->neighbor->name, (const char *)nbr->ip_address, 9695);
+		update_face_to_adl_for_nbr(nbr->neighbor->name, face_id);		
+		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);
+		//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_REG, face_id);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+}
+
 char *
 process_api_client_command(char *command)
 {
@@ -813,11 +846,18 @@ process_api_client_command(char *command)
 				get_host_name_from_command_string(nbr_name,np->name,0);
 				printf("Hostname of neighbor: %s ",nbr_name->name);
 
-				struct sockaddr_in *ip=get_ip_from_hostname(nbr_name->name);
-				printf("IP Address: %s \n",inet_ntoa( ip->sin_addr ));
-				
-				add_nbr_to_adl(np,face_id,inet_ntoa( ip->sin_addr ));
+				char *ip_addr=(char *)malloc(13);
+				memset(ip_addr,13,0);
+				get_ip_from_hostname_02(nbr_name->name,ip_addr);
+				printf("IP Address: %s \n",ip_addr);
+				int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr_name->name, (const char *)ip_addr, 9695);
+				update_face_to_adl_for_nbr(nbr_name->name, face_id);		
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);				
+
+				add_nbr_to_adl(np,face_id,ip_addr);
+
 				sprintf(msg,"Neighbor %s has been added to adjacency list.",name);
+
 			}
 			else
 			{
@@ -1121,6 +1161,8 @@ main(int argc, char *argv[])
 
 	readConfigFile(config_file);
 
+	print_adjacent_from_adl();
+
 	if ( daemon_mode == 1 )
 	{
 		daemonize_nlsr();
@@ -1169,6 +1211,7 @@ main(int argc, char *argv[])
 		printf("lsdb_version: %s\n",nlsr->lsdb->lsdb_version);
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"lsdb_version: %s\n",nlsr->lsdb->lsdb_version);
 
+	add_faces_for_nbrs();
 	print_name_prefix_from_npl();
 	print_adjacent_from_adl();
 	build_and_install_name_lsas();
@@ -1177,8 +1220,6 @@ main(int argc, char *argv[])
 	sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
 
 	write_name_lsdb_to_repo(nlsr->slice_prefix);
-
-	//write_data_to_repo();
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);

@@ -16,7 +16,7 @@
 #define NAME_LSA_VALID 1
 #define NAME_LSA_INVALID 0
 
-#define API_PORT 9696
+#define API_PORT 9999
 
 
 struct name_prefix

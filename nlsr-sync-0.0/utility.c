@@ -232,16 +232,16 @@ get_ip_from_hostname(char *hostname )
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
-    if ( (res = getaddrinfo( hostname , "http", &hints , &servinfo)) != 0)
+    if ( (res = getaddrinfo( hostname , "9696", &hints , &servinfo)) != 0)
     {
         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(res));
         return NULL;
     }
-    //int i=0;
+    int i=0;
     for(p = servinfo; p != NULL; p = p->ai_next)
     {
         ip = (struct sockaddr_in *) p->ai_addr;
-	//i++;
+	i++;
    
     }
     freeaddrinfo(servinfo);
@@ -249,5 +249,28 @@ get_ip_from_hostname(char *hostname )
 
 
 }
+
+
+
+int 
+get_ip_from_hostname_02(char * hostname , char* ip)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    int i;
+    if ( (he = gethostbyname( hostname ) ) == NULL)
+    {
+        herror("gethostbyname");
+        return 1;
+    }
+    addr_list = (struct in_addr **) he->h_addr_list;
+    for(i = 0; addr_list[i] != NULL; i++)
+    {
+        strcpy(ip , inet_ntoa(*addr_list[i]) );
+        return 0;
+    }
+    return 1;
+}
+
 
 

@@ -899,6 +899,32 @@ get_next_hop_face_from_adl(char *nbr)
 	return connecting_face;
 }
 
+void
+update_face_to_adl_for_nbr(char *nbr, int face)
+{
+	int res;
+	struct ndn_neighbor *nnbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		nnbr=e->data;
+		nnbr->face=face;
+		
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+}
+
 int 
 is_neighbor(char *nbr)
 {
