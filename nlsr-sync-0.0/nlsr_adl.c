@@ -8,6 +8,10 @@
 #include <assert.h>
 #ifdef HAVE_CONFIG_H
 #include <config.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #endif
 
 
@@ -25,7 +29,7 @@
 #include "nlsr_npt.h"
 
 void 
-add_nbr_to_adl(struct name_prefix *new_nbr,int face)
+add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip)
 {
 	struct ndn_neighbor *nbr=(struct ndn_neighbor *)malloc(sizeof(struct ndn_neighbor )); //free
 
@@ -54,6 +58,9 @@ add_nbr_to_adl(struct name_prefix *new_nbr,int face)
 		nbr->metric=LINK_METRIC;
 		nbr->is_lsdb_send_interest_scheduled=0;
 		
+		nbr->ip_address=(char *)malloc(13);
+		memset(nbr->ip_address,13,0);
+		memcpy(nbr->ip_address,ip,strlen(ip));
 
 		char *time_stamp=(char *)malloc(20);
 		get_current_timestamp_micro(time_stamp);
@@ -81,6 +88,7 @@ print_adjacent(struct ndn_neighbor *nbr)
 		printf("--------Neighbor---------------------------\n");
 		printf("	Neighbor: %s \n",nbr->neighbor->name);
 		printf("	Length  : %d \n",nbr->neighbor->length);
+		printf("	Ip Address: %s \n",nbr->ip_address);
 		printf("	Face    : %d \n",nbr->face);
 		printf("	Metric    : %d \n",nbr->metric);
 		printf("	Status  : %d \n",nbr->status);

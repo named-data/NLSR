@@ -65,6 +65,7 @@ struct nlsr
 	struct hashtb *npt;
 	struct hashtb *routing_table;
 
+
 	struct linkStateDatabase *lsdb;
 
 	struct ccn *ccn;
@@ -98,6 +99,8 @@ struct nlsr
 
 	char *topo_prefix;
 	char *slice_prefix;
+
+	int is_hyperbolic_calc;
 	
 };
 

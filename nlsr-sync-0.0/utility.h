@@ -9,4 +9,5 @@ long int get_time_diff(const char *time1, const char *time2);
 
 void startLogging(char *loggingDir);
 void writeLogg(const char *source_file, const char *function, const int line, const char *format, ...);
+struct sockaddr_in * get_ip_from_hostname(char *hostname);
 #endif

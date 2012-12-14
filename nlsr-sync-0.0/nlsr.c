@@ -193,7 +193,17 @@ process_command_ccnneighbor(char *command)
 	memcpy(nbr->name,rtr_name,strlen(rtr_name)+1);
 	nbr->length=strlen(rtr_name)+1;
 
-	add_nbr_to_adl(nbr,face_id);
+	//add_nbr_to_adl(nbr,face_id);
+
+	struct name_prefix *nbr_name=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	get_host_name_from_command_string(nbr_name,nbr->name,0);
+	printf("Hostname of neighbor: %s ",nbr_name->name);
+
+	struct sockaddr_in *ip=get_ip_from_hostname(nbr_name->name);
+	printf("IP Address: %s \n",inet_ntoa( ip->sin_addr ));
+
+	add_nbr_to_adl(nbr,face_id,inet_ntoa( ip->sin_addr ));
+	
 
 	free(nbr->name);
 	free(nbr);
@@ -509,6 +519,94 @@ process_command_debug(char *command)
 	}
 }
 
+
+void 
+process_command_topo_prefix(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( topo-prefix )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *topo_prefix;
+
+	topo_prefix=strtok_r(command,sep,&rem);
+	if(topo_prefix==NULL)
+	{
+		printf(" Wrong Command Format (  topo-prefix /name/prefix  )\n");
+		return;
+	}
+	else
+	{
+		if( nlsr->topo_prefix != NULL)	
+			free(nlsr->topo_prefix);
+		nlsr->topo_prefix=(char *)malloc(strlen(topo_prefix)+1);
+		memset(nlsr->topo_prefix,strlen(topo_prefix)+1,0);
+		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix));
+
+		//printf(" Topo Prefix: %s \n",nlsr->topo_prefix);
+
+	}
+}
+
+
+void 
+process_command_slice_prefix(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( slice-prefix /name/prefix )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *slice_prefix;
+
+	slice_prefix=strtok_r(command,sep,&rem);
+	if(slice_prefix==NULL)
+	{
+		printf(" Wrong Command Format (  slice-prefix /name/prefix  )\n");
+		return;
+	}
+	else
+	{
+		if ( nlsr->slice_prefix != NULL)
+			free(nlsr->slice_prefix);
+		nlsr->slice_prefix=(char *)malloc(strlen(slice_prefix)+1);
+		memset(nlsr->slice_prefix,strlen(slice_prefix)+1,0);
+		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix));
+
+		//printf(" Slice Prefix: %s \n",nlsr->slice_prefix);
+	}
+}
+
+void 
+process_command_hyperbolic(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( hyperbolic on/off )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *on_off;
+
+	on_off=strtok_r(command,sep,&rem);
+	if(on_off==NULL)
+	{
+		printf(" Wrong Command Format ( hyperbolic on/off )\n");
+		return;
+	}
+	
+	if ( strcmp(on_off,"ON") == 0 || strcmp(on_off,"on") == 0 )
+	{
+		nlsr->is_hyperbolic_calc=1;
+	}
+}
+
 void 
 process_conf_command(char *command)
 {
@@ -568,6 +666,14 @@ process_conf_command(char *command)
 	else if(!strcmp(cmd_type,"debug") )
 	{
 			process_command_debug(remainder);
+	}
+	else if(!strcmp(cmd_type,"topo-prefix") )
+	{
+			process_command_topo_prefix(remainder);
+	}
+	else if(!strcmp(cmd_type,"slice-prefix") )
+	{
+			process_command_slice_prefix(remainder);
 	}
 	else 
 	{
@@ -703,7 +809,14 @@ process_api_client_command(char *command)
 			res=is_neighbor(np->name);
 			if ( res == 0 )
 			{
-				add_nbr_to_adl(np,face_id);
+				struct name_prefix *nbr_name=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+				get_host_name_from_command_string(nbr_name,np->name,0);
+				printf("Hostname of neighbor: %s ",nbr_name->name);
+
+				struct sockaddr_in *ip=get_ip_from_hostname(nbr_name->name);
+				printf("IP Address: %s \n",inet_ntoa( ip->sin_addr ));
+				
+				add_nbr_to_adl(np,face_id,inet_ntoa( ip->sin_addr ));
 				sprintf(msg,"Neighbor %s has been added to adjacency list.",name);
 			}
 			else
@@ -957,8 +1070,6 @@ init_nlsr(void)
 
 	nlsr->api_port=API_PORT;
 
-	//create_sync_slice();
-
 	nlsr->topo_prefix=(char *)malloc(strlen("/ndn/routing/nlsr")+1);
 	memset(nlsr->topo_prefix,strlen("/ndn/routing/nlsr")+1,0);
 	memcpy(nlsr->topo_prefix,"/ndn/routing/nlsr",strlen("/ndn/routing/nlsr"));
@@ -966,6 +1077,8 @@ init_nlsr(void)
 	nlsr->slice_prefix=(char *)malloc(strlen("/ndn/routing/nlsr/LSA")+1);
 	memset(nlsr->slice_prefix,strlen("/ndn/routing/nlsr/LSA")+1,0);
 	memcpy(nlsr->slice_prefix,"/ndn/routing/nlsr/LSA",strlen("/ndn/routing/nlsr/LSA"));
+
+	nlsr->is_hyperbolic_calc=0;
 
 	return 0;
 }
@@ -1007,6 +1120,7 @@ main(int argc, char *argv[])
 		nlsr->api_port=port;
 
 	readConfigFile(config_file);
+
 	if ( daemon_mode == 1 )
 	{
 		daemonize_nlsr();

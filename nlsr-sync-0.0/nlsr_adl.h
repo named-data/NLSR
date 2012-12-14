@@ -11,6 +11,7 @@ struct ndn_neighbor
 	int status;
 	char * last_lsdb_version;
 	char * last_info_version;
+	char *ip_address;
 	int info_interest_timed_out;
 	int lsdb_interest_timed_out;
 	int lsdb_random_time_component;
@@ -20,7 +21,7 @@ struct ndn_neighbor
 	int metric;
 };
 
-void add_nbr_to_adl(struct name_prefix *new_nbr,int face);
+void add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip);
 void delete_nbr_from_adl(struct name_prefix *nbr);
 void print_adjacent(struct ndn_neighbor *nbr);
 void print_adjacent_from_adl(void);
