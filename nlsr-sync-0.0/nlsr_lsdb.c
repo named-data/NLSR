@@ -77,7 +77,6 @@ make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long in
 	memset(lsid,0,10);
 	sprintf(lsid,"%ld",ls_id);
 	memcpy(key+strlen(key),slice_prefix,strlen(slice_prefix));
-	memcpy(key+strlen(key),"/",1);
 	memcpy(key+strlen(key),lst,strlen(lst));
 	memcpy(key+strlen(key),"/",1);
 	memcpy(key+strlen(key),lsid,strlen(lsid));
@@ -698,7 +697,6 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 			memset(key,0,adj_lsa->header->orig_router->length+2);
 			make_adj_lsa_key(key,adj_lsa);
 			printf("Adj LSA: %s \n",key);
-			
 			struct name_prefix *lsaid=(struct name_prefix *)malloc(sizeof(struct name_prefix));
 			lsaid->name=(char *)malloc(strlen(key)+1);
 			memset(lsaid->name,strlen(key)+1,0);
