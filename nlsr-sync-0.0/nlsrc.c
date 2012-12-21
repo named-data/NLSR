@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	int len;
 	struct sockaddr_in address;
 	int result;
-	int byteSend;
+	int bytesSent;
 	char *server_address, *server_port;	
 
 	int command_len=0;
@@ -92,7 +92,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 	printf("Command to send: %s \n",command);
-	byteSend=send(sockfd, command, strlen(command),0);
+	bytesSent=send(sockfd, command, strlen(command),0);
+	printf("Command len: %d, Bytes sent: %d \n",strlen(command), bytesSent);
 	recv(sockfd, recv_buffer, 1024, 0);
 	printf("%s\n",recv_buffer);
 	free(command);
