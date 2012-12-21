@@ -59,7 +59,7 @@ add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip)
 		nbr->is_lsdb_send_interest_scheduled=0;
 		
 		nbr->ip_address=(char *)malloc(13);
-		memset(nbr->ip_address,13,0);
+		memset(nbr->ip_address,0,13);
 		memcpy(nbr->ip_address,ip,strlen(ip));
 
 		char *time_stamp=(char *)malloc(20);

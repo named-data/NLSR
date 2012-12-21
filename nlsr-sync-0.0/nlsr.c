@@ -204,7 +204,7 @@ process_command_ccnneighbor(char *command)
 
 
 	char *ip_addr=(char *)malloc(13);
-	memset(ip_addr,13,0);
+	memset(ip_addr,0,13);
 	get_ip_from_hostname_02(nbr_name->name,ip_addr);
 	printf("IP Address: %s \n",ip_addr);
 
@@ -583,7 +583,7 @@ process_command_slice_prefix(char *command)
 		if ( nlsr->slice_prefix != NULL)
 			free(nlsr->slice_prefix);
 		nlsr->slice_prefix=(char *)malloc(strlen(slice_prefix)+1);
-		memset(nlsr->slice_prefix,strlen(slice_prefix)+1,0);
+		memset(nlsr->slice_prefix,0,strlen(slice_prefix)+1);
 		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix));
 
 		//printf(" Slice Prefix: %s \n",nlsr->slice_prefix);
@@ -751,7 +751,7 @@ process_api_client_command(char *command)
 {
 	char *msg;
 	msg=(char *)malloc(100);	
-	memset(msg,100,0);
+	memset(msg,0,100);
 	
 	const char *sep=" \t\n";
 	char *rem=NULL;
@@ -849,7 +849,7 @@ process_api_client_command(char *command)
 				printf("Hostname of neighbor: %s ",nbr_name->name);
 
 				char *ip_addr=(char *)malloc(13);
-				memset(ip_addr,13,0);
+				memset(ip_addr,0,13);
 				get_ip_from_hostname_02(nbr_name->name,ip_addr);
 				printf("IP Address: %s \n",ip_addr);
 				int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr_name->name, (const char *)ip_addr, 9695);
@@ -1113,11 +1113,11 @@ init_nlsr(void)
 	nlsr->api_port=API_PORT;
 
 	nlsr->topo_prefix=(char *)malloc(strlen("/ndn/routing/nlsr")+1);
-	memset(nlsr->topo_prefix,strlen("/ndn/routing/nlsr")+1,0);
+	memset(nlsr->topo_prefix,0,strlen("/ndn/routing/nlsr")+1);
 	memcpy(nlsr->topo_prefix,"/ndn/routing/nlsr",strlen("/ndn/routing/nlsr"));
 
 	nlsr->slice_prefix=(char *)malloc(strlen("/ndn/routing/nlsr/LSA")+1);
-	memset(nlsr->slice_prefix,strlen("/ndn/routing/nlsr/LSA")+1,0);
+	memset(nlsr->slice_prefix, 0, strlen("/ndn/routing/nlsr/LSA")+1);
 	memcpy(nlsr->slice_prefix,"/ndn/routing/nlsr/LSA",strlen("/ndn/routing/nlsr/LSA"));
 
 	nlsr->is_hyperbolic_calc=0;

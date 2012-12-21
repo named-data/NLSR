@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 	for(i=5;i<argc;i++)
 		command_len+=(strlen(argv[i])+1);
 	char *command=malloc(command_len);
-	memset(command,command_len+1,0);
+	memset(command, 0, command_len);
 	for(i=5;i<argc;i++)
 	{
 		memcpy(command+strlen(command),argv[i],strlen(argv[i]));
