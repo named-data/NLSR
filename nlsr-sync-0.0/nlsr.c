@@ -549,7 +549,9 @@ process_command_topo_prefix(char *command)
 		if( nlsr->topo_prefix != NULL)	
 			free(nlsr->topo_prefix);
 		nlsr->topo_prefix=(char *)malloc(strlen(topo_prefix)+1);
-		memset(nlsr->topo_prefix,strlen(topo_prefix)+1,0);
+		//nlsr->topo_prefix=(char *)calloc(strlen(topo_prefix)+1, sizeof(char));
+		memset(nlsr->topo_prefix,0,strlen(topo_prefix)+1);
+		puts(topo_prefix);
 		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix));
 
 		//printf(" Topo Prefix: %s \n",nlsr->topo_prefix);

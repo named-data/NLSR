@@ -61,7 +61,7 @@ make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
 	memcpy(key+strlen(key),lst,strlen(lst));
 	memcpy(key+strlen(key),"/",1);
 	memcpy(key+strlen(key),lsid,strlen(lsid));
-
+	printf("%s\n", key);
 }
 
 
@@ -69,7 +69,7 @@ void
 make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long int ls_id,char *orig_time,char *slice_prefix)
 {
 	
-	char lst[2];
+	/*char lst[2];
 	memset(lst,0,2);
 	sprintf(lst,"%d",ls_type);	
 
@@ -83,7 +83,9 @@ make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long in
 	memcpy(key+strlen(key),"/",1);
 	memcpy(key+strlen(key),orig_time,strlen(orig_time));
 	memcpy(key+strlen(key),orig_router,strlen(orig_router));
-	
+	*/
+	sprintf(key,"%s%d/%d/%s%s",slice_prefix, ls_type, ls_id, orig_time, orig_router);
+	printf("%s\n",key);
 }
 
 void 

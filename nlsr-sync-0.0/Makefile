@@ -1,5 +1,5 @@
-CC = cc
-CFLAGS = -g -Wall -Wpointer-arith -Wreturn-type -Wstrict-prototypes
+CC = gcc
+CFLAGS = -g -Wall 
 LIBS = -lccn -lccnsync -lcrypto 
 
 PROGRAMS = nlsrc nlsr
@@ -11,10 +11,10 @@ NLSRC_SRCS=nlsrc.c
 all: $(PROGRAMS)
 
 nlsr: $(NLSR_SRCS)
-	$(CC) $(CFLAGS) $(NLSR_SRCS) -o nlsr $(LIBS) -lm
+	$(CC) $(CFLAGS) $(NLSR_SRCS) $(LIBS) -lm -o nlsr
 
 nlsrc: $(NLSRC_SRCS)
-	$(CC) $(CFLAGS) $(NLSRC_SRCS) -o nlsrc $(LIBS) -lm
+	$(CC) $(CFLAGS) $(NLSRC_SRCS) $(LIBS) -lm -o nlsrc
 
 install: $(PROGRAMS)
 	cp $(PROGRAMS) $(INSTALL_PATH)
