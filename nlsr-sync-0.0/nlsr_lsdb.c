@@ -30,7 +30,7 @@
 void
 set_new_lsdb_version(void)
 {
-	
+//Obaid: this method needs to be modified, no need to free and allocate memory again
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
@@ -2067,8 +2067,8 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 void
 write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 {
-	printf("Content Preifx: %s\n",repo_content_prefix);
-
+	
+	printf("Content Prefix: %s\n",repo_content_prefix);
 	
 	struct ccn_charbuf *lsa_data=ccn_charbuf_create();		
 	get_adj_lsa_data(lsa_data,lsa_id);
@@ -2082,8 +2082,7 @@ write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 void
 write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 {
-	printf("Content Preifx: %s\n",repo_content_prefix);
-
+	printf("****Content Prefix: %s\n",repo_content_prefix);
 	
 	struct ccn_charbuf *lsa_data=ccn_charbuf_create();		
 	get_name_lsa_data(lsa_data,lsa_id);
