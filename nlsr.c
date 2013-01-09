@@ -755,13 +755,14 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 			}			
 			else if(fd == nlsr->nlsr_api_server_sock_fd)
 			{
+				printf("Setting up socket....\n");
 				client_len = sizeof(client_address);
 				client_sockfd = accept(nlsr->nlsr_api_server_sock_fd,(struct sockaddr *)&client_address, &client_len);
 				FD_SET(client_sockfd, &nlsr->readfds);
 			}
 			else
 			{   
-					
+				printf("Else...\n");		
 				ioctl(fd, FIONREAD, &nread);
 				if(nread == 0) 
 				{
@@ -771,7 +772,7 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 				else 
 				{
 					recv(fd, recv_buffer, 1024, 0);
-					printf("Received Data from NLSR API cleint: %s \n",recv_buffer);
+					printf("Test Received Data from NLSR API cleint: %s \n",recv_buffer);
 					char *msg=process_api_client_command(recv_buffer);
 					send(fd, msg, strlen(msg),0);
 					free(msg);
@@ -863,11 +864,13 @@ init_api_server(int ccn_fd)
        	}
 
 	server_address.sin_family = AF_INET;
-	server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
-	server_address.sin_port = nlsr->api_port;
+	//server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server_address.sin_addr.s_addr = INADDR_ANY;
+	server_address.sin_port = htons(nlsr->api_port);
 
 	server_len = sizeof(server_address);
 	bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
+	//printf("port number %d\n", ntohs(server_address.sin_port));
 	listen(server_sockfd, 100);
 	FD_ZERO(&nlsr->readfds);
 	FD_SET(server_sockfd, &nlsr->readfds);

@@ -22,12 +22,15 @@ static int
 usage(char *progname)
 {
     printf("Usage: %s [OPTIONS...]\n\
-	NLSR Api client....\n\
+	NLSR API client....\n\
 	nlsrc -s server_ip -p server_port add|del name|neighbor name_prefix [faceX] \n\
-	add/del, -- adding/deleting operation\n\
-	name/neighbor, -- Operation for name/neighbor\n\
-	name_name, -- Name prefix for name/neighbor\n\
-	faceX, -- Face Id for neighbor if third argument is neighbor\n", progname);
+	option -- description\n\n\
+	add|del -- specify whether you want to add or delete.\n\
+	name|neighbor -- specify whether you are adding a name or a neighbor.\n\
+	name_prefix -- name of the prefix for the name|neighbor.\n\
+	faceX -- face ID for neighbor if the third argument is neighbor.\n\n\
+	Examples:\n\
+	1) nlsrc -s 127.0.0.1 -p 9696 add name /ndn/memphis.edu/test \n", progname);
 
     exit(1);
 }
@@ -41,12 +44,16 @@ int main(int argc, char *argv[])
 	int byteSend;
 	char *server_address, *server_port;	
 
-	int command_len=0;
+	int command_len = 0;
 	int i;
 
-	if (argc < 8 )
+	if (argc < 8)
 		usage(argv[0]);
-	if ( strcmp(argv[6],"neighbor") == 0 && argc <9 )
+
+	if (strcmp(argv[6], "neighbor") == 0 && argc < 9)
+		usage(argv[0]);
+
+	if (strcmp(argv[6], "name") != 0 && strcmp(argv[6], "neighbor") != 0)
 		usage(argv[0]);
 
 	while ((result = getopt_long(argc, argv, "s:p:", longopts, 0)) != -1) 
@@ -66,14 +73,17 @@ int main(int argc, char *argv[])
 	char recv_buffer[1024];
 	bzero(recv_buffer,1024);
 
-	for(i=5;i<argc;i++)
-		command_len+=(strlen(argv[i])+1);
-	char *command=malloc(command_len);
-	memset(command,command_len+1,0);
-	for(i=5;i<argc;i++)
+	for(i = 5; i < argc; i++)
+		command_len += (strlen(argv[i]) + 1);
+
+	char *command = malloc(command_len);
+	memset(command, 0, command_len + 1);
+
+	for(i = 5; i < argc; i++)
 	{
-		memcpy(command+strlen(command),argv[i],strlen(argv[i]));
-		if ( i < argc-1 )
+		memcpy(command+strlen(command), argv[i], strlen(argv[i]));
+		
+		if (i < argc - 1)
 			memcpy(command+strlen(command)," ",1);	
 	}
 
@@ -82,20 +92,25 @@ int main(int argc, char *argv[])
 	//strcpy(address.sun_path, "/tmp/nlsr_api_server_socket");
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = inet_addr(server_address);
-	address.sin_port = atoi(server_port);
+	address.sin_port = htons(atoi(server_port));
 
 	len = sizeof(address);
 	result = connect(sockfd, (struct sockaddr *)&address, len);
+	
 	if(result == -1) 
 	{
 		perror("oops nlsrc ");
 		exit(1);
 	}
+
 	printf("Command to send: %s \n",command);
 	byteSend=send(sockfd, command, strlen(command),0);
+
 	recv(sockfd, recv_buffer, 1024, 0);
 	printf("%s\n",recv_buffer);
+
 	free(command);
 	close(sockfd);
-	exit(0);
+
+	return 0;
 }
