@@ -29,6 +29,61 @@
 #include "nlsr_sync.h"
 #include "nlsr_lsdb.h"
 #include "utility.h"
+//test method
+char *
+hex_string(unsigned char *s, size_t l)
+{
+    const char *hex_digits = "0123456789abcdef";
+    char *r;
+    int i;
+    r = calloc(1, 1 + 2 * l);
+    for (i = 0; i < l; i++) {
+        r[2*i] = hex_digits[(s[i]>>4) & 0xf];
+        r[1+2*i] = hex_digits[s[i] & 0xf];
+    }
+    return(r);
+}
+
+int
+sync_cb(struct ccns_name_closure *nc,
+        struct ccn_charbuf *lhash,
+        struct ccn_charbuf *rhash,
+        struct ccn_charbuf *name)
+{
+    char *hexL;
+    char *hexR;
+    struct ccn_charbuf *uri = ccn_charbuf_create();
+    if (lhash == NULL || lhash->length == 0) {
+        hexL = strdup("none");
+    } else
+        hexL = hex_string(lhash->buf, lhash->length);
+    if (rhash == NULL || rhash->length == 0) {
+        hexR = strdup("none");
+    } else
+        hexR = hex_string(rhash->buf, rhash->length);
+    if (name != NULL)
+        ccn_uri_append(uri, name->buf, name->length, 1);
+    else
+        ccn_charbuf_append_string(uri, "(null)");
+    printf("%s %s %s\n", ccn_charbuf_as_string(uri), hexL, hexR);
+    fflush(stdout);
+    free(hexL);
+    free(hexR);
+    ccn_charbuf_destroy(&uri);
+//--Doing ourthing from here
+ struct ccn_indexbuf cid={0};
+
+    	struct ccn_indexbuf *components=&cid;
+    	ccn_name_split (name, components);
+    	ccn_name_chop(name,components,-3);
+
+	process_content_from_sync(name,components);
+
+ 
+
+  return(0);
+}
+//test method
 
 int 
 get_lsa_position(struct ccn_charbuf * ccnb, struct ccn_indexbuf *comps)
@@ -463,7 +518,8 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
     
 
     ccns_slice_set_topo_prefix(nlsr->slice, topo, prefix);
-    nlsr->closure->callback = &sync_callback;
+    nlsr->closure->callback = &sync_cb;
+    //nlsr->closure->callback = &sync_callback;
     nlsr->ccns = ccns_open(nlsr->ccn, nlsr->slice, nlsr->closure, roothash, NULL);
 }
 
