@@ -1,0 +1,26 @@
+.TH NLSRC 1 "JANUARY 2013" Linux "nlsrc Manual"
+.SH NAME
+nlsrc \- allows the addition or removal of names and/or neighbors while nlsr is running
+.SH SYNOPSIS
+.B nlsrc -s
+.I  server
+.B -p
+.I  port
+.B add|del name|neighbor prefix
+.SH DESCRIPTION
+.B nlsrc
+ allows operators to add or remove names or neighbors while nlsr is running. Names and neighbors can be modified on the localhost or from a remote host. 
+.SH OPTIONS
+.IP -s server
+specifies the server you would like to make changes to
+.IP -p port
+specifies the port you are connecting to on the server, default port is 9696
+.IP add|del
+specifies whether you are performing an add or delete operation
+.IP name|neighbor
+specifies whether you are modifying a name or a neighbor
+.IP prefix
+specifies the prefix for the name or neighbor
+.SH AUTHOR
+A K M Mahmudul Hoque
+ 
