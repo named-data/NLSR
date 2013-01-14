@@ -21,15 +21,18 @@ struct option longopts[] =
 static int 
 usage(char *progname)
 {
-    printf("Usage: %s [OPTIONS...]\n\
-	NLSR Api client....\n\
-	nlsrc -s server_ip -p server_port add|del name|neighbor name_prefix [faceX] \n\
-	add/del, -- adding/deleting operation\n\
-	name/neighbor, -- Operation for name/neighbor\n\
-	name_name, -- Name prefix for name/neighbor\n\
-	faceX, -- Face Id for neighbor if third argument is neighbor\n", progname);
+	printf("Usage: %s [OPTIONS...]\n\
+        NLSR API client....\n\
+        nlsrc -s server_ip -p server_port add|del name|neighbor name_prefix [faceX] \n\
+        option -- description\n\n\
+        add|del -- specify whether you want to add or delete.\n\
+        name|neighbor -- specify whether you are adding a name or a neighbor.\n\
+        name_prefix -- name of the prefix for the name|neighbor.\n\
+        faceX -- face ID for neighbor if the third argument is neighbor.\n\n\
+        Examples:\n\
+        1) nlsrc -s 127.0.0.1 -p 9696 add name /ndn/memphis.edu/test \n", progname);
 
-    exit(1);
+    	exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -44,10 +47,14 @@ int main(int argc, char *argv[])
 	int command_len=0;
 	int i;
 
-	if (argc < 8 )
-		usage(argv[0]);
-	if ( strcmp(argv[6],"neighbor") == 0 && argc <9 )
-		usage(argv[0]);
+	if (argc < 8)
+                usage(argv[0]);
+
+        if (strcmp(argv[6], "neighbor") == 0 && argc < 9)
+                usage(argv[0]);
+
+        if (strcmp(argv[6], "name") != 0 && strcmp(argv[6], "neighbor") != 0)
+                usage(argv[0]);
 
 	while ((result = getopt_long(argc, argv, "s:p:", longopts, 0)) != -1) 
 	{
@@ -82,7 +89,7 @@ int main(int argc, char *argv[])
 	//strcpy(address.sun_path, "/tmp/nlsr_api_server_socket");
 	address.sin_family = AF_INET;
 	address.sin_addr.s_addr = inet_addr(server_address);
-	address.sin_port = atoi(server_port);
+	address.sin_port = htons(atoi(server_port));
 
 	len = sizeof(address);
 	result = connect(sockfd, (struct sockaddr *)&address, len);

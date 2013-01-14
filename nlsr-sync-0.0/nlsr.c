@@ -1028,8 +1028,9 @@ init_api_server(int ccn_fd)
        	}
 
 	server_address.sin_family = AF_INET;
-	server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
-	server_address.sin_port = nlsr->api_port;
+	//server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+	server_address.sin_addr.s_addr = INADDR_ANY;
+	server_address.sin_port = htons(nlsr->api_port);
 
 	server_len = sizeof(server_address);
 	bind(server_sockfd, (struct sockaddr *)&server_address, server_len);
