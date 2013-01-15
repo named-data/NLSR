@@ -548,6 +548,9 @@ process_command_topo_prefix(char *command)
 	{
 		if( nlsr->topo_prefix != NULL)	
 			free(nlsr->topo_prefix);
+		if ( topo_prefix[strlen(topo_prefix)-1] == '/' )
+			topo_prefix[strlen(topo_prefix)-1]='\0';
+
 		nlsr->topo_prefix=(char *)malloc(strlen(topo_prefix)+1);
 		//nlsr->topo_prefix=(char *)calloc(strlen(topo_prefix)+1, sizeof(char));
 		memset(nlsr->topo_prefix,0,strlen(topo_prefix)+1);
@@ -582,6 +585,9 @@ process_command_slice_prefix(char *command)
 	{
 		if ( nlsr->slice_prefix != NULL)
 			free(nlsr->slice_prefix);
+		if ( slice_prefix[strlen(slice_prefix)-1] == '/' )
+			slice_prefix[strlen(slice_prefix)-1]='\0';
+
 		nlsr->slice_prefix=(char *)malloc(strlen(slice_prefix)+1);
 		memset(nlsr->slice_prefix,0,strlen(slice_prefix)+1);
 		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix));

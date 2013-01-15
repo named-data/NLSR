@@ -71,7 +71,7 @@ sync_cb(struct ccns_name_closure *nc,
     free(hexR);
     ccn_charbuf_destroy(&uri);
 //--Doing ourthing from here
- struct ccn_indexbuf cid={0};
+ 	struct ccn_indexbuf cid={0};
 
     	struct ccn_indexbuf *components=&cid;
     	ccn_name_split (name, components);
@@ -594,6 +594,7 @@ write_data_to_repo(char *data, char *name_prefix)
 
 	if (blockread > 0) {
         	//res = ccn_seqw_write(w, ccn_charbuf_as_string(buf), blockread);
+		ccn_run(nlsr->ccn, 100);
 		res = ccn_seqw_write(w, data, blockread);	
         while (res == -1) {
             ccn_run(nlsr->ccn, 100);
@@ -603,9 +604,10 @@ write_data_to_repo(char *data, char *name_prefix)
     	}
 
 	
-	ccn_run(nlsr->ccn, 1);
+	//ccn_run(nlsr->ccn, 1);
    
     ccn_seqw_close(w);
+    ccn_run(nlsr->ccn, 1);
     //ccn_charbuf_destroy(&buf);
     ccn_charbuf_destroy(&name);
 }

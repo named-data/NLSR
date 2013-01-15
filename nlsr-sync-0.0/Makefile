@@ -26,7 +26,7 @@ uninstall:
 clean:
 	rm -f *.o
 	rm -f $(PROGRAMS)
-	rm -rf $(PROGRAMS).dSYM
+	rm -rf *.dSYM
 
 .c.o:
 	$(CC) $(CFLAGS) -c $<
