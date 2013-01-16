@@ -205,7 +205,7 @@ get_host_name_from_command_string(struct name_prefix *name_part,char *nbr_name_u
 
 //char *
 void 
-get_content_by_content_name(char *content_name, unsigned char *content_data)
+get_content_by_content_name(char *content_name, unsigned char **content_data)
 {
 
 	struct ccn_charbuf *name = NULL;
@@ -273,8 +273,8 @@ get_content_by_content_name(char *content_name, unsigned char *content_data)
 		length = resultbuf->length;
 		if (content_only){
 			ccn_content_get_value(ptr, length, &pcobuf, &ptr, &length);
-			content_data = (unsigned char *) calloc(length, sizeof(char *));
-			memcpy (content_data, ptr, length);
+			*content_data = (unsigned char *) calloc(length, sizeof(char *));
+			memcpy (*content_data, ptr, length);
 		}
 	}
 	ccn_charbuf_destroy(&resultbuf);
@@ -427,7 +427,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			{
 				printf("New NAME LSA.....\n");	
 				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
-				get_content_by_content_name(ccn_charbuf_as_string(uri), content_data);
+				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
 				printf("Content Data: %s \n",content_data);
 				process_incoming_sync_content_lsa(content_data);
 			}
@@ -435,7 +435,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			{
 				printf("Name LSA / Newer Name LSA already xists in LSDB\n");
 				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
-				get_content_by_content_name(ccn_charbuf_as_string(uri),content_data);
+				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
 				printf("Content Data: %s \n",content_data);
 			}
 		}
@@ -461,7 +461,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			{
 				printf("New Adj LSA.....\n");	
 				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
-				get_content_by_content_name(ccn_charbuf_as_string(uri), content_data);
+				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
 				printf("Content Data: %s \n",content_data);
 				process_incoming_sync_content_lsa(content_data);			
 			}
@@ -469,7 +469,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			{
 
 				printf("Adj LSA / Newer Adj LSA already exists in LSDB\n");
-				get_content_by_content_name(ccn_charbuf_as_string(uri), content_data);
+				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
 				printf("Content Data: %s \n",content_data);
 			}
 		}
@@ -479,7 +479,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 		}
 	}
 
-	free(content_data);
+	if (content_data != NULL)
+		free(content_data);
 	ccn_charbuf_destroy(&uri);
 }
 
