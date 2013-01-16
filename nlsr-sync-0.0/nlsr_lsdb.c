@@ -2049,12 +2049,15 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 void
 write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 {
-	
-	printf("Content Prefix: %s\n",repo_content_prefix);
+	if ( nlsr->debugging )
+		printf("write_adj_lsa_to_repo \n");
+	if ( nlsr->debugging )
+		printf("Content Prefix: %s\n",repo_content_prefix);
 	
 	struct ccn_charbuf *lsa_data=ccn_charbuf_create();		
 	get_adj_lsa_data(lsa_data,lsa_id);
-	printf("Name LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+	if ( nlsr->debugging )
+		printf("Name LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
 
 	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
 
