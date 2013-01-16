@@ -676,13 +676,14 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 			char *repo_con_name=(char *)malloc(strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);
 			memset(repo_con_name, 0, strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);	
 			make_adj_lsa_prefix_for_repo(repo_con_name, adj_lsa->header->orig_router->name,LS_TYPE_ADJ,adj_lsa->header->orig_time,nlsr->slice_prefix);
-
-			printf("Adj LSA Repo Key: %s \n",repo_con_name);
+			if ( nlsr->debugging )
+				printf("Adj LSA Repo Key: %s \n",repo_con_name);
 			
 			char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
 			memset(key,0,adj_lsa->header->orig_router->length+2);
 			make_adj_lsa_key(key,adj_lsa);
-			printf("Adj LSA: %s \n",key);
+			if ( nlsr->debugging )
+				printf("Adj LSA: %s \n",key);
 			struct name_prefix *lsaid=(struct name_prefix *)malloc(sizeof(struct name_prefix));
 			lsaid->name=(char *)malloc(strlen(key)+1);
 			memset(lsaid->name, 0, strlen(key)+1);
@@ -690,11 +691,8 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 			lsaid->length=strlen(key)+1;
 
 		
-			//write_adj_lsa_to_repo(repo_key, lsaid);
-			
-			//free(key);
-			//free(repo_con_name);
-
+			write_adj_lsa_to_repo(repo_con_name, lsaid);
+		
 			free(adj_lsa->header->orig_router->name);
 			free(adj_lsa->header->orig_router);
 			free(adj_lsa->header->orig_time);
@@ -2051,12 +2049,15 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 void
 write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 {
-	
-	printf("Content Prefix: %s\n",repo_content_prefix);
+	if ( nlsr->debugging )
+		printf("write_adj_lsa_to_repo \n");
+	if ( nlsr->debugging )
+		printf("Content Prefix: %s\n",repo_content_prefix);
 	
 	struct ccn_charbuf *lsa_data=ccn_charbuf_create();		
 	get_adj_lsa_data(lsa_data,lsa_id);
-	printf("Name LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+	if ( nlsr->debugging )
+		printf("Name LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
 
 	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
 

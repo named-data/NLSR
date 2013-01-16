@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	}
 	printf("Command to send: %s \n",command);
 	bytesSent=send(sockfd, command, strlen(command),0);
-	printf("Command len: %d, Bytes sent: %d \n",strlen(command), bytesSent);
+	printf("Command len: %d, Bytes sent: %d \n",(int)strlen(command), bytesSent);
 	recv(sockfd, recv_buffer, 1024, 0);
 	printf("%s\n",recv_buffer);
 	free(command);
