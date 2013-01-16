@@ -203,49 +203,48 @@ get_host_name_from_command_string(struct name_prefix *name_part,char *nbr_name_u
 }
 
 
-char *
-get_content_by_content_name(char *content_name)
+//char *
+void 
+get_content_by_content_name(char *content_name, unsigned char *content_data)
 {
 
-    struct ccn_charbuf *name = NULL;
-    struct ccn_charbuf *templ = NULL;
-    struct ccn_charbuf *resultbuf = NULL;
-    struct ccn_parsed_ContentObject pcobuf = { 0 };
-    int res;
-    int allow_stale = 0;
-    int content_only = 1;
-    int scope = -1;
-    const unsigned char *ptr;
-    size_t length;
-    int resolve_version = CCN_V_HIGHEST;
-    int timeout_ms = 3000;
-    const unsigned lifetime_default = CCN_INTEREST_LIFETIME_SEC << 12;
-    unsigned lifetime_l12 = lifetime_default;
-    int get_flags = 0;
-    
+	struct ccn_charbuf *name = NULL;
+	struct ccn_charbuf *templ = NULL;
+	struct ccn_charbuf *resultbuf = NULL;
+	struct ccn_parsed_ContentObject pcobuf = { 0 };
+	int res;
+	int allow_stale = 0;
+	int content_only = 1;
+	int scope = -1;
+	const unsigned char *ptr; 
+	size_t length;
+	int resolve_version = CCN_V_HIGHEST;
+	int timeout_ms = 3000;
+	const unsigned lifetime_default = CCN_INTEREST_LIFETIME_SEC << 12;
+	unsigned lifetime_l12 = lifetime_default;
+	int get_flags = 0;
 
-    name = ccn_charbuf_create();
-    res = ccn_name_from_uri(name,content_name);
-    if (res < 0) {
-        fprintf(stderr, "Bad ccn URI: %s\n", content_name);
-        exit(1);
-    }
-  
-   
+	name = ccn_charbuf_create();
+	res = ccn_name_from_uri(name,content_name);
+	if (res < 0) {
+		fprintf(stderr, "Bad ccn URI: %s\n", content_name);
+		exit(1);
+	}
+
 	if (allow_stale || lifetime_l12 != lifetime_default || scope != -1) {
-        templ = ccn_charbuf_create();
-        ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
-        ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
-        ccn_charbuf_append_closer(templ); /* </Name> */
+		templ = ccn_charbuf_create();
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
+		ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
+		ccn_charbuf_append_closer(templ); /* </Name> */
 		if (allow_stale) {
 			ccn_charbuf_append_tt(templ, CCN_DTAG_AnswerOriginKind, CCN_DTAG);
 			ccnb_append_number(templ,
-							   CCN_AOK_DEFAULT | CCN_AOK_STALE);
+					CCN_AOK_DEFAULT | CCN_AOK_STALE);
 			ccn_charbuf_append_closer(templ); /* </AnswerOriginKind> */
 		}
-        if (scope != -1) {
-            ccnb_tagged_putf(templ, CCN_DTAG_Scope, "%d", scope);
-        }
+		if (scope != -1) {
+			ccnb_tagged_putf(templ, CCN_DTAG_Scope, "%d", scope);
+		}
 		if (lifetime_l12 != lifetime_default) {
 			/*
 			 * Choose the interest lifetime so there are at least 3
@@ -257,32 +256,35 @@ get_content_by_content_name(char *content_name)
 				buf[i] = lifetime_l12 & 0xff;
 			ccnb_append_tagged_blob(templ, CCN_DTAG_InterestLifetime, buf, sizeof(buf));
 		}
-        ccn_charbuf_append_closer(templ); /* </Interest> */
-    }
-    resultbuf = ccn_charbuf_create();
-    if (resolve_version != 0) {
-        res = ccn_resolve_version(nlsr->ccn, name, resolve_version, 500);
-        if (res >= 0) {
-            ccn_uri_append(resultbuf, name->buf, name->length, 1);
-            //fprintf(stderr, "== %s\n",ccn_charbuf_as_string(resultbuf));
-            resultbuf->length = 0;
-        }
-    }
-    res = ccn_get(nlsr->ccn, name, templ, timeout_ms, resultbuf, &pcobuf, NULL, get_flags);
-    if (res >= 0) {
-        ptr = resultbuf->buf;
-        length = resultbuf->length;
-        if (content_only)
-            ccn_content_get_value(ptr, length, &pcobuf, &ptr, &length);
-    }
-    ccn_charbuf_destroy(&resultbuf);
-    ccn_charbuf_destroy(&templ);
-    ccn_charbuf_destroy(&name);   
-	return (char *)ptr;
+		ccn_charbuf_append_closer(templ); /* </Interest> */
+	}
+	resultbuf = ccn_charbuf_create();
+	if (resolve_version != 0) {
+		res = ccn_resolve_version(nlsr->ccn, name, resolve_version, 500);
+		if (res >= 0) {
+			ccn_uri_append(resultbuf, name->buf, name->length, 1);
+			//fprintf(stderr, "== %s\n",ccn_charbuf_as_string(resultbuf));
+			resultbuf->length = 0;
+		}
+	}
+	res = ccn_get(nlsr->ccn, name, templ, timeout_ms, resultbuf, &pcobuf, NULL, get_flags);
+	if (res >= 0) {
+		ptr = resultbuf->buf;
+		length = resultbuf->length;
+		if (content_only){
+			ccn_content_get_value(ptr, length, &pcobuf, &ptr, &length);
+			content_data = (unsigned char *) calloc(length, sizeof(char *));
+			memcpy (content_data, ptr, length);
+		}
+	}
+	ccn_charbuf_destroy(&resultbuf);
+	ccn_charbuf_destroy(&templ);
+	ccn_charbuf_destroy(&name);   
+	//return (unsigned char *)ptr;
 }
 
 void 
-process_incoming_sync_content_lsa(char *content_data)
+process_incoming_sync_content_lsa( unsigned char *content_data)
 {
 
 
@@ -316,7 +318,7 @@ process_incoming_sync_content_lsa(char *content_data)
 	//if ( nlsr->detailed_logging )
 	//	writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Data\n");	
 
-	if( strlen(content_data ) > 0 )
+	if( strlen((char *)content_data ) > 0 )
 	{
 
 		orig_router=strtok_r((char *)content_data,sep,&rem);
@@ -389,6 +391,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	int ls_type;
 	long int ls_id=0;
 
+	unsigned char *content_data = NULL;
+
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
@@ -422,14 +426,16 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			if ( is_new_name_lsa == 1 )
 			{
 				printf("New NAME LSA.....\n");	
-				char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				get_content_by_content_name(ccn_charbuf_as_string(uri), content_data);
 				printf("Content Data: %s \n",content_data);
 				process_incoming_sync_content_lsa(content_data);
 			}
 			else 
 			{
 				printf("Name LSA / Newer Name LSA already xists in LSDB\n");
-				char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				get_content_by_content_name(ccn_charbuf_as_string(uri),content_data);
 				printf("Content Data: %s \n",content_data);
 			}
 		}
@@ -454,7 +460,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			if ( is_new_adj_lsa == 1 )
 			{
 				printf("New Adj LSA.....\n");	
-				char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				get_content_by_content_name(ccn_charbuf_as_string(uri), content_data);
 				printf("Content Data: %s \n",content_data);
 				process_incoming_sync_content_lsa(content_data);			
 			}
@@ -462,7 +469,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			{
 
 				printf("Adj LSA / Newer Adj LSA already exists in LSDB\n");
-				char *content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
+				get_content_by_content_name(ccn_charbuf_as_string(uri), content_data);
 				printf("Content Data: %s \n",content_data);
 			}
 		}
@@ -472,8 +479,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 		}
 	}
 
+	free(content_data);
 	ccn_charbuf_destroy(&uri);
-
 }
 
 int
