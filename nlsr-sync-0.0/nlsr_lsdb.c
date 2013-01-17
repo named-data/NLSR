@@ -715,7 +715,7 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 			lsaid->length=strlen(key)+1;
 
 		
-			//write_adj_lsa_to_repo(repo_key, lsaid);
+			write_adj_lsa_to_repo(repo_key, lsaid);
 
 			free(key);
 			free(repo_key);
