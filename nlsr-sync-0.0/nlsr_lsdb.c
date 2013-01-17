@@ -673,6 +673,7 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 			memset(lst,0,2);
 			sprintf(lst,"%d",LS_TYPE_ADJ);			
 
+			/*
 			char *repo_con_name=(char *)malloc(strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);
 			memset(repo_con_name, 0, strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);	
 			make_adj_lsa_prefix_for_repo(repo_con_name, adj_lsa->header->orig_router->name,LS_TYPE_ADJ,adj_lsa->header->orig_time,nlsr->slice_prefix);
@@ -692,6 +693,7 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 
 		
 			write_adj_lsa_to_repo(repo_con_name, lsaid);
+			*/
 		
 			free(adj_lsa->header->orig_router->name);
 			free(adj_lsa->header->orig_router);
