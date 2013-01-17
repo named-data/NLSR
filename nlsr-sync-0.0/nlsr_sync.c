@@ -70,7 +70,9 @@ sync_cb(struct ccns_name_closure *nc,
     free(hexL);
     free(hexR);
     ccn_charbuf_destroy(&uri);
-//--Doing ourthing from here
+
+
+	//--Doing ourthing from here
  	struct ccn_indexbuf cid={0};
 
     	struct ccn_indexbuf *components=&cid;
@@ -605,10 +607,10 @@ write_data_to_repo(char *data, char *name_prefix)
 	blockread=strlen(data);
 
 	if (blockread > 0) {
-		ccn_run(nlsr->ccn, 100);
+		//ccn_run(nlsr->ccn, 100);
 		res = ccn_seqw_write(w, data, blockread);	
         	while (res == -1) {
-            		ccn_run(nlsr->ccn, 100);
+            		//ccn_run(nlsr->ccn, 100);
 	       		res = ccn_seqw_write(w, data, blockread);
            	}
     	}
