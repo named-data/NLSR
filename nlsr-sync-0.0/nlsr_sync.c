@@ -433,7 +433,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 					printf("New NAME LSA.....\n");	
 				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
 				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
-				printf("Content Data: %s \n",content_data);
+				if ( nlsr->debugging )
+					printf("Content Data: %s \n",content_data);
 				process_incoming_sync_content_lsa(content_data);
 			}
 			else 
