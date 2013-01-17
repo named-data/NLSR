@@ -673,28 +673,6 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 			memset(lst,0,2);
 			sprintf(lst,"%d",LS_TYPE_ADJ);			
 
-			/*
-			char *repo_con_name=(char *)malloc(strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);
-			memset(repo_con_name, 0, strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);	
-			make_adj_lsa_prefix_for_repo(repo_con_name, adj_lsa->header->orig_router->name,LS_TYPE_ADJ,adj_lsa->header->orig_time,nlsr->slice_prefix);
-			if ( nlsr->debugging )
-				printf("Adj LSA Repo Key: %s \n",repo_con_name);
-			
-			char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
-			memset(key,0,adj_lsa->header->orig_router->length+2+2);
-			make_adj_lsa_key(key,adj_lsa);
-			if ( nlsr->debugging )
-				printf("Adj LSA: %s \n",key);
-			struct name_prefix *lsaid=(struct name_prefix *)malloc(sizeof(struct name_prefix));
-			lsaid->name=(char *)malloc(strlen(key)+1);
-			memset(lsaid->name, 0, strlen(key)+1);
-			memcpy(lsaid->name,key,strlen(key));
-			lsaid->length=strlen(key)+1;
-
-		
-			write_adj_lsa_to_repo(repo_con_name, lsaid);
-			*/
-
 			char *repo_key=(char *)malloc(strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);
 			memset(repo_key, 0, strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5);	
 			make_adj_lsa_prefix_for_repo(repo_key, adj_lsa->header->orig_router->name,LS_TYPE_ADJ,adj_lsa->header->orig_time,nlsr->slice_prefix);

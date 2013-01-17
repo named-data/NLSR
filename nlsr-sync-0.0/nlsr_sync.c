@@ -548,6 +548,12 @@ make_template(int scope)
 void
 write_data_to_repo(char *data, char *name_prefix)
 {
+	if ( nlsr->debugging )
+	{
+		printf("write_data_to_repo called\n");
+		prtinf("Content Name: %s \n",name_prefix);
+		printf("Content Data: %s \n",data);
+	}
 
     struct ccn_charbuf *name = NULL;
     struct ccn_seqwriter *w = NULL;
@@ -594,29 +600,21 @@ write_data_to_repo(char *data, char *name_prefix)
 
 
 	blockread = 0;
-	//struct ccn_charbuf *buf=ccn_charbuf_create();
-	//get_name_lsdb_summary(buf);	
-	//blockread=buf->length;
+
 
 	blockread=strlen(data);
 
 	if (blockread > 0) {
-        	//res = ccn_seqw_write(w, ccn_charbuf_as_string(buf), blockread);
 		ccn_run(nlsr->ccn, 100);
 		res = ccn_seqw_write(w, data, blockread);	
-        while (res == -1) {
-            ccn_run(nlsr->ccn, 100);
-            	//res = ccn_seqw_write(w, ccn_charbuf_as_string(buf), blockread);
-	       res = ccn_seqw_write(w, data, blockread);
-           }
+        	while (res == -1) {
+            		ccn_run(nlsr->ccn, 100);
+	       		res = ccn_seqw_write(w, data, blockread);
+           	}
     	}
 
-	
-	//ccn_run(nlsr->ccn, 1);
-   
     ccn_seqw_close(w);
-    ccn_run(nlsr->ccn, 1);
-    //ccn_charbuf_destroy(&buf);
+    //ccn_run(nlsr->ccn, 1);
     ccn_charbuf_destroy(&name);
 }
 
