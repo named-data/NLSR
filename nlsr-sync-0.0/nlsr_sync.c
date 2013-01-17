@@ -96,7 +96,8 @@ get_lsa_position(struct ccn_charbuf * ccnb, struct ccn_indexbuf *comps)
 	
 	
 	int res,i;
-	int lsa_position=0;
+	int lsa_position=0; 	//Obaid: Hoque make it -1, 0 is also an index
+				//	I didn't change it as it might break the code. 	
 	int name_comps=(int)comps->n;
 
 	for(i=0;i<name_comps;i++)
