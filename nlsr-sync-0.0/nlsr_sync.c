@@ -551,7 +551,7 @@ write_data_to_repo(char *data, char *name_prefix)
 	if ( nlsr->debugging )
 	{
 		printf("write_data_to_repo called\n");
-		prtinf("Content Name: %s \n",name_prefix);
+		pritnf("Content Name: %s \n",name_prefix);
 		printf("Content Data: %s \n",data);
 	}
 
