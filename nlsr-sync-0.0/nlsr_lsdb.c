@@ -61,7 +61,9 @@ make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
 	memcpy(key+strlen(key),lst,strlen(lst));
 	memcpy(key+strlen(key),"/",1);
 	memcpy(key+strlen(key),lsid,strlen(lsid));
-	printf("%s\n", key);
+	
+	if ( nlsr->debugging )
+		printf("%s\n", key);
 }
 
 
@@ -69,7 +71,9 @@ void
 make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long int ls_id,char *orig_time,char *slice_prefix)
 {
 	sprintf(key,"%s/%d/%ld/%s%s",slice_prefix, ls_type, ls_id, orig_time, orig_router);
-	printf("%s\n",key);
+	
+	if ( nlsr->debugging )
+		printf("%s\n",key);
 }
 
 void 
@@ -77,7 +81,9 @@ make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *or
 {
 		
 	sprintf(key,"%s/%d/%s%s",slice_prefix,ls_type, orig_time, orig_router);	
-	printf("Key:%s\n",key);	
+
+	if ( nlsr->debugging )
+		printf("Key:%s\n",key);	
 }
 
 void 
@@ -1023,12 +1029,13 @@ print_adj_lsa_body(const char *body, int no_link)
 		face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
-		printf("		Link %d	 	\n",i+1);
-		printf("		Neighbor		 : %s	\n",rtr_id);
-		printf("		Neighbor Length		 : %s	\n",length);
-		printf("		Connecting Face		 : %s	\n",face);
-		printf("		Metric			 : %s	\n",metric);
-
+		if ( nlsr->debugging ) {
+			printf("		Link %d	 	\n",i+1);
+			printf("		Neighbor		 : %s	\n",rtr_id);
+			printf("		Neighbor Length		 : %s	\n",length);
+			printf("		Connecting Face		 : %s	\n",face);
+			printf("		Metric			 : %s	\n",metric);
+		}
 
 		for(i=1;i<no_link;i++)
 		{
@@ -1567,7 +1574,9 @@ make_name_lsa_invalid(struct name_prefix *np,int ls_type, long int ls_id)
 
 
 	make_name_lsa_key(key, np->name,ls_type,ls_id);	
-	printf("Key:%s Length:%d\n",key,(int)strlen(key));
+	
+	if ( nlsr->debugging )
+		printf("Key:%s Length:%d\n",key,(int)strlen(key));
 
 	struct nlsa *nlsa;
 
@@ -2111,14 +2120,17 @@ write_name_lsdb_to_repo(char *slice_prefix)
 
 
 		make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);
-		printf("Name LSA Key: %s \n",key);
+		
+		if ( nlsr->debugging )
+			printf("Name LSA Key: %s \n",key);
 
 
 		char *repo_key=(char *)malloc(strlen(slice_prefix)+1+strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1+strlen(name_lsa->header->orig_time)+1);
 		memset(repo_key,0,strlen(slice_prefix)+1+strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1+strlen(name_lsa->header->orig_time)+1);	
 		make_name_lsa_prefix_for_repo(repo_key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id,name_lsa->header->orig_time,slice_prefix);
 		
-		printf("Name LSA Repo Key: %s \n",repo_key);
+		if ( nlsr->debugging )
+			printf("Name LSA Repo Key: %s \n",repo_key);
 
 		struct name_prefix *lsaid=(struct name_prefix *)malloc(sizeof(struct name_prefix));
 		lsaid->name=(char *)malloc(strlen(key)+1);

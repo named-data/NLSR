@@ -277,7 +277,9 @@ print_path(long int *parent, long int dest)
 {
 	if (parent[dest] != EMPTY_PARENT )
 		print_path(parent,parent[dest]);
-	printf(" %ld",dest);
+
+	if ( nlsr->debugging )
+		printf(" %ld",dest);
 }
 
 int 
