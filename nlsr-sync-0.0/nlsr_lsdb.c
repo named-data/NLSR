@@ -63,7 +63,7 @@ make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
 	memcpy(key+strlen(key),lsid,strlen(lsid));
 	
 	if ( nlsr->debugging )
-		printf("%s\n", key);
+		printf("name LSA Key: %s\n", key);
 }
 
 
@@ -73,7 +73,7 @@ make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long in
 	sprintf(key,"%s/%d/%ld/%s%s",slice_prefix, ls_type, ls_id, orig_time, orig_router);
 	
 	if ( nlsr->debugging )
-		printf("%s\n",key);
+		printf("Name LSA prefix for repo content: %s\n",key);
 }
 
 void 
@@ -83,7 +83,7 @@ make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *or
 	sprintf(key,"%s/%d/%s%s",slice_prefix,ls_type, orig_time, orig_router);	
 
 	if ( nlsr->debugging )
-		printf("Key:%s\n",key);	
+		printf("Name LSA prefix for repo content:%s\n",key);	
 }
 
 void 
@@ -191,9 +191,6 @@ install_name_lsa(struct nlsa *name_lsa)
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
-	//long int lsa_life_time=get_time_diff(time_stamp,name_lsa->header->orig_time);
-
-	//printf("time difference: %ld \n",lsa_life_time);
 	
 
 		char lst[2];
@@ -1424,8 +1421,7 @@ get_name_lsa_data(struct ccn_charbuf *lsa_data, struct name_prefix *lsaId)
 	if( res == HT_OLD_ENTRY )
 	{
 		name_lsa=e->data;
-		//printf("NAME LSA found\n");
-
+		
 		if ( nlsr->debugging )
 			printf("NAME LSA found  \n");	
 		if ( nlsr->detailed_logging )
@@ -1504,7 +1500,6 @@ get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId)
 	if( res == HT_OLD_ENTRY )
 	{
 		adj_lsa=e->data;
-		//printf("Adj LSA found\n");
 
 		if ( nlsr->debugging )
 			printf("Adj LSA found  \n");	
@@ -1518,15 +1513,15 @@ get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId)
 		memset(temp_length,0,20);
 		sprintf(temp_length,"%d",adj_lsa->header->orig_router->length);
 		ccn_charbuf_append_string(lsa_data,temp_length);
-		free(temp_length);
 		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_length);
 
 		char *temp_ltype=(char *)malloc(20);
 		memset(temp_ltype,0,20);
 		sprintf(temp_ltype,"%d",adj_lsa->header->ls_type);
 		ccn_charbuf_append_string(lsa_data,temp_ltype);
-		free(temp_ltype);
 		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_ltype);
 
 		ccn_charbuf_append_string(lsa_data,adj_lsa->header->orig_time);
 		ccn_charbuf_append_string(lsa_data,"|");
@@ -1535,8 +1530,8 @@ get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId)
 		memset(temp_nl,0,20);
 		sprintf(temp_nl,"%d",adj_lsa->no_link);
 		ccn_charbuf_append_string(lsa_data,temp_nl);
-		free(temp_nl);
 		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_nl);
 
 		ccn_charbuf_append_string(lsa_data,adj_lsa->body);
 

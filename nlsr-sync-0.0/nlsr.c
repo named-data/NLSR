@@ -1216,8 +1216,13 @@ main(int argc, char *argv[])
 
 	init_api_server(ccn_fd);
 
-	create_sync_slice(nlsr->topo_prefix, nlsr->slice_prefix);	
-
+	res=create_sync_slice(nlsr->topo_prefix, nlsr->slice_prefix);
+	if(res<0)
+	{
+		fprintf(stderr, "Can not create slice for prefix %s\n",nlsr->slice_prefix);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Can not create slice for prefix %s\n",nlsr->slice_prefix);
+		ON_ERROR_DESTROY(res);
+	}
 	struct ccn_charbuf *router_prefix;	
 	router_prefix=ccn_charbuf_create(); 
 	res=ccn_name_from_uri(router_prefix,nlsr->router_name);		

@@ -66,8 +66,12 @@ sync_cb(struct ccns_name_closure *nc,
     else
         ccn_charbuf_append_string(uri, "(null)");
 
+    //if ( nlsr->debugging )
+    	//printf("%s %s %s\n", ccn_charbuf_as_string(uri), hexL, hexR);
+
     if ( nlsr->debugging )
-    	printf("%s %s %s\n", ccn_charbuf_as_string(uri), hexL, hexR);
+	printf("Response from sync in the name: %s \n",ccn_charbuf_as_string(uri));	
+
     fflush(stdout);
     free(hexL);
     free(hexR);
@@ -82,6 +86,7 @@ sync_cb(struct ccns_name_closure *nc,
     	ccn_name_chop(name,components,-3);
 
 	process_content_from_sync(name,components);
+
 
  
 
@@ -320,8 +325,6 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 	
 	if ( nlsr->debugging )
 		printf("LSA Data \n");
-	//if ( nlsr->detailed_logging )
-	//	writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Data\n");	
 
 	if( strlen((char *)content_data ) > 0 )
 	{
@@ -563,7 +566,7 @@ make_template(int scope)
     return(templ);
 }
 
-void
+int
 write_data_to_repo(char *data, char *name_prefix)
 {
 	if ( nlsr->debugging )
@@ -587,14 +590,16 @@ write_data_to_repo(char *data, char *name_prefix)
     res = ccn_name_from_uri(name, name_prefix);
     if (res < 0) {
         fprintf(stderr, "bad CCN URI: %s\n",name_prefix);
-        exit(1);
+        //exit(1);
+	return -1;
     }
   
     
     w = ccn_seqw_create(nlsr->ccn, name);
     if (w == NULL) {
         fprintf(stderr, "ccn_seqw_create failed\n");
-        exit(1);
+        //exit(1);
+	return -1;
     }
     ccn_seqw_set_block_limits(w, blocksize, blocksize);
     if (freshness > -1)
@@ -610,7 +615,8 @@ write_data_to_repo(char *data, char *name_prefix)
         ccn_charbuf_destroy(&name_v);
         if (res < 0) {
             fprintf(stderr, "No response from repository\n");
-            exit(1);
+            //exit(1);
+	    return -1;
         }
     }
 
@@ -634,6 +640,8 @@ write_data_to_repo(char *data, char *name_prefix)
     ccn_seqw_close(w);
     //ccn_run(nlsr->ccn, 1);
     ccn_charbuf_destroy(&name);
+
+	return 0;
 }
 
 
@@ -651,7 +659,8 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
     if (prefix == NULL || topo == NULL || clause == NULL ||
         slice_name == NULL || slice_uri == NULL) {
         fprintf(stderr, "Unable to allocate required memory.\n");
-        exit(1);
+        //exit(1);
+	return -1;
     }
     
     
