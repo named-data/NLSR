@@ -752,6 +752,30 @@ add_faces_for_nbrs(void)
 
 }
 
+void
+destroy_faces_for_nbrs(void)
+{	
+	int i, adl_element;
+	struct ndn_neighbor *nbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->adl, e);
+	adl_element=hashtb_n(nlsr->adl);
+
+	for(i=0;i<adl_element;i++)
+	{
+		nbr=e->data;	
+		add_delete_ccn_face_by_face_id(nlsr->ccn,(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);	
+		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, nbr->face);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+}
+
 char *
 process_api_client_command(char *command)
 {
@@ -960,7 +984,7 @@ nlsr_destroy( void )
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Freeing Allocated Memory....\n");	
 	/* Destroying all face created by nlsr in CCND */
 	destroy_all_face_by_nlsr();	
-
+	destroy_faces_for_nbrs();
 	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
 	hashtb_destroy(&nlsr->npl);
 	hashtb_destroy(&nlsr->adl);	
