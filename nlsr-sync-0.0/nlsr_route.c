@@ -876,6 +876,12 @@ add_next_hop_from_lsa_adj_body(char *body, int no_link)
 void 
 update_routing_table(char * dest_router,int next_hop_face, int route_cost)
 {
+	if ( nlsr->debugging )
+	{
+		printf("update_routing_table called \n");
+		printf("Dest Router: %s Next Hop face: %d Route Cost: %d \n",dest_router,next_hop_face,route_cost);
+	}
+
 	int res,res1;
 	struct routing_table_entry *rte;
 
@@ -908,20 +914,6 @@ update_routing_table(char * dest_router,int next_hop_face, int route_cost)
 			fle->route_cost=route_cost;
 		}
 		hashtb_end(ef);
-		
-		/*
-		//updating the face for the router prefix itself
-		if ( (rte->next_hop_face != NO_FACE  || rte->next_hop_face != NO_NEXT_HOP ) && is_neighbor(dest_router)==0 )
-		{
-			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)dest_router, OP_UNREG, rte->next_hop_face);
-		}
-		if ( (next_hop_face != NO_FACE  || next_hop_face != NO_NEXT_HOP ) && is_neighbor(dest_router)==0 )
-		{
-			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)dest_router, OP_REG, next_hop_face);
-		}
-
-		rte->next_hop_face=next_hop_face;
-		*/
 	}
 	else if ( res == HT_OLD_ENTRY )
 	{
