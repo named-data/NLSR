@@ -650,16 +650,17 @@ add_new_fib_entries_to_npt(void)
 		if ( face_list_element <= 0 )
 		{
 			if ( nlsr->debugging )
-				printf(" 	Face: No Face \n");
+				printf(" Face: No Face \n");
 			if ( nlsr->detailed_logging )
-				writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: No Face \n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Face: No Face \n");
 		}
 		else
 		{
 			for(j=0;j<face_list_element;j++)
 			{
 				fle=ef->data;
-				add_face_to_npt_by_face_id(rte->dest_router,fle->next_hop_face,fle->route_cost);
+				if (fle->next_hop_face > 0 )
+					add_face_to_npt_by_face_id(rte->dest_router,fle->next_hop_face,fle->route_cost);
 				hashtb_next(ef);	
 			}
 		}
@@ -823,11 +824,6 @@ clean_old_fib_entries_from_npt(void)
 					for (k=0;k<nl_element;k++)
 					{
 						nle=enle->data;
-
-						//delete all the fib entries here
-
-						//printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
-
 						if( is_neighbor(nle->name) == 0 )
 						{
 							if ( nlsr->debugging )
@@ -851,7 +847,7 @@ clean_old_fib_entries_from_npt(void)
 					memcpy(evdata+strlen(evdata),"|",1);
 					memcpy(evdata+strlen(evdata),faceid,strlen(faceid));					
 	
-					nlsr->event = ccn_schedule_event(nlsr->sched, 1, &delete_old_face_from_npt, (void *)evdata, 0);					
+				        nlsr->event = ccn_schedule_event(nlsr->sched, 1, &delete_old_face_from_npt, (void *)evdata, 0);					
 					
 				}
 				
