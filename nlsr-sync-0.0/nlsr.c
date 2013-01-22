@@ -934,7 +934,7 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 	testfds=nlsr->readfds;
 	result = select(FD_SETSIZE, &testfds, NULL,NULL, &timeout);
 	
-	for(fd = 0; fd < FD_SETSIZE; fd++) 
+	for(fd = 0; fd < FD_SETSIZE && result > 0; fd++) 
 	{
 		if(FD_ISSET(fd,&testfds)) 
 		{
