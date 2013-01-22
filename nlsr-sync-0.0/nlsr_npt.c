@@ -560,6 +560,7 @@ add_face_to_npt_by_face_id(char *dest_router, int face_id, int route_cost)
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Dest Router: %s Face: %d Route_cost: %d \n",dest_router, face_id, route_cost);
 	}
 
+	print_routing_table();
 	
 	int res,res1;
 	struct npt_entry *ne;
@@ -801,7 +802,7 @@ clean_old_fib_entries_from_npt(void)
 		if ( face_list_element <= 0 )
 		{
 			if ( nlsr->debugging )
-				printf(" 	Face: No Face \n");
+				printf(" Face: No Face \n");
 			if ( nlsr->detailed_logging )
 				writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: No Face \n");
 			
