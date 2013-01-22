@@ -129,7 +129,20 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 	int lsa_position=0;
 	int len=0;
 
-	lsa_position=get_lsa_position(interest_ccnb,interest_comps);
+	//lsa_position=get_lsa_position(interest_ccnb,interest_comps);
+	
+	//printf("LSA Position: %d \n",lsa_position);
+	
+	
+	struct ccn_indexbuf cid={0};
+    	struct ccn_indexbuf *components=&cid;
+	struct ccn_charbuf *name=ccn_charbuf_create();
+	ccn_name_from_uri(name,nlsr->slice_prefix);
+    	ccn_name_split (name, components);
+	lsa_position=components->n-2;
+	//printf("LSA Position from Slice Prefix Component: %d \n",(int)components->n-2);
+    	ccn_charbuf_destroy(&name);
+	
 
 	const unsigned char *comp_ptr1;
 	size_t comp_size;
@@ -410,7 +423,19 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 	struct name_prefix *orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix));
 	
-	lsa_position=get_lsa_position(content_name, components);
+	//lsa_position=get_lsa_position(content_name, components);
+
+	//printf("LSA Position: %d \n",lsa_position);
+
+	struct ccn_indexbuf cid={0};
+    	struct ccn_indexbuf *temp_components=&cid;
+	struct ccn_charbuf *name=ccn_charbuf_create();
+	ccn_name_from_uri(name,nlsr->slice_prefix);
+    	ccn_name_split (name, temp_components);
+	lsa_position=temp_components->n-2;
+	//printf("LSA Position from Slice Prefix Component: %d \n",(int)temp_components->n-2);
+    	ccn_charbuf_destroy(&name);
+
 
 	res=ccn_name_comp_get(content_name->buf, components,lsa_position+1,&lst, &comp_size);
 	
@@ -576,9 +601,18 @@ write_data_to_repo(char *data, char *name_prefix)
 		printf("Content Data: %s \n",data);
 	}
 
+	struct ccn *temp_ccn;
+	temp_ccn=ccn_create();
+	int ccn_fd=ccn_connect(temp_ccn, NULL);
+	if(ccn_fd == -1)
+	{
+		fprintf(stderr,"Could not connect to ccnd for Data Writing\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Could not connect to ccnd for Data Writing\n");
+		return -1;
+	}
     struct ccn_charbuf *name = NULL;
     struct ccn_seqwriter *w = NULL;
-    int blocksize = 1024;
+    int blocksize = 4096;
     int freshness = -1;
     int torepo = 1;
     int scope = 1;
@@ -590,15 +624,13 @@ write_data_to_repo(char *data, char *name_prefix)
     res = ccn_name_from_uri(name, name_prefix);
     if (res < 0) {
         fprintf(stderr, "bad CCN URI: %s\n",name_prefix);
-        //exit(1);
 	return -1;
     }
   
     
-    w = ccn_seqw_create(nlsr->ccn, name);
+    w = ccn_seqw_create(temp_ccn, name);
     if (w == NULL) {
         fprintf(stderr, "ccn_seqw_create failed\n");
-        //exit(1);
 	return -1;
     }
     ccn_seqw_set_block_limits(w, blocksize, blocksize);
@@ -610,12 +642,11 @@ write_data_to_repo(char *data, char *name_prefix)
         ccn_name_from_uri(name_v, "%C1.R.sw");
         ccn_name_append_nonce(name_v);
         templ = make_template(scope);
-        res = ccn_get(nlsr->ccn, name_v, templ, 60000, NULL, NULL, NULL, 0);
+        res = ccn_get(temp_ccn, name_v, templ, 60000, NULL, NULL, NULL, 0);
         ccn_charbuf_destroy(&templ);
         ccn_charbuf_destroy(&name_v);
         if (res < 0) {
             fprintf(stderr, "No response from repository\n");
-            //exit(1);
 	    return -1;
         }
     }
@@ -629,17 +660,18 @@ write_data_to_repo(char *data, char *name_prefix)
 	blockread=strlen(data);
 
 	if (blockread > 0) {
-		//ccn_run(nlsr->ccn, 100);
+		ccn_run(temp_ccn, 100);
 		res = ccn_seqw_write(w, data, blockread);	
         	while (res == -1) {
-            		//ccn_run(nlsr->ccn, 100);
+            		ccn_run(temp_ccn, 100);
 	       		res = ccn_seqw_write(w, data, blockread);
            	}
     	}
 
     ccn_seqw_close(w);
-    //ccn_run(nlsr->ccn, 1);
+    ccn_run(temp_ccn, 100);
     ccn_charbuf_destroy(&name);
+    ccn_destroy(&temp_ccn);
 
 	return 0;
 }
