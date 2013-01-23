@@ -15,6 +15,7 @@
 #include <ccn/charbuf.h>
 
 #include "nlsr_fib.h"
+#include "nlsr.h"
 
 
 static void 
@@ -181,6 +182,12 @@ init_data(struct ccn_charbuf *local_scope_template,
 int 
 add_delete_ccn_face_by_face_id(struct ccn *h, const char *uri, int operation, int faceid)
 {
+	if ( nlsr->debugging )
+	{
+		printf("add_delete_ccn_face_by_face_id called\n");
+		printf("Uri: %s  Face: %d Operation: %s \n",(char *)uri , faceid, operation == OP_REG ? "Registration" : "Unregistration");
+	}
+
 	struct ccn_charbuf *prefix;
 	struct ccn_charbuf *local_scope_template = ccn_charbuf_create();
 	struct ccn_charbuf *no_name = ccn_charbuf_create();

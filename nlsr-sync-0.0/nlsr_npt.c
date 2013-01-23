@@ -548,7 +548,7 @@ add_face_to_npt_by_face_id(char *dest_router, int face_id, int route_cost)
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Dest Router: %s Face: %d Route_cost: %d \n",dest_router, face_id, route_cost);
 	}
 
-	print_routing_table();
+	//print_routing_table();
 	
 	int res,res1;
 	struct npt_entry *ne;
@@ -819,7 +819,7 @@ clean_old_fib_entries_from_npt(void)
 								printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
 							if ( nlsr->detailed_logging )
 								writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
-							//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
+							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
 						}						
 		
 
@@ -861,8 +861,6 @@ update_npt_with_new_route(void)
 		
 	clean_old_fib_entries_from_npt();
 
-	print_routing_table();
-
 	add_new_fib_entries_to_npt();
 	
 	int i, npt_element;
@@ -879,7 +877,7 @@ update_npt_with_new_route(void)
 	{
 	
 		ne=e->data;
-		//update_ccnd_fib_for_orig_router(ne->orig_router);
+		update_ccnd_fib_for_orig_router(ne->orig_router);
 		hashtb_next(e);
 	}
 	

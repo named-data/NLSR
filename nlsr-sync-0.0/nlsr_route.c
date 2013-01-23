@@ -86,7 +86,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 			print_all_path_from_source(parent,source);
 			print_all_next_hop(parent,source);		
 			update_routing_table_with_new_route(parent, dist,source);
-			print_routing_table();
+			//print_routing_table();
 		}
 		else if ( (num_link != 0) && (nlsr->multi_path_face_num > 1 ) )
 		{
@@ -100,7 +100,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 				print_all_path_from_source(parent,source);
 				print_all_next_hop(parent,source);		
 				update_routing_table_with_new_route(parent, dist,source);
-				print_routing_table();
+				//print_routing_table();
 			}
 
 			free(links);
@@ -1016,13 +1016,14 @@ delete_empty_rte(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled
 	{
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_empty_rte called\n");
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Router: %s \n",(char *)ev->evdata);
-		//writeLogg(__FILE__,__FUNCTION__,__LINE__,"print_routing_table called\n");
 	}
 	
 	if(flags == CCN_SCHEDULE_CANCEL)
 	{
  	 	return -1;
 	}
+
+	nlsr_lock();
 	int res;
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee;
@@ -1040,6 +1041,8 @@ delete_empty_rte(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled
 	}
 
 	print_routing_table();
+
+	nlsr_unlock();
 	
 	return 0;
 }
@@ -1176,12 +1179,11 @@ does_face_exist_for_router(char *dest_router, int face_id)
 		printf("Dest Router: %s and Face id: %d \n",dest_router, face_id);
 	}
 
-	print_routing_table();
+	//print_routing_table();
 
 	int ret=0;
 
 	int res;
-	//int res1;
 	struct routing_table_entry *rte;
 
 	struct hashtb_enumerator ee;
@@ -1221,7 +1223,7 @@ does_face_exist_for_router(char *dest_router, int face_id)
 	
 	hashtb_end(e);
 
-	print_routing_table();
+	//print_routing_table();
 
 	return ret;
 }

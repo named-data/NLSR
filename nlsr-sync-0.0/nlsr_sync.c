@@ -710,13 +710,13 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
 // 	Obaid: commenting out the following lines to resolve a bug. 
 //	If commenting them can resolve the issue, then we 
 //	need to call them before terminating the program.
-*/
     ccns_slice_destroy(&slice);
     ccn_charbuf_destroy(&prefix);
     ccn_charbuf_destroy(&topo);
     ccn_charbuf_destroy(&clause);
     ccn_charbuf_destroy(&slice_name);
     ccn_charbuf_destroy(&slice_uri);
+*/
 
     return 0;
 }
