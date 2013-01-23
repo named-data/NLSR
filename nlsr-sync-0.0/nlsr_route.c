@@ -1170,6 +1170,14 @@ update_routing_table_with_new_route(long int *parent, long int *dist,long int so
 int 
 does_face_exist_for_router(char *dest_router, int face_id)
 {
+	if (nlsr->debugging)
+	{
+		printf("does_face_exist_for_router called");
+		printf("Dest Router: %s and Face id: %d \n",dest_router, face_id);
+	}
+
+	print_routing_table();
+
 	int ret=0;
 
 	int res,res1;
@@ -1205,6 +1213,8 @@ does_face_exist_for_router(char *dest_router, int face_id)
 	} 
 	
 	hashtb_end(e);
+
+	print_routing_table();
 
 	return ret;
 }

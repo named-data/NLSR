@@ -860,6 +860,9 @@ update_npt_with_new_route(void)
 		printf("update_npt_with_new_route called\n");
 		
 	clean_old_fib_entries_from_npt();
+
+	print_routing_table();
+
 	add_new_fib_entries_to_npt();
 	
 	int i, npt_element;
