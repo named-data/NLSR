@@ -1180,7 +1180,8 @@ does_face_exist_for_router(char *dest_router, int face_id)
 
 	int ret=0;
 
-	int res,res1;
+	int res;
+	//int res1;
 	struct routing_table_entry *rte;
 
 	struct hashtb_enumerator ee;
@@ -1192,6 +1193,7 @@ does_face_exist_for_router(char *dest_router, int face_id)
 	if( res == HT_OLD_ENTRY )
 	{
 		rte=e->data;
+		/*
 		struct hashtb_enumerator eef;
     		struct hashtb_enumerator *ef = &eef;
     	
@@ -1201,13 +1203,18 @@ does_face_exist_for_router(char *dest_router, int face_id)
 		{
 			ret=1;									
 		}
-		else if ( res1 == HT_NEW_ENTRY )
+		else
 		{
 			hashtb_delete(ef);
 		}
 		hashtb_end(ef);
+		*/
+		unsigned *v;
+		v = hashtb_lookup(rte->face_list, &face_id, sizeof(face_id));
+		if (v != NULL)
+			ret = 1;
 	}
-	else if( res == HT_NEW_ENTRY )
+	else
 	{
 		hashtb_delete(e);
 	} 
