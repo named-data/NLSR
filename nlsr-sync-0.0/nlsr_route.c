@@ -80,13 +80,12 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 
 		int num_link=get_no_link_from_adj_matrix(adj_matrix, map_element ,source);
 		
-		if ( (num_link == 0) || (nlsr->multi_path_face_num <= 1 ) )
+		if ( (num_link == 0) || (nlsr->multi_path_face_num == 1 ) )
 		{	
 			calculate_path(adj_matrix,parent,dist, map_element, source);		
 			print_all_path_from_source(parent,source);
 			print_all_next_hop(parent,source);		
 			update_routing_table_with_new_route(parent, dist,source);
-			print_routing_table();
 		}
 		else if ( (num_link != 0) && (nlsr->multi_path_face_num > 1 ) )
 		{
@@ -100,17 +99,17 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 				print_all_path_from_source(parent,source);
 				print_all_next_hop(parent,source);		
 				update_routing_table_with_new_route(parent, dist,source);
-				print_routing_table();
 			}
 
 			free(links);
 			free(link_costs);
 		}
 
-		update_npt_with_new_route();
-
 		print_routing_table();
 		print_npt();
+
+		//update_npt_with_new_route();
+
 
 		for(i = 0; i < map_element; i++)
 		{
@@ -1136,10 +1135,8 @@ update_routing_table_with_new_route(long int *parent, long int *dist,long int so
 			if (orig_router != NULL )
 			{
 				int next_hop_router_num=get_next_hop_from_calculation(parent,me->mapping,source);
-				//printf(" Next hop router Num: %d ",next_hop_router_num);
 				if ( next_hop_router_num == NO_NEXT_HOP )
 				{
-					//update_npt_with_new_route(orig_router,NO_FACE);
 					if ( nlsr->debugging )
 						printf ("Orig_router: %s Next Hop Face: %d \n",orig_router,NO_FACE);
 					if ( nlsr->detailed_logging )
@@ -1148,9 +1145,7 @@ update_routing_table_with_new_route(long int *parent, long int *dist,long int so
 				else 
 				{
 					char *next_hop_router=get_router_from_rev_map(next_hop_router_num);
-					//printf("Next hop router name: %s \n",next_hop_router);
 					int next_hop_face=get_next_hop_face_from_adl(next_hop_router);
-					//update_npt_with_new_route(orig_router,next_hop_face);
 					update_routing_table(orig_router,next_hop_face,dist[me->mapping]);
 					if ( nlsr->debugging )
 						printf ("Orig_router: %s Next Hop Face: %d \n",orig_router,next_hop_face);
