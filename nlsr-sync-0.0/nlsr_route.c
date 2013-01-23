@@ -1172,7 +1172,7 @@ does_face_exist_for_router(char *dest_router, int face_id)
 {
 	if (nlsr->debugging)
 	{
-		printf("does_face_exist_for_router called");
+		printf("does_face_exist_for_router called\n");
 		printf("Dest Router: %s and Face id: %d \n",dest_router, face_id);
 	}
 
@@ -1201,7 +1201,7 @@ does_face_exist_for_router(char *dest_router, int face_id)
 		{
 			ret=1;									
 		}
-		else if ( res1 == HT_OLD_ENTRY )
+		else if ( res1 == HT_NEW_ENTRY )
 		{
 			hashtb_delete(ef);
 		}
