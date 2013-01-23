@@ -86,6 +86,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 			print_all_path_from_source(parent,source);
 			print_all_next_hop(parent,source);		
 			update_routing_table_with_new_route(parent, dist,source);
+			print_routing_table();
 		}
 		else if ( (num_link != 0) && (nlsr->multi_path_face_num > 1 ) )
 		{
@@ -99,6 +100,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 				print_all_path_from_source(parent,source);
 				print_all_next_hop(parent,source);		
 				update_routing_table_with_new_route(parent, dist,source);
+				print_routing_table();
 			}
 
 			free(links);
@@ -108,7 +110,10 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		print_routing_table();
 		print_npt();
 
-		//update_npt_with_new_route();
+		update_npt_with_new_route();
+
+		print_routing_table();
+		print_npt();
 
 
 		for(i = 0; i < map_element; i++)

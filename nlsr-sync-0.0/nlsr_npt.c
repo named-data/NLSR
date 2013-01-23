@@ -819,7 +819,7 @@ clean_old_fib_entries_from_npt(void)
 								printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
 							if ( nlsr->detailed_logging )
 								writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
-							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
+							//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
 						}						
 		
 
@@ -856,6 +856,9 @@ clean_old_fib_entries_from_npt(void)
 void
 update_npt_with_new_route(void)
 {
+	if ( nlsr->debugging )
+		printf("update_npt_with_new_route called\n");
+		
 	clean_old_fib_entries_from_npt();
 	add_new_fib_entries_to_npt();
 	
@@ -873,7 +876,7 @@ update_npt_with_new_route(void)
 	{
 	
 		ne=e->data;
-		update_ccnd_fib_for_orig_router(ne->orig_router);
+		//update_ccnd_fib_for_orig_router(ne->orig_router);
 		hashtb_next(e);
 	}
 	
