@@ -249,7 +249,7 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 
 				printf("FIB Entry Name: %s Face: %d Router Cost: %d \n",nle->name,faces[j],route_costs[j]);
 
-				if ( is_neighbor(orig_router) == 0 )
+				if ( is_active_neighbor(orig_router) == 0 )
 				{
 					if ( nlsr->debugging )
 						printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);	
@@ -259,7 +259,7 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 				}
 				else 
 				{
-					if ( j == last_face && is_neighbor(nle->name)==0)
+					if ( j == last_face &&  is_active_neighbor(nle->name)==0)
 					{
 						if ( nlsr->debugging )
 							printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);	
@@ -360,7 +360,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 			for( j=first_face; j>= last_face; j--)
 			{
 
-				if ( is_neighbor(orig_router) == 0 )
+				if ( is_active_neighbor(orig_router) == 0 )
 				{
 					if ( nlsr->debugging )
 						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);	
@@ -370,7 +370,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 				}
 				else 
 				{
-					if ( j == last_face && is_neighbor(nle->name)==0)
+					if ( j == last_face && is_active_neighbor(nle->name)==0)
 					{
 						if ( nlsr->debugging )
 							printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);	
@@ -832,7 +832,7 @@ clean_old_fib_entries_from_npt(void)
 					for (k=0;k<nl_element;k++)
 					{
 						nle=enle->data;
-						if( is_neighbor(nle->name) == 0 )
+						if( is_active_neighbor(nle->name) == 0 )
 						{
 							if ( nlsr->debugging )
 								printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
@@ -1043,7 +1043,7 @@ destroy_faces_by_orig_router(char *orig_router)
 			
 			for( j=first_face; j>= last_face; j--)
 			{
-				if ( is_neighbor(orig_router) == 0 )
+				if ( is_active_neighbor(orig_router) == 0 )
 				{
 					if ( nlsr->debugging )
 						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
@@ -1053,7 +1053,7 @@ destroy_faces_by_orig_router(char *orig_router)
 				}
 				else 
 				{
-					if ( j == last_face && is_neighbor(nle->name)==0)
+					if ( j == last_face && is_active_neighbor(nle->name)==0)
 					{
 						if ( nlsr->debugging )
 							printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);

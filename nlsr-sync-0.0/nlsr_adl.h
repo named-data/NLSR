@@ -49,5 +49,6 @@ void update_adjacent_lsdb_version_to_adl(struct name_prefix *nbr, char *version)
 void adjust_adjacent_last_lsdb_requested_to_adl(char *nbr, long int sec);
 int get_next_hop_face_from_adl(char *nbr);
 int is_neighbor(char *nbr);
+int is_active_neighbor(char *nbr);
 void update_face_to_adl_for_nbr(char *nbr, int face);
 #endif

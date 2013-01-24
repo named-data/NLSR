@@ -951,3 +951,34 @@ is_neighbor(char *nbr)
 	return ret;
 }
 
+int 
+is_active_neighbor(char *nbr)
+{
+	int ret=0;
+
+	int res;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		struct ndn_neighbor *nnbr;
+		nnbr=e->data;
+		if (nnbr->status == NBR_ACTIVE )
+		{
+			ret=1;	
+		}
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+
+	return ret;
+}
+
