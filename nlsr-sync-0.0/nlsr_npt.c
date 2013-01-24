@@ -853,6 +853,30 @@ clean_old_fib_entries_from_npt(void)
 				}
 				else 
 				{
+					struct name_list_entry *nle;		
+					struct hashtb_enumerator eenle;
+    					struct hashtb_enumerator *enle = &eenle;
+
+					hashtb_start(ne->name_list, enle);
+					nl_element=hashtb_n(ne->name_list);	
+
+					for (k=0;k<nl_element;k++)
+					{
+						nle=enle->data;
+						if(  is_active_neighbor(ne->orig_router) && get_next_hop_face_from_adl(	ne->orig_router ) != fle->next_hop_face )
+						{
+							if ( nlsr->debugging )
+								printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
+							if ( nlsr->detailed_logging )
+								writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);		
+							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
+						}						
+		
+
+						hashtb_next(enle);
+					}
+					hashtb_end(enle);
+					
 					hashtb_next(ef);
 				}	
 			}
