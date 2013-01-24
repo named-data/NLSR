@@ -176,7 +176,6 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 void 
 update_ccnd_fib_for_orig_router(char *orig_router)
 {
-	// problem in this method I think ... need to fix it.
 
 	if ( nlsr->debugging )
 	{
@@ -226,10 +225,11 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 			{
 				last_face=0;
 			}
-			else if ( nlsr->multi_path_face_num == 0)
+			else
 			{
 				last_face=num_face-nlsr->multi_path_face_num;
 			}
+			
 		}
 
 		int i,j, nl_element;
@@ -246,6 +246,8 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 			
 			for( j=first_face; j>= last_face; j--)
 			{
+
+				printf("FIB Entry Name: %s Face: %d Router Cost: %d \n",nle->name,faces[j],route_costs[j]);
 
 				if ( is_neighbor(orig_router) == 0 )
 				{
@@ -349,7 +351,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 				{
 					last_face=0;
 				}
-				else if ( nlsr->multi_path_face_num == 0)
+				else
 				{
 					last_face=num_face-nlsr->multi_path_face_num;
 				}
@@ -364,7 +366,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);	
 					if ( nlsr->detailed_logging )
 						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
+					//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
 				}
 				else 
 				{
@@ -374,7 +376,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 							printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);	
 						if ( nlsr->detailed_logging )
 							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
+						//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}
 				
@@ -836,7 +838,7 @@ clean_old_fib_entries_from_npt(void)
 								printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
 							if ( nlsr->detailed_logging )
 								writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
-							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
+							//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
 						}						
 		
 
@@ -1047,7 +1049,7 @@ destroy_faces_by_orig_router(char *orig_router)
 						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 					if ( nlsr->detailed_logging )
 						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
+					//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
 				}
 				else 
 				{
@@ -1057,7 +1059,7 @@ destroy_faces_by_orig_router(char *orig_router)
 							printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						if ( nlsr->detailed_logging )
 							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
+						//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
 					}
 				}
 			}
