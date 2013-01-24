@@ -1200,6 +1200,7 @@ main(int argc, char *argv[])
 
 	if ( daemon_mode == 1 )
 	{
+		nlsr->debugging=0;
 		daemonize_nlsr();
 	}
 	
