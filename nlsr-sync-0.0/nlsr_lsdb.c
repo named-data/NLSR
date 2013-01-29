@@ -30,7 +30,6 @@
 void
 set_new_lsdb_version(void)
 {
-//Obaid: this method needs to be modified, no need to free and allocate memory again
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
@@ -95,7 +94,6 @@ build_and_install_name_lsas(void)
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"build_and_install_name_lsas called\n");
 
 	int i, npl_element;
-	//struct name_prefix *np;
 	struct name_prefix_list_entry *npe;
 
 	struct hashtb_enumerator ee;
@@ -467,7 +465,6 @@ install_name_lsa(struct nlsa *name_lsa)
 							int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,next_hop,faces,route_costs);
 							if ( check == HT_NEW_ENTRY )
 							{
-								//printf("Added in npt \n");
 								if ( nlsr->debugging )
 									printf("Added in npt \n");
 								if ( nlsr->detailed_logging )
@@ -728,9 +725,6 @@ build_adj_lsa(struct alsa * adj_lsa)
 
 	int no_link=no_active_nbr();
 	
-	//printf("Number of link in Adjacent LSA: %d\n",no_link);
-
-	/*Filling Up Header Data */
 	adj_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
 	adj_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	adj_lsa->header->orig_router->name=(char *)malloc(strlen(nlsr->router_name)+1);
@@ -749,9 +743,6 @@ build_adj_lsa(struct alsa * adj_lsa)
 	memcpy(adj_lsa->header->orig_time,time_stamp,strlen(time_stamp)+1);	
 	free(time_stamp);
 
-
-	/* Filling Up Body Data */
-
 	adj_lsa->no_link=no_link;
 
 
@@ -763,14 +754,6 @@ build_adj_lsa(struct alsa * adj_lsa)
 	memset(adj_lsa->body,0,strlen(data)+1);
 	memcpy(adj_lsa->body,(char *)data,strlen(data)+1);
 	ccn_charbuf_destroy(&c);
-
-
-
-	/*if( !nlsr->is_send_lsdb_interest_scheduled )
-	{	
-		nlsr->event_send_lsdb_interest= ccn_schedule_event(nlsr->sched, 1000, &send_lsdb_interest, NULL, 0);
-		nlsr->is_send_lsdb_interest_scheduled=1;
-	}*/
 
 	nlsr->adj_build_count++;
 
@@ -791,15 +774,11 @@ install_adj_lsa(struct alsa * adj_lsa)
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
-	//long int lsa_life_time=get_time_diff(time_stamp,adj_lsa->header->orig_time);
-
-	//printf("time difference: %ld \n",lsa_life_time);
 
 
 		char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
 		memset(key,0,adj_lsa->header->orig_router->length+2);
 		make_adj_lsa_key(key,adj_lsa);
-		//printf("Adjacent LSA key: %s \n",key);
 
 		struct alsa *new_adj_lsa=(struct alsa*)malloc(sizeof(struct alsa ));
 
@@ -879,8 +858,6 @@ install_adj_lsa(struct alsa * adj_lsa)
 
 				if ( adj_lsa->no_link > 0)
 				{				
-					//new_adj_lsa = e->data;
-
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting adj lsa\n");
 					write_log_for_adj_lsa(new_adj_lsa);
@@ -1111,7 +1088,6 @@ build_and_install_others_adj_lsa(char *orig_router,int ls_type,char *orig_time, 
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"build_and_install_others_adj_lsa called \n");
 	struct alsa *adj_lsa=(struct alsa *)malloc(sizeof( struct alsa ));
 	build_others_adj_lsa(adj_lsa,orig_router,ls_type,orig_time,no_link,data);
-	//print_adj_lsa(adj_lsa);
 	install_adj_lsa(adj_lsa);
 	
 
@@ -1130,7 +1106,6 @@ build_and_install_others_adj_lsa(char *orig_router,int ls_type,char *orig_time, 
 void 
 build_others_adj_lsa(struct alsa *adj_lsa,char *orig_router,int ls_type,char *orig_time,int no_link,char *data)
 {
-	//printf("build_others_adj_lsa called \n");
 	if ( nlsr->debugging )
 		printf("build_others_adj_lsa called  \n");	
 	if ( nlsr->detailed_logging )
@@ -1193,10 +1168,10 @@ get_adj_lsdb_num_element(void)
 	return num_element; 
 }
 
+/*
 void 
 get_name_lsdb_summary(struct ccn_charbuf *name_lsdb_data)
 {
-	//printf("get_name_lsdb_summary called \n");
 	if ( nlsr->debugging )
 		printf("get_name_lsdb_summary called  \n");	
 	if ( nlsr->detailed_logging )
@@ -1241,8 +1216,9 @@ get_name_lsdb_summary(struct ccn_charbuf *name_lsdb_data)
 	hashtb_end(e);
 
 }
+*/
 
-
+/*
 void 
 get_adj_lsdb_summary(struct ccn_charbuf *adj_lsdb_data)
 {
@@ -1281,8 +1257,9 @@ get_adj_lsdb_summary(struct ccn_charbuf *adj_lsdb_data)
 
 	hashtb_end(e);
 }
+*/
 
-
+/*
 void 
 get_lsdb_summary(struct ccn_charbuf *lsdb_data)
 {
@@ -1317,6 +1294,7 @@ get_lsdb_summary(struct ccn_charbuf *lsdb_data)
 	free(num_element);
 
 }
+*/
 
 int 
 check_is_new_name_lsa(char *orig_router,char *lst,char *lsid,char *orig_time)
@@ -1403,7 +1381,6 @@ check_is_new_adj_lsa(char *orig_router,char *lst,char *orig_time)
 void 
 get_name_lsa_data(struct ccn_charbuf *lsa_data, struct name_prefix *lsaId)
 {
-	//printf("get_name_lsa_data called \n");
 	if ( nlsr->debugging )
 		printf("get_name_lsa_data called  \n");	
 	if ( nlsr->detailed_logging )
@@ -1619,8 +1596,7 @@ make_name_lsa_invalid(struct name_prefix *np,int ls_type, long int ls_id)
 int 
 delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
-	//printf("delete_name_lsa called \n");
-
+	
 	if ( nlsr->debugging )
 		printf("delete_name_lsa called  \n");	
 	if ( nlsr->detailed_logging )
@@ -1680,8 +1656,6 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 	
-	//print_name_lsdb();
-	
 	nlsr_unlock();
 
 	return 0;
@@ -1690,8 +1664,6 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 int 
 delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
-	//printf("delete_adj_lsa called \n");
-
 	if ( nlsr->debugging )
 		printf("delete_adj_lsa called  \n");	
 	if ( nlsr->detailed_logging )
@@ -1702,8 +1674,6 @@ delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_e
  	 	return -1;
 	}
 	nlsr_lock();
-
-	//printf("LSA Key: %s \n",(char *)ev->evdata);
 
 	if ( nlsr->debugging )
 		printf("LSA Key: %s \n",(char *)ev->evdata);
@@ -1753,8 +1723,6 @@ delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_e
 		nlsr->is_route_calculation_scheduled=1;
 	}
 
-	//print_adj_lsdb();
-
 	nlsr_unlock();
 
 	return 0;
@@ -1763,14 +1731,10 @@ delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_e
 void
 refresh_name_lsdb(void)
 {
-	//printf("refresh_name_lsdb called \n");
-
 	if ( nlsr->debugging )
 		printf("refresh_name_lsdb called  \n");	
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"refresh_name_lsdb called  \n");
-
-	//int lsa_change_count=0;
 
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
@@ -1846,7 +1810,6 @@ refresh_name_lsdb(void)
 
 
 					make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);	
-					//printf("Key:%s Length:%d\n",key,(int)strlen(key));
 				
 					nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_name_lsa, (void *)key, 0);
 				}
@@ -1866,7 +1829,6 @@ refresh_name_lsdb(void)
 							
 
 				print_name_lsdb();
-				//lsa_change_count++;
 			}	
 		}
 		else 
@@ -1892,10 +1854,8 @@ refresh_name_lsdb(void)
 
 
 				make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);	
-				//printf("Key:%s Length:%d\n",key,(int)strlen(key));
 				
 				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_name_lsa, (void *)key, 0);
-				//lsa_change_count++;
 			}
 		}
 
@@ -1912,7 +1872,6 @@ refresh_name_lsdb(void)
 void
 refresh_adj_lsdb(void)
 {
-	//printf("refresh_adj_lsdb called \n");
 
 	if ( nlsr->debugging )
 		printf("refresh_adj_lsdb called  \n");	
@@ -1938,8 +1897,7 @@ refresh_adj_lsdb(void)
 	{
 		adj_lsa=e->data;
 
-		lsa_life_time=get_time_diff(time_stamp,adj_lsa->header->orig_time);
-		//printf("LSA Life Time: %ld \n",lsa_life_time);	
+		lsa_life_time=get_time_diff(time_stamp,adj_lsa->header->orig_time);	
 
 		if ( nlsr->debugging )
 			printf("LSA Life Time: %ld \n",lsa_life_time);	
@@ -1950,7 +1908,6 @@ refresh_adj_lsdb(void)
 		{
 			if ( lsa_life_time > nlsr->lsa_refresh_time )
 			{
-				//printf("Own Adj LSA need to be refrshed\n");
 				if ( nlsr->debugging )
 					printf("Own Adj LSA need to be refrshed\n");
 				if ( nlsr->detailed_logging )
@@ -1996,7 +1953,6 @@ refresh_adj_lsdb(void)
 		{
 			if ( lsa_life_time > nlsr->router_dead_interval )
 			{
-				//printf("Others Adj LSA need to be deleted\n");
 
 				if ( nlsr->debugging )
 				 	printf("Others Adj LSA need to be deleted\n");
@@ -2006,7 +1962,7 @@ refresh_adj_lsdb(void)
 				char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
 				memset(key,0,adj_lsa->header->orig_router->length+2);
 				make_adj_lsa_key(key,adj_lsa);
-				//printf("Adjacent LSA key: %s \n",key);				
+				
 				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_adj_lsa, (void *)key, 0);
 			}
 		}
@@ -2030,8 +1986,6 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 	}
 
 	nlsr_lock();
-
-	//printf("refresh_lsdb called \n");
 
 	if ( nlsr->debugging )
 		printf("refresh_lsdb called\n");

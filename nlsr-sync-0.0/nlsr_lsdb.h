@@ -72,10 +72,6 @@ void build_others_adj_lsa(struct alsa *adj_lsa,char *orig_router,int ls_type,cha
 long int get_name_lsdb_num_element(void);
 long int get_adj_lsdb_num_element(void);
 
-void get_name_lsdb_summary(struct ccn_charbuf *name_lsdb_data);
-void get_adj_lsdb_summary(struct ccn_charbuf *adj_lsdb_data);
-void get_lsdb_summary(struct ccn_charbuf *lsdb_data);
-
 int check_is_new_name_lsa(char *orig_router,char *lst,char *lsid,char *orig_time);
 int check_is_new_adj_lsa(char *orig_router,char *lst,char *orig_time);
 

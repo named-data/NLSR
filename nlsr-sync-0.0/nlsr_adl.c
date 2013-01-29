@@ -318,23 +318,17 @@ update_lsdb_interest_timed_out_to_adl(struct name_prefix *nbr, int increment)
 
 	hashtb_start(nlsr->adl, e);
 
-	//printf("Neighbor: %s , Length: %d \n",nbr->name, nbr->length);
-
 	res = hashtb_seek(e, nbr->name, nbr->length, 0);
 
 	if( res == HT_OLD_ENTRY )
 	{
-		//printf("Old Neighbor\n");
 		nnbr=e->data;
 		nnbr->lsdb_interest_timed_out += increment;
-		//printf("lsdb_interest_timed_out: %d \n",nnbr->lsdb_interest_timed_out);
 	}
 	else if(res == HT_NEW_ENTRY)
 	{
 		hashtb_delete(e);
-	}
-
-	//print_adjacent_from_adl();		
+	}		
 	hashtb_end(e);
 }
 
