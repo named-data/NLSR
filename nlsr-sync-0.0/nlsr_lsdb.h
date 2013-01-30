@@ -3,6 +3,7 @@
 
 #define LS_TYPE_ADJ 1
 #define LS_TYPE_NAME 2
+#define LS_TYPE_COR 3
 
 struct link
 {
@@ -44,6 +45,13 @@ struct nlsa
 	struct name_prefix *name_prefix;
 };
 
+struct clsa
+{
+	struct alsa_header *header;
+	double cor_r;
+	double cor_theta;
+};
+
 
 void set_new_lsdb_version(void);
 void build_and_install_name_lsas(void);
@@ -74,15 +82,22 @@ long int get_adj_lsdb_num_element(void);
 
 int check_is_new_name_lsa(char *orig_router,char *lst,char *lsid,char *orig_time);
 int check_is_new_adj_lsa(char *orig_router,char *lst,char *orig_time);
+int check_is_new_cor_lsa(char *orig_router,char *lst,char *orig_time);
 
 void get_name_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId);
 void get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId);
 
 void make_name_lsa_invalid(struct name_prefix *np,int ls_type, long int ls_id);
 
+void build_and_install_cor_lsa();
+void print_cor_lsdb();
+
 void write_name_lsdb_to_repo(char *slice_prefix);
 void write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id);
 void make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long int ls_id,char *orig_time,char *slice_prefix);
 void write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id);
+
+void write_cor_lsa_to_repo(struct clsa *cor_lsa);
+void build_and_install_others_cor_lsa(char *orig_router,int ls_type,char *orig_time, double cor_r, double cor_theta);
 
 #endif

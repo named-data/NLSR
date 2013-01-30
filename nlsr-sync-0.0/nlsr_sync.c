@@ -226,7 +226,7 @@ get_host_name_from_command_string(struct name_prefix *name_part,char *nbr_name_u
 }
 
 
-//char *
+
 void 
 get_content_by_content_name(char *content_name, unsigned char **content_data)
 {
@@ -312,9 +312,7 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 
 
 	if ( nlsr->debugging )
-		printf("process_incoming_sync_content_lsa called \n");
-	//if ( nlsr->detailed_logging )
-		//writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_lsa called \n");	
+		printf("process_incoming_sync_content_lsa called \n");	
 
 	char *sep="|";
 	char *rem;
@@ -391,11 +389,31 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 
 			if ( nlsr->debugging )
 			{
+				printf("	Orig Time   : %s\n",orig_time);
 				printf("	No Link  : %d\n",no_link);
 				printf("	Data  : %s\n",data);
 			}
 			build_and_install_others_adj_lsa(orig_router,ls_type,orig_time,no_link,data);
 		}
+		else if ( ls_type == LS_TYPE_COR )
+		{
+			orig_time=strtok_r(NULL,sep,&rem);
+			char *cor_r=strtok_r(NULL,sep,&rem);
+			char *cor_theta=strtok_r(NULL,sep,&rem);
+
+			double r, theta;
+			r=strtof(cor_r,NULL);
+			theta=strtof(cor_theta,NULL);
+
+			if ( nlsr->debugging )
+			{
+				printf("	Orig Time   : %s\n",orig_time);
+				printf("	Cor R	    : %f\n",r);
+				printf("	Cor Theta   : %f\n",theta);
+			}
+			build_and_install_others_cor_lsa(orig_router,ls_type,orig_time, (double)r, (double)theta);	
+		}
+		
 	}
 }
 
@@ -423,9 +441,6 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 	struct name_prefix *orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix));
 	
-	//lsa_position=get_lsa_position(content_name, components);
-
-	//printf("LSA Position: %d \n",lsa_position);
 
 	struct ccn_indexbuf cid={0};
     	struct ccn_indexbuf *temp_components=&cid;
@@ -433,13 +448,11 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	ccn_name_from_uri(name,nlsr->slice_prefix);
     	ccn_name_split (name, temp_components);
 	lsa_position=temp_components->n-2;
-	//printf("LSA Position from Slice Prefix Component: %d \n",(int)temp_components->n-2);
     	ccn_charbuf_destroy(&name);
 
 
 	res=ccn_name_comp_get(content_name->buf, components,lsa_position+1,&lst, &comp_size);
 	
-	//printf("Ls Type: %s\n",lst);
 	ls_type=atoi((char *)lst);
 	if(ls_type == LS_TYPE_NAME)
 	{
@@ -451,8 +464,6 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 
-		//printf("Ls ID: %s\nOrig Time: %s\nOrig Router: %s\n",lsid,origtime,orig_router->name);
-
 		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )
 		{
 			int is_new_name_lsa=check_is_new_name_lsa(orig_router->name,(char *)lst,(char *)lsid,(char *)origtime);
@@ -460,7 +471,6 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			{
 				if ( nlsr->debugging )
 					printf("New NAME LSA.....\n");	
-				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
 				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
 				if ( nlsr->debugging )
 					printf("Content Data: %s \n",content_data);
@@ -470,7 +480,6 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			{
 				if ( nlsr->debugging )
 					printf("Name LSA / Newer Name LSA already xists in LSDB\n");
-				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
 				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
 				
 				if ( nlsr->debugging )
@@ -492,9 +501,6 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			printf("Orig Time: %s\nOrig Router: %s\n",origtime,orig_router->name);
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
-
-		//printf("Ls ID: %s\nOrig Time: %s\nOrig Router: %s\n",lsid,origtime,orig_router->name);
-
 		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
 		{
 			int is_new_adj_lsa=check_is_new_adj_lsa(orig_router->name,(char *)lst,(char *)origtime);
@@ -502,7 +508,6 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			{
 				if ( nlsr->debugging )
 					printf("New Adj LSA.....\n");	
-				//content_data=get_content_by_content_name(ccn_charbuf_as_string(uri));
 				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
 				
 				if ( nlsr->debugging )
@@ -523,6 +528,44 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 			if ( nlsr->debugging )
 				printf("Lsa is older than Router LSA refresh time/ Dead Interval\n");
 		}
+	}
+	else if(ls_type == LS_TYPE_COR)
+	{
+		res=ccn_name_comp_get(content_name->buf, components,lsa_position+2,&origtime, &comp_size);
+		get_name_part(orig_router,content_name,components,2);
+		
+		if ( nlsr->debugging )
+			printf("Orig Time: %s\nOrig Router: %s\n",origtime,orig_router->name);
+
+		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
+		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
+		{
+			int is_new_cor_lsa=check_is_new_cor_lsa(orig_router->name,(char *)lst,(char *)origtime);
+			if ( is_new_cor_lsa == 1 )
+			{
+				if ( nlsr->debugging )
+					printf("New Cor LSA.....\n");	
+				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
+				
+				if ( nlsr->debugging )
+					printf("Content Data: %s \n",content_data);
+				process_incoming_sync_content_lsa(content_data);			
+			}
+			else
+			{
+				if ( nlsr->debugging )
+					printf("Cor LSA / Newer Cor LSA already exists in LSDB\n");
+				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
+				if ( nlsr->debugging )
+					printf("Content Data: %s \n",content_data);
+			}
+		}
+		else 
+		{
+			if ( nlsr->debugging )
+				printf("Lsa is older than Router LSA refresh time/ Dead Interval\n");
+		}
+
 	}
 
 	if (content_data != NULL)
@@ -691,7 +734,6 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
     if (prefix == NULL || topo == NULL || clause == NULL ||
         slice_name == NULL || slice_uri == NULL) {
         fprintf(stderr, "Unable to allocate required memory.\n");
-        //exit(1);
 	return -1;
     }
     

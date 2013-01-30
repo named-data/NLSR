@@ -694,17 +694,20 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 		ccn_charbuf_append_closer(templ); /* </Name> */
 		ccn_charbuf_append_tt(templ, CCN_DTAG_Scope, CCN_DTAG);
 		ccn_charbuf_append_tt(templ, 1, CCN_UDATA);
+		/* Adding InterestLifeTime and InterestScope filter done */		
 		ccn_charbuf_append(templ, "2", 1); //scope of interest: 2 (not further than next host)
 		ccn_charbuf_append_closer(templ); /* </Scope> */
 
 		appendLifetime(templ,nlsr->interest_resend_time);
+		unsigned int face_id=get_next_hop_face_from_adl(nbr->name);
+		ccnb_tagged_putf(templ, CCN_DTAG_FaceID, "%u", face_id);
 		ccn_charbuf_append_closer(templ); /* </Interest> */
-		/* Adding InterestLifeTime and InterestScope filter done */
+		
 	
 		if ( nlsr->debugging )
-			printf("Sending info interest on name prefix : %s \n",int_name);
+			printf("Sending info interest on name prefix : %s through Face:%u\n",int_name,face_id);
 		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending info interest on name prefix : %s \n",int_name);
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending info interest on name prefix : %s through Face:%u\n",int_name,face_id);
 
 		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
 

@@ -86,6 +86,16 @@ make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *or
 }
 
 void 
+make_cor_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *orig_time,char *slice_prefix)
+{
+		
+	sprintf(key,"%s/%d/%s%s",slice_prefix,ls_type, orig_time, orig_router);	
+
+	if ( nlsr->debugging )
+		printf("Cor LSA prefix for repo content:%s\n",key);	
+}
+
+void 
 build_and_install_name_lsas(void)
 {
 	if ( nlsr->debugging )
@@ -611,6 +621,16 @@ build_others_name_lsa(struct nlsa *name_lsa, char *orig_router,int ls_type,long 
 }
 
 
+void 
+make_cor_lsa_key(char *key,struct clsa *cor_lsa)
+{
+	memcpy(key+strlen(key),cor_lsa->header->orig_router->name,cor_lsa->header->orig_router->length);
+	memcpy(key+strlen(key),"/",1);
+	char ls_type[2];
+	sprintf(ls_type,"%d",cor_lsa->header->ls_type);
+	memcpy(key+strlen(key),ls_type,strlen(ls_type));
+	key[strlen(key)]='\0';
+}
 
 
 void 
@@ -1168,133 +1188,6 @@ get_adj_lsdb_num_element(void)
 	return num_element; 
 }
 
-/*
-void 
-get_name_lsdb_summary(struct ccn_charbuf *name_lsdb_data)
-{
-	if ( nlsr->debugging )
-		printf("get_name_lsdb_summary called  \n");	
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_name_lsdb_summary called  \n");
-	
-	int i, name_lsdb_element;
-
-	struct nlsa *name_lsa;
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	
-    	hashtb_start(nlsr->lsdb->name_lsdb, e);
-	name_lsdb_element=hashtb_n(nlsr->lsdb->name_lsdb);
-
-	for(i=0;i<name_lsdb_element;i++)
-	{
-		name_lsa=e->data;
-
-		ccn_charbuf_append_string(name_lsdb_data,name_lsa->header->orig_router->name);
-		ccn_charbuf_append_string(name_lsdb_data,"|");
-
-		char *lst=(char *)malloc(20);
-		memset(lst,0,20);
-		sprintf(lst,"%d",name_lsa->header->ls_type);
-		ccn_charbuf_append_string(name_lsdb_data,lst);
-		free(lst);
-		ccn_charbuf_append_string(name_lsdb_data,"|");
-
-		char *lsid=(char *)malloc(20);
-		memset(lsid,0,20);
-		sprintf(lsid,"%ld",name_lsa->header->ls_id);
-		ccn_charbuf_append_string(name_lsdb_data,lsid);
-		free(lsid);
-		ccn_charbuf_append_string(name_lsdb_data,"|");
-
-		ccn_charbuf_append_string(name_lsdb_data,name_lsa->header->orig_time);
-		ccn_charbuf_append_string(name_lsdb_data,"|");
-
-		hashtb_next(e);		
-	}
-
-	hashtb_end(e);
-
-}
-*/
-
-/*
-void 
-get_adj_lsdb_summary(struct ccn_charbuf *adj_lsdb_data)
-{
-	if ( nlsr->debugging )
-		printf("get_adj_lsdb_summary called  \n");	
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_adj_lsdb_summary called  \n");
-	int i, adj_lsdb_element;
-	struct alsa *adj_lsa;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	
-    	hashtb_start(nlsr->lsdb->adj_lsdb, e);
-	adj_lsdb_element=hashtb_n(nlsr->lsdb->adj_lsdb);
-
-	for(i=0;i<adj_lsdb_element;i++)
-	{
-		adj_lsa=e->data;
-
-		ccn_charbuf_append_string(adj_lsdb_data,adj_lsa->header->orig_router->name);
-		ccn_charbuf_append_string(adj_lsdb_data,"|");
-		
-		char *lst=(char *)malloc(20);
-		memset(lst,0,20);
-		sprintf(lst,"%d",adj_lsa->header->ls_type);
-		ccn_charbuf_append_string(adj_lsdb_data,lst);
-		free(lst);
-		ccn_charbuf_append_string(adj_lsdb_data,"|");
-
-		ccn_charbuf_append_string(adj_lsdb_data,adj_lsa->header->orig_time);
-		ccn_charbuf_append_string(adj_lsdb_data,"|");
-
-		hashtb_next(e);		
-	}
-
-	hashtb_end(e);
-}
-*/
-
-/*
-void 
-get_lsdb_summary(struct ccn_charbuf *lsdb_data)
-{
-	struct ccn_charbuf *name_lsdb_data=ccn_charbuf_create();
-	struct ccn_charbuf *adj_lsdb_data=ccn_charbuf_create();
-
-	get_name_lsdb_summary(name_lsdb_data);
-	get_adj_lsdb_summary(adj_lsdb_data);
-
-	long int num_lsa=get_name_lsdb_num_element() + get_adj_lsdb_num_element();
-	char *num_element=(char *)malloc(15);
-	memset(num_element,0,15);
-	sprintf(num_element,"%ld",num_lsa);
-
-	if( num_lsa > 0)
-	{
-		ccn_charbuf_append_string(lsdb_data,num_element);
-		ccn_charbuf_append_string(lsdb_data,"|");
-	}
-	if(name_lsdb_data->length>0)
-	{
-		char *data1=ccn_charbuf_as_string(name_lsdb_data);
-		ccn_charbuf_append_string(lsdb_data,(char *)data1);
-	}
-	if(adj_lsdb_data->length>0)
-	{
-		char *data2=ccn_charbuf_as_string(adj_lsdb_data);
-		ccn_charbuf_append_string(lsdb_data,(char *)data2);
-	}
-	ccn_charbuf_destroy(&name_lsdb_data);
-	ccn_charbuf_destroy(&adj_lsdb_data);
-	free(num_element);
-
-}
-*/
 
 int 
 check_is_new_name_lsa(char *orig_router,char *lst,char *lsid,char *orig_time)
@@ -1366,6 +1259,46 @@ check_is_new_adj_lsa(char *orig_router,char *lst,char *orig_time)
 	{
 		adj_lsa=e->data;
 		if( strcmp ( orig_time , adj_lsa->header->orig_time ) > 0 )
+		{
+			ret=1;
+		}
+	}
+
+	hashtb_end(e);
+	
+	ccn_charbuf_destroy(&key);
+
+	return ret;
+}
+
+int 
+check_is_new_cor_lsa(char *orig_router,char *lst,char *orig_time)
+{
+	int ret=0;
+	struct ccn_charbuf *key=ccn_charbuf_create();
+	ccn_charbuf_append_string(key,orig_router);
+	ccn_charbuf_append_string(key,"/");
+	ccn_charbuf_append_string(key,lst);
+
+	int res;
+	struct clsa *cor_lsa;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+	res = hashtb_seek(e, ccn_charbuf_as_string(key), key->length, 0);
+
+	if( res == HT_NEW_ENTRY )
+	{
+		hashtb_delete(e);
+		ret=1;
+
+	}
+	else if(res == HT_OLD_ENTRY)
+	{
+		cor_lsa=e->data;
+		if( strcmp ( orig_time , cor_lsa->header->orig_time ) > 0 )
 		{
 			ret=1;
 		}
@@ -2102,3 +2035,304 @@ write_name_lsdb_to_repo(char *slice_prefix)
 	
 
 }
+
+void
+print_cor_lsa(struct clsa *cor_lsa)
+{
+	if ( nlsr->debugging )
+	{
+		printf("-----------Cor LSA Content---------------\n");
+		printf("	Origination Router       :	%s\n",cor_lsa->header->orig_router->name);
+		printf("	Origination Router Length:	%d\n",cor_lsa->header->orig_router->length);
+		printf("	LS Type			 :	%d\n",cor_lsa->header->ls_type);
+		printf("	Origination Time	 :	%s\n",cor_lsa->header->orig_time);
+		printf("	LSA Data			\n");
+		printf("		Cor R:	 	:	%f\n",cor_lsa->cor_r);
+		printf("		Cor Theta	:	%f\n",cor_lsa->cor_theta);
+
+		printf("\n");	
+	}
+}
+
+void 
+print_cor_lsdb()
+{
+	
+	if ( nlsr->debugging )
+		printf("print_cor_lsdb called \n");	
+	
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+	int i=1;
+
+	for (hashtb_start(nlsr->lsdb->cor_lsdb, e); e->key != NULL; hashtb_next(e)) 
+	{
+		if ( nlsr->debugging )
+			printf("-----------Cor LSA (%d)---------------\n",i);	
+		struct clsa *cor_lsa=e->data;
+		print_cor_lsa(cor_lsa);
+		i++;
+  	}
+	hashtb_end(e);
+
+	if ( nlsr->debugging )
+		printf("\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
+}
+
+void
+install_cor_lsa(struct clsa *cor_lsa)
+{
+	if ( nlsr->debugging )
+		printf("install_cor_lsa called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"install_cor_lsa called  \n");
+	
+
+	char *time_stamp=(char *)malloc(20);
+	memset(time_stamp,0,20);
+	get_current_timestamp_micro(time_stamp);
+
+
+	char *key=(char *)malloc(cor_lsa->header->orig_router->length+2+2);
+	memset(key,0,cor_lsa->header->orig_router->length+2);
+	make_cor_lsa_key(key,cor_lsa);
+
+	if ( nlsr->debugging )
+		printf("Cor LSA key: %s \n",key);
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+    	res = hashtb_seek(e, key, strlen(key), 0);
+
+	if ( res == HT_NEW_ENTRY )
+	{
+		if ( nlsr->debugging )
+			printf("New Cor LSA... \n");
+		
+		struct clsa *new_cor_lsa=(struct clsa *)malloc(sizeof( struct clsa ));
+		new_cor_lsa=e->data;
+		new_cor_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
+
+		new_cor_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+		new_cor_lsa->header->orig_router->name=(char *)malloc(strlen(cor_lsa->header->orig_router->name)+1);
+		memset(new_cor_lsa->header->orig_router->name,0,strlen(cor_lsa->header->orig_router->name)+1);
+		memcpy(new_cor_lsa->header->orig_router->name,cor_lsa->header->orig_router->name,strlen(cor_lsa->header->orig_router->name)+1);
+		new_cor_lsa->header->orig_router->length=cor_lsa->header->orig_router->length;
+
+		new_cor_lsa->header->orig_time=(char *)malloc(strlen(cor_lsa->header->orig_time)+1); //free 
+		memset(new_cor_lsa->header->orig_time,0,strlen(cor_lsa->header->orig_time)+1);
+		memcpy(new_cor_lsa->header->orig_time,cor_lsa->header->orig_time,strlen(cor_lsa->header->orig_time)+1);
+
+		new_cor_lsa->header->ls_type=cor_lsa->header->ls_type;
+
+		new_cor_lsa->cor_r=cor_lsa->cor_r;
+		new_cor_lsa->cor_theta=cor_lsa->cor_theta;
+	}
+	else if ( res == HT_OLD_ENTRY )
+	{	
+		if ( nlsr->debugging )
+			printf("Cor LSA exists (Old)... \n");
+	}
+	hashtb_end(e);
+
+	free(key);
+
+}
+
+void 
+build_cor_lsa(struct clsa *cor_lsa, double cor_r, double cor_theta)
+{
+	cor_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
+	cor_lsa->header->ls_type=LS_TYPE_COR;
+
+	char *time_stamp=(char *)malloc(20);
+	memset(time_stamp,0,20);
+	get_current_timestamp_micro(time_stamp);
+
+	cor_lsa->header->orig_time=(char *)malloc(strlen(time_stamp)+1); //free 
+	memset(cor_lsa->header->orig_time,0,strlen(time_stamp)+1);
+	memcpy(cor_lsa->header->orig_time,time_stamp,strlen(time_stamp)+1);
+	free(time_stamp);
+
+	cor_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	cor_lsa->header->orig_router->name=(char *)malloc(strlen(nlsr->router_name)+1);
+	memset(cor_lsa->header->orig_router->name,0,strlen(nlsr->router_name)+1);
+	memcpy(cor_lsa->header->orig_router->name,nlsr->router_name,strlen(nlsr->router_name)+1);
+	cor_lsa->header->orig_router->length=strlen(nlsr->router_name)+1;
+
+	cor_lsa->cor_r=cor_r;	
+	cor_lsa->cor_theta=cor_theta;
+
+}
+
+void 
+build_others_cor_lsa(struct clsa *cor_lsa,char *orig_router, int ls_type,char *orig_time, double cor_r, double cor_theta)
+{
+	cor_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
+	cor_lsa->header->ls_type=ls_type;
+
+	cor_lsa->header->orig_time=(char *)malloc(strlen(orig_time)+1); 
+	memset(cor_lsa->header->orig_time,0,strlen(orig_time)+1);
+	memcpy(cor_lsa->header->orig_time,orig_time,strlen(orig_time)+1);
+
+	cor_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	cor_lsa->header->orig_router->name=(char *)malloc(strlen(orig_router)+1);
+	memset(cor_lsa->header->orig_router->name,0,strlen(orig_router)+1);
+	memcpy(cor_lsa->header->orig_router->name,orig_router,strlen(orig_router)+1);
+	cor_lsa->header->orig_router->length=strlen(orig_router)+1;
+
+	cor_lsa->cor_r=cor_r;	
+	cor_lsa->cor_theta=cor_theta;
+
+}
+
+void
+build_and_install_others_cor_lsa(char *orig_router,int ls_type,char *orig_time, double cor_r, double cor_theta)
+{
+	struct clsa *cor_lsa=(struct clsa *)malloc(sizeof( struct clsa ));
+	build_others_cor_lsa(cor_lsa,orig_router,ls_type, orig_time, cor_r, cor_theta);
+	install_cor_lsa(cor_lsa);
+
+	print_cor_lsdb();
+
+	free(cor_lsa->header->orig_router);
+	free(cor_lsa->header->orig_time);
+	free(cor_lsa->header);
+	free(cor_lsa);
+
+}
+
+
+void 
+build_and_install_cor_lsa()
+{
+
+	struct clsa *cor_lsa=(struct clsa *)malloc(sizeof( struct clsa ));
+	
+	build_cor_lsa(cor_lsa,nlsr->cor_r,nlsr->cor_theta);
+	install_cor_lsa(cor_lsa);
+
+	write_cor_lsa_to_repo(cor_lsa);
+
+	print_cor_lsdb();	
+
+	free(cor_lsa->header->orig_router);
+	free(cor_lsa->header->orig_time);
+	free(cor_lsa->header);
+	free(cor_lsa);
+	
+}
+
+void 
+get_cor_lsa_data(struct ccn_charbuf *lsa_data,char *cor_lsa_key)
+{
+	if ( nlsr->debugging )
+		printf("get_cor_lsa_data called  \n");	
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_adj_lsa_data called  \n");
+
+	struct clsa *cor_lsa=(struct clsa*)malloc(sizeof(struct clsa ));
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+    	res = hashtb_seek(e, cor_lsa_key, strlen(cor_lsa_key), 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		cor_lsa=e->data;
+
+		if ( nlsr->debugging )
+			printf("Cor LSA found  \n");	
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Cor LSA found  \n");
+
+		ccn_charbuf_append_string(lsa_data,cor_lsa->header->orig_router->name);
+		ccn_charbuf_append_string(lsa_data,"|");
+
+		char *temp_length=(char *)malloc(20);
+		memset(temp_length,0,20);
+		sprintf(temp_length,"%d",cor_lsa->header->orig_router->length);
+		ccn_charbuf_append_string(lsa_data,temp_length);
+		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_length);
+
+		char *temp_ltype=(char *)malloc(20);
+		memset(temp_ltype,0,20);
+		sprintf(temp_ltype,"%d",cor_lsa->header->ls_type);
+		ccn_charbuf_append_string(lsa_data,temp_ltype);
+		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_ltype);
+
+		ccn_charbuf_append_string(lsa_data,cor_lsa->header->orig_time);
+		ccn_charbuf_append_string(lsa_data,"|");
+
+		char *cor_r=(char *)malloc(20);
+		memset(cor_r,0,20);
+		sprintf(cor_r,"%f",cor_lsa->cor_r);
+		ccn_charbuf_append_string(lsa_data,cor_r);
+		ccn_charbuf_append_string(lsa_data,"|");
+		free(cor_r);
+
+		char *cor_theta=(char *)malloc(20);
+		memset(cor_theta,0,20);
+		sprintf(cor_theta,"%f",cor_lsa->cor_theta);
+		ccn_charbuf_append_string(lsa_data,cor_theta);
+		ccn_charbuf_append_string(lsa_data,"|");
+		free(cor_theta);
+
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+}
+
+void
+write_cor_lsa_to_repo(struct clsa *cor_lsa)
+{
+	
+
+	if ( nlsr->debugging )
+		printf("write_cor_lsa_to_repo called\n");
+	
+	
+	char *key=(char *)malloc(cor_lsa->header->orig_router->length+2+2);
+	memset(key,0,cor_lsa->header->orig_router->length+2);
+	make_cor_lsa_key(key,cor_lsa);
+	
+	struct ccn_charbuf *lsa_data=ccn_charbuf_create();
+	get_cor_lsa_data(lsa_data,key);
+	
+	if ( nlsr->debugging )
+		printf("Cor LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+	char *lst=(char *)malloc(20);
+	memset(lst,0,20);
+	sprintf(lst,"%d",cor_lsa->header->ls_type);
+	char *repo_key=(char *)malloc(strlen(nlsr->slice_prefix)+strlen(cor_lsa->header->orig_time)+strlen(cor_lsa->header->orig_router->name) + strlen(lst) + 5);
+	memset(repo_key, 0, strlen(nlsr->slice_prefix)+strlen(cor_lsa->header->orig_time)+strlen(cor_lsa->header->orig_router->name) + strlen(lst) + 5);	
+	make_cor_lsa_prefix_for_repo(repo_key, cor_lsa->header->orig_router->name,LS_TYPE_COR,cor_lsa->header->orig_time,nlsr->slice_prefix);
+		
+	if ( nlsr->debugging )
+		printf("Cor LSA Repo Key: %s \n",repo_key);	
+
+	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_key);
+
+	
+		
+	free(lst);
+	free(key);
+	free(repo_key);
+	ccn_charbuf_destroy(&lsa_data);
+}
+

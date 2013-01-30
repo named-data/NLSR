@@ -29,6 +29,8 @@ struct linkStateDatabase
 {
 	struct hashtb *name_lsdb;
 	struct hashtb *adj_lsdb;
+	struct hashtb *cor_lsdb;
+	
 	char *lsdb_version;
 };
 
@@ -101,6 +103,9 @@ struct nlsr
 	char *slice_prefix;
 
 	int is_hyperbolic_calc;
+	double cor_r;
+	double cor_theta;
+	
 	
 };
 

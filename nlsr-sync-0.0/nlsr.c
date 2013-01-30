@@ -552,12 +552,9 @@ process_command_topo_prefix(char *command)
 			topo_prefix[strlen(topo_prefix)-1]='\0';
 
 		nlsr->topo_prefix=(char *)malloc(strlen(topo_prefix)+1);
-		//nlsr->topo_prefix=(char *)calloc(strlen(topo_prefix)+1, sizeof(char));
 		memset(nlsr->topo_prefix,0,strlen(topo_prefix)+1);
 		puts(topo_prefix);
 		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix));
-
-		//printf(" Topo Prefix: %s \n",nlsr->topo_prefix);
 
 	}
 }
@@ -591,8 +588,6 @@ process_command_slice_prefix(char *command)
 		nlsr->slice_prefix=(char *)malloc(strlen(slice_prefix)+1);
 		memset(nlsr->slice_prefix,0,strlen(slice_prefix)+1);
 		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix));
-
-		//printf(" Slice Prefix: %s \n",nlsr->slice_prefix);
 	}
 }
 
@@ -619,6 +614,39 @@ process_command_hyperbolic(char *command)
 	{
 		nlsr->is_hyperbolic_calc=1;
 	}
+}
+
+void
+process_command_hyperbolic_cordinate(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( hyperbolic r 0 )\n");
+		return;
+	}
+
+	char *rem;
+	const char *sep=" \t\n\r";
+	char *radious;
+	char *theta;
+
+	radious=strtok_r(command,sep,&rem);
+	if (radious == NULL )
+	{
+		printf(" Wrong Command Format ( hyperbolic r 0 )\n");
+		return;
+	}
+
+	theta=strtok_r(NULL,sep,&rem);
+	if (theta == NULL )
+	{
+		printf(" Wrong Command Format ( hyperbolic r 0 )\n");
+		return;
+	}
+
+	nlsr->cor_r=strtof(radious,NULL);
+	nlsr->cor_theta=strtof(theta,NULL);
+
 }
 
 void 
@@ -689,6 +717,10 @@ process_conf_command(char *command)
 	{
 			process_command_slice_prefix(remainder);
 	}
+	else if(!strcmp(cmd_type,"hyperbolic-cordinate") )
+	{
+		process_command_hyperbolic_cordinate(remainder);
+	}
 	else 
 	{
 		printf("Wrong configuration Command %s \n",cmd_type);
@@ -744,7 +776,6 @@ add_faces_for_nbrs(void)
 		int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr->neighbor->name, (const char *)nbr->ip_address, 9695);
 		update_face_to_adl_for_nbr(nbr->neighbor->name, face_id);		
 		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);
-		//add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_REG, face_id);
 		hashtb_next(e);		
 	}
 
@@ -766,9 +797,12 @@ destroy_faces_for_nbrs(void)
 
 	for(i=0;i<adl_element;i++)
 	{
-		nbr=e->data;	
-		add_delete_ccn_face_by_face_id(nlsr->ccn,(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);	
-		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, nbr->face);
+		nbr=e->data;
+		if ( nbr->face > 0 )
+		{	
+			add_delete_ccn_face_by_face_id(nlsr->ccn,(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);	
+			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, nbr->face);
+		}
 		hashtb_next(e);		
 	}
 
@@ -992,7 +1026,7 @@ nlsr_destroy( void )
 	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
 	hashtb_destroy(&nlsr->pit_alsa);
 
-	//To Do: has to destroy the face_list one by one 	
+		
 
 	hashtb_destroy(&nlsr->routing_table);
 
@@ -1058,7 +1092,6 @@ init_api_server(int ccn_fd)
        	}
 
 	server_address.sin_family = AF_INET;
-	//server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
 	server_address.sin_addr.s_addr = INADDR_ANY;
 	server_address.sin_port = htons(nlsr->api_port);
 
@@ -1113,13 +1146,15 @@ init_nlsr(void)
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
 	nlsr->lsdb->lsdb_version=(char *)malloc(strlen(time_stamp)+1);
-	memset(nlsr->lsdb->lsdb_version,'0',strlen(time_stamp));
+	memset(nlsr->lsdb->lsdb_version,0,strlen(time_stamp));
 	free(time_stamp);
 	
 	struct hashtb_param param_adj_lsdb = {0};
 	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), &param_adj_lsdb);
 	struct hashtb_param param_name_lsdb = {0};
 	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), &param_name_lsdb);
+	struct hashtb_param param_cor_lsdb = {0};
+	nlsr->lsdb->cor_lsdb = hashtb_create(sizeof(struct clsa), &param_cor_lsdb);
 	
 	
 
@@ -1154,6 +1189,8 @@ init_nlsr(void)
 	memcpy(nlsr->slice_prefix,"/ndn/routing/nlsr/LSA",strlen("/ndn/routing/nlsr/LSA"));
 
 	nlsr->is_hyperbolic_calc=0;
+	nlsr->cor_r=-1.0;
+	nlsr->cor_theta=-1.0;
 
 	return 0;
 }
@@ -1196,6 +1233,11 @@ main(int argc, char *argv[])
 
 	readConfigFile(config_file);
 
+	if ( nlsr->cor_r == -1.0 && nlsr->cor_theta== -1.0 ) 	
+	{
+		fprintf(stderr,"Hyperbolic codinate has not been defined :(\n");
+		ON_ERROR_DESTROY(-1);
+	}
 	print_adjacent_from_adl();
 
 	if ( daemon_mode == 1 )
@@ -1256,7 +1298,10 @@ main(int argc, char *argv[])
 	print_name_prefix_from_npl();
 	print_adjacent_from_adl();
 	build_and_install_name_lsas();
-	print_name_lsdb();	
+	print_name_lsdb();
+
+	build_and_install_cor_lsa();
+	//print_cor_lsdb();	
 
 	sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
 
