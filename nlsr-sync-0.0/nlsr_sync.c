@@ -88,7 +88,7 @@ sync_cb(struct ccns_name_closure *nc,
 
 	struct ccn_charbuf *content_name = ccn_charbuf_create();
 	res = ccn_name_append(content_name, name->buf, name->length);
-	res = ccn_name_split (name, components);
+	res = ccn_name_split (content_name, components);
 
 	printf("Res = %d \n",res);
 	ccn_charbuf_destroy(&content_name);
