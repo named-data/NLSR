@@ -74,20 +74,20 @@ sync_cb(struct ccns_name_closure *nc,
     fflush(stdout);
     free(hexL);
     free(hexR);
-    //ccn_charbuf_destroy(&uri);
+    ccn_charbuf_destroy(&uri);
 
 
 	//--Doing our thing from here
  	struct ccn_indexbuf cid={0};
 
     	struct ccn_indexbuf *components=&cid;
-    	ccn_name_split (uri, components);
-    	ccn_name_chop(uri,components,-3);
+    	ccn_name_split (name, components);
+    	ccn_name_chop(name,components,-3);
 
-	process_content_from_sync(uri,components);
+	process_content_from_sync(name,components);
 
 
-	ccn_charbuf_destroy(&uri); 
+	//ccn_charbuf_destroy(&uri); 
 
   return(0);
 }

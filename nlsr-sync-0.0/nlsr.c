@@ -1300,8 +1300,7 @@ main(int argc, char *argv[])
 	build_and_install_name_lsas();
 	print_name_lsdb();
 
-	build_and_install_cor_lsa();
-	//print_cor_lsdb();	
+	build_and_install_cor_lsa();	
 
 	sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
 
