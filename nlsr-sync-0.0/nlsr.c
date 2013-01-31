@@ -1324,7 +1324,7 @@ main(int argc, char *argv[])
 			}
 			if(nlsr->ccn != NULL)
 			{
-        			res = ccn_run(nlsr->ccn, 0);
+        			res = ccn_run(nlsr->ccn, 1);
 			}
 			if (!(nlsr->sched && nlsr->ccn))
 			{	      

@@ -2001,13 +2001,8 @@ refresh_cor_lsdb(void)
 				if ( nlsr->detailed_logging )
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Others Adj LSA need to be deleted\n");
 				
-				//char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
-				//memset(key,0,adj_lsa->header->orig_router->length+2);
-				//make_adj_lsa_key(key,adj_lsa);
-				
 				hashtb_delete(e);
 				i++;
-				//nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_adj_lsa, (void *)key, 0);
 			}
 		}
 
