@@ -78,7 +78,7 @@ sync_cb(struct ccns_name_closure *nc,
 
 
 	//--Doing our thing from here
- 	struct ccn_indexbuf cid={0};
+ 	/*struct ccn_indexbuf cid={0};
 
     	struct ccn_indexbuf *components=&cid;
     	ccn_name_split (name, components);
@@ -86,8 +86,21 @@ sync_cb(struct ccns_name_closure *nc,
 
 	process_content_from_sync(name,components);
 
+	*/
+	struct ccn_indexbuf cid={0};
+    	struct ccn_indexbuf *components=&cid;
 
-	//ccn_charbuf_destroy(&uri); 
+	char *name_string=ccn_charbuf_as_string(name);
+	struct ccn_charbuf *content_name = ccn_charbuf_create();
+	int res=ccn_name_from_uri(content_name,name_string);
+
+	printf("Res = %d \n",res);
+
+	res=ccn_name_split (content_name, components);
+
+	printf("Res = %d \n",res);	
+
+	ccn_charbuf_destroy(&content_name);
 
   return(0);
 }
