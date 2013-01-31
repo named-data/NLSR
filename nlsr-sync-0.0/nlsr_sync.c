@@ -29,7 +29,8 @@
 #include "nlsr_sync.h"
 #include "nlsr_lsdb.h"
 #include "utility.h"
-//test method
+
+
 char *
 hex_string(unsigned char *s, size_t l)
 {
@@ -66,33 +67,31 @@ sync_cb(struct ccns_name_closure *nc,
     else
         ccn_charbuf_append_string(uri, "(null)");
 
-    //if ( nlsr->debugging )
-    	//printf("%s %s %s\n", ccn_charbuf_as_string(uri), hexL, hexR);
-
+  
     if ( nlsr->debugging )
 	printf("Response from sync in the name: %s \n",ccn_charbuf_as_string(uri));	
 
     fflush(stdout);
     free(hexL);
     free(hexR);
-    ccn_charbuf_destroy(&uri);
+    //ccn_charbuf_destroy(&uri);
 
 
-	//--Doing ourthing from here
+	//--Doing our thing from here
  	struct ccn_indexbuf cid={0};
 
     	struct ccn_indexbuf *components=&cid;
-    	ccn_name_split (name, components);
-    	ccn_name_chop(name,components,-3);
+    	ccn_name_split (uri, components);
+    	ccn_name_chop(uri,components,-3);
 
-	process_content_from_sync(name,components);
+	process_content_from_sync(uri,components);
 
 
- 
+	ccn_charbuf_destroy(&uri); 
 
   return(0);
 }
-//test method
+
 
 int 
 get_lsa_position(struct ccn_charbuf * ccnb, struct ccn_indexbuf *comps)
@@ -101,8 +100,7 @@ get_lsa_position(struct ccn_charbuf * ccnb, struct ccn_indexbuf *comps)
 	
 	
 	int res,i;
-	int lsa_position=0; 	//Obaid: Hoque make it -1, 0 is also an index
-				//	I didn't change it as it might break the code. 	
+	int lsa_position=0; 	 	
 	int name_comps=(int)comps->n;
 
 	for(i=0;i<name_comps;i++)
@@ -129,10 +127,6 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 	int lsa_position=0;
 	int len=0;
 
-	//lsa_position=get_lsa_position(interest_ccnb,interest_comps);
-	
-	//printf("LSA Position: %d \n",lsa_position);
-	
 	
 	struct ccn_indexbuf cid={0};
     	struct ccn_indexbuf *components=&cid;
@@ -140,7 +134,7 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 	ccn_name_from_uri(name,nlsr->slice_prefix);
     	ccn_name_split (name, components);
 	lsa_position=components->n-2;
-	//printf("LSA Position from Slice Prefix Component: %d \n",(int)components->n-2);
+
     	ccn_charbuf_destroy(&name);
 	
 
@@ -170,7 +164,8 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 	memcpy(name_part->name,neighbor,strlen(neighbor)+1);
 	name_part->length=strlen(neighbor)+1;
 
-	
+	// Add 01/31/2013
+	free(neighbor);
 }
 
 void 
@@ -222,7 +217,9 @@ get_host_name_from_command_string(struct name_prefix *name_part,char *nbr_name_u
 	memcpy(name_part->name,neighbor,strlen(neighbor)+1);
 	name_part->length=strlen(neighbor)+1;
 
-	
+	// 01/31/2013
+	free(neighbor);
+	ccn_charbuf_destroy(&name);
 }
 
 
@@ -286,7 +283,6 @@ get_content_by_content_name(char *content_name, unsigned char **content_data)
 		res = ccn_resolve_version(nlsr->ccn, name, resolve_version, 500);
 		if (res >= 0) {
 			ccn_uri_append(resultbuf, name->buf, name->length, 1);
-			//fprintf(stderr, "== %s\n",ccn_charbuf_as_string(resultbuf));
 			resultbuf->length = 0;
 		}
 	}
@@ -303,7 +299,6 @@ get_content_by_content_name(char *content_name, unsigned char **content_data)
 	ccn_charbuf_destroy(&resultbuf);
 	ccn_charbuf_destroy(&templ);
 	ccn_charbuf_destroy(&name);   
-	//return (unsigned char *)ptr;
 }
 
 void 
@@ -571,27 +566,9 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	if (content_data != NULL)
 		free(content_data);
 	ccn_charbuf_destroy(&uri);
+	//01/31/2013	
+	free(time_stamp);
 }
-
-int
-sync_callback(struct ccns_name_closure *nc,
-        struct ccn_charbuf *lhash,
-        struct ccn_charbuf *rhash,
-        struct ccn_charbuf *name)
-{
-
-
-    	struct ccn_indexbuf cid={0};
-
-    	struct ccn_indexbuf *components=&cid;
-    	ccn_name_split (name, components);
-    	ccn_name_chop(name,components,-3);
-
-	process_content_from_sync(name,components);
-
-    	return(0);
-}
-
 
 void
 sync_monitor(char *topo_prefix, char *slice_prefix)
@@ -616,8 +593,11 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
 
     ccns_slice_set_topo_prefix(nlsr->slice, topo, prefix);
     nlsr->closure->callback = &sync_cb;
-    //nlsr->closure->callback = &sync_callback;
     nlsr->ccns = ccns_open(nlsr->ccn, nlsr->slice, nlsr->closure, roothash, NULL);
+
+    //01/31/2013
+    ccn_charbuf_destroy(&prefix);
+    ccn_charbuf_destroy(&topo);
 }
 
 struct ccn_charbuf *
@@ -748,17 +728,14 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
  
   
     res = ccns_write_slice(nlsr->ccn, slice, slice_name);
- /*
-// 	Obaid: commenting out the following lines to resolve a bug. 
-//	If commenting them can resolve the issue, then we 
-//	need to call them before terminating the program.
+ 
+    //01/31/2013
     ccns_slice_destroy(&slice);
     ccn_charbuf_destroy(&prefix);
     ccn_charbuf_destroy(&topo);
     ccn_charbuf_destroy(&clause);
     ccn_charbuf_destroy(&slice_name);
     ccn_charbuf_destroy(&slice_uri);
-*/
 
     return 0;
 }

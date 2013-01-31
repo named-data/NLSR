@@ -381,8 +381,7 @@ add_delete_ccn_face(struct ccn *h, const char *uri, const char *address, const u
 	ccn_face_instance_destroy(&nfi);
 	ccn_charbuf_destroy(&prefix);
 
-	//return nfi->faceid;
-
+	
 	return faceid;
 
 	cleanup:
