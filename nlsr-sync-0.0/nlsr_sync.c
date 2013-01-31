@@ -93,11 +93,10 @@ sync_cb(struct ccns_name_closure *nc,
 	struct ccn_indexbuf cid1={0};
     	struct ccn_indexbuf *components1=&cid1;
     	res=ccn_name_split (content_name, components1);
-
+	ccn_name_chop(content_name,components1,-3);
+	process_content_from_sync(content_name,components1);
 	printf("Res = %d \n",res);
-
 	ccn_charbuf_destroy(&content_name);
-	ccn_indexbuf_destroy(&components1);
 
   return(0);
 }
