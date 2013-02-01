@@ -940,20 +940,16 @@ int
 nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 {
 	struct timeval timeout;
-	if ( time_out_micro_sec < 0 )
+	if (time_out_micro_sec< 500000 && time_out_micro_sec> 0 )
 	{
-		timeout.tv_sec=1;
-		timeout.tv_usec=0;
+		timeout.tv_sec=0;
+		timeout.tv_usec=time_out_micro_sec;
 	}
-	else
+	else 
 	{
-		time_out_micro_sec=(long int)time_out_micro_sec*0.4;
-		timeout.tv_sec=time_out_micro_sec / 1000000;
-		timeout.tv_usec=time_out_micro_sec % 1000000;
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 500000;
 	}
-
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 499000;
 	
 	int fd;
 	int nread;
