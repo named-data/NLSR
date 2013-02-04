@@ -592,11 +592,11 @@ process_command_slice_prefix(char *command)
 }
 
 void 
-process_command_hyperbolic(char *command)
+process_command_hyperbolic_routing(char *command)
 {
 	if(command==NULL)
 	{
-		printf(" Wrong Command Format ( hyperbolic on/off )\n");
+		printf(" Wrong Command Format ( hyperbolic-routing on)\n");
 		return;
 	}
 	char *rem;
@@ -606,7 +606,7 @@ process_command_hyperbolic(char *command)
 	on_off=strtok_r(command,sep,&rem);
 	if(on_off==NULL)
 	{
-		printf(" Wrong Command Format ( hyperbolic on/off )\n");
+		printf(" Wrong Command Format ( hyperbolic-routing on )\n");
 		return;
 	}
 	
@@ -647,6 +647,31 @@ process_command_hyperbolic_cordinate(char *command)
 	nlsr->cor_r=strtof(radious,NULL);
 	nlsr->cor_theta=strtof(theta,NULL);
 
+}
+
+void 
+process_command_tunnel_type(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( tunnel-type udp/tcp)\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *on_off;
+
+	on_off=strtok_r(command,sep,&rem);
+	if(on_off==NULL)
+	{
+		printf(" Wrong Command Format ( tunnel-type udp/tcp )\n");
+		return;
+	}
+	
+	if ( strcmp(on_off,"TCP") == 0 || strcmp(on_off,"tcp") == 0 )
+	{
+		nlsr->tunnel_type=IPPROTO_TCP;
+	}
 }
 
 void 
@@ -721,6 +746,14 @@ process_conf_command(char *command)
 	{
 		process_command_hyperbolic_cordinate(remainder);
 	}
+	else if(!strcmp(cmd_type,"hyperbolic-routing") )
+	{
+		process_command_hyperbolic_routing(remainder);
+	}
+	else if(!strcmp(cmd_type,"tunnel-type") )
+	{
+		process_command_tunnel_type(remainder);
+	}
 	else 
 	{
 		printf("Wrong configuration Command %s \n",cmd_type);
@@ -773,7 +806,7 @@ add_faces_for_nbrs(void)
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr->neighbor->name, (const char *)nbr->ip_address, 9695);
+		int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr->neighbor->name, (const char *)nbr->ip_address, 9695,nlsr->tunnel_type);
 		update_face_to_adl_for_nbr(nbr->neighbor->name, face_id);		
 		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);
 		hashtb_next(e);		
@@ -800,8 +833,8 @@ destroy_faces_for_nbrs(void)
 		nbr=e->data;
 		if ( nbr->face > 0 )
 		{	
-			add_delete_ccn_face_by_face_id(nlsr->ccn,(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);	
 			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, nbr->face);
+			add_delete_ccn_face_by_face_id(nlsr->ccn,(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);
 		}
 		hashtb_next(e);		
 	}
@@ -916,7 +949,7 @@ process_api_client_command(char *command)
 				memset(ip_addr,0,13);
 				get_ip_from_hostname_02(nbr_name->name,ip_addr);
 				printf("IP Address: %s \n",ip_addr);
-				int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr_name->name, (const char *)ip_addr, 9695);
+				int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr_name->name, (const char *)ip_addr, 9695,nlsr->tunnel_type);
 				update_face_to_adl_for_nbr(nbr_name->name, face_id);		
 				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);				
 
@@ -1188,6 +1221,8 @@ init_nlsr(void)
 	nlsr->cor_r=-1.0;
 	nlsr->cor_theta=-1.0;
 
+	nlsr->tunnel_type=IPPROTO_UDP;
+
 	return 0;
 }
 
@@ -1229,7 +1264,7 @@ main(int argc, char *argv[])
 
 	readConfigFile(config_file);
 
-	if ( nlsr->cor_r == -1.0 && nlsr->cor_theta== -1.0 ) 	
+	if ( nlsr->is_hyperbolic_calc == 1 && (nlsr->cor_r == -1.0 && nlsr->cor_theta== -1.0) ) 	
 	{
 		fprintf(stderr,"Hyperbolic codinate has not been defined :(\n");
 		ON_ERROR_DESTROY(-1);
@@ -1293,13 +1328,13 @@ main(int argc, char *argv[])
 	add_faces_for_nbrs();
 	print_name_prefix_from_npl();
 	print_adjacent_from_adl();
-	build_and_install_name_lsas();
-	print_name_lsdb();
-
-	build_and_install_cor_lsa();	
+	build_and_install_name_lsas();	
 
 	sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
 
+
+	print_name_lsdb();
+	build_and_install_cor_lsa();
 	write_name_lsdb_to_repo(nlsr->slice_prefix);
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);

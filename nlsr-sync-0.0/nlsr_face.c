@@ -263,7 +263,7 @@ get_ccndid(struct ccn *h, struct ccn_charbuf *local_scope_template,
  */
 static struct 
 ccn_face_instance *construct_face(const unsigned char *ccndid, size_t ccndid_size,
-        const char *address, const char *port)
+        const char *address, const char *port, unsigned int tunnel_proto)
 {
 	struct ccn_face_instance *fi = calloc(1, sizeof(*fi));
 	char rhostnamebuf[NI_MAXHOST];
@@ -295,7 +295,7 @@ ccn_face_instance *construct_face(const unsigned char *ccndid, size_t ccndid_siz
 	}
 
 	fi->store = store;
-	fi->descr.ipproto = IPPROTO_UDP;
+	fi->descr.ipproto = tunnel_proto;
 	fi->descr.mcast_ttl = CCN_FIB_MCASTTTL;
 	fi->lifetime = CCN_FIB_LIFETIME;
 
@@ -333,7 +333,7 @@ init_data(struct ccn_charbuf *local_scope_template,
 }
 
 static int 
-add_delete_ccn_face(struct ccn *h, const char *uri, const char *address, const unsigned int p, int operation)
+add_delete_ccn_face(struct ccn *h, const char *uri, const char *address, const unsigned int p, int operation,unsigned int tunnel_proto)
 {
 	struct ccn_charbuf *prefix;
 	char port[6];
@@ -362,7 +362,7 @@ add_delete_ccn_face(struct ccn *h, const char *uri, const char *address, const u
 	}
 
 	/* construct a face instance for new face request */
-	fi = construct_face(ccndid, ccndid_size, address, port);
+	fi = construct_face(ccndid, ccndid_size, address, port,tunnel_proto);
 	ON_NULL_CLEANUP(fi);
 
 	/* send new face request to actually create a new face */
@@ -396,15 +396,15 @@ add_delete_ccn_face(struct ccn *h, const char *uri, const char *address, const u
 
 
 int 
-add_ccn_face(struct ccn *h, const char *uri, const char *address, const unsigned int port)
+add_ccn_face(struct ccn *h, const char *uri, const char *address, const unsigned int port, unsigned int tunnel_proto)
 {
-	return add_delete_ccn_face(h, uri, address, port, OP_REG);
+	return add_delete_ccn_face(h, uri, address, port, OP_REG,tunnel_proto);
 }
 
 
 int 
-delete_ccn_face(struct ccn *h, const char *uri, const char *address, const unsigned int port)
+delete_ccn_face(struct ccn *h, const char *uri, const char *address, const unsigned int port,unsigned int tunnel_proto)
 {
-	return add_delete_ccn_face(h, uri, address, port, OP_UNREG);
+	return add_delete_ccn_face(h, uri, address, port, OP_UNREG,tunnel_proto);
 }
 

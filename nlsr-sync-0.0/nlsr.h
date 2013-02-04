@@ -105,6 +105,8 @@ struct nlsr
 	int is_hyperbolic_calc;
 	double cor_r;
 	double cor_theta;
+
+	int tunnel_type;
 	
 	
 };

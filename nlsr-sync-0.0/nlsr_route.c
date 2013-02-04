@@ -186,8 +186,7 @@ calculate_path(int **adj_matrix, long int *parent,long int *dist ,long int V, lo
 			sort_queue_by_distance(Q,dist,head,V);
 		}
 	}
-	free(Q);
-	//free(dist);	
+	free(Q);	
 }
 
 void
