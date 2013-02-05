@@ -478,7 +478,7 @@ print_npt(void)
 			{
 				fle=ef->data;
 				if ( nlsr->debugging )
-					printf(" 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
+					printf(" 	Face: %d Route_Cost: %f \n",fle->next_hop_face,fle->route_cost);
 				if ( nlsr->detailed_logging )
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
 				hashtb_next(ef);	

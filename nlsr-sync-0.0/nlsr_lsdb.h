@@ -99,5 +99,7 @@ void write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id
 
 void write_cor_lsa_to_repo(struct clsa *cor_lsa);
 void build_and_install_others_cor_lsa(char *orig_router,int ls_type,char *orig_time, double cor_r, double cor_theta);
+double get_hyperbolic_r(char *router);
+double get_hyperbolic_theta(char *router);
 
 #endif

@@ -2415,7 +2415,7 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	
 	
 	char *key=(char *)malloc(cor_lsa->header->orig_router->length+2+2);
-	memset(key,0,cor_lsa->header->orig_router->length+2);
+	memset(key,0,cor_lsa->header->orig_router->length+2+2);
 	make_cor_lsa_key(key,cor_lsa);
 	
 	struct ccn_charbuf *lsa_data=ccn_charbuf_create();
@@ -2443,3 +2443,77 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	ccn_charbuf_destroy(&lsa_data);
 }
 
+void 
+make_cor_lsa_key_by_router_name(char *key,char *router_name)
+{
+	memcpy(key+strlen(key),router_name,strlen(router_name));
+	memcpy(key+strlen(key),"/",1);
+	char ls_type[2];
+	sprintf(ls_type,"%d",LS_TYPE_COR);
+	memcpy(key+strlen(key),ls_type,strlen(ls_type));
+	key[strlen(key)]='\0';
+}
+
+
+double 
+get_hyperbolic_r(char *router)
+{
+	double ret=-1.0;
+	char *cor_lsa_key=(char *)calloc(strlen(router)+4,sizeof(char));
+	make_cor_lsa_key_by_router_name(cor_lsa_key,router);
+
+	
+	struct clsa *cor_lsa;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+    	res = hashtb_seek(e, cor_lsa_key, strlen(cor_lsa_key), 0);
+
+	if ( res == HT_OLD_ENTRY)
+	{	
+		cor_lsa=e->data;
+		ret=cor_lsa->cor_r;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+	
+	free(cor_lsa_key);
+	return ret;
+}
+
+double 
+get_hyperbolic_theta(char *router)
+{
+		double ret=-1.0;
+	char *cor_lsa_key=(char *)calloc(strlen(router)+4,sizeof(char));
+	make_cor_lsa_key_by_router_name(cor_lsa_key,router);
+
+	struct clsa *cor_lsa;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+    	res = hashtb_seek(e, cor_lsa_key, strlen(cor_lsa_key), 0);
+
+	if ( res == HT_OLD_ENTRY)
+	{	
+		cor_lsa=e->data;
+		ret=cor_lsa->cor_theta;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+	
+	free(cor_lsa_key);
+	return ret;
+}

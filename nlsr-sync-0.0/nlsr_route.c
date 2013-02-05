@@ -1,6 +1,7 @@
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <sys/time.h>
@@ -75,38 +76,104 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 			print_adj_matrix(adj_matrix,map_element);
 
 		long int source=get_mapping_no(nlsr->router_name);
-		long int *parent=(long int *)malloc(map_element * sizeof(long int));
-		long int *dist=(long int *)malloc(map_element * sizeof(long int));
-
 		int num_link=get_no_link_from_adj_matrix(adj_matrix, map_element ,source);
-		
-		if ( (num_link == 0) || (nlsr->multi_path_face_num == 1 ) )
-		{	
-			calculate_path(adj_matrix,parent,dist, map_element, source);		
-			print_all_path_from_source(parent,source);
-			print_all_next_hop(parent,source);		
-			update_routing_table_with_new_route(parent, dist,source);
-			//print_routing_table();
-		}
-		else if ( (num_link != 0) && (nlsr->multi_path_face_num > 1 ) )
+
+		if ( nlsr->is_hyperbolic_calc == 1)
 		{
 			long int *links=(long int *)malloc(num_link*sizeof(long int));
 			long int *link_costs=(long int *)malloc(num_link*sizeof(long int));
 			get_links_from_adj_matrix(adj_matrix, map_element , links, link_costs, source);
-			for ( i=0 ; i < num_link; i++)
+
+			struct hashtb_enumerator ee;
+			struct hashtb_enumerator *e = &ee;
+			for (hashtb_start(nlsr->rev_map, e); e->key != NULL; hashtb_next(e)) 
 			{
-				adjust_adj_matrix(adj_matrix, map_element,source,links[i],link_costs[i]);
+				struct map_entry *me=e->data;
+				if ( me->mapping != source )
+				{
+					long int *faces=(long int *)calloc(num_link,sizeof(long int));
+					double *nbr_dist=(double *)calloc(num_link,sizeof(double));
+					double *nbr_to_dest=(double *)calloc(num_link,sizeof(double));
+					for ( i=0 ; i < num_link; i++)
+					{
+						int face=get_next_hop_face_from_adl(get_router_from_rev_map(links[i]));
+						double dist_to_nbr=get_hyperbolic_distance(source,links[i]);
+						double dist_to_dest_from_nbr=get_hyperbolic_distance(links[i],me->mapping);
+						faces[i]=face;
+						nbr_dist[i]=dist_to_nbr;
+						nbr_to_dest[i]=	dist_to_dest_from_nbr;	
+
+						
+					}
+					sort_hyperbolic_route(nbr_to_dest,nbr_dist, faces,0,num_link);
+					if (nlsr->multi_path_face_num <= 1 )
+					{
+						update_routing_table_with_new_hyperbolic_route(me->mapping,faces[0],nbr_to_dest[0]);				
+					}
+					else
+					{
+						if ( num_link <= nlsr->multi_path_face_num )
+						{
+							for ( i=0 ; i < num_link; i++)
+							{
+								update_routing_table_with_new_hyperbolic_route(me->mapping,faces[i],nbr_to_dest[i]);
+							}
+						}
+						else if (num_link > nlsr->multi_path_face_num)
+						{
+							for ( i=0 ; i < nlsr->multi_path_face_num; i++)
+							{
+								update_routing_table_with_new_hyperbolic_route(me->mapping,faces[i],nbr_to_dest[i]);
+							}
+						}
+
+					}
+					free(faces);
+					free(nbr_dist);
+					free(nbr_to_dest);
+				}
+			}
+			hashtb_end(e);
+
+			
+			free(links);
+			free(link_costs);
+		}
+		else if (nlsr->is_hyperbolic_calc == 0 )
+		{
+
+			long int *parent=(long int *)malloc(map_element * sizeof(long int));
+			long int *dist=(long int *)malloc(map_element * sizeof(long int));
+			
+		
+			if ( (num_link == 0) || (nlsr->multi_path_face_num == 1 ) )
+			{	
 				calculate_path(adj_matrix,parent,dist, map_element, source);		
 				print_all_path_from_source(parent,source);
 				print_all_next_hop(parent,source);		
 				update_routing_table_with_new_route(parent, dist,source);
-				//print_routing_table();
 			}
+			else if ( (num_link != 0) && (nlsr->multi_path_face_num > 1 ) )
+			{
+				long int *links=(long int *)malloc(num_link*sizeof(long int));
+				long int *link_costs=(long int *)malloc(num_link*sizeof(long int));
+				get_links_from_adj_matrix(adj_matrix, map_element , links, link_costs, source);
+				for ( i=0 ; i < num_link; i++)
+				{
+					adjust_adj_matrix(adj_matrix, map_element,source,links[i],link_costs[i]);
+					calculate_path(adj_matrix,parent,dist, map_element, source);		
+					print_all_path_from_source(parent,source);
+					print_all_next_hop(parent,source);		
+					update_routing_table_with_new_route(parent, dist,source);
+				}
 
-			free(links);
-			free(link_costs);
+				free(links);
+				free(link_costs);
+			}
+			free(parent);
+			free(dist);
 		}
-
+		
 		print_routing_table();
 		print_npt();
 
@@ -120,8 +187,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		{
 			free(adj_matrix[i]);
 		}
-		free(parent);
-		free(dist);
+		
 		free(adj_matrix);
 		hashtb_destroy(&nlsr->map);
 		hashtb_destroy(&nlsr->rev_map);
@@ -142,7 +208,7 @@ calculate_path(int **adj_matrix, long int *parent,long int *dist ,long int V, lo
 	//long int *dist=(long int *)malloc(V * sizeof(long int));
 	long int *Q=(long int *)malloc(V * sizeof(long int));
 	long int head=0;
-	/* Initial the Parent */
+	/* Initiate the Parent */
 	for (i = 0 ; i < V; i++)
 	{
 		parent[i]=EMPTY_PARENT;
@@ -318,6 +384,50 @@ sort_queue_by_distance(long int *Q,long int *dist,long int start,long int elemen
 				temp_u=Q[j];
 				Q[j]=Q[i];
 				Q[i]=temp_u;
+			}
+		}
+	}
+	
+}
+
+void 
+sort_hyperbolic_route(double *dist_dest,double *dist_nbr, long int *faces,long int start,long int element)
+{
+	long int i,j;
+	double temp_dist;
+	long int temp_face;
+
+	for ( i=start ; i < element ; i ++) 
+	{
+		for( j=i+1; j<element; j ++)
+		{
+			if (dist_dest[i] < dist_dest[j])
+			{
+				temp_dist=dist_dest[j];
+				dist_dest[j]=dist_dest[i];
+				dist_dest[i]=temp_dist;
+
+				temp_dist=dist_nbr[j];
+				dist_nbr[j]=dist_nbr[i];
+				dist_nbr[i]=temp_dist;
+
+				temp_face=faces[j];
+				faces[j]=faces[i];
+				faces[i]=temp_face;
+			}
+			if ( (dist_dest[i] == dist_dest[j]) && (dist_nbr[i] < dist_nbr[j]) )
+			{
+				temp_dist=dist_dest[j];
+				dist_dest[j]=dist_dest[i];
+				dist_dest[i]=temp_dist;
+
+				temp_dist=dist_nbr[j];
+				dist_nbr[j]=dist_nbr[i];
+				dist_nbr[i]=temp_dist;
+
+				temp_face=faces[j];
+				faces[j]=faces[i];
+				faces[i]=temp_face;
 			}
 		}
 	}
@@ -983,7 +1093,7 @@ print_routing_table(void)
 			{
 				fle=ef->data;
 				if ( nlsr->debugging )
-					printf(" 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
+					printf(" 	Face: %d Route_Cost: %f \n",fle->next_hop_face,fle->route_cost);
 				if ( nlsr->detailed_logging )
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," 	Face: %d Route_Cost: %d \n",fle->next_hop_face,fle->route_cost);
 				hashtb_next(ef);	
@@ -1114,6 +1224,28 @@ do_old_routing_table_updates(void)
 	hashtb_end(e);	
 }
 
+void 
+update_routing_table_with_new_hyperbolic_route(long int dest_router_rev_map_index, long int face, double nbr_to_dest_dist)
+{
+	if ( nlsr->debugging )
+		printf("update_routing_table_with_new_hyperbolic_route called\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_routing_table_with_new_hyperbolic_route called\n");
+	
+	char *orig_router=get_router_from_rev_map(dest_router_rev_map_index);
+
+	if (face != NO_NEXT_HOP && face != NO_FACE )
+	{
+		update_routing_table(orig_router,face,nbr_to_dest_dist);
+		if ( nlsr->debugging )
+			printf ("Orig_router: %s Next Hop Face: %ld \n",orig_router,face);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Orig_router: %s Next Hop Face: %ld \n",orig_router,face);
+					
+	}
+	
+
+}
 
 
 void 
@@ -1178,8 +1310,6 @@ does_face_exist_for_router(char *dest_router, int face_id)
 		printf("Dest Router: %s and Face id: %d \n",dest_router, face_id);
 	}
 
-	//print_routing_table();
-
 	int ret=0;
 
 	int res;
@@ -1194,22 +1324,6 @@ does_face_exist_for_router(char *dest_router, int face_id)
 	if( res == HT_OLD_ENTRY )
 	{
 		rte=e->data;
-		/*
-		struct hashtb_enumerator eef;
-    		struct hashtb_enumerator *ef = &eef;
-    	
-    		hashtb_start(rte->face_list, ef);
-		res1 = hashtb_seek(ef, &face_id, sizeof(face_id), 0);	
-		if( res1 == HT_OLD_ENTRY)
-		{
-			ret=1;									
-		}
-		else
-		{
-			hashtb_delete(ef);
-		}
-		hashtb_end(ef);
-		*/
 		unsigned *v;
 		v = hashtb_lookup(rte->face_list, &face_id, sizeof(face_id));
 		if (v != NULL)
@@ -1222,7 +1336,29 @@ does_face_exist_for_router(char *dest_router, int face_id)
 	
 	hashtb_end(e);
 
-	//print_routing_table();
-
 	return ret;
+}
+
+double 
+get_hyperbolic_distance(long int source, long int dest)
+{
+	double distance;
+	char *src_router=get_router_from_rev_map(source);
+	char *dest_router=get_router_from_rev_map(dest);
+
+	double src_r=get_hyperbolic_r(src_router);
+	double src_theta=get_hyperbolic_r(src_router);	
+
+	double dest_r=get_hyperbolic_r(dest_router);
+	double dest_theta=get_hyperbolic_r(dest_router);
+	if ( src_r != -1 && dest_r != -1 )
+	{
+		distance=acosh(cosh(src_r)*cosh(dest_r)-sinh(src_r)*sinh(dest_r)*cos(src_theta-dest_theta));
+	}
+	else 
+	{
+		distance= -1.0;
+	}
+	
+	return distance;
 }
