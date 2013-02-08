@@ -159,7 +159,11 @@ process_command_ccnneighbor(char *command)
 	char *rem;
 	const char *sep=" \t\n";
 	char *rtr_name;
+	char *nbr_ip_addr;
+	int is_ip_configured=0;
 	//char *face;
+	char *ip_addr=(char *)malloc(13);
+	memset(ip_addr,0,13);
 
 	rtr_name=strtok_r(command,sep,&rem);
 	if(rtr_name==NULL)
@@ -167,28 +171,15 @@ process_command_ccnneighbor(char *command)
 		printf(" Wrong Command Format ( ccnneighbor router_name faceX)\n");
 		return;
 	}
-
-	/*face=strtok_r(NULL,sep,&rem);
-	if(face==NULL)
-	{
-		printf(" Wrong Command Format ( ccnneighbor router_name faceX)\n");
-		return;
-	}
-
-	printf("Router: %s face: %s\n",rtr_name,face);
-	int face_id;
-	int res;
-	res=sscanf(face,"face%d",&face_id);
-
-	if(res != 1 )
-	{
-		printf(" Wrong Command Format ( ccnneighbor router_name faceX) where X is integer\n");
-		return;
-	}*/
-
 	if ( rtr_name[strlen(rtr_name)-1] == '/' )
 	{
 		rtr_name[strlen(rtr_name)-1]='\0';
+	}
+
+	if (rem != NULL )
+	{
+		nbr_ip_addr=strtok_r(NULL,sep,&rem);
+		is_ip_configured=1;
 	}
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	nbr->name=(char *)malloc(strlen(rtr_name)+1);
@@ -196,18 +187,23 @@ process_command_ccnneighbor(char *command)
 	memcpy(nbr->name,rtr_name,strlen(rtr_name)+1);
 	nbr->length=strlen(rtr_name)+1;
 
-	//add_nbr_to_adl(nbr,face_id);
-
-	struct name_prefix *nbr_name=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
-	get_host_name_from_command_string(nbr_name,nbr->name,0);
-	printf("Hostname of neighbor: %s ",nbr_name->name);
-
-
-	char *ip_addr=(char *)malloc(13);
-	memset(ip_addr,0,13);
-	get_ip_from_hostname_02(nbr_name->name,ip_addr);
-	printf("IP Address: %s \n",ip_addr);
-
+	
+	if ( !is_ip_configured )
+	{
+		struct name_prefix *nbr_name=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+		get_host_name_from_command_string(nbr_name,nbr->name,0);
+		printf("Hostname of neighbor: %s ",nbr_name->name);
+		get_ip_from_hostname_02(nbr_name->name,ip_addr);
+		printf("IP Address: %s \n",ip_addr);
+		free(nbr_name->name);
+		free(nbr_name);
+	}
+	else
+	{
+		memcpy(ip_addr,nbr_ip_addr,strlen(nbr_ip_addr));
+		printf("Name of neighbor: %s ",nbr->name);
+		printf("IP Address: %s \n",ip_addr);
+	}
 	add_nbr_to_adl(nbr,0,ip_addr);
 	
 
@@ -388,9 +384,13 @@ process_command_lsa_refresh_time(char *command)
 	}
 
 	seconds=atoi(secs);
-	if ( seconds >= 240 && seconds <= 3600 )
+	if ( seconds >= 240)
 	{
 		nlsr->lsa_refresh_time=seconds;
+		if ( nlsr->router_dead_interval < nlsr->lsa_refresh_time * 2 )
+		{
+			nlsr->router_dead_interval=2*nlsr->lsa_refresh_time;
+		}
 	}
 
 }
@@ -416,19 +416,23 @@ process_command_router_dead_interval(char *command)
 	}
 
 	seconds=atoi(secs);
-	if ( seconds >= 360 && seconds <= 5400 )
+	if ( seconds >= 480 )
 	{
 		nlsr->router_dead_interval=seconds;
+		if ( nlsr->router_dead_interval < nlsr->lsa_refresh_time * 2 )
+		{
+			nlsr->router_dead_interval=2*nlsr->lsa_refresh_time;
+		}
 	}
 
 }
 
 void 
-process_command_multi_path_face_num(char *command)
+process_command_max_faces_per_prefix(char *command)
 {
 	if(command==NULL)
 	{
-		printf(" Wrong Command Format ( multi-path-face-num n )\n");
+		printf(" Wrong Command Format ( max-faces-per-prefix n )\n");
 		return;
 	}
 	char *rem;
@@ -439,14 +443,14 @@ process_command_multi_path_face_num(char *command)
 	num=strtok_r(command,sep,&rem);
 	if(num==NULL)
 	{
-		printf(" Wrong Command Format ( multi-path-face-num n)\n");
+		printf(" Wrong Command Format ( max-faces-per-prefix n)\n");
 		return;
 	}
 
 	number=atoi(num);
 	if ( number >= 0 && number <= 60 )
 	{
-		nlsr->multi_path_face_num=number;
+		nlsr->max_faces_per_prefix=number;
 	}
 
 }
@@ -672,6 +676,10 @@ process_command_tunnel_type(char *command)
 	{
 		nlsr->tunnel_type=IPPROTO_TCP;
 	}
+	else if ( strcmp(on_off,"UDP") == 0 || strcmp(on_off,"udp") == 0 )
+	{
+		nlsr->tunnel_type=IPPROTO_UDP;
+	}
 }
 
 void 
@@ -718,9 +726,9 @@ process_conf_command(char *command)
 	{
 		process_command_router_dead_interval(remainder);
 	}
-	else if(!strcmp(cmd_type,"multi-path-face-num") )
+	else if(!strcmp(cmd_type,"max-faces-per-prefix") )
 	{
-		process_command_multi_path_face_num(remainder);
+		process_command_max_faces_per_prefix(remainder);
 	}
 	else if(!strcmp(cmd_type,"logdir") )
 	{
@@ -809,6 +817,7 @@ add_faces_for_nbrs(void)
 		int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr->neighbor->name, (const char *)nbr->ip_address, 9695,nlsr->tunnel_type);
 		update_face_to_adl_for_nbr(nbr->neighbor->name, face_id);		
 		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);
+		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_REG, face_id);
 		hashtb_next(e);		
 	}
 
@@ -835,6 +844,7 @@ destroy_faces_for_nbrs(void)
 		{	
 			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, nbr->face);
 			add_delete_ccn_face_by_face_id(nlsr->ccn,(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);
+			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_UNREG, nbr->face);
 		}
 		hashtb_next(e);		
 	}
@@ -927,6 +937,10 @@ process_api_client_command(char *command)
 			else
 			{
 				update_adjacent_status_to_adl(np,NBR_DOWN);
+				int face_id=get_next_hop_face_from_adl(np->name);
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)np->name, OP_UNREG, face_id);
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, face_id);
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_UNREG, face_id);
 				delete_nbr_from_adl(np);
 				if(!nlsr->is_build_adj_lsa_sheduled)
 				{
@@ -951,7 +965,8 @@ process_api_client_command(char *command)
 				printf("IP Address: %s \n",ip_addr);
 				int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr_name->name, (const char *)ip_addr, 9695,nlsr->tunnel_type);
 				update_face_to_adl_for_nbr(nbr_name->name, face_id);		
-				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);				
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_REG, face_id);				
 
 				add_nbr_to_adl(np,face_id,ip_addr);
 
@@ -1204,7 +1219,7 @@ init_nlsr(void)
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
 	nlsr->lsa_refresh_time=LSA_REFRESH_TIME;
 	nlsr->router_dead_interval=ROUTER_DEAD_INTERVAL;
-	nlsr->multi_path_face_num=MULTI_PATH_FACE_NUM;
+	nlsr->max_faces_per_prefix=MAX_FACES_PER_PREFIX;
 	nlsr->semaphor=NLSR_UNLOCKED;
 
 	nlsr->api_port=API_PORT;

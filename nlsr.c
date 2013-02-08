@@ -179,7 +179,6 @@ process_command_ccnneighbor(char *command)
 		printf(" Wrong Command Format ( ccnneighbor router_name faceX) where X is integer\n");
 		return;
 	}
-
 	if ( rtr_name[strlen(rtr_name)-1] == '/' )
 	{
 		rtr_name[strlen(rtr_name)-1]='\0';

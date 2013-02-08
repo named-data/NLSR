@@ -69,7 +69,7 @@ make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
 void 
 make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long int ls_id,char *orig_time,char *slice_prefix)
 {
-	sprintf(key,"%s/%d/%ld/%s%s",slice_prefix, ls_type, ls_id, orig_time, orig_router);
+	sprintf(key,"%s%s/%ld/%d/%s",slice_prefix, orig_router, ls_id,ls_type, orig_time);
 	
 	if ( nlsr->debugging )
 		printf("Name LSA prefix for repo content: %s\n",key);
@@ -79,7 +79,7 @@ void
 make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *orig_time,char *slice_prefix)
 {
 		
-	sprintf(key,"%s/%d/%s%s",slice_prefix,ls_type, orig_time, orig_router);	
+	sprintf(key,"%s%s/%d/%s",slice_prefix,orig_router,ls_type, orig_time );	
 
 	if ( nlsr->debugging )
 		printf("Name LSA prefix for repo content:%s\n",key);	
@@ -89,7 +89,7 @@ void
 make_cor_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *orig_time,char *slice_prefix)
 {
 		
-	sprintf(key,"%s/%d/%s%s",slice_prefix,ls_type, orig_time, orig_router);	
+	sprintf(key,"%s%s/%d/%s",slice_prefix,orig_router,ls_type, orig_time );	
 
 	if ( nlsr->debugging )
 		printf("Cor LSA prefix for repo content:%s\n",key);	

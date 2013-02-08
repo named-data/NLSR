@@ -456,16 +456,21 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
     	ccn_charbuf_destroy(&name);
 
 
-	res=ccn_name_comp_get(content_name->buf, components,lsa_position+1,&lst, &comp_size);
-	
+	//res=ccn_name_comp_get(content_name->buf, components,lsa_position+1,&lst, &comp_size);
+	res=ccn_name_comp_get(content_name->buf, components,components->n-2-1,&lst, &comp_size);	
 	ls_type=atoi((char *)lst);
+	
 	if(ls_type == LS_TYPE_NAME)
 	{
 		
-		res=ccn_name_comp_get(content_name->buf, components,lsa_position+2,&lsid, &comp_size);
+		res=ccn_name_comp_get(content_name->buf, components,components->n-2-2,&lsid, &comp_size);
 		ls_id=atoi((char *)lsid);
-		res=ccn_name_comp_get(content_name->buf, components,lsa_position+3,&origtime, &comp_size);
-		get_name_part(orig_router,content_name,components,3);
+		res=ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+		ccn_name_chop(content_name,components,-3);
+		get_name_part(orig_router,content_name,components,0);
+	
+		if ( nlsr->debugging )
+			printf("Orig Router: %s Ls Type: %d Ls id: %ld Orig Time: %s\n",orig_router->name,ls_type,ls_id,origtime);
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 
@@ -499,11 +504,12 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	}
 	else if(ls_type == LS_TYPE_ADJ)
 	{
-		res=ccn_name_comp_get(content_name->buf, components,lsa_position+2,&origtime, &comp_size);
-		get_name_part(orig_router,content_name,components,2);
+		res=ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+		ccn_name_chop(content_name,components,-2);
+		get_name_part(orig_router,content_name,components,0);
 		
 		if ( nlsr->debugging )
-			printf("Orig Time: %s\nOrig Router: %s\n",origtime,orig_router->name);
+			printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);		
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
@@ -536,11 +542,12 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	}
 	else if(ls_type == LS_TYPE_COR)
 	{
-		res=ccn_name_comp_get(content_name->buf, components,lsa_position+2,&origtime, &comp_size);
-		get_name_part(orig_router,content_name,components,2);
+		res=ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+		ccn_name_chop(content_name,components,-2);
+		get_name_part(orig_router,content_name,components,0);
 		
 		if ( nlsr->debugging )
-			printf("Orig Time: %s\nOrig Router: %s\n",origtime,orig_router->name);
+			printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	

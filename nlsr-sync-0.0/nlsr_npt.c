@@ -216,23 +216,22 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 			}
 		}
 
-		first_face=num_face-1;		
-	
-		if ( nlsr->multi_path_face_num == 0 )
+		last_face=0;
+		if ( nlsr->max_faces_per_prefix == 0) // add all faces available in routing table
 		{
-			last_face=first_face;
+			first_face=num_face-1;
 		}
-		else 
+		else if( nlsr->max_faces_per_prefix > 0)
 		{
-			if ( num_face <= nlsr->multi_path_face_num)
+			if ( nlsr->max_faces_per_prefix >= num_face)
 			{
-				last_face=0;
+				first_face=num_face-1;
 			}
-			else
+			else if ( nlsr->max_faces_per_prefix < num_face)
 			{
-				last_face=num_face-nlsr->multi_path_face_num;
+				first_face=nlsr->max_faces_per_prefix-1;
 			}
-			
+	
 		}
 
 		int i,j, nl_element;
@@ -343,24 +342,23 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 			sort_faces_by_distance(faces,route_costs,0,num_face);
 		
 
-			first_face=num_face-1;		
-	
-			if ( nlsr->multi_path_face_num == 0 )
+			last_face=0;
+			if ( nlsr->max_faces_per_prefix == 0) // add all faces available in routing table
 			{
-				last_face=first_face;
+				first_face=num_face-1;
 			}
-			else 
+			else if( nlsr->max_faces_per_prefix > 0)
 			{
-				if ( num_face <= nlsr->multi_path_face_num)
+				if ( nlsr->max_faces_per_prefix >= num_face)
 				{
-					last_face=0;
+					first_face=num_face-1;
 				}
-				else
+				else if ( nlsr->max_faces_per_prefix < num_face)
 				{
-					last_face=num_face-nlsr->multi_path_face_num;
+					first_face=nlsr->max_faces_per_prefix-1;
 				}
-			}			
-
+	
+			}
 			for( j=first_face; j>= last_face; j--)
 			{
 
@@ -974,7 +972,7 @@ destroy_faces_by_orig_router(char *orig_router)
 		get_all_faces_for_orig_router_from_npt(orig_router,faces,route_costs,num_face);
 		sort_faces_by_distance(faces,route_costs,0,num_face);
 		
-
+		/*
 		first_face=num_face-1;		
 	
 		if ( nlsr->multi_path_face_num == 0 )
@@ -991,6 +989,25 @@ destroy_faces_by_orig_router(char *orig_router)
 			{
 				last_face=num_face-nlsr->multi_path_face_num;
 			}
+		}
+		*/
+
+		last_face=0;
+		if ( nlsr->max_faces_per_prefix == 0) // add all faces available in routing table
+		{
+			first_face=num_face-1;
+		}
+		else if( nlsr->max_faces_per_prefix > 0)
+		{
+			if ( nlsr->max_faces_per_prefix >= num_face)
+			{
+				first_face=num_face-1;
+			}
+			else if ( nlsr->max_faces_per_prefix < num_face)
+			{
+				first_face=nlsr->max_faces_per_prefix-1;
+			}
+	
 		}
 
 		int i,j, nl_element;

@@ -106,22 +106,25 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 						
 					}
 					sort_hyperbolic_route(nbr_to_dest,nbr_dist, faces,0,num_link);
-					if (nlsr->multi_path_face_num <= 1 )
+					if (nlsr->max_faces_per_prefix == 0 )
 					{
-						update_routing_table_with_new_hyperbolic_route(me->mapping,faces[0],nbr_to_dest[0]);				
+						for ( i=0 ; i < num_link; i++)
+						{
+							update_routing_table_with_new_hyperbolic_route(me->mapping,faces[i],nbr_to_dest[i]);
+						}				
 					}
-					else
+					else if ( nlsr->max_faces_per_prefix > 0 )
 					{
-						if ( num_link <= nlsr->multi_path_face_num )
+						if ( num_link <= nlsr->max_faces_per_prefix )
 						{
 							for ( i=0 ; i < num_link; i++)
 							{
 								update_routing_table_with_new_hyperbolic_route(me->mapping,faces[i],nbr_to_dest[i]);
 							}
 						}
-						else if (num_link > nlsr->multi_path_face_num)
+						else if (num_link > nlsr->max_faces_per_prefix)
 						{
-							for ( i=0 ; i < nlsr->multi_path_face_num; i++)
+							for ( i=0 ; i < nlsr->max_faces_per_prefix; i++)
 							{
 								update_routing_table_with_new_hyperbolic_route(me->mapping,faces[i],nbr_to_dest[i]);
 							}
@@ -146,14 +149,14 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 			long int *dist=(long int *)malloc(map_element * sizeof(long int));
 			
 		
-			if ( (num_link == 0) || (nlsr->multi_path_face_num == 1 ) )
+			if ( (num_link == 0) || (nlsr->max_faces_per_prefix == 1 ) )
 			{	
 				calculate_path(adj_matrix,parent,dist, map_element, source);		
 				print_all_path_from_source(parent,source);
 				print_all_next_hop(parent,source);		
 				update_routing_table_with_new_route(parent, dist,source);
 			}
-			else if ( (num_link != 0) && (nlsr->multi_path_face_num > 1 ) )
+			else if ( (num_link != 0) && (nlsr->max_faces_per_prefix == 0 || nlsr->max_faces_per_prefix > 1 ) )
 			{
 				long int *links=(long int *)malloc(num_link*sizeof(long int));
 				long int *link_costs=(long int *)malloc(num_link*sizeof(long int));
