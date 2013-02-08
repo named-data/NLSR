@@ -278,6 +278,7 @@ process_command_router_name(char *command)
 
 }
 
+/*
 void 
 process_command_lsdb_synch_interval(char *command)
 {
@@ -305,7 +306,7 @@ process_command_lsdb_synch_interval(char *command)
 	}
 
 }
-
+*/
 
 void 
 process_command_interest_retry(char *command)
@@ -706,10 +707,10 @@ process_conf_command(char *command)
 	{
 		process_command_ccnname(remainder);
 	}
-	else if(!strcmp(cmd_type,"lsdb-synch-interval") )
+	/*else if(!strcmp(cmd_type,"lsdb-synch-interval") )
 	{
 		process_command_lsdb_synch_interval(remainder);
-	}
+	}*/
 	else if(!strcmp(cmd_type,"interest-retry") )
 	{
 		process_command_interest_retry(remainder);
@@ -1052,6 +1053,23 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 	return 0;
 }
 
+int
+check_config_validity()
+{
+	if (nlsr->router_name == NULL )
+	{
+		fprintf(stderr,"Router name has not been configured :(\n");
+		return -1;
+	}
+	if ( nlsr->is_hyperbolic_calc == 1 && (nlsr->cor_r == -1.0 && nlsr->cor_theta== -1.0) ) 	
+	{
+		fprintf(stderr,"Hyperbolic codinate has not been defined :(\n");
+		return -1;
+	}
+	
+	return 0;
+}
+
 void 
 nlsr_destroy( void )
 {
@@ -1214,7 +1232,7 @@ init_nlsr(void)
 	nlsr->detailed_logging=0;
 	nlsr->debugging=0;
 
-	nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
+	//nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
 	nlsr->interest_retry = INTEREST_RETRY;
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
 	nlsr->lsa_refresh_time=LSA_REFRESH_TIME;
@@ -1279,11 +1297,8 @@ main(int argc, char *argv[])
 
 	readConfigFile(config_file);
 
-	if ( nlsr->is_hyperbolic_calc == 1 && (nlsr->cor_r == -1.0 && nlsr->cor_theta== -1.0) ) 	
-	{
-		fprintf(stderr,"Hyperbolic codinate has not been defined :(\n");
-		ON_ERROR_DESTROY(-1);
-	}
+	ON_ERROR_DESTROY(check_config_validity());
+
 	print_adjacent_from_adl();
 
 	if ( daemon_mode == 1 )
@@ -1349,7 +1364,10 @@ main(int argc, char *argv[])
 
 
 	print_name_lsdb();
-	build_and_install_cor_lsa();
+	if ( nlsr->cor_r != -1.0 && nlsr->cor_theta== -1.0)
+	{
+		build_and_install_cor_lsa();
+	}
 	write_name_lsdb_to_repo(nlsr->slice_prefix);
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);

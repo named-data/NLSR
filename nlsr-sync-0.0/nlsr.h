@@ -83,7 +83,7 @@ struct nlsr
 	int is_send_lsdb_interest_scheduled;
 	int is_route_calculation_scheduled;
 
-	long int lsdb_synch_interval;
+	//long int lsdb_synch_interval;
 	int interest_retry;
 	long int interest_resend_time;
 	long int lsa_refresh_time;

@@ -313,9 +313,9 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		ccn_charbuf_append_closer(sp.template_ccnb);
 
 
-		char *raw_data=(char *)malloc(16);
-		memset(raw_data,0,16);
-		sprintf(raw_data,"%ld", nlsr->lsdb_synch_interval);	
+		char *raw_data=(char *)malloc(20);
+		memset(raw_data,0,20);
+		sprintf(raw_data,"%s", nlsr->lsdb->lsdb_version);	
 
 		res= ccn_sign_content(nlsr->ccn, data, name, &sp, raw_data,strlen(raw_data)); 
 		if(res >= 0)
@@ -484,17 +484,17 @@ process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info*
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Content Received For Neighbor: %s Length:%d\n",nbr->name,nbr->length);
 
 
-	const unsigned char *ptr;
-	size_t length;
-	ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E_Content]-info->pco->offset[CCN_PCO_B_Content], info->pco, &ptr, &length);
+	//const unsigned char *ptr;
+	//size_t length;
+	//ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E_Content]-info->pco->offset[CCN_PCO_B_Content], info->pco, &ptr, &length);
 
-	long int interval=atoi((char *)ptr);
+	//long int interval=atoi((char *)ptr);
 
 
 
 	update_adjacent_timed_out_zero_to_adl(nbr);	
 	update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
-	update_lsdb_synch_interval_to_adl(nbr,interval);
+	//update_lsdb_synch_interval_to_adl(nbr,interval);
 	print_adjacent_from_adl();
 
 

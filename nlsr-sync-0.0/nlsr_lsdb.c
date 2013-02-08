@@ -2320,6 +2320,8 @@ void
 build_and_install_cor_lsa()
 {
 
+	
+
 	struct clsa *cor_lsa=(struct clsa *)malloc(sizeof( struct clsa ));
 	
 	build_cor_lsa(cor_lsa,nlsr->cor_r,nlsr->cor_theta);
