@@ -193,17 +193,22 @@ process_command_ccnneighbor(char *command)
 	{
 		struct name_prefix *nbr_name=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 		get_host_name_from_command_string(nbr_name,nbr->name,0);
-		printf("Hostname of neighbor: %s ",nbr_name->name);
+		if ( nlsr->debugging)
+			printf("Hostname of neighbor: %s ",nbr_name->name);
 		get_ip_from_hostname_02(nbr_name->name,ip_addr);
-		printf("IP Address: %s \n",ip_addr);
+		if ( nlsr->debugging)
+			printf("IP Address: %s \n",ip_addr);
 		free(nbr_name->name);
 		free(nbr_name);
 	}
 	else
 	{
 		memcpy(ip_addr,nbr_ip_addr,strlen(nbr_ip_addr));
-		printf("Name of neighbor: %s ",nbr->name);
-		printf("IP Address: %s \n",ip_addr);
+		if (nlsr->debugging)
+		{
+			printf("Name of neighbor: %s ",nbr->name);
+			printf("IP Address: %s \n",ip_addr);
+		}
 	}
 	add_nbr_to_adl(nbr,0,ip_addr);
 	

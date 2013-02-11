@@ -82,13 +82,21 @@ sync_cb(struct ccns_name_closure *nc,
  	struct ccn_indexbuf cid={0};
 
     	struct ccn_indexbuf *components=&cid;
-    	ccn_name_split (name, components);
+    	res=ccn_name_split (name, components);
+	if ( res < 0 )
+		return 0;
     	//ccn_name_chop(name,components,-3);
 	//process_content_from_sync(name,components);
 
 	struct ccn_charbuf *content_name = ccn_charbuf_create();
 	ccn_name_init(content_name);
+	if (components->n < 2)
+		return 0;
 	res = ccn_name_append_components(content_name, name->buf, components->buf[0], components->buf[components->n - 1]);
+
+	if ( res < 0)
+		return 0;
+
 
 	// debugging purpose
 	struct ccn_charbuf *temp=ccn_charbuf_create();
@@ -100,6 +108,9 @@ sync_cb(struct ccns_name_closure *nc,
 	struct ccn_indexbuf cid1={0};
     	struct ccn_indexbuf *components1=&cid1;
     	res=ccn_name_split (content_name, components1);
+	if ( res < 0)
+		return 0;		
+
 	if ( nlsr->debugging )
 		{
 			printf("Number of components in name = %d \n",res);
