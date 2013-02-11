@@ -179,7 +179,8 @@ process_command_ccnneighbor(char *command)
 	if (rem != NULL )
 	{
 		nbr_ip_addr=strtok_r(NULL,sep,&rem);
-		is_ip_configured=1;
+		if ( nbr_ip_addr != NULL)
+			is_ip_configured=1;
 	}
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	nbr->name=(char *)malloc(strlen(rtr_name)+1);
