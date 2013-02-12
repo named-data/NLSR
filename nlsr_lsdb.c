@@ -949,7 +949,7 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 	char *rem;
 	char *rtr_id;
 	char *length;
-	char *face;
+	//char *face;
 	char *metric;
 
 	if(no_link >0 )
@@ -970,7 +970,7 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 		{
 			rtr_id=strtok_r(NULL,sep,&rem);
 			length=strtok_r(NULL,sep,&rem);
-			face=strtok_r(NULL,sep,&rem);
+			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Link %d	 	\n",i+1);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router: %s	\n",rtr_id);
@@ -1013,7 +1013,7 @@ print_adj_lsa_body(const char *body, int no_link)
 	char *rem;
 	char *rtr_id;
 	char *length;
-	char *face;
+	//char *face;
 	char *metric;
 
 	if(no_link >0 )
@@ -1035,7 +1035,7 @@ print_adj_lsa_body(const char *body, int no_link)
 		{
 			rtr_id=strtok_r(NULL,sep,&rem);
 			length=strtok_r(NULL,sep,&rem);
-			face=strtok_r(NULL,sep,&rem);
+			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
 			printf("		Link %d	 	\n",i+1);
 			printf("		Neighbor		 : %s	\n",rtr_id);

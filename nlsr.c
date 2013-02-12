@@ -119,7 +119,7 @@ nlsr_stop_signal_handler(int sig)
 void  
 daemonize_nlsr(void)
 {
-	int ret;
+	//int ret;
 	pid_t process_id = 0;
 	pid_t sid = 0;
 	process_id = fork();
@@ -131,7 +131,7 @@ daemonize_nlsr(void)
 	if (process_id > 0)
 	{
 		printf("Process daemonized. Process id: %d \n", process_id);
-		ret=process_id;
+		//ret=process_id;
 		exit(0);
 	}
 	

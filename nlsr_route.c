@@ -563,6 +563,10 @@ add_adj_data_to_map(char *orig_router, char *body, int no_link)
 		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
+		if ( !nlsr->debugging && nlsr->debugging)
+		{
+			printf("Metric: %s Length:%s\n",metric,length);
+		}
 		add_map_entry(rtr_id);
 
 		for(i=1;i<no_link;i++)
@@ -571,6 +575,10 @@ add_adj_data_to_map(char *orig_router, char *body, int no_link)
 			length=strtok_r(NULL,sep,&rem);
 			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
+			if ( !nlsr->debugging && nlsr->debugging)
+			{
+				printf("Metric: %s Length:%s\n",metric,length);
+			}
 
 			add_map_entry(rtr_id);
 
@@ -723,6 +731,11 @@ assign_adj_matrix_for_lsa(struct alsa *adj_lsa, int **adj_matrix)
 		length=strtok_r(NULL,sep,&rem);
 		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
+	
+		if ( !nlsr->debugging && nlsr->debugging)
+		{
+				printf("Metric: %s Length:%s\n",metric,length);
+		}
 
 		mapping_nbr_router=get_mapping_no(rtr_id);
 		adj_matrix[mapping_orig_router][mapping_nbr_router]=atoi(metric);
@@ -733,6 +746,11 @@ assign_adj_matrix_for_lsa(struct alsa *adj_lsa, int **adj_matrix)
 			length=strtok_r(NULL,sep,&rem);
 			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
+
+			if ( !nlsr->debugging && nlsr->debugging)
+			{
+				printf("Metric: %s Length:%s\n",metric,length);
+			}
 
 			mapping_nbr_router=get_mapping_no(rtr_id);
 			adj_matrix[mapping_orig_router][mapping_nbr_router]=atoi(metric);
@@ -970,6 +988,10 @@ add_next_hop_from_lsa_adj_body(char *body, int no_link)
 		length=strtok_r(NULL,sep,&rem);
 		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
+		if ( !nlsr->debugging && nlsr->debugging)
+		{
+			printf("Metric: %s Length:%s\n",metric,length);
+		}
 
 
 		add_next_hop_router(rtr_id);
@@ -980,6 +1002,10 @@ add_next_hop_from_lsa_adj_body(char *body, int no_link)
 			length=strtok_r(NULL,sep,&rem);
 			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
+			if ( !nlsr->debugging && nlsr->debugging)
+			{
+				printf("Metric: %s Length:%s\n",metric,length);
+			}
 
 			add_next_hop_router(rtr_id);
 	

@@ -164,7 +164,7 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 
 	
 	
-	int res,i;
+	int i;
 	int lsa_position=0;
 	int len=0;
 
@@ -183,7 +183,7 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 	size_t comp_size;
 	for(i=lsa_position+1+offset;i<interest_comps->n-1;i++)
 	{
-		res=ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, &comp_size);
+		ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, &comp_size);
 		len+=1;
 		len+=(int)comp_size;	
 	}
@@ -194,7 +194,7 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 
 	for(i=lsa_position+1+offset; i<interest_comps->n-1;i++)
 	{
-		res=ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, &comp_size);
+		ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, &comp_size);
 		memcpy(neighbor+strlen(neighbor),"/",1);
 		memcpy(neighbor+strlen(neighbor),(char *)comp_ptr1,strlen((char *)comp_ptr1));
 
@@ -457,7 +457,7 @@ void
 process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf *components)
 {
 	//int lsa_position;
-	int res;
+	//int res;
 	size_t comp_size;
 	char *lst;
 	char *lsid;
@@ -493,20 +493,21 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 
 	//res=ccn_name_comp_get(content_name->buf, components,lsa_position+1,&lst, &comp_size);
-	res=ccn_name_comp_get(content_name->buf, components,components->n-2-1,&second_last_comp, &comp_size);	
+	ccn_name_comp_get(content_name->buf, components,components->n-2-1,&second_last_comp, &comp_size);	
 	//ls_type=atoi((char *)lst);
-
-	printf("2nd Last Component: %s \n",second_last_comp);
+	if (nlsr->debugging)
+		printf("2nd Last Component: %s \n",second_last_comp);
+	
 	second_comp_type=strtok_r((char *)second_last_comp,sep,&rem);		
 	if ( strcmp( second_comp_type, "lsId" ) == 0 )
 	{	
 		lsid=rem;
 		ls_id=atoi(rem);
-		res=ccn_name_comp_get(content_name->buf, components,components->n-2-2,&third_last_comp, &comp_size);
+		ccn_name_comp_get(content_name->buf, components,components->n-2-2,&third_last_comp, &comp_size);
 		lst=strtok_r((char *)third_last_comp,sep,&rem);
 		lst=rem;
 		ls_type=atoi(lst);
-		res=ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+		ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
 		ccn_name_chop(content_name,components,-3);
 		get_name_part(orig_router,content_name,components,0);
 	
@@ -549,7 +550,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 		lst=rem;
 		if(ls_type == LS_TYPE_ADJ)
 		{
-			res=ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+			ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
 			ccn_name_chop(content_name,components,-2);
 			get_name_part(orig_router,content_name,components,0);
 		
@@ -587,7 +588,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 		}
 		else if(ls_type == LS_TYPE_COR)
 		{
-			res=ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+			ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
 			ccn_name_chop(content_name,components,-2);
 			get_name_part(orig_router,content_name,components,0);
 		
