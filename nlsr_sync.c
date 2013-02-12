@@ -79,9 +79,10 @@ sync_cb(struct ccns_name_closure *nc,
 
 
 	//--Doing our thing from here
- 	struct ccn_indexbuf cid={0};
+ 	//struct ccn_indexbuf cid={0};
 
-    	struct ccn_indexbuf *components=&cid;
+    	//struct ccn_indexbuf *components=&cid;
+	struct ccn_indexbuf *components=ccn_indexbuf_create();
     	res=ccn_name_split (name, components);
 	if ( res < 0 )
 		return 0;
@@ -105,8 +106,9 @@ sync_cb(struct ccns_name_closure *nc,
 		printf("Name before chopping: %s \n",ccn_charbuf_as_string(temp));
 	ccn_charbuf_destroy(&temp);
 
-	struct ccn_indexbuf cid1={0};
-    	struct ccn_indexbuf *components1=&cid1;
+	//struct ccn_indexbuf cid1={0};
+    	//struct ccn_indexbuf *components1=&cid1;
+	struct ccn_indexbuf *components1=ccn_indexbuf_create();
     	res=ccn_name_split (content_name, components1);
 	if ( res < 0)
 		return 0;		
@@ -129,6 +131,8 @@ sync_cb(struct ccns_name_closure *nc,
 
 	process_content_from_sync(content_name,components1);
 	ccn_charbuf_destroy(&content_name);
+	ccn_indexbuf_destroy(&components);
+	ccn_indexbuf_destroy(&components1);
 
   return(0);
 }
