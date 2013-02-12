@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -g -Wall -gdwarf-2 -g3 
+CFLAGS = -Wall -gdwarf-2 -g3 
 LIBS = -lccn -lccnsync -lcrypto 
 
 PROGRAMS = nlsrc nlsr
