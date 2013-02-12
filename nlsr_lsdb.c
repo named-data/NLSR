@@ -956,13 +956,13 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 	{
 		rtr_id=strtok_r(lsa_data,sep,&rem);
 		length=strtok_r(NULL,sep,&rem);
-		face=strtok_r(NULL,sep,&rem);
+		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Link %d	 	\n",i+1);
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router: %s	\n",rtr_id);
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router Length: %s	\n",length);
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
+		//writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Metric: %s	\n",metric);
 
 
@@ -975,7 +975,7 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Link %d	 	\n",i+1);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router: %s	\n",rtr_id);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router Length: %s	\n",length);
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
+			//writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Metric: %s	\n",metric);
 
 		}
@@ -1020,14 +1020,14 @@ print_adj_lsa_body(const char *body, int no_link)
 	{
 		rtr_id=strtok_r(lsa_data,sep,&rem);
 		length=strtok_r(NULL,sep,&rem);
-		face=strtok_r(NULL,sep,&rem);
+		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
 		if ( nlsr->debugging ) {
 			printf("		Link %d	 	\n",i+1);
 			printf("		Neighbor		 : %s	\n",rtr_id);
 			printf("		Neighbor Length		 : %s	\n",length);
-			printf("		Connecting Face		 : %s	\n",face);
+			//printf("		Connecting Face		 : %s	\n",face);
 			printf("		Metric			 : %s	\n",metric);
 		}
 
@@ -1040,7 +1040,7 @@ print_adj_lsa_body(const char *body, int no_link)
 			printf("		Link %d	 	\n",i+1);
 			printf("		Neighbor		 : %s	\n",rtr_id);
 			printf("		Neighbor Length		 : %s	\n",length);
-			printf("		Connecting Face		 : %s	\n",face);
+			//printf("		Connecting Face		 : %s	\n",face);
 			printf("		Metric			 : %s	\n",metric);
 
 		}
@@ -1526,15 +1526,17 @@ make_name_lsa_invalid(struct name_prefix *np,int ls_type, long int ls_id)
 
 }
 
-int 
-delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+//int 
+//delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+int
+delete_name_lsa(char *orig_router, char *name_prefix)
 {
 	
 	if ( nlsr->debugging )
 		printf("delete_name_lsa called  \n");	
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_name_lsa called  \n");
-	
+	/*
 	if(flags == CCN_SCHEDULE_CANCEL)
 	{
  	 	return -1;
@@ -1562,8 +1564,9 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 	if( res == HT_OLD_ENTRY )
 	{
 		nlsa=e->data;
-		delete_npt_entry_by_router_and_name_prefix(nlsa->header->orig_router->name, nlsa->name_prefix->name);
-
+	*/
+		delete_npt_entry_by_router_and_name_prefix(orig_router, name_prefix);
+	/*
 		writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
 		writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name lsa\n");
 		write_log_for_name_lsa(nlsa);
@@ -1576,6 +1579,7 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		hashtb_delete(e);
 	}
 	hashtb_end(e);
+	*/
 	
 	if ( nlsr->debugging )
 		printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
@@ -1589,19 +1593,22 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 	
-	nlsr_unlock();
+	//nlsr_unlock();
 
 	return 0;
 }
 
-int 
-delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+//int 
+//delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+int delete_adj_lsa()
 {
+	
 	if ( nlsr->debugging )
 		printf("delete_adj_lsa called  \n");	
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_adj_lsa called  \n");
-	
+
+	/*	
 	if(flags == CCN_SCHEDULE_CANCEL)
 	{
  	 	return -1;
@@ -1636,6 +1643,7 @@ delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_e
 		hashtb_delete(e);
 	}
 	hashtb_end(e);
+	*/
 
 	if ( nlsr->debugging )
 		printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
@@ -1656,7 +1664,7 @@ delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_e
 		nlsr->is_route_calculation_scheduled=1;
 	}
 
-	nlsr_unlock();
+	//nlsr_unlock();
 
 	return 0;
 }
@@ -1726,9 +1734,11 @@ refresh_name_lsdb(void)
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
 	
 					free(current_time_stamp);
+					
+					hashtb_next(e);
 				}
 				else 
-				{
+				{	/*
 					char lst[2];
 					memset(lst,0,2);
 					sprintf(lst,"%d",name_lsa->header->ls_type);	
@@ -1737,7 +1747,7 @@ refresh_name_lsdb(void)
 					memset(lsid,0,10);
 					sprintf(lsid,"%ld",name_lsa->header->ls_id);
 	
-	
+					
 					char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
 					memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
 
@@ -1745,6 +1755,14 @@ refresh_name_lsdb(void)
 					make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);	
 				
 					nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_name_lsa, (void *)key, 0);
+					*/
+					delete_name_lsa(name_lsa->header->orig_router->name, name_lsa->name_prefix->name);
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name lsa\n");
+					write_log_for_name_lsa(name_lsa);
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
+					hashtb_delete(e);
+					i++;
 				}
 
 				if ( nlsr->debugging )
@@ -1762,6 +1780,10 @@ refresh_name_lsdb(void)
 							
 
 				print_name_lsdb();
+			}
+			else 
+			{
+				hashtb_next(e);
 			}	
 		}
 		else 
@@ -1773,7 +1795,7 @@ refresh_name_lsdb(void)
 				if ( nlsr->detailed_logging )
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Others Name LSA need to be deleted\n");
 
-				char lst[2];
+				/*char lst[2];
 				memset(lst,0,2);
 				sprintf(lst,"%d",name_lsa->header->ls_type);	
 
@@ -1789,10 +1811,24 @@ refresh_name_lsdb(void)
 				make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);	
 				
 				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_name_lsa, (void *)key, 0);
+				*/
+				delete_name_lsa(name_lsa->header->orig_router->name, name_lsa->name_prefix->name);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name lsa\n");
+				write_log_for_name_lsa(name_lsa);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
+				hashtb_delete(e);
+				i++;
+			}
+			else 
+			{
+				hashtb_next(e);
 			}
 		}
-
-		hashtb_next(e);		
+		/*else
+		{
+			hashtb_next(e);	
+		}*/	
 	}
 
 	hashtb_end(e);
@@ -1880,7 +1916,11 @@ refresh_adj_lsdb(void)
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 
 				print_adj_lsdb();
+				
+				
 			}	
+			
+			hashtb_next(e);
 		}
 		else 
 		{
@@ -1891,18 +1931,32 @@ refresh_adj_lsdb(void)
 				 	printf("Others Adj LSA need to be deleted\n");
 				if ( nlsr->detailed_logging )
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Others Adj LSA need to be deleted\n");
-				
+				/*
 				char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
 				memset(key,0,adj_lsa->header->orig_router->length+2);
 				make_adj_lsa_key(key,adj_lsa);
 				
 				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_adj_lsa, (void *)key, 0);
+				*/
+				
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting adj lsa\n");
+				write_log_for_adj_lsa(adj_lsa);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," adj_lsa_end\n");
+				delete_adj_lsa();
+				hashtb_delete(e);
+				i++;
+				
+			}
+			else
+			{
+				hashtb_next(e);
 			}
 		}
 
 		
 
-		hashtb_next(e);		
+		//hashtb_next(e);		
 	}
 
 	hashtb_end(e);
@@ -1989,7 +2043,9 @@ refresh_cor_lsdb(void)
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 
 				print_adj_lsdb();
-			}	
+			}
+
+			hashtb_next(e);		
 		}
 		else 
 		{
@@ -2004,11 +2060,14 @@ refresh_cor_lsdb(void)
 				hashtb_delete(e);
 				i++;
 			}
+			else 
+			{
+				hashtb_next(e);	
+			}
 		}
 
 		
-
-		hashtb_next(e);		
+	
 	}
 
 	hashtb_end(e);

@@ -1125,8 +1125,11 @@ nlsr_destroy( void )
 	close(nlsr->nlsr_api_server_sock_fd);	
 
 	ccn_schedule_destroy(&nlsr->sched);
-	ccn_destroy(&nlsr->ccn);
 
+	ccns_close(&nlsr->ccns,NULL, NULL);
+	ccns_slice_destroy(&nlsr->slice);
+
+	ccn_destroy(&nlsr->ccn);
 	free(nlsr->lsdb->lsdb_version);
 	free(nlsr->lsdb);
 	free(nlsr->router_name);
@@ -1366,8 +1369,8 @@ main(int argc, char *argv[])
 	print_adjacent_from_adl();
 	build_and_install_name_lsas();	
 
-	sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
-
+	res=sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
+	ON_ERROR_DESTROY(res);
 
 	print_name_lsdb();
 	if ( nlsr->cor_r != -1.0 && nlsr->cor_theta != -1.0)

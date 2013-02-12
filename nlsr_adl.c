@@ -535,12 +535,13 @@ get_active_nbr_adj_data(struct ccn_charbuf *c)
 			free(temp_length);
 			ccn_charbuf_append_string(c,"|");
 
-			char *temp_face=(char *)malloc(20);
+			/*char *temp_face=(char *)malloc(20);
 			memset(temp_face,0,20);
 			sprintf(temp_face,"%d",nbr->face);
 			ccn_charbuf_append_string(c,temp_face);
 			free(temp_face);
 			ccn_charbuf_append_string(c,"|");
+			*/
 
 			char *temp_metric=(char *)malloc(20);
 			memset(temp_metric,0,20);

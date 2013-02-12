@@ -553,14 +553,14 @@ add_adj_data_to_map(char *orig_router, char *body, int no_link)
 	char *rem;
 	char *rtr_id;
 	char *length;
-	char *face;
+	//char *face;
 	char *metric;
 	
 	if(no_link >0 )
 	{
 		rtr_id=strtok_r(lsa_data,sep,&rem);
 		length=strtok_r(NULL,sep,&rem);
-		face=strtok_r(NULL,sep,&rem);
+		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
 		add_map_entry(rtr_id);
@@ -569,7 +569,7 @@ add_adj_data_to_map(char *orig_router, char *body, int no_link)
 		{
 			rtr_id=strtok_r(NULL,sep,&rem);
 			length=strtok_r(NULL,sep,&rem);
-			face=strtok_r(NULL,sep,&rem);
+			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
 
 			add_map_entry(rtr_id);
@@ -714,14 +714,14 @@ assign_adj_matrix_for_lsa(struct alsa *adj_lsa, int **adj_matrix)
 	char *rem;
 	char *rtr_id;
 	char *length;
-	char *face;
+	//char *face;
 	char *metric;
 	
 	if(adj_lsa->no_link >0 )
 	{
 		rtr_id=strtok_r(lsa_data,sep,&rem);
 		length=strtok_r(NULL,sep,&rem);
-		face=strtok_r(NULL,sep,&rem);
+		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
 		mapping_nbr_router=get_mapping_no(rtr_id);
@@ -731,7 +731,7 @@ assign_adj_matrix_for_lsa(struct alsa *adj_lsa, int **adj_matrix)
 		{
 			rtr_id=strtok_r(NULL,sep,&rem);
 			length=strtok_r(NULL,sep,&rem);
-			face=strtok_r(NULL,sep,&rem);
+			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
 
 			mapping_nbr_router=get_mapping_no(rtr_id);
@@ -961,14 +961,14 @@ add_next_hop_from_lsa_adj_body(char *body, int no_link)
 	char *rem;
 	char *rtr_id;
 	char *length;
-	char *face;
+	//char *face;
 	char *metric;
 
 	if(no_link >0 )
 	{
 		rtr_id=strtok_r(lsa_data,sep,&rem);
 		length=strtok_r(NULL,sep,&rem);
-		face=strtok_r(NULL,sep,&rem);
+		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
 
@@ -978,7 +978,7 @@ add_next_hop_from_lsa_adj_body(char *body, int no_link)
 		{
 			rtr_id=strtok_r(NULL,sep,&rem);
 			length=strtok_r(NULL,sep,&rem);
-			face=strtok_r(NULL,sep,&rem);
+			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
 
 			add_next_hop_router(rtr_id);
@@ -1115,7 +1115,7 @@ print_routing_table(void)
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
 }
 
-
+/*
 int
 delete_empty_rte(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
 {
@@ -1158,6 +1158,7 @@ delete_empty_rte(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled
 	
 	return 0;
 }
+*/
 
 void 
 clear_old_routing_table(void)
@@ -1216,12 +1217,19 @@ do_old_routing_table_updates(void)
 		if ( mapping_no == NO_MAPPING_NUM)
 		{		
 			delete_orig_router_from_npt(rte->dest_router);
+			/*
 			char *router=(char *)malloc(strlen(rte->dest_router)+1);
 			memset(router,0,strlen(rte->dest_router)+1);
 			memcpy(router,rte->dest_router,strlen(rte->dest_router)+1);
 			nlsr->event = ccn_schedule_event(nlsr->sched, 1, &delete_empty_rte, (void *)router , 0);
+			*/
+			hashtb_delete(e);
+			i++;
 		}
-		hashtb_next(e);		
+		else
+		{
+			hashtb_next(e);
+		}		
 	}
 
 	hashtb_end(e);	

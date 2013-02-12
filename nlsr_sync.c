@@ -626,14 +626,14 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 		}
 	}
 
-	if (content_data != NULL)
-		free(content_data);
+	//if (content_data != NULL)
+		//free(content_data);
 	ccn_charbuf_destroy(&uri);
 	//01/31/2013	
 	free(time_stamp);
 }
 
-void
+int
 sync_monitor(char *topo_prefix, char *slice_prefix)
 {
 
@@ -661,6 +661,8 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
     //01/31/2013
     ccn_charbuf_destroy(&prefix);
     ccn_charbuf_destroy(&topo);
+    ccn_charbuf_destroy(&roothash);
+	return 0;
 }
 
 struct ccn_charbuf *
@@ -767,6 +769,7 @@ int
 create_sync_slice(char *topo_prefix, char *slice_prefix)
 {
     int res;
+    struct ccn *handle;
     struct ccns_slice *slice;
     struct ccn_charbuf *prefix = ccn_charbuf_create();
     struct ccn_charbuf *topo = ccn_charbuf_create();
@@ -780,7 +783,13 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
 	return -1;
     }
     
-    
+     handle = ccn_create();
+     res = ccn_connect(handle, NULL);
+     if (0 > res) {
+         fprintf(stderr, "Unable to connect to ccnd.\n");
+         return -1;
+     }    
+
     slice = ccns_slice_create();
     
     ccn_charbuf_reset(topo);
@@ -790,10 +799,11 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
     ccns_slice_set_topo_prefix(slice, topo, prefix);
  
   
-    res = ccns_write_slice(nlsr->ccn, slice, slice_name);
+    res = ccns_write_slice(handle, slice, slice_name);
  
     //01/31/2013
     ccns_slice_destroy(&slice);
+    ccn_destroy(&handle);
     ccn_charbuf_destroy(&prefix);
     ccn_charbuf_destroy(&topo);
     ccn_charbuf_destroy(&clause);
