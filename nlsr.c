@@ -162,8 +162,8 @@ process_command_ccnneighbor(char *command)
 	char *nbr_ip_addr;
 	int is_ip_configured=0;
 	//char *face;
-	char *ip_addr=(char *)malloc(13);
-	memset(ip_addr,0,13);
+	char *ip_addr=(char *)calloc(20,sizeof(char));
+	//memset(ip_addr,0,12);
 
 	rtr_name=strtok_r(command,sep,&rem);
 	if(rtr_name==NULL)
@@ -182,16 +182,16 @@ process_command_ccnneighbor(char *command)
 		if ( nbr_ip_addr != NULL)
 			is_ip_configured=1;
 	}
-	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
-	nbr->name=(char *)malloc(strlen(rtr_name)+1);
-	memset(nbr->name,0,strlen(rtr_name)+1);
+	struct name_prefix *nbr=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
+	nbr->name=(char *)calloc(strlen(rtr_name)+1,sizeof(char));
+	//memset(nbr->name,0,strlen(rtr_name)+1);
 	memcpy(nbr->name,rtr_name,strlen(rtr_name)+1);
 	nbr->length=strlen(rtr_name)+1;
 
 	
 	if ( !is_ip_configured )
 	{
-		struct name_prefix *nbr_name=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+		struct name_prefix *nbr_name=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
 		get_host_name_from_command_string(nbr_name,nbr->name,0);
 		if ( nlsr->debugging)
 			printf("Hostname of neighbor: %s ",nbr_name->name);
@@ -241,9 +241,9 @@ process_command_ccnname(char *command)
 	if ( name[strlen(name)-1] == '/' )
 		name[strlen(name)-1]='\0';
 
-	struct name_prefix *np=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
-	np->name=(char *)malloc(strlen(name)+1);
-	memset(np->name,0,strlen(name)+1);
+	struct name_prefix *np=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
+	np->name=(char *)calloc(strlen(name)+1,sizeof(char));
+	//memset(np->name,0,strlen(name)+1);
 	memcpy(np->name,name,strlen(name)+1);
 	np->length=strlen(name)+1;
 
@@ -277,8 +277,8 @@ process_command_router_name(char *command)
 	if ( rtr_name[strlen(rtr_name)-1] == '/' )
 		rtr_name[strlen(rtr_name)-1]='\0';
 
-	nlsr->router_name=(char *)malloc(strlen(rtr_name)+1);
-	memset(nlsr->router_name,0,strlen(rtr_name)+1);
+	nlsr->router_name=(char *)calloc(strlen(rtr_name)+1,sizeof(char));
+	//memset(nlsr->router_name,0,strlen(rtr_name)+1);
 	memcpy(nlsr->router_name,rtr_name,strlen(rtr_name)+1);
 
 
@@ -481,8 +481,8 @@ process_command_logdir(char *command)
 		return;
 	}
 	
-	nlsr->logDir=(char *)malloc(strlen(dir)+1);
-	memset(nlsr->logDir,0,strlen(dir)+1);
+	nlsr->logDir=(char *)calloc(strlen(dir)+1,sizeof(char));
+	//memset(nlsr->logDir,0,strlen(dir)+1);
 	memcpy(nlsr->logDir,dir,strlen(dir));
 }
 
@@ -562,8 +562,8 @@ process_command_topo_prefix(char *command)
 		if ( topo_prefix[strlen(topo_prefix)-1] == '/' )
 			topo_prefix[strlen(topo_prefix)-1]='\0';
 
-		nlsr->topo_prefix=(char *)malloc(strlen(topo_prefix)+1);
-		memset(nlsr->topo_prefix,0,strlen(topo_prefix)+1);
+		nlsr->topo_prefix=(char *)calloc(strlen(topo_prefix)+1,sizeof(char));
+		//memset(nlsr->topo_prefix,0,strlen(topo_prefix)+1);
 		puts(topo_prefix);
 		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix));
 
@@ -596,8 +596,8 @@ process_command_slice_prefix(char *command)
 		if ( slice_prefix[strlen(slice_prefix)-1] == '/' )
 			slice_prefix[strlen(slice_prefix)-1]='\0';
 
-		nlsr->slice_prefix=(char *)malloc(strlen(slice_prefix)+1);
-		memset(nlsr->slice_prefix,0,strlen(slice_prefix)+1);
+		nlsr->slice_prefix=(char *)calloc(strlen(slice_prefix)+1,sizeof(char));
+		//memset(nlsr->slice_prefix,0,strlen(slice_prefix)+1);
 		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix));
 	}
 }
@@ -882,9 +882,9 @@ process_api_client_command(char *command)
 	if ( name[strlen(name)-1] == '/' )
 		name[strlen(name)-1]='\0';
 
-	struct name_prefix *np=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
-	np->name=(char *)malloc(strlen(name)+1);
-	memset(np->name,0,strlen(name)+1);
+	struct name_prefix *np=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
+	np->name=(char *)calloc(strlen(name)+1,sizeof(char));
+	//memset(np->name,0,strlen(name)+1);
 	memcpy(np->name,name,strlen(name)+1);
 	np->length=strlen(name)+1;
 
@@ -962,12 +962,12 @@ process_api_client_command(char *command)
 			res=is_neighbor(np->name);
 			if ( res == 0 )
 			{
-				struct name_prefix *nbr_name=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+				struct name_prefix *nbr_name=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
 				get_host_name_from_command_string(nbr_name,np->name,0);
 				printf("Hostname of neighbor: %s ",nbr_name->name);
 
-				char *ip_addr=(char *)malloc(13);
-				memset(ip_addr,0,13);
+				char *ip_addr=(char *)calloc(20,sizeof(char));
+				//memset(ip_addr,0,20);
 				get_ip_from_hostname_02(nbr_name->name,ip_addr);
 				printf("IP Address: %s \n",ip_addr);
 				int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr_name->name, (const char *)ip_addr, 9695,nlsr->tunnel_type);
@@ -978,6 +978,7 @@ process_api_client_command(char *command)
 				add_nbr_to_adl(np,face_id,ip_addr);
 
 				sprintf(msg,"Neighbor %s has been added to adjacency list.",name);
+				free(ip_addr);
 
 			}
 			else
@@ -1088,18 +1089,14 @@ nlsr_destroy( void )
 	destroy_all_face_by_nlsr();	
 	destroy_faces_for_nbrs();
 	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
-	hashtb_destroy(&nlsr->npl);
-	hashtb_destroy(&nlsr->adl);	
+	hashtb_destroy(&nlsr->adl);
+	hashtb_destroy(&nlsr->npl);	
+	hashtb_destroy(&nlsr->pit_alsa);
 	hashtb_destroy(&nlsr->lsdb->name_lsdb);
 	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
-	hashtb_destroy(&nlsr->pit_alsa);
+	hashtb_destroy(&nlsr->lsdb->cor_lsdb);
 
-		
-
-	hashtb_destroy(&nlsr->routing_table);
-
-
-	int i, npt_element;
+	int i, npt_element,rt_element;
 	struct npt_entry *ne;
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee;
@@ -1115,30 +1112,41 @@ nlsr_destroy( void )
 
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->npt);
+	
+	
+	struct routing_table_entry *rte;
+	hashtb_start(nlsr->routing_table, e);
+	rt_element=hashtb_n(nlsr->routing_table);
+	for(i=0;i<rt_element;i++)
+	{
+		rte=e->data;
+		hashtb_destroy(&rte->face_list);	
+		hashtb_next(e);		
+	}	
+	hashtb_end(e);
+	hashtb_destroy(&nlsr->routing_table);
+	
+	if ( nlsr->ccns != NULL )
+		ccns_close(&nlsr->ccns, NULL, NULL);
+	if ( nlsr->slice != NULL ) 
+		ccns_slice_destroy(&nlsr->slice);
 
+	close(nlsr->nlsr_api_server_sock_fd);
 
-	ccns_close(&nlsr->ccns, NULL, NULL);
-	ccns_slice_destroy(&nlsr->slice);
-
-
-
-	close(nlsr->nlsr_api_server_sock_fd);	
-
-	ccn_schedule_destroy(&nlsr->sched);
-
-	ccns_close(&nlsr->ccns,NULL, NULL);
-	ccns_slice_destroy(&nlsr->slice);
+	if ( nlsr->sched != NULL )	
+		ccn_schedule_destroy(&nlsr->sched);
 
 	ccn_destroy(&nlsr->ccn);
 	free(nlsr->lsdb->lsdb_version);
 	free(nlsr->lsdb);
 	free(nlsr->router_name);
-	free(nlsr);
 	if ( nlsr->debugging )
 	{
 		printf("Finished freeing allocated memory\n");
 	}
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Finished freeing allocated memory\n");
+	
+	free(nlsr);
 
 }
 
@@ -1195,7 +1203,7 @@ init_nlsr(void)
 		return -1;
 	}
 
-	nlsr=(struct nlsr *)malloc(sizeof(struct nlsr));
+	nlsr=(struct nlsr *)calloc(1,sizeof(struct nlsr));
 	
 	struct hashtb_param param_adl = {0};
 	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), &param_adl);
@@ -1213,8 +1221,8 @@ init_nlsr(void)
 
 	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase));
 
-	char *time_stamp=(char *)malloc(20);
-	memset(time_stamp,0,20);
+	char *time_stamp=(char *)calloc(20,sizeof(char));
+	//memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
 	nlsr->lsdb->lsdb_version=(char *)malloc(strlen(time_stamp)+1);
 	memset(nlsr->lsdb->lsdb_version,0,strlen(time_stamp));
@@ -1251,12 +1259,12 @@ init_nlsr(void)
 
 	nlsr->api_port=API_PORT;
 
-	nlsr->topo_prefix=(char *)malloc(strlen("/ndn/routing/nlsr")+1);
-	memset(nlsr->topo_prefix,0,strlen("/ndn/routing/nlsr")+1);
+	nlsr->topo_prefix=(char *)calloc(strlen("/ndn/routing/nlsr")+1,sizeof(char));
+	//memset(nlsr->topo_prefix,0,strlen("/ndn/routing/nlsr")+1);
 	memcpy(nlsr->topo_prefix,"/ndn/routing/nlsr",strlen("/ndn/routing/nlsr"));
 
-	nlsr->slice_prefix=(char *)malloc(strlen("/ndn/routing/nlsr/LSA")+1);
-	memset(nlsr->slice_prefix, 0, strlen("/ndn/routing/nlsr/LSA")+1);
+	nlsr->slice_prefix=(char *)calloc(strlen("/ndn/routing/nlsr/LSA")+1,sizeof(char));
+	//memset(nlsr->slice_prefix, 0, strlen("/ndn/routing/nlsr/LSA")+1);
 	memcpy(nlsr->slice_prefix,"/ndn/routing/nlsr/LSA",strlen("/ndn/routing/nlsr/LSA"));
 
 	nlsr->is_hyperbolic_calc=0;
