@@ -28,6 +28,7 @@
 #include <ccn/hashtb.h>
 #include <ccn/sync.h>
 #include <ccn/seqwriter.h>
+#include <ccn/ccn_private.h>
 
 #include "nlsr.h"
 #include "nlsr_ndn.h"
@@ -1133,9 +1134,6 @@ nlsr_destroy( void )
 
 	close(nlsr->nlsr_api_server_sock_fd);
 
-	if ( nlsr->sched != NULL )	
-		ccn_schedule_destroy(&nlsr->sched);
-
 	ccn_destroy(&nlsr->ccn);
 	free(nlsr->lsdb->lsdb_version);
 	free(nlsr->lsdb);
@@ -1388,6 +1386,7 @@ main(int argc, char *argv[])
 	write_name_lsdb_to_repo(nlsr->slice_prefix);
 
 	nlsr->sched = ccn_schedule_create(nlsr, &ndn_rtr_ticker);
+	ccn_set_schedule(nlsr->ccn,nlsr->sched);
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
 	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
 
