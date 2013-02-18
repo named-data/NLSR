@@ -1,20 +1,20 @@
-CC = cc
-CFLAGS = -g -Wall -Wpointer-arith -Wreturn-type -Wstrict-prototypes
-LIBS = -lccn -lcrypto
+CC = gcc
+CFLAGS = -Wall -gdwarf-2 -g3 
+LIBS = -lccn -lccnsync -lcrypto 
 
 PROGRAMS = nlsrc nlsr
 INSTALL_PATH=/usr/local/bin/
 
-NLSR_SRCS=nlsr.c nlsr_ndn.c nlsr_npl.c  nlsr_adl.c nlsr_lsdb.c nlsr_route.c nlsr_npt.c nlsr_fib.c utility.c
+NLSR_SRCS=nlsr.c nlsr_ndn.c nlsr_npl.c  nlsr_adl.c nlsr_lsdb.c nlsr_route.c nlsr_npt.c nlsr_fib.c nlsr_sync.c  nlsr_face.c utility.c
 NLSRC_SRCS=nlsrc.c
 
 all: $(PROGRAMS)
 
 nlsr: $(NLSR_SRCS)
-	$(CC) $(CFLAGS) $(NLSR_SRCS) -o nlsr $(LIBS) -lm
+	$(CC) $(CFLAGS) $(NLSR_SRCS) $(LIBS) -lm -o nlsr
 
 nlsrc: $(NLSRC_SRCS)
-	$(CC) $(CFLAGS) $(NLSRC_SRCS) -o nlsrc $(LIBS) -lm
+	$(CC) $(CFLAGS) $(NLSRC_SRCS) $(LIBS) -lm -o nlsrc
 
 install: $(PROGRAMS)
 	cp $(PROGRAMS) $(INSTALL_PATH)

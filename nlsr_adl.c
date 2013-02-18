@@ -8,6 +8,10 @@
 #include <assert.h>
 #ifdef HAVE_CONFIG_H
 #include <config.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #endif
 
 
@@ -25,7 +29,7 @@
 #include "nlsr_npt.h"
 
 void 
-add_nbr_to_adl(struct name_prefix *new_nbr,int face)
+add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip)
 {
 	struct ndn_neighbor *nbr=(struct ndn_neighbor *)malloc(sizeof(struct ndn_neighbor )); //free
 
@@ -54,6 +58,9 @@ add_nbr_to_adl(struct name_prefix *new_nbr,int face)
 		nbr->metric=LINK_METRIC;
 		nbr->is_lsdb_send_interest_scheduled=0;
 		
+		nbr->ip_address=(char *)malloc(strlen(ip)+1);
+		memset(nbr->ip_address,0,strlen(ip)+1);
+		memcpy(nbr->ip_address,ip,strlen(ip));
 
 		char *time_stamp=(char *)malloc(20);
 		get_current_timestamp_micro(time_stamp);
@@ -81,6 +88,7 @@ print_adjacent(struct ndn_neighbor *nbr)
 		printf("--------Neighbor---------------------------\n");
 		printf("	Neighbor: %s \n",nbr->neighbor->name);
 		printf("	Length  : %d \n",nbr->neighbor->length);
+		printf("	Ip Address: %s \n",nbr->ip_address);
 		printf("	Face    : %d \n",nbr->face);
 		printf("	Metric    : %d \n",nbr->metric);
 		printf("	Status  : %d \n",nbr->status);
@@ -310,23 +318,17 @@ update_lsdb_interest_timed_out_to_adl(struct name_prefix *nbr, int increment)
 
 	hashtb_start(nlsr->adl, e);
 
-	//printf("Neighbor: %s , Length: %d \n",nbr->name, nbr->length);
-
 	res = hashtb_seek(e, nbr->name, nbr->length, 0);
 
 	if( res == HT_OLD_ENTRY )
 	{
-		//printf("Old Neighbor\n");
 		nnbr=e->data;
 		nnbr->lsdb_interest_timed_out += increment;
-		//printf("lsdb_interest_timed_out: %d \n",nnbr->lsdb_interest_timed_out);
 	}
 	else if(res == HT_NEW_ENTRY)
 	{
 		hashtb_delete(e);
-	}
-
-	//print_adjacent_from_adl();		
+	}		
 	hashtb_end(e);
 }
 
@@ -533,12 +535,13 @@ get_active_nbr_adj_data(struct ccn_charbuf *c)
 			free(temp_length);
 			ccn_charbuf_append_string(c,"|");
 
-			char *temp_face=(char *)malloc(20);
+			/*char *temp_face=(char *)malloc(20);
 			memset(temp_face,0,20);
 			sprintf(temp_face,"%d",nbr->face);
 			ccn_charbuf_append_string(c,temp_face);
 			free(temp_face);
 			ccn_charbuf_append_string(c,"|");
+			*/
 
 			char *temp_metric=(char *)malloc(20);
 			memset(temp_metric,0,20);
@@ -891,6 +894,32 @@ get_next_hop_face_from_adl(char *nbr)
 	return connecting_face;
 }
 
+void
+update_face_to_adl_for_nbr(char *nbr, int face)
+{
+	int res;
+	struct ndn_neighbor *nnbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		nnbr=e->data;
+		nnbr->face=face;
+		
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+}
+
 int 
 is_neighbor(char *nbr)
 {
@@ -906,6 +935,37 @@ is_neighbor(char *nbr)
 	if( res == HT_OLD_ENTRY )
 	{
 		ret=1;	
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+
+	return ret;
+}
+
+int 
+is_active_neighbor(char *nbr)
+{
+	int ret=0;
+
+	int res;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
+	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		struct ndn_neighbor *nnbr;
+		nnbr=e->data;
+		if (nnbr->status == NBR_ACTIVE )
+		{
+			ret=1;	
+		}
 	}
 	else if(res == HT_NEW_ENTRY)
 	{

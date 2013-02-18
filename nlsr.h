@@ -9,14 +9,14 @@
 #define NLSR_UNLOCKED 0
 #define LSA_REFRESH_TIME 1800
 #define ROUTER_DEAD_INTERVAL 3600
-#define MULTI_PATH_FACE_NUM 0
+#define MAX_FACES_PER_PREFIX 0
 
 #define LINK_METRIC 10
 
 #define NAME_LSA_VALID 1
 #define NAME_LSA_INVALID 0
 
-#define API_PORT 9696
+#define API_PORT 9999
 
 
 struct name_prefix
@@ -29,6 +29,8 @@ struct linkStateDatabase
 {
 	struct hashtb *name_lsdb;
 	struct hashtb *adj_lsdb;
+	struct hashtb *cor_lsdb;
+	
 	char *lsdb_version;
 };
 
@@ -43,6 +45,12 @@ struct nlsr
 
 	struct ccn_closure in_interest;
 	struct ccn_closure in_content;
+
+	struct ccns_name_closure *closure;
+
+	struct ccns_slice *slice;
+    	struct ccns_handle *ccns;
+
 	struct ccn_schedule *sched;
     	struct ccn_scheduled_event *event;
 	struct ccn_scheduled_event *event_send_lsdb_interest;
@@ -59,6 +67,7 @@ struct nlsr
 	struct hashtb *npt;
 	struct hashtb *routing_table;
 
+
 	struct linkStateDatabase *lsdb;
 
 	struct ccn *ccn;
@@ -74,12 +83,13 @@ struct nlsr
 	int is_send_lsdb_interest_scheduled;
 	int is_route_calculation_scheduled;
 
-	long int lsdb_synch_interval;
+	//long int lsdb_synch_interval;
 	int interest_retry;
 	long int interest_resend_time;
 	long int lsa_refresh_time;
 	long int router_dead_interval;
-	long int multi_path_face_num;
+	//long int multi_path_face_num;
+	long int max_faces_per_prefix;
 	char *logDir;
 	int detailed_logging;
 	int debugging;
@@ -89,6 +99,16 @@ struct nlsr
 	int nlsr_api_server_sock_fd;
 	fd_set readfds;
 	int api_port;
+
+	char *topo_prefix;
+	char *slice_prefix;
+
+	int is_hyperbolic_calc;
+	double cor_r;
+	double cor_theta;
+
+	int tunnel_type;
+	
 	
 };
 

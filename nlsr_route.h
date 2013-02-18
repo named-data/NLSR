@@ -24,7 +24,7 @@ struct routing_table_entry
 struct face_list_entry
 {
 	int next_hop_face;
-	int route_cost;
+	double route_cost;
 };
 
 int route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
@@ -63,5 +63,9 @@ void update_routing_table_with_new_route(long int *parent,long int *dist, long i
 long int get_next_hop_from_calculation(long int *parent, long int dest,long int source);
 void print_all_next_hop(long int *parent,long int source);
 int does_face_exist_for_router(char *dest_router, int face_id);
+
+double get_hyperbolic_distance(long int source, long int dest);
+void sort_hyperbolic_route(double *dist_dest,double *dist_nbr, long int *faces,long int start,long int element);
+void update_routing_table_with_new_hyperbolic_route(long int dest_router_rev_map_index, long int face, double nbr_to_dest_dist);
 
 #endif

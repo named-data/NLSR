@@ -10,11 +10,16 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include<sys/socket.h>
+#include<arpa/inet.h>
+#include<errno.h>
+#include<netdb.h>
 #include <time.h>
 #include <assert.h>
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
 
 
 #include <ccn/ccn.h>
@@ -117,7 +122,7 @@ startLogging(char *loggingDir)
 	char *ret;
 	char *logExt;
 	char *defaultLogDir;	
-	int status;
+	//int status;
 	struct stat st;
 	int isLogDirExists=0;
 	char *time=getLocalTimeStamp();
@@ -165,7 +170,8 @@ startLogging(char *loggingDir)
 			memcpy(logDir,pd.pw_dir,strlen(pd.pw_dir)+1);	
 			memcpy(logDir+strlen(logDir),defaultLogDir,strlen(defaultLogDir)+1);	
 			if(stat(logDir,&st) != 0)
-				status = mkdir(logDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);	
+				mkdir(logDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);	
+			//printf("Status: %d\n",status);
 		}
 	}	
  	memcpy(logFileName,logDir,strlen(logDir)+1);	
@@ -213,4 +219,59 @@ writeLogg(const char *source_file, const char *function, const int line, const c
 		}
     	}
 }
+
+
+struct sockaddr_in *
+get_ip_from_hostname(char *hostname )
+{
+ 
+
+    struct addrinfo hints, *servinfo, *p;
+    int res; 
+    struct sockaddr_in * ip;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if ( (res = getaddrinfo( hostname , "9696", &hints , &servinfo)) != 0)
+    {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(res));
+        return NULL;
+    }
+    int i=0;
+    for(p = servinfo; p != NULL; p = p->ai_next)
+    {
+        ip = (struct sockaddr_in *) p->ai_addr;
+	i++;
+   
+    }
+    freeaddrinfo(servinfo);
+    return ip;
+
+
+}
+
+
+
+int 
+get_ip_from_hostname_02(char * hostname , char* ip)
+{
+    struct hostent *he;
+    struct in_addr **addr_list;
+    int i;
+    if ( (he = gethostbyname( hostname ) ) == NULL)
+    {
+        herror("gethostbyname");
+        return 1;
+    }
+    addr_list = (struct in_addr **) he->h_addr_list;
+    for(i = 0; addr_list[i] != NULL; i++)
+    {
+        strcpy(ip , inet_ntoa(*addr_list[i]) );
+        return 0;
+    }
+    return 1;
+}
+
+
 

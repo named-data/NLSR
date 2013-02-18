@@ -25,11 +25,11 @@
 #include "nlsr_adl.h"
 #include "nlsr_route.h"
 #include "nlsr_npt.h"
+#include "nlsr_sync.h"
 
 void
 set_new_lsdb_version(void)
 {
-	
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
@@ -47,9 +47,6 @@ void
 make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
 {
 	
-	
-	//printf("Orig Router: %s LS Type: %d LS Id: %ld\n",orig_router,ls_type,ls_id);
-
 	char lst[2];
 	memset(lst,0,2);
 	sprintf(lst,"%d",ls_type);	
@@ -63,9 +60,39 @@ make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
 	memcpy(key+strlen(key),lst,strlen(lst));
 	memcpy(key+strlen(key),"/",1);
 	memcpy(key+strlen(key),lsid,strlen(lsid));
-
-	//printf("Key: %s\n",key);
 	
+	if ( nlsr->debugging )
+		printf("name LSA Key: %s\n", key);
+}
+
+
+void 
+make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long int ls_id,char *orig_time,char *slice_prefix)
+{
+	sprintf(key,"%s%s/lsType.%d/lsId.%ld/%s",slice_prefix, orig_router, ls_type, ls_id, orig_time);
+	
+	if ( nlsr->debugging )
+		printf("Name LSA prefix for repo content: %s\n",key);
+}
+
+void 
+make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *orig_time,char *slice_prefix)
+{
+		
+	sprintf(key,"%s%s/lsType.%d/%s",slice_prefix,orig_router,ls_type, orig_time );	
+
+	if ( nlsr->debugging )
+		printf("Name LSA prefix for repo content:%s\n",key);	
+}
+
+void 
+make_cor_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *orig_time,char *slice_prefix)
+{
+		
+	sprintf(key,"%s%s/lsType.%d/%s",slice_prefix,orig_router,ls_type, orig_time );	
+
+	if ( nlsr->debugging )
+		printf("Cor LSA prefix for repo content:%s\n",key);	
 }
 
 void 
@@ -77,7 +104,6 @@ build_and_install_name_lsas(void)
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"build_and_install_name_lsas called\n");
 
 	int i, npl_element;
-	//struct name_prefix *np;
 	struct name_prefix_list_entry *npe;
 
 	struct hashtb_enumerator ee;
@@ -173,9 +199,6 @@ install_name_lsa(struct nlsa *name_lsa)
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
-	//long int lsa_life_time=get_time_diff(time_stamp,name_lsa->header->orig_time);
-
-	//printf("time difference: %ld \n",lsa_life_time);
 	
 
 		char lst[2];
@@ -452,7 +475,6 @@ install_name_lsa(struct nlsa *name_lsa)
 							int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,next_hop,faces,route_costs);
 							if ( check == HT_NEW_ENTRY )
 							{
-								//printf("Added in npt \n");
 								if ( nlsr->debugging )
 									printf("Added in npt \n");
 								if ( nlsr->detailed_logging )
@@ -599,6 +621,16 @@ build_others_name_lsa(struct nlsa *name_lsa, char *orig_router,int ls_type,long 
 }
 
 
+void 
+make_cor_lsa_key(char *key,struct clsa *cor_lsa)
+{
+	memcpy(key+strlen(key),cor_lsa->header->orig_router->name,cor_lsa->header->orig_router->length);
+	memcpy(key+strlen(key),"/",1);
+	char ls_type[2];
+	sprintf(ls_type,"%d",cor_lsa->header->ls_type);
+	memcpy(key+strlen(key),ls_type,strlen(ls_type));
+	key[strlen(key)]='\0';
+}
 
 
 void 
@@ -645,6 +677,39 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 			build_adj_lsa(adj_lsa);
 			install_adj_lsa(adj_lsa);
 
+			char lst[2];
+			memset(lst,0,2);
+			sprintf(lst,"%d",LS_TYPE_ADJ);			
+
+			char *repo_key=(char *)malloc(strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5+15);
+			memset(repo_key, 0, strlen(nlsr->slice_prefix)+strlen(adj_lsa->header->orig_time)+strlen(adj_lsa->header->orig_router->name) + strlen(lst) + 5+15);	
+			make_adj_lsa_prefix_for_repo(repo_key, adj_lsa->header->orig_router->name,LS_TYPE_ADJ,adj_lsa->header->orig_time,nlsr->slice_prefix);
+		
+			if ( nlsr->debugging )
+				printf("Adj LSA Repo Key: %s \n",repo_key);
+
+			char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
+			memset(key,0,adj_lsa->header->orig_router->length+2+2);
+			make_adj_lsa_key(key,adj_lsa);
+			if ( nlsr->debugging )
+				printf("Adj LSA: %s \n",key);
+
+			struct name_prefix *lsaid=(struct name_prefix *)malloc(sizeof(struct name_prefix));
+			lsaid->name=(char *)malloc(strlen(key)+1);
+			memset(lsaid->name, 0, strlen(key)+1);
+			memcpy(lsaid->name,key,strlen(key));
+			lsaid->length=strlen(key)+1;
+
+		
+			write_adj_lsa_to_repo(repo_key, lsaid);
+
+			free(key);
+			free(repo_key);
+			free(lsaid->name);
+			free(lsaid);
+
+
+		
 			free(adj_lsa->header->orig_router->name);
 			free(adj_lsa->header->orig_router);
 			free(adj_lsa->header->orig_time);
@@ -680,9 +745,6 @@ build_adj_lsa(struct alsa * adj_lsa)
 
 	int no_link=no_active_nbr();
 	
-	//printf("Number of link in Adjacent LSA: %d\n",no_link);
-
-	/*Filling Up Header Data */
 	adj_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
 	adj_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	adj_lsa->header->orig_router->name=(char *)malloc(strlen(nlsr->router_name)+1);
@@ -701,9 +763,6 @@ build_adj_lsa(struct alsa * adj_lsa)
 	memcpy(adj_lsa->header->orig_time,time_stamp,strlen(time_stamp)+1);	
 	free(time_stamp);
 
-
-	/* Filling Up Body Data */
-
 	adj_lsa->no_link=no_link;
 
 
@@ -715,14 +774,6 @@ build_adj_lsa(struct alsa * adj_lsa)
 	memset(adj_lsa->body,0,strlen(data)+1);
 	memcpy(adj_lsa->body,(char *)data,strlen(data)+1);
 	ccn_charbuf_destroy(&c);
-
-
-
-	if( !nlsr->is_send_lsdb_interest_scheduled )
-	{	
-		nlsr->event_send_lsdb_interest= ccn_schedule_event(nlsr->sched, 1000, &send_lsdb_interest, NULL, 0);
-		nlsr->is_send_lsdb_interest_scheduled=1;
-	}
 
 	nlsr->adj_build_count++;
 
@@ -743,15 +794,11 @@ install_adj_lsa(struct alsa * adj_lsa)
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
-	//long int lsa_life_time=get_time_diff(time_stamp,adj_lsa->header->orig_time);
-
-	//printf("time difference: %ld \n",lsa_life_time);
 
 
 		char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
 		memset(key,0,adj_lsa->header->orig_router->length+2);
 		make_adj_lsa_key(key,adj_lsa);
-		//printf("Adjacent LSA key: %s \n",key);
 
 		struct alsa *new_adj_lsa=(struct alsa*)malloc(sizeof(struct alsa ));
 
@@ -831,8 +878,6 @@ install_adj_lsa(struct alsa * adj_lsa)
 
 				if ( adj_lsa->no_link > 0)
 				{				
-					//new_adj_lsa = e->data;
-
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting adj lsa\n");
 					write_log_for_adj_lsa(new_adj_lsa);
@@ -904,20 +949,20 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 	char *rem;
 	char *rtr_id;
 	char *length;
-	char *face;
+	//char *face;
 	char *metric;
 
 	if(no_link >0 )
 	{
 		rtr_id=strtok_r(lsa_data,sep,&rem);
 		length=strtok_r(NULL,sep,&rem);
-		face=strtok_r(NULL,sep,&rem);
+		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Link %d	 	\n",i+1);
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router: %s	\n",rtr_id);
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router Length: %s	\n",length);
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
+		//writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Metric: %s	\n",metric);
 
 
@@ -925,12 +970,12 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 		{
 			rtr_id=strtok_r(NULL,sep,&rem);
 			length=strtok_r(NULL,sep,&rem);
-			face=strtok_r(NULL,sep,&rem);
+			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Link %d	 	\n",i+1);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router: %s	\n",rtr_id);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Adjacent Router Length: %s	\n",length);
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
+			//writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Connecting Face: %s	\n",face);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"		Metric: %s	\n",metric);
 
 		}
@@ -968,33 +1013,34 @@ print_adj_lsa_body(const char *body, int no_link)
 	char *rem;
 	char *rtr_id;
 	char *length;
-	char *face;
+	//char *face;
 	char *metric;
 
 	if(no_link >0 )
 	{
 		rtr_id=strtok_r(lsa_data,sep,&rem);
 		length=strtok_r(NULL,sep,&rem);
-		face=strtok_r(NULL,sep,&rem);
+		//face=strtok_r(NULL,sep,&rem);
 		metric=strtok_r(NULL,sep,&rem);
 
-		printf("		Link %d	 	\n",i+1);
-		printf("		Neighbor		 : %s	\n",rtr_id);
-		printf("		Neighbor Length		 : %s	\n",length);
-		printf("		Connecting Face		 : %s	\n",face);
-		printf("		Metric			 : %s	\n",metric);
-
+		if ( nlsr->debugging ) {
+			printf("		Link %d	 	\n",i+1);
+			printf("		Neighbor		 : %s	\n",rtr_id);
+			printf("		Neighbor Length		 : %s	\n",length);
+			//printf("		Connecting Face		 : %s	\n",face);
+			printf("		Metric			 : %s	\n",metric);
+		}
 
 		for(i=1;i<no_link;i++)
 		{
 			rtr_id=strtok_r(NULL,sep,&rem);
 			length=strtok_r(NULL,sep,&rem);
-			face=strtok_r(NULL,sep,&rem);
+			//face=strtok_r(NULL,sep,&rem);
 			metric=strtok_r(NULL,sep,&rem);
 			printf("		Link %d	 	\n",i+1);
 			printf("		Neighbor		 : %s	\n",rtr_id);
 			printf("		Neighbor Length		 : %s	\n",length);
-			printf("		Connecting Face		 : %s	\n",face);
+			//printf("		Connecting Face		 : %s	\n",face);
 			printf("		Metric			 : %s	\n",metric);
 
 		}
@@ -1062,7 +1108,6 @@ build_and_install_others_adj_lsa(char *orig_router,int ls_type,char *orig_time, 
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"build_and_install_others_adj_lsa called \n");
 	struct alsa *adj_lsa=(struct alsa *)malloc(sizeof( struct alsa ));
 	build_others_adj_lsa(adj_lsa,orig_router,ls_type,orig_time,no_link,data);
-	//print_adj_lsa(adj_lsa);
 	install_adj_lsa(adj_lsa);
 	
 
@@ -1081,7 +1126,6 @@ build_and_install_others_adj_lsa(char *orig_router,int ls_type,char *orig_time, 
 void 
 build_others_adj_lsa(struct alsa *adj_lsa,char *orig_router,int ls_type,char *orig_time,int no_link,char *data)
 {
-	//printf("build_others_adj_lsa called \n");
 	if ( nlsr->debugging )
 		printf("build_others_adj_lsa called  \n");	
 	if ( nlsr->detailed_logging )
@@ -1144,130 +1188,6 @@ get_adj_lsdb_num_element(void)
 	return num_element; 
 }
 
-void 
-get_name_lsdb_summary(struct ccn_charbuf *name_lsdb_data)
-{
-	//printf("get_name_lsdb_summary called \n");
-	if ( nlsr->debugging )
-		printf("get_name_lsdb_summary called  \n");	
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_name_lsdb_summary called  \n");
-	
-	int i, name_lsdb_element;
-
-	struct nlsa *name_lsa;
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	
-    	hashtb_start(nlsr->lsdb->name_lsdb, e);
-	name_lsdb_element=hashtb_n(nlsr->lsdb->name_lsdb);
-
-	for(i=0;i<name_lsdb_element;i++)
-	{
-		name_lsa=e->data;
-
-		ccn_charbuf_append_string(name_lsdb_data,name_lsa->header->orig_router->name);
-		ccn_charbuf_append_string(name_lsdb_data,"|");
-
-		char *lst=(char *)malloc(20);
-		memset(lst,0,20);
-		sprintf(lst,"%d",name_lsa->header->ls_type);
-		ccn_charbuf_append_string(name_lsdb_data,lst);
-		free(lst);
-		ccn_charbuf_append_string(name_lsdb_data,"|");
-
-		char *lsid=(char *)malloc(20);
-		memset(lsid,0,20);
-		sprintf(lsid,"%ld",name_lsa->header->ls_id);
-		ccn_charbuf_append_string(name_lsdb_data,lsid);
-		free(lsid);
-		ccn_charbuf_append_string(name_lsdb_data,"|");
-
-		ccn_charbuf_append_string(name_lsdb_data,name_lsa->header->orig_time);
-		ccn_charbuf_append_string(name_lsdb_data,"|");
-
-		hashtb_next(e);		
-	}
-
-	hashtb_end(e);
-
-}
-
-
-void 
-get_adj_lsdb_summary(struct ccn_charbuf *adj_lsdb_data)
-{
-	if ( nlsr->debugging )
-		printf("get_adj_lsdb_summary called  \n");	
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_adj_lsdb_summary called  \n");
-	int i, adj_lsdb_element;
-	struct alsa *adj_lsa;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	
-    	hashtb_start(nlsr->lsdb->adj_lsdb, e);
-	adj_lsdb_element=hashtb_n(nlsr->lsdb->adj_lsdb);
-
-	for(i=0;i<adj_lsdb_element;i++)
-	{
-		adj_lsa=e->data;
-
-		ccn_charbuf_append_string(adj_lsdb_data,adj_lsa->header->orig_router->name);
-		ccn_charbuf_append_string(adj_lsdb_data,"|");
-		
-		char *lst=(char *)malloc(20);
-		memset(lst,0,20);
-		sprintf(lst,"%d",adj_lsa->header->ls_type);
-		ccn_charbuf_append_string(adj_lsdb_data,lst);
-		free(lst);
-		ccn_charbuf_append_string(adj_lsdb_data,"|");
-
-		ccn_charbuf_append_string(adj_lsdb_data,adj_lsa->header->orig_time);
-		ccn_charbuf_append_string(adj_lsdb_data,"|");
-
-		hashtb_next(e);		
-	}
-
-	hashtb_end(e);
-}
-
-
-void 
-get_lsdb_summary(struct ccn_charbuf *lsdb_data)
-{
-	struct ccn_charbuf *name_lsdb_data=ccn_charbuf_create();
-	struct ccn_charbuf *adj_lsdb_data=ccn_charbuf_create();
-
-	get_name_lsdb_summary(name_lsdb_data);
-	get_adj_lsdb_summary(adj_lsdb_data);
-
-	long int num_lsa=get_name_lsdb_num_element() + get_adj_lsdb_num_element();
-	char *num_element=(char *)malloc(15);
-	memset(num_element,0,15);
-	sprintf(num_element,"%ld",num_lsa);
-
-	if( num_lsa > 0)
-	{
-		ccn_charbuf_append_string(lsdb_data,num_element);
-		ccn_charbuf_append_string(lsdb_data,"|");
-	}
-	if(name_lsdb_data->length>0)
-	{
-		char *data1=ccn_charbuf_as_string(name_lsdb_data);
-		ccn_charbuf_append_string(lsdb_data,(char *)data1);
-	}
-	if(adj_lsdb_data->length>0)
-	{
-		char *data2=ccn_charbuf_as_string(adj_lsdb_data);
-		ccn_charbuf_append_string(lsdb_data,(char *)data2);
-	}
-	ccn_charbuf_destroy(&name_lsdb_data);
-	ccn_charbuf_destroy(&adj_lsdb_data);
-	free(num_element);
-
-}
 
 int 
 check_is_new_name_lsa(char *orig_router,char *lst,char *lsid,char *orig_time)
@@ -1351,10 +1271,49 @@ check_is_new_adj_lsa(char *orig_router,char *lst,char *orig_time)
 	return ret;
 }
 
+int 
+check_is_new_cor_lsa(char *orig_router,char *lst,char *orig_time)
+{
+	int ret=0;
+	struct ccn_charbuf *key=ccn_charbuf_create();
+	ccn_charbuf_append_string(key,orig_router);
+	ccn_charbuf_append_string(key,"/");
+	ccn_charbuf_append_string(key,lst);
+
+	int res;
+	struct clsa *cor_lsa;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+	res = hashtb_seek(e, ccn_charbuf_as_string(key), key->length, 0);
+
+	if( res == HT_NEW_ENTRY )
+	{
+		hashtb_delete(e);
+		ret=1;
+
+	}
+	else if(res == HT_OLD_ENTRY)
+	{
+		cor_lsa=e->data;
+		if( strcmp ( orig_time , cor_lsa->header->orig_time ) > 0 )
+		{
+			ret=1;
+		}
+	}
+
+	hashtb_end(e);
+	
+	ccn_charbuf_destroy(&key);
+
+	return ret;
+}
+
 void 
 get_name_lsa_data(struct ccn_charbuf *lsa_data, struct name_prefix *lsaId)
 {
-	//printf("get_name_lsa_data called \n");
 	if ( nlsr->debugging )
 		printf("get_name_lsa_data called  \n");	
 	if ( nlsr->detailed_logging )
@@ -1372,8 +1331,7 @@ get_name_lsa_data(struct ccn_charbuf *lsa_data, struct name_prefix *lsaId)
 	if( res == HT_OLD_ENTRY )
 	{
 		name_lsa=e->data;
-		//printf("NAME LSA found\n");
-
+		
 		if ( nlsr->debugging )
 			printf("NAME LSA found  \n");	
 		if ( nlsr->detailed_logging )
@@ -1452,7 +1410,6 @@ get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId)
 	if( res == HT_OLD_ENTRY )
 	{
 		adj_lsa=e->data;
-		//printf("Adj LSA found\n");
 
 		if ( nlsr->debugging )
 			printf("Adj LSA found  \n");	
@@ -1466,15 +1423,15 @@ get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId)
 		memset(temp_length,0,20);
 		sprintf(temp_length,"%d",adj_lsa->header->orig_router->length);
 		ccn_charbuf_append_string(lsa_data,temp_length);
-		free(temp_length);
 		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_length);
 
 		char *temp_ltype=(char *)malloc(20);
 		memset(temp_ltype,0,20);
 		sprintf(temp_ltype,"%d",adj_lsa->header->ls_type);
 		ccn_charbuf_append_string(lsa_data,temp_ltype);
-		free(temp_ltype);
 		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_ltype);
 
 		ccn_charbuf_append_string(lsa_data,adj_lsa->header->orig_time);
 		ccn_charbuf_append_string(lsa_data,"|");
@@ -1483,8 +1440,8 @@ get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId)
 		memset(temp_nl,0,20);
 		sprintf(temp_nl,"%d",adj_lsa->no_link);
 		ccn_charbuf_append_string(lsa_data,temp_nl);
-		free(temp_nl);
 		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_nl);
 
 		ccn_charbuf_append_string(lsa_data,adj_lsa->body);
 
@@ -1522,7 +1479,9 @@ make_name_lsa_invalid(struct name_prefix *np,int ls_type, long int ls_id)
 
 
 	make_name_lsa_key(key, np->name,ls_type,ls_id);	
-	printf("Key:%s Length:%d\n",key,(int)strlen(key));
+	
+	if ( nlsr->debugging )
+		printf("Key:%s Length:%d\n",key,(int)strlen(key));
 
 	struct nlsa *nlsa;
 
@@ -1567,16 +1526,17 @@ make_name_lsa_invalid(struct name_prefix *np,int ls_type, long int ls_id)
 
 }
 
-int 
-delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+//int 
+//delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+int
+delete_name_lsa(char *orig_router, char *name_prefix)
 {
-	//printf("delete_name_lsa called \n");
-
+	
 	if ( nlsr->debugging )
 		printf("delete_name_lsa called  \n");	
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_name_lsa called  \n");
-	
+	/*
 	if(flags == CCN_SCHEDULE_CANCEL)
 	{
  	 	return -1;
@@ -1604,8 +1564,9 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 	if( res == HT_OLD_ENTRY )
 	{
 		nlsa=e->data;
-		delete_npt_entry_by_router_and_name_prefix(nlsa->header->orig_router->name, nlsa->name_prefix->name);
-
+	*/
+		delete_npt_entry_by_router_and_name_prefix(orig_router, name_prefix);
+	/*
 		writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
 		writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name lsa\n");
 		write_log_for_name_lsa(nlsa);
@@ -1618,6 +1579,7 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		hashtb_delete(e);
 	}
 	hashtb_end(e);
+	*/
 	
 	if ( nlsr->debugging )
 		printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
@@ -1631,30 +1593,27 @@ delete_name_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 	
-	//print_name_lsdb();
-	
-	nlsr_unlock();
+	//nlsr_unlock();
 
 	return 0;
 }
 
-int 
-delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+//int 
+//delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+int delete_adj_lsa()
 {
-	//printf("delete_adj_lsa called \n");
-
+	
 	if ( nlsr->debugging )
 		printf("delete_adj_lsa called  \n");	
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"delete_adj_lsa called  \n");
-	
+
+	/*	
 	if(flags == CCN_SCHEDULE_CANCEL)
 	{
  	 	return -1;
 	}
 	nlsr_lock();
-
-	//printf("LSA Key: %s \n",(char *)ev->evdata);
 
 	if ( nlsr->debugging )
 		printf("LSA Key: %s \n",(char *)ev->evdata);
@@ -1684,6 +1643,7 @@ delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_e
 		hashtb_delete(e);
 	}
 	hashtb_end(e);
+	*/
 
 	if ( nlsr->debugging )
 		printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
@@ -1704,9 +1664,7 @@ delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_e
 		nlsr->is_route_calculation_scheduled=1;
 	}
 
-	//print_adj_lsdb();
-
-	nlsr_unlock();
+	//nlsr_unlock();
 
 	return 0;
 }
@@ -1714,14 +1672,10 @@ delete_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_e
 void
 refresh_name_lsdb(void)
 {
-	//printf("refresh_name_lsdb called \n");
-
 	if ( nlsr->debugging )
 		printf("refresh_name_lsdb called  \n");	
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"refresh_name_lsdb called  \n");
-
-	//int lsa_change_count=0;
 
 	char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
@@ -1780,9 +1734,11 @@ refresh_name_lsdb(void)
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
 	
 					free(current_time_stamp);
+					
+					hashtb_next(e);
 				}
 				else 
-				{
+				{	/*
 					char lst[2];
 					memset(lst,0,2);
 					sprintf(lst,"%d",name_lsa->header->ls_type);	
@@ -1791,15 +1747,22 @@ refresh_name_lsdb(void)
 					memset(lsid,0,10);
 					sprintf(lsid,"%ld",name_lsa->header->ls_id);
 	
-	
+					
 					char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
 					memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
 
 
 					make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);	
-					//printf("Key:%s Length:%d\n",key,(int)strlen(key));
 				
 					nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_name_lsa, (void *)key, 0);
+					*/
+					delete_name_lsa(name_lsa->header->orig_router->name, name_lsa->name_prefix->name);
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name lsa\n");
+					write_log_for_name_lsa(name_lsa);
+					writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
+					hashtb_delete(e);
+					i++;
 				}
 
 				if ( nlsr->debugging )
@@ -1817,7 +1780,10 @@ refresh_name_lsdb(void)
 							
 
 				print_name_lsdb();
-				//lsa_change_count++;
+			}
+			else 
+			{
+				hashtb_next(e);
 			}	
 		}
 		else 
@@ -1829,7 +1795,7 @@ refresh_name_lsdb(void)
 				if ( nlsr->detailed_logging )
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Others Name LSA need to be deleted\n");
 
-				char lst[2];
+				/*char lst[2];
 				memset(lst,0,2);
 				sprintf(lst,"%d",name_lsa->header->ls_type);	
 
@@ -1843,14 +1809,26 @@ refresh_name_lsdb(void)
 
 
 				make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);	
-				//printf("Key:%s Length:%d\n",key,(int)strlen(key));
 				
 				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_name_lsa, (void *)key, 0);
-				//lsa_change_count++;
+				*/
+				delete_name_lsa(name_lsa->header->orig_router->name, name_lsa->name_prefix->name);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name lsa\n");
+				write_log_for_name_lsa(name_lsa);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
+				hashtb_delete(e);
+				i++;
+			}
+			else 
+			{
+				hashtb_next(e);
 			}
 		}
-
-		hashtb_next(e);		
+		/*else
+		{
+			hashtb_next(e);	
+		}*/	
 	}
 
 	hashtb_end(e);
@@ -1863,7 +1841,6 @@ refresh_name_lsdb(void)
 void
 refresh_adj_lsdb(void)
 {
-	//printf("refresh_adj_lsdb called \n");
 
 	if ( nlsr->debugging )
 		printf("refresh_adj_lsdb called  \n");	
@@ -1889,8 +1866,7 @@ refresh_adj_lsdb(void)
 	{
 		adj_lsa=e->data;
 
-		lsa_life_time=get_time_diff(time_stamp,adj_lsa->header->orig_time);
-		//printf("LSA Life Time: %ld \n",lsa_life_time);	
+		lsa_life_time=get_time_diff(time_stamp,adj_lsa->header->orig_time);	
 
 		if ( nlsr->debugging )
 			printf("LSA Life Time: %ld \n",lsa_life_time);	
@@ -1901,7 +1877,6 @@ refresh_adj_lsdb(void)
 		{
 			if ( lsa_life_time > nlsr->lsa_refresh_time )
 			{
-				//printf("Own Adj LSA need to be refrshed\n");
 				if ( nlsr->debugging )
 					printf("Own Adj LSA need to be refrshed\n");
 				if ( nlsr->detailed_logging )
@@ -1941,30 +1916,158 @@ refresh_adj_lsdb(void)
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 
 				print_adj_lsdb();
+				
+				
 			}	
+			
+			hashtb_next(e);
 		}
 		else 
 		{
 			if ( lsa_life_time > nlsr->router_dead_interval )
 			{
-				//printf("Others Adj LSA need to be deleted\n");
+
+				if ( nlsr->debugging )
+				 	printf("Others Adj LSA need to be deleted\n");
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Others Adj LSA need to be deleted\n");
+				/*
+				char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
+				memset(key,0,adj_lsa->header->orig_router->length+2);
+				make_adj_lsa_key(key,adj_lsa);
+				
+				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_adj_lsa, (void *)key, 0);
+				*/
+				
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting adj lsa\n");
+				write_log_for_adj_lsa(adj_lsa);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__," adj_lsa_end\n");
+				delete_adj_lsa();
+				hashtb_delete(e);
+				i++;
+				
+			}
+			else
+			{
+				hashtb_next(e);
+			}
+		}
+
+		
+
+		//hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	
+	free(time_stamp);
+}
+
+
+void
+refresh_cor_lsdb(void)
+{
+
+	if ( nlsr->debugging )
+		printf("refresh_cor_lsdb called  \n");	
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"refresh_cor_lsdb called  \n");
+
+	char *time_stamp=(char *)malloc(20);
+	memset(time_stamp,0,20);
+	get_current_timestamp_micro(time_stamp);
+	
+	long int lsa_life_time;
+		
+	int i, cor_lsdb_element;
+	struct clsa *cor_lsa;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+	cor_lsdb_element=hashtb_n(nlsr->lsdb->cor_lsdb);
+
+	for(i=0;i<cor_lsdb_element;i++)
+	{
+		cor_lsa=e->data;
+
+		lsa_life_time=get_time_diff(time_stamp,cor_lsa->header->orig_time);	
+
+		if ( nlsr->debugging )
+			printf("LSA Life Time: %ld \n",lsa_life_time);	
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Life Time: %ld \n",lsa_life_time);		
+
+		if ( strcmp(cor_lsa->header->orig_router->name,nlsr->router_name) == 0)
+		{
+			if ( lsa_life_time > nlsr->lsa_refresh_time )
+			{
+				if ( nlsr->debugging )
+					printf("Own Cor LSA need to be refrshed\n");
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Own Cor LSA need to be refrshed\n");
+
+				//writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
+				//writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting adj lsa\n");
+				//write_log_for_adj_lsa(adj_lsa);
+				//writeLogg(__FILE__,__FUNCTION__,__LINE__," adj_lsa_end\n");
+
+				char *current_time_stamp=(char *)malloc(20);
+				memset(current_time_stamp,0,20);
+				get_current_timestamp_micro(current_time_stamp);
+
+				free(cor_lsa->header->orig_time);
+				cor_lsa->header->orig_time=(char *)malloc(strlen(current_time_stamp)+1); //free 
+				memset(cor_lsa->header->orig_time,0,strlen(current_time_stamp)+1);
+				memcpy(cor_lsa->header->orig_time,current_time_stamp,strlen(current_time_stamp)+1);
+	
+				free(current_time_stamp);
+
+				//writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
+				//writeLogg(__FILE__,__FUNCTION__,__LINE__," Adding adj lsa\n");
+				//write_log_for_adj_lsa(adj_lsa);
+				//writeLogg(__FILE__,__FUNCTION__,__LINE__," adj_lsa_end\n");
+
+				if ( nlsr->debugging )
+					printf("Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+
+				set_new_lsdb_version();	
+
+				if ( nlsr->debugging )
+					printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+
+				print_adj_lsdb();
+			}
+
+			hashtb_next(e);		
+		}
+		else 
+		{
+			if ( lsa_life_time > nlsr->router_dead_interval )
+			{
 
 				if ( nlsr->debugging )
 				 	printf("Others Adj LSA need to be deleted\n");
 				if ( nlsr->detailed_logging )
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Others Adj LSA need to be deleted\n");
 				
-				char *key=(char *)malloc(adj_lsa->header->orig_router->length+2+2);
-				memset(key,0,adj_lsa->header->orig_router->length+2);
-				make_adj_lsa_key(key,adj_lsa);
-				//printf("Adjacent LSA key: %s \n",key);				
-				nlsr->event = ccn_schedule_event(nlsr->sched, 10, &delete_adj_lsa, (void *)key, 0);
+				hashtb_delete(e);
+				i++;
+			}
+			else 
+			{
+				hashtb_next(e);	
 			}
 		}
 
 		
-
-		hashtb_next(e);		
+	
 	}
 
 	hashtb_end(e);
@@ -1982,8 +2085,6 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 
 	nlsr_lock();
 
-	//printf("refresh_lsdb called \n");
-
 	if ( nlsr->debugging )
 		printf("refresh_lsdb called\n");
 	if ( nlsr->detailed_logging )
@@ -1991,9 +2092,489 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 	
 	refresh_name_lsdb();
 	refresh_adj_lsdb();
+	refresh_cor_lsdb();
 
 	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
 	
 	nlsr_unlock();
 	return 0;
+}
+
+void
+write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
+{
+	if ( nlsr->debugging )
+		printf("write_adj_lsa_to_repo called\n");
+	if ( nlsr->debugging )
+		printf("Content Prefix: %s\n",repo_content_prefix);
+	
+	struct ccn_charbuf *lsa_data=ccn_charbuf_create();		
+	get_adj_lsa_data(lsa_data,lsa_id);
+	if ( nlsr->debugging )
+		printf("Adj LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+
+	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
+
+	ccn_charbuf_destroy(&lsa_data);
+}
+
+void
+write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
+{
+	if ( nlsr->debugging )
+		printf("write_name_lsa_to_repo called\n");
+	if ( nlsr->debugging )
+		printf("Content Prefix: %s\n",repo_content_prefix);
+	
+	struct ccn_charbuf *lsa_data=ccn_charbuf_create();		
+	get_name_lsa_data(lsa_data,lsa_id);
+	
+	if ( nlsr->debugging )
+		printf("Name LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+
+	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
+
+	ccn_charbuf_destroy(&lsa_data);
+}
+
+
+void
+write_name_lsdb_to_repo(char *slice_prefix)
+{
+	int i, name_lsdb_element;
+
+	struct nlsa *name_lsa;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->lsdb->name_lsdb, e);
+	name_lsdb_element=hashtb_n(nlsr->lsdb->name_lsdb);
+
+	for(i=0;i<name_lsdb_element;i++)
+	{
+		name_lsa=e->data;
+
+		char lst[2];
+		memset(lst,0,2);
+		sprintf(lst,"%d",name_lsa->header->ls_type);	
+
+		char lsid[10];
+		memset(lsid,0,10);
+		sprintf(lsid,"%ld",name_lsa->header->ls_id);
+	
+	
+		char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
+		memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
+
+
+		make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);
+		
+		if ( nlsr->debugging )
+			printf("Name LSA Key: %s \n",key);
+
+
+		char *repo_key=(char *)malloc(strlen(slice_prefix)+1+strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1+strlen(name_lsa->header->orig_time)+1+15);
+		memset(repo_key,0,strlen(slice_prefix)+1+strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1+strlen(name_lsa->header->orig_time)+1+15);	
+		make_name_lsa_prefix_for_repo(repo_key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id,name_lsa->header->orig_time,slice_prefix);
+		
+		if ( nlsr->debugging )
+			printf("Name LSA Repo Key: %s \n",repo_key);
+
+		struct name_prefix *lsaid=(struct name_prefix *)malloc(sizeof(struct name_prefix));
+		lsaid->name=(char *)malloc(strlen(key)+1);
+		memset(lsaid->name, 0, strlen(key)+1);
+		memcpy(lsaid->name,key,strlen(key));
+		lsaid->length=strlen(key)+1;
+
+		
+		write_name_lsa_to_repo(repo_key, lsaid);
+
+		free(key);
+		free(repo_key);
+		free(lsaid->name);
+		free(lsaid);
+
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	
+
+}
+
+void
+print_cor_lsa(struct clsa *cor_lsa)
+{
+	if ( nlsr->debugging )
+	{
+		printf("-----------Cor LSA Content---------------\n");
+		printf("	Origination Router       :	%s\n",cor_lsa->header->orig_router->name);
+		printf("	Origination Router Length:	%d\n",cor_lsa->header->orig_router->length);
+		printf("	LS Type			 :	%d\n",cor_lsa->header->ls_type);
+		printf("	Origination Time	 :	%s\n",cor_lsa->header->orig_time);
+		printf("	LSA Data			\n");
+		printf("		Cor R:	 	:	%f\n",cor_lsa->cor_r);
+		printf("		Cor Theta	:	%f\n",cor_lsa->cor_theta);
+
+		printf("\n");	
+	}
+}
+
+void 
+print_cor_lsdb()
+{
+	
+	if ( nlsr->debugging )
+		printf("print_cor_lsdb called \n");	
+	
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+	int i=1;
+
+	for (hashtb_start(nlsr->lsdb->cor_lsdb, e); e->key != NULL; hashtb_next(e)) 
+	{
+		if ( nlsr->debugging )
+			printf("-----------Cor LSA (%d)---------------\n",i);	
+		struct clsa *cor_lsa=e->data;
+		print_cor_lsa(cor_lsa);
+		i++;
+  	}
+	hashtb_end(e);
+
+	if ( nlsr->debugging )
+		printf("\n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
+}
+
+void
+install_cor_lsa(struct clsa *cor_lsa)
+{
+	if ( nlsr->debugging )
+		printf("install_cor_lsa called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"install_cor_lsa called  \n");
+	
+
+	char *time_stamp=(char *)malloc(20);
+	memset(time_stamp,0,20);
+	get_current_timestamp_micro(time_stamp);
+
+
+	char *key=(char *)malloc(cor_lsa->header->orig_router->length+2+2);
+	memset(key,0,cor_lsa->header->orig_router->length+2);
+	make_cor_lsa_key(key,cor_lsa);
+
+	if ( nlsr->debugging )
+		printf("Cor LSA key: %s \n",key);
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+    	res = hashtb_seek(e, key, strlen(key), 0);
+
+	if ( res == HT_NEW_ENTRY )
+	{
+		if ( nlsr->debugging )
+			printf("New Cor LSA... \n");
+		
+		struct clsa *new_cor_lsa=(struct clsa *)malloc(sizeof( struct clsa ));
+		new_cor_lsa=e->data;
+		new_cor_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
+
+		new_cor_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+		new_cor_lsa->header->orig_router->name=(char *)malloc(strlen(cor_lsa->header->orig_router->name)+1);
+		memset(new_cor_lsa->header->orig_router->name,0,strlen(cor_lsa->header->orig_router->name)+1);
+		memcpy(new_cor_lsa->header->orig_router->name,cor_lsa->header->orig_router->name,strlen(cor_lsa->header->orig_router->name)+1);
+		new_cor_lsa->header->orig_router->length=cor_lsa->header->orig_router->length;
+
+		new_cor_lsa->header->orig_time=(char *)malloc(strlen(cor_lsa->header->orig_time)+1); //free 
+		memset(new_cor_lsa->header->orig_time,0,strlen(cor_lsa->header->orig_time)+1);
+		memcpy(new_cor_lsa->header->orig_time,cor_lsa->header->orig_time,strlen(cor_lsa->header->orig_time)+1);
+
+		new_cor_lsa->header->ls_type=cor_lsa->header->ls_type;
+
+		new_cor_lsa->cor_r=cor_lsa->cor_r;
+		new_cor_lsa->cor_theta=cor_lsa->cor_theta;
+	}
+	else if ( res == HT_OLD_ENTRY )
+	{	
+		if ( nlsr->debugging )
+			printf("Cor LSA exists (Old)... \n");
+	}
+	hashtb_end(e);
+
+	free(key);
+
+}
+
+void 
+build_cor_lsa(struct clsa *cor_lsa, double cor_r, double cor_theta)
+{
+	cor_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
+	cor_lsa->header->ls_type=LS_TYPE_COR;
+
+	char *time_stamp=(char *)malloc(20);
+	memset(time_stamp,0,20);
+	get_current_timestamp_micro(time_stamp);
+
+	cor_lsa->header->orig_time=(char *)malloc(strlen(time_stamp)+1); //free 
+	memset(cor_lsa->header->orig_time,0,strlen(time_stamp)+1);
+	memcpy(cor_lsa->header->orig_time,time_stamp,strlen(time_stamp)+1);
+	free(time_stamp);
+
+	cor_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	cor_lsa->header->orig_router->name=(char *)malloc(strlen(nlsr->router_name)+1);
+	memset(cor_lsa->header->orig_router->name,0,strlen(nlsr->router_name)+1);
+	memcpy(cor_lsa->header->orig_router->name,nlsr->router_name,strlen(nlsr->router_name)+1);
+	cor_lsa->header->orig_router->length=strlen(nlsr->router_name)+1;
+
+	cor_lsa->cor_r=cor_r;	
+	cor_lsa->cor_theta=cor_theta;
+
+}
+
+void 
+build_others_cor_lsa(struct clsa *cor_lsa,char *orig_router, int ls_type,char *orig_time, double cor_r, double cor_theta)
+{
+	cor_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
+	cor_lsa->header->ls_type=ls_type;
+
+	cor_lsa->header->orig_time=(char *)malloc(strlen(orig_time)+1); 
+	memset(cor_lsa->header->orig_time,0,strlen(orig_time)+1);
+	memcpy(cor_lsa->header->orig_time,orig_time,strlen(orig_time)+1);
+
+	cor_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	cor_lsa->header->orig_router->name=(char *)malloc(strlen(orig_router)+1);
+	memset(cor_lsa->header->orig_router->name,0,strlen(orig_router)+1);
+	memcpy(cor_lsa->header->orig_router->name,orig_router,strlen(orig_router)+1);
+	cor_lsa->header->orig_router->length=strlen(orig_router)+1;
+
+	cor_lsa->cor_r=cor_r;	
+	cor_lsa->cor_theta=cor_theta;
+
+}
+
+void
+build_and_install_others_cor_lsa(char *orig_router,int ls_type,char *orig_time, double cor_r, double cor_theta)
+{
+	struct clsa *cor_lsa=(struct clsa *)malloc(sizeof( struct clsa ));
+	build_others_cor_lsa(cor_lsa,orig_router,ls_type, orig_time, cor_r, cor_theta);
+	install_cor_lsa(cor_lsa);
+
+	print_cor_lsdb();
+
+	free(cor_lsa->header->orig_router);
+	free(cor_lsa->header->orig_time);
+	free(cor_lsa->header);
+	free(cor_lsa);
+
+}
+
+
+void 
+build_and_install_cor_lsa()
+{
+
+	
+
+	struct clsa *cor_lsa=(struct clsa *)malloc(sizeof( struct clsa ));
+	
+	build_cor_lsa(cor_lsa,nlsr->cor_r,nlsr->cor_theta);
+	install_cor_lsa(cor_lsa);
+
+	write_cor_lsa_to_repo(cor_lsa);
+
+	print_cor_lsdb();	
+
+	free(cor_lsa->header->orig_router);
+	free(cor_lsa->header->orig_time);
+	free(cor_lsa->header);
+	free(cor_lsa);
+	
+}
+
+void 
+get_cor_lsa_data(struct ccn_charbuf *lsa_data,char *cor_lsa_key)
+{
+	if ( nlsr->debugging )
+		printf("get_cor_lsa_data called  \n");	
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_adj_lsa_data called  \n");
+
+	struct clsa *cor_lsa=(struct clsa*)malloc(sizeof(struct clsa ));
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+    	res = hashtb_seek(e, cor_lsa_key, strlen(cor_lsa_key), 0);
+
+	if( res == HT_OLD_ENTRY )
+	{
+		cor_lsa=e->data;
+
+		if ( nlsr->debugging )
+			printf("Cor LSA found  \n");	
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Cor LSA found  \n");
+
+		ccn_charbuf_append_string(lsa_data,cor_lsa->header->orig_router->name);
+		ccn_charbuf_append_string(lsa_data,"|");
+
+		char *temp_length=(char *)malloc(20);
+		memset(temp_length,0,20);
+		sprintf(temp_length,"%d",cor_lsa->header->orig_router->length);
+		ccn_charbuf_append_string(lsa_data,temp_length);
+		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_length);
+
+		char *temp_ltype=(char *)malloc(20);
+		memset(temp_ltype,0,20);
+		sprintf(temp_ltype,"%d",cor_lsa->header->ls_type);
+		ccn_charbuf_append_string(lsa_data,temp_ltype);
+		ccn_charbuf_append_string(lsa_data,"|");
+		free(temp_ltype);
+
+		ccn_charbuf_append_string(lsa_data,cor_lsa->header->orig_time);
+		ccn_charbuf_append_string(lsa_data,"|");
+
+		char *cor_r=(char *)malloc(20);
+		memset(cor_r,0,20);
+		sprintf(cor_r,"%f",cor_lsa->cor_r);
+		ccn_charbuf_append_string(lsa_data,cor_r);
+		ccn_charbuf_append_string(lsa_data,"|");
+		free(cor_r);
+
+		char *cor_theta=(char *)malloc(20);
+		memset(cor_theta,0,20);
+		sprintf(cor_theta,"%f",cor_lsa->cor_theta);
+		ccn_charbuf_append_string(lsa_data,cor_theta);
+		ccn_charbuf_append_string(lsa_data,"|");
+		free(cor_theta);
+
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+}
+
+void
+write_cor_lsa_to_repo(struct clsa *cor_lsa)
+{
+	
+
+	if ( nlsr->debugging )
+		printf("write_cor_lsa_to_repo called\n");
+	
+	
+	char *key=(char *)malloc(cor_lsa->header->orig_router->length+2+2);
+	memset(key,0,cor_lsa->header->orig_router->length+2+2);
+	make_cor_lsa_key(key,cor_lsa);
+	
+	struct ccn_charbuf *lsa_data=ccn_charbuf_create();
+	get_cor_lsa_data(lsa_data,key);
+	
+	if ( nlsr->debugging )
+		printf("Cor LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+	char *lst=(char *)malloc(20);
+	memset(lst,0,20);
+	sprintf(lst,"%d",cor_lsa->header->ls_type);
+	char *repo_key=(char *)malloc(strlen(nlsr->slice_prefix)+strlen(cor_lsa->header->orig_time)+strlen(cor_lsa->header->orig_router->name) + strlen(lst) + 5+15);
+	memset(repo_key, 0, strlen(nlsr->slice_prefix)+strlen(cor_lsa->header->orig_time)+strlen(cor_lsa->header->orig_router->name) + strlen(lst) + 5+15);	
+	make_cor_lsa_prefix_for_repo(repo_key, cor_lsa->header->orig_router->name,LS_TYPE_COR,cor_lsa->header->orig_time,nlsr->slice_prefix);
+		
+	if ( nlsr->debugging )
+		printf("Cor LSA Repo Key: %s \n",repo_key);	
+
+	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_key);
+
+	
+		
+	free(lst);
+	free(key);
+	free(repo_key);
+	ccn_charbuf_destroy(&lsa_data);
+}
+
+void 
+make_cor_lsa_key_by_router_name(char *key,char *router_name)
+{
+	memcpy(key+strlen(key),router_name,strlen(router_name));
+	memcpy(key+strlen(key),"/",1);
+	char ls_type[2];
+	sprintf(ls_type,"%d",LS_TYPE_COR);
+	memcpy(key+strlen(key),ls_type,strlen(ls_type));
+	key[strlen(key)]='\0';
+}
+
+
+double 
+get_hyperbolic_r(char *router)
+{
+	double ret=-1.0;
+	char *cor_lsa_key=(char *)calloc(strlen(router)+4,sizeof(char));
+	make_cor_lsa_key_by_router_name(cor_lsa_key,router);
+
+	
+	struct clsa *cor_lsa;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+    	res = hashtb_seek(e, cor_lsa_key, strlen(cor_lsa_key), 0);
+
+	if ( res == HT_OLD_ENTRY)
+	{	
+		cor_lsa=e->data;
+		ret=cor_lsa->cor_r;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+	
+	free(cor_lsa_key);
+	return ret;
+}
+
+double 
+get_hyperbolic_theta(char *router)
+{
+		double ret=-1.0;
+	char *cor_lsa_key=(char *)calloc(strlen(router)+4,sizeof(char));
+	make_cor_lsa_key_by_router_name(cor_lsa_key,router);
+
+	struct clsa *cor_lsa;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+    	res = hashtb_seek(e, cor_lsa_key, strlen(cor_lsa_key), 0);
+
+	if ( res == HT_OLD_ENTRY)
+	{	
+		cor_lsa=e->data;
+		ret=cor_lsa->cor_theta;
+	}
+	else if(res == HT_NEW_ENTRY)
+	{
+		hashtb_delete(e);
+	}
+
+	hashtb_end(e);
+	
+	free(cor_lsa_key);
+	return ret;
 }

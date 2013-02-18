@@ -22,7 +22,6 @@ int add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces
 int delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix);
 void print_npt(void);
 void delete_orig_router_from_npt(char *orig_router);
-//void update_npt_with_new_route(char * orig_router,int next_hop_face);
 void update_npt_with_new_route(void);
 void destroy_all_face_by_nlsr(void);
 void sort_faces_by_distance(int *faces,int *route_costs,int start,int element);
