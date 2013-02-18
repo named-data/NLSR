@@ -240,6 +240,34 @@ update_ccnd_fib_for_orig_router(char *orig_router)
     		struct hashtb_enumerator *enle = &eenle;
 
 		hashtb_start(ne->name_list, enle);
+		nl_element=hashtb_n(ne->name_list);
+
+		for (i=0;i<nl_element;i++)
+		{
+			nle=enle->data;
+			
+			for( j=num_face-1; j>= 0; j--)
+			{
+
+				if ( !( is_neighbor(nle->name) == 1 && get_next_hop_face_from_adl(nle->name) == faces[j] ) )
+				{
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
+				}
+			}
+			
+			
+			hashtb_next(enle);
+		}
+
+
+		hashtb_end(enle);
+
+		if ( nlsr->debugging )
+		{
+			printf("First Face Index: %d Last Face Index: %d\n",first_face,last_face);
+		}
+
+		hashtb_start(ne->name_list, enle);
 		nl_element=hashtb_n(ne->name_list);	
 
 		for (i=0;i<nl_element;i++)
