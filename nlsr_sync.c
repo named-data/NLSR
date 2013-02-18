@@ -642,8 +642,7 @@ int
 sync_monitor(char *topo_prefix, char *slice_prefix)
 {
 
-    static struct ccns_name_closure nc={0};	
-
+    static struct ccns_name_closure nc={0};
     nlsr->closure = &nc;
     struct ccn_charbuf *prefix = ccn_charbuf_create();
     struct ccn_charbuf *roothash = NULL;
@@ -658,7 +657,6 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
     ccn_charbuf_reset(topo);
     ccn_name_from_uri(topo, topo_prefix);
     
-
     ccns_slice_set_topo_prefix(nlsr->slice, topo, prefix);
     nlsr->closure->callback = &sync_cb;
     nlsr->ccns = ccns_open(nlsr->ccn, nlsr->slice, nlsr->closure, roothash, NULL);

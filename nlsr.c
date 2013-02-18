@@ -1375,9 +1375,6 @@ main(int argc, char *argv[])
 	print_adjacent_from_adl();
 	build_and_install_name_lsas();	
 
-	res=sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
-	ON_ERROR_DESTROY(res);
-
 	print_name_lsdb();
 	if ( nlsr->cor_r != -1.0 && nlsr->cor_theta != -1.0)
 	{
@@ -1389,6 +1386,9 @@ main(int argc, char *argv[])
 	ccn_set_schedule(nlsr->ccn,nlsr->sched);
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
 	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
+	
+	res=sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
+	ON_ERROR_DESTROY(res);
 
 	
 	while(1)
