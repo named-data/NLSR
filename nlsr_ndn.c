@@ -24,6 +24,9 @@
 #include "nlsr_lsdb.h"
 #include "utility.h"
 
+/**
+* add lifetime in second to a interest template
+*/
 int
 appendLifetime(struct ccn_charbuf *cb, int lifetime) 
 {
@@ -37,13 +40,18 @@ appendLifetime(struct ccn_charbuf *cb, int lifetime)
 		buf[pos] = dreck & 255;
 		dreck = dreck >> 8;
 	}
-	res |= ccnb_append_tagged_blob(cb, CCN_DTAG_InterestLifetime, buf+pos, sizeof(buf)-pos);
+	res |= ccnb_append_tagged_blob(cb, CCN_DTAG_InterestLifetime, buf+pos, 
+															sizeof(buf)-pos);
 	return res;
 }
 
+/**
+* get neighbor name prefix from interest/content name and put into nbr
+*/
 
 void 
-get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp, struct ccn_upcall_info *info)
+get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp, 
+													struct ccn_upcall_info *info)
 {
 	if ( nlsr->debugging )
 		printf("get_nbr called\n");
@@ -70,7 +78,8 @@ get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp, struct ccn_upcall_inf
 	size_t comp_size;
 	for(i=0;i<nlsr_position;i++)
 	{
-		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);
+		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&
+														comp_ptr1, &comp_size);
 		len+=1;
 		len+=(int)comp_size;	
 	}
@@ -81,7 +90,8 @@ get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp, struct ccn_upcall_inf
 
 	for(i=0; i<nlsr_position;i++)
 	{
-		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);
+		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,
+														&comp_ptr1, &comp_size);
 		memcpy(neighbor+strlen(neighbor),"/",1);
 		memcpy(neighbor+strlen(neighbor),(char *)comp_ptr1,strlen((char *)comp_ptr1));
 
@@ -94,17 +104,19 @@ get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp, struct ccn_upcall_inf
 	if ( nlsr->debugging )
 		printf("Neighbor: %s Length: %d\n",nbr->name,nbr->length);
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor: %s Length: %d\n",nbr->name,nbr->length);
-
-	
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor: %s Length: %d\n",
+														nbr->name,nbr->length);
 
 }
 
-void 
-get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, struct ccn_upcall_info *info, int offset)
-{
+/**
+*	Retrieve LSA identifier from content name
+*/
 
-	//printf("get_lsa_identifier called\n");
+void 
+get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, 
+									struct ccn_upcall_info *info, int offset)
+{
 
 	if ( nlsr->debugging )
 		printf("get_lsa_identifier called\n");
@@ -131,7 +143,8 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, struct c
 	size_t comp_size;
 	for(i=nlsr_position+3+offset;i<info->interest_comps->n-1;i++)
 	{
-		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);
+		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,
+														&comp_ptr1, &comp_size);
 		len+=1;
 		len+=(int)comp_size;	
 	}
@@ -142,7 +155,8 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, struct c
 
 	for(i=nlsr_position+3+offset; i<info->interest_comps->n-1;i++)
 	{
-		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,&comp_ptr1, &comp_size);
+		res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,i,
+														&comp_ptr1, &comp_size);
 		memcpy(neighbor+strlen(neighbor),"/",1);
 		memcpy(neighbor+strlen(neighbor),(char *)comp_ptr1,strlen((char *)comp_ptr1));
 
@@ -156,52 +170,17 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, struct c
 	if ( nlsr->debugging )
 		printf("LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length-1);
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length-1);
-
-}
-
-int 
-get_ls_type(struct ccn_closure *selfp, struct ccn_upcall_info *info)
-{
-	int res,i;
-	int nlsr_position=0;
-	int name_comps=(int)info->interest_comps->n;
-
-	int ret=0;
-
-	for(i=0;i<name_comps;i++)
-	{
-		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
-		if( res == 0)
-		{
-			nlsr_position=i;
-			break;
-		}	
-	}
-
-
-	const unsigned char *comp_ptr1;
-	size_t comp_size;
-	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+2,&comp_ptr1, &comp_size);
-
-	ret=atoi((char *)comp_ptr1);
-
-	return ret;	
-
-}
-
-void 
-get_lsdb_version(char *lsdb_version,struct ccn_closure *selfp, struct ccn_upcall_info *info )
-{
-	const unsigned char *comp_ptr1;
-	size_t comp_size;
-	ccn_name_comp_get(info->content_ccnb, info->content_comps,info->content_comps->n-2,&comp_ptr1, &comp_size);
-	memcpy(lsdb_version,(char *)comp_ptr1,(int)comp_size);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Identifier: %s Length: "
+											"%d\n",lsaId->name,lsaId->length-1);
 
 }
 
 
-/* Call back function registered in ccnd to get all interest coming to NLSR application */
+
+/** 
+* Call back function registered in ccnd to get all interest coming to NLSR 
+* application 
+*/
 
 enum ccn_upcall_res 
 incoming_interest(struct ccn_closure *selfp,
@@ -244,7 +223,9 @@ incoming_interest(struct ccn_closure *selfp,
     return CCN_UPCALL_RESULT_OK;
 }
 
-/* Function for processing incoming interest and reply with content/NACK content */
+/**
+* Function for processing incoming interest and reply with content/NACK content 
+*/
 
 void 
 process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *info)
@@ -270,7 +251,8 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 		}	
 	}
 
-	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
+	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,
+								&comp_ptr1, &comp_size);
 
 
 	if(!strcmp((char *)comp_ptr1,"info"))
@@ -279,6 +261,10 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 	}
 
 }
+
+/**
+*
+*/
 
 void 
 process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info *info)
@@ -290,7 +276,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	}
 	if ( nlsr->detailed_logging )
 	{
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_interest_info called \n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_interest_info"
+				" called \n");
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending Info Content back.....\n");
 	}
 	
@@ -300,7 +287,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
     	struct ccn_charbuf *name=ccn_charbuf_create();
     	
 
-	res=ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]);
+	res=ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],
+			info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]);
 	if (res >= 0)
 	{
 		
@@ -315,6 +303,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 
 		struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 		sp.template_ccnb=ccn_charbuf_create();		
+				
 		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_SignedInfo, CCN_DTAG);
 		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyLocator, CCN_DTAG);
 		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
@@ -328,11 +317,12 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		sp.type = CCN_CONTENT_KEY;
 		sp.freshness = 10;
 		
-		//ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
-		//ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
-       	 	//sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
-		//ccn_charbuf_append_closer(sp.template_ccnb);
-
+		
+		/*ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
+		ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
+       	 	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+		ccn_charbuf_append_closer(sp.template_ccnb);
+		*/
 
 		char *raw_data=(char *)malloc(20);
 		memset(raw_data,0,20);
@@ -344,7 +334,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 			if ( nlsr->debugging )
 				printf("Signing info Content is successful \n");
 			if ( nlsr->detailed_logging )
-				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing info Content is successful \n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing info Content"
+									" is successful \n");
 
 		}
     		res=ccn_put(nlsr->ccn,data->buf,data->length);		
@@ -353,7 +344,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 			if ( nlsr->debugging )
 				printf("Sending Info Content is successful \n");
 			if ( nlsr->detailed_logging )
-				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending info Content is successful \n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending info Content"
+									  " is successful \n");
 		}
 		
 
@@ -362,14 +354,15 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		get_lsa_identifier(nbr,selfp,info,-1);
 
 		if ( nlsr->debugging )
-			printf("Neighbor : %s Length : %d Status : %d\n",nbr->name,nbr->length,get_adjacent_status(nbr));
+			printf("Neighbor : %s Length : %d Status : %d\n",nbr->name,nbr->length,
+									get_adjacent_status(nbr));
 		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor : %s Length : %d Status : %d\n",nbr->name,nbr->length,get_adjacent_status(nbr));		
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor : %s Length : %d"
+				" Status : %d\n",nbr->name,nbr->length,get_adjacent_status(nbr));		
 
-		//printf("Neighbor : %s Length : %d Status : %d\n",nbr->name,nbr->length,get_adjacent_status(nbr));
 
-
-		if( get_adjacent_status(nbr) == 0 && get_timed_out_number(nbr)>=nlsr->interest_retry )
+		if( get_adjacent_status(nbr) == 0 && get_timed_out_number(nbr) >= 
+														nlsr->interest_retry )
 		{
 			update_adjacent_timed_out_zero_to_adl(nbr);
 			send_info_interest_to_neighbor(nbr);
@@ -423,7 +416,8 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 		if ( nlsr->debugging )
 			printf("Interest Timed Out Received for Name:  "); 
 		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Timed Out Received for Name: ");
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Timed Out Receiv"
+															"ed for Name: ");
 		
 		struct ccn_charbuf*ito;
 		ito=ccn_charbuf_create();
@@ -442,9 +436,10 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
         default:
             fprintf(stderr, "Unexpected response of kind %d\n", kind);
 	    if ( nlsr->debugging )
-		printf("Unexpected response of kind %d\n", kind);
+			printf("Unexpected response of kind %d\n", kind);
 	    if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Unexpected response of kind %d\n", kind);
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Unexpected response of "
+															"kind %d\n", kind);
 	    break;
     }
     
@@ -478,7 +473,8 @@ process_incoming_content(struct ccn_closure *selfp, struct ccn_upcall_info* info
 		}	
 	}
 
-	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+1,&comp_ptr1, &comp_size);
+	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,
+										nlsr_position+1,&comp_ptr1, &comp_size);
 
 
 	if(!strcmp((char *)comp_ptr1,"info"))
@@ -490,20 +486,24 @@ process_incoming_content(struct ccn_closure *selfp, struct ccn_upcall_info* info
 
 
 void 
-process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info* info)
+process_incoming_content_info(struct ccn_closure *selfp, 
+												struct ccn_upcall_info* info)
 {
 	if ( nlsr->debugging )
 		printf("process_incoming_content_info called \n");
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_info called \n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_info"
+																" called \n");
 
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	get_nbr(nbr,selfp,info);
 
 	if ( nlsr->debugging )
-		printf("Info Content Received For Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+		printf("Info Content Received For Neighbor: %s Length:%d\n",nbr->name,
+																nbr->length);
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Content Received For Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Content Received For Nei"
+								"ghbor: %s Length:%d\n",nbr->name,nbr->length);
 
 
 	if ( contain_key_name(info->content_ccnb, info->pco) == 1)
@@ -532,8 +532,10 @@ process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info*
 		if ( nlsr->debugging )
 			printf("Scheduling Build and Install Adj LSA...\n");
 		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Scheduling Build and Install Adj LSA...\n");
-		nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 100000, &build_and_install_adj_lsa, NULL, 0);
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Scheduling Build and Inst"
+															"all Adj LSA...\n");
+		nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 100000, 
+										&build_and_install_adj_lsa, NULL, 0);
 		nlsr->is_build_adj_lsa_sheduled=1;		
 	}
 	else
@@ -541,7 +543,8 @@ process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info*
 		if ( nlsr->debugging )
 			printf("Build and Install Adj LSA already scheduled\n");
 		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Build and Install Adj LSA already scheduled\n");
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Build and Install Adj LSA"
+														" already scheduled\n");
 	}
 
 
@@ -554,14 +557,16 @@ process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info*
 
 
 void
-process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+process_incoming_timed_out_interest(struct ccn_closure* selfp, 
+												struct ccn_upcall_info* info)
 {
 	
 
 	if ( nlsr->debugging )
 		printf("process_incoming_timed_out_interest called \n");
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_timed_out_interest called \n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_timed_out_int"
+															"erest called \n");
 
 	int res,i;
 	int nlsr_position=0;
@@ -577,28 +582,33 @@ process_incoming_timed_out_interest(struct ccn_closure* selfp, struct ccn_upcall
 		}	
 	}
 
-	if(ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,nlsr_position+1,"info") == 0)
+	if(ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,
+												nlsr_position+1,"info") == 0)
 	{
 		process_incoming_timed_out_interest_info(selfp,info);
 	}
 }
 
 void
-process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_upcall_info* info)
+process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct 
+														ccn_upcall_info* info)
 {
 	
 	if ( nlsr->debugging )
 		printf("process_incoming_timed_out_interest_info called \n");
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_timed_out_interest_info called \n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_timed_out_int"
+														"erest_info called \n");
 
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	get_nbr(nbr,selfp,info);
 
 	if ( nlsr->debugging )
-		printf("Info Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+		printf("Info Interest Timed Out for for Neighbor: %s Length:%d\n",
+														nbr->name,nbr->length);
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Interest Timed Out for for Neighbor: %s Length:%d\n",nbr->name,nbr->length);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Interest Timed Out for"
+							" Neighbor: %s Length:%d\n",nbr->name,nbr->length);
 	
 
 
@@ -607,9 +617,11 @@ process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_u
 	int timed_out=get_timed_out_number(nbr);
 
 	if ( nlsr->debugging )
-		printf("Neighbor: %s Info Interest Timed Out: %d times\n",nbr->name,timed_out);
+		printf("Neighbor: %s Info Interest Timed Out: %d times\n",nbr->name,
+																	timed_out);
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor: %s Info Interest Timed Out: %d times\n",nbr->name,timed_out);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor: %s Info Interest "
+									"Timed Out: %d times\n",nbr->name,timed_out);
 
 
 	if(timed_out<nlsr->interest_retry && timed_out>0) // use configured variables 
@@ -621,7 +633,8 @@ process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_u
 		update_adjacent_status_to_adl(nbr,NBR_DOWN);
 		if(!nlsr->is_build_adj_lsa_sheduled)
 		{
-			nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 1000, &build_and_install_adj_lsa, NULL, 0);
+			nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 1000, 
+										   &build_and_install_adj_lsa, NULL, 0);
 			nlsr->is_build_adj_lsa_sheduled=1;		
 		}
 	}
@@ -633,7 +646,8 @@ process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct ccn_u
 
 
 int
-send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+send_info_interest(struct ccn_schedule *sched, void *clienth, 
+									struct ccn_scheduled_event *ev, int flags)
 {
 	if(flags == CCN_SCHEDULE_CANCEL)
 	{
@@ -671,7 +685,8 @@ send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_schedul
 
 	 nlsr_unlock();
 
-	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &send_info_interest, NULL, 0);
+	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &send_info_interest,
+																	 NULL, 0);
 
 	return 0;
 }
@@ -683,7 +698,8 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 	if ( nlsr->debugging )
 		printf("send_info_interest_to_neighbor called \n");
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_info_interest_to_neighbor called \n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_info_interest_to_neighbor"
+																" called \n");
 
 
 	int res;
@@ -699,8 +715,10 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 	struct ccn_charbuf *name;	
 	name=ccn_charbuf_create();
 
-	char *int_name=(char *)malloc(strlen(nbr->name)+1+strlen(nlsr_str)+1+strlen(info_str)+strlen(nlsr->router_name)+1);
-	memset(int_name,0,strlen(nbr->name)+1+strlen(nlsr_str)+1+strlen(info_str)+strlen(nlsr->router_name)+1);
+	char *int_name=(char *)malloc(strlen(nbr->name)+1+strlen(nlsr_str)+1+
+						strlen(info_str)+strlen(nlsr->router_name)+1);
+	memset(int_name,0,strlen(nbr->name)+1+strlen(nlsr_str)+1+strlen(info_str)+
+												strlen(nlsr->router_name)+1);
 	memcpy(int_name+strlen(int_name),nbr->name,strlen(nbr->name));
 	memcpy(int_name+strlen(int_name),"/",1);
 	memcpy(int_name+strlen(int_name),nlsr_str,strlen(nlsr_str));
@@ -723,7 +741,8 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 		ccn_charbuf_append_tt(templ, CCN_DTAG_Scope, CCN_DTAG);
 		ccn_charbuf_append_tt(templ, 1, CCN_UDATA);
 		/* Adding InterestLifeTime and InterestScope filter done */		
-		ccn_charbuf_append(templ, "2", 1); //scope of interest: 2 (not further than next host)
+		ccn_charbuf_append(templ, "2", 1); //scope of interest: 2 
+											//(not further than next host)
 		ccn_charbuf_append_closer(templ); /* </Scope> */
 
 		appendLifetime(templ,nlsr->interest_resend_time);
@@ -733,9 +752,11 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 		
 	
 		if ( nlsr->debugging )
-			printf("Sending info interest on name prefix : %s through Face:%u\n",int_name,face_id);
+			printf("Sending info interest on name prefix : %s through Face:%u\n"
+															,int_name,face_id);
 		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending info interest on name prefix : %s through Face:%u\n",int_name,face_id);
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending info interest on"
+						 "name prefix : %s through Face:%u\n",int_name,face_id);
 
 		res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
 
@@ -744,7 +765,8 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 			if ( nlsr->debugging )
 				printf("Info interest sending Successfull .... \n");
 			if ( nlsr->detailed_logging )
-				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info interest sending Successfull .... \n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info" 
+					"interest sending Successfull .... \n");
 		}	
 		ccn_charbuf_destroy(&templ);
 	}
@@ -760,7 +782,10 @@ contain_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco
 
 	struct ccn_buf_decoder decoder;
 	struct ccn_buf_decoder *d;
-	d = ccn_buf_decoder_start(&decoder, ccnb + pco->offset[CCN_PCO_B_Key_Certificate_KeyName], pco->offset[CCN_PCO_E_Key_Certificate_KeyName] - pco->offset[CCN_PCO_B_Key_Certificate_KeyName]);
+	d = ccn_buf_decoder_start(&decoder, ccnb + 
+		pco->offset[CCN_PCO_B_Key_Certificate_KeyName], 
+		pco->offset[CCN_PCO_E_Key_Certificate_KeyName] - 
+		pco->offset[CCN_PCO_B_Key_Certificate_KeyName]);
 	if (ccn_buf_match_dtag(d, CCN_DTAG_KeyName))
 		return 1;
 
@@ -771,7 +796,8 @@ struct ccn_charbuf *
 get_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco) 
 {
 	struct ccn_charbuf *key_name = ccn_charbuf_create();
-	ccn_charbuf_append(key_name, ccnb + pco->offset[CCN_PCO_B_KeyName_Name], pco->offset[CCN_PCO_E_KeyName_Name] - pco->offset[CCN_PCO_B_KeyName_Name]);
+	ccn_charbuf_append(key_name, ccnb + pco->offset[CCN_PCO_B_KeyName_Name], 
+	pco->offset[CCN_PCO_E_KeyName_Name] - pco->offset[CCN_PCO_B_KeyName_Name]);
 
 	return key_name;
 }
