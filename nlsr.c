@@ -45,79 +45,79 @@
 
 #define ON_ERROR_DESTROY(resval) \
 {           \
-    if ((resval) < 0) { \
-        nlsr_destroy(); \
-	exit(1);\
-    } \
+	if ((resval) < 0) { \
+		nlsr_destroy(); \
+		exit(1);\
+	} \
 }
 
 
 #define ON_ERROR_EXIT(resval) \
 {           \
-    if ((resval) < 0) { \
-        exit(1); \
-    } \
+	if ((resval) < 0) { \
+		exit(1); \
+	} \
 }
 
 struct option longopts[] =
 {
-    { "daemon",      no_argument,       NULL, 'd'},
-    { "config_file", required_argument, NULL, 'f'},
-    { "api_port",    required_argument, NULL, 'p'},
-    { "help",        no_argument,       NULL, 'h'},
-    { 0 }
+	{ "daemon",      no_argument,       NULL, 'd'},
+	{ "config_file", required_argument, NULL, 'f'},
+	{ "api_port",    required_argument, NULL, 'p'},
+	{ "help",        no_argument,       NULL, 'h'},
+	{ 0 }
 };
 
-static int 
+	static int 
 usage(char *progname)
 {
 
-    printf("Usage: %s [OPTIONS...]\n\
-	NDN routing....\n\
-	-d, --daemon        Run in daemon mode\n\
-	-f, --config_file   Specify configuration file name\n\
-	-p, --api_port      port where api client will connect\n\
-	-h, --help          Display this help message\n", progname);
+	printf("Usage: %s [OPTIONS...]\n\
+			NDN routing....\n\
+			-d, --daemon        Run in daemon mode\n\
+			-f, --config_file   Specify configuration file name\n\
+			-p, --api_port      port where api client will connect\n\
+			-h, --help          Display this help message\n", progname);
 
-    exit(1);
+	exit(1);
 }
 
 void ndn_rtr_gettime(const struct ccn_gettime *self, struct ccn_timeval *result)
 {
-    struct timeval now = {0};
-    gettimeofday(&now, 0);
-    result->s = now.tv_sec;
-    result->micros = now.tv_usec;
+	struct timeval now = {0};
+	gettimeofday(&now, 0);
+	result->s = now.tv_sec;
+	result->micros = now.tv_usec;
 }
 
 static struct ccn_gettime ndn_rtr_ticker = {
-    "timer",
-    &ndn_rtr_gettime,
-    1000000,
-    NULL
+	"timer",
+	&ndn_rtr_gettime,
+	1000000,
+	NULL
 };
 
-void
+	void
 nlsr_lock(void)
 {
 	nlsr->semaphor=NLSR_LOCKED;
 }
 
-void
+	void
 nlsr_unlock(void)
 {
 	nlsr->semaphor=NLSR_UNLOCKED;
 }
 
-void 
+	void 
 nlsr_stop_signal_handler(int sig)
 {
 	signal(sig, SIG_IGN);
- 	nlsr_destroy();
+	nlsr_destroy();
 	exit(0);	
 }
 
-void  
+	void  
 daemonize_nlsr(void)
 {
 	//int ret;
@@ -135,21 +135,21 @@ daemonize_nlsr(void)
 		//ret=process_id;
 		exit(0);
 	}
-	
+
 	umask(0);
 	sid = setsid();
 	if(sid < 0)
 	{
 		ON_ERROR_DESTROY(sid);		
 	}
-	
+
 	chdir("/");	
 	close(STDIN_FILENO);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
 }
 
-void 
+	void 
 process_command_ccnneighbor(char *command)
 {
 	if(command==NULL)
@@ -189,7 +189,7 @@ process_command_ccnneighbor(char *command)
 	memcpy(nbr->name,rtr_name,strlen(rtr_name)+1);
 	nbr->length=strlen(rtr_name)+1;
 
-	
+
 	if ( !is_ip_configured )
 	{
 		struct name_prefix *nbr_name=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
@@ -212,13 +212,13 @@ process_command_ccnneighbor(char *command)
 		}
 	}
 	add_nbr_to_adl(nbr,0,ip_addr);
-	
+
 
 	free(nbr->name);
 	free(nbr);
 }
 
-void 
+	void 
 process_command_ccnname(char *command)
 {
 
@@ -255,7 +255,7 @@ process_command_ccnname(char *command)
 }
 
 
-void 
+	void 
 process_command_router_name(char *command)
 {
 	if(command==NULL)
@@ -273,7 +273,7 @@ process_command_router_name(char *command)
 		printf(" Wrong Command Format ( router-name /router/name )\n");
 		return;
 	}
-	
+
 
 	if ( rtr_name[strlen(rtr_name)-1] == '/' )
 		rtr_name[strlen(rtr_name)-1]='\0';
@@ -286,36 +286,36 @@ process_command_router_name(char *command)
 }
 
 /*
-void 
-process_command_lsdb_synch_interval(char *command)
-{
-	if(command==NULL)
-	{
-		printf(" Wrong Command Format ( lsdb-synch-interval secs )\n");
-		return;
-	}
-	char *rem;
-	const char *sep=" \t\n";
-	char *secs;
-	long int seconds;
-	
-	secs=strtok_r(command,sep,&rem);
-	if(secs==NULL)
-	{
-		printf(" Wrong Command Format ( lsdb-synch-interval secs)\n");
-		return;
-	}
+   void 
+   process_command_lsdb_synch_interval(char *command)
+   {
+   if(command==NULL)
+   {
+   printf(" Wrong Command Format ( lsdb-synch-interval secs )\n");
+   return;
+   }
+   char *rem;
+   const char *sep=" \t\n";
+   char *secs;
+   long int seconds;
 
-	seconds=atoi(secs);
-	if ( seconds >= 120 && seconds <= 3600 )
-	{
-		nlsr->lsdb_synch_interval=seconds;
-	}
+   secs=strtok_r(command,sep,&rem);
+   if(secs==NULL)
+   {
+   printf(" Wrong Command Format ( lsdb-synch-interval secs)\n");
+   return;
+   }
 
-}
-*/
+   seconds=atoi(secs);
+   if ( seconds >= 120 && seconds <= 3600 )
+   {
+   nlsr->lsdb_synch_interval=seconds;
+   }
 
-void 
+   }
+ */
+
+	void 
 process_command_interest_retry(char *command)
 {
 	if(command==NULL)
@@ -327,7 +327,7 @@ process_command_interest_retry(char *command)
 	const char *sep=" \t\n";
 	char *retry;
 	long int retry_number;
-	
+
 	retry=strtok_r(command,sep,&rem);
 	if(retry==NULL)
 	{
@@ -343,7 +343,7 @@ process_command_interest_retry(char *command)
 
 }
 
-void 
+	void 
 process_command_interest_resend_time(char *command)
 {
 	if(command==NULL)
@@ -355,7 +355,7 @@ process_command_interest_resend_time(char *command)
 	const char *sep=" \t\n";
 	char *secs;
 	long int seconds;
-	
+
 	secs=strtok_r(command,sep,&rem);
 	if(secs==NULL)
 	{
@@ -371,7 +371,7 @@ process_command_interest_resend_time(char *command)
 }
 
 
-void 
+	void 
 process_command_lsa_refresh_time(char *command)
 {
 	if(command==NULL)
@@ -383,7 +383,7 @@ process_command_lsa_refresh_time(char *command)
 	const char *sep=" \t\n";
 	char *secs;
 	long int seconds;
-	
+
 	secs=strtok_r(command,sep,&rem);
 	if(secs==NULL)
 	{
@@ -403,7 +403,7 @@ process_command_lsa_refresh_time(char *command)
 
 }
 
-void 
+	void 
 process_command_router_dead_interval(char *command)
 {
 	if(command==NULL)
@@ -415,7 +415,7 @@ process_command_router_dead_interval(char *command)
 	const char *sep=" \t\n";
 	char *secs;
 	long int seconds;
-	
+
 	secs=strtok_r(command,sep,&rem);
 	if(secs==NULL)
 	{
@@ -435,7 +435,7 @@ process_command_router_dead_interval(char *command)
 
 }
 
-void 
+	void 
 process_command_max_faces_per_prefix(char *command)
 {
 	if(command==NULL)
@@ -447,7 +447,7 @@ process_command_max_faces_per_prefix(char *command)
 	const char *sep=" \t\n";
 	char *num;
 	long int number;
-	
+
 	num=strtok_r(command,sep,&rem);
 	if(num==NULL)
 	{
@@ -463,7 +463,7 @@ process_command_max_faces_per_prefix(char *command)
 
 }
 
-void 
+	void 
 process_command_logdir(char *command)
 {
 	if(command==NULL)
@@ -481,13 +481,13 @@ process_command_logdir(char *command)
 		printf(" Wrong Command Format ( logdir /path/to/logdir/ )\n");
 		return;
 	}
-	
+
 	nlsr->logDir=(char *)calloc(strlen(dir)+1,sizeof(char));
 	//memset(nlsr->logDir,0,strlen(dir)+1);
 	memcpy(nlsr->logDir,dir,strlen(dir));
 }
 
-void 
+	void 
 process_command_detailed_log(char *command)
 {
 	if(command==NULL)
@@ -505,14 +505,14 @@ process_command_detailed_log(char *command)
 		printf(" Wrong Command Format ( detailed-log on/off )\n");
 		return;
 	}
-	
+
 	if ( strcmp(on_off,"ON") == 0  || strcmp(on_off,"on") == 0)
 	{
 		nlsr->detailed_logging=1;
 	}
 }
 
-void 
+	void 
 process_command_debug(char *command)
 {
 	if(command==NULL)
@@ -530,7 +530,7 @@ process_command_debug(char *command)
 		printf(" Wrong Command Format ( debug on/off )\n");
 		return;
 	}
-	
+
 	if ( strcmp(on_off,"ON") == 0 || strcmp(on_off,"on") == 0 )
 	{
 		nlsr->debugging=1;
@@ -538,7 +538,7 @@ process_command_debug(char *command)
 }
 
 
-void 
+	void 
 process_command_topo_prefix(char *command)
 {
 	if(command==NULL)
@@ -572,7 +572,7 @@ process_command_topo_prefix(char *command)
 }
 
 
-void 
+	void 
 process_command_slice_prefix(char *command)
 {
 	if(command==NULL)
@@ -603,7 +603,7 @@ process_command_slice_prefix(char *command)
 	}
 }
 
-void 
+	void 
 process_command_hyperbolic_routing(char *command)
 {
 	if(command==NULL)
@@ -621,14 +621,14 @@ process_command_hyperbolic_routing(char *command)
 		printf(" Wrong Command Format ( hyperbolic-routing on )\n");
 		return;
 	}
-	
+
 	if ( strcmp(on_off,"ON") == 0 || strcmp(on_off,"on") == 0 )
 	{
 		nlsr->is_hyperbolic_calc=1;
 	}
 }
 
-void
+	void
 process_command_hyperbolic_cordinate(char *command)
 {
 	if(command==NULL)
@@ -661,7 +661,7 @@ process_command_hyperbolic_cordinate(char *command)
 
 }
 
-void 
+	void 
 process_command_tunnel_type(char *command)
 {
 	if(command==NULL)
@@ -679,7 +679,7 @@ process_command_tunnel_type(char *command)
 		printf(" Wrong Command Format ( tunnel-type udp/tcp )\n");
 		return;
 	}
-	
+
 	if ( strcmp(on_off,"TCP") == 0 || strcmp(on_off,"tcp") == 0 )
 	{
 		nlsr->tunnel_type=IPPROTO_TCP;
@@ -690,7 +690,7 @@ process_command_tunnel_type(char *command)
 	}
 }
 
-void 
+	void 
 process_conf_command(char *command)
 {
 	const char *separators=" \t\n";
@@ -736,23 +736,23 @@ process_conf_command(char *command)
 	}
 	else if(!strcmp(cmd_type,"logdir") )
 	{
-			process_command_logdir(remainder);
+		process_command_logdir(remainder);
 	}
 	else if(!strcmp(cmd_type,"detailed-log") )
 	{
-			process_command_detailed_log(remainder);
+		process_command_detailed_log(remainder);
 	}
 	else if(!strcmp(cmd_type,"debug") )
 	{
-			process_command_debug(remainder);
+		process_command_debug(remainder);
 	}
 	else if(!strcmp(cmd_type,"topo-prefix") )
 	{
-			process_command_topo_prefix(remainder);
+		process_command_topo_prefix(remainder);
 	}
 	else if(!strcmp(cmd_type,"slice-prefix") )
 	{
-			process_command_slice_prefix(remainder);
+		process_command_slice_prefix(remainder);
 	}
 	else if(!strcmp(cmd_type,"hyperbolic-cordinate") )
 	{
@@ -792,7 +792,7 @@ readConfigFile(const char *filename)
 	{
 		len=strlen(buf);
 		if(buf[len-1] == '\n')
-		buf[len-1]='\0';
+			buf[len-1]='\0';
 		if ( buf[0] != '#' && buf[0] != '!') 
 			process_conf_command(buf);	
 	}
@@ -810,18 +810,21 @@ add_faces_for_nbrs(void)
 	struct ndn_neighbor *nbr;
 
 	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	
-    	hashtb_start(nlsr->adl, e);
+	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
 	adl_element=hashtb_n(nlsr->adl);
 
 	for(i=0;i<adl_element;i++)
 	{
 		nbr=e->data;
-		int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr->neighbor->name, (const char *)nbr->ip_address, 9695,nlsr->tunnel_type);
+		int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr->neighbor->name, 
+						(const char *)nbr->ip_address, 9695,nlsr->tunnel_type);
 		update_face_to_adl_for_nbr(nbr->neighbor->name, face_id);		
-		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);
-		add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_REG, face_id);
+		add_delete_ccn_face_by_face_id(nlsr->ccn,
+				(const char *)nlsr->topo_prefix, OP_REG, face_id);
+		add_delete_ccn_face_by_face_id(nlsr->ccn, 
+				(const char *)nlsr->slice_prefix, OP_REG, face_id);
 		hashtb_next(e);		
 	}
 
@@ -836,9 +839,9 @@ destroy_faces_for_nbrs(void)
 	struct ndn_neighbor *nbr;
 
 	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	
-    	hashtb_start(nlsr->adl, e);
+	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->adl, e);
 	adl_element=hashtb_n(nlsr->adl);
 
 	for(i=0;i<adl_element;i++)
@@ -846,15 +849,16 @@ destroy_faces_for_nbrs(void)
 		nbr=e->data;
 		if ( nbr->face > 0 )
 		{	
-			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, nbr->face);
-			add_delete_ccn_face_by_face_id(nlsr->ccn,(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);
-			add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_UNREG, nbr->face);
+			add_delete_ccn_face_by_face_id(nlsr->ccn, 
+					(const char *)nlsr->topo_prefix, OP_UNREG, nbr->face);
+			add_delete_ccn_face_by_face_id(nlsr->ccn, 
+					(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);
+			add_delete_ccn_face_by_face_id(nlsr->ccn, 
+					(const char *)nlsr->slice_prefix, OP_UNREG, nbr->face);
 		}
 		hashtb_next(e);		
 	}
-
 	hashtb_end(e);
-
 }
 
 char *
@@ -863,7 +867,7 @@ process_api_client_command(char *command)
 	char *msg;
 	msg=(char *)malloc(100);	
 	memset(msg,0,100);
-	
+
 	const char *sep=" \t\n";
 	char *rem=NULL;
 	char *cmd_type=NULL;
@@ -879,9 +883,9 @@ process_api_client_command(char *command)
 	if ( name[strlen(name)-1] == '/' )
 		name[strlen(name)-1]='\0';
 
-	struct name_prefix *np=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
-	np->name=(char *)calloc(strlen(name)+1,sizeof(char));
-	//memset(np->name,0,strlen(name)+1);
+	struct name_prefix *np=(struct name_prefix *) calloc (1, 
+											sizeof(struct name_prefix ));
+	np->name = (char *) calloc (strlen(name)+1,sizeof(char));
 	memcpy(np->name,name,strlen(name)+1);
 	np->length=strlen(name)+1;
 
@@ -890,7 +894,7 @@ process_api_client_command(char *command)
 		face=strtok_r(NULL,sep,&rem);
 		sscanf(face,"face%d",&face_id);
 	}
-	
+
 	if ( strcmp(cmd_type,"name")== 0 )
 	{
 		if ( strcmp(op_type,"del") == 0 ) 
@@ -984,12 +988,12 @@ process_api_client_command(char *command)
 			}
 		}
 	}
-		
+
 
 	return msg;
 }
 
-int
+	int
 nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 {
 	struct timeval timeout;
@@ -1003,7 +1007,7 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 		timeout.tv_sec = 0;
 		timeout.tv_usec = 500000;
 	}
-	
+
 	int fd;
 	int nread;
 	int result;
@@ -1016,7 +1020,7 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 
 	testfds=nlsr->readfds;
 	result = select(FD_SETSIZE, &testfds, NULL,NULL, &timeout);
-	
+
 	for(fd = 0; fd < FD_SETSIZE && result > 0; fd++) 
 	{
 		if(FD_ISSET(fd,&testfds)) 
@@ -1033,7 +1037,7 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 			}
 			else
 			{   
-					
+
 				ioctl(fd, FIONREAD, &nread);
 				if(nread == 0) 
 				{
@@ -1057,7 +1061,7 @@ nlsr_api_server_poll(long int time_out_micro_sec, int ccn_fd)
 	return 0;
 }
 
-int
+	int
 check_config_validity()
 {
 	if (nlsr->router_name == NULL )
@@ -1070,11 +1074,11 @@ check_config_validity()
 		fprintf(stderr,"Hyperbolic codinate has not been defined :(\n");
 		return -1;
 	}
-	
+
 	return 0;
 }
 
-void 
+	void 
 nlsr_destroy( void )
 {
 	if ( nlsr->debugging )
@@ -1096,8 +1100,8 @@ nlsr_destroy( void )
 	int i, npt_element,rt_element;
 	struct npt_entry *ne;
 	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	hashtb_start(nlsr->npt, e);
+	struct hashtb_enumerator *e = &ee;
+	hashtb_start(nlsr->npt, e);
 	npt_element=hashtb_n(nlsr->npt);
 	for(i=0;i<npt_element;i++)
 	{
@@ -1109,8 +1113,8 @@ nlsr_destroy( void )
 
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->npt);
-	
-	
+
+
 	struct routing_table_entry *rte;
 	hashtb_start(nlsr->routing_table, e);
 	rt_element=hashtb_n(nlsr->routing_table);
@@ -1122,7 +1126,7 @@ nlsr_destroy( void )
 	}	
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->routing_table);
-	
+
 	if ( nlsr->ccns != NULL )
 		ccns_close(&nlsr->ccns, NULL, NULL);
 	if ( nlsr->slice != NULL ) 
@@ -1139,7 +1143,7 @@ nlsr_destroy( void )
 		printf("Finished freeing allocated memory\n");
 	}
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Finished freeing allocated memory\n");
-	
+
 	free(nlsr);
 
 }
@@ -1161,8 +1165,8 @@ init_api_server(int ccn_fd)
 
 	if (setsockopt(server_sockfd,SOL_SOCKET,SO_REUSEADDR,&yes,sizeof(yes)) < 0) 
 	{
-       		ON_ERROR_DESTROY(-1);
-       	}
+		ON_ERROR_DESTROY(-1);
+	}
 
 	server_address.sin_family = AF_INET;
 	server_address.sin_addr.s_addr = INADDR_ANY;
@@ -1175,7 +1179,6 @@ init_api_server(int ccn_fd)
 	FD_SET(server_sockfd, &nlsr->readfds);
 	FD_SET(ccn_fd, &nlsr->readfds);
 	nlsr->nlsr_api_server_sock_fd=server_sockfd;
-
 }
 
 int 
@@ -1190,25 +1193,20 @@ init_nlsr(void)
 	{
 		perror("SIGTERM install error\n");
 		return -1;
-    	}
- 	if (signal(SIGINT, nlsr_stop_signal_handler ) == SIG_ERR)
+	}
+	if (signal(SIGINT, nlsr_stop_signal_handler ) == SIG_ERR)
 	{
 		perror("SIGTERM install error\n");
 		return -1;
 	}
 
 	nlsr=(struct nlsr *)calloc(1,sizeof(struct nlsr));
-	
-	struct hashtb_param param_adl = {0};
-	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), &param_adl);
-	struct hashtb_param param_npl = {0};
-	nlsr->npl = hashtb_create(sizeof(struct name_prefix_list_entry), &param_npl);
-	struct hashtb_param param_pit_alsa = {0};	
-	nlsr->pit_alsa = hashtb_create(sizeof(struct pending_interest), &param_pit_alsa);
-	struct hashtb_param param_npt = {0};	
-	nlsr->npt = hashtb_create(sizeof(struct npt_entry), &param_npt);
-	struct hashtb_param param_rte = {0};	
-	nlsr->routing_table = hashtb_create(sizeof(struct routing_table_entry), &param_rte);
+
+	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), NULL);
+	nlsr->npl = hashtb_create(sizeof(struct name_prefix_list_entry), NULL);
+	nlsr->pit_alsa = hashtb_create(sizeof(struct pending_interest), NULL);
+	nlsr->npt = hashtb_create(sizeof(struct npt_entry), NULL);
+	nlsr->routing_table = hashtb_create(sizeof(struct routing_table_entry), NULL);
 
 	nlsr->in_interest.p = &incoming_interest;
 	nlsr->in_content.p = &incoming_content;
@@ -1221,16 +1219,10 @@ init_nlsr(void)
 	nlsr->lsdb->lsdb_version=(char *)malloc(strlen(time_stamp)+1);
 	memset(nlsr->lsdb->lsdb_version,0,strlen(time_stamp));
 	free(time_stamp);
-	
-	struct hashtb_param param_adj_lsdb = {0};
-	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), &param_adj_lsdb);
-	struct hashtb_param param_name_lsdb = {0};
-	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), &param_name_lsdb);
-	struct hashtb_param param_cor_lsdb = {0};
-	nlsr->lsdb->cor_lsdb = hashtb_create(sizeof(struct clsa), &param_cor_lsdb);
-	
-	
 
+	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), NULL);
+	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), NULL);
+	nlsr->lsdb->cor_lsdb = hashtb_create(sizeof(struct clsa), NULL);
 
 	nlsr->is_synch_init=1;
 	nlsr->nlsa_id=0;
@@ -1254,11 +1246,9 @@ init_nlsr(void)
 	nlsr->api_port=API_PORT;
 
 	nlsr->topo_prefix=(char *)calloc(strlen("/ndn/routing/nlsr")+1,sizeof(char));
-	//memset(nlsr->topo_prefix,0,strlen("/ndn/routing/nlsr")+1);
 	memcpy(nlsr->topo_prefix,"/ndn/routing/nlsr",strlen("/ndn/routing/nlsr"));
 
 	nlsr->slice_prefix=(char *)calloc(strlen("/ndn/routing/nlsr/LSA")+1,sizeof(char));
-	//memset(nlsr->slice_prefix, 0, strlen("/ndn/routing/nlsr/LSA")+1);
 	memcpy(nlsr->slice_prefix,"/ndn/routing/nlsr/LSA",strlen("/ndn/routing/nlsr/LSA"));
 
 	nlsr->is_hyperbolic_calc=0;
@@ -1270,20 +1260,17 @@ init_nlsr(void)
 	return 0;
 }
 
-
 int 
 main(int argc, char *argv[])
 {
-    	int res, ret;
-    	char *config_file;
+	int res, ret;
+	char *config_file;
 	int daemon_mode=0;
 	int port=0;
 
-	
-
 	while ((res = getopt_long(argc, argv, "df:p:h", longopts, 0)) != -1) 
 	{
-        	switch (res) 
+		switch (res) 
 		{
 			case 'd':
 				daemon_mode = 1;
@@ -1298,10 +1285,10 @@ main(int argc, char *argv[])
 			default:
 				usage(argv[0]);
 		}
-    	}
+	}
 
-	ret=init_nlsr();	
-    	ON_ERROR_EXIT(ret);
+	ret = init_nlsr();	
+	ON_ERROR_EXIT(ret);
 
 	if ( port !=0 )
 		nlsr->api_port=port;
@@ -1317,11 +1304,12 @@ main(int argc, char *argv[])
 		nlsr->debugging=0;
 		daemonize_nlsr();
 	}
-	
+
 	startLogging(nlsr->logDir);
-	
+
 	nlsr->ccn=ccn_create();
 	int ccn_fd=ccn_connect(nlsr->ccn, NULL);
+	
 	if(ccn_fd == -1)
 	{
 		fprintf(stderr,"Could not connect to ccnd\n");
@@ -1332,10 +1320,13 @@ main(int argc, char *argv[])
 	init_api_server(ccn_fd);
 
 	res=create_sync_slice(nlsr->topo_prefix, nlsr->slice_prefix);
+
 	if(res<0)
 	{
-		fprintf(stderr, "Can not create slice for prefix %s\n",nlsr->slice_prefix);
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Can not create slice for prefix %s\n",nlsr->slice_prefix);
+		fprintf(stderr, "Can not create slice for prefix %s\n",
+														nlsr->slice_prefix);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Can not create slice for" 
+											"prefix %s\n",nlsr->slice_prefix);
 		ON_ERROR_DESTROY(res);
 	}
 	struct ccn_charbuf *router_prefix;	
@@ -1344,7 +1335,8 @@ main(int argc, char *argv[])
 	if(res<0)
 	{
 		fprintf(stderr, "Bad ccn URI: %s\n",nlsr->router_name);
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Bad ccn URI: %s\n",nlsr->router_name);
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,
+									"Bad ccn URI: %s\n", nlsr->router_name);
 		ON_ERROR_DESTROY(res);
 	}
 
@@ -1354,11 +1346,12 @@ main(int argc, char *argv[])
 	if ( res < 0 )
 	{
 		fprintf(stderr,"Failed to register interest for router\n");
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Failed to register interest for router\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,
+						"Failed to register interest for router\n");
 		ON_ERROR_DESTROY(res);
 	}
 	ccn_charbuf_destroy(&router_prefix);
-	
+
 	if ( nlsr->debugging )
 		printf("Router Name : %s\n",nlsr->router_name);
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Router Name : %s\n",nlsr->router_name);
@@ -1382,11 +1375,11 @@ main(int argc, char *argv[])
 	ccn_set_schedule(nlsr->ccn,nlsr->sched);
 	nlsr->event_send_info_interest = ccn_schedule_event(nlsr->sched, 1, &send_info_interest, NULL, 0);
 	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
-	
+
 	res=sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
 	ON_ERROR_DESTROY(res);
 
-	
+
 	while(1)
 	{	
 		if ( nlsr->semaphor == NLSR_UNLOCKED  )
@@ -1399,7 +1392,7 @@ main(int argc, char *argv[])
 			}
 			if(nlsr->ccn != NULL)
 			{
-        			res = ccn_run(nlsr->ccn, 1);
+				res = ccn_run(nlsr->ccn, 1);
 			}
 			if (!(nlsr->sched && nlsr->ccn))
 			{	      
@@ -1408,7 +1401,7 @@ main(int argc, char *argv[])
 		}
 
 	}
-	
+
 
 	return 0;
 }
