@@ -1379,7 +1379,6 @@ main(int argc, char *argv[])
 	res=sync_monitor(nlsr->topo_prefix,nlsr->slice_prefix);
 	ON_ERROR_DESTROY(res);
 
-
 	while(1)
 	{	
 		if ( nlsr->semaphor == NLSR_UNLOCKED  )
