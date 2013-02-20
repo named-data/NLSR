@@ -977,3 +977,61 @@ is_active_neighbor(char *nbr)
 	return ret;
 }
 
+
+void 
+get_host_name_from_command_string(struct name_prefix *name_part,
+												char *nbr_name_uri, int offset)
+{
+
+	
+	
+	int res,i;
+	int len=0;
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+
+	struct ccn_charbuf *name=ccn_charbuf_create();
+	name = ccn_charbuf_create();
+    	res = ccn_name_from_uri(name,nbr_name_uri);
+    	if (res < 0) {
+        	fprintf(stderr, "Bad ccn URI: %s\n", nbr_name_uri);
+        	exit(1);
+    	}	
+
+	struct ccn_indexbuf cid={0};
+
+    	struct ccn_indexbuf *components=&cid;
+    	ccn_name_split (name, components);
+
+	for(i=components->n-2;i> (0+offset);i--)
+	{
+		res=ccn_name_comp_get(name->buf, components,i,&comp_ptr1, &comp_size);
+		len+=1;
+		len+=(int)comp_size;	
+	}
+	len++;
+
+	char *neighbor=(char *)malloc(len);
+	memset(neighbor,0,len);
+
+	for(i=components->n-2;i> (0+offset);i--)
+	{
+		res=ccn_name_comp_get(name->buf, components,i,&comp_ptr1, &comp_size);
+		if ( i != components->n-2)
+		memcpy(neighbor+strlen(neighbor),".",1);
+		memcpy(neighbor+strlen(neighbor),(char *)comp_ptr1,
+													strlen((char *)comp_ptr1));
+
+	}
+
+	name_part->name=(char *)malloc(strlen(neighbor)+1);
+	memset(name_part->name,0,strlen(neighbor)+1);
+	memcpy(name_part->name,neighbor,strlen(neighbor)+1);
+	name_part->length=strlen(neighbor)+1;
+
+	// 01/31/2013
+	free(neighbor);
+	ccn_charbuf_destroy(&name);
+}
+
+

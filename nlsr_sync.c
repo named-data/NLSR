@@ -93,7 +93,8 @@ sync_cb(struct ccns_name_closure *nc,
 	ccn_name_init(content_name);
 	if (components->n < 2)
 		return 0;
-	res = ccn_name_append_components(content_name, name->buf, components->buf[0], components->buf[components->n - 1]);
+	res = ccn_name_append_components(content_name, name->buf, components->buf[0]
+										, components->buf[components->n - 1]);
 
 	if ( res < 0)
 		return 0;
@@ -116,11 +117,13 @@ sync_cb(struct ccns_name_closure *nc,
 	if ( nlsr->debugging )
 		{
 			printf("Number of components in name = %d \n",res);
-			printf("Number of components in name as indexbuf->n = %d \n",(int)components1->n);
+			printf("Number of components in name as indexbuf->n = %d \n",
+														(int)components1->n);
 		}
 	ccn_name_chop(content_name,components1,-3);
 	if ( nlsr->debugging )
-		printf("Number of components in name as indexbuf->n after chopping= %d \n",(int)components1->n);	
+		printf("Number of components in name as indexbuf->n after chopping= %d \n"
+															,(int)components1->n);	
 
 	//debugging purpose
 	struct ccn_charbuf *temp1=ccn_charbuf_create();
@@ -138,8 +141,10 @@ sync_cb(struct ccns_name_closure *nc,
 }
 
 
+
 void 
-get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, struct ccn_indexbuf *interest_comps, int offset)
+get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
+							struct ccn_indexbuf *interest_comps, int offset)
 {
 
 	
@@ -163,7 +168,8 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 	size_t comp_size;
 	for(i=lsa_position+1+offset;i<interest_comps->n-1;i++)
 	{
-		ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, &comp_size);
+		ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, 
+																	&comp_size);
 		len+=1;
 		len+=(int)comp_size;	
 	}
@@ -174,9 +180,11 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 
 	for(i=lsa_position+1+offset; i<interest_comps->n-1;i++)
 	{
-		ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, &comp_size);
+		ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, 
+																	&comp_size);
 		memcpy(neighbor+strlen(neighbor),"/",1);
-		memcpy(neighbor+strlen(neighbor),(char *)comp_ptr1,strlen((char *)comp_ptr1));
+		memcpy(neighbor+strlen(neighbor),(char *)comp_ptr1,
+												strlen((char *)comp_ptr1));
 
 	}
 
@@ -189,59 +197,7 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 	free(neighbor);
 }
 
-void 
-get_host_name_from_command_string(struct name_prefix *name_part,char *nbr_name_uri, int offset)
-{
 
-	
-	
-	int res,i;
-	int len=0;
-	const unsigned char *comp_ptr1;
-	size_t comp_size;
-
-	struct ccn_charbuf *name=ccn_charbuf_create();
-	name = ccn_charbuf_create();
-    	res = ccn_name_from_uri(name,nbr_name_uri);
-    	if (res < 0) {
-        	fprintf(stderr, "Bad ccn URI: %s\n", nbr_name_uri);
-        	exit(1);
-    	}	
-
-	struct ccn_indexbuf cid={0};
-
-    	struct ccn_indexbuf *components=&cid;
-    	ccn_name_split (name, components);
-
-	for(i=components->n-2;i> (0+offset);i--)
-	{
-		res=ccn_name_comp_get(name->buf, components,i,&comp_ptr1, &comp_size);
-		len+=1;
-		len+=(int)comp_size;	
-	}
-	len++;
-
-	char *neighbor=(char *)malloc(len);
-	memset(neighbor,0,len);
-
-	for(i=components->n-2;i> (0+offset);i--)
-	{
-		res=ccn_name_comp_get(name->buf, components,i,&comp_ptr1, &comp_size);
-		if ( i != components->n-2)
-		memcpy(neighbor+strlen(neighbor),".",1);
-		memcpy(neighbor+strlen(neighbor),(char *)comp_ptr1,strlen((char *)comp_ptr1));
-
-	}
-
-	name_part->name=(char *)malloc(strlen(neighbor)+1);
-	memset(name_part->name,0,strlen(neighbor)+1);
-	memcpy(name_part->name,neighbor,strlen(neighbor)+1);
-	name_part->length=strlen(neighbor)+1;
-
-	// 01/31/2013
-	free(neighbor);
-	ccn_charbuf_destroy(&name);
-}
 
 
 
@@ -295,7 +251,8 @@ get_content_by_content_name(char *content_name, unsigned char **content_data)
 			int i;
 			for (i = sizeof(buf) - 1; i >= 0; i--, lifetime_l12 >>= 8)
 				buf[i] = lifetime_l12 & 0xff;
-			ccnb_append_tagged_blob(templ, CCN_DTAG_InterestLifetime, buf, sizeof(buf));
+			ccnb_append_tagged_blob(templ, CCN_DTAG_InterestLifetime, buf, 
+																sizeof(buf));
 		}
 		ccn_charbuf_append_closer(templ); /* </Interest> */
 	}
@@ -307,7 +264,8 @@ get_content_by_content_name(char *content_name, unsigned char **content_data)
 			resultbuf->length = 0;
 		}
 	}
-	res = ccn_get(nlsr->ccn, name, templ, timeout_ms, resultbuf, &pcobuf, NULL, get_flags);
+	res = ccn_get(nlsr->ccn, name, templ, timeout_ms, resultbuf, &pcobuf, NULL, 
+																	get_flags);
 	if (res >= 0) {
 		ptr = resultbuf->buf;
 		length = resultbuf->length;
