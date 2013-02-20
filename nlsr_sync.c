@@ -487,13 +487,13 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	struct name_prefix *orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix));
 	
 
-	struct ccn_indexbuf cid={0};
-    	struct ccn_indexbuf *temp_components=&cid;
-	struct ccn_charbuf *name=ccn_charbuf_create();
-	ccn_name_from_uri(name,nlsr->slice_prefix);
-    	ccn_name_split (name, temp_components);
+	//struct ccn_indexbuf cid={0};
+    	//struct ccn_indexbuf *temp_components=&cid;
+	//struct ccn_charbuf *name=ccn_charbuf_create();
+	//ccn_name_from_uri(name,nlsr->slice_prefix);
+    	//ccn_name_split (name, temp_components);
 	//lsa_position=temp_components->n-2;
-    	ccn_charbuf_destroy(&name);
+    	//ccn_charbuf_destroy(&name);
 
 
 	//res=ccn_name_comp_get(content_name->buf, components,lsa_position+1,&lst, &comp_size);
@@ -562,7 +562,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);		
 
 			int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
-			if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
+			if ( (strcmp((char *)orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
 			{
 				int is_new_adj_lsa=check_is_new_adj_lsa(orig_router->name,(char *)lst,(char *)origtime);
 				if ( is_new_adj_lsa == 1 )

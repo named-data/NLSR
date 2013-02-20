@@ -308,8 +308,10 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		struct ccn_charbuf *pubid = ccn_charbuf_create();
 		struct ccn_charbuf *pubkey = ccn_charbuf_create();
 
-		int res1;
-		res1 = ccn_get_public_key(nlsr->ccn, NULL, pubid, pubkey);
+		//pubid is the digest_result pubkey is result
+		ccn_get_public_key(nlsr->ccn, NULL, pubid, pubkey);
+
+		
 
 		struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 		sp.template_ccnb=ccn_charbuf_create();		
@@ -507,8 +509,16 @@ process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info*
 	if ( contain_key_name(info->content_ccnb, info->pco) == 1)
 	{
 		struct ccn_charbuf *key_name=get_key_name(info->content_ccnb, info->pco);
+		struct ccn_charbuf *key_uri = ccn_charbuf_create();
+		ccn_uri_append(key_uri, key_name->buf, key_name->length, 1);
+
 		if(nlsr->debugging)
-			printf("Key Name: %s\n",ccn_charbuf_as_string(key_name));
+			printf("Key Name: %s\n",ccn_charbuf_as_string(key_uri));
+
+		ccn_charbuf_destroy(&key_uri);
+		ccn_charbuf_destroy(&key_name);
+
+
 	}
 
 	update_adjacent_timed_out_zero_to_adl(nbr);	
