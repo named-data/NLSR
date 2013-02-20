@@ -714,10 +714,6 @@ process_conf_command(char *command)
 	{
 		process_command_ccnname(remainder);
 	}
-	/*else if(!strcmp(cmd_type,"lsdb-synch-interval") )
-	{
-		process_command_lsdb_synch_interval(remainder);
-	}*/
 	else if(!strcmp(cmd_type,"interest-retry") )
 	{
 		process_command_interest_retry(remainder);
