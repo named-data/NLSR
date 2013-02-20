@@ -316,15 +316,12 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		ccn_charbuf_append_charbuf(sp.template_ccnb, pubid);
 		ccn_charbuf_append_closer(sp.template_ccnb);
 		ccn_charbuf_append_closer(sp.template_ccnb);
-
-		ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
-       	 	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;		
-
 		ccn_charbuf_append_closer(sp.template_ccnb);
-		
+		sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
 		sp.sp_flags |= CCN_SP_TEMPL_KEY_LOCATOR;
 		sp.sp_flags |= CCN_SP_FINAL_BLOCK;
 		sp.type = CCN_CONTENT_KEY;
+		sp.freshness = 10;
 		
 		//ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
 		//ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
