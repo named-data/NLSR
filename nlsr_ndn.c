@@ -298,26 +298,29 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	int res;
 	struct ccn_charbuf *data=ccn_charbuf_create();
     	struct ccn_charbuf *name=ccn_charbuf_create();
-    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
+    	
 
 	res=ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]);
 	if (res >= 0)
 	{
-		sp.template_ccnb=ccn_charbuf_create();
+		
 
 		struct ccn_charbuf *pubid = ccn_charbuf_create();
 		struct ccn_charbuf *pubkey = ccn_charbuf_create();
 
 		int res1;
-		res1 = ccn_get_public_key(nlsr->ccn, NULL, pubid, pubkey);		
+		res1 = ccn_get_public_key(nlsr->ccn, NULL, pubid, pubkey);
+
+		struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
+		sp.template_ccnb=ccn_charbuf_create();		
 		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_SignedInfo, CCN_DTAG);
 		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyLocator, CCN_DTAG);
 		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
-		ccn_charbuf_append_charbuf(sp.template_ccnb, pubid);
+		ccn_charbuf_append_charbuf(sp.template_ccnb, name);
 		ccn_charbuf_append_closer(sp.template_ccnb);
 		ccn_charbuf_append_closer(sp.template_ccnb);
 		ccn_charbuf_append_closer(sp.template_ccnb);
-		sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+
 		sp.sp_flags |= CCN_SP_TEMPL_KEY_LOCATOR;
 		sp.sp_flags |= CCN_SP_FINAL_BLOCK;
 		sp.type = CCN_CONTENT_KEY;
