@@ -158,9 +158,6 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, struct c
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length-1);
 
-	//printf("LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length-1);
-
-
 }
 
 int 
@@ -301,23 +298,47 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	int res;
 	struct ccn_charbuf *data=ccn_charbuf_create();
     	struct ccn_charbuf *name=ccn_charbuf_create();
-    	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
+    	
 
 	res=ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]);
 	if (res >= 0)
 	{
-		sp.template_ccnb=ccn_charbuf_create();
-		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
-		ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
-       	 	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+		
+
+		struct ccn_charbuf *pubid = ccn_charbuf_create();
+		struct ccn_charbuf *pubkey = ccn_charbuf_create();
+
+		//pubid is the digest_result pubkey is result
+		ccn_get_public_key(nlsr->ccn, NULL, pubid, pubkey);
+
+		
+
+		struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
+		sp.template_ccnb=ccn_charbuf_create();		
+		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_SignedInfo, CCN_DTAG);
+		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyLocator, CCN_DTAG);
+		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
+		ccn_charbuf_append_charbuf(sp.template_ccnb, name);
 		ccn_charbuf_append_closer(sp.template_ccnb);
+		ccn_charbuf_append_closer(sp.template_ccnb);
+		ccn_charbuf_append_closer(sp.template_ccnb);
+
+		sp.sp_flags |= CCN_SP_TEMPL_KEY_LOCATOR;
+		sp.sp_flags |= CCN_SP_FINAL_BLOCK;
+		sp.type = CCN_CONTENT_KEY;
+		sp.freshness = 10;
+		
+		//ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
+		//ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
+       	 	//sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+		//ccn_charbuf_append_closer(sp.template_ccnb);
 
 
 		char *raw_data=(char *)malloc(20);
 		memset(raw_data,0,20);
 		sprintf(raw_data,"%s", nlsr->lsdb->lsdb_version);	
 
-		res= ccn_sign_content(nlsr->ccn, data, name, &sp, raw_data,strlen(raw_data)); 
+		res= ccn_sign_content(nlsr->ccn, data, name, &sp, pubkey->buf,pubkey->length); 
 		if(res >= 0)
 		{
 			if ( nlsr->debugging )
@@ -357,6 +378,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		free(nbr);
 		free(raw_data);
 		ccn_charbuf_destroy(&sp.template_ccnb);
+		ccn_charbuf_destroy(&pubid);
+		ccn_charbuf_destroy(&pubkey);
 	}
 
 	ccn_charbuf_destroy(&data);
@@ -405,14 +428,13 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 		struct ccn_charbuf*ito;
 		ito=ccn_charbuf_create();
 		ccn_uri_append(ito,info->interest_ccnb,info->pi->offset[CCN_PI_E],0);
-
 		if ( nlsr->debugging )
 			printf("%s\n",ccn_charbuf_as_string(ito));
 		if ( nlsr->detailed_logging )
 			writeLogg(__FILE__,__FUNCTION__,__LINE__,"%s\n",ccn_charbuf_as_string(ito));
-
-		//printf("%s\n",ccn_charbuf_as_string(ito));
 		ccn_charbuf_destroy(&ito);
+
+		
 
 		process_incoming_timed_out_interest(selfp,info);
 
@@ -484,17 +506,23 @@ process_incoming_content_info(struct ccn_closure *selfp, struct ccn_upcall_info*
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Content Received For Neighbor: %s Length:%d\n",nbr->name,nbr->length);
 
 
-	//const unsigned char *ptr;
-	//size_t length;
-	//ccn_content_get_value(info->content_ccnb, info->pco->offset[CCN_PCO_E_Content]-info->pco->offset[CCN_PCO_B_Content], info->pco, &ptr, &length);
+	if ( contain_key_name(info->content_ccnb, info->pco) == 1)
+	{
+		struct ccn_charbuf *key_name=get_key_name(info->content_ccnb, info->pco);
+		struct ccn_charbuf *key_uri = ccn_charbuf_create();
+		ccn_uri_append(key_uri, key_name->buf, key_name->length, 1);
 
-	//long int interval=atoi((char *)ptr);
+		if(nlsr->debugging)
+			printf("Key Name: %s\n",ccn_charbuf_as_string(key_uri));
+
+		ccn_charbuf_destroy(&key_uri);
+		ccn_charbuf_destroy(&key_name);
 
 
+	}
 
 	update_adjacent_timed_out_zero_to_adl(nbr);	
 	update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
-	//update_lsdb_synch_interval_to_adl(nbr,interval);
 	print_adjacent_from_adl();
 
 
@@ -722,5 +750,28 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 	}
 	ccn_charbuf_destroy(&name);
 	free(int_name);
+}
 
+int
+contain_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco) 
+{
+	if (pco->offset[CCN_PCO_B_KeyLocator] == pco->offset[CCN_PCO_E_KeyLocator])
+		return -1;
+
+	struct ccn_buf_decoder decoder;
+	struct ccn_buf_decoder *d;
+	d = ccn_buf_decoder_start(&decoder, ccnb + pco->offset[CCN_PCO_B_Key_Certificate_KeyName], pco->offset[CCN_PCO_E_Key_Certificate_KeyName] - pco->offset[CCN_PCO_B_Key_Certificate_KeyName]);
+	if (ccn_buf_match_dtag(d, CCN_DTAG_KeyName))
+		return 1;
+
+	return -1;
+}
+
+struct ccn_charbuf *
+get_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco) 
+{
+	struct ccn_charbuf *key_name = ccn_charbuf_create();
+	ccn_charbuf_append(key_name, ccnb + pco->offset[CCN_PCO_B_KeyName_Name], pco->offset[CCN_PCO_E_KeyName_Name] - pco->offset[CCN_PCO_B_KeyName_Name]);
+
+	return key_name;
 }

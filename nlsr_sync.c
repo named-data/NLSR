@@ -138,30 +138,6 @@ sync_cb(struct ccns_name_closure *nc,
 }
 
 
-int 
-get_lsa_position(struct ccn_charbuf * ccnb, struct ccn_indexbuf *comps)
-{
-
-	
-	
-	int res,i;
-	int lsa_position=0; 	 	
-	int name_comps=(int)comps->n;
-
-	for(i=0;i<name_comps;i++)
-	{
-		res=ccn_name_comp_strcmp(ccnb->buf,comps,i,"LSA");
-		if( res == 0)
-		{
-			lsa_position=i;
-			break;
-		}	
-	}
-
-	return lsa_position;
-
-}
-
 void 
 get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, struct ccn_indexbuf *interest_comps, int offset)
 {
@@ -460,8 +436,6 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 void
 process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf *components)
 {
-	//int lsa_position;
-	//int res;
 	size_t comp_size;
 	char *lst;
 	char *lsid;
@@ -487,18 +461,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	struct name_prefix *orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix));
 	
 
-	struct ccn_indexbuf cid={0};
-    	struct ccn_indexbuf *temp_components=&cid;
-	struct ccn_charbuf *name=ccn_charbuf_create();
-	ccn_name_from_uri(name,nlsr->slice_prefix);
-    	ccn_name_split (name, temp_components);
-	//lsa_position=temp_components->n-2;
-    	ccn_charbuf_destroy(&name);
 
-
-	//res=ccn_name_comp_get(content_name->buf, components,lsa_position+1,&lst, &comp_size);
-	ccn_name_comp_get(content_name->buf, components,components->n-2-1,&second_last_comp, &comp_size);	
-	//ls_type=atoi((char *)lst);
+	ccn_name_comp_get(content_name->buf, components,components->n-1-2,&second_last_comp, &comp_size);
 	if (nlsr->debugging)
 		printf("2nd Last Component: %s \n",second_last_comp);
 	
@@ -520,7 +484,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 
-		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )
+		if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )
 		{
 			int is_new_name_lsa=check_is_new_name_lsa(orig_router->name,(char *)lst,(char *)lsid,(char *)origtime);
 			if ( is_new_name_lsa == 1 )
@@ -562,7 +526,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);		
 
 			int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
-			if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
+			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
 			{
 				int is_new_adj_lsa=check_is_new_adj_lsa(orig_router->name,(char *)lst,(char *)origtime);
 				if ( is_new_adj_lsa == 1 )
@@ -600,7 +564,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);
 
 			int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
-			if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
+			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
 			{
 				int is_new_cor_lsa=check_is_new_cor_lsa(orig_router->name,(char *)lst,(char *)origtime);
 				if ( is_new_cor_lsa == 1 )
@@ -631,8 +595,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 		}
 	}
 
-	//if (content_data != NULL)
-		//free(content_data);
+	free(orig_router->name);
+	free(orig_router);
 	ccn_charbuf_destroy(&uri);
 	//01/31/2013	
 	free(time_stamp);
