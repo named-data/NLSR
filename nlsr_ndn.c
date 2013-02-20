@@ -263,7 +263,9 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 }
 
 /**
-*
+* Processes incoming interest for "info" interest. Send back reply content back,
+* if interest comes from a neighbor with status down, NLSR will send "info"
+* ineterst to that neighbor
 */
 
 void 
@@ -381,7 +383,10 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 }
 
 
-/* Call back function registered in ccnd to get all content coming to NLSR application */
+/**
+* Call back function registered in ccnd to get all content coming to NLSR 
+* application 
+*/
 
 enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
         enum ccn_upcall_kind kind, struct ccn_upcall_info* info)
@@ -448,6 +453,9 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
     return CCN_UPCALL_RESULT_OK;
 }
 
+/**
+* process any incoming content to NLSR from ccnd
+*/
 
 void 
 process_incoming_content(struct ccn_closure *selfp, struct ccn_upcall_info* info)
@@ -484,6 +492,9 @@ process_incoming_content(struct ccn_closure *selfp, struct ccn_upcall_info* info
 
 }
 
+/**
+* process any incoming "info" content to NLSR from ccnd
+*/
 
 void 
 process_incoming_content_info(struct ccn_closure *selfp, 
@@ -553,7 +564,9 @@ process_incoming_content_info(struct ccn_closure *selfp,
 
 }
 
-
+/**
+* process any incoming interest timed out content to NLSR from ccnd
+*/
 
 
 void
@@ -588,6 +601,10 @@ process_incoming_timed_out_interest(struct ccn_closure* selfp,
 		process_incoming_timed_out_interest_info(selfp,info);
 	}
 }
+
+/**
+* process any incoming "info" interest timed out content to NLSR from ccnd
+*/
 
 void
 process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct 
@@ -644,6 +661,10 @@ process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct
 
 }
 
+/**
+* send "info" interest to each and every neighbor in ADL and also schedule for 
+* itself for periodical sending of "info" interest
+*/
 
 int
 send_info_interest(struct ccn_schedule *sched, void *clienth, 
@@ -690,6 +711,12 @@ send_info_interest(struct ccn_schedule *sched, void *clienth,
 
 	return 0;
 }
+
+
+/**
+* send "info" interest neighbor nbr 
+*
+*/
 
 void 
 send_info_interest_to_neighbor(struct name_prefix *nbr)
@@ -774,6 +801,10 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 	free(int_name);
 }
 
+/**
+* Check whether content name contains a key name. Return 1 for containing
+*/
+
 int
 contain_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco) 
 {
@@ -791,6 +822,11 @@ contain_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco
 
 	return -1;
 }
+
+/**
+* Extract Key Name from Content Name and return the Key Name
+*
+*/
 
 struct ccn_charbuf *
 get_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco) 
