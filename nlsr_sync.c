@@ -600,7 +600,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);
 
 			int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
-			if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
+			if ( (strcmp((char *)orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
 			{
 				int is_new_cor_lsa=check_is_new_cor_lsa(orig_router->name,(char *)lst,(char *)origtime);
 				if ( is_new_cor_lsa == 1 )
