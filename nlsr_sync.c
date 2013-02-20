@@ -520,7 +520,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 
-		if ( (strcmp((char *)orig_router,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )
+		if ( (strcmp((char *)orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp((char *)orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )
 		{
 			int is_new_name_lsa=check_is_new_name_lsa(orig_router->name,(char *)lst,(char *)lsid,(char *)origtime);
 			if ( is_new_name_lsa == 1 )
@@ -633,6 +633,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 	//if (content_data != NULL)
 		//free(content_data);
+	free(orig_router->name);
+	free(orig_router);
 	ccn_charbuf_destroy(&uri);
 	//01/31/2013	
 	free(time_stamp);
