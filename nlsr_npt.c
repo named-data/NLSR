@@ -1091,13 +1091,13 @@ void
 destroy_all_face_by_nlsr(void)
 {
 	int i, npt_element;
-	
+
 	struct npt_entry *ne;
 
 	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-    	
-    	hashtb_start(nlsr->npt, e);
+	struct hashtb_enumerator *e = &ee;
+
+	hashtb_start(nlsr->npt, e);
 	npt_element=hashtb_n(nlsr->npt);
 
 	for(i=0;i<npt_element;i++)

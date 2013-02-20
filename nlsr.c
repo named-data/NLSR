@@ -564,10 +564,8 @@ process_command_topo_prefix(char *command)
 			topo_prefix[strlen(topo_prefix)-1]='\0';
 
 		nlsr->topo_prefix=(char *)calloc(strlen(topo_prefix)+1,sizeof(char));
-		//memset(nlsr->topo_prefix,0,strlen(topo_prefix)+1);
-		puts(topo_prefix);
 		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix));
-
+		printf ("Topo prefix is: %s", nlsr->topo_prefix);;
 	}
 }
 
@@ -598,7 +596,6 @@ process_command_slice_prefix(char *command)
 			slice_prefix[strlen(slice_prefix)-1]='\0';
 
 		nlsr->slice_prefix=(char *)calloc(strlen(slice_prefix)+1,sizeof(char));
-		//memset(nlsr->slice_prefix,0,strlen(slice_prefix)+1);
 		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix));
 	}
 }
@@ -773,7 +770,7 @@ process_conf_command(char *command)
 }
 
 
-int 
+	int 
 readConfigFile(const char *filename)
 {
 	FILE *cfg;
@@ -785,7 +782,7 @@ readConfigFile(const char *filename)
 	if(cfg == NULL)
 	{
 		printf("\nConfiguration File does not exists\n");
-		exit(1);	
+		return -1;	
 	}
 
 	while(fgets((char *)buf, sizeof(buf), cfg))
@@ -803,7 +800,7 @@ readConfigFile(const char *filename)
 }
 
 
-void
+	void
 add_faces_for_nbrs(void)
 {	
 	int i, adl_element;
@@ -819,7 +816,7 @@ add_faces_for_nbrs(void)
 	{
 		nbr=e->data;
 		int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr->neighbor->name, 
-						(const char *)nbr->ip_address, 9695,nlsr->tunnel_type);
+				(const char *)nbr->ip_address, 9695,nlsr->tunnel_type);
 		update_face_to_adl_for_nbr(nbr->neighbor->name, face_id);		
 		add_delete_ccn_face_by_face_id(nlsr->ccn,
 				(const char *)nlsr->topo_prefix, OP_REG, face_id);
@@ -832,7 +829,7 @@ add_faces_for_nbrs(void)
 
 }
 
-void
+	void
 destroy_faces_for_nbrs(void)
 {	
 	int i, adl_element;
@@ -861,7 +858,7 @@ destroy_faces_for_nbrs(void)
 	hashtb_end(e);
 }
 
-char *
+	char *
 process_api_client_command(char *command)
 {
 	char *msg;
@@ -884,7 +881,7 @@ process_api_client_command(char *command)
 		name[strlen(name)-1]='\0';
 
 	struct name_prefix *np=(struct name_prefix *) calloc (1, 
-											sizeof(struct name_prefix ));
+			sizeof(struct name_prefix ));
 	np->name = (char *) calloc (strlen(name)+1,sizeof(char));
 	memcpy(np->name,name,strlen(name)+1);
 	np->length=strlen(name)+1;
@@ -1089,6 +1086,7 @@ nlsr_destroy( void )
 	/* Destroying all face created by nlsr in CCND */
 	destroy_all_face_by_nlsr();	
 	destroy_faces_for_nbrs();
+	
 	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
 	hashtb_destroy(&nlsr->adl);
 	hashtb_destroy(&nlsr->npl);	
@@ -1113,7 +1111,6 @@ nlsr_destroy( void )
 
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->npt);
-
 
 	struct routing_table_entry *rte;
 	hashtb_start(nlsr->routing_table, e);
@@ -1150,7 +1147,7 @@ nlsr_destroy( void )
 
 
 
-void
+	void
 init_api_server(int ccn_fd)
 {
 	int server_sockfd;
@@ -1181,7 +1178,7 @@ init_api_server(int ccn_fd)
 	nlsr->nlsr_api_server_sock_fd=server_sockfd;
 }
 
-int 
+	int 
 init_nlsr(void)
 {
 	if (signal(SIGQUIT, nlsr_stop_signal_handler ) == SIG_ERR) 
@@ -1213,7 +1210,7 @@ init_nlsr(void)
 
 	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase));
 
-	char *time_stamp=(char *)calloc(20,sizeof(char));
+	char *time_stamp=(char *) calloc (20,sizeof(char));
 	//memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
 	nlsr->lsdb->lsdb_version=(char *)malloc(strlen(time_stamp)+1);
@@ -1260,7 +1257,7 @@ init_nlsr(void)
 	return 0;
 }
 
-int 
+	int 
 main(int argc, char *argv[])
 {
 	int res, ret;
@@ -1293,7 +1290,7 @@ main(int argc, char *argv[])
 	if ( port !=0 )
 		nlsr->api_port=port;
 
-	readConfigFile(config_file);
+	ON_ERROR_DESTROY(readConfigFile(config_file));
 
 	ON_ERROR_DESTROY(check_config_validity());
 
@@ -1309,7 +1306,7 @@ main(int argc, char *argv[])
 
 	nlsr->ccn=ccn_create();
 	int ccn_fd=ccn_connect(nlsr->ccn, NULL);
-	
+
 	if(ccn_fd == -1)
 	{
 		fprintf(stderr,"Could not connect to ccnd\n");
@@ -1324,19 +1321,21 @@ main(int argc, char *argv[])
 	if(res<0)
 	{
 		fprintf(stderr, "Can not create slice for prefix %s\n",
-														nlsr->slice_prefix);
+				nlsr->slice_prefix);
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Can not create slice for" 
-											"prefix %s\n",nlsr->slice_prefix);
+				"prefix %s\n",nlsr->slice_prefix);
 		ON_ERROR_DESTROY(res);
 	}
+	
 	struct ccn_charbuf *router_prefix;	
+	
 	router_prefix=ccn_charbuf_create(); 
 	res=ccn_name_from_uri(router_prefix,nlsr->router_name);		
 	if(res<0)
 	{
 		fprintf(stderr, "Bad ccn URI: %s\n",nlsr->router_name);
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,
-									"Bad ccn URI: %s\n", nlsr->router_name);
+				"Bad ccn URI: %s\n", nlsr->router_name);
 		ON_ERROR_DESTROY(res);
 	}
 
@@ -1347,7 +1346,7 @@ main(int argc, char *argv[])
 	{
 		fprintf(stderr,"Failed to register interest for router\n");
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,
-						"Failed to register interest for router\n");
+				"Failed to register interest for router\n");
 		ON_ERROR_DESTROY(res);
 	}
 	ccn_charbuf_destroy(&router_prefix);
@@ -1400,8 +1399,6 @@ main(int argc, char *argv[])
 		}
 
 	}
-
-
 	return 0;
 }
 
