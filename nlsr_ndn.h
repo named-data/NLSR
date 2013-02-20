@@ -4,8 +4,8 @@
 int appendLifetime(struct ccn_charbuf *cb, int lifetime);
 void get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp, struct ccn_upcall_info *info);
 void get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp, struct ccn_upcall_info *info,int offset);
-void get_lsdb_version(char *lsdb_version,struct ccn_closure *selfp, struct ccn_upcall_info *info );
-int get_ls_type(struct ccn_closure *selfp, struct ccn_upcall_info *info);
+//void get_lsdb_version(char *lsdb_version,struct ccn_closure *selfp, struct ccn_upcall_info *info );
+//int get_ls_type(struct ccn_closure *selfp, struct ccn_upcall_info *info);
 
 enum ccn_upcall_res incoming_interest(struct ccn_closure *selfp, enum ccn_upcall_kind kind, struct ccn_upcall_info *info); 
 void process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *info);
