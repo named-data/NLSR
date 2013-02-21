@@ -27,6 +27,10 @@
 #include "nlsr_npt.h"
 #include "nlsr_sync.h"
 
+/**
+* LSDB version is updated to last updated timestamp
+*/
+
 void
 set_new_lsdb_version(void)
 {
@@ -42,6 +46,10 @@ set_new_lsdb_version(void)
 	free(time_stamp);
 	
 }
+
+/**
+* Make key for storing Name LSA in Name LSDB
+*/
 
 void 
 make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
@@ -65,18 +73,28 @@ make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
 		printf("name LSA Key: %s\n", key);
 }
 
+/**
+* Make content name prefix for Name LSA to store in repo
+*/
 
 void 
-make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, long int ls_id,char *orig_time,char *slice_prefix)
+make_name_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, 
+							long int ls_id,char *orig_time,char *slice_prefix)
 {
-	sprintf(key,"%s%s/lsType.%d/lsId.%ld/%s",slice_prefix, orig_router, ls_type, ls_id, orig_time);
+	sprintf(key,"%s%s/lsType.%d/lsId.%ld/%s",slice_prefix, orig_router, ls_type,
+															 ls_id, orig_time);
 	
 	if ( nlsr->debugging )
 		printf("Name LSA prefix for repo content: %s\n",key);
 }
 
+/**
+* Make content name prefix for Adj LSA to store in repo
+*/
+
 void 
-make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *orig_time,char *slice_prefix)
+make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, 
+											char *orig_time,char *slice_prefix)
 {
 		
 	sprintf(key,"%s%s/lsType.%d/%s",slice_prefix,orig_router,ls_type, orig_time );	
@@ -85,8 +103,13 @@ make_adj_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *or
 		printf("Name LSA prefix for repo content:%s\n",key);	
 }
 
+/**
+* Make content name prefix for Cor LSA to store in repo
+*/
+
 void 
-make_cor_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *orig_time,char *slice_prefix)
+make_cor_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, 
+											char *orig_time,char *slice_prefix)
 {
 		
 	sprintf(key,"%s%s/lsType.%d/%s",slice_prefix,orig_router,ls_type, orig_time );	
@@ -94,6 +117,12 @@ make_cor_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type, char *or
 	if ( nlsr->debugging )
 		printf("Cor LSA prefix for repo content:%s\n",key);	
 }
+
+/**
+* Build name lsa for all name prefixes in Name Prefix List (NPL). Intsall Name
+* LSA in Name LSDB for router itself.
+*/
+
 
 void 
 build_and_install_name_lsas(void)
@@ -134,6 +163,10 @@ build_and_install_name_lsas(void)
 	print_name_prefix_from_npl();
 
 }
+
+/**
+* Build and Install one Name LSA Use ful for API
+*/
 
 void 
 build_and_install_single_name_lsa(struct name_prefix *np)
@@ -201,36 +234,33 @@ install_name_lsa(struct nlsa *name_lsa)
 	get_current_timestamp_micro(time_stamp);
 	
 
-		char lst[2];
-		memset(lst,0,2);
-		sprintf(lst,"%d",name_lsa->header->ls_type);	
+	char lst[2];
+	memset(lst,0,2);
+	sprintf(lst,"%d",name_lsa->header->ls_type);	
 
-		char lsid[10];
-		memset(lsid,0,10);
-		sprintf(lsid,"%ld",name_lsa->header->ls_id);
-	
-	
-		char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
-		memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
-
-
-		make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);
-		if ( nlsr->debugging )
-			printf("Key:%s Length:%d\n",key,(int)strlen(key));
-		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Key:%s Length:%d\n",key,(int)strlen(key));	
+	char lsid[10];
+	memset(lsid,0,10);
+	sprintf(lsid,"%ld",name_lsa->header->ls_id);
 		
+	char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
+	memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
+	make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);
 
-		struct nlsa *new_name_lsa=(struct nlsa*)malloc(sizeof(struct nlsa )); //free
+	if ( nlsr->debugging )
+		printf("Key:%s Length:%d\n",key,(int)strlen(key));
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Key:%s Length:%d\n",key,(int)strlen(key));	
+		
+	struct nlsa *new_name_lsa=(struct nlsa*)malloc(sizeof(struct nlsa ));
 
-		struct hashtb_enumerator ee;
-    		struct hashtb_enumerator *e = &ee; 	
-    		int res;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
 
-   		hashtb_start(nlsr->lsdb->name_lsdb, e);
-    		res = hashtb_seek(e, key, strlen(key), 0);
+   	hashtb_start(nlsr->lsdb->name_lsdb, e);
+    	res = hashtb_seek(e, key, strlen(key), 0);
 
-		if(res == HT_NEW_ENTRY )
+	if(res == HT_NEW_ENTRY )
 		{
 		
 			if ( nlsr->debugging )
@@ -241,22 +271,22 @@ install_name_lsa(struct nlsa *name_lsa)
 
 			new_name_lsa = e->data;
 
-			new_name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header )); //free
+			new_name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header ));
 			new_name_lsa->header->ls_type=name_lsa->header->ls_type;
 
 			new_name_lsa->header->orig_time=(char *)malloc(strlen(name_lsa->header->orig_time)+1);
 			memset(new_name_lsa->header->orig_time,0,strlen(name_lsa->header->orig_time)+1);
-			memcpy(new_name_lsa->header->orig_time,name_lsa->header->orig_time,strlen(name_lsa->header->orig_time)+1);
+			memcpy(new_name_lsa->header->orig_time,name_lsa->header->orig_time,strlen(name_lsa->header->orig_time));
 
 			new_name_lsa->header->ls_id=name_lsa->header->ls_id;
-			new_name_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix )); //free
+			new_name_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 			new_name_lsa->header->orig_router->name=(char *)malloc(name_lsa->header->orig_router->length);
 			memcpy(new_name_lsa->header->orig_router->name,name_lsa->header->orig_router->name,name_lsa->header->orig_router->length);
 			new_name_lsa->header->orig_router->length=name_lsa->header->orig_router->length;
 			new_name_lsa->header->isValid=name_lsa->header->isValid;
 
 	
-			new_name_lsa->name_prefix=(struct name_prefix *)malloc(sizeof(struct name_prefix )); //free
+			new_name_lsa->name_prefix=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 			new_name_lsa->name_prefix->name=(char *)malloc(name_lsa->name_prefix->length);
 			memcpy(new_name_lsa->name_prefix->name,name_lsa->name_prefix->name,name_lsa->name_prefix->length);
 			new_name_lsa->name_prefix->length=name_lsa->name_prefix->length;
@@ -404,7 +434,7 @@ install_name_lsa(struct nlsa *name_lsa)
 					free(new_name_lsa->header->orig_time);
 					new_name_lsa->header->orig_time=(char *)malloc(strlen(name_lsa->header->orig_time)+1);
 					memset(new_name_lsa->header->orig_time,0,strlen(name_lsa->header->orig_time)+1);
-					memcpy(new_name_lsa->header->orig_time,name_lsa->header->orig_time,strlen(name_lsa->header->orig_time)+1);
+					memcpy(new_name_lsa->header->orig_time,name_lsa->header->orig_time,strlen(name_lsa->header->orig_time));
 				
 					new_name_lsa->header->isValid=name_lsa->header->isValid;
 
@@ -603,20 +633,20 @@ build_others_name_lsa(struct nlsa *name_lsa, char *orig_router,int ls_type,long 
 
 	name_lsa->header->orig_time=(char *)malloc(strlen(orig_time)+1);
 	memset(name_lsa->header->orig_time,0,strlen(orig_time)+1);
-	memcpy(name_lsa->header->orig_time,orig_time,strlen(orig_time)+1);
+	memcpy(name_lsa->header->orig_time,orig_time,strlen(orig_time));
 
 	name_lsa->header->ls_id=ls_id;
 	name_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	name_lsa->header->orig_router->name=(char *)malloc(strlen(orig_router)+1);
 	memset(name_lsa->header->orig_router->name,0,strlen(orig_router)+1);
-	memcpy(name_lsa->header->orig_router->name,orig_router,strlen(orig_router)+1);
+	memcpy(name_lsa->header->orig_router->name,orig_router,strlen(orig_router));
 	name_lsa->header->orig_router->length=strlen(orig_router)+1;
 	name_lsa->header->isValid=isValid;
 
 	name_lsa->name_prefix=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	name_lsa->name_prefix->name=(char *)malloc(strlen(np)+1);
 	memset(name_lsa->name_prefix->name,0,strlen(np)+1);
-	memcpy(name_lsa->name_prefix->name,np,strlen(np)+1);
+	memcpy(name_lsa->name_prefix->name,np,strlen(np));
 	name_lsa->name_prefix->length=strlen(np)+1;
 }
 
