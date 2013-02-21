@@ -52,31 +52,6 @@ sync_cb(struct ccns_name_closure *nc,
 		struct ccn_charbuf *name)
 {
 	int res;
-	/*char *hexL;
-	  char *hexR;
-	  struct ccn_charbuf *uri = ccn_charbuf_create();
-	  if (lhash == NULL || lhash->length == 0) {
-	  hexL = strdup("none");
-	  } else
-	  hexL = hex_string(lhash->buf, lhash->length);
-	  if (rhash == NULL || rhash->length == 0) {
-	  hexR = strdup("none");
-	  } else
-	  hexR = hex_string(rhash->buf, rhash->length);
-	  if (name != NULL)
-	  ccn_uri_append(uri, name->buf, name->length, 1);
-	  else
-	  ccn_charbuf_append_string(uri, "(null)");
-
-	  if ( nlsr->debugging )
-	  printf("Response from sync in the name: %s \n",ccn_charbuf_as_string(uri));	
-
-	  fflush(stdout);
-	  free(hexL);
-	  free(hexR);
-	  ccn_charbuf_destroy(&uri);
-	 */
-
 	//--Doing our thing from here
 	//struct ccn_indexbuf cid={0};
 
@@ -555,18 +530,19 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	free(time_stamp);
 }
 
-	int
+int
 sync_monitor(char *topo_prefix, char *slice_prefix)
 {
 
-	static struct ccns_name_closure nc={0};
-	nlsr->closure = &nc;
+	//static struct ccns_name_closure nc={0};
+	//nlsr->closure = &nc;
+	nlsr->closure=(struct ccns_name_closure *)calloc(1,sizeof(struct ccns_name_closure));
 	struct ccn_charbuf *prefix = ccn_charbuf_create();
-	struct ccn_charbuf *roothash = NULL;
+	//struct ccn_charbuf *roothash = NULL;
 	struct ccn_charbuf *topo = ccn_charbuf_create(); 
 	nlsr->slice = ccns_slice_create();
-	ccn_charbuf_reset(prefix);
-	ccn_charbuf_reset(topo);
+	//ccn_charbuf_reset(prefix);
+	//ccn_charbuf_reset(topo);
 
 	ccn_charbuf_reset(prefix);
 	ccn_name_from_uri(prefix, slice_prefix);
@@ -576,16 +552,16 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
 
 	ccns_slice_set_topo_prefix(nlsr->slice, topo, prefix);
 	nlsr->closure->callback = &sync_cb;
-	nlsr->ccns = ccns_open(nlsr->ccn, nlsr->slice, nlsr->closure, roothash, NULL);
+	nlsr->ccns = ccns_open(nlsr->ccn, nlsr->slice, nlsr->closure, NULL, NULL);
 
 	//01/31/2013
-	ccn_charbuf_destroy(&prefix);
-	ccn_charbuf_destroy(&topo);
-	ccn_charbuf_destroy(&roothash);
+	//ccn_charbuf_destroy(&prefix);
+	//ccn_charbuf_destroy(&topo);
+	//ccn_charbuf_destroy(&roothash);
 	return 0;
 }
 
-	struct ccn_charbuf *
+struct ccn_charbuf *
 make_template(int scope)
 {
 	struct ccn_charbuf *templ = NULL;
@@ -599,7 +575,7 @@ make_template(int scope)
 	return(templ);
 }
 
-	int
+int
 write_data_to_repo(char *data, char *name_prefix)
 {
 	if ( nlsr->debugging )

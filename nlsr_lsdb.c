@@ -149,12 +149,12 @@ build_and_install_name_lsas(void)
 		
 		install_name_lsa(name_lsa);
 		update_nlsa_id_for_name_in_npl(npe->np,name_lsa->header->ls_id);
-		free(name_lsa->header->orig_router->name);
-		free(name_lsa->header->orig_router);
-		free(name_lsa->header);
-		free(name_lsa->name_prefix->name);
-		free(name_lsa->name_prefix);
-		free(name_lsa);
+		//free(name_lsa->header->orig_router->name);
+		//free(name_lsa->header->orig_router);
+		//free(name_lsa->header);
+		//free(name_lsa->name_prefix->name);
+		//free(name_lsa->name_prefix);
+		//free(name_lsa);
 		hashtb_next(e);		
 	}
 
@@ -182,11 +182,11 @@ build_and_install_single_name_lsa(struct name_prefix *np)
 	install_name_lsa(name_lsa);
 	update_nlsa_id_for_name_in_npl(np,name_lsa->header->ls_id);
 
-	free(name_lsa->header->orig_router->name);
-	free(name_lsa->header->orig_router);
-	free(name_lsa->header);
-	free(name_lsa->name_prefix->name);
-	free(name_lsa->name_prefix);
+	//free(name_lsa->header->orig_router->name);
+	//free(name_lsa->header->orig_router);
+	//free(name_lsa->header);
+	//free(name_lsa->name_prefix->name);
+	//free(name_lsa->name_prefix);
 	free(name_lsa);
 	
 	print_name_prefix_from_npl();
@@ -229,9 +229,9 @@ void
 install_name_lsa(struct nlsa *name_lsa)
 {
 
-	char *time_stamp=(char *)malloc(20);
+	/*char *time_stamp=(char *)malloc(20);
 	memset(time_stamp,0,20);
-	get_current_timestamp_micro(time_stamp);
+	get_current_timestamp_micro(time_stamp);*/
 	
 
 	char lst[2];
@@ -270,7 +270,9 @@ install_name_lsa(struct nlsa *name_lsa)
 
 
 			new_name_lsa = e->data;
+			//memcpy(e->data, name_lsa, sizeof(name_lsa));
 	
+			
 			new_name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header ));
 			new_name_lsa->header->ls_type=name_lsa->header->ls_type;
 
@@ -302,7 +304,9 @@ install_name_lsa(struct nlsa *name_lsa)
 				writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Name LSA Added....\n");	
 				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 			}
+
 			set_new_lsdb_version();	
+
 			if ( nlsr->debugging )
 				printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 			if ( nlsr->detailed_logging )
@@ -355,10 +359,10 @@ install_name_lsa(struct nlsa *name_lsa)
 			
 			writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
 			writeLogg(__FILE__,__FUNCTION__,__LINE__," Adding name lsa\n");
-			write_log_for_name_lsa(new_name_lsa);
+			//write_log_for_name_lsa(new_name_lsa);
 			writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
 		
-			free(time_stamp);
+			//free(time_stamp);
 
 		}
 		else if(res == HT_OLD_ENTRY)
