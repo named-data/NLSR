@@ -35,7 +35,7 @@
 
 char * getLocalTimeStamp(void)
 {
-	char *timestamp = (char *)malloc(sizeof(char) * 16);
+	char *timestamp = (char *)malloc(sizeof(char) * 20);
 	time_t ltime;
 	ltime=time(NULL);
 	struct tm *tm;
@@ -49,7 +49,7 @@ char * getLocalTimeStamp(void)
 
 char * getGmTimeStamp(void)
 {
-	char *timestamp = (char *)malloc(sizeof(char) * 16);
+	char *timestamp = (char *)malloc(sizeof(char) * 20);
 	time_t gtime;
 	gtime=time(NULL);
 	struct tm *tm;

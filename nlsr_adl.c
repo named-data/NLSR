@@ -31,7 +31,7 @@
 void 
 add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip)
 {
-	struct ndn_neighbor *nbr=(struct ndn_neighbor *)malloc(sizeof(struct ndn_neighbor )); //free
+	struct ndn_neighbor *nbr;//=(struct ndn_neighbor *)malloc(sizeof(struct ndn_neighbor )); //free
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	

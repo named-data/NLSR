@@ -142,7 +142,7 @@ sync_cb(struct ccns_name_closure *nc,
 
 
 
-    void 
+void 
 get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 	struct ccn_indexbuf *interest_comps, int offset)
 {

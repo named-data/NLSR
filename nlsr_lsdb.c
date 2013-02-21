@@ -251,7 +251,7 @@ install_name_lsa(struct nlsa *name_lsa)
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Key:%s Length:%d\n",key,(int)strlen(key));	
 		
-	struct nlsa *new_name_lsa=(struct nlsa*)malloc(sizeof(struct nlsa ));
+	struct nlsa *new_name_lsa; //=(struct nlsa*)malloc(sizeof(struct nlsa ));
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
@@ -270,13 +270,13 @@ install_name_lsa(struct nlsa *name_lsa)
 
 
 			new_name_lsa = e->data;
-
+	
 			new_name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header ));
 			new_name_lsa->header->ls_type=name_lsa->header->ls_type;
 
 			new_name_lsa->header->orig_time=(char *)malloc(strlen(name_lsa->header->orig_time)+1);
 			memset(new_name_lsa->header->orig_time,0,strlen(name_lsa->header->orig_time)+1);
-			memcpy(new_name_lsa->header->orig_time,name_lsa->header->orig_time,strlen(name_lsa->header->orig_time));
+			memcpy(new_name_lsa->header->orig_time,name_lsa->header->orig_time,strlen(name_lsa->header->orig_time)+1);
 
 			new_name_lsa->header->ls_id=name_lsa->header->ls_id;
 			new_name_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
@@ -290,6 +290,7 @@ install_name_lsa(struct nlsa *name_lsa)
 			new_name_lsa->name_prefix->name=(char *)malloc(name_lsa->name_prefix->length);
 			memcpy(new_name_lsa->name_prefix->name,name_lsa->name_prefix->name,name_lsa->name_prefix->length);
 			new_name_lsa->name_prefix->length=name_lsa->name_prefix->length;
+			
 
 			if ( nlsr->debugging )
 			{
@@ -830,7 +831,7 @@ install_adj_lsa(struct alsa * adj_lsa)
 		memset(key,0,adj_lsa->header->orig_router->length+2);
 		make_adj_lsa_key(key,adj_lsa);
 
-		struct alsa *new_adj_lsa=(struct alsa*)malloc(sizeof(struct alsa ));
+		struct alsa *new_adj_lsa;//=(struct alsa*)malloc(sizeof(struct alsa ));
 
 		struct hashtb_enumerator ee;
     		struct hashtb_enumerator *e = &ee; 	
@@ -1349,7 +1350,7 @@ get_name_lsa_data(struct ccn_charbuf *lsa_data, struct name_prefix *lsaId)
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_name_lsa_data called  \n");
 
-	struct nlsa *name_lsa=(struct nlsa*)malloc(sizeof(struct nlsa ));
+	struct nlsa *name_lsa;//=(struct nlsa*)malloc(sizeof(struct nlsa ));
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
@@ -2122,7 +2123,7 @@ refresh_lsdb(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_eve
 	
 	refresh_name_lsdb();
 	refresh_adj_lsdb();
-	refresh_cor_lsdb();
+	//refresh_cor_lsdb();
 
 	nlsr->event = ccn_schedule_event(nlsr->sched, 60000000, &refresh_lsdb, NULL, 0);
 	
@@ -2145,7 +2146,7 @@ write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 
 	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
 
-	ccn_charbuf_destroy(&lsa_data);
+	//ccn_charbuf_destroy(&lsa_data);
 }
 
 void
@@ -2164,7 +2165,7 @@ write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 
 	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
 
-	ccn_charbuf_destroy(&lsa_data);
+	//ccn_charbuf_destroy(&lsa_data);
 }
 
 
@@ -2311,7 +2312,7 @@ install_cor_lsa(struct clsa *cor_lsa)
 		if ( nlsr->debugging )
 			printf("New Cor LSA... \n");
 		
-		struct clsa *new_cor_lsa=(struct clsa *)malloc(sizeof( struct clsa ));
+		struct clsa *new_cor_lsa;//=(struct clsa *)malloc(sizeof( struct clsa ));
 		new_cor_lsa=e->data;
 		new_cor_lsa->header=(struct alsa_header *)malloc(sizeof(struct alsa_header ));
 
@@ -2532,7 +2533,7 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	free(lst);
 	free(key);
 	free(repo_key);
-	ccn_charbuf_destroy(&lsa_data);
+	//ccn_charbuf_destroy(&lsa_data);
 }
 
 void 
