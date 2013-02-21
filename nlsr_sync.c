@@ -145,13 +145,9 @@ void
 get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 		struct ccn_indexbuf *interest_comps, int offset)
 {
-
-
-
 	int i;
 	int lsa_position=0;
 	int len=0;
-
 
 	struct ccn_indexbuf cid={0};
 	struct ccn_indexbuf *components=&cid;
@@ -161,7 +157,6 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 	lsa_position=components->n-2;
 
 	ccn_charbuf_destroy(&name);
-
 
 	const unsigned char *comp_ptr1;
 	size_t comp_size;
@@ -553,7 +548,8 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 		}
 	}
 
-	free(orig_router);
+	if (orig_router)
+		free(orig_router);
 	ccn_charbuf_destroy(&uri);
 	//01/31/2013	
 	free(time_stamp);
