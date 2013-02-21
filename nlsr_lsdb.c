@@ -523,7 +523,7 @@ install_name_lsa(struct nlsa *name_lsa)
 
     		hashtb_end(e);
 
-		free(key);
+		//free(key);
 }
 
 void 
@@ -733,7 +733,7 @@ build_and_install_adj_lsa(struct ccn_schedule *sched, void *clienth, struct ccn_
 		
 			write_adj_lsa_to_repo(repo_key, lsaid);
 
-			free(key);
+			//free(key);
 			free(repo_key);
 			free(lsaid->name);
 			free(lsaid);
@@ -963,7 +963,7 @@ install_adj_lsa(struct alsa * adj_lsa)
 		}
 
 
-		free(key);
+		//free(key);
 
 	free(time_stamp);
 }
@@ -2292,8 +2292,8 @@ install_cor_lsa(struct clsa *cor_lsa)
 	get_current_timestamp_micro(time_stamp);
 
 
-	char *key=(char *)malloc(cor_lsa->header->orig_router->length+2+2);
-	memset(key,0,cor_lsa->header->orig_router->length+2);
+	char *key=(char *)malloc(cor_lsa->header->orig_router->length+4);
+	memset(key,0,cor_lsa->header->orig_router->length+4);
 	make_cor_lsa_key(key,cor_lsa);
 
 	if ( nlsr->debugging )
@@ -2337,7 +2337,7 @@ install_cor_lsa(struct clsa *cor_lsa)
 	}
 	hashtb_end(e);
 
-	free(key);
+	//free(key);
 
 }
 
@@ -2375,12 +2375,12 @@ build_others_cor_lsa(struct clsa *cor_lsa,char *orig_router, int ls_type,char *o
 
 	cor_lsa->header->orig_time=(char *)malloc(strlen(orig_time)+1); 
 	memset(cor_lsa->header->orig_time,0,strlen(orig_time)+1);
-	memcpy(cor_lsa->header->orig_time,orig_time,strlen(orig_time)+1);
+	memcpy(cor_lsa->header->orig_time,orig_time,strlen(orig_time));
 
 	cor_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	cor_lsa->header->orig_router->name=(char *)malloc(strlen(orig_router)+1);
 	memset(cor_lsa->header->orig_router->name,0,strlen(orig_router)+1);
-	memcpy(cor_lsa->header->orig_router->name,orig_router,strlen(orig_router)+1);
+	memcpy(cor_lsa->header->orig_router->name,orig_router,strlen(orig_router));
 	cor_lsa->header->orig_router->length=strlen(orig_router)+1;
 
 	cor_lsa->cor_r=cor_r;	
@@ -2396,7 +2396,8 @@ build_and_install_others_cor_lsa(char *orig_router,int ls_type,char *orig_time, 
 	install_cor_lsa(cor_lsa);
 
 	print_cor_lsdb();
-
+	
+	free(cor_lsa->header->orig_router->name);
 	free(cor_lsa->header->orig_router);
 	free(cor_lsa->header->orig_time);
 	free(cor_lsa->header);
