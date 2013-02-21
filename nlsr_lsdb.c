@@ -2142,11 +2142,16 @@ write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 	struct ccn_charbuf *lsa_data=ccn_charbuf_create();		
 	get_adj_lsa_data(lsa_data,lsa_id);
 	if ( nlsr->debugging )
-		printf("Adj LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+		printf("Adj LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));
 
-	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
+	char *data=(char *)calloc(strlen(ccn_charbuf_as_string(lsa_data))+1,sizeof(char));
+	memcpy(data,	ccn_charbuf_as_string(lsa_data),strlen(ccn_charbuf_as_string(lsa_data)));
+	data[strlen(ccn_charbuf_as_string(lsa_data))]='\0';	
 
-	//ccn_charbuf_destroy(&lsa_data);
+	//write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
+	write_data_to_repo(data, repo_content_prefix);
+
+	ccn_charbuf_destroy(&lsa_data);
 }
 
 void
@@ -2163,7 +2168,13 @@ write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 	if ( nlsr->debugging )
 		printf("Name LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
 
-	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
+	char *data=(char *)calloc(strlen(ccn_charbuf_as_string(lsa_data))+1,sizeof(char));
+	memcpy(data,	ccn_charbuf_as_string(lsa_data),strlen(ccn_charbuf_as_string(lsa_data)));
+	data[strlen(ccn_charbuf_as_string(lsa_data))]='\0';	
+
+	write_data_to_repo(data, repo_content_prefix);
+
+	//write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
 
 	//ccn_charbuf_destroy(&lsa_data);
 }
@@ -2513,9 +2524,15 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	
 	struct ccn_charbuf *lsa_data=ccn_charbuf_create();
 	get_cor_lsa_data(lsa_data,key);
-	
+
+	char *data=(char *)calloc(strlen(ccn_charbuf_as_string(lsa_data))+1,sizeof(char));
+	memcpy(data,	ccn_charbuf_as_string(lsa_data),strlen(ccn_charbuf_as_string(lsa_data)));
+	data[strlen(ccn_charbuf_as_string(lsa_data))]='\0';
+
+	//if ( nlsr->debugging )
+		//printf("Cor LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
 	if ( nlsr->debugging )
-		printf("Cor LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
+		printf("Cor LSA Data: %s \n",data);
 	char *lst=(char *)malloc(20);
 	memset(lst,0,20);
 	sprintf(lst,"%d",cor_lsa->header->ls_type);
@@ -2526,7 +2543,8 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	if ( nlsr->debugging )
 		printf("Cor LSA Repo Key: %s \n",repo_key);	
 
-	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_key);
+	//write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_key);
+	write_data_to_repo(data, repo_key);
 
 	
 		
