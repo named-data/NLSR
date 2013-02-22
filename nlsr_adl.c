@@ -399,11 +399,13 @@ delete_nbr_from_adl(struct name_prefix *nbr)
 	if (res == HT_OLD_ENTRY)
 	{
 		struct ndn_neighbor *nbr=e->data;
-		free(nbr->neighbor->name);
+		/*free(nbr->neighbor->name);
 		free(nbr->neighbor);
 		free(nbr->last_lsdb_version);
 		free(nbr->last_info_version);
 		free(nbr->ip_address);
+		*/
+		destroy_nbr_component(nbr);
 		hashtb_delete(e);
 			
 	}
@@ -721,6 +723,48 @@ get_host_name_from_command_string(struct name_prefix *name_part,
 	// 01/31/2013
 	free(neighbor);
 	ccn_charbuf_destroy(&name);
+}
+
+
+void
+destroy_nbr_component(struct ndn_neighbor *nbr)
+{
+	if ( nbr->neighbor->name )
+		free(nbr->neighbor->name);
+	if ( nbr->neighbor )
+		free(nbr->neighbor);
+	if ( nbr->last_lsdb_version)
+		free(nbr->last_lsdb_version);
+	if ( nbr->last_info_version)
+		free(nbr->last_info_version);
+	if ( nbr->ip_address)
+		free(nbr->ip_address);
+}
+
+void
+destroy_adl(void)
+{	
+	int i, adl_element;
+	struct ndn_neighbor *nbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->adl, e);
+	adl_element=hashtb_n(nlsr->adl);
+
+	for(i=0;i<adl_element;i++)
+	{
+		nbr=e->data;
+		destroy_nbr_component(nbr);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	
+	if( nlsr->adl )
+		hashtb_destroy(&nlsr->adl);
+
 }
 
 

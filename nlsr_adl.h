@@ -53,4 +53,6 @@ int is_active_neighbor(char *nbr);
 void update_face_to_adl_for_nbr(char *nbr, int face);
 
 void get_host_name_from_command_string(struct name_prefix *name_part,char *nbr_name_uri, int offset);
+void destroy_nbr_component(struct ndn_neighbor *nbr);
+void destroy_adl(void);
 #endif

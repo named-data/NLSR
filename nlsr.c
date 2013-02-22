@@ -1084,9 +1084,12 @@ nlsr_destroy( void )
 	destroy_faces_for_nbrs();
 	
 	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
-	hashtb_destroy(&nlsr->adl);
-	hashtb_destroy(&nlsr->npl);	
-	hashtb_destroy(&nlsr->pit_alsa);
+	//hashtb_destroy(&nlsr->adl);
+	destroy_adl();
+	//hashtb_destroy(&nlsr->npl);
+	destroy_npl();
+		
+	//hashtb_destroy(&nlsr->pit_alsa);
 	hashtb_destroy(&nlsr->lsdb->name_lsdb);
 	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
 	hashtb_destroy(&nlsr->lsdb->cor_lsdb);
@@ -1197,7 +1200,7 @@ init_nlsr(void)
 
 	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), NULL);
 	nlsr->npl = hashtb_create(sizeof(struct name_prefix_list_entry), NULL);
-	nlsr->pit_alsa = hashtb_create(sizeof(struct pending_interest), NULL);
+	//nlsr->pit_alsa = hashtb_create(sizeof(struct pending_interest), NULL);
 	nlsr->npt = hashtb_create(sizeof(struct npt_entry), NULL);
 	nlsr->routing_table = hashtb_create(sizeof(struct routing_table_entry), NULL);
 

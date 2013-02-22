@@ -22,12 +22,11 @@
 #include "utility.h"
 
 
+
 void 
 add_name_to_npl(struct name_prefix *np)
 {
-	struct name_prefix_list_entry *npe=(struct name_prefix_list_entry *)malloc(sizeof(struct name_prefix_list_entry));
-	//struct name_prefix *hnp=(struct name_prefix *)malloc(sizeof(struct name_prefix )); //free
-
+	struct name_prefix_list_entry *npe;
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
     	int res;
@@ -38,15 +37,11 @@ add_name_to_npl(struct name_prefix *np)
 	if(res == HT_NEW_ENTRY)
 	{   
 		npe=e->data;
-		npe->np=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+		npe->np=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
 		npe->np->length=np->length;
-		npe->np->name=(char *)malloc(np->length);
+		npe->np->name=(char *)calloc(np->length,sizeof(char));
 		memcpy(npe->np->name,np->name,np->length);
 		npe->name_lsa_id=0;
-		//hnp = e->data;
-		//hnp->length=np->length;
-		//hnp->name=(char *)malloc(np->length); //free
-		//memcpy(hnp->name,np->name,np->length);
 	}
     	
 	hashtb_end(e);
@@ -57,9 +52,6 @@ int
 does_name_exist_in_npl(struct name_prefix *np)
 {
 	int ret=0;
-
-	//struct name_prefix_entry *npe;
-
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
     	int res;
@@ -172,3 +164,36 @@ update_nlsa_id_for_name_in_npl(struct name_prefix *np, long int nlsa_id)
 	hashtb_end(e);
 }
 
+void
+destroy_npl_entry_component(struct name_prefix_list_entry *npe)
+{
+	if (npe->np->name)
+		free(npe->np->name);
+	if(npe->np)
+		free(npe->np);
+}
+
+void
+destroy_npl(void)
+{
+	int i, npl_element;
+	struct name_prefix_list_entry *npe;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->npl, e);
+	npl_element=hashtb_n(nlsr->npl);
+
+	for(i=0;i<npl_element;i++)
+	{
+		npe=e->data;
+		destroy_npl_entry_component(npe);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+	if ( nlsr->npl)
+		hashtb_destroy(&nlsr->npl);
+}
