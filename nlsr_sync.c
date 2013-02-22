@@ -378,9 +378,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 
 	unsigned char *content_data = NULL;
 
-	char *time_stamp=(char *)malloc(20);
-	memset(time_stamp,0,20);
-	get_current_timestamp_micro(time_stamp);
+	char *time_stamp=get_current_timestamp_micro_v2();
 
 	struct ccn_charbuf *uri = ccn_charbuf_create();
 	ccn_uri_append(uri, content_name->buf, content_name->length, 0);	
