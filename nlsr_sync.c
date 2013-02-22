@@ -52,64 +52,64 @@ sync_cb(struct ccns_name_closure *nc,
 		struct ccn_charbuf *name)
 {
 	int res;
-	//--Doing our thing from here
-	//struct ccn_indexbuf cid={0};
-
-	//struct ccn_indexbuf *components=&cid;
-	struct ccn_indexbuf *components=ccn_indexbuf_create();
-	res=ccn_name_split (name, components);
+	struct ccn_charbuf *content_name; 
+	struct ccn_indexbuf *content_comps;
+	struct ccn_indexbuf *name_comps;
+	
+	content_comps = ccn_indexbuf_create();
+	res = ccn_name_split(name, content_comps);
 	if ( res < 0 )
 		return 0;
-	//ccn_name_chop(name,components,-3);
-	//process_content_from_sync(name,components);
-
-	struct ccn_charbuf *content_name = ccn_charbuf_create();
-	ccn_name_init(content_name);
-	if (components->n < 2)
+	
+	if (content_comps->n < 2)
 		return 0;
-	res = ccn_name_append_components(content_name, name->buf, components->buf[0]
-			, components->buf[components->n - 1]);
+
+	content_name = ccn_charbuf_create();
+	ccn_name_init(content_name);
+	
+	res = ccn_name_append_components( content_name,	name->buf,
+			content_comps->buf[0], content_comps->buf[content_comps->n - 1]);
 
 	if ( res < 0)
 		return 0;
 
-
-	// debugging purpose
+	// for debugging
 	struct ccn_charbuf *temp=ccn_charbuf_create();
 	ccn_uri_append(temp, content_name->buf, content_name->length, 0);
 	if ( nlsr->debugging )
 		printf("Name before chopping: %s \n",ccn_charbuf_as_string(temp));
 	ccn_charbuf_destroy(&temp);
 
-	//struct ccn_indexbuf cid1={0};
-	//struct ccn_indexbuf *components1=&cid1;
-	struct ccn_indexbuf *components1=ccn_indexbuf_create();
-	res=ccn_name_split (content_name, components1);
-	if ( res < 0)
+	name_comps = ccn_indexbuf_create();
+	res=ccn_name_split (content_name, name_comps);
+	if (res < 0)
 		return 0;		
 
 	if ( nlsr->debugging )
 	{
 		printf("Number of components in name = %d \n",res);
 		printf("Number of components in name as indexbuf->n = %d \n",
-				(int)components1->n);
+				(int)name_comps->n);
 	}
-	ccn_name_chop(content_name,components1,-3);
+
+	ccn_name_chop(content_name, name_comps, -3);
 	if ( nlsr->debugging )
 		printf("Number of components in name as indexbuf->n after chopping= %d \n"
-				,(int)components1->n);	
+				, (int)name_comps->n);	
 
-	//debugging purpose
+	//for debugging 
 	struct ccn_charbuf *temp1=ccn_charbuf_create();
 	ccn_uri_append(temp1, content_name->buf, content_name->length, 0);
 	if ( nlsr->debugging )
 		printf("Name after chopping: %s \n",ccn_charbuf_as_string(temp1));
 	ccn_charbuf_destroy(&temp1);
 
-	process_content_from_sync(content_name,components1);
+	//main method which process contents from the sync.
+	process_content_from_sync(content_name, name_comps);
+	
 	ccn_charbuf_destroy(&content_name);
-	ccn_indexbuf_destroy(&components);
-	ccn_indexbuf_destroy(&components1);
+	ccn_indexbuf_destroy(&content_comps);
+	ccn_indexbuf_destroy(&name_comps);
 
 	return(0);
 }
@@ -361,7 +361,8 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 }
 
 	void
-process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf *components)
+process_content_from_sync (struct ccn_charbuf *content_name, 
+								struct ccn_indexbuf *components)
 {
 	size_t comp_size;
 	char *lst;
@@ -383,15 +384,23 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	struct ccn_charbuf *uri = ccn_charbuf_create();
 	ccn_uri_append(uri, content_name->buf, content_name->length, 0);	
 
-	struct name_prefix *orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix));
+	struct name_prefix *orig_router=(struct name_prefix *)
+								calloc( 1, sizeof(struct name_prefix));
 
-
-
-	ccn_name_comp_get(content_name->buf, components,components->n-1-2,&second_last_comp, &comp_size);
+	ccn_name_comp_get( content_name->buf, components, 
+					  components->n-1-2, &second_last_comp, &comp_size);
+	
 	if (nlsr->debugging)
-		printf("2nd Last Component: %s \n",second_last_comp);
+		printf("2nd Last Component: %s \n", second_last_comp);
 
-	second_comp_type=strtok_r((char *)second_last_comp,sep,&rem);		
+	second_comp_type=strtok_r((char *)second_last_comp, sep, &rem);
+	if (second_comp_type == NULL || rem == NULL)
+	{
+		printf ("Error: unable to tokenize the string: %s, calling exit()\n",
+													(char *)second_last_comp); 
+		exit(0);
+	}
+
 	if ( strcmp( second_comp_type, "lsId" ) == 0 )
 	{	
 		lsid=rem;
@@ -532,15 +541,13 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 sync_monitor(char *topo_prefix, char *slice_prefix)
 {
 
-	//static struct ccns_name_closure nc={0};
-	//nlsr->closure = &nc;
-	nlsr->closure=(struct ccns_name_closure *)calloc(1,sizeof(struct ccns_name_closure));
 	struct ccn_charbuf *prefix = ccn_charbuf_create();
-	//struct ccn_charbuf *roothash = NULL;
 	struct ccn_charbuf *topo = ccn_charbuf_create(); 
+	
+	nlsr->closure=(struct ccns_name_closure *) 
+						calloc(1,sizeof(struct ccns_name_closure));
+
 	nlsr->slice = ccns_slice_create();
-	//ccn_charbuf_reset(prefix);
-	//ccn_charbuf_reset(topo);
 
 	ccn_charbuf_reset(prefix);
 	ccn_name_from_uri(prefix, slice_prefix);
@@ -552,10 +559,8 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
 	nlsr->closure->callback = &sync_cb;
 	nlsr->ccns = ccns_open(nlsr->ccn, nlsr->slice, nlsr->closure, NULL, NULL);
 
-	//01/31/2013
-	//ccn_charbuf_destroy(&prefix);
-	//ccn_charbuf_destroy(&topo);
-	//ccn_charbuf_destroy(&roothash);
+	ccn_charbuf_destroy(&prefix);
+	ccn_charbuf_destroy(&topo);
 	return 0;
 }
 
@@ -597,7 +602,6 @@ write_data_to_repo(char *data, char *name_prefix)
 	struct ccn_seqwriter *w = NULL;
 	int blocksize = 4096;
 	int freshness = -1;
-	int torepo = 1;
 	int scope = 1;
 	int res;
 	size_t blockread;
@@ -610,7 +614,6 @@ write_data_to_repo(char *data, char *name_prefix)
 		return -1;
 	}
 
-
 	w = ccn_seqw_create(temp_ccn, name);
 	if (w == NULL) {
 		fprintf(stderr, "ccn_seqw_create failed\n");
@@ -619,21 +622,19 @@ write_data_to_repo(char *data, char *name_prefix)
 	ccn_seqw_set_block_limits(w, blocksize, blocksize);
 	if (freshness > -1)
 		ccn_seqw_set_freshness(w, freshness);
-	if (torepo) {
-		struct ccn_charbuf *name_v = ccn_charbuf_create();
-		ccn_seqw_get_name(w, name_v);
-		ccn_name_from_uri(name_v, "%C1.R.sw");
-		ccn_name_append_nonce(name_v);
-		templ = make_template(scope);
-		res = ccn_get(temp_ccn, name_v, templ, 60000, NULL, NULL, NULL, 0);
-		ccn_charbuf_destroy(&templ);
-		ccn_charbuf_destroy(&name_v);
-		if (res < 0) {
-			fprintf(stderr, "No response from repository\n");
-			return -1;
-		}
-	}
 
+	struct ccn_charbuf *name_v = ccn_charbuf_create();
+	ccn_seqw_get_name(w, name_v);
+	ccn_name_from_uri(name_v, "%C1.R.sw");
+	ccn_name_append_nonce(name_v);
+	templ = make_template(scope);
+	res = ccn_get(temp_ccn, name_v, templ, 60000, NULL, NULL, NULL, 0);
+	ccn_charbuf_destroy(&templ);
+	ccn_charbuf_destroy(&name_v);
+	if (res < 0) {
+		fprintf(stderr, "No response from repository\n");
+		return -1;
+	}
 
 	blockread = 0;
 
@@ -654,10 +655,8 @@ write_data_to_repo(char *data, char *name_prefix)
 
 	return 0;
 }
-
-
 	int
-create_sync_slice(char *topo_prefix, char *slice_prefix)
+	create_sync_slice(char *topo_prefix, char *slice_prefix)
 {
 	int res;
 	struct ccn *handle; //obaid: probably we don't need it use the same handle i.e. nlsr->ccn
