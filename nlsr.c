@@ -1079,20 +1079,18 @@ nlsr_destroy( void )
 		printf("Freeing Allocated Memory....\n");
 	}	
 	writeLogg(__FILE__,__FUNCTION__,__LINE__,"Freeing Allocated Memory....\n");	
+	
 	/* Destroying all face created by nlsr in CCND */
 	destroy_all_face_by_nlsr();	
 	destroy_faces_for_nbrs();
 	
-	/* Destroying every hash table attached to each neighbor in ADL before destorying ADL */	
-	//hashtb_destroy(&nlsr->adl);
 	destroy_adl();
-	//hashtb_destroy(&nlsr->npl);
 	destroy_npl();
-		
-	//hashtb_destroy(&nlsr->pit_alsa);
-	hashtb_destroy(&nlsr->lsdb->name_lsdb);
-	hashtb_destroy(&nlsr->lsdb->adj_lsdb);
-	hashtb_destroy(&nlsr->lsdb->cor_lsdb);
+	destroy_lsdb();	
+
+	//hashtb_destroy(&nlsr->lsdb->name_lsdb);
+	//hashtb_destroy(&nlsr->lsdb->adj_lsdb);
+	//hashtb_destroy(&nlsr->lsdb->cor_lsdb);
 
 	int i, npt_element,rt_element;
 	struct npt_entry *ne;
@@ -1131,8 +1129,6 @@ nlsr_destroy( void )
 	close(nlsr->nlsr_api_server_sock_fd);
 
 	ccn_destroy(&nlsr->ccn);
-	free(nlsr->lsdb->lsdb_version);
-	free(nlsr->lsdb);
 	free(nlsr->router_name);
 	if ( nlsr->debugging )
 	{
@@ -1200,7 +1196,6 @@ init_nlsr(void)
 
 	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), NULL);
 	nlsr->npl = hashtb_create(sizeof(struct name_prefix_list_entry), NULL);
-	//nlsr->pit_alsa = hashtb_create(sizeof(struct pending_interest), NULL);
 	nlsr->npt = hashtb_create(sizeof(struct npt_entry), NULL);
 	nlsr->routing_table = hashtb_create(sizeof(struct routing_table_entry), NULL);
 

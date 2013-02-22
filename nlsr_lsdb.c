@@ -2489,3 +2489,90 @@ get_hyperbolic_theta(char *router)
 	free(cor_lsa_key);
 	return ret;
 }
+
+
+void
+destroy_name_lsdb(void)
+{
+	int i, name_lsdb_element;
+	struct nlsa *name_lsa;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->lsdb->name_lsdb, e);
+	name_lsdb_element=hashtb_n(nlsr->lsdb->name_lsdb);
+
+	for(i=0;i<name_lsdb_element;i++)
+	{
+		name_lsa=e->data;
+		destroy_name_lsa_component(name_lsa);	
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+	if ( nlsr->lsdb->name_lsdb )
+		hashtb_destroy(&nlsr->lsdb->name_lsdb);
+}
+
+void
+destroy_adj_lsdb(void)
+{
+	int i, adj_lsdb_element;
+	struct alsa *adj_lsa;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->lsdb->adj_lsdb, e);
+	adj_lsdb_element=hashtb_n(nlsr->lsdb->adj_lsdb);
+
+	for(i=0;i<adj_lsdb_element;i++)
+	{
+		adj_lsa=e->data;
+		destroy_adj_lsa_component(adj_lsa);	
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	if(nlsr->lsdb->adj_lsdb	)
+		hashtb_destroy(&nlsr->lsdb->adj_lsdb);
+}
+
+void
+destroy_cor_lsdb(void)
+{
+	int i, cor_lsdb_element;
+	struct clsa *cor_lsa;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->lsdb->cor_lsdb, e);
+	cor_lsdb_element=hashtb_n(nlsr->lsdb->cor_lsdb);
+
+	for(i=0;i<cor_lsdb_element;i++)
+	{
+		cor_lsa=e->data;
+		destroy_cor_lsa_component(cor_lsa);	
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	if(nlsr->lsdb->cor_lsdb	)
+		hashtb_destroy(&nlsr->lsdb->cor_lsdb);
+}
+
+void
+destroy_lsdb(void)
+{
+	destroy_name_lsdb();
+	destroy_adj_lsdb();
+	destroy_cor_lsdb();
+	
+	if ( nlsr->lsdb->lsdb_version )
+		free(nlsr->lsdb->lsdb_version);
+	if ( nlsr->lsdb )
+		free(nlsr->lsdb);
+}

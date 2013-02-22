@@ -102,4 +102,6 @@ void build_and_install_others_cor_lsa(char *orig_router,int ls_type,char *orig_t
 double get_hyperbolic_r(char *router);
 double get_hyperbolic_theta(char *router);
 
+void destroy_lsdb(void);
+
 #endif
