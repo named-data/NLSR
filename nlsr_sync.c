@@ -585,7 +585,7 @@ write_data_to_repo(char *data, char *name_prefix)
 		printf("Content Data: %s \n",data);
 	}
 
-	struct ccn *temp_ccn;
+/*	struct ccn *temp_ccn;
 	temp_ccn=ccn_create();
 	int ccn_fd=ccn_connect(temp_ccn, NULL);
 	if(ccn_fd == -1)
@@ -594,6 +594,7 @@ write_data_to_repo(char *data, char *name_prefix)
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Could not connect to ccnd for Data Writing\n");
 		return -1;
 	}
+*/
 	struct ccn_charbuf *name = NULL;
 	struct ccn_seqwriter *w = NULL;
 	int blocksize = 4096;
@@ -612,7 +613,8 @@ write_data_to_repo(char *data, char *name_prefix)
 	}
 
 
-	w = ccn_seqw_create(temp_ccn, name);
+	//w = ccn_seqw_create(temp_ccn, name);
+	w = ccn_seqw_create(nlsr->ccn, name);
 	if (w == NULL) {
 		fprintf(stderr, "ccn_seqw_create failed\n");
 		return -1;
@@ -626,7 +628,8 @@ write_data_to_repo(char *data, char *name_prefix)
 		ccn_name_from_uri(name_v, "%C1.R.sw");
 		ccn_name_append_nonce(name_v);
 		templ = make_template(scope);
-		res = ccn_get(temp_ccn, name_v, templ, 60000, NULL, NULL, NULL, 0);
+		//res = ccn_get(temp_ccn, name_v, templ, 60000, NULL, NULL, NULL, 0);
+		res = ccn_get(nlsr->ccn, name_v, templ, 60000, NULL, NULL, NULL, 0);
 		ccn_charbuf_destroy(&templ);
 		ccn_charbuf_destroy(&name_v);
 		if (res < 0) {
@@ -636,26 +639,26 @@ write_data_to_repo(char *data, char *name_prefix)
 	}
 
 
-
-
 	blockread = 0;
-
 
 	blockread=strlen(data);
 
 	if (blockread > 0) {
-		ccn_run(temp_ccn, 100);
+		//ccn_run(temp_ccn, 100);
+		ccn_run(nlsr->ccn, 1);
 		res = ccn_seqw_write(w, data, blockread);	
 		while (res == -1) {
-			ccn_run(temp_ccn, 100);
+			//ccn_run(temp_ccn, 100);
+			ccn_run(nlsr->ccn, 1);
 			res = ccn_seqw_write(w, data, blockread);
 		}
 	}
 
 	ccn_seqw_close(w);
-	ccn_run(temp_ccn, 100);
+	//ccn_run(temp_ccn, 100);
+	ccn_run(nlsr->ccn, 1);
 	ccn_charbuf_destroy(&name);
-	ccn_destroy(&temp_ccn);
+	//ccn_destroy(&temp_ccn);
 
 	return 0;
 }
