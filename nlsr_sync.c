@@ -116,7 +116,7 @@ sync_cb(struct ccns_name_closure *nc,
 
 
 
-void
+	void
 get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 		struct ccn_indexbuf *interest_comps, int offset)
 {
@@ -530,7 +530,7 @@ process_content_from_sync(struct ccn_charbuf *content_name, struct ccn_indexbuf 
 	free(time_stamp);
 }
 
-int
+	int
 sync_monitor(char *topo_prefix, char *slice_prefix)
 {
 
@@ -561,7 +561,7 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
 	return 0;
 }
 
-struct ccn_charbuf *
+	struct ccn_charbuf *
 make_template(int scope)
 {
 	struct ccn_charbuf *templ = NULL;
@@ -575,7 +575,7 @@ make_template(int scope)
 	return(templ);
 }
 
-int
+	int
 write_data_to_repo(char *data, char *name_prefix)
 {
 	if ( nlsr->debugging )
@@ -665,7 +665,7 @@ write_data_to_repo(char *data, char *name_prefix)
 create_sync_slice(char *topo_prefix, char *slice_prefix)
 {
 	int res;
-	struct ccn *handle;
+	//struct ccn *handle; //obaid: probably we don't need it use the same handle i.e. nlsr->ccn
 	struct ccns_slice *slice;
 	struct ccn_charbuf *prefix = ccn_charbuf_create();
 	struct ccn_charbuf *topo = ccn_charbuf_create();
@@ -679,13 +679,13 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
 		return -1;
 	}
 
-	handle = ccn_create();
+	/*handle = ccn_create();
 	res = ccn_connect(handle, NULL);
 	if (0 > res) {
 		fprintf(stderr, "Unable to connect to ccnd.\n");
 		return -1;
 	}    
-
+*/
 	slice = ccns_slice_create();
 
 	ccn_charbuf_reset(topo);
@@ -695,11 +695,12 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
 	ccns_slice_set_topo_prefix(slice, topo, prefix);
 
 
-	res = ccns_write_slice(handle, slice, slice_name);
+	//res = ccns_write_slice(handle, slice, slice_name);
+	res = ccns_write_slice(nlsr->ccn, slice, slice_name);
 
 	//01/31/2013
 	ccns_slice_destroy(&slice);
-	ccn_destroy(&handle);
+	//ccn_destroy(&handle);
 	ccn_charbuf_destroy(&prefix);
 	ccn_charbuf_destroy(&topo);
 	ccn_charbuf_destroy(&clause);
