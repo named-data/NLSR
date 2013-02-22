@@ -642,12 +642,13 @@ write_data_to_repo(char *data, char *name_prefix)
 	if (blockread > 0) {
 		res = ccn_seqw_write(w, data, blockread);	
 		while (res == -1) {
+			ccn_run(temp_ccn,1);
 			res = ccn_seqw_write(w, data, blockread);
 		}
 	}
 
-	ccn_seqw_close(w);
-	ccn_run(temp_ccn, 100);
+	
+	ccn_run(temp_ccn, 1);
 	ccn_charbuf_destroy(&name);
 	ccn_destroy(&temp_ccn);
 
