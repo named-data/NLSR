@@ -34,16 +34,18 @@
 void
 set_new_lsdb_version(void)
 {
-	char *time_stamp=(char *)malloc(20);
-	memset(time_stamp,0,20);
-	get_current_timestamp_micro(time_stamp);
+	//char *time_stamp=(char *)malloc(20);
+	//memset(time_stamp,0,20);
+	//get_current_timestamp_micro(time_stamp);
 	
+	char *time_stamp=get_current_timestamp_micro_v2();
 	free(nlsr->lsdb->lsdb_version);
-	nlsr->lsdb->lsdb_version=(char *)malloc(strlen(time_stamp)+1);
-	memset(nlsr->lsdb->lsdb_version,0,strlen(time_stamp)+1);
+	nlsr->lsdb->lsdb_version=(char *)calloc(strlen(time_stamp)+1,sizeof(char));
 	memcpy(nlsr->lsdb->lsdb_version,time_stamp,strlen(time_stamp)+1);
-
 	free(time_stamp);
+	//memcpy(nlsr->lsdb->lsdb_version,time_stamp,strlen(time_stamp)+1);
+
+	//free(time_stamp);
 	
 }
 

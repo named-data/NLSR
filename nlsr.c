@@ -162,9 +162,7 @@ process_command_ccnneighbor(char *command)
 	char *rtr_name;
 	char *nbr_ip_addr;
 	int is_ip_configured=0;
-	//char *face;
 	char *ip_addr=(char *)calloc(20,sizeof(char));
-	//memset(ip_addr,0,12);
 
 	rtr_name=strtok_r(command,sep,&rem);
 	if(rtr_name==NULL)
@@ -185,7 +183,6 @@ process_command_ccnneighbor(char *command)
 	}
 	struct name_prefix *nbr=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
 	nbr->name=(char *)calloc(strlen(rtr_name)+1,sizeof(char));
-	//memset(nbr->name,0,strlen(rtr_name)+1);
 	memcpy(nbr->name,rtr_name,strlen(rtr_name)+1);
 	nbr->length=strlen(rtr_name)+1;
 
@@ -204,7 +201,7 @@ process_command_ccnneighbor(char *command)
 	}
 	else
 	{
-		memcpy(ip_addr,nbr_ip_addr,strlen(nbr_ip_addr));
+		memcpy(ip_addr,nbr_ip_addr,strlen(nbr_ip_addr)+1);
 		if (nlsr->debugging)
 		{
 			printf("Name of neighbor: %s ",nbr->name);
@@ -483,8 +480,7 @@ process_command_logdir(char *command)
 	}
 
 	nlsr->logDir=(char *)calloc(strlen(dir)+1,sizeof(char));
-	//memset(nlsr->logDir,0,strlen(dir)+1);
-	memcpy(nlsr->logDir,dir,strlen(dir));
+	memcpy(nlsr->logDir,dir,strlen(dir)+1);
 }
 
 	void 
@@ -564,7 +560,7 @@ process_command_topo_prefix(char *command)
 			topo_prefix[strlen(topo_prefix)-1]='\0';
 
 		nlsr->topo_prefix=(char *)calloc(strlen(topo_prefix)+1,sizeof(char));
-		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix));
+		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix)+1);
 		printf ("Topo prefix is: %s", nlsr->topo_prefix);;
 	}
 }
@@ -596,7 +592,7 @@ process_command_slice_prefix(char *command)
 			slice_prefix[strlen(slice_prefix)-1]='\0';
 
 		nlsr->slice_prefix=(char *)calloc(strlen(slice_prefix)+1,sizeof(char));
-		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix));
+		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix)+1);
 	}
 }
 
@@ -1211,7 +1207,6 @@ init_nlsr(void)
 	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase));
 
 	char *time_stamp=(char *) calloc (20,sizeof(char));
-	//memset(time_stamp,0,20);
 	get_current_timestamp_micro(time_stamp);
 	nlsr->lsdb->lsdb_version=(char *)malloc(strlen(time_stamp)+1);
 	memset(nlsr->lsdb->lsdb_version,0,strlen(time_stamp));

@@ -31,7 +31,7 @@
 void 
 add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip)
 {
-	struct ndn_neighbor *nbr;//=(struct ndn_neighbor *)malloc(sizeof(struct ndn_neighbor )); //free
+	struct ndn_neighbor *nbr;
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
@@ -45,7 +45,7 @@ add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip)
    
 		nbr = e->data;
 
-		nbr->neighbor=(struct name_prefix *)malloc(sizeof( struct name_prefix )); //free
+		nbr->neighbor=(struct name_prefix *)malloc(sizeof( struct name_prefix ));
 		nbr->neighbor->name=(char *)malloc(new_nbr->length);
 		memcpy(nbr->neighbor->name,new_nbr->name,new_nbr->length);
 		nbr->neighbor->length=new_nbr->length;
@@ -58,18 +58,17 @@ add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip)
 		nbr->metric=LINK_METRIC;
 		nbr->is_lsdb_send_interest_scheduled=0;
 		
-		nbr->ip_address=(char *)malloc(strlen(ip)+1);
-		memset(nbr->ip_address,0,strlen(ip)+1);
-		memcpy(nbr->ip_address,ip,strlen(ip));
+		nbr->ip_address=(char *)calloc(strlen(ip)+1,sizeof(char));
+		memcpy(nbr->ip_address,ip,strlen(ip)+1);
 
 		char *time_stamp=(char *)malloc(20);
 		get_current_timestamp_micro(time_stamp);
-		nbr->last_lsdb_version=(char *)malloc(strlen(time_stamp)+1); //free
+		nbr->last_lsdb_version=(char *)calloc(strlen(time_stamp)+1,sizeof(char));
 		memcpy(nbr->last_lsdb_version,time_stamp,strlen(time_stamp)+1);
-		memset(nbr->last_lsdb_version,'0',strlen(time_stamp));
-		nbr->last_info_version=(char *)malloc(strlen(time_stamp)+1); //free
+		memset(nbr->last_lsdb_version,'0',strlen(time_stamp)+1);
+		nbr->last_info_version=(char *)calloc(strlen(time_stamp)+1,sizeof(char));
 		memcpy(nbr->last_info_version,time_stamp,strlen(time_stamp)+1);
-		memset(nbr->last_info_version,'0',strlen(time_stamp));
+		memset(nbr->last_info_version,'0',strlen(time_stamp)+1);
 		free(time_stamp);		
 
 		nbr->last_lsdb_requested=0;
@@ -399,7 +398,14 @@ delete_nbr_from_adl(struct name_prefix *nbr)
 
 	if (res == HT_OLD_ENTRY)
 	{
-		hashtb_delete(e);	
+		struct ndn_neighbor *nbr=e->data;
+		free(nbr->neighbor->name);
+		free(nbr->neighbor);
+		free(nbr->last_lsdb_version);
+		free(nbr->last_info_version);
+		free(nbr->ip_address);
+		hashtb_delete(e);
+			
 	}
 	else if(res == HT_NEW_ENTRY)
 	{
@@ -535,14 +541,6 @@ get_active_nbr_adj_data(struct ccn_charbuf *c)
 			free(temp_length);
 			ccn_charbuf_append_string(c,"|");
 
-			/*char *temp_face=(char *)malloc(20);
-			memset(temp_face,0,20);
-			sprintf(temp_face,"%d",nbr->face);
-			ccn_charbuf_append_string(c,temp_face);
-			free(temp_face);
-			ccn_charbuf_append_string(c,"|");
-			*/
-
 			char *temp_metric=(char *)malloc(20);
 			memset(temp_metric,0,20);
 			sprintf(temp_metric,"%d",nbr->metric);
@@ -557,314 +555,6 @@ get_active_nbr_adj_data(struct ccn_charbuf *c)
 	hashtb_end(e);
 }
 
-long int
-get_nbr_time_diff_lsdb_req(char *nbr)
-{
-	if ( nlsr->debugging )
-		printf("get_nbr_time_diff_lsdb_req called\n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_nbr_time_diff_lsdb_req called\n");
-
-	long int time_diff=get_lsdb_synch_interval(nbr)+1;	
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
-
-	if (res == HT_OLD_ENTRY)
-	{
-		nnbr=e->data;
-
-		if (nnbr->last_lsdb_requested == 0)
-			time_diff=get_lsdb_synch_interval(nbr)+1;
-		else time_diff=get_current_time_sec() - get_nbr_last_lsdb_requested(nbr);
-
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-
-	return time_diff;
-}
-
-long int 
-get_nbr_last_lsdb_requested(char *nbr)
-{
-	if ( nlsr->debugging )
-		printf("get_timed_out_number called\n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_timed_out_number called\n");
-
-	long int last_lsdb_requested=0;
-
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
-
-	if (res == HT_OLD_ENTRY)
-	{
-		nnbr=e->data;
-		last_lsdb_requested=nnbr->last_lsdb_requested;
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-
-	return last_lsdb_requested;
-}
-
-
-int 
-get_nbr_random_time_component(char *nbr)
-{
-	if ( nlsr->debugging )
-		printf("get_nbr_random_time_component called\n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_nbr_random_time_component called\n");
-
-	int time=0;
-
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
-
-	if (res == HT_OLD_ENTRY)
-	{
-		nnbr=e->data;
-		time=nnbr->lsdb_random_time_component * (int)pow(-1,nnbr->lsdb_interest_timed_out+1);
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-
-	return time;
-}
-
-long int 
-get_lsdb_synch_interval(char *nbr)
-{
-	if ( nlsr->debugging )
-		printf("get_lsdb_synch_interval called \n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_lsdb_synch_interval called \n");
-
-	long int lsdb_synch_interval=300;	
-
-
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
-
-	if (res == HT_OLD_ENTRY)
-	{
-		nnbr=e->data;
-		lsdb_synch_interval=nnbr->lsdb_synch_interval;
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-
-	return lsdb_synch_interval;
-
-}
-
-char *
-get_nbr_lsdb_version(char *nbr)
-{
-	if ( nlsr->debugging )
-		printf("get_nbr_lsdb_version called \n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_nbr_lsdb_version called \n");
-
-	char *version=NULL;
-
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
-
-	if (res == HT_OLD_ENTRY)
-	{
-		nnbr=e->data;
-		version=(char *)malloc(strlen(nnbr->last_lsdb_version)+1);
-		memset(version,0,strlen(nnbr->last_lsdb_version)+1);
-		memcpy(version,nnbr->last_lsdb_version,strlen(nnbr->last_lsdb_version)+1);
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-
-	return version;
-}
-
-void 
-update_adjacent_last_lsdb_requested_to_adl(char *nbr, long int timestamp)
-{
-	if ( nlsr->debugging )
-		printf("update_adjacent_last_lsdb_requested_to_adl called \n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_last_lsdb_requested_to_adl called \n");
-
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
-
-	if( res == HT_OLD_ENTRY )
-	{
-		nnbr=e->data;
-		nnbr->last_lsdb_requested=timestamp;
-
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-}
-
-void 
-set_is_lsdb_send_interest_scheduled_to_zero(char *nbr)
-{
-	if ( nlsr->debugging )
-		printf("set_is_lsdb_send_interest_scheduled_to_zero called \n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"set_is_lsdb_send_interest_scheduled_to_zero called\n");
-
-
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
-
-	if (res == HT_OLD_ENTRY)
-	{
-		nnbr=e->data;
-		nnbr->is_lsdb_send_interest_scheduled=0;
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-}
-
-void 
-update_adjacent_lsdb_version_to_adl(struct name_prefix *nbr, char *version)
-{
-	if ( nlsr->debugging )
-		printf("update_adjacent_timed_out_to_adl called \n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_timed_out_to_adl called\n");
-
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr->name, nbr->length, 0);
-
-	if( res == HT_OLD_ENTRY )
-	{
-		nnbr=e->data;
-		free(nnbr->last_lsdb_version);
-		nnbr->last_lsdb_version=(char *)malloc(strlen(version)+1);
-		memset(nnbr->last_lsdb_version,0,strlen(version)+1);
-		memcpy(nnbr->last_lsdb_version,version,strlen(version)+1);
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-
-}
-
-void 
-adjust_adjacent_last_lsdb_requested_to_adl(char *nbr, long int sec)
-{
-	printf("update_adjacent_last_lsdb_requested_to_adl called \n");
-
-	if ( nlsr->debugging )
-		printf("update_adjacent_last_lsdb_requested_to_adl called \n");
-	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"update_adjacent_last_lsdb_requested_to_adl called\n");
-
-
-	int res;
-	struct ndn_neighbor *nnbr;
-
-	struct hashtb_enumerator ee;
-    	struct hashtb_enumerator *e = &ee;
-
-	hashtb_start(nlsr->adl, e);
-	res = hashtb_seek(e, nbr, strlen(nbr)+1, 0);
-
-	if( res == HT_OLD_ENTRY )
-	{
-		nnbr=e->data;
-		nnbr->last_lsdb_requested=nnbr->last_lsdb_requested-sec;
-
-	}
-	else if(res == HT_NEW_ENTRY)
-	{
-		hashtb_delete(e);
-	}
-
-	hashtb_end(e);
-
-}
 
 int 
 get_next_hop_face_from_adl(char *nbr)
@@ -1024,8 +714,7 @@ get_host_name_from_command_string(struct name_prefix *name_part,
 
 	}
 
-	name_part->name=(char *)malloc(strlen(neighbor)+1);
-	memset(name_part->name,0,strlen(neighbor)+1);
+	name_part->name=(char *)calloc(strlen(neighbor)+1,sizeof(char));
 	memcpy(name_part->name,neighbor,strlen(neighbor)+1);
 	name_part->length=strlen(neighbor)+1;
 

@@ -62,7 +62,17 @@ char * getGmTimeStamp(void)
 }
 
 
-
+int
+get_width_of_number(long int number)
+{
+	int i=0;
+	while(number>0)
+	{
+		i++;
+		number/=10;
+	}
+	return i;
+}
 
 long int 
 get_current_time_sec(void)
@@ -81,6 +91,18 @@ get_current_timestamp_micro(char * microSec)
 	sprintf(microSec,"%ld%06ld",now.tv_sec,(long int)now.tv_usec);
 }
 
+char *
+get_current_timestamp_micro_v2()
+{
+	struct timeval now; 
+	gettimeofday(&now, NULL);
+	//sprintf(microSec,"%ld%06ld",now.tv_sec,(long int)now.tv_usec);
+	char *microSec=(char *)calloc(get_width_of_number(now.tv_sec)+7,sizeof(char));
+	sprintf(microSec,"%ld%06ld",now.tv_sec,(long int)now.tv_usec);
+	microSec[strlen(microSec)]='\0';	
+
+	return microSec;
+}
 
 long int
 get_time_diff(const char *time1, const char *time2)
@@ -268,9 +290,10 @@ get_ip_from_hostname_02(char * hostname , char* ip)
     for(i = 0; addr_list[i] != NULL; i++)
     {
         strcpy(ip , inet_ntoa(*addr_list[i]) );
+		ip[strlen(ip)]='\0';
         return 0;
     }
-    return 1;
+    return -1;
 }
 
 
