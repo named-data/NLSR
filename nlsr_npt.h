@@ -8,7 +8,6 @@ struct npt_entry
 {
 	char *orig_router;
 	struct hashtb *name_list;
-	//int next_hop_face;
 	struct hashtb *face_list;
 };
 

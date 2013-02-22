@@ -35,7 +35,7 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 		return -1;
 	}
 
-	struct npt_entry *ne=(struct npt_entry*)malloc(sizeof(struct npt_entry ));
+	struct npt_entry *ne;//=(struct npt_entry*)calloc(1,sizeof(struct npt_entry ));
 	
 	int res,res_nle,res_fle;
 	struct hashtb_enumerator ee;
@@ -56,8 +56,8 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 	
 		
 
-		struct hashtb_param param_nle = {0};
-		ne->name_list= hashtb_create(sizeof(struct name_list_entry ), &param_nle);
+		//struct hashtb_param param_nle = {0};
+		ne->name_list= hashtb_create(sizeof(struct name_list_entry ),NULL);
 
 		struct hashtb_enumerator eenle;
     		struct hashtb_enumerator *enle = &eenle;
@@ -67,19 +67,19 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 
 		if(res_nle == HT_NEW_ENTRY )
 		{
-			struct name_list_entry *nle=(struct name_list_entry *)malloc(sizeof(struct name_list_entry));
+			struct name_list_entry *nle;//=(struct name_list_entry *)calloc(1,sizeof(struct name_list_entry));
 			nle=enle->data;
-			nle->name=(char *)malloc(strlen(name_prefix)+1);
-			memset(nle->name,0,strlen(name_prefix)+1);
-			memcpy(nle->name,name_prefix,strlen(name_prefix));
+			nle->name=(char *)calloc(strlen(name_prefix)+1,sizeof(char));
+			//memset(nle->name,0,strlen(name_prefix)+1);
+			memcpy(nle->name,name_prefix,strlen(name_prefix)+1);
 
 			
 
 		}
 		hashtb_end(enle);
 
-		struct hashtb_param param_fle = {0};
-		ne->face_list=hashtb_create(sizeof(struct face_list_entry), &param_fle);
+		//struct hashtb_param param_fle = {0};
+		ne->face_list=hashtb_create(sizeof(struct face_list_entry), NULL);
 
 		if ( num_face > 0 )
 		{
@@ -98,7 +98,7 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 				
 					if ( res_fle == HT_NEW_ENTRY )
 					{
-						struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
+						struct face_list_entry *fle;//=(struct face_list_entry *)calloc(1,sizeof(struct face_list_entry));
 						fle=ef->data;
 						fle->next_hop_face=face;
 						fle->route_cost=route_costs[i];
@@ -125,7 +125,7 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 
 		if(res_nle == HT_NEW_ENTRY )
 		{
-			struct name_list_entry *nle=(struct name_list_entry *)malloc(sizeof(struct name_list_entry));
+			struct name_list_entry *nle;//=(struct name_list_entry *)calloc(1,sizeof(struct name_list_entry));
 			nle=enle->data;
 			nle->name=(char *)malloc(strlen(name_prefix)+1);
 			memset(nle->name,0,strlen(name_prefix)+1);
@@ -154,7 +154,7 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 				
 					if ( res_fle == HT_NEW_ENTRY )
 					{
-						struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
+						struct face_list_entry *fle;//=(struct face_list_entry *)calloc(1,sizeof(struct face_list_entry));
 						fle=ef->data;
 						fle->next_hop_face=face;
 						fle->route_cost=route_costs[i];
@@ -999,29 +999,8 @@ destroy_faces_by_orig_router(char *orig_router)
 		
 		get_all_faces_for_orig_router_from_npt(orig_router,faces,route_costs,num_face);
 		sort_faces_by_distance(faces,route_costs,0,num_face);
-		
-		/*
-		first_face=num_face-1;		
-	
-		if ( nlsr->multi_path_face_num == 0 )
-		{
-			last_face=first_face;
-		}
-		else 
-		{
-			if ( num_face <= nlsr->multi_path_face_num)
-			{
-				last_face=0;
-			}
-			else if ( nlsr->multi_path_face_num == 0)
-			{
-				last_face=num_face-nlsr->multi_path_face_num;
-			}
-		}
-		*/
-
 		last_face=0;
-		if ( nlsr->max_faces_per_prefix == 0) // add all faces available in routing table
+		if ( nlsr->max_faces_per_prefix == 0)
 		{
 			first_face=num_face-1;
 		}
@@ -1114,3 +1093,71 @@ destroy_all_face_by_nlsr(void)
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
 }
+
+void
+destroy_name_list(void)
+{
+	
+}
+
+void
+destroy_face_list(void)
+{
+
+}
+
+void 
+destroy_npt(void)
+{
+
+
+	int i, npt_element;	
+	struct npt_entry *ne;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->npt, e);
+	npt_element=hashtb_n(nlsr->npt);
+
+	for(i=0;i<npt_element;i++)
+	{
+		ne=e->data;
+	
+		int j, nl_element,face_list_element;
+		struct name_list_entry *nle;		
+		struct hashtb_enumerator eenle;
+    		struct hashtb_enumerator *enle = &eenle;
+
+		hashtb_start(ne->name_list, enle);
+		nl_element=hashtb_n(ne->name_list);	
+
+		for (j=0;j<nl_element;j++)
+		{
+			nle=enle->data;
+			hashtb_next(enle);
+		}
+		hashtb_end(enle);
+
+		struct face_list_entry *fle;
+		struct hashtb_enumerator eef;
+    		struct hashtb_enumerator *ef = &eef;
+    	
+    		hashtb_start(ne->face_list, ef);
+		face_list_element=hashtb_n(ne->face_list);
+		
+		for(j=0;j<face_list_element;j++)
+		{
+			fle=ef->data;
+			hashtb_next(ef);	
+		}
+		
+		hashtb_end(ef);
+		
+			
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+}
+

@@ -640,10 +640,8 @@ write_data_to_repo(char *data, char *name_prefix)
 	blockread=strlen(data);
 
 	if (blockread > 0) {
-		ccn_run(temp_ccn, 100);
 		res = ccn_seqw_write(w, data, blockread);	
 		while (res == -1) {
-			ccn_run(temp_ccn, 100);
 			res = ccn_seqw_write(w, data, blockread);
 		}
 	}
@@ -651,6 +649,7 @@ write_data_to_repo(char *data, char *name_prefix)
 	ccn_seqw_close(w);
 	ccn_run(temp_ccn, 100);
 	ccn_charbuf_destroy(&name);
+	ccn_destroy(&temp_ccn);
 
 	return 0;
 }
@@ -660,7 +659,7 @@ write_data_to_repo(char *data, char *name_prefix)
 create_sync_slice(char *topo_prefix, char *slice_prefix)
 {
 	int res;
-	//struct ccn *handle; //obaid: probably we don't need it use the same handle i.e. nlsr->ccn
+	struct ccn *handle; //obaid: probably we don't need it use the same handle i.e. nlsr->ccn
 	struct ccns_slice *slice;
 	struct ccn_charbuf *prefix = ccn_charbuf_create();
 	struct ccn_charbuf *topo = ccn_charbuf_create();
@@ -674,13 +673,13 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
 		return -1;
 	}
 
-	/*handle = ccn_create();
+	handle = ccn_create();
 	res = ccn_connect(handle, NULL);
 	if (0 > res) {
 		fprintf(stderr, "Unable to connect to ccnd.\n");
 		return -1;
 	}    
-*/
+
 	slice = ccns_slice_create();
 
 	ccn_charbuf_reset(topo);
@@ -690,12 +689,12 @@ create_sync_slice(char *topo_prefix, char *slice_prefix)
 	ccns_slice_set_topo_prefix(slice, topo, prefix);
 
 
-	//res = ccns_write_slice(handle, slice, slice_name);
-	res = ccns_write_slice(nlsr->ccn, slice, slice_name);
+	res = ccns_write_slice(handle, slice, slice_name);
+	//res = ccns_write_slice(nlsr->ccn, slice, slice_name);
 
 	//01/31/2013
 	ccns_slice_destroy(&slice);
-	//ccn_destroy(&handle);
+	ccn_destroy(&handle);
 	ccn_charbuf_destroy(&prefix);
 	ccn_charbuf_destroy(&topo);
 	ccn_charbuf_destroy(&clause);

@@ -69,6 +69,7 @@ make_name_lsa_key(char *key, char *orig_router, int ls_type, long int ls_id)
 		printf("name LSA Key: %s\n", key);
 }
 
+
 /**
 * Make content name prefix for Name LSA to store in repo
 */

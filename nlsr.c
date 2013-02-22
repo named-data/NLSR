@@ -1088,10 +1088,8 @@ nlsr_destroy( void )
 	destroy_npl();
 	destroy_lsdb();	
 
-	//hashtb_destroy(&nlsr->lsdb->name_lsdb);
-	//hashtb_destroy(&nlsr->lsdb->adj_lsdb);
-	//hashtb_destroy(&nlsr->lsdb->cor_lsdb);
 
+	/*
 	int i, npt_element,rt_element;
 	struct npt_entry *ne;
 	struct hashtb_enumerator ee;
@@ -1108,7 +1106,8 @@ nlsr_destroy( void )
 
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->npt);
-
+	*/
+	/*
 	struct routing_table_entry *rte;
 	hashtb_start(nlsr->routing_table, e);
 	rt_element=hashtb_n(nlsr->routing_table);
@@ -1120,6 +1119,7 @@ nlsr_destroy( void )
 	}	
 	hashtb_end(e);
 	hashtb_destroy(&nlsr->routing_table);
+	*/
 
 	if ( nlsr->ccns != NULL )
 		ccns_close(&nlsr->ccns, NULL, NULL);
