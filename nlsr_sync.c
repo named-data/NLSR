@@ -120,9 +120,9 @@ sync_cb(struct ccns_name_closure *nc,
 get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 		struct ccn_indexbuf *interest_comps, int offset)
 {
-	int i;
+	//int i;
 	int lsa_position=0;
-	int len=0;
+	//int len=0;
 
 	struct ccn_indexbuf cid={0};
 	struct ccn_indexbuf *components=&cid;
@@ -130,9 +130,29 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 	ccn_name_from_uri(name,nlsr->slice_prefix);
 	ccn_name_split (name, components);
 	lsa_position=components->n-2;
-
 	ccn_charbuf_destroy(&name);
 
+	struct ccn_charbuf *temp=ccn_charbuf_create();
+	ccn_name_init(temp);	
+	ccn_name_append_components( temp,	interest_ccnb->buf,
+			interest_comps->buf[lsa_position+1], interest_comps->buf[interest_comps->n - 1]);
+
+	struct ccn_charbuf *temp1=ccn_charbuf_create();
+	ccn_uri_append(temp1, temp->buf, temp->length, 0);
+
+	name_part->name=(char *)calloc(strlen(ccn_charbuf_as_string(temp1))+1,sizeof(char));
+	memcpy(name_part->name,ccn_charbuf_as_string(temp1),strlen(ccn_charbuf_as_string(temp1)));
+	name_part->name[strlen(ccn_charbuf_as_string(temp1))]='\0';
+	name_part->length=strlen(ccn_charbuf_as_string(temp1))+1;
+
+	ccn_charbuf_destroy(&temp1);
+	ccn_charbuf_destroy(&temp);
+
+	if ( nlsr->debugging )
+		printf("Name Part: %s \n",name_part->name);
+	
+
+	/*
 	const unsigned char *comp_ptr1;
 	size_t comp_size;
 	for(i=lsa_position+1+offset;i<interest_comps->n-1;i++)
@@ -164,6 +184,7 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 
 	// Add 01/31/2013
 	free(neighbor);
+	*/
 }
 
 
@@ -530,6 +551,8 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 		}
 	}
 
+	if (orig_router->name)
+		free(orig_router->name);
 	if (orig_router)
 		free(orig_router);
 	ccn_charbuf_destroy(&uri);
