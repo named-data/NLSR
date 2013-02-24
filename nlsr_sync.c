@@ -385,6 +385,8 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 process_content_from_sync (struct ccn_charbuf *content_name, 
 								struct ccn_indexbuf *components)
 {
+	if (nlsr->debugging)
+		printf("process_content_from_sync called \n");
 	size_t comp_size;
 	char *lst;
 	char *lsid;
@@ -438,6 +440,8 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 			printf("Orig Router: %s Ls Type: %d Ls id: %ld Orig Time: %s\n",orig_router->name,ls_type,ls_id,origtime);
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
+		if ( nlsr->debugging )
+			printf("LSA Life time: %d\n",lsa_life_time);
 
 		if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) 
 				|| (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )
@@ -482,6 +486,9 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);		
 
 			int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
+			if ( nlsr->debugging )
+				printf("LSA Life time: %d\n",lsa_life_time);
+
 			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
 			{
 				int is_new_adj_lsa=check_is_new_adj_lsa(orig_router->name,(char *)lst,(char *)origtime);
@@ -520,6 +527,9 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);
 
 			int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
+			if ( nlsr->debugging )
+				printf("LSA Life time: %d\n",lsa_life_time);
+
 			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
 			{
 				int is_new_cor_lsa=check_is_new_cor_lsa(orig_router->name,(char *)lst,(char *)origtime);
