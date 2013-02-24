@@ -671,7 +671,7 @@ write_data_to_repo(char *data, char *name_prefix)
 
 	blockread = 0;
 
-	blockread=strlen(data);
+	blockread=strlen(data)+1;
 
 	if (blockread > 0) {
 		res = ccn_seqw_write(w, data, blockread);	
