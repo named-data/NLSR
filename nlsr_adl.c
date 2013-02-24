@@ -64,10 +64,8 @@ add_nbr_to_adl(struct name_prefix *new_nbr,int face,char *ip)
 		char *time_stamp=(char *)malloc(20);
 		get_current_timestamp_micro(time_stamp);
 		nbr->last_lsdb_version=(char *)calloc(strlen(time_stamp)+1,sizeof(char));
-		memcpy(nbr->last_lsdb_version,time_stamp,strlen(time_stamp)+1);
 		memset(nbr->last_lsdb_version,'0',strlen(time_stamp)+1);
 		nbr->last_info_version=(char *)calloc(strlen(time_stamp)+1,sizeof(char));
-		memcpy(nbr->last_info_version,time_stamp,strlen(time_stamp)+1);
 		memset(nbr->last_info_version,'0',strlen(time_stamp)+1);
 		free(time_stamp);		
 
