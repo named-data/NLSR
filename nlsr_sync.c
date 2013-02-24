@@ -366,8 +366,8 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 			char *cor_theta=strtok_r(NULL,sep,&rem);
 
 			double r, theta;
-			r=strtof(cor_r,NULL);
-			theta=strtof(cor_theta,NULL);
+			r=strtod(cor_r,NULL);
+			theta=strtod(cor_theta,NULL);
 
 			if ( nlsr->debugging )
 			{
@@ -676,13 +676,13 @@ write_data_to_repo(char *data, char *name_prefix)
 	if (blockread > 0) {
 		res = ccn_seqw_write(w, data, blockread);	
 		while (res == -1) {
-			ccn_run(temp_ccn,1);
+			ccn_run(temp_ccn,100);
 			res = ccn_seqw_write(w, data, blockread);
 		}
 	}
 
-	
-	ccn_run(temp_ccn, 1);
+	ccn_seqw_close(w);
+	ccn_run(temp_ccn, 100);
 	ccn_charbuf_destroy(&name);
 	ccn_destroy(&temp_ccn);
 
