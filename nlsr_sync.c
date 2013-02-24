@@ -261,9 +261,8 @@ get_content_by_content_name(char *content_name, unsigned char **content_data)
 		length = resultbuf->length;
 		if (content_only){
 			ccn_content_get_value(ptr, length, &pcobuf, &ptr, &length);
-			*content_data = (unsigned char *) calloc(length+1, sizeof(char *));
+			*content_data = (unsigned char *) calloc(length, sizeof(char *));
 			memcpy (*content_data, ptr, length);
-			*content_data[strlen((char *)*content_data)]='\0';
 		}
 	}
 	ccn_charbuf_destroy(&resultbuf);
