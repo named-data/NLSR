@@ -1087,39 +1087,8 @@ nlsr_destroy( void )
 	destroy_adl();
 	destroy_npl();
 	destroy_lsdb();	
-
-
-	/*
-	int i, npt_element,rt_element;
-	struct npt_entry *ne;
-	struct hashtb_enumerator ee;
-	struct hashtb_enumerator *e = &ee;
-	hashtb_start(nlsr->npt, e);
-	npt_element=hashtb_n(nlsr->npt);
-	for(i=0;i<npt_element;i++)
-	{
-		ne=e->data;
-		hashtb_destroy(&ne->name_list);
-		hashtb_destroy(&ne->face_list);	
-		hashtb_next(e);		
-	}
-
-	hashtb_end(e);
-	hashtb_destroy(&nlsr->npt);
-	*/
-	/*
-	struct routing_table_entry *rte;
-	hashtb_start(nlsr->routing_table, e);
-	rt_element=hashtb_n(nlsr->routing_table);
-	for(i=0;i<rt_element;i++)
-	{
-		rte=e->data;
-		hashtb_destroy(&rte->face_list);	
-		hashtb_next(e);		
-	}	
-	hashtb_end(e);
-	hashtb_destroy(&nlsr->routing_table);
-	*/
+	destroy_npt();
+	destroy_routing_table();
 
 	if ( nlsr->ccns != NULL )
 		ccns_close(&nlsr->ccns, NULL, NULL);
@@ -1199,20 +1168,23 @@ init_nlsr(void)
 	nlsr->npt = hashtb_create(sizeof(struct npt_entry), NULL);
 	nlsr->routing_table = hashtb_create(sizeof(struct routing_table_entry), NULL);
 
-	nlsr->in_interest.p = &incoming_interest;
-	nlsr->in_content.p = &incoming_content;
-
 	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase));
+	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), NULL);
+	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), NULL);
+	nlsr->lsdb->cor_lsdb = hashtb_create(sizeof(struct clsa), NULL);
 
+	/*
 	char *time_stamp=(char *) calloc (20,sizeof(char));
 	get_current_timestamp_micro(time_stamp);
 	nlsr->lsdb->lsdb_version=(char *)malloc(strlen(time_stamp)+1);
 	memset(nlsr->lsdb->lsdb_version,0,strlen(time_stamp));
 	free(time_stamp);
+	*/
 
-	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), NULL);
-	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), NULL);
-	nlsr->lsdb->cor_lsdb = hashtb_create(sizeof(struct clsa), NULL);
+	nlsr->lsdb->lsdb_version=get_current_timestamp_micro_v2();
+
+	nlsr->in_interest.p = &incoming_interest;
+	nlsr->in_content.p = &incoming_content;
 
 	nlsr->is_synch_init=1;
 	nlsr->nlsa_id=0;
@@ -1225,7 +1197,6 @@ init_nlsr(void)
 	nlsr->detailed_logging=0;
 	nlsr->debugging=0;
 
-	//nlsr->lsdb_synch_interval = LSDB_SYNCH_INTERVAL;
 	nlsr->interest_retry = INTEREST_RETRY;
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
 	nlsr->lsa_refresh_time=LSA_REFRESH_TIME;

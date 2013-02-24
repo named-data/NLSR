@@ -26,5 +26,8 @@ void destroy_all_face_by_nlsr(void);
 void sort_faces_by_distance(int *faces,int *route_costs,int start,int element);
 void update_ccnd_fib_for_orig_router(char *orig_router);
 void get_all_faces_for_orig_router_from_npt(char *orig_router, int *faces, int *route_costs, int num_faces);
+void destroy_name_list(struct hashtb *name_list);
+void destroy_face_list(struct hashtb *face_list);
+void destroy_npt(void);
 
 #endif

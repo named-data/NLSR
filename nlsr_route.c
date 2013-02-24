@@ -192,8 +192,10 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		}
 		
 		free(adj_matrix);
-		hashtb_destroy(&nlsr->map);
-		hashtb_destroy(&nlsr->rev_map);
+		destroy_map();
+		destroy_rev_map();
+		//hashtb_destroy(&nlsr->map);
+		//hashtb_destroy(&nlsr->rev_map);
 		
 	}
 	nlsr->is_route_calculation_scheduled=0;
@@ -1059,7 +1061,7 @@ update_routing_table(char * dest_router,int next_hop_face, int route_cost)
 		}
 		hashtb_end(ef);
 	}
-	else if ( res == HT_OLD_ENTRY )
+	else if ( res == HT_NEW_ENTRY )
 	{
 		hashtb_delete(e);
 	}
@@ -1249,6 +1251,7 @@ do_old_routing_table_updates(void)
 			memcpy(router,rte->dest_router,strlen(rte->dest_router)+1);
 			nlsr->event = ccn_schedule_event(nlsr->sched, 1, &delete_empty_rte, (void *)router , 0);
 			*/
+			destroy_routing_table_entry_comp(rte);
 			hashtb_delete(e);
 			i++;
 		}
@@ -1398,4 +1401,89 @@ get_hyperbolic_distance(long int source, long int dest)
 	}
 	
 	return distance;
+}
+
+void
+destroy_routing_table_entry_comp(struct routing_table_entry *rte)
+{
+
+	free(rte->dest_router);
+	hashtb_destroy(&rte->face_list);	
+		
+}
+
+void
+destroy_routing_table_entry(struct routing_table_entry *rte)
+{
+
+	destroy_routing_table_entry_comp(rte);
+	free(rte);
+}
+
+void
+destroy_routing_table(void)
+{
+	int i, rt_element;
+	struct hashtb_enumerator ee;
+	struct hashtb_enumerator *e = &ee;
+
+	struct routing_table_entry *rte;
+	hashtb_start(nlsr->routing_table, e);
+	rt_element=hashtb_n(nlsr->routing_table);
+	for(i=0;i<rt_element;i++)
+	{
+		rte=e->data;
+		free(rte->dest_router);
+		hashtb_destroy(&rte->face_list);	
+		hashtb_next(e);		
+	}	
+	hashtb_end(e);
+	hashtb_destroy(&nlsr->routing_table);
+
+}
+
+void
+destroy_map(void)
+{
+
+	int i, map_element;
+	struct map_entry *me;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->map, e);
+	map_element=hashtb_n(nlsr->map);
+
+	for(i=0;i<map_element;i++)
+	{
+		me=e->data;
+		free(me->router);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+}
+
+void
+destroy_rev_map(void)
+{
+	int i, map_element;
+	struct map_entry *me;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->rev_map, e);
+	map_element=hashtb_n(nlsr->rev_map);
+
+	for(i=0;i<map_element;i++)
+	{
+		me=e->data;
+		free(me->router);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
 }

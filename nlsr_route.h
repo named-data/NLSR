@@ -17,7 +17,6 @@ struct map_entry
 struct routing_table_entry
 {
 	char *dest_router;
-	//int next_hop_face;
 	struct hashtb *face_list;
 };
 
@@ -67,5 +66,11 @@ int does_face_exist_for_router(char *dest_router, int face_id);
 double get_hyperbolic_distance(long int source, long int dest);
 void sort_hyperbolic_route(double *dist_dest,double *dist_nbr, long int *faces,long int start,long int element);
 void update_routing_table_with_new_hyperbolic_route(long int dest_router_rev_map_index, long int face, double nbr_to_dest_dist);
+
+void destroy_routing_table_entry_comp(struct routing_table_entry *rte);
+void destroy_routing_table_entry(struct routing_table_entry *rte);
+void destroy_routing_table(void);
+void destroy_map(void);
+void destroy_rev_map(void);
 
 #endif

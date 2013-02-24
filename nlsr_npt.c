@@ -241,7 +241,7 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 
 		hashtb_start(ne->name_list, enle);
 		nl_element=hashtb_n(ne->name_list);
-
+		
 		for (i=0;i<nl_element;i++)
 		{
 			nle=enle->data;
@@ -258,9 +258,8 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 			
 			hashtb_next(enle);
 		}
-
-
 		hashtb_end(enle);
+		
 
 		if ( nlsr->debugging )
 		{
@@ -565,8 +564,10 @@ delete_orig_router_from_npt(char *orig_router)
 			} 
 
 		}
-		hashtb_destroy(&ne->name_list);
-		hashtb_destroy(&ne->face_list);
+		//hashtb_destroy(&ne->name_list);
+		//hashtb_destroy(&ne->face_list);
+		destroy_name_list(ne->name_list);
+		destroy_face_list(ne->face_list);
 		hashtb_delete(e);		
 	}
 	else if ( res == HT_NEW_ENTRY )
@@ -735,6 +736,7 @@ delete_face_from_npt_by_face_id(char *dest_router, int face_id)
 		res1=hashtb_seek(ef, &face_id, sizeof(face_id), 0);
 		if ( res1 == HT_OLD_ENTRY )
 		{
+			
 			hashtb_delete(ef);
 		}
 		else if ( res1 == HT_NEW_ENTRY )
@@ -1095,15 +1097,31 @@ destroy_all_face_by_nlsr(void)
 }
 
 void
-destroy_name_list(void)
+destroy_name_list(struct hashtb *name_list)
 {
-	
+	int j,nl_element;
+	struct name_list_entry *nle;		
+	struct hashtb_enumerator eenle;
+    	struct hashtb_enumerator *enle = &eenle;
+
+	hashtb_start(name_list, enle);
+	nl_element=hashtb_n(name_list);	
+
+	for (j=0;j<nl_element;j++)
+	{
+		nle=enle->data;
+		free(nle->name);
+		hashtb_next(enle);
+	}
+	hashtb_end(enle);
+
+	hashtb_destroy(&name_list);	
 }
 
 void
-destroy_face_list(void)
+destroy_face_list(struct hashtb *face_list)
 {
-
+	hashtb_destroy(&face_list);
 }
 
 void 
@@ -1123,41 +1141,12 @@ destroy_npt(void)
 	for(i=0;i<npt_element;i++)
 	{
 		ne=e->data;
-	
-		int j, nl_element,face_list_element;
-		struct name_list_entry *nle;		
-		struct hashtb_enumerator eenle;
-    		struct hashtb_enumerator *enle = &eenle;
-
-		hashtb_start(ne->name_list, enle);
-		nl_element=hashtb_n(ne->name_list);	
-
-		for (j=0;j<nl_element;j++)
-		{
-			nle=enle->data;
-			hashtb_next(enle);
-		}
-		hashtb_end(enle);
-
-		struct face_list_entry *fle;
-		struct hashtb_enumerator eef;
-    		struct hashtb_enumerator *ef = &eef;
-    	
-    		hashtb_start(ne->face_list, ef);
-		face_list_element=hashtb_n(ne->face_list);
-		
-		for(j=0;j<face_list_element;j++)
-		{
-			fle=ef->data;
-			hashtb_next(ef);	
-		}
-		
-		hashtb_end(ef);
-		
-			
+		destroy_name_list(ne->name_list);
+		destroy_face_list(ne->face_list);	
 		hashtb_next(e);		
 	}
-
 	hashtb_end(e);
+
+	hashtb_destroy(&nlsr->npt);
 }
 

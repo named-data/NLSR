@@ -35,11 +35,12 @@ void
 set_new_lsdb_version(void)
 {
 	
-	char *time_stamp=get_current_timestamp_micro_v2();
+	//char *time_stamp=get_current_timestamp_micro_v2();
 	free(nlsr->lsdb->lsdb_version);
-	nlsr->lsdb->lsdb_version=(char *)calloc(strlen(time_stamp)+1,sizeof(char));
-	memcpy(nlsr->lsdb->lsdb_version,time_stamp,strlen(time_stamp)+1);
-	free(time_stamp);
+	nlsr->lsdb->lsdb_version=get_current_timestamp_micro_v2();
+	//nlsr->lsdb->lsdb_version=(char *)calloc(strlen(time_stamp)+1,sizeof(char));
+	//memcpy(nlsr->lsdb->lsdb_version,time_stamp,strlen(time_stamp)+1);
+	//free(time_stamp);
 }
 
 /**
