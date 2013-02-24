@@ -112,7 +112,6 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 	}
 	else if (res == HT_OLD_ENTRY)
 	{
-		free(ne);
 		struct npt_entry *one;
 
 		one=e->data;
