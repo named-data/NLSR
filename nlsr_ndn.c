@@ -352,7 +352,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		
 
 
-		struct name_prefix *nbr=(struct name_prefix * )malloc(sizeof(struct name_prefix *));
+		struct name_prefix *nbr=(struct name_prefix * )malloc(sizeof(struct name_prefix));
 		get_lsa_identifier(nbr,selfp,info,-1);
 
 		if ( nlsr->debugging )
