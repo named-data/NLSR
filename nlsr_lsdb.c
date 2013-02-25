@@ -903,6 +903,8 @@ install_adj_lsa(struct alsa * adj_lsa)
 
 				new_adj_lsa->no_link=adj_lsa->no_link;
 		
+				if(new_adj_lsa->body )
+					free(new_adj_lsa->body);
 				new_adj_lsa->body=(char *)calloc(strlen(adj_lsa->body)+1,sizeof(char));
 				//memset(new_adj_lsa->body,0,strlen(adj_lsa->body)+1);
 				memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);
@@ -1461,7 +1463,7 @@ get_adj_lsa_data(struct ccn_charbuf *lsa_data,struct name_prefix *lsaId)
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_adj_lsa_data called  \n");
 
-	struct alsa *adj_lsa=(struct alsa*)malloc(sizeof(struct alsa ));
+	struct alsa *adj_lsa;//=(struct alsa*)malloc(sizeof(struct alsa ));
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
@@ -2034,6 +2036,7 @@ write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 
 
 	ccn_charbuf_destroy(&lsa_data);
+	free(data);
 }
 
 void
@@ -2057,6 +2060,7 @@ write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 	write_data_to_repo(data, repo_content_prefix);
 
 	ccn_charbuf_destroy(&lsa_data);
+	free(data);
 }
 
 
@@ -2177,9 +2181,9 @@ install_cor_lsa(struct clsa *cor_lsa)
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"install_cor_lsa called  \n");
 	
 
-	char *time_stamp=(char *)malloc(20);
-	memset(time_stamp,0,20);
-	get_current_timestamp_micro(time_stamp);
+	//char *time_stamp=(char *)malloc(20);
+	//memset(time_stamp,0,20);
+	//get_current_timestamp_micro(time_stamp);
 
 
 	char *key=(char *)malloc(cor_lsa->header->orig_router->length+4);
@@ -2207,13 +2211,14 @@ install_cor_lsa(struct clsa *cor_lsa)
 
 		new_cor_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 		new_cor_lsa->header->orig_router->name=(char *)malloc(strlen(cor_lsa->header->orig_router->name)+1);
-		memset(new_cor_lsa->header->orig_router->name,0,strlen(cor_lsa->header->orig_router->name)+1);
+		//memset(new_cor_lsa->header->orig_router->name,0,strlen(cor_lsa->header->orig_router->name)+1);
 		memcpy(new_cor_lsa->header->orig_router->name,cor_lsa->header->orig_router->name,strlen(cor_lsa->header->orig_router->name)+1);
 		new_cor_lsa->header->orig_router->length=cor_lsa->header->orig_router->length;
 
-		new_cor_lsa->header->orig_time=(char *)malloc(strlen(cor_lsa->header->orig_time)+1); //free 
-		memset(new_cor_lsa->header->orig_time,0,strlen(cor_lsa->header->orig_time)+1);
-		memcpy(new_cor_lsa->header->orig_time,cor_lsa->header->orig_time,strlen(cor_lsa->header->orig_time)+1);
+		//new_cor_lsa->header->orig_time=(char *)malloc(strlen(cor_lsa->header->orig_time)+1); //free 
+		//memset(new_cor_lsa->header->orig_time,0,strlen(cor_lsa->header->orig_time)+1);
+		//memcpy(new_cor_lsa->header->orig_time,cor_lsa->header->orig_time,strlen(cor_lsa->header->orig_time)+1);
+		new_cor_lsa->header->orig_time=get_current_timestamp_micro_v2();
 
 		new_cor_lsa->header->ls_type=cor_lsa->header->ls_type;
 
@@ -2314,7 +2319,7 @@ get_cor_lsa_data(struct ccn_charbuf *lsa_data,char *cor_lsa_key)
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_adj_lsa_data called  \n");
 
-	struct clsa *cor_lsa=(struct clsa*)malloc(sizeof(struct clsa ));
+	struct clsa *cor_lsa;//=(struct clsa*)malloc(sizeof(struct clsa ));
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
@@ -2414,6 +2419,7 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	free(lst);
 	free(key);
 	free(repo_key);
+	free(data);
 	ccn_charbuf_destroy(&lsa_data);
 }
 

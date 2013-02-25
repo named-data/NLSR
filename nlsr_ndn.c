@@ -106,7 +106,7 @@ get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp,
 	if ( nlsr->detailed_logging )
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Neighbor: %s Length: %d\n",
 														nbr->name,nbr->length);
-
+	free(neighbor);
 }
 
 /**
@@ -150,8 +150,8 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp,
 	}
 	len++;
 
-	char *neighbor=(char *)malloc(len);
-	memset(neighbor,0,len);
+	char *neighbor=(char *)calloc(len,sizeof(char));
+	//memset(neighbor,0,len);
 
 	for(i=nlsr_position+3+offset; i<info->interest_comps->n-1;i++)
 	{
@@ -173,6 +173,7 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp,
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSA Identifier: %s Length: "
 											"%d\n",lsaId->name,lsaId->length-1);
 
+	free(neighbor);
 }
 
 

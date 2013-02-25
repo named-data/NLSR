@@ -519,7 +519,7 @@ void
 add_map_entry(char *router)
 {
 
-	struct map_entry *me=(struct map_entry*)malloc(sizeof(struct map_entry ));
+	struct map_entry *me;//=(struct map_entry*)malloc(sizeof(struct map_entry ));
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
@@ -632,7 +632,7 @@ void
 add_rev_map_entry(long int mapping_number, char *router)
 {
 
-	struct map_entry *me=(struct map_entry*)malloc(sizeof(struct map_entry ));
+	struct map_entry *me;//=(struct map_entry*)malloc(sizeof(struct map_entry ));
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
@@ -944,7 +944,7 @@ add_next_hop_router(char *dest_router)
 		return ;
 	}
 
-	struct routing_table_entry *rte=(struct routing_table_entry *)malloc(sizeof(struct routing_table_entry));
+	struct routing_table_entry *rte;//=(struct routing_table_entry *)malloc(sizeof(struct routing_table_entry));
 
 	struct hashtb_enumerator ee;
     	struct hashtb_enumerator *e = &ee; 	
@@ -1048,7 +1048,7 @@ update_routing_table(char * dest_router,int next_hop_face, int route_cost)
 		res1 = hashtb_seek(ef, &next_hop_face, sizeof(next_hop_face), 0);	
 		if( res1 == HT_NEW_ENTRY)
 		{
-			struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
+			struct face_list_entry *fle;//=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
 			fle=ef->data;
 			fle->next_hop_face=next_hop_face;
 			fle->route_cost=route_cost;						

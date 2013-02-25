@@ -51,7 +51,7 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 
 		ne->orig_router=(char *)malloc(strlen(orig_router)+1);
 		memset(ne->orig_router,0,strlen(orig_router)+1);
-		memcpy(ne->orig_router,orig_router,strlen(orig_router));
+		memcpy(ne->orig_router,orig_router,strlen(orig_router)+1);
 
 	
 		
@@ -633,7 +633,7 @@ add_face_to_npt_by_face_id(char *dest_router, int face_id, int route_cost)
 				printf("Face Not Found \n");
 			if ( nlsr->detailed_logging )
 				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Face Not Found \n");
-			struct face_list_entry *fle=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
+			struct face_list_entry *fle;//=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
 			fle=ef->data;
 			fle->next_hop_face=face_id;
 			fle->route_cost=route_cost;

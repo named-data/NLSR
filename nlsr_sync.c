@@ -591,7 +591,7 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
 	struct ccn_charbuf *topo = ccn_charbuf_create(); 
 	
 	nlsr->closure=(struct ccns_name_closure *) 
-						calloc(1,sizeof(struct ccns_name_closure));
+						calloc(1,sizeof(struct ccns_name_closure)); // leak
 
 	nlsr->slice = ccns_slice_create();
 
