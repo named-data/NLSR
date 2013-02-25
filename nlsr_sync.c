@@ -104,7 +104,7 @@ sync_cb(struct ccns_name_closure *nc,
 		printf("Name after chopping: %s \n",ccn_charbuf_as_string(temp1));
 	ccn_charbuf_destroy(&temp1);
 
-	//main method which process contents from the sync.
+	//main method that processes contents from the sync
 	process_content_from_sync(content_name, name_comps);
 	
 	ccn_charbuf_destroy(&content_name);
@@ -478,20 +478,26 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 		lst=rem;
 		if(ls_type == LS_TYPE_ADJ)
 		{
-			ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+			ccn_name_comp_get(content_name->buf, components,components->n-2, 
+														&origtime, &comp_size);
 			ccn_name_chop(content_name,components,-2);
 			get_name_part(orig_router,content_name,components,0);
 
 			if ( nlsr->debugging )
-				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);		
+				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",
+											orig_router->name,ls_type,origtime);
 
 			int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 			if ( nlsr->debugging )
 				printf("LSA Life time: %d\n",lsa_life_time);
 
-			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
+			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && 
+							lsa_life_time < nlsr->lsa_refresh_time) || 
+							(strcmp(orig_router->name,nlsr->router_name) != 0 && 
+							 lsa_life_time < nlsr->router_dead_interval) )	
 			{
-				int is_new_adj_lsa=check_is_new_adj_lsa(orig_router->name,(char *)lst,(char *)origtime);
+				int is_new_adj_lsa = check_is_new_adj_lsa( orig_router->name, 
+													(char *)lst, (char *)origtime);
 				if ( is_new_adj_lsa == 1 )
 				{
 					if ( nlsr->debugging )
@@ -519,25 +525,32 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 		}
 		else if(ls_type == LS_TYPE_COR)
 		{
-			ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+			ccn_name_comp_get(content_name->buf, components, components->n-2, 
+														&origtime, &comp_size);
 			ccn_name_chop(content_name,components,-2);
 			get_name_part(orig_router,content_name,components,0);
 
 			if ( nlsr->debugging )
-				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n",orig_router->name,ls_type,origtime);
+				printf("Orig Router: %s Ls Type: %d Orig Time: %s\n", 
+											orig_router->name,ls_type,origtime);
 
 			int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 			if ( nlsr->debugging )
 				printf("LSA Life time: %d\n",lsa_life_time);
 
-			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) || (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )	
+			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && 
+							lsa_life_time < nlsr->lsa_refresh_time) || 
+							(strcmp(orig_router->name,nlsr->router_name) != 0 && 
+							 lsa_life_time < nlsr->router_dead_interval) )	
 			{
-				int is_new_cor_lsa=check_is_new_cor_lsa(orig_router->name,(char *)lst,(char *)origtime);
+				int is_new_cor_lsa=check_is_new_cor_lsa( orig_router->name, 
+												(char *)lst,(char *) origtime);
 				if ( is_new_cor_lsa == 1 )
 				{
 					if ( nlsr->debugging )
 						printf("New Cor LSA.....\n");	
-					get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
+					get_content_by_content_name(ccn_charbuf_as_string(uri), 
+																&content_data);
 
 					if ( nlsr->debugging )
 						printf("Content Data: %s \n",content_data);
@@ -627,7 +640,8 @@ write_data_to_repo(char *data, char *name_prefix)
 	if(ccn_fd == -1)
 	{
 		fprintf(stderr,"Could not connect to ccnd for Data Writing\n");
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Could not connect to ccnd for Data Writing\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__, 
+						"Could not connect to ccnd for Data Writing\n");
 		return -1;
 	}
 
