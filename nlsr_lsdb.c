@@ -2035,8 +2035,8 @@ write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 	write_data_to_repo(data, repo_content_prefix);
 
 
-	ccn_charbuf_destroy(&lsa_data);
-	free(data);
+	//ccn_charbuf_destroy(&lsa_data);
+	//free(data);
 }
 
 void
@@ -2059,8 +2059,8 @@ write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 
 	write_data_to_repo(data, repo_content_prefix);
 
-	ccn_charbuf_destroy(&lsa_data);
-	free(data);
+	//ccn_charbuf_destroy(&lsa_data);
+	//free(data);
 }
 
 
@@ -2419,8 +2419,8 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	free(lst);
 	free(key);
 	free(repo_key);
-	free(data);
-	ccn_charbuf_destroy(&lsa_data);
+	//free(data);
+	//ccn_charbuf_destroy(&lsa_data);
 }
 
 void 
