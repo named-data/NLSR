@@ -559,8 +559,8 @@ process_command_topo_prefix(char *command)
 			free(nlsr->topo_prefix);
 		if ( topo_prefix[strlen(topo_prefix)-1] == '/' )
 			topo_prefix[strlen(topo_prefix)-1]='\0';
-		if(nlsr->topo_prefix)
-			free(nlsr->topo_prefix);
+		//if(nlsr->topo_prefix)
+			//free(nlsr->topo_prefix);
 		nlsr->topo_prefix=(char *)calloc(strlen(topo_prefix)+1,sizeof(char));
 		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix)+1);
 		printf ("Topo prefix is: %s", nlsr->topo_prefix);;
@@ -592,8 +592,8 @@ process_command_slice_prefix(char *command)
 			free(nlsr->slice_prefix);
 		if ( slice_prefix[strlen(slice_prefix)-1] == '/' )
 			slice_prefix[strlen(slice_prefix)-1]='\0';
-		if( nlsr->slice_prefix)
-			free(nlsr->slice_prefix);
+		//if( nlsr->slice_prefix)
+			//free(nlsr->slice_prefix);
 		nlsr->slice_prefix=(char *)calloc(strlen(slice_prefix)+1,sizeof(char));
 		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix)+1);
 	}
