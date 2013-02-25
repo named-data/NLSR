@@ -478,8 +478,8 @@ process_command_logdir(char *command)
 		printf(" Wrong Command Format ( logdir /path/to/logdir/ )\n");
 		return;
 	}
-	if ( nlsr->logDir)
-		free(nlsr->logDir);
+	//if ( nlsr->logDir)
+		//free(nlsr->logDir);
 	nlsr->logDir=(char *)calloc(strlen(dir)+1,sizeof(char));
 	memcpy(nlsr->logDir,dir,strlen(dir)+1);
 }

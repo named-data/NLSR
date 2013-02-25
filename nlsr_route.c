@@ -50,9 +50,9 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		print_routing_table();
 		print_npt();		
 
-		struct hashtb_param param_me = {0};
-		nlsr->map = hashtb_create(sizeof(struct map_entry), &param_me);
-		nlsr->rev_map = hashtb_create(sizeof(struct map_entry), &param_me);
+		//struct hashtb_param param_me = {0};
+		nlsr->map = hashtb_create(sizeof(struct map_entry), NULL);
+		nlsr->rev_map = hashtb_create(sizeof(struct map_entry), NULL);
 		make_map();
 		assign_mapping_number();		
 		print_map();

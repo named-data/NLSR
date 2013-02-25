@@ -124,8 +124,9 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 	int lsa_position=0;
 	//int len=0;
 
-	struct ccn_indexbuf cid={0};
-	struct ccn_indexbuf *components=&cid;
+	//struct ccn_indexbuf cid={0};
+	//struct ccn_indexbuf *components=&cid;
+	struct ccn_indexbuf *components=ccn_indexbuf_create();
 	struct ccn_charbuf *name=ccn_charbuf_create();
 	ccn_name_from_uri(name,nlsr->slice_prefix);
 	ccn_name_split (name, components);
@@ -147,6 +148,7 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 
 	ccn_charbuf_destroy(&temp1);
 	ccn_charbuf_destroy(&temp);
+	ccn_indexbuf_destroy(&components);
 
 	if ( nlsr->debugging )
 		printf("Name Part: %s \n",name_part->name);

@@ -903,8 +903,8 @@ install_adj_lsa(struct alsa * adj_lsa)
 
 				new_adj_lsa->no_link=adj_lsa->no_link;
 		
-				if(new_adj_lsa->body )
-					free(new_adj_lsa->body);
+				//if(new_adj_lsa->body )
+					//free(new_adj_lsa->body);
 				new_adj_lsa->body=(char *)calloc(strlen(adj_lsa->body)+1,sizeof(char));
 				//memset(new_adj_lsa->body,0,strlen(adj_lsa->body)+1);
 				memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);

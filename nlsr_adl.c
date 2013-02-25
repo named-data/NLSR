@@ -688,9 +688,10 @@ get_host_name_from_command_string(struct name_prefix *name_part,
         	exit(1);
     	}	
 
-	struct ccn_indexbuf cid={0};
+	//struct ccn_indexbuf cid={0};
 
-    	struct ccn_indexbuf *components=&cid;
+    	//struct ccn_indexbuf *components=&cid;
+	struct ccn_indexbuf *components=ccn_indexbuf_create();
     	ccn_name_split (name, components);
 
 	for(i=components->n-2;i> (0+offset);i--)
@@ -721,6 +722,7 @@ get_host_name_from_command_string(struct name_prefix *name_part,
 	// 01/31/2013
 	free(neighbor);
 	ccn_charbuf_destroy(&name);
+	ccn_indexbuf_destroy(&components);
 }
 
 
