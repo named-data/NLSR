@@ -307,7 +307,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 		sp.template_ccnb=ccn_charbuf_create();		
 				
-		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_SignedInfo, CCN_DTAG);
+		/*ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_SignedInfo, CCN_DTAG);
 		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyLocator, CCN_DTAG);
 		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
 		ccn_charbuf_append_charbuf(sp.template_ccnb, name);
@@ -319,19 +319,19 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		sp.sp_flags |= CCN_SP_FINAL_BLOCK;
 		sp.type = CCN_CONTENT_KEY;
 		sp.freshness = 10;
+		*/
 		
-		
-		/*ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
+		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
 		ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
        	 	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
 		ccn_charbuf_append_closer(sp.template_ccnb);
-		*/
+		
 
 		char *raw_data=(char *)malloc(20);
 		memset(raw_data,0,20);
 		sprintf(raw_data,"%s", nlsr->lsdb->lsdb_version);	
 
-		res= ccn_sign_content(nlsr->ccn, data, name, &sp, pubkey->buf,pubkey->length); 
+		res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info",strlen("info")); 
 		if(res >= 0)
 		{
 			if ( nlsr->debugging )

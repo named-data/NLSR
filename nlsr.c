@@ -144,9 +144,9 @@ daemonize_nlsr(void)
 	}
 
 	chdir("/");	
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
+	//close(STDIN_FILENO);
+	//close(STDOUT_FILENO);
+	//close(STDERR_FILENO);
 }
 
 	void 
