@@ -202,7 +202,8 @@ build_and_install_name_lsas(void)
 	if ( nlsr->debugging )
 		printf("build_and_install_name_lsas called \n");
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"build_and_install_name_lsas called\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"build_and_install_name_lsas "
+																	"called\n");
 
 	int i, npl_element;
 	struct name_prefix_list_entry *npe;
@@ -241,7 +242,8 @@ build_and_install_single_name_lsa(struct name_prefix *np)
 	if ( nlsr->debugging )
 		printf("build_and_install_single_name_lsa called \n");
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"build_and_install_single_name_lsa called\n");
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"build_and_install_single_name"
+																"_lsa called\n");
 	
 	struct nlsa *name_lsa=(struct nlsa *)malloc(sizeof( struct nlsa ));
 	build_name_lsa(name_lsa,np);
@@ -267,9 +269,12 @@ build_name_lsa(struct nlsa *name_lsa, struct name_prefix *np)
 	free(time_stamp);
 
 	name_lsa->header->ls_id=++nlsr->nlsa_id;
-	name_lsa->header->orig_router=(struct name_prefix *)calloc(1,sizeof(struct name_prefix ));
-	name_lsa->header->orig_router->name=(char *)calloc(strlen(nlsr->router_name)+1,sizeof(char));
-	memcpy(name_lsa->header->orig_router->name,nlsr->router_name,strlen(nlsr->router_name)+1);
+	name_lsa->header->orig_router=(struct name_prefix *)calloc(1,
+													sizeof(struct name_prefix ));
+	name_lsa->header->orig_router->name=(char *)calloc(
+										strlen(nlsr->router_name)+1,sizeof(char));
+	memcpy(name_lsa->header->orig_router->name,
+									nlsr->router_name,strlen(nlsr->router_name)+1);
 	name_lsa->header->orig_router->length=strlen(nlsr->router_name)+1;
 	name_lsa->header->isValid=1;
 
@@ -293,14 +298,18 @@ install_name_lsa(struct nlsa *name_lsa)
 	memset(lsid,0,10);
 	sprintf(lsid,"%ld",name_lsa->header->ls_id);
 		
-	char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
-	memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)+1+strlen(lsid)+1);
-	make_name_lsa_key(key, name_lsa->header->orig_router->name,name_lsa->header->ls_type,name_lsa->header->ls_id);
+	char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)+1+
+												strlen(lst)+1+strlen(lsid)+1);
+	memset(key,0,strlen(name_lsa->header->orig_router->name)+1+strlen(lst)
+															+1+strlen(lsid)+1);
+	make_name_lsa_key(key, name_lsa->header->orig_router->name,
+						name_lsa->header->ls_type,name_lsa->header->ls_id);
 
 	if ( nlsr->debugging )
 		printf("Key:%s Length:%d\n",key,(int)strlen(key));
 	if ( nlsr->detailed_logging )
-		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Key:%s Length:%d\n",key,(int)strlen(key));	
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Key:%s Length:%d\n",key,
+															(int)strlen(key));	
 		
 	struct nlsa *new_name_lsa;
 
@@ -319,30 +328,41 @@ install_name_lsa(struct nlsa *name_lsa)
 			if ( nlsr->debugging )
 				printf("New Name LSA... Adding to LSDB\n");
 			if ( nlsr->detailed_logging )
-				writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Name LSA... Adding to LSDB\n");
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Name LSA... "
+															"Adding to LSDB\n");
 
 
 			new_name_lsa = e->data;
 	
 			
-			new_name_lsa->header=(struct nlsa_header *)malloc(sizeof(struct nlsa_header ));
+			new_name_lsa->header=(struct nlsa_header *)calloc(1,
+												sizeof(struct nlsa_header ));
 			new_name_lsa->header->ls_type=name_lsa->header->ls_type;
 
-			new_name_lsa->header->orig_time=(char *)malloc(strlen(name_lsa->header->orig_time)+1);
-			memset(new_name_lsa->header->orig_time,0,strlen(name_lsa->header->orig_time)+1);
-			memcpy(new_name_lsa->header->orig_time,name_lsa->header->orig_time,strlen(name_lsa->header->orig_time)+1);
+			new_name_lsa->header->orig_time=(char *)calloc(
+							strlen(name_lsa->header->orig_time)+1,sizeof(char));
+			//memset(new_name_lsa->header->orig_time,0,strlen(name_lsa->header->orig_time)+1);
+			memcpy(new_name_lsa->header->orig_time,name_lsa->header->orig_time,
+										strlen(name_lsa->header->orig_time)+1);
 
 			new_name_lsa->header->ls_id=name_lsa->header->ls_id;
-			new_name_lsa->header->orig_router=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
-			new_name_lsa->header->orig_router->name=(char *)malloc(name_lsa->header->orig_router->length);
-			memcpy(new_name_lsa->header->orig_router->name,name_lsa->header->orig_router->name,name_lsa->header->orig_router->length);
+			new_name_lsa->header->orig_router=(struct name_prefix *)calloc(1,
+													sizeof(struct name_prefix ));
+			new_name_lsa->header->orig_router->name=(char *)calloc(
+							name_lsa->header->orig_router->length,sizeof(char));
+			memcpy(new_name_lsa->header->orig_router->name,
+					name_lsa->header->orig_router->name,
+										name_lsa->header->orig_router->length);
 			new_name_lsa->header->orig_router->length=name_lsa->header->orig_router->length;
 			new_name_lsa->header->isValid=name_lsa->header->isValid;
 
 	
-			new_name_lsa->name_prefix=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
-			new_name_lsa->name_prefix->name=(char *)malloc(name_lsa->name_prefix->length);
-			memcpy(new_name_lsa->name_prefix->name,name_lsa->name_prefix->name,name_lsa->name_prefix->length);
+			new_name_lsa->name_prefix=(struct name_prefix *)calloc(1,
+												sizeof(struct name_prefix ));
+			new_name_lsa->name_prefix->name=(char *)calloc(
+									name_lsa->name_prefix->length,sizeof(char));
+			memcpy(new_name_lsa->name_prefix->name,name_lsa->name_prefix->name,
+												name_lsa->name_prefix->length);
 			new_name_lsa->name_prefix->length=name_lsa->name_prefix->length;
 			
 
@@ -353,22 +373,27 @@ install_name_lsa(struct nlsa *name_lsa)
 			}
 			if ( nlsr->detailed_logging )
 			{
-				writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Name LSA Added....\n");	
-				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Old Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Name LSA Added.\n");	
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Old Version Number of"
+										" LSDB: %s \n",nlsr->lsdb->lsdb_version);
 			}
 
 			set_new_lsdb_version();	
 
 			if ( nlsr->debugging )
-				printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+				printf("New Version Number of LSDB: %s \n",
+													nlsr->lsdb->lsdb_version);
 			if ( nlsr->detailed_logging )
-				writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);	
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of"
+										" LSDB: %s \n",nlsr->lsdb->lsdb_version);	
 
 			
-			int num_next_hop=get_number_of_next_hop(new_name_lsa->header->orig_router->name);
+			int num_next_hop=get_number_of_next_hop(
+										new_name_lsa->header->orig_router->name);
 			if ( num_next_hop < 0 )
 			{
-				int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,NO_NEXT_HOP,NULL,NULL);
+				int check=add_npt_entry(new_name_lsa->header->orig_router->name,
+						new_name_lsa->name_prefix->name,NO_NEXT_HOP,NULL,NULL);
 				if ( check == HT_NEW_ENTRY )
 				{
 					if ( nlsr->debugging )
@@ -381,7 +406,8 @@ install_name_lsa(struct nlsa *name_lsa)
 			{
 				int *faces=malloc(num_next_hop*sizeof(int));
 				int *route_costs=malloc(num_next_hop*sizeof(int));			
-				int next_hop=get_next_hop(new_name_lsa->header->orig_router->name,faces,route_costs);
+				int next_hop=get_next_hop(new_name_lsa->header->orig_router->name
+															,faces,route_costs);
 				if ( nlsr->debugging )
 				{
 					printf("Printing from install_name_lsa \n");
@@ -391,12 +417,15 @@ install_name_lsa(struct nlsa *name_lsa)
 				}
 				if ( nlsr->detailed_logging )
 				{
-					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Printing from install_name_lsa \n");
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Printing from ins"
+															"tall_name_lsa \n");
 					int j;
 					for(j=0;j<num_next_hop;j++)
-						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Face: %d Route Cost: %d \n",faces[j],route_costs[j]);
+						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Face: %d Route"
+										" Cost: %d \n",faces[j],route_costs[j]);
 				}
-				int check=add_npt_entry(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name,next_hop,faces,route_costs);
+				int check=add_npt_entry(new_name_lsa->header->orig_router->name,
+					new_name_lsa->name_prefix->name,next_hop,faces,route_costs);
 				if ( check == HT_NEW_ENTRY )
 				{
 					if ( nlsr->debugging )
@@ -430,34 +459,45 @@ install_name_lsa(struct nlsa *name_lsa)
 				if ( nlsr->debugging )
 					printf("Older Adj LSA. Discarded... \n");
 				if ( nlsr->detailed_logging )
-					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Older Adj LSA. Discarded...\n");
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Older Adj LSA. Di"
+																"scarded...\n");
 			}
-			else if( strcmp(name_lsa->header->orig_time,new_name_lsa->header->orig_time) == 0 )
+			else if( strcmp(name_lsa->header->orig_time,
+										new_name_lsa->header->orig_time) == 0 )
 			{
 				if ( nlsr->debugging )
 					printf("Duplicate Adj LSA. Discarded... \n");
 				if ( nlsr->detailed_logging )
-					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Duplicate Adj LSA. Discarded...\n");
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Duplicate Adj LSA."
+															" Discarded...\n");
 			}
 			else 
 			{
 				if ( name_lsa->header->isValid == 0 )
 				{
 					// have to call to delete npt table entry
-					delete_npt_entry_by_router_and_name_prefix(new_name_lsa->header->orig_router->name,new_name_lsa->name_prefix->name);
+					delete_npt_entry_by_router_and_name_prefix(
+									new_name_lsa->header->orig_router->name,
+												new_name_lsa->name_prefix->name);
 				
 					if ( strcmp(name_lsa->header->orig_router->name,nlsr->router_name)!= 0)
 					{
 						writeLogg(__FILE__,__FUNCTION__,__LINE__," Name-LSA\n");
-						writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name lsa\n");
+						writeLogg(__FILE__,__FUNCTION__,__LINE__," Deleting name"
+																	" lsa\n");
 						write_log_for_name_lsa(new_name_lsa);
-						writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
+						writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end"
+																		"\n");
 						
 						hashtb_delete(e);
 						if ( nlsr->debugging )
-							printf("isValid bit not set for Router %s so LSA Deleted from LSDB\n",name_lsa->header->orig_router->name);
+							printf("isValid bit not set for Router %s so LSA De"
+									"leted from LSDB\n",
+											name_lsa->header->orig_router->name);
 						if ( nlsr->detailed_logging )
-							writeLogg(__FILE__,__FUNCTION__,__LINE__,"isValid bit not set for Router %s so LSA Deleted from LSDB\n",name_lsa->header->orig_router->name);
+							writeLogg(__FILE__,__FUNCTION__,__LINE__,"isValid b"
+							"it not set for Router %s so LSA Deleted from LSDB\n"
+											,name_lsa->header->orig_router->name);
 					}
 					else 
 					{
@@ -1710,6 +1750,58 @@ refresh_name_lsdb(void)
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," name_lsa_end\n");
 	
 					free(current_time_stamp);
+
+					char lst[2];
+					memset(lst,0,2);
+					sprintf(lst,"%d",name_lsa->header->ls_type);	
+
+					char lsid[10];
+					memset(lsid,0,10);
+					sprintf(lsid,"%ld",name_lsa->header->ls_id);
+
+					char *key=(char *)malloc(strlen(name_lsa->header->orig_router->name)
+								+1+strlen(lst)+1+strlen(lsid)+1);
+					memset(key,0,strlen(name_lsa->header->orig_router->name)+1+
+										strlen(lst)+1+strlen(lsid)+1);
+
+
+					make_name_lsa_key(key, name_lsa->header->orig_router->name,
+								name_lsa->header->ls_type,name_lsa->header->ls_id);
+		
+					if ( nlsr->debugging )
+							printf("Name LSA Key: %s \n",key);
+
+
+					char *repo_key=(char *)calloc(strlen(nlsr->slice_prefix)+1+
+									strlen(name_lsa->header->orig_router->name)
+									+1+strlen(lst)+1+strlen(lsid)+1+
+									strlen(name_lsa->header->orig_time)+16,
+									sizeof(char));	
+					make_name_lsa_prefix_for_repo(repo_key, 
+											name_lsa->header->orig_router->name,
+											name_lsa->header->ls_type,
+											name_lsa->header->ls_id,
+											name_lsa->header->orig_time,
+											nlsr->slice_prefix);
+		
+					if ( nlsr->debugging )
+							printf("Name LSA Repo Key: %s \n",repo_key);
+
+					struct name_prefix *lsaid=(struct name_prefix *)
+											calloc(1,sizeof(struct name_prefix));
+					lsaid->name=(char *)calloc(strlen(key)+1,sizeof(char));
+					memcpy(lsaid->name,key,strlen(key)+1);
+					lsaid->length=strlen(key)+1;
+
+		
+					write_name_lsa_to_repo(repo_key, lsaid);
+
+					free(key);
+					free(repo_key);
+					free(lsaid->name);
+					free(lsaid);
+
+
 					
 					hashtb_next(e);
 				}
@@ -1852,6 +1944,47 @@ refresh_adj_lsdb(void)
 					printf("New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
 				if ( nlsr->detailed_logging )
 					writeLogg(__FILE__,__FUNCTION__,__LINE__,"New Version Number of LSDB: %s \n",nlsr->lsdb->lsdb_version);
+
+
+				char lst[2];
+				memset(lst,0,2);
+				sprintf(lst,"%d",LS_TYPE_ADJ);			
+
+				char *repo_key=(char *)calloc(strlen(nlsr->slice_prefix)+
+								strlen(adj_lsa->header->orig_time)+
+								strlen(adj_lsa->header->orig_router->name) 
+								+ strlen(lst) + 5+15,sizeof(char));
+				make_adj_lsa_prefix_for_repo(repo_key, 
+								adj_lsa->header->orig_router->name,LS_TYPE_ADJ,
+								adj_lsa->header->orig_time,nlsr->slice_prefix);
+		
+				if ( nlsr->debugging )
+					printf("Adj LSA Repo Key: %s \n",repo_key);
+
+				char *key=(char *)calloc(adj_lsa->header->orig_router->length+5,
+																	sizeof(char));
+				make_adj_lsa_key(key,adj_lsa);
+				if ( nlsr->debugging )
+					printf("Adj LSA Key: %s \n",key);
+
+				struct name_prefix *lsaid=(struct name_prefix *)
+											calloc(1,sizeof(struct name_prefix));
+				lsaid->name=(char *)calloc(strlen(key)+1,sizeof(char));
+				memcpy(lsaid->name,key,strlen(key)+1);
+				lsaid->length=strlen(key)+1;
+
+		
+				write_adj_lsa_to_repo(repo_key, lsaid);
+
+				free(key);
+				free(repo_key);
+				free(lsaid->name);
+				free(lsaid);
+
+
+
+
+
 
 				print_adj_lsdb();
 				

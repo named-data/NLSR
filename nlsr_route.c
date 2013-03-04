@@ -1048,7 +1048,7 @@ update_routing_table(char * dest_router,int next_hop_face, int route_cost)
 		res1 = hashtb_seek(ef, &next_hop_face, sizeof(next_hop_face), 0);	
 		if( res1 == HT_NEW_ENTRY)
 		{
-			struct face_list_entry *fle;//=(struct face_list_entry *)malloc(sizeof(struct face_list_entry));
+			struct face_list_entry *fle;
 			fle=ef->data;
 			fle->next_hop_face=next_hop_face;
 			fle->route_cost=route_cost;						
