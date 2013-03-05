@@ -47,21 +47,17 @@ struct nlsr
 	struct ccn_closure in_content;
 
 	struct ccns_name_closure *closure;
-
 	struct ccns_slice *slice;
     	struct ccns_handle *ccns;
 
 	struct ccn_schedule *sched;
     	struct ccn_scheduled_event *event;
-	struct ccn_scheduled_event *event_send_lsdb_interest;
 	struct ccn_scheduled_event *event_send_info_interest;
-	struct ccn_scheduled_event *event_build_name_lsa;
 	struct ccn_scheduled_event *event_build_adj_lsa;
 	struct ccn_scheduled_event *event_calculate_route;
 
 	struct hashtb *adl;
 	struct hashtb *npl;
-	//struct hashtb *pit_alsa;
 	struct hashtb *map;
 	struct hashtb *rev_map;
 	struct hashtb *npt;
@@ -83,12 +79,11 @@ struct nlsr
 	int is_send_lsdb_interest_scheduled;
 	int is_route_calculation_scheduled;
 
-	//long int lsdb_synch_interval;
 	int interest_retry;
 	long int interest_resend_time;
 	long int lsa_refresh_time;
 	long int router_dead_interval;
-	//long int multi_path_face_num;
+	
 	long int max_faces_per_prefix;
 	char *logDir;
 	int detailed_logging;
@@ -102,6 +97,11 @@ struct nlsr
 
 	char *topo_prefix;
 	char *slice_prefix;
+
+	char *root_key_prefix;
+	char *keystore_path;
+	char *keystore_passphrase;
+	char *site_name;
 
 	int is_hyperbolic_calc;
 	double cor_r;

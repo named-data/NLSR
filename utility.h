@@ -11,7 +11,9 @@ void startLogging(char *loggingDir);
 void writeLogg(const char *source_file, const char *function, const int line, const char *format, ...);
 struct sockaddr_in * get_ip_from_hostname(char *hostname);
 int get_ip_from_hostname_02(char * hostname , char* ip);
-char * get_current_timestamp_micro_v2();
+char * get_current_timestamp_micro_v2(void);
+char * get_current_user_home(void);
+char * get_current_user_default_keystore(void);
 
 int add_ccn_uri_name(struct ccn_charbuf *res_name, struct ccn_charbuf *add);
 

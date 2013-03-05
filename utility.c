@@ -92,7 +92,7 @@ get_current_timestamp_micro(char * microSec)
 }
 
 char *
-get_current_timestamp_micro_v2()
+get_current_timestamp_micro_v2(void)
 {
 	struct timeval now; 
 	gettimeofday(&now, NULL);
@@ -144,21 +144,15 @@ startLogging(char *loggingDir)
 	char *ret;
 	char *logExt;
 	char *defaultLogDir;	
-	//int status;
 	struct stat st;
 	int isLogDirExists=0;
 	char *time=getLocalTimeStamp();
 
-	pwdbuffer=(char *)malloc(sizeof(char)*200);
-	memset(pwdbuffer,0,200);		
-	logDir=(char *)malloc(sizeof(char)*200);
-	memset(logDir,0,200);
-	logFileName=(char *)malloc(sizeof(char)*200);
-	memset(logFileName,0,200);
-	logExt=(char *)malloc(sizeof(char)*5);
-	memset(logExt,0,5);
-	defaultLogDir=(char *)malloc(sizeof(char)*10);
-	memset(defaultLogDir,0,10);
+	pwdbuffer=(char *)calloc(200,sizeof(char));		
+	logDir=(char *)calloc(200,sizeof(char));
+	logFileName=(char *)calloc(200,sizeof(char));
+	logExt=(char *)calloc(5,sizeof(char));
+	defaultLogDir=(char *)calloc(10,sizeof(char));
 
 	memcpy(logExt,".log",4);
 	logExt[4]='\0';
@@ -192,8 +186,7 @@ startLogging(char *loggingDir)
 			memcpy(logDir,pd.pw_dir,strlen(pd.pw_dir)+1);	
 			memcpy(logDir+strlen(logDir),defaultLogDir,strlen(defaultLogDir)+1);	
 			if(stat(logDir,&st) != 0)
-				mkdir(logDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);	
-			//printf("Status: %d\n",status);
+				mkdir(logDir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 		}
 	}	
  	memcpy(logFileName,logDir,strlen(logDir)+1);	
@@ -219,6 +212,39 @@ startLogging(char *loggingDir)
 	free(ret);	
 }
 
+
+char *
+get_current_user_home(void){
+
+	const char *homeDir = getenv("HOME");
+
+    if (!homeDir ) {
+        struct passwd* pwd = getpwuid(getuid());
+        if (pwd)
+           homeDir = pwd->pw_dir;
+    }
+    
+	char *home=(char *)calloc(strlen(homeDir)+1,sizeof(char));
+	memcpy(home,homeDir,strlen(homeDir)+1);
+
+	return home;
+}
+
+
+char * 
+get_current_user_default_keystore(void){
+
+	char *home=get_current_user_home();
+	char *def_keystore=(char *)calloc(strlen(home)+strlen("/.ccnx") + 
+						strlen("/.ccnx_keystore")+1,sizeof(char));
+	memcpy(def_keystore,home,strlen(home));
+	memcpy(def_keystore+strlen(def_keystore),"/.ccnx/.ccnx_keystore",
+			strlen("/.ccnx/.ccnx_keystore"));
+	def_keystore[strlen(def_keystore)]='\0';
+	free(home);
+
+	return def_keystore;
+}
 
 void 
 writeLogg(const char *source_file, const char *function, const int line, const char *format, ...)

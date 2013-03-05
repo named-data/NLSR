@@ -563,7 +563,7 @@ process_command_topo_prefix(char *command)
 			//free(nlsr->topo_prefix);
 		nlsr->topo_prefix=(char *)calloc(strlen(topo_prefix)+1,sizeof(char));
 		memcpy(nlsr->topo_prefix,topo_prefix,strlen(topo_prefix)+1);
-		printf ("Topo prefix is: %s", nlsr->topo_prefix);;
+		printf ("Topo prefix is: %s\n", nlsr->topo_prefix);
 	}
 }
 
@@ -596,6 +596,38 @@ process_command_slice_prefix(char *command)
 			//free(nlsr->slice_prefix);
 		nlsr->slice_prefix=(char *)calloc(strlen(slice_prefix)+1,sizeof(char));
 		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix)+1);
+		printf("Slice prefix: %s \n",nlsr->slice_prefix);
+	}
+}
+
+
+	void 
+process_command_root_key_prefix(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( root-key-prefix /name/prefix )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *root_key_prefix;
+
+	root_key_prefix=strtok_r(command,sep,&rem);
+	if(root_key_prefix==NULL)
+	{
+		printf(" Wrong Command Format (  root-key-prefix /name/prefix  )\n");
+		return;
+	}
+	else
+	{
+		if ( nlsr->root_key_prefix != NULL)
+			free(nlsr->root_key_prefix);
+		if ( root_key_prefix[strlen(root_key_prefix)-1] == '/' )
+			root_key_prefix[strlen(root_key_prefix)-1]='\0';
+		nlsr->root_key_prefix=(char *)calloc(strlen(root_key_prefix)+1,sizeof(char));
+		memcpy(nlsr->root_key_prefix,root_key_prefix,strlen(root_key_prefix)+1);
+		printf("Root key prefix: %s \n",nlsr->root_key_prefix);
 	}
 }
 
@@ -686,6 +718,94 @@ process_command_tunnel_type(char *command)
 	}
 }
 
+void 
+process_command_keystore_passphrase(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( keystore-passphrase passphrase )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *passphrase;
+
+	passphrase=strtok_r(command,sep,&rem);
+	if(passphrase==NULL)
+	{
+		printf(" Wrong Command Format ( keystore-passphrase passphrase )\n");
+		return;
+	}
+
+	if( nlsr->keystore_passphrase)
+		free(nlsr->keystore_passphrase);
+	nlsr->keystore_passphrase=(char *)calloc(strlen(passphrase)+1,sizeof(char));
+	memcpy(nlsr->keystore_passphrase,passphrase,strlen(passphrase));
+
+	
+}
+
+
+void 
+process_command_keystore_path(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( keystore-path path/to/.ccnx_keystore )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *path;
+
+	path=strtok_r(command,sep,&rem);
+	if(path==NULL)
+	{
+		printf(" Wrong Command Format ( keystore-path path/to/.ccnx_keystore )\n");
+		return;
+	}
+
+	if( nlsr->keystore_path)
+		free(nlsr->keystore_path);
+	nlsr->keystore_path=(char *)calloc(strlen(path)+1,sizeof(char));
+	memcpy(nlsr->keystore_path,path,strlen(path));
+	
+}
+
+
+
+void 
+process_command_site_name(char *command)
+{
+	if(command==NULL)
+	{
+		printf(" Wrong Command Format ( site-name site/name/prefix )\n");
+		return;
+	}
+	char *rem;
+	const char *sep=" \t\n";
+	char *site_name;
+
+	site_name=strtok_r(command,sep,&rem);
+	if(site_name==NULL)
+	{
+		printf(" Wrong Command Format ( site-name site/name/prefix )\n");
+		return;
+	}
+
+	if( nlsr->site_name)
+		free(nlsr->site_name);
+
+	if ( site_name[strlen(site_name)-1] == '/' )
+			site_name[strlen(site_name)-1]='\0';
+
+	nlsr->site_name=(char *)calloc(strlen(site_name)+1,sizeof(char));
+	memcpy(nlsr->site_name,site_name,strlen(site_name));
+	printf("Site Name prefix: %s \n",nlsr->site_name);
+	
+}
+
+
 	void 
 process_conf_command(char *command)
 {
@@ -761,6 +881,22 @@ process_conf_command(char *command)
 	else if(!strcmp(cmd_type,"tunnel-type") )
 	{
 		process_command_tunnel_type(remainder);
+	}
+	else if(!strcmp(cmd_type,"site-name") )
+	{
+		process_command_site_name(remainder);
+	}
+	else if(!strcmp(cmd_type,"keystore-path") )
+	{
+		process_command_keystore_path(remainder);
+	}
+	else if(!strcmp(cmd_type,"keystore-passphrase") )
+	{
+		process_command_keystore_passphrase(remainder);	
+	}
+	else if(!strcmp(cmd_type,"root-key-prefix") )
+	{
+		process_command_root_key_prefix(remainder);
 	}
 	else 
 	{
@@ -1070,6 +1206,11 @@ check_config_validity()
 		fprintf(stderr,"Hyperbolic codinate has not been defined :(\n");
 		return -1;
 	}
+	if (nlsr->site_name == NULL )
+	{
+		fprintf(stderr,"Site name has not been configured :(\n");
+		return -1;
+	}
 
 	return 0;
 }
@@ -1101,6 +1242,13 @@ nlsr_destroy( void )
 	close(nlsr->nlsr_api_server_sock_fd);
 
 	ccn_destroy(&nlsr->ccn);
+
+	free(nlsr->root_key_prefix);
+	free(nlsr->keystore_path);
+	free(nlsr->keystore_passphrase);
+	if( nlsr->site_name )
+		free(nlsr->site_name);
+
 	free(nlsr->router_name);
 	if ( nlsr->debugging )
 	{
@@ -1176,13 +1324,7 @@ init_nlsr(void)
 	nlsr->lsdb->name_lsdb = hashtb_create(sizeof(struct nlsa), NULL);
 	nlsr->lsdb->cor_lsdb = hashtb_create(sizeof(struct clsa), NULL);
 
-	/*
-	char *time_stamp=(char *) calloc (20,sizeof(char));
-	get_current_timestamp_micro(time_stamp);
-	nlsr->lsdb->lsdb_version=(char *)malloc(strlen(time_stamp)+1);
-	memset(nlsr->lsdb->lsdb_version,0,strlen(time_stamp));
-	free(time_stamp);
-	*/
+
 
 	nlsr->lsdb->lsdb_version=get_current_timestamp_micro_v2();
 
@@ -1220,6 +1362,14 @@ init_nlsr(void)
 	nlsr->cor_theta=-1.0;
 
 	nlsr->tunnel_type=IPPROTO_UDP;
+
+	nlsr->root_key_prefix=(char *)calloc(strlen("/ndn/keys")+1,sizeof(char));
+	memcpy(nlsr->root_key_prefix,"/ndn/keys",strlen("/ndn/keys"));
+	nlsr->keystore_path=get_current_user_default_keystore();
+	nlsr->keystore_passphrase=(char *)calloc(strlen("Th1s1sn0t8g00dp8ssw0rd.")+1
+																,sizeof(char));
+	memcpy(nlsr->keystore_passphrase,"Th1s1sn0t8g00dp8ssw0rd.",
+											strlen("Th1s1sn0t8g00dp8ssw0rd."));
 
 	return 0;
 }

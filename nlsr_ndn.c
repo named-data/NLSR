@@ -761,6 +761,7 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 		}	
 		ccn_charbuf_destroy(&templ);
 	}
+
 	ccn_charbuf_destroy(&name);
 	free(int_name);
 }

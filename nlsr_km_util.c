@@ -65,6 +65,44 @@ get_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco)
 	return key_name;
 }
 
+
+int 
+get_orig_router_from_key_name(struct ccn_charbuf *orig_router ,struct ccn_charbuf *name) 
+{
+	int res;	
+	struct ccn_indexbuf *name_comps;
+	
+	name_comps = ccn_indexbuf_create();
+	res = ccn_name_split(name, name_comps);
+	if ( res < 0 ){
+		ccn_indexbuf_destroy(&name_comps);
+		return res;
+	}
+	else{
+		res=ccn_name_chop(name, name_comps, -2);
+		if ( res < 0 ){
+			ccn_indexbuf_destroy(&name_comps);
+			return res;
+		}
+		else{
+			res=check_for_tag_component_in_name(name,name_comps,"R.N.Start");
+			if ( res > 0 ){
+				ccn_name_init(orig_router);	
+				ccn_name_append_components(orig_router,name->buf,
+										name_comps->buf[res+1], 
+										name_comps->buf[name_comps->n - 1]);
+			}
+			else{
+				ccn_indexbuf_destroy(&name_comps);
+				return -1;
+			}
+		}
+	}	
+
+	ccn_indexbuf_destroy(&name_comps);
+	return 0;
+}
+
 int
 check_for_name_component_in_name(const struct ccn_charbuf *name, 
 								const struct ccn_indexbuf *indx,

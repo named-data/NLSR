@@ -30,6 +30,7 @@
 #include "nlsr_lsdb.h"
 #include "utility.h"
 #include "nlsr_km.h"
+#include "nlsr_km_util.h"
 
 
 char *
@@ -133,13 +134,16 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 	struct ccn_charbuf *temp=ccn_charbuf_create();
 	ccn_name_init(temp);	
 	ccn_name_append_components( temp,	interest_ccnb->buf,
-			interest_comps->buf[lsa_position+1], interest_comps->buf[interest_comps->n - 1]);
+								interest_comps->buf[lsa_position+1], 
+								interest_comps->buf[interest_comps->n - 1]);
 
 	struct ccn_charbuf *temp1=ccn_charbuf_create();
 	ccn_uri_append(temp1, temp->buf, temp->length, 0);
 
-	name_part->name=(char *)calloc(strlen(ccn_charbuf_as_string(temp1))+1,sizeof(char));
-	memcpy(name_part->name,ccn_charbuf_as_string(temp1),strlen(ccn_charbuf_as_string(temp1)));
+	name_part->name=(char *)calloc(strlen(ccn_charbuf_as_string(temp1))+1,
+																sizeof(char));
+	memcpy(name_part->name,ccn_charbuf_as_string(temp1),
+										strlen(ccn_charbuf_as_string(temp1)));
 	name_part->name[strlen(ccn_charbuf_as_string(temp1))]='\0';
 	name_part->length=strlen(ccn_charbuf_as_string(temp1))+1;
 
@@ -156,20 +160,22 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 
 
 
-	void 
-get_content_by_content_name(char *content_name, unsigned char **content_data)
+int 
+get_content_by_content_name(char *content_name, unsigned char **content_data,
+							char *orig_router)
 {
-
+	
+	int ret=-1;
 	struct ccn_charbuf *name = NULL;
 	struct ccn_charbuf *templ = NULL;
 	struct ccn_charbuf *resultbuf = NULL;
 	struct ccn_parsed_ContentObject pcobuf = { 0 };
 	int res;
-	int allow_stale = 0;
+	int allow_stale = 1;
 	int content_only = 1;
 	int scope = -1;
-	const unsigned char *ptr; 
-	size_t length;
+	const unsigned char *ptr,*ptr_in; 
+	size_t length,length_in;
 	int resolve_version = CCN_V_HIGHEST;
 	int timeout_ms = 3000;
 	const unsigned lifetime_default = CCN_INTEREST_LIFETIME_SEC << 12;
@@ -180,7 +186,8 @@ get_content_by_content_name(char *content_name, unsigned char **content_data)
 	res = ccn_name_from_uri(name,content_name);
 	if (res < 0) {
 		fprintf(stderr, "Bad ccn URI: %s\n", content_name);
-		exit(1);
+		ccn_charbuf_destroy(&name);
+		return ret;
 	}
 
 	if (allow_stale || lifetime_l12 != lifetime_default || scope != -1) {
@@ -226,13 +233,53 @@ get_content_by_content_name(char *content_name, unsigned char **content_data)
 		length = resultbuf->length;
 		if (content_only){
 			ccn_content_get_value(ptr, length, &pcobuf, &ptr, &length);
-			*content_data = (unsigned char *) calloc(length, sizeof(char *));
-			memcpy (*content_data, ptr, length);
+			struct ccn_parsed_ContentObject pcobuf1 = { 0 };
+			int chk_cont=ccn_parse_ContentObject(ptr,length,&pcobuf1,NULL);
+			printf("Content Parsing result: %d\n",chk_cont); 
+			if ( contain_key_name(ptr, &pcobuf1) == 1){
+				struct ccn_charbuf *key_name=get_key_name(ptr, &pcobuf1);
+				struct ccn_charbuf *orig_router_kn=ccn_charbuf_create();
+				res=get_orig_router_from_key_name(orig_router_kn,key_name);
+				if( res == 0){
+					struct ccn_charbuf *rtr_uri = ccn_charbuf_create();
+					ccn_uri_append(rtr_uri, orig_router_kn->buf,
+													orig_router_kn->length, 0);
+					printf("Orig Router from Key name: %s\n",
+												ccn_charbuf_as_string(rtr_uri));
+					
+					if( strcmp(orig_router,ccn_charbuf_as_string(rtr_uri)) == 0){
+						
+						int res_verify=verify_key(ptr,pcobuf1.offset[CCN_PCO_E],
+																	&pcobuf1);
+
+						if ( res_verify != 0 ){
+							printf("Error in verfiying keys !! :( \n");
+						}
+						else{
+							printf("Key verification is successful :)\n");
+							ptr_in=ptr;
+							length_in=length;
+							ccn_content_get_value(ptr_in, length_in, &pcobuf1, 
+															&ptr_in, &length_in);
+							*content_data = (unsigned char *) calloc(length_in, 
+																sizeof(char *));
+							memcpy (*content_data, ptr_in, length_in);
+							ret=0;
+						}
+					}
+					ccn_charbuf_destroy(&rtr_uri);
+				}
+				ccn_charbuf_destroy(&key_name);
+				ccn_charbuf_destroy(&orig_router_kn);	
+			}
 		}
 	}
+
 	ccn_charbuf_destroy(&resultbuf);
 	ccn_charbuf_destroy(&templ);
-	ccn_charbuf_destroy(&name);   
+	ccn_charbuf_destroy(&name);
+
+	return ret;   
 }
 
 void 
@@ -304,7 +351,8 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 				printf("	Name Prefix length: %d\n",name_length);
 			}
 
-			build_and_install_others_name_lsa(orig_router,ls_type,ls_id,orig_time,isValid,np);
+			build_and_install_others_name_lsa(orig_router,ls_type,ls_id,
+														orig_time,isValid,np);
 
 			print_name_lsdb();
 
@@ -322,7 +370,8 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 				printf("	No Link  : %d\n",no_link);
 				printf("	Data  : %s\n",data);
 			}
-			build_and_install_others_adj_lsa(orig_router,ls_type,orig_time,no_link,data);
+			build_and_install_others_adj_lsa(orig_router,ls_type,orig_time,
+																no_link,data);
 		}
 		else if ( ls_type == LS_TYPE_COR )
 		{
@@ -340,13 +389,14 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 				printf("	Cor R	    : %f\n",r);
 				printf("	Cor Theta   : %f\n",theta);
 			}
-			build_and_install_others_cor_lsa(orig_router,ls_type,orig_time, (double)r, (double)theta);	
+			build_and_install_others_cor_lsa(orig_router,ls_type,orig_time, 
+													(double)r, (double)theta);	
 		}
 
 	}
 }
 
-	void
+void
 process_content_from_sync (struct ccn_charbuf *content_name, 
 								struct ccn_indexbuf *components)
 {
@@ -393,42 +443,63 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 	{	
 		lsid=rem;
 		ls_id=atoi(rem);
-		ccn_name_comp_get(content_name->buf, components,components->n-2-2,&third_last_comp, &comp_size);
+		ccn_name_comp_get(content_name->buf, components,components->n-2-2,
+												&third_last_comp, &comp_size);
 		lst=strtok_r((char *)third_last_comp,sep,&rem);
 		lst=rem;
 		ls_type=atoi(lst);
-		ccn_name_comp_get(content_name->buf, components,components->n-2,&origtime, &comp_size);
+		ccn_name_comp_get(content_name->buf, components,components->n-2,
+														&origtime, &comp_size);
 		ccn_name_chop(content_name,components,-3);
 		get_name_part(orig_router,content_name,components,0);
 
 		if ( nlsr->debugging )
-			printf("Orig Router: %s Ls Type: %d Ls id: %ld Orig Time: %s\n",orig_router->name,ls_type,ls_id,origtime);
+			printf("Orig Router: %s Ls Type: %d Ls id: %ld Orig Time: %s\n",
+									orig_router->name,ls_type,ls_id,origtime);
 
 		int lsa_life_time=get_time_diff(time_stamp,(char *)origtime);
 		if ( nlsr->debugging )
 			printf("LSA Life time: %d\n",lsa_life_time);
 
-		if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && lsa_life_time < nlsr->lsa_refresh_time) 
-				|| (strcmp(orig_router->name,nlsr->router_name) != 0 && lsa_life_time < nlsr->router_dead_interval) )
+		if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && 
+					lsa_life_time < nlsr->lsa_refresh_time) 
+				|| (strcmp(orig_router->name,nlsr->router_name) != 0 
+				&& lsa_life_time < nlsr->router_dead_interval) )
 		{
-			int is_new_name_lsa=check_is_new_name_lsa(orig_router->name,(char *)lst,(char *)lsid,(char *)origtime);
+			int is_new_name_lsa=check_is_new_name_lsa(orig_router->name,
+									(char *)lst,(char *)lsid,(char *)origtime);
 			if ( is_new_name_lsa == 1 )
 			{
 				if ( nlsr->debugging )
 					printf("New NAME LSA.....\n");	
-				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
-				if ( nlsr->debugging )
-					printf("Content Data: %s \n",content_data);
-				process_incoming_sync_content_lsa(content_data);
+				int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
+												&content_data,orig_router->name);
+				if ( chk_con == 0 ){
+					if ( nlsr->debugging )
+						printf("Content Data: %s \n",content_data);
+					process_incoming_sync_content_lsa(content_data);
+				}
+				else{
+					if ( nlsr->debugging )
+						printf("Verification failed. No content given back\n");
+				}
 			}
 			else 
 			{
 				if ( nlsr->debugging )
 					printf("Name LSA / Newer Name LSA already xists in LSDB\n");
-				get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
+				int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri)
+											, &content_data,orig_router->name);
 
-				if ( nlsr->debugging )
-					printf("Content Data: %s \n",content_data);
+				if ( chk_con == 0 ){
+					if ( nlsr->debugging )
+						printf("Content Data: %s \n",content_data);
+					process_incoming_sync_content_lsa(content_data);
+				}
+				else{
+					if ( nlsr->debugging )
+						printf("Verification failed. No content given back\n");
+				}
 			}
 		}
 		else 
@@ -467,19 +538,34 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 				{
 					if ( nlsr->debugging )
 						printf("New Adj LSA.....\n");	
-					get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
+					int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
+												&content_data,orig_router->name);
 
-					if ( nlsr->debugging )
-						printf("Content Data: %s \n",content_data);
-					process_incoming_sync_content_lsa(content_data);			
+					if ( chk_con == 0 ){
+						if ( nlsr->debugging )
+							printf("Content Data: %s \n",content_data);
+						process_incoming_sync_content_lsa(content_data);
+					}
+					else{
+						if ( nlsr->debugging )
+							printf("Verification failed. No content given back\n");
+					}		
 				}
 				else
 				{
 					if ( nlsr->debugging )
 						printf("Adj LSA / Newer Adj LSA already exists in LSDB\n");
-					get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
-					if ( nlsr->debugging )
-						printf("Content Data: %s \n",content_data);
+					int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
+												&content_data,orig_router->name);
+					if ( chk_con == 0 ){
+						if ( nlsr->debugging )
+							printf("Content Data: %s \n",content_data);
+						process_incoming_sync_content_lsa(content_data);
+					}
+					else{
+						if ( nlsr->debugging )
+							printf("Verification failed. No content given back\n");
+					}
 				}
 			}
 			else 
@@ -514,20 +600,35 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 				{
 					if ( nlsr->debugging )
 						printf("New Cor LSA.....\n");	
-					get_content_by_content_name(ccn_charbuf_as_string(uri), 
-																&content_data);
+					int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
+																&content_data,
+															orig_router->name);
 
-					if ( nlsr->debugging )
-						printf("Content Data: %s \n",content_data);
-					process_incoming_sync_content_lsa(content_data);			
+					if ( chk_con == 0 ){
+						if ( nlsr->debugging )
+							printf("Content Data: %s \n",content_data);
+						process_incoming_sync_content_lsa(content_data);
+					}
+					else{
+						if ( nlsr->debugging )
+							printf("Verification failed. No content given back\n");
+					}		
 				}
 				else
 				{
 					if ( nlsr->debugging )
 						printf("Cor LSA / Newer Cor LSA already exists in LSDB\n");
-					get_content_by_content_name(ccn_charbuf_as_string(uri), &content_data);
-					if ( nlsr->debugging )
-						printf("Content Data: %s \n",content_data);
+					int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
+												&content_data,orig_router->name);
+					if ( chk_con == 0 ){
+						if ( nlsr->debugging )
+							printf("Content Data: %s \n",content_data);
+						process_incoming_sync_content_lsa(content_data);
+					}
+					else{
+						if ( nlsr->debugging )
+							printf("Verification failed. No content given back\n");
+					}
 				}
 			}
 			else 
@@ -648,15 +749,30 @@ write_data_to_repo(char *data, char *name_prefix)
 		return -1;
 	}
 
-	blockread = 0;
+	struct ccn_charbuf *resultbuf=ccn_charbuf_create();
 
-	blockread=strlen(data)+1;
+	sign_content_with_user_defined_keystore(name,
+										resultbuf,
+										data,
+										strlen(data),
+										nlsr->keystore_path,
+										nlsr->keystore_passphrase,
+										nlsr->root_key_prefix,
+										nlsr->site_name,
+										nlsr->router_name);	
+
+
+	//blockread = 0;
+	//blockread=strlen(data)+1;
+	blockread=resultbuf->length;
 
 	if (blockread > 0) {
-		res = ccn_seqw_write(w, data, blockread);	
+		//res = ccn_seqw_write(w, data, blockread);
+		res = ccn_seqw_write(w, resultbuf->buf, resultbuf->length);	
 		while (res == -1) {
 			ccn_run(temp_ccn,100);
-			res = ccn_seqw_write(w, data, blockread);
+			//res = ccn_seqw_write(w, data, blockread);
+			res = ccn_seqw_write(w, resultbuf->buf, resultbuf->length);	
 		}
 	}
 
@@ -671,7 +787,7 @@ write_data_to_repo(char *data, char *name_prefix)
 	create_sync_slice(char *topo_prefix, char *slice_prefix)
 {
 	int res;
-	struct ccn *handle; //obaid: probably we don't need it use the same handle i.e. nlsr->ccn
+	struct ccn *handle; 
 	struct ccns_slice *slice;
 	struct ccn_charbuf *prefix = ccn_charbuf_create();
 	struct ccn_charbuf *topo = ccn_charbuf_create();
@@ -702,7 +818,6 @@ write_data_to_repo(char *data, char *name_prefix)
 
 
 	res = ccns_write_slice(handle, slice, slice_name);
-	//res = ccns_write_slice(nlsr->ccn, slice, slice_name);
 
 	//01/31/2013
 	ccns_slice_destroy(&slice);
