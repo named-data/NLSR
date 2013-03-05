@@ -21,8 +21,5 @@ void process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct 
 int send_info_interest(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags);
 void send_info_interest_to_neighbor(struct name_prefix *nbr);
 
-struct ccn_charbuf * get_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco);
-int contain_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco);
-
 
 #endif

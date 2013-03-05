@@ -5,7 +5,7 @@ LIBS = -lccn -lccnsync -lcrypto
 PROGRAMS = nlsrc nlsr
 INSTALL_PATH=/usr/local/bin/
 
-NLSR_SRCS=nlsr.c nlsr_ndn.c nlsr_npl.c  nlsr_adl.c nlsr_lsdb.c nlsr_route.c nlsr_npt.c nlsr_fib.c nlsr_sync.c  nlsr_face.c utility.c
+NLSR_SRCS=nlsr.c nlsr_ndn.c nlsr_npl.c  nlsr_adl.c nlsr_lsdb.c nlsr_route.c nlsr_npt.c nlsr_fib.c nlsr_sync.c  nlsr_face.c nlsr_km.c nlsr_km_util.c utility.c
 NLSRC_SRCS=nlsrc.c
 
 all: $(PROGRAMS)

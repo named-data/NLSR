@@ -29,9 +29,10 @@
 #include "nlsr_sync.h"
 #include "nlsr_lsdb.h"
 #include "utility.h"
+#include "nlsr_km.h"
 
 
-	char *
+char *
 hex_string(unsigned char *s, size_t l)
 {
 	const char *hex_digits = "0123456789abcdef";
@@ -45,7 +46,7 @@ hex_string(unsigned char *s, size_t l)
 	return(r);
 }
 
-	int
+int
 sync_cb(struct ccns_name_closure *nc,
 		struct ccn_charbuf *lhash,
 		struct ccn_charbuf *rhash,
@@ -116,16 +117,12 @@ sync_cb(struct ccns_name_closure *nc,
 
 
 
-	void
+void
 get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
 		struct ccn_indexbuf *interest_comps, int offset)
 {
-	//int i;
 	int lsa_position=0;
-	//int len=0;
-
-	//struct ccn_indexbuf cid={0};
-	//struct ccn_indexbuf *components=&cid;
+	
 	struct ccn_indexbuf *components=ccn_indexbuf_create();
 	struct ccn_charbuf *name=ccn_charbuf_create();
 	ccn_name_from_uri(name,nlsr->slice_prefix);
@@ -153,40 +150,6 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 	if ( nlsr->debugging )
 		printf("Name Part: %s \n",name_part->name);
 	
-
-	/*
-	const unsigned char *comp_ptr1;
-	size_t comp_size;
-	for(i=lsa_position+1+offset;i<interest_comps->n-1;i++)
-	{
-		ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, 
-				&comp_size);
-		len+=1;
-		len+=(int)comp_size;	
-	}
-	len++;
-
-	char *neighbor=(char *)malloc(len);
-	memset(neighbor,0,len);
-
-	for(i=lsa_position+1+offset; i<interest_comps->n-1;i++)
-	{
-		ccn_name_comp_get(interest_ccnb->buf, interest_comps,i,&comp_ptr1, 
-				&comp_size);
-		memcpy(neighbor+strlen(neighbor),"/",1);
-		memcpy(neighbor+strlen(neighbor),(char *)comp_ptr1,
-				strlen((char *)comp_ptr1));
-
-	}
-
-	name_part->name=(char *)malloc(strlen(neighbor)+1);
-	memset(name_part->name,0,strlen(neighbor)+1);
-	memcpy(name_part->name,neighbor,strlen(neighbor)+1);
-	name_part->length=strlen(neighbor)+1;
-
-	// Add 01/31/2013
-	free(neighbor);
-	*/
 }
 
 
@@ -272,7 +235,7 @@ get_content_by_content_name(char *content_name, unsigned char **content_data)
 	ccn_charbuf_destroy(&name);   
 }
 
-	void 
+void 
 process_incoming_sync_content_lsa( unsigned char *content_data)
 {
 

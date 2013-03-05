@@ -297,4 +297,27 @@ get_ip_from_hostname_02(char * hostname , char* ip)
 }
 
 
+int 
+add_ccn_uri_name(struct ccn_charbuf *res_name, struct ccn_charbuf *add){
+
+	int i, res;
+	struct ccn_indexbuf *idx=ccn_indexbuf_create();
+	res=ccn_name_split(add,idx);	
+	if ( res < 0 ){
+		ccn_indexbuf_destroy(&idx);
+		return -1;
+	}
+
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	for(i=0;i<idx->n-1;i++){
+		ccn_name_comp_get(add->buf,idx,i,&comp_ptr1, &comp_size);
+		ccn_name_append_str(res_name,(char *)comp_ptr1);
+	}
+	ccn_indexbuf_destroy(&idx);
+
+	return 0;
+
+}
+
 

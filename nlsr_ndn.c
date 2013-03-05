@@ -23,27 +23,10 @@
 #include "nlsr_adl.h"
 #include "nlsr_lsdb.h"
 #include "utility.h"
+#include "nlsr_km.h"
+#include "nlsr_km_util.h"
 
-/**
-* add lifetime in second to a interest template
-*/
-int
-appendLifetime(struct ccn_charbuf *cb, int lifetime) 
-{
-	unsigned char buf[sizeof(int32_t)];
-	int32_t dreck = lifetime << 12;
-	int pos = sizeof(int32_t);
-	int res = 0;
-	while (dreck > 0 && pos > 0) 
-	{
-		pos--;
-		buf[pos] = dreck & 255;
-		dreck = dreck >> 8;
-	}
-	res |= ccnb_append_tagged_blob(cb, CCN_DTAG_InterestLifetime, buf+pos, 
-															sizeof(buf)-pos);
-	return res;
-}
+
 
 /**
 * get neighbor name prefix from interest/content name and put into nbr
@@ -307,20 +290,6 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
 		sp.template_ccnb=ccn_charbuf_create();		
 				
-		/*ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_SignedInfo, CCN_DTAG);
-		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyLocator, CCN_DTAG);
-		ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_KeyName, CCN_DTAG);
-		ccn_charbuf_append_charbuf(sp.template_ccnb, name);
-		ccn_charbuf_append_closer(sp.template_ccnb);
-		ccn_charbuf_append_closer(sp.template_ccnb);
-		ccn_charbuf_append_closer(sp.template_ccnb);
-
-		sp.sp_flags |= CCN_SP_TEMPL_KEY_LOCATOR;
-		sp.sp_flags |= CCN_SP_FINAL_BLOCK;
-		sp.type = CCN_CONTENT_KEY;
-		sp.freshness = 10;
-		*/
-		
 		ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
 		ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
        	 	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
@@ -418,33 +387,41 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 
 	    break;
         case CCN_UPCALL_INTEREST_TIMED_OUT:
-		//printf("Interest Timed Out Received for Name: ");
-		if ( nlsr->debugging )
-			printf("Interest Timed Out Received for Name:  "); 
-		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Timed Out Receiv"
+			//printf("Interest Timed Out Received for Name: ");
+			if ( nlsr->debugging )
+				printf("Interest Timed Out Received for Name:  "); 
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Timed Out Receiv"
 															"ed for Name: ");
 		
-		struct ccn_charbuf*ito;
-		ito=ccn_charbuf_create();
-		ccn_uri_append(ito,info->interest_ccnb,info->pi->offset[CCN_PI_E],0);
-		if ( nlsr->debugging )
-			printf("%s\n",ccn_charbuf_as_string(ito));
-		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"%s\n",ccn_charbuf_as_string(ito));
-		ccn_charbuf_destroy(&ito);
+			struct ccn_charbuf*ito;
+			ito=ccn_charbuf_create();
+			ccn_uri_append(ito,info->interest_ccnb,info->pi->offset[CCN_PI_E],0);
+			if ( nlsr->debugging )
+				printf("%s\n",ccn_charbuf_as_string(ito));
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"%s\n",ccn_charbuf_as_string(ito));
+			ccn_charbuf_destroy(&ito);
 
-		
-
-		process_incoming_timed_out_interest(selfp,info);
+			process_incoming_timed_out_interest(selfp,info);
 
 	    break;
+
+		case CCN_UPCALL_CONTENT_UNVERIFIED:
+			if ( nlsr->debugging )
+				printf("Unverified Content Received ..Waiting for verification\n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Unverified Content"
+										" Received ..Waiting for verification\n");
+			return CCN_UPCALL_RESULT_VERIFY;
+	    break;
+
         default:
             fprintf(stderr, "Unexpected response of kind %d\n", kind);
-	    if ( nlsr->debugging )
-			printf("Unexpected response of kind %d\n", kind);
-	    if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Unexpected response of "
+	    		if ( nlsr->debugging )
+				printf("Unexpected response of kind %d\n", kind);
+	    		if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Unexpected response of "
 															"kind %d\n", kind);
 	    break;
     }
@@ -518,20 +495,6 @@ process_incoming_content_info(struct ccn_closure *selfp,
 								"ghbor: %s Length:%d\n",nbr->name,nbr->length);
 
 
-	if ( contain_key_name(info->content_ccnb, info->pco) == 1)
-	{
-		struct ccn_charbuf *key_name=get_key_name(info->content_ccnb, info->pco);
-		struct ccn_charbuf *key_uri = ccn_charbuf_create();
-		ccn_uri_append(key_uri, key_name->buf, key_name->length, 1);
-
-		if(nlsr->debugging)
-			printf("Key Name: %s\n",ccn_charbuf_as_string(key_uri));
-
-		ccn_charbuf_destroy(&key_uri);
-		ccn_charbuf_destroy(&key_name);
-
-
-	}
 
 	update_adjacent_timed_out_zero_to_adl(nbr);	
 	update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
@@ -800,41 +763,4 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 	}
 	ccn_charbuf_destroy(&name);
 	free(int_name);
-}
-
-/**
-* Check whether content name contains a key name. Return 1 for containing
-*/
-
-int
-contain_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco) 
-{
-	if (pco->offset[CCN_PCO_B_KeyLocator] == pco->offset[CCN_PCO_E_KeyLocator])
-		return -1;
-
-	struct ccn_buf_decoder decoder;
-	struct ccn_buf_decoder *d;
-	d = ccn_buf_decoder_start(&decoder, ccnb + 
-		pco->offset[CCN_PCO_B_Key_Certificate_KeyName], 
-		pco->offset[CCN_PCO_E_Key_Certificate_KeyName] - 
-		pco->offset[CCN_PCO_B_Key_Certificate_KeyName]);
-	if (ccn_buf_match_dtag(d, CCN_DTAG_KeyName))
-		return 1;
-
-	return -1;
-}
-
-/**
-* Extract Key Name from Content Name and return the Key Name
-*
-*/
-
-struct ccn_charbuf *
-get_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco) 
-{
-	struct ccn_charbuf *key_name = ccn_charbuf_create();
-	ccn_charbuf_append(key_name, ccnb + pco->offset[CCN_PCO_B_KeyName_Name], 
-	pco->offset[CCN_PCO_E_KeyName_Name] - pco->offset[CCN_PCO_B_KeyName_Name]);
-
-	return key_name;
 }

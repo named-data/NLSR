@@ -12,4 +12,7 @@ void writeLogg(const char *source_file, const char *function, const int line, co
 struct sockaddr_in * get_ip_from_hostname(char *hostname);
 int get_ip_from_hostname_02(char * hostname , char* ip);
 char * get_current_timestamp_micro_v2();
+
+int add_ccn_uri_name(struct ccn_charbuf *res_name, struct ccn_charbuf *add);
+
 #endif
