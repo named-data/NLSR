@@ -89,7 +89,8 @@ sign_content_with_user_defined_keystore(struct ccn_charbuf *content_name,
 		free(baseuri);
 		return -1;		
 	}
-		
+	
+	ccn_name_append_str(keyname,"routing");
 	ccn_name_append_str(keyname,"nlsr");
 	struct ccn_charbuf *keyid = ccn_charbuf_create();
 	ccn_charbuf_append_value(keyid, CCN_MARKER_CONTROL, 1);
