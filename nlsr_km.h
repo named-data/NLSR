@@ -29,7 +29,7 @@ int	contain_key_name(const unsigned char *ccnb,
 struct ccn_charbuf * get_key_name(const unsigned char *ccnb, 
 					struct ccn_parsed_ContentObject *pco);
 
-int verify_key(const unsigned char *ccnb, size_t size, 
+int verify_key(const unsigned char *ccnb, 
 					struct ccn_parsed_ContentObject *pco);
 
 #endif

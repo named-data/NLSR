@@ -176,7 +176,7 @@ process_incoming_content(struct ccn_closure* selfp,
 */
 
 int 
-verify_key(const unsigned char *ccnb,size_t size, 
+verify_key(const unsigned char *ccnb, 
 										struct ccn_parsed_ContentObject *pco){
 	if ( nlsr->debugging )
 		printf("verify key called\n");
@@ -216,7 +216,7 @@ verify_key(const unsigned char *ccnb,size_t size,
 					ret=0;
 				}
 				else{
-					ret=verify_key(result->buf,temp_pco.offset[CCN_PCO_E],&temp_pco);
+					ret=verify_key(result->buf,&temp_pco);
 				}
 			}
 		}

@@ -269,7 +269,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	
 
 	int res;
-	struct ccn_charbuf *data=ccn_charbuf_create();
+	//struct ccn_charbuf *data=ccn_charbuf_create();
     	struct ccn_charbuf *name=ccn_charbuf_create();
     	
 
@@ -278,7 +278,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	if (res >= 0)
 	{
 		
-
+		/*
 		struct ccn_charbuf *pubid = ccn_charbuf_create();
 		struct ccn_charbuf *pubkey = ccn_charbuf_create();
 
@@ -298,9 +298,23 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 
 		char *raw_data=(char *)malloc(20);
 		memset(raw_data,0,20);
-		sprintf(raw_data,"%s", nlsr->lsdb->lsdb_version);	
+		sprintf(raw_data,"%s", nlsr->lsdb->lsdb_version);
+		*/	
 
-		res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info",strlen("info")); 
+		struct ccn_charbuf *resultbuf=ccn_charbuf_create();
+
+		res=sign_content_with_user_defined_keystore(name,
+											resultbuf,
+											"info",
+											strlen("info"),
+											nlsr->keystore_path,
+											nlsr->keystore_passphrase,
+											nlsr->root_key_prefix,
+											nlsr->site_name,
+											nlsr->router_name);
+
+
+		//res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info",strlen("info")); 
 		if(res >= 0)
 		{
 			if ( nlsr->debugging )
@@ -310,7 +324,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 									" is successful \n");
 
 		}
-    		res=ccn_put(nlsr->ccn,data->buf,data->length);		
+    		res=ccn_put(nlsr->ccn,resultbuf->buf,resultbuf->length);		
 		if(res >= 0)
 		{
 			if ( nlsr->debugging )
@@ -341,13 +355,13 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		}
 
 		free(nbr);
-		free(raw_data);
-		ccn_charbuf_destroy(&sp.template_ccnb);
-		ccn_charbuf_destroy(&pubid);
-		ccn_charbuf_destroy(&pubkey);
+		//free(raw_data);
+		//ccn_charbuf_destroy(&sp.template_ccnb);
+		//ccn_charbuf_destroy(&pubid);
+		//ccn_charbuf_destroy(&pubkey);
 	}
 
-	ccn_charbuf_destroy(&data);
+	//ccn_charbuf_destroy(&data);
 	ccn_charbuf_destroy(&name);
 
 }
@@ -413,7 +427,8 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 			if ( nlsr->detailed_logging )
 				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Unverified Content"
 										" Received ..Waiting for verification\n");
-			return CCN_UPCALL_RESULT_VERIFY;
+			//return CCN_UPCALL_RESULT_VERIFY;
+			process_incoming_timed_out_interest(selfp,info);
 	    break;
 
         default:
@@ -484,6 +499,7 @@ process_incoming_content_info(struct ccn_closure *selfp,
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_info"
 																" called \n");
 
+	int res;
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	get_nbr(nbr,selfp,info);
 
@@ -495,32 +511,58 @@ process_incoming_content_info(struct ccn_closure *selfp,
 								"ghbor: %s Length:%d\n",nbr->name,nbr->length);
 
 
+	if ( contain_key_name(info->content_ccnb, info->pco) == 1){
+		struct ccn_charbuf *key_name=get_key_name(info->content_ccnb, info->pco);
+		struct ccn_charbuf *orig_router_kn=ccn_charbuf_create();
+		res=get_orig_router_from_key_name(orig_router_kn,key_name);
+		if( res == 0){
+			struct ccn_charbuf *rtr_uri = ccn_charbuf_create();
+			ccn_uri_append(rtr_uri, orig_router_kn->buf,
+													orig_router_kn->length, 0);
+			printf("Orig Router from Key name: %s\n",
+												ccn_charbuf_as_string(rtr_uri));
+					
+			if( strcmp(nbr->name,ccn_charbuf_as_string(rtr_uri)) == 0){
+						
+				int res_verify=verify_key(info->content_ccnb,info->pco);
 
-	update_adjacent_timed_out_zero_to_adl(nbr);	
-	update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
-	print_adjacent_from_adl();
+				if ( res_verify != 0 ){
+					printf("Error in verfiying keys !! :( \n");
+				}
+				else{
+					printf("Key verification is successful :)\n");
+					update_adjacent_timed_out_zero_to_adl(nbr);	
+					update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
+					print_adjacent_from_adl();
 
-
-
-	if(!nlsr->is_build_adj_lsa_sheduled)
-	{
-		if ( nlsr->debugging )
-			printf("Scheduling Build and Install Adj LSA...\n");
-		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Scheduling Build and Inst"
-															"all Adj LSA...\n");
-		nlsr->event_build_adj_lsa = ccn_schedule_event(nlsr->sched, 100000, 
+					if(!nlsr->is_build_adj_lsa_sheduled){
+						if ( nlsr->debugging )
+							printf("Scheduling Build and Install Adj LSA...\n");
+						if ( nlsr->detailed_logging )
+							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Scheduling"
+									 "Build and Install Adj LSA...\n");
+						nlsr->event_build_adj_lsa = ccn_schedule_event(
+														nlsr->sched, 100000, 
 										&build_and_install_adj_lsa, NULL, 0);
-		nlsr->is_build_adj_lsa_sheduled=1;		
-	}
-	else
-	{
-		if ( nlsr->debugging )
-			printf("Build and Install Adj LSA already scheduled\n");
-		if ( nlsr->detailed_logging )
-			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Build and Install Adj LSA"
+						nlsr->is_build_adj_lsa_sheduled=1;			
+					}
+					else{
+						if ( nlsr->debugging )
+							printf("Build and Install Adj LSA already scheduled\n");
+						if ( nlsr->detailed_logging )
+							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Build and Install Adj LSA"
 														" already scheduled\n");
+					}
+
+				}
+			}
+			ccn_charbuf_destroy(&rtr_uri);
+		}
+		ccn_charbuf_destroy(&key_name);
+		ccn_charbuf_destroy(&orig_router_kn);	
 	}
+
+
 
 
 	free(nbr);

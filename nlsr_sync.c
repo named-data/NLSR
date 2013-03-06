@@ -249,8 +249,7 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 					
 					if( strcmp(orig_router,ccn_charbuf_as_string(rtr_uri)) == 0){
 						
-						int res_verify=verify_key(ptr,pcobuf1.offset[CCN_PCO_E],
-																	&pcobuf1);
+						int res_verify=verify_key(ptr,&pcobuf1);
 
 						if ( res_verify != 0 ){
 							printf("Error in verfiying keys !! :( \n");
@@ -780,6 +779,7 @@ write_data_to_repo(char *data, char *name_prefix)
 	ccn_run(temp_ccn, 100);
 	ccn_charbuf_destroy(&name);
 	ccn_destroy(&temp_ccn);
+	ccn_charbuf_destroy(&resultbuf);
 
 	return 0;
 }
