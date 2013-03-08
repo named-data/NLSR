@@ -563,7 +563,6 @@ process_incoming_content_info(struct ccn_closure *selfp,
 		ccn_charbuf_destroy(&orig_router_kn);	
 	}
 	*/
-
 					update_adjacent_timed_out_zero_to_adl(nbr);	
 					update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
 					print_adjacent_from_adl();
