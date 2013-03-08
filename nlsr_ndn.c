@@ -510,7 +510,7 @@ process_incoming_content_info(struct ccn_closure *selfp,
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Content Received For Nei"
 								"ghbor: %s Length:%d\n",nbr->name,nbr->length);
 
-	/*
+	
 
 	if ( contain_key_name(info->content_ccnb, info->pco) == 1){
 		struct ccn_charbuf *key_name=get_key_name(info->content_ccnb, info->pco);
@@ -562,7 +562,7 @@ process_incoming_content_info(struct ccn_closure *selfp,
 		ccn_charbuf_destroy(&key_name);
 		ccn_charbuf_destroy(&orig_router_kn);	
 	}
-	*/
+	/*
 					update_adjacent_timed_out_zero_to_adl(nbr);	
 					update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
 					print_adjacent_from_adl();
@@ -586,7 +586,7 @@ process_incoming_content_info(struct ccn_closure *selfp,
 														" already scheduled\n");
 					}
 
-
+	*/
 
 	free(nbr);
 
