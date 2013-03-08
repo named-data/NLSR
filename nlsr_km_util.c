@@ -79,7 +79,7 @@ get_orig_router_from_key_name(struct ccn_charbuf *orig_router ,struct ccn_charbu
 		return res;
 	}
 	else{
-		res=ccn_name_chop(name, name_comps, -3);
+		res=ccn_name_chop(name, name_comps, -2);
 		if ( res < 0 ){
 			ccn_indexbuf_destroy(&name_comps);
 			return res;
