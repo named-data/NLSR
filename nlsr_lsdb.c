@@ -2348,10 +2348,10 @@ install_cor_lsa(struct clsa *cor_lsa)
 		memcpy(new_cor_lsa->header->orig_router->name,cor_lsa->header->orig_router->name,strlen(cor_lsa->header->orig_router->name)+1);
 		new_cor_lsa->header->orig_router->length=cor_lsa->header->orig_router->length;
 
-		//new_cor_lsa->header->orig_time=(char *)malloc(strlen(cor_lsa->header->orig_time)+1); //free 
+		new_cor_lsa->header->orig_time=(char *)calloc(strlen(cor_lsa->header->orig_time)+1,sizeof(char)); //free 
 		//memset(new_cor_lsa->header->orig_time,0,strlen(cor_lsa->header->orig_time)+1);
-		//memcpy(new_cor_lsa->header->orig_time,cor_lsa->header->orig_time,strlen(cor_lsa->header->orig_time)+1);
-		new_cor_lsa->header->orig_time=get_current_timestamp_micro_v2();
+		memcpy(new_cor_lsa->header->orig_time,cor_lsa->header->orig_time,strlen(cor_lsa->header->orig_time)+1);
+		//new_cor_lsa->header->orig_time=get_current_timestamp_micro_v2();
 
 		new_cor_lsa->header->ls_type=cor_lsa->header->ls_type;
 

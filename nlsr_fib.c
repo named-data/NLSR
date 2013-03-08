@@ -50,7 +50,9 @@ ccn_fib_warn(int lineno, const char *format, ...)
 
 static int 
 register_unregister_prefix(struct ccn *h, struct ccn_charbuf *local_scope_template,
-        struct ccn_charbuf *no_name, struct ccn_charbuf *name_prefix,const unsigned char *ccndid, size_t ccnd_id_size, int faceid, int operation)
+        struct ccn_charbuf *no_name, struct ccn_charbuf *name_prefix,
+		const unsigned char *ccndid, size_t ccnd_id_size, int faceid, 
+		int operation, long int lifetime)
 {
 	struct ccn_charbuf *temp = NULL;
 	struct ccn_charbuf *resultbuf = NULL;
@@ -72,7 +74,7 @@ register_unregister_prefix(struct ccn *h, struct ccn_charbuf *local_scope_templa
 	forwarding_entry->ccnd_id_size =ccnd_id_size;
 	forwarding_entry->faceid = faceid;
 	forwarding_entry->flags = -1;
-	forwarding_entry->lifetime = 2100;
+	forwarding_entry->lifetime = lifetime;
 
 	prefixreg = ccn_charbuf_create();
 	ccnb_append_forwarding_entry(prefixreg, forwarding_entry);
@@ -180,7 +182,7 @@ init_data(struct ccn_charbuf *local_scope_template,
 }
 
 int 
-add_delete_ccn_face_by_face_id(struct ccn *h, const char *uri, int operation, int faceid)
+add_delete_ccn_face_by_face_id(struct ccn *h, const char *uri, int operation, int faceid, long int lifetime)
 {
 	if ( nlsr->debugging )
 	{
@@ -210,7 +212,7 @@ add_delete_ccn_face_by_face_id(struct ccn *h, const char *uri, int operation, in
 		ON_ERROR_CLEANUP(-1);
 	}
 
-	res = register_unregister_prefix(h, local_scope_template, no_name, prefix,ccndid, ccndid_size,faceid, operation);
+	res = register_unregister_prefix(h, local_scope_template, no_name, prefix,ccndid, ccndid_size,faceid, operation,lifetime);
 	
 	ON_ERROR_CLEANUP(res);
 

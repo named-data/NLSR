@@ -53,6 +53,7 @@ sync_cb(struct ccns_name_closure *nc,
 		struct ccn_charbuf *rhash,
 		struct ccn_charbuf *name)
 {
+	nlsr_lock();
 	int res;
 	struct ccn_charbuf *content_name; 
 	struct ccn_indexbuf *content_comps;
@@ -113,6 +114,7 @@ sync_cb(struct ccns_name_closure *nc,
 	ccn_indexbuf_destroy(&content_comps);
 	ccn_indexbuf_destroy(&name_comps);
 
+	nlsr_unlock();
 	return(0);
 }
 
@@ -460,10 +462,8 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 		if ( nlsr->debugging )
 			printf("LSA Life time: %d\n",lsa_life_time);
 
-		if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && 
-					lsa_life_time < nlsr->lsa_refresh_time) 
-				|| (strcmp(orig_router->name,nlsr->router_name) != 0 
-				&& lsa_life_time < nlsr->router_dead_interval) )
+		if ( strcmp(orig_router->name,nlsr->router_name) != 0 
+				&& (lsa_life_time < nlsr->router_dead_interval) )
 		{
 			int is_new_name_lsa=check_is_new_name_lsa(orig_router->name,
 									(char *)lst,(char *)lsid,(char *)origtime);
@@ -526,10 +526,8 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 			if ( nlsr->debugging )
 				printf("LSA Life time: %d\n",lsa_life_time);
 
-			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && 
-							lsa_life_time < nlsr->lsa_refresh_time) || 
-							(strcmp(orig_router->name,nlsr->router_name) != 0 && 
-							 lsa_life_time < nlsr->router_dead_interval) )	
+			if ( strcmp(orig_router->name,nlsr->router_name) != 0 
+				&& (lsa_life_time < nlsr->router_dead_interval) )
 			{
 				int is_new_adj_lsa = check_is_new_adj_lsa( orig_router->name, 
 													(char *)lst, (char *)origtime);
@@ -588,10 +586,8 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 			if ( nlsr->debugging )
 				printf("LSA Life time: %d\n",lsa_life_time);
 
-			if ( (strcmp(orig_router->name,nlsr->router_name) == 0 && 
-							lsa_life_time < nlsr->lsa_refresh_time) || 
-							(strcmp(orig_router->name,nlsr->router_name) != 0 && 
-							 lsa_life_time < nlsr->router_dead_interval) )	
+			if ( strcmp(orig_router->name,nlsr->router_name) != 0 
+				&& (lsa_life_time < nlsr->router_dead_interval) )	
 			{
 				int is_new_cor_lsa=check_is_new_cor_lsa( orig_router->name, 
 												(char *)lst,(char *) origtime);
@@ -692,6 +688,8 @@ make_template(int scope)
 	int
 write_data_to_repo(char *data, char *name_prefix)
 {
+
+	nlsr_lock();
 	if ( nlsr->debugging )
 	{
 		printf("write_data_to_repo called\n");
@@ -781,6 +779,7 @@ write_data_to_repo(char *data, char *name_prefix)
 	ccn_destroy(&temp_ccn);
 	ccn_charbuf_destroy(&resultbuf);
 
+	nlsr_unlock();
 	return 0;
 }
 	int

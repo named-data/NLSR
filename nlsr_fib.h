@@ -6,6 +6,7 @@
 #define OP_REG  0
 #define OP_UNREG 1
 
-int add_delete_ccn_face_by_face_id(struct ccn *h, const char *uri, int operation, int faceid);
+int add_delete_ccn_face_by_face_id(struct ccn *h, const char *uri, int operation,
+ int faceid, long int lifetime);
 
 #endif

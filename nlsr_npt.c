@@ -250,7 +250,7 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 
 				if ( !( is_neighbor(nle->name) == 1 && get_next_hop_face_from_adl(nle->name) == faces[j] ) )
 				{
-					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j],nlsr->router_dead_interval);
 				}
 			}
 			
@@ -284,7 +284,7 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 						printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);	
 					if ( nlsr->detailed_logging )
 						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
-					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);	
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j],nlsr->router_dead_interval);	
 				}
 				else 
 				{
@@ -294,7 +294,7 @@ update_ccnd_fib_for_orig_router(char *orig_router)
 							printf("Adding face: Name:%s Face: %d\n",nle->name,faces[j]);	
 						if ( nlsr->detailed_logging )
 							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Adding face: Name:%s Face: %d\n",nle->name,faces[j]);
-						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j]);
+						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_REG, faces[j],nlsr->router_dead_interval);
 					}
 				}
 			}
@@ -394,7 +394,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);	
 					if ( nlsr->detailed_logging )
 						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j],nlsr->router_dead_interval);	
 				}
 				else 
 				{
@@ -404,7 +404,7 @@ delete_npt_entry_by_router_and_name_prefix(char *orig_router, char *name_prefix)
 							printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);	
 						if ( nlsr->detailed_logging )
 							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
+						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j],nlsr->router_dead_interval);
 					}
 				}
 				
@@ -816,7 +816,7 @@ clean_old_fib_entries_from_npt(void)
 								printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
 							if ( nlsr->detailed_logging )
 								writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);		
-							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
+							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face,nlsr->router_dead_interval);
 						}						
 		
 
@@ -847,7 +847,7 @@ clean_old_fib_entries_from_npt(void)
 								printf("Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);
 							if ( nlsr->detailed_logging )
 								writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,fle->next_hop_face);		
-							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face);
+							add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, fle->next_hop_face,nlsr->router_dead_interval);
 						}						
 		
 
@@ -1038,7 +1038,7 @@ destroy_faces_by_orig_router(char *orig_router)
 						printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 					if ( nlsr->detailed_logging )
 						writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);	
+					add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j],nlsr->router_dead_interval);	
 				}
 				else 
 				{
@@ -1048,7 +1048,7 @@ destroy_faces_by_orig_router(char *orig_router)
 							printf("Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
 						if ( nlsr->detailed_logging )
 							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Deleting face: Name:%s Face: %d\n",nle->name,faces[j]);
-						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j]);
+						add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nle->name, OP_UNREG, faces[j],nlsr->router_dead_interval);
 					}
 				}
 			}

@@ -282,35 +282,6 @@ process_command_router_name(char *command)
 
 }
 
-/*
-   void 
-   process_command_lsdb_synch_interval(char *command)
-   {
-   if(command==NULL)
-   {
-   printf(" Wrong Command Format ( lsdb-synch-interval secs )\n");
-   return;
-   }
-   char *rem;
-   const char *sep=" \t\n";
-   char *secs;
-   long int seconds;
-
-   secs=strtok_r(command,sep,&rem);
-   if(secs==NULL)
-   {
-   printf(" Wrong Command Format ( lsdb-synch-interval secs)\n");
-   return;
-   }
-
-   seconds=atoi(secs);
-   if ( seconds >= 120 && seconds <= 3600 )
-   {
-   nlsr->lsdb_synch_interval=seconds;
-   }
-
-   }
- */
 
 	void 
 process_command_interest_retry(char *command)
@@ -954,9 +925,9 @@ add_faces_for_nbrs(void)
 				(const char *)nbr->ip_address, 9695,nlsr->tunnel_type);
 		update_face_to_adl_for_nbr(nbr->neighbor->name, face_id);		
 		add_delete_ccn_face_by_face_id(nlsr->ccn,
-				(const char *)nlsr->topo_prefix, OP_REG, face_id);
+				(const char *)nlsr->topo_prefix, OP_REG, face_id,(~0U) >> 1);
 		add_delete_ccn_face_by_face_id(nlsr->ccn, 
-				(const char *)nlsr->slice_prefix, OP_REG, face_id);
+				(const char *)nlsr->slice_prefix, OP_REG, face_id,(~0U) >> 1);
 		hashtb_next(e);		
 	}
 
@@ -982,11 +953,11 @@ destroy_faces_for_nbrs(void)
 		if ( nbr->face > 0 )
 		{	
 			add_delete_ccn_face_by_face_id(nlsr->ccn, 
-					(const char *)nlsr->topo_prefix, OP_UNREG, nbr->face);
+					(const char *)nlsr->topo_prefix, OP_UNREG, nbr->face,(~0U) >> 1);
 			add_delete_ccn_face_by_face_id(nlsr->ccn, 
-					(const char *)nbr->neighbor->name,OP_UNREG,nbr->face);
+					(const char *)nbr->neighbor->name,OP_UNREG,nbr->face,(~0U) >> 1);
 			add_delete_ccn_face_by_face_id(nlsr->ccn, 
-					(const char *)nlsr->slice_prefix, OP_UNREG, nbr->face);
+					(const char *)nlsr->slice_prefix, OP_UNREG, nbr->face,(~0U) >> 1);
 		}
 		hashtb_next(e);		
 	}
@@ -1078,9 +1049,9 @@ process_api_client_command(char *command)
 			{
 				update_adjacent_status_to_adl(np,NBR_DOWN);
 				int face_id=get_next_hop_face_from_adl(np->name);
-				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)np->name, OP_UNREG, face_id);
-				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, face_id);
-				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_UNREG, face_id);
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)np->name, OP_UNREG, face_id,(~0U) >> 1);
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_UNREG, face_id,(~0U) >> 1);
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_UNREG, face_id,(~0U) >> 1);
 				delete_nbr_from_adl(np);
 				if(!nlsr->is_build_adj_lsa_sheduled)
 				{
@@ -1105,8 +1076,8 @@ process_api_client_command(char *command)
 				printf("IP Address: %s \n",ip_addr);
 				int face_id=add_ccn_face(nlsr->ccn, (const char *)nbr_name->name, (const char *)ip_addr, 9695,nlsr->tunnel_type);
 				update_face_to_adl_for_nbr(nbr_name->name, face_id);		
-				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id);
-				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_REG, face_id);				
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->topo_prefix, OP_REG, face_id,(~0U) >> 1);
+				add_delete_ccn_face_by_face_id(nlsr->ccn, (const char *)nlsr->slice_prefix, OP_REG, face_id,(~0U) >> 1);				
 
 				add_nbr_to_adl(np,face_id,ip_addr);
 
