@@ -428,7 +428,7 @@ enum ccn_upcall_res incoming_content(struct ccn_closure* selfp,
 				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Unverified Content"
 										" Received ..Waiting for verification\n");
 			//return CCN_UPCALL_RESULT_VERIFY;
-			process_incoming_timed_out_interest(selfp,info);
+			process_incoming_content(selfp,info);
 	    break;
 
         default:
