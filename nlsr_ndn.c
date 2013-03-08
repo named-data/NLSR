@@ -510,6 +510,7 @@ process_incoming_content_info(struct ccn_closure *selfp,
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"Info Content Received For Nei"
 								"ghbor: %s Length:%d\n",nbr->name,nbr->length);
 
+	/*
 
 	if ( contain_key_name(info->content_ccnb, info->pco) == 1){
 		struct ccn_charbuf *key_name=get_key_name(info->content_ccnb, info->pco);
@@ -561,7 +562,30 @@ process_incoming_content_info(struct ccn_closure *selfp,
 		ccn_charbuf_destroy(&key_name);
 		ccn_charbuf_destroy(&orig_router_kn);	
 	}
+	*/
 
+					update_adjacent_timed_out_zero_to_adl(nbr);	
+					update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
+					print_adjacent_from_adl();
+
+					if(!nlsr->is_build_adj_lsa_sheduled){
+						if ( nlsr->debugging )
+							printf("Scheduling Build and Install Adj LSA...\n");
+						if ( nlsr->detailed_logging )
+							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Scheduling"
+									 "Build and Install Adj LSA...\n");
+						nlsr->event_build_adj_lsa = ccn_schedule_event(
+														nlsr->sched, 100000, 
+										&build_and_install_adj_lsa, NULL, 0);
+						nlsr->is_build_adj_lsa_sheduled=1;			
+					}
+					else{
+						if ( nlsr->debugging )
+							printf("Build and Install Adj LSA already scheduled\n");
+						if ( nlsr->detailed_logging )
+							writeLogg(__FILE__,__FUNCTION__,__LINE__,"Build and Install Adj LSA"
+														" already scheduled\n");
+					}
 
 
 
