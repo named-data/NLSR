@@ -239,39 +239,23 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 			int chk_cont=ccn_parse_ContentObject(ptr,length,&pcobuf1,NULL);
 			printf("Content Parsing result: %d\n",chk_cont); 
 			if ( contain_key_name(ptr, &pcobuf1) == 1){
-				//struct ccn_charbuf *key_name=get_key_name(ptr, &pcobuf1);
-				//struct ccn_charbuf *orig_router_kn=ccn_charbuf_create();
-				//res=get_orig_router_from_key_name(orig_router_kn,key_name);
-				//if( res == 0){
-					//struct ccn_charbuf *rtr_uri = ccn_charbuf_create();
-					//ccn_uri_append(rtr_uri, orig_router_kn->buf,
-					//								orig_router_kn->length, 0);
-					//printf("Orig Router from Key name: %s\n",
-					//							ccn_charbuf_as_string(rtr_uri));
-					
-					//if( strcmp(orig_router,ccn_charbuf_as_string(rtr_uri)) == 0){
 						
-						int res_verify=verify_key(ptr,&pcobuf1);
+				int res_verify=verify_key(ptr,&pcobuf1,1);
 
-						if ( res_verify != 0 ){
-							printf("Error in verfiying keys !! :( \n");
-						}
-						else{
-							printf("Key verification is successful :)\n");
-							ptr_in=ptr;
-							length_in=length;
-							ccn_content_get_value(ptr_in, length_in, &pcobuf1, 
+				if ( res_verify != 0 ){
+						printf("Error in verfiying keys !! :( \n");
+				}
+				else{
+					printf("Key verification is successful :)\n");
+					ptr_in=ptr;
+					length_in=length;
+					ccn_content_get_value(ptr_in, length_in, &pcobuf1, 
 															&ptr_in, &length_in);
-							*content_data = (unsigned char *) calloc(length_in, 
+					*content_data = (unsigned char *) calloc(length_in, 
 																sizeof(char *));
-							memcpy (*content_data, ptr_in, length_in);
-							ret=0;
-						}
-					//}
-					//ccn_charbuf_destroy(&rtr_uri);
-				//}
-				//ccn_charbuf_destroy(&key_name);
-				//ccn_charbuf_destroy(&orig_router_kn);	
+					memcpy (*content_data, ptr_in, length_in);
+					ret=0;
+				}
 			}
 		}
 	}

@@ -30,6 +30,7 @@ struct ccn_charbuf * get_key_name(const unsigned char *ccnb,
 					struct ccn_parsed_ContentObject *pco);
 
 int verify_key(const unsigned char *ccnb, 
-					struct ccn_parsed_ContentObject *pco);
+				struct ccn_parsed_ContentObject *pco,
+				int content_type);
 
 #endif

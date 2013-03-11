@@ -156,25 +156,6 @@ sign_content_with_user_defined_keystore(struct ccn_charbuf *content_name,
 }
 
 
-/*
-int
-process_incoming_content(struct ccn_closure* selfp, 
-												struct ccn_upcall_info* info){
-
-	printf("process_incoming_content called\n");
-
-	int res=verify_key(info->content_ccnb,info->pco->offset[CCN_PCO_E],info->pco);
-
-	if ( res != 0 ){
-		printf("Error in verfiying keys !! :( \n");
-	}
-	else{
-		printf("Key verification is successful :)\n");
-	}
-	return 0;
-}
-*/
-
 char * 
 get_orig_router_from_lsa_name(struct ccn_charbuf * content_name)
 {
@@ -188,7 +169,7 @@ get_orig_router_from_lsa_name(struct ccn_charbuf * content_name)
 
 	struct ccn_indexbuf *components=ccn_indexbuf_create();
 	struct ccn_charbuf *name=ccn_charbuf_create();
-	ccn_name_from_uri(name,"/ndn/routing/nlsr/LSA");
+	ccn_name_from_uri(name,nlsr->slice_prefix);
 	ccn_name_split (name, components);
 	start=components->n-2;
 	ccn_charbuf_destroy(&name);
@@ -232,11 +213,47 @@ get_orig_router_from_lsa_name(struct ccn_charbuf * content_name)
 }
 
 
+char * 
+get_orig_router_from_info_content_name(struct ccn_charbuf * content_name)
+{
+	int start,end;
+
+	start=0;
+
+	struct ccn_indexbuf *comps=ccn_indexbuf_create();
+	ccn_name_split (content_name, comps);
+
+	end=check_for_name_component_in_name(content_name,comps,"nlsr");
+
+
+	struct ccn_charbuf *temp=ccn_charbuf_create();
+	ccn_name_init(temp);	
+	ccn_name_append_components( temp,	content_name->buf,
+								comps->buf[start], 
+								comps->buf[end]);
+
+	struct ccn_charbuf *temp1=ccn_charbuf_create();
+	ccn_uri_append(temp1, temp->buf, temp->length, 0);
+
+	char *orig_router=(char *)calloc(strlen(ccn_charbuf_as_string(temp1))+1,
+																sizeof(char));
+	memcpy(orig_router,ccn_charbuf_as_string(temp1),
+										strlen(ccn_charbuf_as_string(temp1)));
+	orig_router[strlen(orig_router)]='\0';
+	
+	ccn_charbuf_destroy(&temp);
+	ccn_charbuf_destroy(&temp1);
+	ccn_indexbuf_destroy(&comps);
+	return orig_router;
+	
+
+}
+
 
 int 
 check_key_name_hierarchy(const unsigned char *ccnb, 
 										struct ccn_parsed_ContentObject *pco,
-																int key_type){
+										int key_type, int content_type){
 	printf("check_key_name_hierarchy called\n");	
 	if (key_type == UNKNOWN_KEY ){
 		return 1;
@@ -260,7 +277,13 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 	
 	if ( key_type == NLSR_KEY){
 		char *orig_router_key_name=get_orig_router_from_key_name(key_name,0,0);
-		char *orig_router_content_name=get_orig_router_from_lsa_name(content_name);
+		char *orig_router_content_name;
+		if ( content_type == 1 ){
+			orig_router_content_name=get_orig_router_from_lsa_name(content_name);
+		}
+		else if ( content_type == 0 ){
+			orig_router_content_name=get_orig_router_from_info_content_name(content_name);
+		}
 		printf("Orig Router (Key Name):%s\n",orig_router_key_name);
 		printf("Orig Router (Content Name):%s\n",orig_router_content_name);
 
@@ -354,7 +377,8 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 
 int 
 verify_key(const unsigned char *ccnb, 
-										struct ccn_parsed_ContentObject *pco){
+		struct ccn_parsed_ContentObject *pco,
+		int content_type){
 	if ( nlsr->debugging )
 		printf("verify key called\n");
 	int ret=-1;
@@ -383,7 +407,7 @@ verify_key(const unsigned char *ccnb,
 
 		if ( chk_verify == 0 ){
 			if ( nlsr->debugging )
-				printf("Verification Successful :)\n");
+				printf("Content verification Successful :)\n");
 
 			if ( counter == 3){
 				if ( nlsr->debugging )
@@ -394,15 +418,17 @@ verify_key(const unsigned char *ccnb,
 					ret=0;
 				}
 				else{
-					//ret=verify_key(result->buf,&temp_pco);
 					if ( nlsr->isStrictHierchicalKeyCheck ){
-						int key_name_test=check_key_name_hierarchy(ccnb,pco,key_type);
+						int key_name_test=check_key_name_hierarchy(ccnb,
+																	pco,
+																	key_type,
+																	content_type);
 						if ( key_name_test == 1){
-							ret=verify_key(result->buf,&temp_pco);
+							ret=verify_key(result->buf,&temp_pco,content_type);
 						}
 					}
 					else{ 
-						ret=verify_key(result->buf,&temp_pco);
+						ret=verify_key(result->buf,&temp_pco,content_type);
 					}
 				}
 			}
