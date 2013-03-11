@@ -66,43 +66,6 @@ get_key_name(const unsigned char *ccnb, struct ccn_parsed_ContentObject *pco)
 }
 
 
-int 
-get_orig_router_from_key_name(struct ccn_charbuf *orig_router ,struct ccn_charbuf *name) 
-{
-	int res;	
-	struct ccn_indexbuf *name_comps;
-	
-	name_comps = ccn_indexbuf_create();
-	res = ccn_name_split(name, name_comps);
-	if ( res < 0 ){
-		ccn_indexbuf_destroy(&name_comps);
-		return res;
-	}
-	else{
-		res=ccn_name_chop(name, name_comps, -2);
-		if ( res < 0 ){
-			ccn_indexbuf_destroy(&name_comps);
-			return res;
-		}
-		else{
-			res=check_for_tag_component_in_name(name,name_comps,"R.N.Start");
-			if ( res > 0 ){
-				ccn_name_init(orig_router);	
-				ccn_name_append_components(orig_router,name->buf,
-										name_comps->buf[res+1], 
-										name_comps->buf[name_comps->n - 1]);
-			}
-			else{
-				ccn_indexbuf_destroy(&name_comps);
-				return -1;
-			}
-		}
-	}	
-
-	ccn_indexbuf_destroy(&name_comps);
-	return 0;
-}
-
 int
 check_for_name_component_in_name(const struct ccn_charbuf *name, 
 								const struct ccn_indexbuf *indx,
@@ -205,3 +168,93 @@ get_key_type_from_key_name(struct ccn_charbuf *keyname)
 	ccn_indexbuf_destroy(&indx);
 	return return_key;
 }
+
+
+char *
+get_name_segments_from_name(struct ccn_charbuf *name, int start_indx, int end_indx) 
+{
+	int res;	
+	struct ccn_indexbuf *name_comps;
+	struct ccn_charbuf *orig_router;
+	char *name_seg=NULL;
+
+	name_comps = ccn_indexbuf_create();
+	res = ccn_name_split(name, name_comps);
+	if ( res < 0 ){
+		ccn_indexbuf_destroy(&name_comps);
+		return name_seg;
+	}
+	else{		
+		orig_router=ccn_charbuf_create();
+		ccn_name_init(orig_router);	
+		ccn_name_append_components(orig_router,name->buf,
+										name_comps->buf[start_indx], 
+										name_comps->buf[end_indx]);
+		struct ccn_charbuf *temp1=ccn_charbuf_create();
+		ccn_uri_append(temp1, orig_router->buf, orig_router->length, 0);
+
+		name_seg=(char *)calloc(strlen(ccn_charbuf_as_string(temp1))+1,
+																sizeof(char));
+		memcpy(name_seg,ccn_charbuf_as_string(temp1),
+										strlen(ccn_charbuf_as_string(temp1)));
+		name_seg[strlen(name_seg)]='\0';
+		ccn_charbuf_destroy(&orig_router);
+		ccn_charbuf_destroy(&temp1);
+		
+	}	
+
+	ccn_indexbuf_destroy(&name_comps);
+	return name_seg;
+}
+
+
+char *
+get_orig_router_from_key_name(struct ccn_charbuf *name, int more, int type) 
+{
+	int res;	
+	struct ccn_indexbuf *name_comps;
+	struct ccn_charbuf *orig_router;
+	char *router=NULL;
+
+	name_comps = ccn_indexbuf_create();
+	res = ccn_name_split(name, name_comps);
+	if ( res < 0 ){
+		ccn_indexbuf_destroy(&name_comps);
+		return router;
+	}
+	else{
+		res=ccn_name_chop(name, name_comps, -(2-more));
+		if ( more > 0 && type==1)
+		res=ccn_name_chop(name, name_comps, -3);
+		if ( res < 0 ){
+			ccn_indexbuf_destroy(&name_comps);
+			return NULL;
+		}
+		else{
+			res=check_for_tag_component_in_name(name,name_comps,"R.N.Start");
+			if ( res > 0 ){
+				orig_router=ccn_charbuf_create();
+				ccn_name_init(orig_router);	
+				ccn_name_append_components(orig_router,name->buf,
+										name_comps->buf[res+1], 
+										name_comps->buf[name_comps->n - 1]);
+				struct ccn_charbuf *temp1=ccn_charbuf_create();
+				ccn_uri_append(temp1, orig_router->buf, orig_router->length, 0);
+
+				router=(char *)calloc(strlen(ccn_charbuf_as_string(temp1))+1,
+																sizeof(char));
+				memcpy(router,ccn_charbuf_as_string(temp1),
+										strlen(ccn_charbuf_as_string(temp1)));
+				router[strlen(router)]='\0';
+			}
+			else{
+				ccn_indexbuf_destroy(&name_comps);
+				return NULL;
+			}
+		}
+	}	
+
+	ccn_indexbuf_destroy(&name_comps);
+	return router;
+}
+

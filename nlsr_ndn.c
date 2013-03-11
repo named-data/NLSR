@@ -499,7 +499,7 @@ process_incoming_content_info(struct ccn_closure *selfp,
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_content_info"
 																" called \n");
 
-	int res;
+	//int res;
 	struct name_prefix *nbr=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
 	get_nbr(nbr,selfp,info);
 
@@ -513,17 +513,17 @@ process_incoming_content_info(struct ccn_closure *selfp,
 	
 
 	if ( contain_key_name(info->content_ccnb, info->pco) == 1){
-		struct ccn_charbuf *key_name=get_key_name(info->content_ccnb, info->pco);
-		struct ccn_charbuf *orig_router_kn=ccn_charbuf_create();
-		res=get_orig_router_from_key_name(orig_router_kn,key_name);
-		if( res == 0){
-			struct ccn_charbuf *rtr_uri = ccn_charbuf_create();
-			ccn_uri_append(rtr_uri, orig_router_kn->buf,
-													orig_router_kn->length, 0);
-			printf("Orig Router from Key name: %s\n",
-												ccn_charbuf_as_string(rtr_uri));
+		//struct ccn_charbuf *key_name=get_key_name(info->content_ccnb, info->pco);
+		//struct ccn_charbuf *orig_router_kn=ccn_charbuf_create();
+		//res=get_orig_router_from_key_name(orig_router_kn,key_name);
+		//if( res == 0){
+			//struct ccn_charbuf *rtr_uri = ccn_charbuf_create();
+			//ccn_uri_append(rtr_uri, orig_router_kn->buf,
+			//										orig_router_kn->length, 0);
+			//printf("Orig Router from Key name: %s\n",
+			//									ccn_charbuf_as_string(rtr_uri));
 					
-			if( strcmp(nbr->name,ccn_charbuf_as_string(rtr_uri)) == 0){
+			//if( strcmp(nbr->name,ccn_charbuf_as_string(rtr_uri)) == 0){
 						
 				int res_verify=verify_key(info->content_ccnb,info->pco);
 
@@ -556,11 +556,11 @@ process_incoming_content_info(struct ccn_closure *selfp,
 					}
 
 				}
-			}
-			ccn_charbuf_destroy(&rtr_uri);
-		}
-		ccn_charbuf_destroy(&key_name);
-		ccn_charbuf_destroy(&orig_router_kn);	
+			//}
+			//ccn_charbuf_destroy(&rtr_uri);
+		//}
+		//ccn_charbuf_destroy(&key_name);
+		//ccn_charbuf_destroy(&orig_router_kn);	
 	}
 	/*
 					update_adjacent_timed_out_zero_to_adl(nbr);	

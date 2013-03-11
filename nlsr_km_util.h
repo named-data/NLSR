@@ -20,12 +20,17 @@ check_for_tag_component_in_name(const struct ccn_charbuf *name,
 enum key_type
 get_key_type_from_key_name(struct ccn_charbuf *keyname); 
 
-int
-get_orig_router_from_key_name(struct ccn_charbuf *orig_router,
-									 struct ccn_charbuf *name);
-
 
 int
 appendLifetime(struct ccn_charbuf *cb, int lifetime);
+
+char * 
+get_orig_router_from_key_name(struct ccn_charbuf *name, int more, int type);
+
+
+
+char *
+get_name_segments_from_name(struct ccn_charbuf *name, 
+							int start_indx, int end_indx);
 
 #endif

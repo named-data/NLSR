@@ -175,13 +175,191 @@ process_incoming_content(struct ccn_closure* selfp,
 }
 */
 
+char * 
+get_orig_router_from_lsa_name(struct ccn_charbuf * content_name)
+{
+	int start=0;
+
+	size_t comp_size;
+	const unsigned char *second_last_comp;
+	char *second_comp_type;
+	char *sep=".";
+	char *rem;
+
+	struct ccn_indexbuf *components=ccn_indexbuf_create();
+	struct ccn_charbuf *name=ccn_charbuf_create();
+	ccn_name_from_uri(name,"/ndn/routing/nlsr/LSA");
+	ccn_name_split (name, components);
+	start=components->n-2;
+	ccn_charbuf_destroy(&name);
+	ccn_indexbuf_destroy(&components);
+
+	struct ccn_indexbuf *comps=ccn_indexbuf_create();
+	ccn_name_split (content_name, comps);
+	ccn_name_comp_get( content_name->buf, comps, 
+					  comps->n-1-2, &second_last_comp, &comp_size);
+
+	second_comp_type=strtok_r((char *)second_last_comp, sep, &rem);
+	if ( strcmp( second_comp_type, "lsId" ) == 0 ){
+		ccn_name_chop(content_name,comps,-3);
+	}
+	else{
+		ccn_name_chop(content_name,comps,-2);
+	}
+	
+
+	struct ccn_charbuf *temp=ccn_charbuf_create();
+	ccn_name_init(temp);	
+	ccn_name_append_components( temp,	content_name->buf,
+								comps->buf[start+1], 
+								comps->buf[comps->n - 1]);
+
+	struct ccn_charbuf *temp1=ccn_charbuf_create();
+	ccn_uri_append(temp1, temp->buf, temp->length, 0);
+
+	char *orig_router=(char *)calloc(strlen(ccn_charbuf_as_string(temp1))+1,
+																sizeof(char));
+	memcpy(orig_router,ccn_charbuf_as_string(temp1),
+										strlen(ccn_charbuf_as_string(temp1)));
+	orig_router[strlen(orig_router)]='\0';
+	
+	ccn_charbuf_destroy(&temp);
+	ccn_charbuf_destroy(&temp1);
+	ccn_indexbuf_destroy(&comps);
+	return orig_router;
+	
+
+}
+
+
+
+int 
+check_key_name_hierarchy(const unsigned char *ccnb, 
+										struct ccn_parsed_ContentObject *pco,
+																int key_type){
+	printf("check_key_name_hierarchy called\n");	
+	if (key_type == UNKNOWN_KEY ){
+		return 1;
+	}
+	int res;
+	struct ccn_charbuf *key_name=get_key_name(ccnb, pco);
+
+	struct ccn_charbuf *key_uri = ccn_charbuf_create();
+	ccn_uri_append(key_uri, key_name->buf, key_name->length, 0);
+	printf("Key Name: %s\n",ccn_charbuf_as_string(key_uri));
+	ccn_charbuf_destroy(&key_uri);
+
+	struct ccn_charbuf *content_name=ccn_charbuf_create();
+	res=ccn_charbuf_append(content_name, ccnb + pco->offset[CCN_PCO_B_Name],
+			pco->offset[CCN_PCO_E_Name] - pco->offset[CCN_PCO_B_Name]);
+
+	struct ccn_charbuf *content_uri = ccn_charbuf_create();
+	ccn_uri_append(content_uri, content_name->buf, content_name->length, 0);
+	printf("Content Name: %s\n",ccn_charbuf_as_string(content_uri));
+	ccn_charbuf_destroy(&content_uri);
+	
+	if ( key_type == NLSR_KEY){
+		char *orig_router_key_name=get_orig_router_from_key_name(key_name,0,0);
+		char *orig_router_content_name=get_orig_router_from_lsa_name(content_name);
+		printf("Orig Router (Key Name):%s\n",orig_router_key_name);
+		printf("Orig Router (Content Name):%s\n",orig_router_content_name);
+
+		if (strcmp(orig_router_key_name,orig_router_content_name) == 0 ){
+			free(orig_router_key_name);
+			free(orig_router_content_name);
+			ccn_charbuf_destroy(&key_name);
+			ccn_charbuf_destroy(&content_name);
+			return 1;
+		}
+	}
+
+	if ( key_type == ROUTING_KEY){
+		char *orig_router_key_name=get_orig_router_from_key_name(key_name,1,0);
+		char *orig_router_content_name=get_orig_router_from_key_name(content_name,1,1);
+		printf("Orig Router (Key Name):%s\n",orig_router_key_name);
+		printf("Orig Router (Content Name):%s\n",orig_router_content_name);
+		
+		if (strcmp(orig_router_key_name,orig_router_content_name) == 0 ){
+			free(orig_router_key_name);
+			free(orig_router_content_name);
+			ccn_charbuf_destroy(&key_name);
+			ccn_charbuf_destroy(&content_name);
+			return 1;
+		}
+	}
+	if ( key_type == OPERATOR_KEY){
+		struct ccn_indexbuf *key_name_comps;
+		key_name_comps = ccn_indexbuf_create();
+		res = ccn_name_split(key_name, key_name_comps);
+		int last_indx=check_for_tag_component_in_name(key_name,key_name_comps,"O.N.Start");
+		char *site_key_prefix_key=get_name_segments_from_name(key_name,0,last_indx);
+		printf("Site key prefix(key Name):%s\n",site_key_prefix_key);
+		ccn_indexbuf_destroy(&key_name_comps);
+
+		struct ccn_indexbuf *content_name_comps;
+		content_name_comps = ccn_indexbuf_create();
+		res = ccn_name_split(content_name, content_name_comps);
+		int last_indx_rtr=check_for_tag_component_in_name(content_name,content_name_comps,"R.N.Start");
+		char *site_key_prefix_content=get_name_segments_from_name(key_name,0,last_indx_rtr);
+		printf("Site key prefix(Content Name):%s\n",site_key_prefix_content);
+		ccn_indexbuf_destroy(&content_name_comps);
+
+		if( strcmp(site_key_prefix_key,site_key_prefix_content) == 0 ){
+			free(site_key_prefix_key);
+			free(site_key_prefix_content);
+			ccn_charbuf_destroy(&key_name);
+			ccn_charbuf_destroy(&content_name);
+			return 1;
+		}
+
+	}
+
+	if ( key_type == SITE_KEY){
+		struct ccn_indexbuf *key_name_comps;
+		key_name_comps = ccn_indexbuf_create();
+		res = ccn_name_split(key_name, key_name_comps);
+		int last_indx=check_for_tag_component_in_name(key_name,key_name_comps,"M.K");
+		char *site_key_prefix_key=get_name_segments_from_name(key_name,0,last_indx);
+		printf("Site key prefix(key Name):%s\n",site_key_prefix_key);
+		ccn_indexbuf_destroy(&key_name_comps);
+
+		struct ccn_indexbuf *content_name_comps;
+		content_name_comps = ccn_indexbuf_create();
+		res = ccn_name_split(content_name, content_name_comps);
+		int last_indx_rtr=check_for_tag_component_in_name(content_name,content_name_comps,"O.N.Start");
+		char *site_key_prefix_content=get_name_segments_from_name(key_name,0,last_indx_rtr);
+		printf("Site key prefix(Content Name):%s\n",site_key_prefix_content);
+		ccn_indexbuf_destroy(&content_name_comps);
+
+		if( strcmp(site_key_prefix_key,site_key_prefix_content) == 0 ){
+			free(site_key_prefix_key);
+			free(site_key_prefix_content);
+			ccn_charbuf_destroy(&key_name);
+			ccn_charbuf_destroy(&content_name);
+			return 1;
+		}
+
+	}
+	
+	if ( key_type == ROOT_KEY){
+		ccn_charbuf_destroy(&key_name);
+		ccn_charbuf_destroy(&content_name);
+		return 1;
+	}
+
+	ccn_charbuf_destroy(&key_name);
+	ccn_charbuf_destroy(&content_name);
+	return 0;
+}
+
 int 
 verify_key(const unsigned char *ccnb, 
 										struct ccn_parsed_ContentObject *pco){
 	if ( nlsr->debugging )
 		printf("verify key called\n");
 	int ret=-1;
-
+	//int res;
+	
 	if ( contain_key_name(ccnb, pco) == 1){
 		
 		struct ccn_charbuf *key_name=get_key_name(ccnb, pco);
@@ -189,9 +367,9 @@ verify_key(const unsigned char *ccnb,
 		ccn_uri_append(key_uri, key_name->buf, key_name->length, 0);
 		if ( nlsr->debugging )
 			printf("Key Name from Incoming Content: %s\n",ccn_charbuf_as_string(key_uri));
-		int res=get_key_type_from_key_name(key_name);
+		int key_type=get_key_type_from_key_name(key_name);
 		if ( nlsr->debugging )		
-			printf("Key Type: %d \n",res);
+			printf("Key Type: %d \n",key_type);
 
 		struct ccn_charbuf *result = ccn_charbuf_create();
 		struct ccn_parsed_ContentObject temp_pco = {0};
@@ -212,11 +390,20 @@ verify_key(const unsigned char *ccnb,
 					printf("Could not retrieve key by name !!!\n");
 			}
 			else{
-				if ( res == ROOT_KEY ){
+				if ( key_type == ROOT_KEY ){
 					ret=0;
 				}
 				else{
-					ret=verify_key(result->buf,&temp_pco);
+					//ret=verify_key(result->buf,&temp_pco);
+					if ( nlsr->isStrictHierchicalKeyCheck ){
+						int key_name_test=check_key_name_hierarchy(ccnb,pco,key_type);
+						if ( key_name_test == 1){
+							ret=verify_key(result->buf,&temp_pco);
+						}
+					}
+					else{ 
+						ret=verify_key(result->buf,&temp_pco);
+					}
 				}
 			}
 		}

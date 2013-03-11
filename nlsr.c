@@ -1313,6 +1313,8 @@ init_nlsr(void)
 	nlsr->detailed_logging=0;
 	nlsr->debugging=0;
 
+	nlsr->isStrictHierchicalKeyCheck=1;
+
 	nlsr->interest_retry = INTEREST_RETRY;
 	nlsr->interest_resend_time = INTEREST_RESEND_TIME;
 	nlsr->lsa_refresh_time=LSA_REFRESH_TIME;

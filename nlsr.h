@@ -107,6 +107,8 @@ struct nlsr
 	double cor_r;
 	double cor_theta;
 
+	int isStrictHierchicalKeyCheck;
+
 	int tunnel_type;
 	
 	
