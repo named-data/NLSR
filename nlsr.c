@@ -964,7 +964,8 @@ destroy_faces_for_nbrs(void)
 	hashtb_end(e);
 }
 
-	char *
+
+char *
 process_api_client_command(char *command)
 {
 	char *msg;

@@ -655,7 +655,7 @@ sync_monitor(char *topo_prefix, char *slice_prefix)
 	return 0;
 }
 
-	struct ccn_charbuf *
+struct ccn_charbuf *
 make_template(int scope)
 {
 	struct ccn_charbuf *templ = NULL;

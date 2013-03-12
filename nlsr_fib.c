@@ -113,12 +113,15 @@ register_unregister_prefix(struct ccn *h, struct ccn_charbuf *local_scope_templa
 	return res;
 
 	cleanup:
-		ccn_forwarding_entry_destroy(&new_forwarding_entry);
-		ccn_charbuf_destroy(&signed_info);
-		ccn_charbuf_destroy(&temp);
-		ccn_charbuf_destroy(&resultbuf);
+		if ( signed_info )
+			ccn_charbuf_destroy(&signed_info);
+		if ( temp )
+			ccn_charbuf_destroy(&temp);
+		if ( resultbuf )
+			ccn_charbuf_destroy(&resultbuf);
 		ccn_charbuf_destroy(&name);
-		ccn_charbuf_destroy(&prefixreg);
+		if ( prefixreg )
+			ccn_charbuf_destroy(&prefixreg);
 
 	return -1;
 }
