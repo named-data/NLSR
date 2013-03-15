@@ -187,8 +187,8 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 	int allow_stale = 1;
 	int content_only = 1;
 	int scope = -1;
-	const unsigned char *ptr;//,*ptr_in; 
-	size_t length;//,length_in;
+	const unsigned char *ptr,*ptr_in; 
+	size_t length,length_in;
 	int resolve_version = CCN_V_HIGHEST;
 	int timeout_ms = 3000;
 	const unsigned lifetime_default = CCN_INTEREST_LIFETIME_SEC << 12;
@@ -261,13 +261,13 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 				else{
 					if ( nlsr->debugging )
 						printf("Key verification is successful :)\n");
-					//ptr_in=ptr;
-					//length_in=length;
-					//ccn_content_get_value(ptr_in, length_in, &pcobuf1, 
-					//										&ptr_in, &length_in);
-					*content_data = (unsigned char *) calloc(length, 
+					ptr_in=ptr;
+					length_in=length;
+					ccn_content_get_value(ptr_in, length_in, &pcobuf1, 
+															&ptr_in, &length_in);
+					*content_data = (unsigned char *) calloc(length_in, 
 																sizeof(char *));
-					memcpy (*content_data, ptr, length);
+					memcpy (*content_data, ptr_in, length_in);
 					ret=0;
 				}
 			}
