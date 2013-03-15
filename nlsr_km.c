@@ -395,7 +395,6 @@ verify_key(const unsigned char *ccnb,
 	if ( nlsr->debugging )
 		printf("verify key called\n");
 	int ret=-1;
-	//int res;
 	
 	if ( contain_key_name(ccnb, pco) == 1){
 		
