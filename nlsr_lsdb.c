@@ -34,13 +34,8 @@
 void
 set_new_lsdb_version(void)
 {
-	
-	//char *time_stamp=get_current_timestamp_micro_v2();
 	free(nlsr->lsdb->lsdb_version);
 	nlsr->lsdb->lsdb_version=get_current_timestamp_micro_v2();
-	//nlsr->lsdb->lsdb_version=(char *)calloc(strlen(time_stamp)+1,sizeof(char));
-	//memcpy(nlsr->lsdb->lsdb_version,time_stamp,strlen(time_stamp)+1);
-	//free(time_stamp);
 }
 
 /**
@@ -116,10 +111,7 @@ make_cor_lsa_prefix_for_repo(char *key, char *orig_router, int ls_type,
 		printf("Cor LSA prefix for repo content:%s\n",key);	
 }
 
-/**
-* Build name lsa for all name prefixes in Name Prefix List (NPL). Intsall Name
-* LSA in Name LSDB for router itself.
-*/
+
 
 void
 destroy_name_lsa_component(struct nlsa * name_lsa)
@@ -194,6 +186,10 @@ destroy_cor_lsa(struct clsa * cor_lsa)
 		free(cor_lsa);
 }
 
+/**
+* Build name lsa for all name prefixes in Name Prefix List (NPL). Intsall Name
+* LSA in Name LSDB for router itself.
+*/
 
 
 void 
@@ -255,6 +251,11 @@ build_and_install_single_name_lsa(struct name_prefix *np)
 
 }
 
+/**
+* Build Name LSA for own router from name_prefix np and fill up the name_lsa
+*/
+
+
 void 
 build_name_lsa(struct nlsa *name_lsa, struct name_prefix *np)
 {
@@ -285,6 +286,10 @@ build_name_lsa(struct nlsa *name_lsa, struct name_prefix *np)
 	name_lsa->name_prefix->length=np->length;
 
 }
+
+/**
+* install name lsa into lsdb
+*/
 
 void 
 install_name_lsa(struct nlsa *name_lsa)
@@ -628,6 +633,10 @@ install_name_lsa(struct nlsa *name_lsa)
 		free(key);
 }
 
+/**
+* Write log for name LSA
+*/
+
 void 
 write_log_for_name_lsa(struct nlsa *name_lsa)
 {
@@ -697,9 +706,14 @@ print_name_lsdb(void)
 		writeLogg(__FILE__,__FUNCTION__,__LINE__,"\n");
 }
 
+/**
+* Build and install name LSA by the parameter provided
+*/
+
 
 void
-build_and_install_others_name_lsa(char *orig_router,int ls_type,long int ls_id,char *orig_time, int isValid,char *np)
+build_and_install_others_name_lsa(char *orig_router,int ls_type,long int ls_id,
+										char *orig_time, int isValid,char *np)
 {
 	if ( nlsr->debugging )
 		printf("build_and_install_others_name_lsa called \n");
@@ -717,8 +731,13 @@ build_and_install_others_name_lsa(char *orig_router,int ls_type,long int ls_id,c
 	
 }
 
+/**
+* Build name LSA by the parameter provided
+*/
+
 void
-build_others_name_lsa(struct nlsa *name_lsa, char *orig_router,int ls_type,long int ls_id,char *orig_time, int isValid,char *np)
+build_others_name_lsa(struct nlsa *name_lsa, char *orig_router,int ls_type,long 
+								int ls_id,char *orig_time, int isValid,char *np)
 {
 	if ( nlsr->debugging )
 		printf("build_others_name_lsa called\n");
@@ -1055,7 +1074,6 @@ write_log_for_adj_lsa_body(const char *body, int no_link)
 {
 	int i=0;
 	char *lsa_data=(char *)calloc(strlen(body)+1,sizeof(char));
-	//memset(	lsa_data,0,strlen(body)+1);
 	memcpy(lsa_data,body,strlen(body)+1);
 	char *sep="|";
 	char *rem;
@@ -2161,15 +2179,15 @@ write_adj_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 	if ( nlsr->debugging )
 		printf("Adj LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));
 
-	char *data;//=calloc(strlen(ccn_charbuf_as_string(lsa_data))+1,sizeof(char));
-	data=ccn_charbuf_as_string(lsa_data);
-	data[strlen(data)]='\0';
+	//char *data;
+	//data=ccn_charbuf_as_string(lsa_data);
+	//data[strlen(data)]='\0';
 
-	write_data_to_repo(data, repo_content_prefix);
+	//write_data_to_repo(data, repo_content_prefix);
 
+	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
 
-	//ccn_charbuf_destroy(&lsa_data);
-	//free(data);
+	ccn_charbuf_destroy(&lsa_data);
 }
 
 void
@@ -2186,14 +2204,15 @@ write_name_lsa_to_repo(char *repo_content_prefix, struct name_prefix *lsa_id)
 	if ( nlsr->debugging )
 		printf("Name LSA Data: %s \n",ccn_charbuf_as_string(lsa_data));	
 
-	char *data;//=calloc(strlen(ccn_charbuf_as_string(lsa_data))+1,sizeof(char));
-	data=ccn_charbuf_as_string(lsa_data);
-	data[strlen(data)]='\0';
+	//char *data;
+	//data=ccn_charbuf_as_string(lsa_data);
+	//data[strlen(data)]='\0';
 
-	write_data_to_repo(data, repo_content_prefix);
+	//write_data_to_repo(data, repo_content_prefix);
 
-	//ccn_charbuf_destroy(&lsa_data);
-	//free(data);
+	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_content_prefix);
+
+	ccn_charbuf_destroy(&lsa_data);
 }
 
 
@@ -2540,11 +2559,13 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	if ( nlsr->debugging )
 		printf("Cor LSA Repo Key: %s \n",repo_key);	
 
-	char *data;//=calloc(strlen(ccn_charbuf_as_string(lsa_data))+1,sizeof(char));
-	data=ccn_charbuf_as_string(lsa_data);
-	data[strlen(data)]='\0';
+	//char *data;
+	//data=ccn_charbuf_as_string(lsa_data);
+	//data[strlen(data)]='\0';
 
-	write_data_to_repo(data, repo_key);
+	//write_data_to_repo(data, repo_content_prefix);
+
+	write_data_to_repo(ccn_charbuf_as_string(lsa_data), repo_key);
 
 
 	
@@ -2552,8 +2573,7 @@ write_cor_lsa_to_repo(struct clsa *cor_lsa)
 	free(lst);
 	free(key);
 	free(repo_key);
-	//free(data);
-	//ccn_charbuf_destroy(&lsa_data);
+	ccn_charbuf_destroy(&lsa_data);
 }
 
 void 

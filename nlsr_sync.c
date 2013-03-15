@@ -47,6 +47,12 @@ hex_string(unsigned char *s, size_t l)
 	return(r);
 }
 
+/**
+* call back function from sync. Receive notification of updates in sync.
+* This function calls process_content_from_sync to handle incoming content
+* from sync.
+*/
+
 int
 sync_cb(struct ccns_name_closure *nc,
 		struct ccn_charbuf *lhash,
@@ -119,6 +125,9 @@ sync_cb(struct ccns_name_closure *nc,
 }
 
 
+/**
+* this function retrieve part of name from interest name and put it in name_part
+*/
 
 void
 get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb, 
@@ -159,7 +168,9 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 }
 
 
-
+/**
+* Get content value by content name and put the content value in content_data
+*/
 
 
 int 
@@ -266,6 +277,10 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 
 	return ret;   
 }
+
+/**
+* Handle incoming lsa content, Calls functions to install lsa into lsdb
+*/
 
 void 
 process_incoming_sync_content_lsa( unsigned char *content_data)
@@ -380,6 +395,11 @@ process_incoming_sync_content_lsa( unsigned char *content_data)
 
 	}
 }
+
+/**
+* Check LSA whether its new. If new retrieve the LSA content and call 
+* process_incoming_sync_content_lsa with content_data
+*/
 
 void
 process_content_from_sync (struct ccn_charbuf *content_name, 
@@ -619,6 +639,9 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 		}
 	}
 
+	if(content_data)
+		free(content_data);
+
 	if (orig_router->name)
 		free(orig_router->name);
 	if (orig_router)
@@ -628,7 +651,12 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 	free(time_stamp);
 }
 
-	int
+/**
+* This function performs same functionality as ccnsyncwatch
+*/
+
+
+int
 sync_monitor(char *topo_prefix, char *slice_prefix)
 {
 
@@ -669,7 +697,12 @@ make_template(int scope)
 	return(templ);
 }
 
-	int
+/**
+* Write signed data to repo
+*/
+
+
+int
 write_data_to_repo(char *data, char *name_prefix)
 {
 
@@ -743,22 +776,18 @@ write_data_to_repo(char *data, char *name_prefix)
 										nlsr->router_name);	
 
 
-	//blockread = 0;
-	//blockread=strlen(data)+1;
 	blockread=resultbuf->length;
 
 	if (blockread > 0) {
-		//res = ccn_seqw_write(w, data, blockread);
 		res = ccn_seqw_write(w, resultbuf->buf, resultbuf->length);	
 		while (res == -1) {
-			ccn_run(temp_ccn,100);
-			//res = ccn_seqw_write(w, data, blockread);
+			ccn_run(temp_ccn,1);
 			res = ccn_seqw_write(w, resultbuf->buf, resultbuf->length);	
 		}
 	}
 
 	ccn_seqw_close(w);
-	ccn_run(temp_ccn, 100);
+	ccn_run(temp_ccn, 1);
 	ccn_charbuf_destroy(&name);
 	ccn_destroy(&temp_ccn);
 	ccn_charbuf_destroy(&resultbuf);
@@ -766,8 +795,14 @@ write_data_to_repo(char *data, char *name_prefix)
 	nlsr_unlock();
 	return 0;
 }
-	int
-	create_sync_slice(char *topo_prefix, char *slice_prefix)
+
+/**
+*	Create slice for sync/repo
+*/
+
+
+int
+create_sync_slice(char *topo_prefix, char *slice_prefix)
 {
 	int res;
 	struct ccn *handle; 
