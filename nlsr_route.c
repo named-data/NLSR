@@ -48,9 +48,7 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 	{
 		/* Calculate Route here */
 		print_routing_table();
-		print_npt();		
-
-		//struct hashtb_param param_me = {0};
+		print_npt();	
 		nlsr->map = hashtb_create(sizeof(struct map_entry), NULL);
 		nlsr->rev_map = hashtb_create(sizeof(struct map_entry), NULL);
 		make_map();
@@ -194,8 +192,6 @@ route_calculate(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_
 		free(adj_matrix);
 		destroy_map();
 		destroy_rev_map();
-		//hashtb_destroy(&nlsr->map);
-		//hashtb_destroy(&nlsr->rev_map);
 		
 	}
 	nlsr->is_route_calculation_scheduled=0;
@@ -1464,6 +1460,8 @@ destroy_map(void)
 
 	hashtb_end(e);
 
+	hashtb_destroy(&nlsr->map);
+
 }
 
 void
@@ -1486,4 +1484,6 @@ destroy_rev_map(void)
 	}
 
 	hashtb_end(e);
+
+	hashtb_destroy(&nlsr->rev_map);
 }

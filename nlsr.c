@@ -1290,7 +1290,7 @@ init_nlsr(void)
 
 	nlsr=(struct nlsr *)calloc(1,sizeof(struct nlsr));
 
-	nlsr->adl=hashtb_create(sizeof(struct ndn_neighbor), NULL);
+	nlsr->adl= hashtb_create(sizeof(struct ndn_neighbor), NULL);
 	nlsr->npl = hashtb_create(sizeof(struct name_prefix_list_entry), NULL);
 	nlsr->npt = hashtb_create(sizeof(struct npt_entry), NULL);
 	nlsr->routing_table = hashtb_create(sizeof(struct routing_table_entry), NULL);
