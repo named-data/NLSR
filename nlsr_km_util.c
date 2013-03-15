@@ -249,6 +249,8 @@ get_orig_router_from_key_name(struct ccn_charbuf *name, int more, int type)
 				memcpy(router,ccn_charbuf_as_string(temp1),
 										strlen(ccn_charbuf_as_string(temp1)));
 				router[strlen(router)]='\0';
+				ccn_charbuf_destroy(&temp1);
+				ccn_charbuf_destroy(&orig_router);
 			}
 			else{
 				ccn_indexbuf_destroy(&name_comps);

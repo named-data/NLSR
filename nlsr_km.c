@@ -147,10 +147,12 @@ sign_content_with_user_defined_keystore(struct ccn_charbuf *content_name,
  		return -1;
 	}
 
+	ccn_keystore_destroy(&keystore);
 	ccn_charbuf_destroy(&sp.template_ccnb);
 	ccn_charbuf_destroy(&keyid);
 	ccn_charbuf_destroy(&keyname);
 	ccn_charbuf_destroy(&pubid_out);
+	
 	free(baseuri);
  	return 0;
 }

@@ -80,7 +80,7 @@ get_nbr(struct name_prefix *nbr,struct ccn_closure *selfp,
 
 	}
 
-	nbr->name=(char *)malloc(strlen(neighbor)+1);
+	nbr->name=(char *)calloc(strlen(neighbor)+1,sizeof(char));
 	memcpy(nbr->name,neighbor,strlen(neighbor)+1);
 	nbr->length=strlen(neighbor)+1;
 
@@ -359,6 +359,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 		//ccn_charbuf_destroy(&sp.template_ccnb);
 		//ccn_charbuf_destroy(&pubid);
 		//ccn_charbuf_destroy(&pubkey);
+		ccn_charbuf_destroy(&resultbuf);
 	}
 
 	//ccn_charbuf_destroy(&data);
@@ -670,7 +671,10 @@ process_incoming_timed_out_interest_info(struct ccn_closure* selfp, struct
 		}
 	}
 
-	free(nbr);
+	if ( nbr->name != NULL )
+		free(nbr->name);
+	if ( nbr != NULL )
+		free(nbr);
 
 
 }
