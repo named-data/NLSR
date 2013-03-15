@@ -258,7 +258,7 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 	if (key_type == UNKNOWN_KEY ){
 		return 1;
 	}
-	int res;
+	//int res;
 	struct ccn_charbuf *key_name=get_key_name(ccnb, pco);
 
 	struct ccn_charbuf *key_uri = ccn_charbuf_create();
