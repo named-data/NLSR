@@ -563,8 +563,6 @@ process_command_slice_prefix(char *command)
 			free(nlsr->slice_prefix);
 		if ( slice_prefix[strlen(slice_prefix)-1] == '/' )
 			slice_prefix[strlen(slice_prefix)-1]='\0';
-		//if( nlsr->slice_prefix)
-			//free(nlsr->slice_prefix);
 		nlsr->slice_prefix=(char *)calloc(strlen(slice_prefix)+1,sizeof(char));
 		memcpy(nlsr->slice_prefix,slice_prefix,strlen(slice_prefix)+1);
 		printf("Slice prefix: %s \n",nlsr->slice_prefix);
@@ -1222,6 +1220,12 @@ nlsr_destroy( void )
 		free(nlsr->site_name);
 
 	free(nlsr->router_name);
+
+
+	free(nlsr->slice_prefix);
+	free(nlsr->topo_prefix);
+	free(nlsr->logDir);
+
 	if ( nlsr->debugging )
 	{
 		printf("Finished freeing allocated memory\n");

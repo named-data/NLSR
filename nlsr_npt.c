@@ -49,8 +49,7 @@ add_npt_entry(char *orig_router, char *name_prefix, int num_face, int *faces, in
 	{
 		ne=e->data;
 
-		ne->orig_router=(char *)malloc(strlen(orig_router)+1);
-		memset(ne->orig_router,0,strlen(orig_router)+1);
+		ne->orig_router=(char *)calloc(strlen(orig_router)+1,sizeof(char));
 		memcpy(ne->orig_router,orig_router,strlen(orig_router)+1);
 
 	

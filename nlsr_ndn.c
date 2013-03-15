@@ -134,7 +134,6 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp,
 	len++;
 
 	char *neighbor=(char *)calloc(len,sizeof(char));
-	//memset(neighbor,0,len);
 
 	for(i=nlsr_position+3+offset; i<info->interest_comps->n-1;i++)
 	{
@@ -145,8 +144,7 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp,
 
 	}
 
-	lsaId->name=(char *)malloc(strlen(neighbor)+1);
-	memset(lsaId->name,0,strlen(neighbor)+1);
+	lsaId->name=(char *)calloc(strlen(neighbor)+1,sizeof(char));
 	memcpy(lsaId->name,neighbor,strlen(neighbor)+1);
 	lsaId->length=strlen(neighbor)+1;
 
@@ -354,11 +352,10 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 			send_info_interest_to_neighbor(nbr);
 		}
 
-		free(nbr);
-		//free(raw_data);
-		//ccn_charbuf_destroy(&sp.template_ccnb);
-		//ccn_charbuf_destroy(&pubid);
-		//ccn_charbuf_destroy(&pubkey);
+		if ( nbr->name != NULL )
+			free(nbr->name);
+		if ( nbr != NULL )
+			free(nbr);
 		ccn_charbuf_destroy(&resultbuf);
 	}
 
@@ -573,8 +570,10 @@ process_incoming_content_info(struct ccn_closure *selfp,
 					}
 
 	*/
-
-	free(nbr);
+	if ( nbr->name != NULL )
+		free(nbr->name);
+	if ( nbr != NULL )
+		free(nbr);
 
 
 }

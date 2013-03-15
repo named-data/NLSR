@@ -681,7 +681,6 @@ get_host_name_from_command_string(struct name_prefix *name_part,
 	size_t comp_size;
 
 	struct ccn_charbuf *name=ccn_charbuf_create();
-	name = ccn_charbuf_create();
     	res = ccn_name_from_uri(name,nbr_name_uri);
     	if (res < 0) {
         	fprintf(stderr, "Bad ccn URI: %s\n", nbr_name_uri);
