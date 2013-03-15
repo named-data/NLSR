@@ -267,7 +267,7 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 	ccn_charbuf_destroy(&key_uri);
 
 	struct ccn_charbuf *content_name=ccn_charbuf_create();
-	res=ccn_charbuf_append(content_name, ccnb + pco->offset[CCN_PCO_B_Name],
+	ccn_charbuf_append(content_name, ccnb + pco->offset[CCN_PCO_B_Name],
 			pco->offset[CCN_PCO_E_Name] - pco->offset[CCN_PCO_B_Name]);
 
 	struct ccn_charbuf *content_uri = ccn_charbuf_create();
@@ -313,7 +313,7 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 	if ( key_type == OPERATOR_KEY){
 		struct ccn_indexbuf *key_name_comps;
 		key_name_comps = ccn_indexbuf_create();
-		res = ccn_name_split(key_name, key_name_comps);
+		ccn_name_split(key_name, key_name_comps);
 		int last_indx=check_for_tag_component_in_name(key_name,key_name_comps,"O.N.Start");
 		char *site_key_prefix_key=get_name_segments_from_name(key_name,0,last_indx);
 		printf("Site key prefix(key Name):%s\n",site_key_prefix_key);
@@ -321,7 +321,7 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 
 		struct ccn_indexbuf *content_name_comps;
 		content_name_comps = ccn_indexbuf_create();
-		res = ccn_name_split(content_name, content_name_comps);
+		ccn_name_split(content_name, content_name_comps);
 		int last_indx_rtr=check_for_tag_component_in_name(content_name,content_name_comps,"R.N.Start");
 		char *site_key_prefix_content=get_name_segments_from_name(key_name,0,last_indx_rtr);
 		printf("Site key prefix(Content Name):%s\n",site_key_prefix_content);
@@ -340,7 +340,7 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 	if ( key_type == SITE_KEY){
 		struct ccn_indexbuf *key_name_comps;
 		key_name_comps = ccn_indexbuf_create();
-		res = ccn_name_split(key_name, key_name_comps);
+		ccn_name_split(key_name, key_name_comps);
 		int last_indx=check_for_tag_component_in_name(key_name,key_name_comps,"M.K");
 		char *site_key_prefix_key=get_name_segments_from_name(key_name,0,last_indx);
 		printf("Site key prefix(key Name):%s\n",site_key_prefix_key);
@@ -348,7 +348,7 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 
 		struct ccn_indexbuf *content_name_comps;
 		content_name_comps = ccn_indexbuf_create();
-		res = ccn_name_split(content_name, content_name_comps);
+		ccn_name_split(content_name, content_name_comps);
 		int last_indx_rtr=check_for_tag_component_in_name(content_name,content_name_comps,"O.N.Start");
 		char *site_key_prefix_content=get_name_segments_from_name(key_name,0,last_indx_rtr);
 		printf("Site key prefix(Content Name):%s\n",site_key_prefix_content);
