@@ -564,6 +564,7 @@ delete_orig_router_from_npt(char *orig_router)
 		}
 		//hashtb_destroy(&ne->name_list);
 		//hashtb_destroy(&ne->face_list);
+		free(ne->orig_router);
 		destroy_name_list(ne->name_list);
 		destroy_face_list(ne->face_list);
 		hashtb_delete(e);		

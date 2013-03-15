@@ -929,7 +929,7 @@ install_adj_lsa(struct alsa * adj_lsa)
 		char *key=(char *)calloc(adj_lsa->header->orig_router->length+4,sizeof(char));
 		make_adj_lsa_key(key,adj_lsa);
 
-		struct alsa *new_adj_lsa;//=(struct alsa*)malloc(sizeof(struct alsa ));
+		struct alsa *new_adj_lsa;
 
 		struct hashtb_enumerator ee;
     		struct hashtb_enumerator *e = &ee; 	
@@ -961,11 +961,8 @@ install_adj_lsa(struct alsa * adj_lsa)
 				new_adj_lsa->header->orig_router->length=adj_lsa->header->orig_router->length;
 
 				new_adj_lsa->no_link=adj_lsa->no_link;
-		
-				//if(new_adj_lsa->body )
-					//free(new_adj_lsa->body);
+	
 				new_adj_lsa->body=(char *)calloc(strlen(adj_lsa->body)+1,sizeof(char));
-				//memset(new_adj_lsa->body,0,strlen(adj_lsa->body)+1);
 				memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);
 			
 				add_next_hop_router(new_adj_lsa->header->orig_router->name);
@@ -1019,11 +1016,8 @@ install_adj_lsa(struct alsa * adj_lsa)
 					memcpy(new_adj_lsa->header->orig_time,adj_lsa->header->orig_time,strlen(adj_lsa->header->orig_time)+1);
 
 					new_adj_lsa->no_link=adj_lsa->no_link;
-				
 					new_adj_lsa->body=(char *)calloc(strlen(adj_lsa->body)+1,sizeof(char));
-					//memset(new_adj_lsa->body,0,strlen(adj_lsa->body)+1);
 					memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);
-
 					add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
 
 					writeLogg(__FILE__,__FUNCTION__,__LINE__," Adj-LSA\n");
