@@ -516,10 +516,12 @@ process_incoming_content_info(struct ccn_closure *selfp,
 		int res_verify=verify_key(info->content_ccnb,info->pco,0);
 
 		if ( res_verify != 0 ){
-			printf("Error in verfiying keys !! :( \n");
+			if ( nlsr->debugging )
+				printf("Error in verfiying keys !! :( \n");
 		}
 		else{
-			printf("Key verification is successful :)\n");
+			if ( nlsr->debugging )
+				printf("Key verification is successful :)\n");
 			update_adjacent_timed_out_zero_to_adl(nbr);	
 			update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
 			print_adjacent_from_adl();
