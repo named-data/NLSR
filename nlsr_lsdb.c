@@ -1016,6 +1016,8 @@ install_adj_lsa(struct alsa * adj_lsa)
 					memcpy(new_adj_lsa->header->orig_time,adj_lsa->header->orig_time,strlen(adj_lsa->header->orig_time)+1);
 
 					new_adj_lsa->no_link=adj_lsa->no_link;
+					if ( new_adj_lsa->body != NULL )
+						free(new_adj_lsa->body);
 					new_adj_lsa->body=(char *)calloc(strlen(adj_lsa->body)+1,sizeof(char));
 					memcpy(new_adj_lsa->body,adj_lsa->body,strlen(adj_lsa->body)+1);
 					add_next_hop_from_lsa_adj_body(new_adj_lsa->body,new_adj_lsa->no_link);
