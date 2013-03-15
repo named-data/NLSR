@@ -115,20 +115,23 @@ check_for_tag_component_in_name(const struct ccn_charbuf *name,
 enum key_type
 get_key_type_from_key_name(struct ccn_charbuf *keyname)
 {
-	printf("get_key_type_from_key_name called\n");
+	if ( nlsr->debugging )	
+		printf("get_key_type_from_key_name called\n");
 
 	int res;
 	int return_key=UNKNOWN_KEY;	
 
 	struct ccn_indexbuf *indx=ccn_indexbuf_create();
 	if ( indx == NULL ){
-		printf("Error in creating index for key name \n");
+		if ( nlsr->debugging )
+			printf("Error in creating index for key name \n");
 		return UNKNOWN_KEY;
 	}
 
 	res=ccn_name_split(keyname,indx);
 	if ( res < 0 ){
-		printf("Error in parsing key name \n");
+		if ( nlsr->debugging )
+			printf("Error in parsing key name \n");
 		ccn_indexbuf_destroy(&indx);
 		return UNKNOWN_KEY;
 	}

@@ -254,7 +254,8 @@ int
 check_key_name_hierarchy(const unsigned char *ccnb, 
 										struct ccn_parsed_ContentObject *pco,
 										int key_type, int content_type){
-	printf("check_key_name_hierarchy called\n");	
+	if ( nlsr->debugging )
+		printf("check_key_name_hierarchy called\n");	
 	if (key_type == UNKNOWN_KEY ){
 		return 1;
 	}
@@ -263,7 +264,8 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 
 	struct ccn_charbuf *key_uri = ccn_charbuf_create();
 	ccn_uri_append(key_uri, key_name->buf, key_name->length, 0);
-	printf("Key Name: %s\n",ccn_charbuf_as_string(key_uri));
+	if ( nlsr->debugging )
+		printf("Key Name: %s\n",ccn_charbuf_as_string(key_uri));
 	ccn_charbuf_destroy(&key_uri);
 
 	struct ccn_charbuf *content_name=ccn_charbuf_create();
@@ -272,7 +274,8 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 
 	struct ccn_charbuf *content_uri = ccn_charbuf_create();
 	ccn_uri_append(content_uri, content_name->buf, content_name->length, 0);
-	printf("Content Name: %s\n",ccn_charbuf_as_string(content_uri));
+	if ( nlsr->debugging )
+		printf("Content Name: %s\n",ccn_charbuf_as_string(content_uri));
 	ccn_charbuf_destroy(&content_uri);
 	
 	if ( key_type == NLSR_KEY){
@@ -284,8 +287,10 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 		else if ( content_type == 0 ){
 			orig_router_content_name=get_orig_router_from_info_content_name(content_name);
 		}
-		printf("Orig Router (Key Name):%s\n",orig_router_key_name);
-		printf("Orig Router (Content Name):%s\n",orig_router_content_name);
+		if ( nlsr->debugging ){
+			printf("Orig Router (Key Name):%s\n",orig_router_key_name);
+			printf("Orig Router (Content Name):%s\n",orig_router_content_name);
+		}
 
 		if (strcmp(orig_router_key_name,orig_router_content_name) == 0 ){
 			free(orig_router_key_name);
@@ -299,8 +304,10 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 	if ( key_type == ROUTING_KEY){
 		char *orig_router_key_name=get_orig_router_from_key_name(key_name,1,0);
 		char *orig_router_content_name=get_orig_router_from_key_name(content_name,1,1);
-		printf("Orig Router (Key Name):%s\n",orig_router_key_name);
-		printf("Orig Router (Content Name):%s\n",orig_router_content_name);
+		if ( nlsr->debugging ){
+			printf("Orig Router (Key Name):%s\n",orig_router_key_name);
+			printf("Orig Router (Content Name):%s\n",orig_router_content_name);
+		}
 		
 		if (strcmp(orig_router_key_name,orig_router_content_name) == 0 ){
 			free(orig_router_key_name);
@@ -316,7 +323,8 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 		ccn_name_split(key_name, key_name_comps);
 		int last_indx=check_for_tag_component_in_name(key_name,key_name_comps,"O.N.Start");
 		char *site_key_prefix_key=get_name_segments_from_name(key_name,0,last_indx);
-		printf("Site key prefix(key Name):%s\n",site_key_prefix_key);
+		if ( nlsr->debugging )	
+			printf("Site key prefix(key Name):%s\n",site_key_prefix_key);
 		ccn_indexbuf_destroy(&key_name_comps);
 
 		struct ccn_indexbuf *content_name_comps;
@@ -324,7 +332,8 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 		ccn_name_split(content_name, content_name_comps);
 		int last_indx_rtr=check_for_tag_component_in_name(content_name,content_name_comps,"R.N.Start");
 		char *site_key_prefix_content=get_name_segments_from_name(key_name,0,last_indx_rtr);
-		printf("Site key prefix(Content Name):%s\n",site_key_prefix_content);
+		if ( nlsr->debugging )
+			printf("Site key prefix(Content Name):%s\n",site_key_prefix_content);
 		ccn_indexbuf_destroy(&content_name_comps);
 
 		if( strcmp(site_key_prefix_key,site_key_prefix_content) == 0 ){
@@ -343,7 +352,8 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 		ccn_name_split(key_name, key_name_comps);
 		int last_indx=check_for_tag_component_in_name(key_name,key_name_comps,"M.K");
 		char *site_key_prefix_key=get_name_segments_from_name(key_name,0,last_indx);
-		printf("Site key prefix(key Name):%s\n",site_key_prefix_key);
+		if ( nlsr->debugging )
+			printf("Site key prefix(key Name):%s\n",site_key_prefix_key);
 		ccn_indexbuf_destroy(&key_name_comps);
 
 		struct ccn_indexbuf *content_name_comps;
@@ -351,7 +361,8 @@ check_key_name_hierarchy(const unsigned char *ccnb,
 		ccn_name_split(content_name, content_name_comps);
 		int last_indx_rtr=check_for_tag_component_in_name(content_name,content_name_comps,"O.N.Start");
 		char *site_key_prefix_content=get_name_segments_from_name(key_name,0,last_indx_rtr);
-		printf("Site key prefix(Content Name):%s\n",site_key_prefix_content);
+		if ( nlsr->debugging )
+			printf("Site key prefix(Content Name):%s\n",site_key_prefix_content);
 		ccn_indexbuf_destroy(&content_name_comps);
 
 		if( strcmp(site_key_prefix_key,site_key_prefix_content) == 0 ){

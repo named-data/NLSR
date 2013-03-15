@@ -248,16 +248,19 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 			ccn_content_get_value(ptr, length, &pcobuf, &ptr, &length);
 			struct ccn_parsed_ContentObject pcobuf1 = { 0 };
 			int chk_cont=ccn_parse_ContentObject(ptr,length,&pcobuf1,NULL);
-			printf("Content Parsing result: %d\n",chk_cont); 
+			if ( nlsr->debugging )	
+				printf("Content Parsing result: %d\n",chk_cont); 
 			if ( contain_key_name(ptr, &pcobuf1) == 1){
 						
 				int res_verify=verify_key(ptr,&pcobuf1,1);
 
 				if ( res_verify != 0 ){
+					if ( nlsr->debugging )
 						printf("Error in verfiying keys !! :( \n");
 				}
 				else{
-					printf("Key verification is successful :)\n");
+					if ( nlsr->debugging )
+						printf("Key verification is successful :)\n");
 					ptr_in=ptr;
 					length_in=length;
 					ccn_content_get_value(ptr_in, length_in, &pcobuf1, 
