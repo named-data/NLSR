@@ -1140,6 +1140,7 @@ destroy_npt(void)
 	for(i=0;i<npt_element;i++)
 	{
 		ne=e->data;
+		free(ne->orig_router);
 		destroy_name_list(ne->name_list);
 		destroy_face_list(ne->face_list);	
 		hashtb_next(e);		
