@@ -267,7 +267,7 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 															&ptr_in, &length_in);
 					content_data = (unsigned char **)calloc(1,sizeof(char *));
 					*content_data = (unsigned char *) calloc(length_in, 
-																sizeof(char ));
+																sizeof(char *));
 					memcpy (*content_data, ptr_in, length_in);
 					ret=0;
 				}
