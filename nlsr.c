@@ -1208,7 +1208,8 @@ nlsr_destroy( void )
 		ccns_slice_destroy(&nlsr->slice);
 	if ( nlsr->ccns != NULL )
 		ccns_close(&nlsr->ccns, NULL, NULL);
-	
+	if (nlsr->closure != NULL )
+		free(nlsr->closure);
 
 	close(nlsr->nlsr_api_server_sock_fd);
 
