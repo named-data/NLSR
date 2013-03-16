@@ -1204,10 +1204,11 @@ nlsr_destroy( void )
 	destroy_npt();
 	destroy_routing_table();
 
-	if ( nlsr->ccns != NULL )
-		ccns_close(&nlsr->ccns, NULL, NULL);
 	if ( nlsr->slice != NULL ) 
 		ccns_slice_destroy(&nlsr->slice);
+	if ( nlsr->ccns != NULL )
+		ccns_close(&nlsr->ccns, NULL, NULL);
+	
 
 	close(nlsr->nlsr_api_server_sock_fd);
 

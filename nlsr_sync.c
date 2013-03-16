@@ -174,7 +174,7 @@ get_name_part(struct name_prefix *name_part,struct ccn_charbuf * interest_ccnb,
 
 
 int 
-get_content_by_content_name(char *content_name, unsigned char **content_data,
+get_content_by_content_name(char *content_name, unsigned char *content_data,
 							char *orig_router)
 {
 	
@@ -265,9 +265,9 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 					length_in=length;
 					ccn_content_get_value(ptr_in, length_in, &pcobuf1, 
 															&ptr_in, &length_in);
-					*content_data = (unsigned char *) calloc(length_in, 
-																sizeof(char *));
-					memcpy (*content_data, ptr_in, length_in);
+					content_data = (unsigned char *) calloc(length_in, 
+																sizeof(unsigned char ));
+					memcpy (content_data, ptr_in, length_in);
 					ret=0;
 				}
 			}
@@ -479,7 +479,7 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 				if ( nlsr->debugging )
 					printf("New NAME LSA.....\n");	
 				int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
-												&content_data,orig_router->name);
+												content_data,orig_router->name);
 				if ( chk_con == 0 ){
 					if ( nlsr->debugging )
 						printf("Content Data: %s \n",content_data);
@@ -495,7 +495,7 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 				if ( nlsr->debugging )
 					printf("Name LSA / Newer Name LSA already xists in LSDB\n");
 				int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri)
-											, &content_data,orig_router->name);
+											, content_data,orig_router->name);
 
 				if ( chk_con == 0 ){
 					if ( nlsr->debugging )
@@ -543,7 +543,7 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 					if ( nlsr->debugging )
 						printf("New Adj LSA.....\n");	
 					int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
-												&content_data,orig_router->name);
+												content_data,orig_router->name);
 
 					if ( chk_con == 0 ){
 						if ( nlsr->debugging )
@@ -560,7 +560,7 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 					if ( nlsr->debugging )
 						printf("Adj LSA / Newer Adj LSA already exists in LSDB\n");
 					int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
-												&content_data,orig_router->name);
+												content_data,orig_router->name);
 					if ( chk_con == 0 ){
 						if ( nlsr->debugging )
 							printf("Content Data: %s \n",content_data);
@@ -603,7 +603,7 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 					if ( nlsr->debugging )
 						printf("New Cor LSA.....\n");	
 					int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
-																&content_data,
+																content_data,
 															orig_router->name);
 
 					if ( chk_con == 0 ){
@@ -621,7 +621,7 @@ process_content_from_sync (struct ccn_charbuf *content_name,
 					if ( nlsr->debugging )
 						printf("Cor LSA / Newer Cor LSA already exists in LSDB\n");
 					int chk_con=get_content_by_content_name(ccn_charbuf_as_string(uri), 
-												&content_data,orig_router->name);
+												content_data,orig_router->name);
 					if ( chk_con == 0 ){
 						if ( nlsr->debugging )
 							printf("Content Data: %s \n",content_data);
