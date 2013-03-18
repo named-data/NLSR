@@ -251,14 +251,32 @@ get_content_by_content_name(char *content_name, unsigned char **content_data,
 			if ( nlsr->debugging )	
 				printf("Content Parsing result: %d\n",chk_cont); 
 			if ( contain_key_name(ptr, &pcobuf1) == 1){
-						
-				int res_verify=verify_key(ptr,&pcobuf1,1);
+				int res_verify=-1;
+				int key_exists=0;
+				struct ccn_charbuf *key_name=get_key_name(ptr, &pcobuf1);
+				struct ccn_charbuf *key_uri = ccn_charbuf_create();
+				ccn_uri_append(key_uri, key_name->buf, key_name->length, 0);
+				key_exists=does_key_exist(ccn_charbuf_as_string(key_uri));
+				int key_type=get_key_type_from_key_name(key_name);
+
+				if ( key_exists == 1 && key_type == NLSR_KEY ){				
+					res_verify=0;
+				}
+				else{
+					res_verify=verify_key(ptr,&pcobuf1,1);
+				}
 
 				if ( res_verify != 0 ){
 					if ( nlsr->debugging )
 						printf("Error in verfiying keys !! :( \n");
+					ccn_charbuf_destroy(&key_name);
+					ccn_charbuf_destroy(&key_uri);
 				}
 				else{
+					if ( key_exists == 0 )
+						add_key(ccn_charbuf_as_string(key_uri));
+					ccn_charbuf_destroy(&key_name);
+					ccn_charbuf_destroy(&key_uri);
 					if ( nlsr->debugging )
 						printf("Key verification is successful :)\n");
 					ptr_in=ptr;

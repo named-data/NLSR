@@ -41,6 +41,7 @@
 #include "nlsr_sync.h"
 #include "nlsr_face.h"
 #include "nlsr_fib.h"
+#include "nlsr_km.h"
 
 
 #define ON_ERROR_DESTROY(resval) \
@@ -1198,11 +1199,13 @@ nlsr_destroy( void )
 	destroy_all_face_by_nlsr();	
 	destroy_faces_for_nbrs();
 	
+
 	destroy_adl();
 	destroy_npl();
 	destroy_lsdb();	
 	destroy_npt();
 	destroy_routing_table();
+	destroy_keys();
 
 	if ( nlsr->slice != NULL ) 
 		ccns_slice_destroy(&nlsr->slice);
@@ -1296,6 +1299,7 @@ init_nlsr(void)
 	nlsr->npl = hashtb_create(sizeof(struct name_prefix_list_entry), NULL);
 	nlsr->npt = hashtb_create(sizeof(struct npt_entry), NULL);
 	nlsr->routing_table = hashtb_create(sizeof(struct routing_table_entry), NULL);
+	nlsr->keys = hashtb_create(sizeof(struct nlsr_key), NULL);
 
 	nlsr->lsdb=(struct linkStateDatabase *)malloc(sizeof(struct linkStateDatabase));
 	nlsr->lsdb->adj_lsdb = hashtb_create(sizeof(struct alsa), NULL);

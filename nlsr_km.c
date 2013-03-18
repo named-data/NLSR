@@ -17,6 +17,7 @@
 #include "nlsr.h"
 #include "nlsr_km.h"
 #include "nlsr_km_util.h"
+#include "utility.h"
 
 int
 sign_content_with_user_defined_keystore(struct ccn_charbuf *content_name,
@@ -454,3 +455,108 @@ verify_key(const unsigned char *ccnb,
 	return ret;
 }
 
+void
+destroy_keys(void)
+{	
+	int i, key_element;
+	struct nlsr_key *key;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->keys, e);
+	key_element=hashtb_n(nlsr->keys);
+
+	for(i=0;i<key_element;i++)
+	{
+		key=e->data;
+		free(key->key_name);
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	
+	if( nlsr->keys )
+		hashtb_destroy(&nlsr->keys);
+
+}
+
+void
+print_keys(void){
+
+	if ( nlsr->debugging )
+		printf("print_keys called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"print_keys called \n");		
+	
+	int i, key_element;
+	struct nlsr_key *key;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->keys, e);
+	key_element=hashtb_n(nlsr->keys);
+
+	for(i=0;i<key_element;i++)
+	{
+		key=e->data;
+		
+		if ( nlsr->debugging )
+			printf("Key : %s \n",key->key_name);
+			
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+}
+
+int
+does_key_exist(char *keyname){
+	if (nlsr->debugging)
+	{
+		printf("does_key_exist called\n");
+		printf("Keyname : %s \n",keyname);
+	}
+
+	int ret=0;
+
+	unsigned *v;
+	v = hashtb_lookup(nlsr->keys, keyname, strlen(keyname));
+	if (v != NULL){
+		ret = 1;
+		if (nlsr->debugging)
+			printf("Key Found\n");
+	}
+	
+	return ret;
+}
+
+void
+add_key(char *keyname){
+	if (nlsr->debugging)
+	{
+		printf("add_key called\n");
+		printf("Keyname : %s \n",keyname);
+	}
+
+	struct nlsr_key *key;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee; 	
+    	int res;
+
+   	hashtb_start(nlsr->keys, e);
+    	res = hashtb_seek(e, keyname, strlen(keyname), 0);
+
+	if(res == HT_NEW_ENTRY )
+	{
+		key=e->data;
+		key->key_name=(char *)calloc(strlen(keyname)+1,sizeof(char));
+		memcpy(key->key_name,keyname,strlen(keyname)+1);
+	}
+
+	if (nlsr->debugging)
+		print_keys();
+}

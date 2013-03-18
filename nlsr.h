@@ -62,6 +62,7 @@ struct nlsr
 	struct hashtb *rev_map;
 	struct hashtb *npt;
 	struct hashtb *routing_table;
+	struct hashtb *keys;
 
 
 	struct linkStateDatabase *lsdb;

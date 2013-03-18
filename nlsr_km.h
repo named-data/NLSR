@@ -11,6 +11,9 @@ enum key_type{
 };
 
 
+struct nlsr_key{
+	char *key_name;
+};
 
 
 int
@@ -32,5 +35,10 @@ struct ccn_charbuf * get_key_name(const unsigned char *ccnb,
 int verify_key(const unsigned char *ccnb, 
 				struct ccn_parsed_ContentObject *pco,
 				int content_type);
+
+void add_key(char *keyname);
+int does_key_exist(char *keyname);
+
+void destroy_keys(void);
 
 #endif
