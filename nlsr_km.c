@@ -28,7 +28,8 @@ sign_content_with_user_defined_keystore(struct ccn_charbuf *content_name,
 										char *keystore_passphrase,
 										char *key_repo_name,
 										char *site_name,
-										char *router_name){
+										char *router_name,
+										long int freshness){
 	
 	if ( nlsr->debugging )
 		printf("sign_content_with_user_defined_keystore called\n");
@@ -116,11 +117,15 @@ sign_content_with_user_defined_keystore(struct ccn_charbuf *content_name,
   	ccn_charbuf_append(sp.template_ccnb, keyname->buf, keyname->length); 
 	ccn_charbuf_append_closer(sp.template_ccnb); // KeyName closer
   	ccn_charbuf_append_closer(sp.template_ccnb); // KeyLocator closer
+
+	ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", freshness);
+    sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+
   	ccn_charbuf_append_closer(sp.template_ccnb); // SignedInfo closer
 	
 	sp.sp_flags |= CCN_SP_TEMPL_KEY_LOCATOR;
 	sp.sp_flags |= CCN_SP_FINAL_BLOCK;
-	sp.freshness = 60;
+	//sp.freshness = 60;
 
 
 	if (pubid_out->length != sizeof(sp.pubid)){

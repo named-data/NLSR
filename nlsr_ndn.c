@@ -309,7 +309,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 											nlsr->keystore_passphrase,
 											nlsr->root_key_prefix,
 											nlsr->site_name,
-											nlsr->router_name);
+											nlsr->router_name,
+											10);
 
 
 		//res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info",strlen("info")); 

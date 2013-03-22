@@ -25,7 +25,8 @@ sign_content_with_user_defined_keystore(struct ccn_charbuf *content_name,
 										char *keystore_passphrase,
 										char *key_repo_name,
 										char *site_name,
-										char *router_name);
+										char *router_name,
+										long int freshness);
 
 int	contain_key_name(const unsigned char *ccnb, 
 					struct ccn_parsed_ContentObject *pco);

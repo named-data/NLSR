@@ -794,7 +794,8 @@ write_data_to_repo(char *data, char *name_prefix)
 										nlsr->keystore_passphrase,
 										nlsr->root_key_prefix,
 										nlsr->site_name,
-										nlsr->router_name);	
+										nlsr->router_name,
+										60);	
 
 
 	blockread=resultbuf->length;
