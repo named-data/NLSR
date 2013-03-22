@@ -282,7 +282,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 
 		//pubid is the digest_result pubkey is result
 		ccn_get_public_key(nlsr->ccn, NULL, pubid, pubkey);
-
+		*/
 		
 
 		struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
@@ -293,7 +293,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
        	 	sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
 		ccn_charbuf_append_closer(sp.template_ccnb);
 		
-
+		/*
 		char *raw_data=(char *)malloc(20);
 		memset(raw_data,0,20);
 		sprintf(raw_data,"%s", nlsr->lsdb->lsdb_version);
@@ -301,6 +301,7 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 
 		struct ccn_charbuf *resultbuf=ccn_charbuf_create();
 
+		/*
 		res=sign_content_with_user_defined_keystore(name,
 											resultbuf,
 											"info",
@@ -311,9 +312,9 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 											nlsr->site_name,
 											nlsr->router_name,
 											10);
-
-
-		//res= ccn_sign_content(nlsr->ccn, data, name, &sp, "info",strlen("info")); 
+	
+		*/
+		res= ccn_sign_content(nlsr->ccn, resultbuf, name, &sp, "info",strlen("info")); 
 		if(res >= 0)
 		{
 			if ( nlsr->debugging )
@@ -323,7 +324,8 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 									" is successful \n");
 
 		}
-    		res=ccn_put(nlsr->ccn,resultbuf->buf,resultbuf->length);		
+    		
+		res=ccn_put(nlsr->ccn,resultbuf->buf,resultbuf->length);		
 		if(res >= 0)
 		{
 			if ( nlsr->debugging )
@@ -509,7 +511,7 @@ process_incoming_content_info(struct ccn_closure *selfp,
 								"ghbor: %s Length:%d\n",nbr->name,nbr->length);
 
 	
-
+	/*
 	if ( contain_key_name(info->content_ccnb, info->pco) == 1){
 		int res_verify=-1;
 		int key_exists=0;
@@ -566,7 +568,8 @@ process_incoming_content_info(struct ccn_closure *selfp,
 
 		}	
 	}
-	/*
+	*/
+	
 					update_adjacent_timed_out_zero_to_adl(nbr);	
 					update_adjacent_status_to_adl(nbr,NBR_ACTIVE);
 					print_adjacent_from_adl();
@@ -590,7 +593,7 @@ process_incoming_content_info(struct ccn_closure *selfp,
 														" already scheduled\n");
 					}
 
-	*/
+	
 	if ( nbr->name != NULL )
 		free(nbr->name);
 	if ( nbr != NULL )
