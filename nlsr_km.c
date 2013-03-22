@@ -122,10 +122,15 @@ sign_content_with_user_defined_keystore(struct ccn_charbuf *content_name,
     //sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
 
   	ccn_charbuf_append_closer(sp.template_ccnb); // SignedInfo closer
+
+	ccn_charbuf_append_tt(sp.template_ccnb, CCN_DTAG_SignedInfo, CCN_DTAG);
+	ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", freshness);
+    sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+	ccn_charbuf_append_closer(sp.template_ccnb);
 	
 	sp.sp_flags |= CCN_SP_TEMPL_KEY_LOCATOR;
 	sp.sp_flags |= CCN_SP_FINAL_BLOCK;
-	sp.freshness = freshness;
+	//sp.freshness = freshness;
 
 
 	if (pubid_out->length != sizeof(sp.pubid)){
