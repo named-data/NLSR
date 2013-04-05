@@ -104,4 +104,7 @@ double get_hyperbolic_theta(char *router);
 
 void destroy_lsdb(void);
 
+void 
+get_lsdb_summary(struct ccn_charbuf *lsdb_data);
+
 #endif

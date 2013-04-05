@@ -158,6 +158,35 @@ get_lsa_identifier(struct name_prefix *lsaId,struct ccn_closure *selfp,
 }
 
 
+int 
+get_ls_type(struct ccn_closure *selfp, struct ccn_upcall_info *info)
+{
+	int res,i;
+	int nlsr_position=0;
+	int name_comps=(int)info->interest_comps->n;
+
+	int ret=0;
+
+	for(i=0;i<name_comps;i++)
+	{
+		res=ccn_name_comp_strcmp(info->interest_ccnb,info->interest_comps,i,"nlsr");
+		if( res == 0)
+		{
+			nlsr_position=i;
+			break;
+		}	
+	}
+
+
+	const unsigned char *comp_ptr1;
+	size_t comp_size;
+	res=ccn_name_comp_get(info->interest_ccnb, info->interest_comps,nlsr_position+2,&comp_ptr1, &comp_size);
+
+	ret=atoi((char *)comp_ptr1);
+
+	return ret;	
+
+}
 
 /** 
 * Call back function registered in ccnd to get all interest coming to NLSR 
@@ -240,6 +269,14 @@ process_incoming_interest(struct ccn_closure *selfp, struct ccn_upcall_info *inf
 	if(!strcmp((char *)comp_ptr1,"info"))
 	{
 		process_incoming_interest_info(selfp,info);
+	}
+	if(!strcmp((char *)comp_ptr1,"lsdb"))
+	{
+		process_incoming_interest_lsdb(selfp,info);
+	}
+	if(!strcmp((char *)comp_ptr1,"lsa"))
+	{
+		process_incoming_interest_lsa(selfp,info);
 	}
 
 }
@@ -366,6 +403,267 @@ process_incoming_interest_info(struct ccn_closure *selfp, struct ccn_upcall_info
 	ccn_charbuf_destroy(&name);
 
 }
+
+
+
+void 
+process_incoming_interest_lsdb(struct ccn_closure *selfp, struct ccn_upcall_info *info)
+{
+	//printf("process_incoming_interest_lsdb called \n");
+
+	if ( nlsr->debugging )
+		printf("process_incoming_interest_lsdb called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_interest_lsdb called \n");
+	
+
+	int l,res;
+	const unsigned char *exclbase;
+	size_t size;
+	struct ccn_buf_decoder decoder;
+	struct ccn_buf_decoder *d;
+	const unsigned char *comp;
+	int dbcmp=0;
+
+	l = info->pi->offset[CCN_PI_E_Exclude] - info->pi->offset[CCN_PI_B_Exclude];
+	if (l > 0) 
+	{
+		comp = NULL;
+		size = 0;
+		exclbase = info->interest_ccnb + info->pi->offset[CCN_PI_B_Exclude];
+		d = ccn_buf_decoder_start(&decoder, exclbase, l);
+		if (ccn_buf_match_dtag(d, CCN_DTAG_Exclude)) 
+		{
+			ccn_buf_advance(d);
+			if (ccn_buf_match_dtag(d, CCN_DTAG_Any))
+				ccn_buf_advance_past_element(d);
+			if (ccn_buf_match_dtag(d, CCN_DTAG_Component)) 
+			{
+				ccn_buf_advance(d);
+				ccn_buf_match_blob(d, &comp, &size);
+				ccn_buf_check_close(d);			
+
+
+			}
+			ccn_buf_check_close(d);
+		}
+		if (comp != NULL)
+		{
+			if ( nlsr->debugging )
+			{
+				printf("LSDB Version in Exclusion Filter is %s\n",comp);
+				printf("LSDB Version of own NLSR is: %s \n",nlsr->lsdb->lsdb_version);
+			}
+			if ( nlsr->detailed_logging )
+			{
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSDB Version in Exclusion Filter is %s\n",comp);
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSDB Version of own NLSR is: %s \n",nlsr->lsdb->lsdb_version);
+			}
+			dbcmp=strcmp(nlsr->lsdb->lsdb_version,(char *)comp);
+		}
+		/* Now comp points to the start of your potential number, and size is its length */
+	}
+	else
+	{
+		if ( nlsr->debugging )
+			printf("LSDB Version in Exclusion Filter is: None Added\n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"LSDB Version in Exclusion Filter is: None Added\n");
+		dbcmp=1;		
+
+	}
+
+	struct ccn_charbuf *data=ccn_charbuf_create();
+	struct ccn_charbuf *name=ccn_charbuf_create();
+	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
+	
+	ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]);
+
+	sp.template_ccnb=ccn_charbuf_create();
+	ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
+	ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
+        sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+        ccn_charbuf_append_closer(sp.template_ccnb);
+
+
+	if(dbcmp>0)
+	{
+		if ( nlsr->debugging )
+		{
+			printf("Has Updated Database than Neighbor\n");
+			printf("Sending LSDB Summary of Updated LSDB Content...\n");			
+		}
+		if ( nlsr->detailed_logging )
+		{
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Has Updated Database than Neighbor\n");
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending LSDB Summary of Updated LSDB Content...\n");	
+		}
+		ccn_name_append_str(name,nlsr->lsdb->lsdb_version);
+
+		struct ccn_charbuf *lsdb_data=ccn_charbuf_create();
+		get_lsdb_summary(lsdb_data);
+
+		char *raw_data=ccn_charbuf_as_string(lsdb_data);
+
+		//printf("Content Data to be sent: %s \n",raw_data);		
+
+		if( nlsr->is_build_adj_lsa_sheduled == 1 || strlen((char *)raw_data) == 0 )
+		{
+			 res= ccn_sign_content(nlsr->ccn, data, name, &sp, "WAIT" , strlen("WAIT"));
+		}
+		else
+		{
+			res= ccn_sign_content(nlsr->ccn, data, name, &sp, raw_data , strlen(raw_data));
+		}
+
+		if(res >= 0)
+		{
+			if ( nlsr->debugging )
+				printf("Signing LSDB Summary of Updated LSDB Content is successful  \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing LSDB Summary of Updated LSDB Content is successful  \n");
+		}		
+
+	    	res=ccn_put(nlsr->ccn,data->buf,data->length);
+
+		if(res >= 0)
+		{
+			if ( nlsr->debugging )
+				printf("Sending LSDB Summary of Updated LSDB Content is successful  \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending LSDB Summary of Updated LSDB Content is successful  \n");
+		}
+		
+		ccn_charbuf_destroy(&lsdb_data);
+	}
+	else
+	{
+		if ( nlsr->debugging )
+		{
+			printf("Does not have Updated Database than Neighbor\n");		
+			printf("Sending NACK Content.....\n");	
+		}
+		if ( nlsr->detailed_logging )
+		{
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Does not have Updated Database than Neighbor\n");		
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending NACK Content.....\n");
+		}
+
+		res= ccn_sign_content(nlsr->ccn, data, name, &sp, "NACK", strlen("NACK")); 
+
+		if(res >= 0)
+		{
+			if ( nlsr->debugging )
+				printf("Signing NACK Content is successful  \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing NACK Content is successful  \n");
+		}
+
+	    	res=ccn_put(nlsr->ccn,data->buf,data->length);
+
+		if(res >= 0)
+		{
+			if ( nlsr->debugging )
+				printf("Sending NACK Content is successful  \n");
+			if ( nlsr->detailed_logging )
+				writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending NACK Content is successful  \n");
+		}
+
+		
+	}
+
+	ccn_charbuf_destroy(&data);
+	ccn_charbuf_destroy(&name);
+	ccn_charbuf_destroy(&sp.template_ccnb);
+
+
+}
+
+
+void 
+process_incoming_interest_lsa(struct ccn_closure *selfp, struct ccn_upcall_info *info)
+{
+	if ( nlsr->debugging )
+		printf("process_incoming_interest_lsa called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"process_incoming_interest_lsa called \n");
+
+	int res;
+
+	struct name_prefix *lsaId=(struct name_prefix *)malloc(sizeof(struct name_prefix ));
+	get_lsa_identifier(lsaId,selfp,info,0);
+
+	//printf("LSA Identifier: %s Length: %d\n",lsaId->name,lsaId->length);
+	int ls_type=get_ls_type(selfp, info);
+
+	struct ccn_charbuf *lsa_data=ccn_charbuf_create();
+
+	if ( ls_type == LS_TYPE_NAME )
+	{
+		if ( nlsr->debugging )
+			printf("Interest Received for NAME LSA \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Received for NAME LSA \n");
+		get_name_lsa_data(lsa_data,lsaId);
+	}
+	else if ( ls_type == LS_TYPE_ADJ )
+	{
+		if ( nlsr->debugging )
+			printf("Interest Received for ADJ LSA \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest Received for ADJ LSA \n");
+		get_adj_lsa_data(lsa_data,lsaId);
+	}
+
+	char *rdata=ccn_charbuf_as_string(lsa_data);
+	char *raw_data=(char *)malloc(strlen(rdata)+1);
+	memset(raw_data,0,strlen(rdata)+1);
+	memcpy(raw_data,(char *)rdata,strlen(rdata)+1);
+	//printf("Content Data to be sent: %s\n",raw_data);
+
+	struct ccn_charbuf *data=ccn_charbuf_create();
+	struct ccn_charbuf *name=ccn_charbuf_create();
+	struct ccn_signing_params sp=CCN_SIGNING_PARAMS_INIT;
+
+	ccn_charbuf_append(name, info->interest_ccnb + info->pi->offset[CCN_PI_B_Name],info->pi->offset[CCN_PI_E_Name] - info->pi->offset[CCN_PI_B_Name]); 
+
+	sp.template_ccnb=ccn_charbuf_create();
+	ccn_charbuf_append_tt(sp.template_ccnb,CCN_DTAG_SignedInfo, CCN_DTAG);
+	ccnb_tagged_putf(sp.template_ccnb, CCN_DTAG_FreshnessSeconds, "%ld", 10);
+        sp.sp_flags |= CCN_SP_TEMPL_FRESHNESS;
+        ccn_charbuf_append_closer(sp.template_ccnb);
+
+	res= ccn_sign_content(nlsr->ccn, data, name, &sp, raw_data , strlen(raw_data)); 
+
+	if(res >= 0)
+	{
+		if ( nlsr->debugging )
+			printf("Signing LSA Content is successful  \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Signing LSA Content is successful  \n");
+	}
+
+	res=ccn_put(nlsr->ccn,data->buf,data->length);
+
+	if(res >= 0)
+	{
+		if ( nlsr->debugging )
+			printf("Sending LSA Content is successful  \n");
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending LSA Content is successful  \n");
+	}
+
+
+
+	ccn_charbuf_destroy(&data);
+	ccn_charbuf_destroy(&name);
+	ccn_charbuf_destroy(&sp.template_ccnb);
+	ccn_charbuf_destroy(&lsa_data);
+
+	free(raw_data);
+	free(lsaId);
+}
+
 
 
 /**
@@ -842,3 +1140,162 @@ send_info_interest_to_neighbor(struct name_prefix *nbr)
 	ccn_charbuf_destroy(&name);
 	free(int_name);
 }
+
+
+void 
+send_lsdb_interest_to_nbr(struct name_prefix *nbr)
+{
+	/*
+	if ( nlsr->debugging )
+		printf("send_lsdb_interest_to_nbr called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_lsdb_interest_to_nbr called \n");
+
+	char *last_lsdb_version=get_nbr_lsdb_version(nbr->name);
+
+	if(last_lsdb_version !=NULL)
+	{
+		
+
+		if ( nlsr->debugging )
+			printf("Last LSDB Version: %s \n",last_lsdb_version);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Last LSDB Version: %s \n",last_lsdb_version);
+
+		struct ccn_charbuf *name;
+		int res;
+		char lsdb_str[5];
+		char nlsr_str[5];
+
+		memset(&nlsr_str,0,5);
+		sprintf(nlsr_str,"nlsr");
+		memset(&lsdb_str,0,5);
+		sprintf(lsdb_str,"lsdb");		
+		//make and send interest with exclusion filter as last_lsdb_version
+		if ( nlsr->debugging )
+			printf("Sending interest for name prefix:%s/%s/%s\n",nbr->name,nlsr_str,lsdb_str);
+		if ( nlsr->detailed_logging )
+			writeLogg(__FILE__,__FUNCTION__,__LINE__,"Sending interest for name prefix:%s/%s/%s\n",nbr->name,nlsr_str,lsdb_str);
+			
+		name=ccn_charbuf_create();
+		res=ccn_name_from_uri(name,nbr->name);
+
+		if( res >= 0)
+		{
+			ccn_name_append_str(name,nlsr_str);
+			ccn_name_append_str(name,lsdb_str);
+			// adding Exclusion filter 
+
+			struct ccn_charbuf *templ;
+			templ = ccn_charbuf_create();
+
+			struct ccn_charbuf *c;
+			c = ccn_charbuf_create();
+
+
+			ccn_charbuf_append_tt(templ, CCN_DTAG_Interest, CCN_DTAG);
+			ccn_charbuf_append_tt(templ, CCN_DTAG_Name, CCN_DTAG);
+			ccn_charbuf_append_closer(templ); // </Name> 
+			ccn_charbuf_append_tt(templ, CCN_DTAG_Exclude, CCN_DTAG);
+			ccnb_tagged_putf(templ, CCN_DTAG_Any, "");
+			ccn_charbuf_reset(c);
+			ccn_charbuf_putf(c, "%s", last_lsdb_version);
+			
+			ccnb_append_tagged_blob(templ, CCN_DTAG_Component, c->buf, c->length);
+			ccn_charbuf_append_closer(templ); // </Exclude> 
+			ccn_charbuf_append_tt(templ, CCN_DTAG_Scope, CCN_DTAG);
+			ccn_charbuf_append_tt(templ, 1, CCN_UDATA);
+			ccn_charbuf_append(templ, "2", 1);
+			ccn_charbuf_append_closer(templ); // </Scope> 
+
+			appendLifetime(templ,nlsr->interest_resend_time);
+
+			ccn_charbuf_append_closer(templ); // </Interest> 
+
+
+			// Adding Exclusion filter done 
+
+			res=ccn_express_interest(nlsr->ccn,name,&(nlsr->in_content),templ);
+
+			if ( res >= 0 )
+			{
+				if ( nlsr->debugging )
+					printf("Interest sending Successfull .... \n");
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Interest sending Successfull .... \n");	
+				update_adjacent_last_lsdb_requested_to_adl(nbr->name,get_current_time_sec());
+
+			}
+			ccn_charbuf_destroy(&c);
+			ccn_charbuf_destroy(&templ);
+		}
+		ccn_charbuf_destroy(&name);
+	}	
+	set_is_lsdb_send_interest_scheduled_to_zero(nbr->name);
+	*/
+}
+
+
+
+int 
+send_lsdb_interest(struct ccn_schedule *sched, void *clienth, struct ccn_scheduled_event *ev, int flags)
+{
+
+	/*
+	if ( nlsr->debugging )
+		printf("send_lsdb_interest called \n");
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"send_lsdb_interest called \n");	
+
+	if(flags == CCN_SCHEDULE_CANCEL)
+	{
+ 	 	return -1;
+	}
+
+	 nlsr_lock();
+
+	int i, adl_element;
+	struct ndn_neighbor *nbr;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->adl, e);
+	adl_element=hashtb_n(nlsr->adl);
+
+	for(i=0;i<adl_element;i++)
+	{
+		nbr=e->data;
+
+		if(nbr->status == NBR_ACTIVE)
+		{	
+			if(nbr->is_lsdb_send_interest_scheduled == 0)
+			{
+				long int time_diff=get_nbr_time_diff_lsdb_req(nbr->neighbor->name);
+				if ( nlsr->debugging )
+					printf("Time since last time LSDB requested : %ld Seconds for Neighbor: %s \n",time_diff,nbr->neighbor->name);
+				if ( nlsr->detailed_logging )
+					writeLogg(__FILE__,__FUNCTION__,__LINE__,"Time since last time LSDB requested : %ld Seconds for Neighbor: %s \n",time_diff,nbr->neighbor->name);	
+						
+
+				if( time_diff >= ( get_lsdb_synch_interval(nbr->neighbor->name) + get_nbr_random_time_component(nbr->neighbor->name) ) )
+				{
+					nbr->is_lsdb_send_interest_scheduled=1;
+					send_lsdb_interest_to_nbr(nbr->neighbor);
+				}
+			}
+		}
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+	nlsr->event_send_lsdb_interest= ccn_schedule_event(nlsr->sched, 30000000, &send_lsdb_interest, NULL, 0);
+
+	 nlsr_unlock();
+
+	*/
+	return 0;
+
+}
+
+

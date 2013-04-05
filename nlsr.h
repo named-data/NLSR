@@ -53,6 +53,7 @@ struct nlsr
 	struct ccn_schedule *sched;
     	struct ccn_scheduled_event *event;
 	struct ccn_scheduled_event *event_send_info_interest;
+	struct ccn_scheduled_event *event_send_lsdb_interest;
 	struct ccn_scheduled_event *event_build_adj_lsa;
 	struct ccn_scheduled_event *event_calculate_route;
 

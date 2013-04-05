@@ -2721,6 +2721,133 @@ destroy_cor_lsdb(void)
 		hashtb_destroy(&nlsr->lsdb->cor_lsdb);
 }
 
+
+
+void 
+get_name_lsdb_summary(struct ccn_charbuf *name_lsdb_data)
+{
+	//printf("get_name_lsdb_summary called \n");
+	if ( nlsr->debugging )
+		printf("get_name_lsdb_summary called  \n");	
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_name_lsdb_summary called  \n");
+	
+	int i, name_lsdb_element;
+
+	struct nlsa *name_lsa;
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->lsdb->name_lsdb, e);
+	name_lsdb_element=hashtb_n(nlsr->lsdb->name_lsdb);
+
+	for(i=0;i<name_lsdb_element;i++)
+	{
+		name_lsa=e->data;
+
+		ccn_charbuf_append_string(name_lsdb_data,name_lsa->header->orig_router->name);
+		ccn_charbuf_append_string(name_lsdb_data,"|");
+
+		char *lst=(char *)malloc(20);
+		memset(lst,0,20);
+		sprintf(lst,"%d",name_lsa->header->ls_type);
+		ccn_charbuf_append_string(name_lsdb_data,lst);
+		free(lst);
+		ccn_charbuf_append_string(name_lsdb_data,"|");
+
+		char *lsid=(char *)malloc(20);
+		memset(lsid,0,20);
+		sprintf(lsid,"%ld",name_lsa->header->ls_id);
+		ccn_charbuf_append_string(name_lsdb_data,lsid);
+		free(lsid);
+		ccn_charbuf_append_string(name_lsdb_data,"|");
+
+		ccn_charbuf_append_string(name_lsdb_data,name_lsa->header->orig_time);
+		ccn_charbuf_append_string(name_lsdb_data,"|");
+
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+
+}
+
+
+void 
+get_adj_lsdb_summary(struct ccn_charbuf *adj_lsdb_data)
+{
+	if ( nlsr->debugging )
+		printf("get_adj_lsdb_summary called  \n");	
+	if ( nlsr->detailed_logging )
+		writeLogg(__FILE__,__FUNCTION__,__LINE__,"get_adj_lsdb_summary called  \n");
+	int i, adj_lsdb_element;
+	struct alsa *adj_lsa;
+
+	struct hashtb_enumerator ee;
+    	struct hashtb_enumerator *e = &ee;
+    	
+    	hashtb_start(nlsr->lsdb->adj_lsdb, e);
+	adj_lsdb_element=hashtb_n(nlsr->lsdb->adj_lsdb);
+
+	for(i=0;i<adj_lsdb_element;i++)
+	{
+		adj_lsa=e->data;
+
+		ccn_charbuf_append_string(adj_lsdb_data,adj_lsa->header->orig_router->name);
+		ccn_charbuf_append_string(adj_lsdb_data,"|");
+		
+		char *lst=(char *)malloc(20);
+		memset(lst,0,20);
+		sprintf(lst,"%d",adj_lsa->header->ls_type);
+		ccn_charbuf_append_string(adj_lsdb_data,lst);
+		free(lst);
+		ccn_charbuf_append_string(adj_lsdb_data,"|");
+
+		ccn_charbuf_append_string(adj_lsdb_data,adj_lsa->header->orig_time);
+		ccn_charbuf_append_string(adj_lsdb_data,"|");
+
+		hashtb_next(e);		
+	}
+
+	hashtb_end(e);
+}
+
+
+void 
+get_lsdb_summary(struct ccn_charbuf *lsdb_data)
+{
+	struct ccn_charbuf *name_lsdb_data=ccn_charbuf_create();
+	struct ccn_charbuf *adj_lsdb_data=ccn_charbuf_create();
+
+	get_name_lsdb_summary(name_lsdb_data);
+	get_adj_lsdb_summary(adj_lsdb_data);
+
+	long int num_lsa=get_name_lsdb_num_element() + get_adj_lsdb_num_element();
+	char *num_element=(char *)malloc(15);
+	memset(num_element,0,15);
+	sprintf(num_element,"%ld",num_lsa);
+
+	if( num_lsa > 0)
+	{
+		ccn_charbuf_append_string(lsdb_data,num_element);
+		ccn_charbuf_append_string(lsdb_data,"|");
+	}
+	if(name_lsdb_data->length>0)
+	{
+		char *data1=ccn_charbuf_as_string(name_lsdb_data);
+		ccn_charbuf_append_string(lsdb_data,(char *)data1);
+	}
+	if(adj_lsdb_data->length>0)
+	{
+		char *data2=ccn_charbuf_as_string(adj_lsdb_data);
+		ccn_charbuf_append_string(lsdb_data,(char *)data2);
+	}
+	ccn_charbuf_destroy(&name_lsdb_data);
+	ccn_charbuf_destroy(&adj_lsdb_data);
+	free(num_element);
+
+}
+
 void
 destroy_lsdb(void)
 {
