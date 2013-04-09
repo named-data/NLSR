@@ -1,3 +1,4 @@
+#Use this script to setup your keys. 
 #!/bin/bash
 
 EXPECTED_ARGS=3 #site, operator, router
@@ -19,6 +20,12 @@ fi
 
 
 KSUITE=/home/"$(whoami)"/ndn-testbed-key-suite/bin
+if [ ! -d ${KSUITE} ]; then
+    echo "This script requires key signing suite available at:"
+	echo "git://github.com/named-data/ndn-testbed-key-suite.git"
+	echo "If you already have it, set the variable KSUITE of the script accordingly"
+fi
+
 SITE=$1
 OP=$2
 RTR=$3
