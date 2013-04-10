@@ -19,7 +19,7 @@ if [ "${RESULT:-null}" = null ]; then
 fi
 
 
-KSUITE=${HOME}ndn-testbed-key-suite/
+KSUITE=${HOME}/ndn-testbed-key-suite/
 echo $KSUITE
 if [ ! -d ${KSUITE} ]; then
     echo "This script requires key signing suite available at:"
