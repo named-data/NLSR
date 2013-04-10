@@ -24,6 +24,7 @@ if [ ! -d ${KSUITE} ]; then
     echo "This script requires key signing suite available at:"
 	echo "git://github.com/named-data/ndn-testbed-key-suite.git"
 	echo "If you already have it, set the variable KSUITE of the script accordingly"
+	exit
 fi
 
 SITE=$1
