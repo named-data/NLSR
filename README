@@ -98,9 +98,11 @@ overlay network. By default NLSR creates udp tunnels.
 
 **Following Commands are only required for hyperbolic routing**
 
-14. hyperbolic-routing <on> 
-This option enables hyperbolic routing. With this option on, link state routing
-doesn't work. Following field is required if hyperbolic routing is on. 
+14. hyperbolic-routing <on|dry_run> 
+This option enables hyperbolic routing. With option on, link state routing
+doesn't work while with dry_run option route is calculated by Link State 
+routing and hyperbolic routes are just recorded only in log file.Following 
+field is required if hyperbolic routing is on. 
 
 15. hyperbolic-cordinate <radius> <theta> 
 Polar coordinates of a node in a form of radius and theta. Currently, calculation 
