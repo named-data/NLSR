@@ -109,8 +109,6 @@ Polar coordinates of a node in a form of radius and theta. Currently, calculatio
 of the polar coordinates is an offline process and done by 
 the operator of a site. 
 
-** Following parameters are required for the key management**
-
 16. keystore-path </path/to/keystore/file name(.ccnx_keystore)>
 Path to the keystore. The keystore folder is usually created  by
 ccninitkeystore. Keys in this folder will be used by NLSR to sign the packets. 
@@ -122,3 +120,5 @@ e.g. root-key-prefix /ndn/keys
 18. site-name </name/prefix/of/site> 
 Name of the site of which this router is a part. 
 
+19. network </name/of/network>
+Name of the networks router belongs to 
