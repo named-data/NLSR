@@ -2,7 +2,7 @@
 #define ADL_HPP
 
 #include <ndn-cpp-dev/face.hpp>
-#include "adjacent.hpp"
+#include "nlsr_adjacent.hpp"
 #include<list>
 
 using namespace std;

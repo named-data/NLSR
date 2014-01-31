@@ -4,10 +4,10 @@
 #include<cstdlib>
 #include <sstream>
 
-#include "conf_processor.hpp"
-#include "conf_param.hpp"
+#include "nlsr_conf_processor.hpp"
+#include "nlsr_conf_param.hpp"
 #include "nlsr_tokenizer.hpp"
-#include "adjacent.hpp"
+#include "nlsr_adjacent.hpp"
 
 
 using namespace std;

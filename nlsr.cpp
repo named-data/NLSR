@@ -5,8 +5,8 @@
 #include <cstdlib>
 
 #include "nlsr.hpp"
-#include "conf_param.hpp"
-#include "conf_processor.hpp"
+#include "nlsr_conf_param.hpp"
+#include "nlsr_conf_processor.hpp"
 
 
 using namespace ndn;

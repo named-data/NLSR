@@ -1,7 +1,7 @@
 #include<iostream>
 #include<algorithm>
 
-#include "npl.hpp"
+#include "nlsr_npl.hpp"
 
 using namespace std;
 

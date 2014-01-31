@@ -5,9 +5,9 @@
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/util/scheduler.hpp>
 
-#include "conf_param.hpp"
-#include "adl.hpp"
-#include "npl.hpp"
+#include "nlsr_conf_param.hpp"
+#include "nlsr_adl.hpp"
+#include "nlsr_npl.hpp"
 #include "nlsr_im.hpp"
 #include "nlsr_dm.hpp"
 

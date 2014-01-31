@@ -1,8 +1,8 @@
 #include<iostream>
 #include<algorithm>
 
-#include "adl.hpp"
-#include "adjacent.hpp"
+#include "nlsr_adl.hpp"
+#include "nlsr_adjacent.hpp"
 
 Adl::Adl(){
 }

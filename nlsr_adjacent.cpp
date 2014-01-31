@@ -1,7 +1,7 @@
 #include<iostream>
 #include<string>
 
-#include "adjacent.hpp"
+#include "nlsr_adjacent.hpp"
 
 using namespace std;
 

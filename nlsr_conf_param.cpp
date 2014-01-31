@@ -1,5 +1,5 @@
 #include<iostream>
-#include "conf_param.hpp"
+#include "nlsr_conf_param.hpp"
 
 using namespace std;
 
