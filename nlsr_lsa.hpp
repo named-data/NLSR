@@ -64,7 +64,7 @@ protected:
 	uint32_t lifeTime;
 };
 
-class NameLsa:Lsa{
+class NameLsa:public Lsa{
 public:
 	NameLsa()
 		: Lsa()
@@ -73,6 +73,7 @@ public:
 		setLsType(1);
 	}
 
+	NameLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt, Npl& npl);
 
 	Npl& getNpl(){
 		return npl;
@@ -90,7 +91,10 @@ private:
 	
 };
 
-class AdjLsa:Lsa{
+std::ostream& 
+operator<<(std::ostream& os, NameLsa& nLsa);
+
+class AdjLsa: public Lsa{
 public:
 	AdjLsa()
 		: Lsa()
@@ -103,7 +107,7 @@ private:
 	Adl adl;
 };
 
-class CorLsa:Lsa{
+class CorLsa:public Lsa{
 public:
 	CorLsa()
 		:Lsa()

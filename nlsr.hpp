@@ -10,6 +10,7 @@
 #include "nlsr_npl.hpp"
 #include "nlsr_im.hpp"
 #include "nlsr_dm.hpp"
+#include "nlsr_lsdb.hpp"
 
 
 using namespace ndn;
@@ -28,9 +29,32 @@ public:
 		, npl()
     , im()
     , dm()
+    , nlsrLsdb()
+    , nameLsaSeq(0)
+    , adjLsaSeq(0)
+    , corLsaSeq(0)
 	{
 		isDaemonProcess=false;
 		configFileName="nlsr.conf";	
+	}
+
+	nlsr(string confFile, uint32_t nlsn, uint32_t alsn, uint32_t clsn)
+		: io(ndn::make_shared<boost::asio::io_service>())
+		, nlsrFace(io)
+		, scheduler(*io)
+		, configFileName()	
+		, confParam()
+		, adl()
+		, npl()
+    , im()
+    , dm()
+    , nlsrLsdb()
+	{
+		isDaemonProcess=false;
+		configFileName=confFile;
+		nameLsaSeq=nlsn;
+    adjLsaSeq=alsn;
+    corLsaSeq=clsn;
 	}
 
 	void nlsrRegistrationFailed(const ptr_lib::shared_ptr<const Name>&);
@@ -96,6 +120,37 @@ public:
 	DataManager& getDm(){
 		return dm;
 	}
+
+	Lsdb& getLsdb(){
+		return nlsrLsdb;
+	}
+
+	uint32_t getNameLsaSeq()
+	{
+		return nameLsaSeq;
+	}
+
+	void setNameLsaSeq(uint32_t nlsn){
+		nameLsaSeq=nlsn;
+	}
+
+	uint32_t getAdjLsaSeq()
+	{
+		return adjLsaSeq;
+	}
+
+	void setAdjLsaSeq(uint32_t alsn){
+		adjLsaSeq=alsn;
+	}
+
+	uint32_t getCorLsaSeq()
+	{
+		return corLsaSeq;
+	}
+
+	void setCorLsaSeq(uint32_t clsn){
+		corLsaSeq=clsn;
+	}
 		
 private:
 	ConfParameter confParam;
@@ -109,6 +164,11 @@ private:
 	DataManager dm;
 	bool isDaemonProcess;
 	string configFileName;
+	Lsdb nlsrLsdb;
+	uint32_t nameLsaSeq;
+	uint32_t adjLsaSeq;
+	uint32_t corLsaSeq;
+	
 
 };
 

@@ -35,7 +35,9 @@ Npl::insertIntoNpl(string& name){
 
 void
 Npl::printNpl(){
+	int i=1;
 	for( std::list<string>::iterator it=nameList.begin(); it != nameList.end(); it++){
-		cout<<"Name : "<<(*it)<<endl;
+		cout<<"Name "<<i<<" : "<<(*it)<<endl;
+		i++;
 	}
 }

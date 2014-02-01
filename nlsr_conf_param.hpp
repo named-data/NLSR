@@ -94,7 +94,7 @@ class ConfParameter{
 			routerDeadInterval=rdt;
 		}
 
-		long int setRouterDeadInterval(){
+		long int getRouterDeadInterval(){
 			return routerDeadInterval;
 		}
 

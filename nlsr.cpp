@@ -7,6 +7,7 @@
 #include "nlsr.hpp"
 #include "nlsr_conf_param.hpp"
 #include "nlsr_conf_processor.hpp"
+#include "nlsr_lsdb.hpp"
 
 
 using namespace ndn;
@@ -58,10 +59,15 @@ main(){
 	ConfFileProcessor cfp(nlsr.getConfFileName());
 	cfp.processConfFile(nlsr);
 	nlsr.getConfParameter().buildRouterPrefix();
+
+	nlsr.getLsdb().buildAndInstallOwnNameLsa(nlsr);
+	
+	
 /* debugging purpose start */
 	cout <<	nlsr.getConfParameter(); ;
 	nlsr.getAdl().printAdl();
 	nlsr.getNpl().printNpl();
+	nlsr.getLsdb().printNameLsdb();
 /* debugging purpose end */
 	nlsr.setInterestFilterNlsr(nlsr.getConfParameter().getRouterPrefix());
 	nlsr.getIm().scheduleInfoInterest(nlsr,1);
