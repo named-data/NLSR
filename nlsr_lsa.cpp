@@ -69,3 +69,44 @@ operator<<(std::ostream& os, NameLsa& nLsa)
 
 	return os;  
 }
+
+
+CorLsa::CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
+	      																							, double r, double theta)
+{
+	origRouter=origR;
+	lsType=lst;
+	lsSeqNo=lsn;
+	lifeTime=lt;
+	corRad=r;
+	corTheta=theta;
+}
+
+string 
+CorLsa::getCorLsaData()
+{
+	string corLsaData;
+	corLsaData=origRouter + "|";
+	corLsaData+=(boost::lexical_cast<std::string>(lsType) + "|");
+	corLsaData+=(boost::lexical_cast<std::string>(lsSeqNo) + "|");
+	corLsaData+=(boost::lexical_cast<std::string>(lifeTime) + "|");
+	corLsaData+=(boost::lexical_cast<std::string>(corRad) + "|");
+	corLsaData+=(boost::lexical_cast<std::string>(corTheta) + "|");
+
+	return corLsaData;
+}
+
+std::ostream& 
+operator<<(std::ostream& os, CorLsa& cLsa)
+{
+	os<<"Cor Lsa: "<<endl;
+	os<<"  Origination Router: "<<cLsa.getOrigRouter()<<endl;
+	os<<"  Ls Type: "<<(unsigned short)cLsa.getLsType()<<endl;
+	os<<"  Ls Seq No: "<<(unsigned int)cLsa.getLsSeqNo()<<endl;
+	os<<"  Ls Lifetime: "<<(unsigned int)cLsa.getLifeTime()<<endl;
+	os<<"    Hyperbolic Radius: "<<cLsa.getCorRadius()<<endl;
+	os<<"    Hyperbolic Theta: "<<cLsa.getCorTheta()<<endl;
+
+	return os;
+}
+

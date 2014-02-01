@@ -113,11 +113,37 @@ public:
 		:Lsa()
 	{
 	}
+
+	CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
+	      																							, double r, double theta);
+	string getCorLsaData();
+	
+	double getCorRadius()
+	{
+		return corRad;
+	}
+	
+	void setCorRadius(double cr)
+	{
+		corRad=cr;
+	}
+
+	double getCorTheta()
+	{
+		return corTheta;
+	}
+
+	void setCorTheta(double ct){
+		corTheta=ct;
+	}
 private:
 	double corRad;
 	double corTheta;
 
 };
+
+std::ostream& 
+operator<<(std::ostream& os, CorLsa& cLsa);
 
 
 

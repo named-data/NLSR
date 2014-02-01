@@ -61,6 +61,7 @@ main(){
 	nlsr.getConfParameter().buildRouterPrefix();
 
 	nlsr.getLsdb().buildAndInstallOwnNameLsa(nlsr);
+	nlsr.getLsdb().buildAndInstallOwnCorLsa(nlsr);
 	
 	
 /* debugging purpose start */
@@ -68,6 +69,7 @@ main(){
 	nlsr.getAdl().printAdl();
 	nlsr.getNpl().printNpl();
 	nlsr.getLsdb().printNameLsdb();
+	nlsr.getLsdb().printCorLsdb();
 /* debugging purpose end */
 	nlsr.setInterestFilterNlsr(nlsr.getConfParameter().getRouterPrefix());
 	nlsr.getIm().scheduleInfoInterest(nlsr,1);

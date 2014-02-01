@@ -28,6 +28,8 @@ Lsdb::doesLsaExist(string key, int lsType)
 	
 }
 
+//Name LSA and LSDB related functions start here
+
 static bool
 nameLsaCompare(NameLsa& nlsa1, NameLsa& nlsa2){
 	return nlsa1.getLsaKey()==nlsa1.getLsaKey();
@@ -48,7 +50,7 @@ Lsdb::buildAndInstallOwnNameLsa(nlsr& pnlsr)
 					, pnlsr.getConfParameter().getRouterDeadInterval()
 					, pnlsr.getNpl() );
 	pnlsr.setNameLsaSeq(pnlsr.getNameLsaSeq()+1);
-	cout<<nameLsa;
+	//cout<<nameLsa;
 	return installNameLsa(nameLsa);
 
 }
@@ -106,16 +108,6 @@ Lsdb::removeNameLsa(string& key)
 {
 	return false;
 }
-	
-void 
-Lsdb::printNameLsdb()
-{
-	for( std::list<NameLsa>::iterator it=nameLsdb.begin(); 
-	                                                 it!= nameLsdb.end() ; it++)
-	{
-		cout<< (*it) <<endl;
-	}
-}
 
 bool 
 Lsdb::doesNameLsaExist(string key)
@@ -131,15 +123,145 @@ Lsdb::doesNameLsaExist(string key)
 	return true;
 }
 
+void 
+Lsdb::printNameLsdb()
+{
+	for( std::list<NameLsa>::iterator it=nameLsdb.begin(); 
+	                                                 it!= nameLsdb.end() ; it++)
+	{
+		cout<< (*it) <<endl;
+	}
+}
+
+// Cor LSA and LSDB related Functions start here
+
+static bool
+corLsaCompare(CorLsa& clsa1, CorLsa& clsa2){
+	return clsa1.getLsaKey()==clsa1.getLsaKey();
+}
+
+static bool
+corLsaCompareByKey(CorLsa& clsa, string& key){
+	return clsa.getLsaKey()==key;
+}
 
 bool 
-Lsdb::doesAdjLsaExist(string key)
+Lsdb::buildAndInstallOwnCorLsa(nlsr& pnlsr){
+	CorLsa corLsa(pnlsr.getConfParameter().getRouterPrefix()
+					, 1
+					, pnlsr.getCorLsaSeq()+1
+					, pnlsr.getConfParameter().getRouterDeadInterval()
+					, pnlsr.getConfParameter().getCorR()
+					, pnlsr.getConfParameter().getCorTheta() );
+	pnlsr.setCorLsaSeq(pnlsr.getCorLsaSeq()+1);
+	//cout<<corLsa;
+	installCorLsa(corLsa);
+
+}
+
+CorLsa& 
+Lsdb::getCorLsa(string key)
 {
+	std::list< CorLsa >::iterator it = std::find_if( corLsdb.begin(), 
+																		corLsdb.end(),	
+   																	bind(corLsaCompareByKey, _1, key));
+
+	if( it != corLsdb.end()){
+		return (*it);
+	}
+}
+
+bool 
+Lsdb::installCorLsa(CorLsa &clsa)
+{
+	bool doesLsaExist_ = doesCorLsaExist(clsa.getLsaKey());
+	if ( !doesLsaExist_ )
+	{
+		// add cor LSA
+		addCorLsa(clsa);
+	}
+	else
+	{
+		// check for newer cor LSA
+		CorLsa oldCorLsa=getCorLsa(clsa.getLsaKey());
+		
+	}
+	
+	return true;
+}
+
+bool 
+Lsdb::addCorLsa(CorLsa& clsa)
+{
+	std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(), 
+																		corLsdb.end(),	
+   																	bind(corLsaCompare, _1, clsa));
+
+	if( it == corLsdb.end()){
+		corLsdb.push_back(clsa);
+		return true;
+	}
 	return false;
+}
+
+bool 
+Lsdb::removeCorLsa(string& key)
+{
+
 }
 
 bool 
 Lsdb::doesCorLsaExist(string key)
 {
-	return false;
+	std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(), 
+																		corLsdb.end(),	
+   																	bind(corLsaCompareByKey, _1, key));
+
+	if( it == corLsdb.end()){
+		return false;
+	}
+
+	return true;
 }
+
+void 
+Lsdb::printCorLsdb() //debugging
+{
+	for( std::list<CorLsa>::iterator it=corLsdb.begin(); 
+	                                                 it!= corLsdb.end() ; it++)
+	{
+		cout<< (*it) <<endl;
+	}
+}
+
+
+// Adj LSA and LSDB related function starts here
+
+static bool
+adjLsaCompare(AdjLsa& alsa1, AdjLsa& alsa2){
+	return alsa1.getLsaKey()==alsa1.getLsaKey();
+}
+
+static bool
+adjLsaCompareByKey(AdjLsa& alsa, string& key){
+	return alsa.getLsaKey()==key;
+}
+
+
+
+
+bool 
+Lsdb::doesAdjLsaExist(string key)
+{
+	std::list< AdjLsa >::iterator it = std::find_if( adjLsdb.begin(), 
+																		adjLsdb.end(),	
+   																	bind(adjLsaCompareByKey, _1, key));
+
+	if( it == adjLsdb.end()){
+		return false;
+	}
+
+	return true;
+}
+
+
