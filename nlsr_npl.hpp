@@ -14,6 +14,14 @@ public:
 	~Npl();
 
 	int insertIntoNpl(string& name);
+	int getNplSize()
+	{
+		return nameList.size();
+	}
+	std::list<string>& getNameList()
+	{
+		return nameList;
+	}
 	void printNpl();
 
 private:
