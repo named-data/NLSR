@@ -9,7 +9,7 @@ class Adjacent{
 		Adjacent()
 			:adjacentName()
 			,connectingFace(0)
-			,linkCost(0.0)
+			,linkCost(10.0)
 			,status(0)
 			,interestTimedOutNo(0)
 		{

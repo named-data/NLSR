@@ -60,6 +60,44 @@ public:
     isDaemonProcess=value;
   }
 
+	ConfParameter& getConfParameter(){
+		return confParam;
+	}
+
+	Adl& getAdl(){
+		return adl;
+	}
+
+	Npl& getNpl(){
+		return npl;
+	}
+
+	ndn::shared_ptr<boost::asio::io_service>& getIo()
+	{
+		return io;
+	}
+
+	ndn::Scheduler& getScheduler(){
+		return scheduler;
+	}
+
+	ndn::Face& getNlsrFace(){
+		return nlsrFace;
+	}
+
+	ndn::KeyChain& getKeyChain(){
+		return kChain;
+	}
+
+	interestManager& getIm(){
+		return im;
+	}
+
+	DataManager& getDm(){
+		return dm;
+	}
+		
+private:
 	ConfParameter confParam;
 	Adl adl;
 	Npl npl;
@@ -69,9 +107,6 @@ public:
 	ndn::KeyChain kChain;
 	interestManager im;
 	DataManager dm;
-
-private:
-	
 	bool isDaemonProcess;
 	string configFileName;
 

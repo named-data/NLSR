@@ -108,7 +108,7 @@ ConfFileProcessor::processConfCommandNetwork(nlsr& pnlsr, string command){
 		if(command[0] == '/' ){
 			command.erase(0,1);
 		}
-		pnlsr.confParam.setNetwork(command);
+		pnlsr.getConfParameter().setNetwork(command);
 	}
 	return 0;
 }
@@ -125,7 +125,7 @@ ConfFileProcessor::processConfCommandSiteName(nlsr& pnlsr, string command){
 		if(command[0] == '/' ){
 			command.erase(0,1);
 		}
-		pnlsr.confParam.setSiteName(command);
+		pnlsr.getConfParameter().setSiteName(command);
 	}
 	return 0;
 }
@@ -142,7 +142,7 @@ ConfFileProcessor::processConfCommandRouterName(nlsr& pnlsr, string command){
 		if(command[0] == '/' ){
 			command.erase(0,1);
 		}
-		pnlsr.confParam.setRouterName(command);
+		pnlsr.getConfParameter().setRouterName(command);
 	}
 	return 0;
 }
@@ -156,7 +156,7 @@ ConfFileProcessor::processConfCommandInterestRetryNumber(nlsr& pnlsr, string com
 		stringstream ss(command.c_str());
 		ss>>irn;
 		if ( irn >=1 && irn <=5){
-			pnlsr.confParam.setInterestRetryNumber(irn);
+			pnlsr.getConfParameter().setInterestRetryNumber(irn);
 		}
 	}
 	return 0;
@@ -171,7 +171,7 @@ ConfFileProcessor::processConfCommandInterestResendTime(nlsr& pnlsr, string comm
 		stringstream ss(command.c_str());
 		ss>>irt;
 		if( irt>=1 && irt <=20){
-			pnlsr.confParam.setInterestResendTime(irt);
+			pnlsr.getConfParameter().setInterestResendTime(irt);
 		}
 	}
 	return 0;
@@ -186,7 +186,7 @@ ConfFileProcessor::processConfCommandLsaRefreshTime(nlsr& pnlsr, string command)
 		stringstream ss(command.c_str());
 		ss>>lrt;
 		if ( lrt>= 240 && lrt<=7200){
-			pnlsr.confParam.setLsaRefreshTime(lrt);
+			pnlsr.getConfParameter().setLsaRefreshTime(lrt);
 		}
 	}
 	return 0;
@@ -201,7 +201,7 @@ ConfFileProcessor::processConfCommandMaxFacesPerPrefix(nlsr& pnlsr, string comma
 		stringstream ss(command.c_str());
 		ss>>mfpp;
 		if ( mfpp>=0 && mfpp<=60){
-			pnlsr.confParam.setMaxFacesPerPrefix(mfpp);
+			pnlsr.getConfParameter().setMaxFacesPerPrefix(mfpp);
 		}
 	}
 	return 0;
@@ -213,10 +213,10 @@ ConfFileProcessor::processConfCommandTunnelType(nlsr& pnlsr, string command){
 		cerr <<" Wrong command format ! [tunnel-type tcp/udp]!"<<endl;
 	}else{
 		if(command == "tcp" || command == "TCP" ){
-			pnlsr.confParam.setTunnelType(1);
+			pnlsr.getConfParameter().setTunnelType(1);
 		}
 		else if(command == "udp" || command == "UDP"){
-			pnlsr.confParam.setTunnelType(0);
+			pnlsr.getConfParameter().setTunnelType(0);
 		}else{
 			cerr <<" Wrong command format ! [tunnel-type tcp/udp]!"<<endl;
 		}
@@ -230,7 +230,7 @@ ConfFileProcessor::processConfCommandChronosyncSyncPrefix(nlsr& pnlsr,
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [chronosync-sync-prefix name/prefix]!"<<endl;
 	}else{
-		pnlsr.confParam.setChronosyncSyncPrefix(command);
+		pnlsr.getConfParameter().setChronosyncSyncPrefix(command);
 	}
 	return 0;
 }
@@ -241,7 +241,7 @@ ConfFileProcessor::processConfCommandLogDir(nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [log-dir /path/to/log/dir]!"<<endl;
 	}else{
-		pnlsr.confParam.setLogDir(command);
+		pnlsr.getConfParameter().setLogDir(command);
 	}
 	return 0;
 }
@@ -252,10 +252,10 @@ ConfFileProcessor::processConfCommandDebugging(nlsr& pnlsr, string command){
 		cerr <<" Wrong command format ! [debugging on/of]!"<<endl;
 	}else{
 		if(command == "on" || command == "ON" ){
-			pnlsr.confParam.setDebugging(1);
+			pnlsr.getConfParameter().setDebugging(1);
 		}
 		else if(command == "off" || command == "off"){
-			pnlsr.confParam.setDebugging(0);
+			pnlsr.getConfParameter().setDebugging(0);
 		}else{
 			cerr <<" Wrong command format ! [debugging on/off]!"<<endl;
 		}
@@ -269,10 +269,10 @@ ConfFileProcessor::processConfCommandDetailedLogging(nlsr& pnlsr, string command
 		cerr <<" Wrong command format ! [detailed-logging on/off]!"<<endl;
 	}else{
 		if(command == "on" || command == "ON" ){
-			pnlsr.confParam.setDetailedLogging(1);
+			pnlsr.getConfParameter().setDetailedLogging(1);
 		}
 		else if(command == "off" || command == "off"){
-			pnlsr.confParam.setDetailedLogging(0);
+			pnlsr.getConfParameter().setDetailedLogging(0);
 		}else{
 			cerr <<" Wrong command format ! [detailed-logging on/off]!"<<endl;
 		}
@@ -286,13 +286,13 @@ ConfFileProcessor::processConfCommandIsHyperbolicCalc(nlsr& pnlsr, string comman
 		cerr <<" Wrong command format ! [hyperbolic-routing on/off/dry-run]!"<<endl;
 	}else{
 		if(command == "on" || command == "ON" ){
-			pnlsr.confParam.setIsHyperbolicCalc(1);
+			pnlsr.getConfParameter().setIsHyperbolicCalc(1);
 		}
 		else if(command == "dry-run" || command == "DRY-RUN"){
-			pnlsr.confParam.setIsHyperbolicCalc(2);
+			pnlsr.getConfParameter().setIsHyperbolicCalc(2);
 		}
 		else if(command == "off" || command == "off"){
-			pnlsr.confParam.setIsHyperbolicCalc(0);
+			pnlsr.getConfParameter().setIsHyperbolicCalc(0);
 		}else{
 			cerr <<" Wrong command format ! [hyperbolic-routing on/off/dry-run]!"<<endl;
 		}
@@ -304,7 +304,7 @@ int
 ConfFileProcessor::processConfCommandHyperbolicCordinate(nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [hyperbolic-cordinate r 0]!"<<endl;
-		if (pnlsr.confParam.getIsHyperbolicCalc() > 0 ){
+		if (pnlsr.getConfParameter().getIsHyperbolicCalc() > 0 ){
 			return -1;
 		}
 	}else{
@@ -316,8 +316,8 @@ ConfFileProcessor::processConfCommandHyperbolicCordinate(nlsr& pnlsr, string com
 		ssr>>r;
 		sst>>theta;
 		
-		pnlsr.confParam.setCorR(r);
-		pnlsr.confParam.setCorTheta(theta);
+		pnlsr.getConfParameter().setCorR(r);
+		pnlsr.getConfParameter().setCorTheta(theta);
 	}
 	return 0;
 }
@@ -330,7 +330,7 @@ ConfFileProcessor::processConfCommandNdnNeighbor(nlsr& pnlsr, string command){
 	}else{
 		nlsrTokenizer nt(command," ");
 		Adjacent adj(nt.getFirstToken(),0,0.0,0,0);
-		pnlsr.adl.insert(adj);
+		pnlsr.getAdl().insert(adj);
 	}
 	return 0;	
 }
@@ -340,7 +340,7 @@ ConfFileProcessor::processConfCommandNdnName(nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [ndnname name/prefix]!"<<endl;
 	}else{
-		pnlsr.npl.insertIntoNpl(command);
+		pnlsr.getNpl().insertIntoNpl(command);
 	}
 	return 0;
 }
@@ -350,7 +350,7 @@ int
 ConfFileProcessor::processConfCommandLinkCost(nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [link-cost nbr/name cost]!"<<endl;
-		if (pnlsr.confParam.getIsHyperbolicCalc() > 0 ){
+		if (pnlsr.getConfParameter().getIsHyperbolicCalc() > 0 ){
 			return -1;
 		}
 	}else{
@@ -360,7 +360,7 @@ ConfFileProcessor::processConfCommandLinkCost(nlsr& pnlsr, string command){
 		double cost;
 		sst>>cost;
 		
-		pnlsr.adl.updateAdjacentLinkCost(nt.getFirstToken(),cost);
+		pnlsr.getAdl().updateAdjacentLinkCost(nt.getFirstToken(),cost);
 	}
 	return 0;
 }

@@ -11,13 +11,57 @@ using namespace std;
 using namespace ndn;
 
 void
-DataManager::processContent(const nlsr& pnlsr, 
+DataManager::processContent(nlsr& pnlsr, 
                   const ndn::ptr_lib::shared_ptr<const ndn::Interest> &interest,
 								               const ndn::ptr_lib::shared_ptr<ndn::Data> &data)
 {
 
 	cout << "I: " << interest->toUri() << endl;
-  	cout << "D: " << data->getName().toUri() << endl;
-	cout << "Data Content: " << data->getContent() << endl;
 
+	string dataName(data->getName().toUri());
+	string dataContent((char *)data->getContent().value());
+	
+  	cout << "D: " << dataName << endl;
+	cout << "Data Content: " << dataContent << endl;
+
+	nlsrTokenizer nt(dataName,"/");
+	string chkString("info");
+	if( nt.doesTokenExist(chkString) ){
+		processContentInfo(pnlsr,dataName,dataContent);
+	}
+
+}
+
+void
+DataManager::processContentInfo(nlsr& pnlsr, string& dataName,
+                                                           string& dataContent)
+{
+	nlsrTokenizer nt(dataName,"/");
+	string chkString("info");
+	string neighbor="/" + nt.getFirstToken()
+							+nt.getTokenString(0,nt.getTokenPosition(chkString)-1);
+	int status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
+	int infoIntTimedOutCount=pnlsr.getAdl().getTimedOutInterestCount(neighbor);
+	//debugging purpose start
+	cout <<"Before Updates: " <<endl;
+	cout <<"Neighbor : "<<neighbor<<endl;
+	cout<<"Status: "<< status << endl;
+	cout<<"Info Interest Timed out: "<< infoIntTimedOutCount <<endl;
+	//debugging purpose end
+
+	pnlsr.getAdl().setStatusOfNeighbor(neighbor,1);
+	pnlsr.getAdl().setTimedOutInterestCount(neighbor,0);
+
+	status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
+	infoIntTimedOutCount=pnlsr.getAdl().getTimedOutInterestCount(neighbor);
+
+	//debugging purpose
+	cout <<"After Updates: " <<endl;
+	cout <<"Neighbor : "<<neighbor<<endl;
+	cout<<"Status: "<< status << endl;
+	cout<<"Info Interest Timed out: "<< infoIntTimedOutCount <<endl;
+	//debugging purpose end
+
+	/* Need to schedule event for Adjacency LSA building */
+	
 }

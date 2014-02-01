@@ -18,12 +18,46 @@ interestManager::processInterest( nlsr& pnlsr,
 {
 
 	cout << "<< I: " << *interest << endl;
-  Data data(ndn::Name(interest->getName()).append("testApp").appendVersion());
-  data.setFreshnessPeriod(1000); // 10 sec
-  data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
-  pnlsr.kChain.sign(data);
-  cout << ">> D: " << data << endl;
-  pnlsr.nlsrFace.put(data);
+	string intName=interest->getName().toUri();
+	cout << "Interest Received for Name: "<< intName <<endl;
+	nlsrTokenizer nt(intName,"/");
+	string chkString("info");
+	if( nt.doesTokenExist(chkString) ){
+		string nbr=nt.getTokenString(nt.getTokenPosition(chkString)+1);
+		cout <<"Neighbor: " << nbr <<endl;
+		processInterestInfo(pnlsr,nbr,interest);
+	}
+	
+  //Data data(ndn::Name(interest->getName()).append("testApp").appendVersion());
+  //data.setFreshnessPeriod(1000); // 10 sec
+  //data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
+  //pnlsr.getKeyChain().sign(data);
+  //cout << ">> D: " << data << endl;
+  //pnlsr.getNlsrFace().put(data);
+}
+
+void 
+interestManager::processInterestInfo(nlsr& pnlsr, string& neighbor,
+							            const ptr_lib::shared_ptr<const Interest> &interest)
+{
+	if ( pnlsr.getAdl().isNeighbor(neighbor) )
+	{
+		Data data(ndn::Name(interest->getName()).appendVersion());
+  		data.setFreshnessPeriod(1000); // 10 sec
+  		data.setContent((const uint8_t*)"info", sizeof("info"));
+  		pnlsr.getKeyChain().sign(data);
+  		cout << ">> D: " << data << endl;
+  		pnlsr.getNlsrFace().put(data);
+
+  		int status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
+  		if ( status == 0 )
+  		{
+			string intName=neighbor +"/"+"info"+
+                                     pnlsr.getConfParameter().getRouterPrefix();
+    		expressInterest(	pnlsr,intName,2,
+                              pnlsr.getConfParameter().getInterestResendTime());
+  		}
+	}
 }
 
 void 
@@ -32,14 +66,41 @@ interestManager::processInterestTimedOut(nlsr& pnlsr,
 {
   	cout << "Timed out interest : " << interest->getName().toUri() << endl;
 	string intName=	interest->getName().toUri();
-	cout << intName <<endl;
 	nlsrTokenizer nt(intName,"/");
 	string chkString("info");
 	if( nt.doesTokenExist(chkString) ){
-		string nbr=nt.getTokenString(0,nt.getTokenPosition(chkString)-1);
-		cout<<"Neighbor :"<<nbr<<endl;
+		string nbr="/" + nt.getFirstToken()
+							+nt.getTokenString(0,nt.getTokenPosition(chkString)-1);
+		processInterestTimedOutInfo( pnlsr , nbr , interest);
 	}
 
+}
+
+void 
+interestManager::processInterestTimedOutInfo(nlsr& pnlsr, string& neighbor,
+                 const ndn::ptr_lib::shared_ptr<const ndn::Interest> &interest)
+{
+	pnlsr.getAdl().incrementTimedOutInterestCount(neighbor);
+	int status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
+	int infoIntTimedOutCount=pnlsr.getAdl().getTimedOutInterestCount(neighbor);
+	cout<<"Neighbor: "<< neighbor << endl;
+	cout<<"Status: "<< status << endl;
+	cout<<"Info Interest Timed out: "<< infoIntTimedOutCount <<endl;
+
+	if((infoIntTimedOutCount < pnlsr.getConfParameter().getInterestRetryNumber()))
+	{
+		string intName=neighbor +"/"+"info"+
+                                     pnlsr.getConfParameter().getRouterPrefix();
+    expressInterest(	pnlsr,intName,2,
+                              pnlsr.getConfParameter().getInterestResendTime());
+	}
+	else if ( (status == 1) && 
+	  (infoIntTimedOutCount == pnlsr.getConfParameter().getInterestRetryNumber()))
+	{
+		pnlsr.getAdl().setStatusOfNeighbor(neighbor,0);
+		// schedule event for building adjacency LSA
+	}
+	
 }
 
 void 
@@ -51,9 +112,9 @@ interestManager::expressInterest(nlsr& pnlsr,const string& interestNamePrefix,
   i.setInterestLifetime(seconds*1000);
 	i.setMustBeFresh(true);
 
-	pnlsr.nlsrFace.expressInterest(i,
+	pnlsr.getNlsrFace().expressInterest(i,
                   ndn::func_lib::bind(&DataManager::processContent, 
-                  &pnlsr.dm, boost::ref(pnlsr),_1, _2),
+                  &pnlsr.getDm(), boost::ref(pnlsr),_1, _2),
                   ndn::func_lib::bind(&interestManager::processInterestTimedOut,
                                                     this,boost::ref(pnlsr),_1));
 }
@@ -62,22 +123,22 @@ interestManager::expressInterest(nlsr& pnlsr,const string& interestNamePrefix,
 void 
 interestManager::sendScheduledInfoInterest(nlsr& pnlsr, int seconds)
 {
-	std::list<Adjacent> adjList=pnlsr.adl.getAdjList();
+	std::list<Adjacent> adjList=pnlsr.getAdl().getAdjList();
 	for(std::list<Adjacent>::iterator it=adjList.begin(); it!=adjList.end();++it)
   {
 		string adjName=(*it).getAdjacentName()+"/"+"info"+
-                                              pnlsr.confParam.getRouterPrefix();
-		expressInterest(	pnlsr,adjName,2,pnlsr.confParam.getInterestResendTime());
+                                              pnlsr.getConfParameter().getRouterPrefix();
+		expressInterest(	pnlsr,adjName,2,pnlsr.getConfParameter().getInterestResendTime());
 	}
 
-	scheduleInfoInterest(pnlsr, pnlsr.confParam.getInfoInterestInterval());
+	scheduleInfoInterest(pnlsr, pnlsr.getConfParameter().getInfoInterestInterval());
 
 }
 
 void 
 interestManager::scheduleInfoInterest(nlsr& pnlsr, int seconds)
 {
-	pnlsr.scheduler.scheduleEvent(ndn::time::seconds(seconds),
+	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(seconds),
 							ndn::bind(&interestManager::sendScheduledInfoInterest, this, 
 																									boost::ref(pnlsr),seconds));
 }

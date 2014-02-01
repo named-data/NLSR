@@ -16,14 +16,14 @@ void
 nlsr::nlsrRegistrationFailed(const ptr_lib::shared_ptr<const Name>&)
 {
   cerr << "ERROR: Failed to register prefix in local hub's daemon" << endl;
-  nlsrFace.shutdown();
+  getNlsrFace().shutdown();
 }
 
 
 void
 nlsr::setInterestFilterNlsr(const string& name)
 {
-  nlsrFace.setInterestFilter(name,
+  getNlsrFace().setInterestFilter(name,
                         func_lib::bind(&interestManager::processInterest, &im, 
                         boost::ref(*this), _1, _2),
                         func_lib::bind(&nlsr::nlsrRegistrationFailed, this, _1));
@@ -33,7 +33,7 @@ nlsr::setInterestFilterNlsr(const string& name)
 void
 nlsr::startEventLoop()
 {
-	nlsrFace.processEvents();
+	getNlsrFace().processEvents();
 }
 
 int 
@@ -57,14 +57,14 @@ main(){
 	nlsr.setConfFileName("nlsr.conf");
 	ConfFileProcessor cfp(nlsr.getConfFileName());
 	cfp.processConfFile(nlsr);
-	nlsr.confParam.buildRouterPrefix();
+	nlsr.getConfParameter().buildRouterPrefix();
 /* debugging purpose start */
-	cout <<	nlsr.confParam ;
-	nlsr.adl.printAdl();
-	nlsr.npl.printNpl();
+	cout <<	nlsr.getConfParameter(); ;
+	nlsr.getAdl().printAdl();
+	nlsr.getNpl().printNpl();
 /* debugging purpose end */
-	nlsr.setInterestFilterNlsr(nlsr.confParam.getRouterPrefix());
-	nlsr.im.scheduleInfoInterest(nlsr,1);
+	nlsr.setInterestFilterNlsr(nlsr.getConfParameter().getRouterPrefix());
+	nlsr.getIm().scheduleInfoInterest(nlsr,1);
 
 	
 	

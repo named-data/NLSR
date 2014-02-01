@@ -62,6 +62,90 @@ Adl::updateAdjacentLinkCost(string adjName, double lc){
 
 }
 
+bool 
+Adl::isNeighbor(string adjName){
+	Adjacent adj(adjName);
+	std::list<Adjacent >::iterator it = std::find_if( adjList.begin(), 
+								adjList.end(),	
+   								bind(&adjacent_compare, _1, adj));
+
+	if( it == adjList.end()){
+		return false;
+	}
+
+	return true;
+}
+
+void 
+Adl::incrementTimedOutInterestCount(string& neighbor){
+	Adjacent adj(neighbor);
+	std::list<Adjacent >::iterator it = std::find_if( adjList.begin(), 
+								adjList.end(),	
+   								bind(&adjacent_compare, _1, adj));
+
+	if( it == adjList.end()){
+		return ;
+	}
+
+	(*it).setInterestTimedOutNo((*it).getInterestTimedOutNo()+1);
+
+}
+
+void 
+Adl::setTimedOutInterestCount(string& neighbor, int count){
+	Adjacent adj(neighbor);
+	std::list<Adjacent >::iterator it = std::find_if( adjList.begin(), 
+								adjList.end(),	
+   								bind(&adjacent_compare, _1, adj));
+
+	if( it != adjList.end()){
+		(*it).setInterestTimedOutNo(count);
+	}
+}
+
+int
+Adl::getTimedOutInterestCount(string& neighbor)
+{
+	Adjacent adj(neighbor);
+	std::list<Adjacent >::iterator it = std::find_if( adjList.begin(), 
+								adjList.end(),	
+   								bind(&adjacent_compare, _1, adj));
+
+	if( it == adjList.end()){
+		return -1;
+	}
+
+	return (*it).getInterestTimedOutNo();
+}
+
+int 
+Adl::getStatusOfNeighbor(string& neighbor)
+{
+	Adjacent adj(neighbor);
+	std::list<Adjacent >::iterator it = std::find_if( adjList.begin(), 
+								adjList.end(),	
+   								bind(&adjacent_compare, _1, adj));
+
+	if( it == adjList.end()){
+		return -1;
+	}
+
+	return (*it).getStatus();
+}
+
+void
+Adl::setStatusOfNeighbor(string& neighbor, int status)
+{
+	Adjacent adj(neighbor);
+	std::list<Adjacent >::iterator it = std::find_if( adjList.begin(), 
+								adjList.end(),	
+   								bind(&adjacent_compare, _1, adj));
+
+	if( it != adjList.end()){
+		(*it).setStatus(status);
+	}
+}
+
 std::list<Adjacent> 
 Adl::getAdjList(){
 	return adjList;

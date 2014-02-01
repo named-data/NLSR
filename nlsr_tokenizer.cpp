@@ -57,16 +57,17 @@ string
 nlsrTokenizer::getTokenString(int from , int to){
 	string returnString;
 	if ( from >=0 && to < tokenList.size()){
-		int i=1;
+		int i=0;
 		for(std::list<string>::iterator it=tokenList.begin();
 													it!=tokenList.end();it++){
+			i++;
 			if( i >= from && i<= to ){
 				string oneToken((*it));
 				returnString+=seps;
 				returnString+=oneToken;
 				
 			}
-			i++;
+			
 		}
 	}
 
@@ -78,16 +79,17 @@ string
 nlsrTokenizer::getTokenString(int from){
 	string returnString;
 	if ( from >=0 && from < tokenList.size()){
-		int i=1;
+		int i=0;
 		for(std::list<string>::iterator it=tokenList.begin();
 													it!=tokenList.end();it++){
+			i++;
 			if( i >= from){
 				string oneToken((*it));
 				returnString+=seps;
 				returnString+=oneToken;
 				
 			}
-			i++;
+			
 		}
 	}
 

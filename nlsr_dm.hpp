@@ -14,9 +14,11 @@ class nlsr;
 class DataManager
 {
 public:
-  void processContent(const nlsr& pnlsr, 
+  void processContent(nlsr& pnlsr, 
                   const ndn::ptr_lib::shared_ptr<const ndn::Interest> &interest,
 								               const ndn::ptr_lib::shared_ptr<ndn::Data> &data);
+	void processContentInfo(nlsr& pnlsr, string& dataName,
+                                                           string& dataContent);
 private:
   
 };

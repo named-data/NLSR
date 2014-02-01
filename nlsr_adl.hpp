@@ -15,9 +15,15 @@ public:
 	int insert(Adjacent& adj);
 	int updateAdjacentStatus(string adjName, int s);
 	int updateAdjacentLinkCost(string adjName, double lc);	
-	void printAdl();
 	std::list<Adjacent> getAdjList();
+	bool isNeighbor(string adjName);
+	void incrementTimedOutInterestCount(string& neighbor);
+	int getTimedOutInterestCount(string& neighbor);
+	int getStatusOfNeighbor(string& neighbor);
+	void setStatusOfNeighbor(string& neighbor, int status);
+	void setTimedOutInterestCount(string& neighbor, int count);
 
+	void printAdl();
 
 private:	
 	std::list< Adjacent > adjList;

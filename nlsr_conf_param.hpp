@@ -178,44 +178,42 @@ class ConfParameter{
 			infoInterestInterval=iii;
 		}
 
-	private:
-        string routerName;
-        string siteName;
-        string network;
+private:
+	string routerName;
+	string siteName;
+	string network;
 
-        string routerPrefix;
-        string lsaRouterPrefix;
+	string routerPrefix;
+	string lsaRouterPrefix;
 
-        string chronosyncSyncPrefix;
-        string chronosyncLsaPrefix;             
+	string chronosyncSyncPrefix;
+	string chronosyncLsaPrefix;             
 
-        int interestRetryNumber;
-        int interestResendTime;
-		int infoInterestInterval;
-        int lsaRefreshTime;
-        int routerDeadInterval;
+	int interestRetryNumber;
+	int interestResendTime;
+	int infoInterestInterval;
+	int lsaRefreshTime;
+	int routerDeadInterval;
         
-        int maxFacesPerPrefix;
-        string logDir;
-        string logFile;
-        int detailedLogging;
-        int debugging;
+	int maxFacesPerPrefix;
+	string logDir;
+	string logFile;
+	int detailedLogging;
+	int debugging;
 
-        int isHyperbolicCalc;
-        double corR;
-        double corTheta;
+	int isHyperbolicCalc;
+	double corR;
+	double corTheta;
 
-		int tunnelType;
+	int tunnelType;
 
-		int adjBuildFlag;
-        long int adjBuildCount;
-        int isBuildAdjLsaSheduled;
-        int isRouteCalculationScheduled;
+	int adjBuildFlag;
+	long int adjBuildCount;
+	int isBuildAdjLsaSheduled;
+	int isRouteCalculationScheduled;
 
-        int isRoutingTableCalculating;
-        int isStrictHierchicalKeyCheck;
-
-        
+	int isRoutingTableCalculating;
+	int isStrictHierchicalKeyCheck;
 
 };
 
