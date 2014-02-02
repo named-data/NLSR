@@ -1,0 +1,98 @@
+# project  configured on Sat Feb  1 23:54:56 2014 by
+# waf 1.7.13 (abi 98, python 20704f0 on darwin)
+# using ./waf configure
+#
+----------------------------------------
+Setting top to
+/Users/akmhoque/NLSR0.0
+----------------------------------------
+Setting out to
+/Users/akmhoque/NLSR0.0/build
+----------------------------------------
+Checking for 'g++' (c++ compiler)
+find program=['g++', 'c++'] paths=['/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/Library/Frameworks/Python.framework/Versions/2.7/bin', '/opt/local/bin', '/opt/local/sbin', '/opt/local/bin', '/opt/local/sbin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/bin', '/opt/X11/bin'] var='CXX' -> '/usr/bin/g++'
+find program=['ar'] paths=['/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/Library/Frameworks/Python.framework/Versions/2.7/bin', '/opt/local/bin', '/opt/local/sbin', '/opt/local/bin', '/opt/local/sbin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/bin', '/opt/X11/bin'] var='AR' -> '/usr/bin/ar'
+/usr/bin/g++
+----------------------------------------
+Checking allowed flags for c++ compiler
+==>
+
+int main(int argc, char **argv) {
+	(void)argc; (void)argv;
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_c72b9e6991dae6abd356d1d5b3a19170/test.cpp -> build/.conf_check_c72b9e6991dae6abd356d1d5b3a19170/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-O3', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_c72b9e6991dae6abd356d1d5b3a19170/testbuild/test.cpp.1.o -> build/.conf_check_c72b9e6991dae6abd356d1d5b3a19170/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/Users/akmhoque/NLSR0.0/build/.conf_check_c72b9e6991dae6abd356d1d5b3a19170/testbuild/testprog']
+==>
+
+int main(int argc, char **argv) {
+	(void)argc; (void)argv;
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_4a6655f9e1d4a2082f457991481562c7/test.cpp -> build/.conf_check_4a6655f9e1d4a2082f457991481562c7/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-g', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_4a6655f9e1d4a2082f457991481562c7/testbuild/test.cpp.1.o -> build/.conf_check_4a6655f9e1d4a2082f457991481562c7/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/Users/akmhoque/NLSR0.0/build/.conf_check_4a6655f9e1d4a2082f457991481562c7/testbuild/testprog']
+==>
+
+int main(int argc, char **argv) {
+	(void)argc; (void)argv;
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_03c2709ca989fcd1a99ef5b353768db0/test.cpp -> build/.conf_check_03c2709ca989fcd1a99ef5b353768db0/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-Wno-tautological-compare', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_03c2709ca989fcd1a99ef5b353768db0/testbuild/test.cpp.1.o -> build/.conf_check_03c2709ca989fcd1a99ef5b353768db0/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/Users/akmhoque/NLSR0.0/build/.conf_check_03c2709ca989fcd1a99ef5b353768db0/testbuild/testprog']
+==>
+
+int main(int argc, char **argv) {
+	(void)argc; (void)argv;
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_ef6d11ef93dc201e640c414d940983ad/test.cpp -> build/.conf_check_ef6d11ef93dc201e640c414d940983ad/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-Wno-unused-function', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_ef6d11ef93dc201e640c414d940983ad/testbuild/test.cpp.1.o -> build/.conf_check_ef6d11ef93dc201e640c414d940983ad/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/Users/akmhoque/NLSR0.0/build/.conf_check_ef6d11ef93dc201e640c414d940983ad/testbuild/testprog']
+==>
+
+int main(int argc, char **argv) {
+	(void)argc; (void)argv;
+	return 0;
+}
+
+<==
+[1/2] [32mcxx: build/.conf_check_7cad001db13b1f2fd0a663aabc37630a/test.cpp -> build/.conf_check_7cad001db13b1f2fd0a663aabc37630a/testbuild/test.cpp.1.o
+[0m
+['/usr/bin/g++', '-Wno-deprecated-declarations', '../test.cpp', '-c', '-o', 'test.cpp.1.o']
+[2/2] [33mcxxprogram: build/.conf_check_7cad001db13b1f2fd0a663aabc37630a/testbuild/test.cpp.1.o -> build/.conf_check_7cad001db13b1f2fd0a663aabc37630a/testbuild/testprog
+[0m
+['/usr/bin/g++', 'test.cpp.1.o', '-o', '/Users/akmhoque/NLSR0.0/build/.conf_check_7cad001db13b1f2fd0a663aabc37630a/testbuild/testprog']
+-O3 -g -Wno-tautological-compare -Wno-unused-function -Wno-deprecated-declarations
+----------------------------------------
+Checking for program pkg-config
+/usr/local/ndn/bin/pkg-config
+find program=['pkg-config'] paths=['/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/usr/local/ndn/bin', '/usr/local/ndn/sbin', '/Library/Frameworks/Python.framework/Versions/2.7/bin', '/opt/local/bin', '/opt/local/sbin', '/opt/local/bin', '/opt/local/sbin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/bin', '/opt/X11/bin'] var='PKGCONFIG' -> '/usr/local/ndn/bin/pkg-config'
+----------------------------------------
+Checking for 'libndn-cpp-dev'
+['/usr/local/ndn/bin/pkg-config', '--cflags', '--libs', 'libndn-cpp-dev']
+out: -I/usr/local/include -I/usr/local/ndn/include -L/usr/local/lib -L/usr/lib -L/usr/local/ndn/lib -lndn-cpp-dev -lboost_system -lboost_filesystem -lboost_date_time -lboost_iostreams -lboost_regex -lssl -lcrypto -lcryptopp -lsqlite3 -lpthread -framework CoreFoundation -framework Security  
+
+yes
