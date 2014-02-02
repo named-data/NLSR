@@ -62,9 +62,11 @@ Lsdb::getNameLsa(string key)
 																		nameLsdb.end(),	
    																	bind(nameLsaCompareByKey, _1, key));
 
-	if( it != nameLsdb.end()){
+	if( it != nameLsdb.end())
+	{
 		return (*it);
 	}
+	
 }
 
 
@@ -78,12 +80,14 @@ Lsdb::installNameLsa(NameLsa &nlsa)
 		// add name LSA
 		addNameLsa(nlsa);
 		// update NPT and FIB
+		// if its not own LSA
 	}
 	else
 	{
 		// check for newer name LSA
 		NameLsa oldNameLsa=getNameLsa(nlsa.getLsaKey());
 		// Discard or Update Name lsa, NPT, FIB
+		// if its not own LSA
 	}
 	
 	return true;
@@ -106,6 +110,14 @@ Lsdb::addNameLsa(NameLsa &nlsa)
 bool 
 Lsdb::removeNameLsa(string& key)
 {
+	std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(), 
+																		nameLsdb.end(),	
+   																	bind(nameLsaCompareByKey, _1, key));
+  if ( it != nameLsdb.end() )
+  {
+		nameLsdb.erase(it);
+		return true;
+  }
 	return false;
 }
 
@@ -157,6 +169,7 @@ Lsdb::buildAndInstallOwnCorLsa(nlsr& pnlsr){
 	//cout<<corLsa;
 	installCorLsa(corLsa);
 
+	return true;
 }
 
 CorLsa& 
@@ -179,6 +192,8 @@ Lsdb::installCorLsa(CorLsa &clsa)
 	{
 		// add cor LSA
 		addCorLsa(clsa);
+		//schedule routing table calculation only if 
+		//hyperbolic calculation is scheduled
 	}
 	else
 	{
@@ -207,6 +222,15 @@ Lsdb::addCorLsa(CorLsa& clsa)
 bool 
 Lsdb::removeCorLsa(string& key)
 {
+	std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(), 
+																		corLsdb.end(),	
+   																	bind(corLsaCompareByKey, _1, key));
+  if ( it != corLsdb.end() )
+  {
+		corLsdb.erase(it);
+		return true;
+  }
+	return false;
 
 }
 
@@ -266,6 +290,9 @@ Lsdb::scheduledAdjLsaBuild(nlsr& pnlsr)
 			else
 			{
 				//remove if there is any adj lsa in LSDB
+				string key=pnlsr.getConfParameter().getRouterPrefix()+"/2";
+				removeAdjLsa(key);
+				// Remove alll fib entries as per NPT
 			}
 			pnlsr.setAdjBuildCount(pnlsr.getAdjBuildCount()-adjBuildCount);
 		}		
@@ -308,7 +335,6 @@ Lsdb::getAdjLsa(string key)
 	if( it != adjLsdb.end()){
 		return (*it);
 	}
-	
 }
 
 bool 
@@ -349,6 +375,15 @@ Lsdb::buildAndInstallOwnAdjLsa(nlsr& pnlsr)
 bool 
 Lsdb::removeAdjLsa(string& key)
 {
+	std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(), 
+																		adjLsdb.end(),	
+   																	bind(adjLsaCompareByKey, _1, key));
+  if ( it != adjLsdb.end() )
+  {
+		adjLsdb.erase(it);
+		return true;
+  }
+	return false;
 	
 }
 
