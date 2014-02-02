@@ -148,7 +148,7 @@ corLsaCompareByKey(CorLsa& clsa, string& key){
 bool 
 Lsdb::buildAndInstallOwnCorLsa(nlsr& pnlsr){
 	CorLsa corLsa(pnlsr.getConfParameter().getRouterPrefix()
-					, 1
+					, 3
 					, pnlsr.getCorLsaSeq()+1
 					, pnlsr.getConfParameter().getRouterDeadInterval()
 					, pnlsr.getConfParameter().getCorR()
@@ -248,7 +248,109 @@ adjLsaCompareByKey(AdjLsa& alsa, string& key){
 }
 
 
+void 
+Lsdb::scheduledAdjLsaBuild(nlsr& pnlsr)
+{
+	cout<<"scheduledAdjLsaBuild Called"<<endl;
+	pnlsr.setIsBuildAdjLsaSheduled(0);
 
+	if( pnlsr.getAdl().isAdjLsaBuildable(pnlsr))
+	{
+		int adjBuildCount=pnlsr.getAdjBuildCount();
+		if(adjBuildCount>0 )
+		{
+			if (pnlsr.getAdl().getNumOfActiveNeighbor()>0)
+			{
+				buildAndInstallOwnAdjLsa(pnlsr);
+			}
+			else
+			{
+				//remove if there is any adj lsa in LSDB
+			}
+			pnlsr.setAdjBuildCount(pnlsr.getAdjBuildCount()-adjBuildCount);
+		}		
+	}
+	else
+	{
+		pnlsr.setIsBuildAdjLsaSheduled(1);
+		int schedulingTime=pnlsr.getConfParameter().getInterestRetryNumber()*
+		                   pnlsr.getConfParameter().getInterestRetryNumber();
+		pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(schedulingTime),
+							ndn::bind(&Lsdb::scheduledAdjLsaBuild, pnlsr.getLsdb(), 
+																									boost::ref(pnlsr)));
+	}
+
+}
+
+
+bool 
+Lsdb::addAdjLsa(AdjLsa &alsa)
+{
+	std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(), 
+																		adjLsdb.end(),	
+   																	bind(adjLsaCompare, _1, alsa));
+
+	if( it == adjLsdb.end()){
+		adjLsdb.push_back(alsa);
+		return true;
+	}
+	return false;
+	
+}
+
+AdjLsa& 
+Lsdb::getAdjLsa(string key)
+{
+	std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(), 
+																		adjLsdb.end(),	
+   																	bind(adjLsaCompareByKey, _1, key));
+
+	if( it != adjLsdb.end()){
+		return (*it);
+	}
+	
+}
+
+bool 
+Lsdb::installAdjLsa(AdjLsa &alsa)
+{
+	bool doesLsaExist_ = doesAdjLsaExist(alsa.getLsaKey());
+	if ( !doesLsaExist_ )
+	{
+		// add Adj LSA
+		addAdjLsa(alsa);
+		// schedule routing table calculation
+	}
+	else
+	{
+		// check for newer name LSA
+		AdjLsa oldAdjLsa=getAdjLsa(alsa.getLsaKey());
+		
+	}
+
+	printAdjLsdb();
+	
+	return true;
+}
+
+bool 
+Lsdb::buildAndInstallOwnAdjLsa(nlsr& pnlsr)
+{
+	AdjLsa adjLsa(pnlsr.getConfParameter().getRouterPrefix()
+					, 2
+					, pnlsr.getAdjLsaSeq()+1
+					, pnlsr.getConfParameter().getRouterDeadInterval()
+					, pnlsr.getAdl().getNumOfActiveNeighbor()
+					, pnlsr.getAdl() );
+	pnlsr.setAdjLsaSeq(pnlsr.getAdjLsaSeq()+1);
+	return installAdjLsa(adjLsa);
+}
+
+bool 
+Lsdb::removeAdjLsa(string& key)
+{
+	
+}
 
 bool 
 Lsdb::doesAdjLsaExist(string key)
@@ -264,4 +366,13 @@ Lsdb::doesAdjLsaExist(string key)
 	return true;
 }
 
+void 
+Lsdb::printAdjLsdb()
+{
+	for( std::list<AdjLsa>::iterator it=adjLsdb.begin(); 
+	                                                 it!= adjLsdb.end() ; it++)
+	{
+		cout<< (*it) <<endl;
+	}
+}
 

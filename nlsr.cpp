@@ -65,7 +65,7 @@ main(){
 	
 	
 /* debugging purpose start */
-	cout <<	nlsr.getConfParameter(); ;
+	cout <<	nlsr.getConfParameter();
 	nlsr.getAdl().printAdl();
 	nlsr.getNpl().printNpl();
 	nlsr.getLsdb().printNameLsdb();

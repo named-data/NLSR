@@ -5,6 +5,8 @@
 #include "nlsr_adjacent.hpp"
 #include<list>
 
+class nlsr;
+
 using namespace std;
 
 class Adl{
@@ -22,6 +24,14 @@ public:
 	int getStatusOfNeighbor(string& neighbor);
 	void setStatusOfNeighbor(string& neighbor, int status);
 	void setTimedOutInterestCount(string& neighbor, int count);
+
+	bool isAdjLsaBuildable(nlsr& pnlsr);
+	int getNumOfActiveNeighbor();
+
+	int getAdlSize()
+	{
+		return adjList.size();
+	}
 
 	void printAdl();
 

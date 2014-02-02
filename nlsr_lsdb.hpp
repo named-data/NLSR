@@ -28,13 +28,25 @@ public:
 	bool installCorLsa(CorLsa &clsa);
 	bool removeCorLsa(string& key);
 	void printCorLsdb(); //debugging
+
+	//function related to Cor LSDB
+	void scheduledAdjLsaBuild(nlsr& pnlsr);
+	bool buildAndInstallOwnAdjLsa(nlsr& pnlsr);
+	bool removeAdjLsa(string& key);
+	bool installAdjLsa(AdjLsa &alsa);
+	AdjLsa& getAdjLsa(string key);
+	void printAdjLsdb();
 	
 private:
 	bool addNameLsa(NameLsa &nlsa);
-	bool addCorLsa(CorLsa& clsa);
 	bool doesNameLsaExist(string key);
-	bool doesAdjLsaExist(string key);
+	
+	bool addCorLsa(CorLsa& clsa);
 	bool doesCorLsaExist(string key);
+
+	bool addAdjLsa(AdjLsa &alsa);
+	bool doesAdjLsaExist(string key);
+	
 
 private:
 	std::list<NameLsa> nameLsdb;

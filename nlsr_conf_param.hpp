@@ -7,17 +7,12 @@ using namespace std;
 
 class ConfParameter{
 	
-	public:
-		ConfParameter()
-			:chronosyncSyncPrefix("ndn/nlsr/sync")
-			,chronosyncLsaPrefix("/ndn/nlsr/LSA")
+public:
+	ConfParameter()
+		:chronosyncSyncPrefix("ndn/nlsr/sync")
+		,chronosyncLsaPrefix("/ndn/nlsr/LSA")
 		{
-			adjBuildFlag=0;
-        		adjBuildCount=0;
-        		isBuildAdjLsaSheduled=0;
-        		isRouteCalculationScheduled=0;
-			isRoutingTableCalculating=0;
-        		isStrictHierchicalKeyCheck=0;
+      isStrictHierchicalKeyCheck=0;
 
 			interestRetryNumber=3;
 			interestResendTime=5;
@@ -27,10 +22,8 @@ class ConfParameter{
 			maxFacesPerPrefix=0;
 			tunnelType=0;
 			detailedLogging=0;
-        		debugging=0;
-			isHyperbolicCalc=0;
-			
-			
+      debugging=0;
+			isHyperbolicCalc=0;	
 		}
 
 		void setRouterName(const string& rn){  
@@ -206,13 +199,6 @@ private:
 	double corTheta;
 
 	int tunnelType;
-
-	int adjBuildFlag;
-	long int adjBuildCount;
-	int isBuildAdjLsaSheduled;
-	int isRouteCalculationScheduled;
-
-	int isRoutingTableCalculating;
 	int isStrictHierchicalKeyCheck;
 
 };

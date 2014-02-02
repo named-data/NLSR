@@ -73,7 +73,7 @@ public:
 		setLsType(1);
 	}
 
-	NameLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt, Npl& npl);
+	NameLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt, Npl npl);
 
 	Npl& getNpl(){
 		return npl;
@@ -100,6 +100,24 @@ public:
 		: Lsa()
 		, adl()
 	{
+		setLsType(2);
+	}
+
+	AdjLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt, 
+	                                                        uint32_t nl ,Adl padl);
+	Adl& getAdl(){
+		return adl;
+	}
+
+	void addAdjacentToLsa(Adjacent adj)
+	{
+		adl.insert(adj);
+	}
+
+	string getAdjLsaData();
+	uint32_t getNoLink()
+	{
+		return noLink;
 	}
 
 private:
@@ -107,11 +125,15 @@ private:
 	Adl adl;
 };
 
+std::ostream& 
+operator<<(std::ostream& os, AdjLsa& aLsa);
+
 class CorLsa:public Lsa{
 public:
 	CorLsa()
 		:Lsa()
 	{
+		setLsType(3);
 	}
 
 	CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt

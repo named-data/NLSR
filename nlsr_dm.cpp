@@ -6,6 +6,7 @@
 #include "nlsr.hpp"
 #include "nlsr_dm.hpp"
 #include "nlsr_tokenizer.hpp"
+#include "nlsr_lsdb.hpp"
 
 using namespace std;
 using namespace ndn;
@@ -40,28 +41,43 @@ DataManager::processContentInfo(nlsr& pnlsr, string& dataName,
 	string chkString("info");
 	string neighbor="/" + nt.getFirstToken()
 							+nt.getTokenString(0,nt.getTokenPosition(chkString)-1);
-	int status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
+	int oldStatus=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
 	int infoIntTimedOutCount=pnlsr.getAdl().getTimedOutInterestCount(neighbor);
 	//debugging purpose start
 	cout <<"Before Updates: " <<endl;
 	cout <<"Neighbor : "<<neighbor<<endl;
-	cout<<"Status: "<< status << endl;
+	cout<<"Status: "<< oldStatus << endl;
 	cout<<"Info Interest Timed out: "<< infoIntTimedOutCount <<endl;
 	//debugging purpose end
 
 	pnlsr.getAdl().setStatusOfNeighbor(neighbor,1);
 	pnlsr.getAdl().setTimedOutInterestCount(neighbor,0);
 
-	status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
+	int newStatus=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
 	infoIntTimedOutCount=pnlsr.getAdl().getTimedOutInterestCount(neighbor);
 
 	//debugging purpose
 	cout <<"After Updates: " <<endl;
 	cout <<"Neighbor : "<<neighbor<<endl;
-	cout<<"Status: "<< status << endl;
+	cout<<"Status: "<< newStatus << endl;
 	cout<<"Info Interest Timed out: "<< infoIntTimedOutCount <<endl;
 	//debugging purpose end
 
-	/* Need to schedule event for Adjacency LSA building */
+	if ( ( oldStatus-newStatus)!= 0 ) // change in Adjacency list
+	{
+		pnlsr.incrementAdjBuildCount();
+		/* Need to schedule event for Adjacency LSA building */
+		if ( pnlsr.getIsBuildAdjLsaSheduled() == 0 )
+		{
+			pnlsr.setIsBuildAdjLsaSheduled(1);
+			// event here
+			pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
+							ndn::bind(&Lsdb::scheduledAdjLsaBuild, pnlsr.getLsdb(), 
+																									boost::ref(pnlsr)));
+		}
+		
+	}
+
+	
 	
 }

@@ -3,6 +3,7 @@
 
 #include "nlsr_adl.hpp"
 #include "nlsr_adjacent.hpp"
+#include "nlsr.hpp"
 
 Adl::Adl(){
 }
@@ -149,6 +150,51 @@ Adl::setStatusOfNeighbor(string& neighbor, int status)
 std::list<Adjacent> 
 Adl::getAdjList(){
 	return adjList;
+}
+
+bool
+Adl::isAdjLsaBuildable(nlsr& pnlsr)
+{
+	int nbrCount=0;
+	for( std::list<Adjacent>::iterator it=adjList.begin(); 
+	                                                   it!= adjList.end() ; it++)
+	{
+		if ( ((*it).getStatus() == 1 ) )
+		{
+			nbrCount++;
+		}
+		else
+		{
+			if ( (*it).getInterestTimedOutNo() >= 
+				                       pnlsr.getConfParameter().getInterestRetryNumber())
+			{
+					nbrCount++;
+			}
+		} 
+	}
+
+	if( nbrCount == adjList.size())
+	{
+		return true;
+	}
+
+	return false;
+}
+
+int 
+Adl::getNumOfActiveNeighbor()
+{
+	int actNbrCount=0;
+	for( std::list<Adjacent>::iterator it=adjList.begin(); 
+	                                                   it!= adjList.end() ; it++)
+	{
+		if ( ((*it).getStatus() == 1 ) )
+		{
+			actNbrCount++;
+		}
+	}
+
+	return actNbrCount;
 }
 
 // used for debugging purpose

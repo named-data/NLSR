@@ -33,6 +33,10 @@ public:
     , nameLsaSeq(0)
     , adjLsaSeq(0)
     , corLsaSeq(0)
+    , adjBuildCount(0)
+    , isBuildAdjLsaSheduled(0)
+    , isRouteCalculationScheduled(0)
+    , isRoutingTableCalculating(0)
 	{
 		isDaemonProcess=false;
 		configFileName="nlsr.conf";	
@@ -49,6 +53,10 @@ public:
     , im()
     , dm()
     , nlsrLsdb()
+    , adjBuildCount(0)
+    , isBuildAdjLsaSheduled(0)
+    , isRouteCalculationScheduled(0)
+    , isRoutingTableCalculating(0)
 	{
 		isDaemonProcess=false;
 		configFileName=confFile;
@@ -151,7 +159,32 @@ public:
 	void setCorLsaSeq(uint32_t clsn){
 		corLsaSeq=clsn;
 	}
-		
+
+	long int getAdjBuildCount()
+	{
+		return adjBuildCount;
+	}
+
+	void incrementAdjBuildCount()
+	{
+		adjBuildCount++;
+	}
+
+	void setAdjBuildCount(long int abc)
+	{
+		adjBuildCount=abc;
+	}
+
+	int getIsBuildAdjLsaSheduled()
+	{
+		return isBuildAdjLsaSheduled;
+	}
+
+	void setIsBuildAdjLsaSheduled(int iabls)
+	{
+		isBuildAdjLsaSheduled=iabls;
+	}
+	
 private:
 	ConfParameter confParam;
 	Adl adl;
@@ -168,6 +201,11 @@ private:
 	uint32_t nameLsaSeq;
 	uint32_t adjLsaSeq;
 	uint32_t corLsaSeq;
+
+	long int adjBuildCount;
+	int isBuildAdjLsaSheduled;
+	int isRouteCalculationScheduled;
+	int isRoutingTableCalculating;
 	
 
 };

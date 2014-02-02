@@ -7,6 +7,7 @@
 #include "nlsr_im.hpp"
 #include "nlsr_dm.hpp"
 #include "nlsr_tokenizer.hpp"
+#include "nlsr_lsdb.hpp"
 
 using namespace std;
 using namespace ndn;
@@ -98,7 +99,15 @@ interestManager::processInterestTimedOutInfo(nlsr& pnlsr, string& neighbor,
 	  (infoIntTimedOutCount == pnlsr.getConfParameter().getInterestRetryNumber()))
 	{
 		pnlsr.getAdl().setStatusOfNeighbor(neighbor,0);
-		// schedule event for building adjacency LSA
+		pnlsr.incrementAdjBuildCount();
+		if ( pnlsr.getIsBuildAdjLsaSheduled() == 0 )
+		{
+			pnlsr.setIsBuildAdjLsaSheduled(1);
+			// event here
+			pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
+							ndn::bind(&Lsdb::scheduledAdjLsaBuild,pnlsr.getLsdb(), 
+																									boost::ref(pnlsr)));
+		}
 	}
 	
 }
