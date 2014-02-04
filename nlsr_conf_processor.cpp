@@ -18,15 +18,22 @@ ConfFileProcessor::processConfFile(nlsr& pnlsr){
 
 	if ( !confFileName.empty()){
 		std::ifstream inputFile(confFileName.c_str());
-		for( string line; getline( inputFile, line ); ){
-    			if (!line.empty() ){
-				if(line[0]!= '#' && line[0]!='!'){
-					ret=processConfCommand(pnlsr, line);	
-					if( ret == -1 ){
-						break;
+		if ( inputFile.is_open()){
+			for( string line; getline( inputFile, line ); ){
+    				if (!line.empty() ){
+					if(line[0]!= '#' && line[0]!='!'){
+						ret=processConfCommand(pnlsr, line);	
+						if( ret == -1 ){
+							break;
+						}
 					}
 				}
 			}
+		}
+		else{
+			std::cerr <<"Configuration file: ("<<confFileName<<") does not exist :(";
+			std::cerr <<endl;
+			ret=-1;
 		}
 	}
 
@@ -326,11 +333,22 @@ ConfFileProcessor::processConfCommandHyperbolicCordinate(nlsr& pnlsr, string com
 int 
 ConfFileProcessor::processConfCommandNdnNeighbor(nlsr& pnlsr, string command){
 	if(command.empty() ){
-		cerr <<" Wrong command format ! [ndnneighbor /nbr/name/]!"<<endl;
+		cerr <<" Wrong command format ! [ndnneighbor /nbr/name/ FaceId]!"<<endl;
 	}else{
 		nlsrTokenizer nt(command," ");
-		Adjacent adj(nt.getFirstToken(),0,0.0,0,0);
-		pnlsr.getAdl().insert(adj);
+		if( nt.getRestOfLine().empty())
+		{
+			cerr <<" Wrong command format ! [ndnneighbor /nbr/name/ FaceId]!"<<endl;
+			return 0;
+		}
+		else
+		{
+			stringstream sst(nt.getRestOfLine().c_str());
+			int faceId;
+			sst>>faceId;
+			Adjacent adj(nt.getFirstToken(),faceId,0.0,0,0);
+			pnlsr.getAdl().insert(adj);
+		}
 	}
 	return 0;	
 }

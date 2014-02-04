@@ -3,12 +3,15 @@
 #include <ndn-cpp-dev/util/scheduler.hpp>
 
 #include <cstdlib>
+#include<string>
+#include <sstream>
 
 #include "nlsr.hpp"
 #include "nlsr_conf_param.hpp"
 #include "nlsr_conf_processor.hpp"
 #include "nlsr_lsdb.hpp"
-
+//test purpose of NLSR
+#include "nlsr_test.hpp" 
 
 using namespace ndn;
 using namespace std;
@@ -52,25 +55,57 @@ nlsr::usage(const string& progname)
 }
 
 int 
-main(){
+main(int argc, char **argv){
 
 	nlsr nlsr;
+	string programName(argv[0]);
 	nlsr.setConfFileName("nlsr.conf");
+
+	int opt;
+  while ((opt = getopt(argc, argv, "df:p:h")) != -1) {
+    switch (opt) {
+    case 'f':
+      nlsr.setConfFileName(optarg);
+      break;
+    case 'd':
+      nlsr.setIsDaemonProcess(optarg);
+      break;
+    case 'p':
+    		{
+    			stringstream sst(optarg);
+    			int ap;
+    			sst>>ap;
+    			nlsr.setApiPort(ap);
+    		}
+      break;
+    case 'h':
+    default:
+      nlsr.usage(programName);
+      return EXIT_FAILURE;
+    }
+  }
+	
+	
 	ConfFileProcessor cfp(nlsr.getConfFileName());
-	cfp.processConfFile(nlsr);
+	int res=cfp.processConfFile(nlsr);
+	if ( res < 0 )
+	{
+		return EXIT_FAILURE;
+	}
 	nlsr.getConfParameter().buildRouterPrefix();
 
-	nlsr.getLsdb().buildAndInstallOwnNameLsa(nlsr);
-	nlsr.getLsdb().buildAndInstallOwnCorLsa(nlsr);
-	
-	
-/* debugging purpose start */
+	/* debugging purpose start */
 	cout <<	nlsr.getConfParameter();
 	nlsr.getAdl().printAdl();
 	nlsr.getNpl().printNpl();
-	nlsr.getLsdb().printNameLsdb();
-	nlsr.getLsdb().printCorLsdb();
-/* debugging purpose end */
+  /* debugging purpose end */
+
+	nlsr.getLsdb().buildAndInstallOwnNameLsa(nlsr);
+	nlsr.getLsdb().buildAndInstallOwnCorLsa(nlsr);
+
+	//testing purpose
+	nlsr.getNlsrTesting().schedlueAddingLsas(nlsr);
+
 	nlsr.setInterestFilterNlsr(nlsr.getConfParameter().getRouterPrefix());
 	nlsr.getIm().scheduleInfoInterest(nlsr,1);
 
@@ -83,5 +118,5 @@ main(){
     		std::cerr << "ERROR: " << e.what() << std::endl;
 	}
 
-	return 0;
+	return EXIT_SUCCESS;
 }

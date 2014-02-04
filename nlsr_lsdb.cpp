@@ -30,10 +30,6 @@ Lsdb::doesLsaExist(string key, int lsType)
 
 //Name LSA and LSDB related functions start here
 
-static bool
-nameLsaCompare(NameLsa& nlsa1, NameLsa& nlsa2){
-	return nlsa1.getLsaKey()==nlsa1.getLsaKey();
-}
 
 static bool
 nameLsaCompareByKey(NameLsa& nlsa1, string& key){
@@ -46,11 +42,10 @@ Lsdb::buildAndInstallOwnNameLsa(nlsr& pnlsr)
 {
 	NameLsa nameLsa(pnlsr.getConfParameter().getRouterPrefix()
 					, 1
-					, pnlsr.getNameLsaSeq()+1
+					, pnlsr.getSm().getNameLsaSeq()+1
 					, pnlsr.getConfParameter().getRouterDeadInterval()
 					, pnlsr.getNpl() );
-	pnlsr.setNameLsaSeq(pnlsr.getNameLsaSeq()+1);
-	//cout<<nameLsa;
+	pnlsr.getSm().setNameLsaSeq(pnlsr.getSm().getNameLsaSeq()+1);
 	return installNameLsa(nameLsa);
 
 }
@@ -66,7 +61,7 @@ Lsdb::getNameLsa(string key)
 	{
 		return (*it);
 	}
-	
+
 }
 
 
@@ -81,6 +76,7 @@ Lsdb::installNameLsa(NameLsa &nlsa)
 		addNameLsa(nlsa);
 		// update NPT and FIB
 		// if its not own LSA
+		printNameLsdb();
 	}
 	else
 	{
@@ -98,9 +94,10 @@ Lsdb::addNameLsa(NameLsa &nlsa)
 {
 	std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(), 
 																		nameLsdb.end(),	
-   																	bind(nameLsaCompare, _1, nlsa));
+   													  bind(nameLsaCompareByKey, _1, nlsa.getLsaKey()));
 
-	if( it == nameLsdb.end()){
+	if( it == nameLsdb.end())
+	{
 		nameLsdb.push_back(nlsa);
 		return true;
 	}
@@ -138,6 +135,7 @@ Lsdb::doesNameLsaExist(string key)
 void 
 Lsdb::printNameLsdb()
 {
+	cout<<"---------------Name LSDB-------------------"<<endl;
 	for( std::list<NameLsa>::iterator it=nameLsdb.begin(); 
 	                                                 it!= nameLsdb.end() ; it++)
 	{
@@ -146,12 +144,12 @@ Lsdb::printNameLsdb()
 }
 
 // Cor LSA and LSDB related Functions start here
-
+/*
 static bool
 corLsaCompare(CorLsa& clsa1, CorLsa& clsa2){
 	return clsa1.getLsaKey()==clsa1.getLsaKey();
 }
-
+*/
 static bool
 corLsaCompareByKey(CorLsa& clsa, string& key){
 	return clsa.getLsaKey()==key;
@@ -161,12 +159,11 @@ bool
 Lsdb::buildAndInstallOwnCorLsa(nlsr& pnlsr){
 	CorLsa corLsa(pnlsr.getConfParameter().getRouterPrefix()
 					, 3
-					, pnlsr.getCorLsaSeq()+1
+					, pnlsr.getSm().getCorLsaSeq()+1
 					, pnlsr.getConfParameter().getRouterDeadInterval()
 					, pnlsr.getConfParameter().getCorR()
 					, pnlsr.getConfParameter().getCorTheta() );
-	pnlsr.setCorLsaSeq(pnlsr.getCorLsaSeq()+1);
-	//cout<<corLsa;
+	pnlsr.getSm().setCorLsaSeq(pnlsr.getSm().getCorLsaSeq()+1);
 	installCorLsa(corLsa);
 
 	return true;
@@ -194,6 +191,7 @@ Lsdb::installCorLsa(CorLsa &clsa)
 		addCorLsa(clsa);
 		//schedule routing table calculation only if 
 		//hyperbolic calculation is scheduled
+		printCorLsdb();
 	}
 	else
 	{
@@ -210,9 +208,10 @@ Lsdb::addCorLsa(CorLsa& clsa)
 {
 	std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(), 
 																		corLsdb.end(),	
-   																	bind(corLsaCompare, _1, clsa));
+   														bind(corLsaCompareByKey, _1, clsa.getLsaKey()));
 
-	if( it == corLsdb.end()){
+	if( it == corLsdb.end())
+	{
 		corLsdb.push_back(clsa);
 		return true;
 	}
@@ -251,6 +250,7 @@ Lsdb::doesCorLsaExist(string key)
 void 
 Lsdb::printCorLsdb() //debugging
 {
+	cout<<"---------------Cor LSDB-------------------"<<endl;
 	for( std::list<CorLsa>::iterator it=corLsdb.begin(); 
 	                                                 it!= corLsdb.end() ; it++)
 	{
@@ -260,12 +260,12 @@ Lsdb::printCorLsdb() //debugging
 
 
 // Adj LSA and LSDB related function starts here
-
+/*
 static bool
 adjLsaCompare(AdjLsa& alsa1, AdjLsa& alsa2){
 	return alsa1.getLsaKey()==alsa1.getLsaKey();
 }
-
+*/
 static bool
 adjLsaCompareByKey(AdjLsa& alsa, string& key){
 	return alsa.getLsaKey()==key;
@@ -315,7 +315,7 @@ Lsdb::addAdjLsa(AdjLsa &alsa)
 {
 	std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(), 
 																		adjLsdb.end(),	
-   																	bind(adjLsaCompare, _1, alsa));
+   														bind(adjLsaCompareByKey, _1, alsa.getLsaKey()));
 
 	if( it == adjLsdb.end()){
 		adjLsdb.push_back(alsa);
@@ -338,7 +338,7 @@ Lsdb::getAdjLsa(string key)
 }
 
 bool 
-Lsdb::installAdjLsa(AdjLsa &alsa)
+Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
 {
 	bool doesLsaExist_ = doesAdjLsaExist(alsa.getLsaKey());
 	if ( !doesLsaExist_ )
@@ -346,6 +346,8 @@ Lsdb::installAdjLsa(AdjLsa &alsa)
 		// add Adj LSA
 		addAdjLsa(alsa);
 		// schedule routing table calculation
+		pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
+							ndn::bind(&RoutingTable::calculate, &pnlsr.getRoutingTable()));
 	}
 	else
 	{
@@ -364,12 +366,12 @@ Lsdb::buildAndInstallOwnAdjLsa(nlsr& pnlsr)
 {
 	AdjLsa adjLsa(pnlsr.getConfParameter().getRouterPrefix()
 					, 2
-					, pnlsr.getAdjLsaSeq()+1
+					, pnlsr.getSm().getAdjLsaSeq()+1
 					, pnlsr.getConfParameter().getRouterDeadInterval()
 					, pnlsr.getAdl().getNumOfActiveNeighbor()
 					, pnlsr.getAdl() );
-	pnlsr.setAdjLsaSeq(pnlsr.getAdjLsaSeq()+1);
-	return installAdjLsa(adjLsa);
+	pnlsr.getSm().setAdjLsaSeq(pnlsr.getSm().getAdjLsaSeq()+1);
+	return installAdjLsa(pnlsr, adjLsa);
 }
 
 bool 
@@ -404,6 +406,7 @@ Lsdb::doesAdjLsaExist(string key)
 void 
 Lsdb::printAdjLsdb()
 {
+	cout<<"---------------Adj LSDB-------------------"<<endl;
 	for( std::list<AdjLsa>::iterator it=adjLsdb.begin(); 
 	                                                 it!= adjLsdb.end() ; it++)
 	{

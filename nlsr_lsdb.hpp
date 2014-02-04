@@ -33,7 +33,7 @@ public:
 	void scheduledAdjLsaBuild(nlsr& pnlsr);
 	bool buildAndInstallOwnAdjLsa(nlsr& pnlsr);
 	bool removeAdjLsa(string& key);
-	bool installAdjLsa(AdjLsa &alsa);
+	bool installAdjLsa(nlsr& pnlsr, AdjLsa &alsa);
 	AdjLsa& getAdjLsa(string key);
 	void printAdjLsdb();
 	

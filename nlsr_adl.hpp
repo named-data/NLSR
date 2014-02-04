@@ -1,5 +1,5 @@
-#ifndef ADL_HPP
-#define ADL_HPP
+#ifndef NLSR_ADL_HPP
+#define NLSR_ADL_HPP
 
 #include <ndn-cpp-dev/face.hpp>
 #include "nlsr_adjacent.hpp"

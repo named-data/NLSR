@@ -11,6 +11,11 @@
 #include "nlsr_im.hpp"
 #include "nlsr_dm.hpp"
 #include "nlsr_lsdb.hpp"
+#include "nlsr_sm.hpp"
+#include "nlsr_rt.hpp"
+//testing
+#include "nlsr_test.hpp"
+
 
 
 using namespace ndn;
@@ -29,40 +34,17 @@ public:
 		, npl()
     , im()
     , dm()
+    , sm()
     , nlsrLsdb()
-    , nameLsaSeq(0)
-    , adjLsaSeq(0)
-    , corLsaSeq(0)
     , adjBuildCount(0)
     , isBuildAdjLsaSheduled(0)
     , isRouteCalculationScheduled(0)
     , isRoutingTableCalculating(0)
+    , routingTable()
+    , nlsrTesting()
 	{
 		isDaemonProcess=false;
 		configFileName="nlsr.conf";	
-	}
-
-	nlsr(string confFile, uint32_t nlsn, uint32_t alsn, uint32_t clsn)
-		: io(ndn::make_shared<boost::asio::io_service>())
-		, nlsrFace(io)
-		, scheduler(*io)
-		, configFileName()	
-		, confParam()
-		, adl()
-		, npl()
-    , im()
-    , dm()
-    , nlsrLsdb()
-    , adjBuildCount(0)
-    , isBuildAdjLsaSheduled(0)
-    , isRouteCalculationScheduled(0)
-    , isRoutingTableCalculating(0)
-	{
-		isDaemonProcess=false;
-		configFileName=confFile;
-		nameLsaSeq=nlsn;
-    adjLsaSeq=alsn;
-    corLsaSeq=clsn;
 	}
 
 	void nlsrRegistrationFailed(const ptr_lib::shared_ptr<const Name>&);
@@ -129,35 +111,16 @@ public:
 		return dm;
 	}
 
+	SequencingManager& getSm(){
+	 return sm;
+	}
+
 	Lsdb& getLsdb(){
 		return nlsrLsdb;
 	}
 
-	uint32_t getNameLsaSeq()
-	{
-		return nameLsaSeq;
-	}
-
-	void setNameLsaSeq(uint32_t nlsn){
-		nameLsaSeq=nlsn;
-	}
-
-	uint32_t getAdjLsaSeq()
-	{
-		return adjLsaSeq;
-	}
-
-	void setAdjLsaSeq(uint32_t alsn){
-		adjLsaSeq=alsn;
-	}
-
-	uint32_t getCorLsaSeq()
-	{
-		return corLsaSeq;
-	}
-
-	void setCorLsaSeq(uint32_t clsn){
-		corLsaSeq=clsn;
+	RoutingTable& getRoutingTable(){
+		return routingTable;
 	}
 
 	long int getAdjBuildCount()
@@ -184,6 +147,21 @@ public:
 	{
 		isBuildAdjLsaSheduled=iabls;
 	}
+
+	nlsrTest& getNlsrTesting()
+	{
+		return nlsrTesting;
+	}
+
+	void setApiPort(int ap)
+	{
+		apiPort=ap;
+	}
+
+	int getApiPort()
+	{
+		return apiPort;
+	}
 	
 private:
 	ConfParameter confParam;
@@ -195,17 +173,22 @@ private:
 	ndn::KeyChain kChain;
 	interestManager im;
 	DataManager dm;
+	SequencingManager sm;
 	bool isDaemonProcess;
 	string configFileName;
+	int apiPort;
+	
 	Lsdb nlsrLsdb;
-	uint32_t nameLsaSeq;
-	uint32_t adjLsaSeq;
-	uint32_t corLsaSeq;
+	RoutingTable routingTable;
+	
+	
 
 	long int adjBuildCount;
 	int isBuildAdjLsaSheduled;
 	int isRouteCalculationScheduled;
 	int isRoutingTableCalculating;
+
+	nlsrTest nlsrTesting;
 	
 
 };
