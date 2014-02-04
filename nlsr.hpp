@@ -162,6 +162,26 @@ public:
 	{
 		return apiPort;
 	}
+
+	int getIsRoutingTableCalculating()
+	{
+		return isRoutingTableCalculating;
+	}
+
+	void setIsRoutingTableCalculating(int irtc)
+	{
+		isRoutingTableCalculating=irtc;
+	}
+
+	int getIsRouteCalculationScheduled()
+	{
+		return isRouteCalculationScheduled;
+	}
+
+	void setIsRouteCalculationScheduled(int ircs)
+	{
+		isRouteCalculationScheduled=ircs;
+	}
 	
 private:
 	ConfParameter confParam;

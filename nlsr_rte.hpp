@@ -17,6 +17,10 @@ public:
 		
 	}
 
+	~RoutingTableEntry()
+	{
+	}
+
 	RoutingTableEntry(string dest)
 		: nhl()
 	{

@@ -56,7 +56,6 @@ nlsr::usage(const string& progname)
 
 int 
 main(int argc, char **argv){
-
 	nlsr nlsr;
 	string programName(argv[0]);
 	nlsr.setConfFileName("nlsr.conf");

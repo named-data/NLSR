@@ -6,6 +6,8 @@
 
 #include "nlsr_rte.hpp"
 
+class nlsr;
+
 using namespace std;
 
 class RoutingTable
@@ -14,13 +16,18 @@ public:
 	RoutingTable()
 	{
 	}
-	void calculate()
-	{
-		cout<<"Routing Table Calculating......"<<endl;
-	}
+	void calculate(nlsr& pnlsr);
 
 private:
+	void calculateLsRoutingTable(nlsr& pnlsr);
+	void calculateHypRoutingTable(nlsr& pnlsr);
+	void calculateHypDryRoutingTable(nlsr&pnlsr);
+	
+	void clearRoutingTable();
+	void clearDryRoutingTable();
+	
 	std::list< RoutingTableEntry > rTable;
+	std::list< RoutingTableEntry > dryTable;
 };
 
 #endif

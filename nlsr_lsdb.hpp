@@ -29,12 +29,13 @@ public:
 	bool removeCorLsa(string& key);
 	void printCorLsdb(); //debugging
 
-	//function related to Cor LSDB
+	//function related to Adj LSDB
 	void scheduledAdjLsaBuild(nlsr& pnlsr);
 	bool buildAndInstallOwnAdjLsa(nlsr& pnlsr);
 	bool removeAdjLsa(string& key);
 	bool installAdjLsa(nlsr& pnlsr, AdjLsa &alsa);
 	AdjLsa& getAdjLsa(string key);
+	std::list<AdjLsa>& getAdjLsdb();
 	void printAdjLsdb();
 	
 private:

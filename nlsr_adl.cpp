@@ -147,7 +147,7 @@ Adl::setStatusOfNeighbor(string& neighbor, int status)
 	}
 }
 
-std::list<Adjacent> 
+std::list<Adjacent>& 
 Adl::getAdjList(){
 	return adjList;
 }

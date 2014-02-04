@@ -346,8 +346,13 @@ Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
 		// add Adj LSA
 		addAdjLsa(alsa);
 		// schedule routing table calculation
-		pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
-							ndn::bind(&RoutingTable::calculate, &pnlsr.getRoutingTable()));
+		if ( pnlsr.getIsRouteCalculationScheduled() != 1 )
+		{
+			pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
+								ndn::bind(&RoutingTable::calculate, 
+								&pnlsr.getRoutingTable(),boost::ref(pnlsr)));
+			pnlsr.setIsRouteCalculationScheduled(1);
+		}
 	}
 	else
 	{
@@ -401,6 +406,12 @@ Lsdb::doesAdjLsaExist(string key)
 	}
 
 	return true;
+}
+
+std::list<AdjLsa>& 
+Lsdb::getAdjLsdb()
+{
+		return adjLsdb;
 }
 
 void 
