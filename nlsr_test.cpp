@@ -54,7 +54,16 @@ nlsrTest::schedlueAddingLsas(nlsr& pnlsr)
 							ndn::bind(&nlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(), 
 																									boost::ref(pnlsr)
 							,routerMaia,maiaAdj1,maiaAdj2));
-	
+
+	//sheduling Adding LSAs for Router itself
+	string routerPollux("/ndn/memphis.edu/cs/pollux");
+	Adjacent polluxAdj1("/ndn/memphis.edu/cs/maia",9,13,1,0);
+	Adjacent polluxAdj2("/ndn/memphis.edu/cs/altair",12,23,1,0);
+
+	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(90),
+							ndn::bind(&nlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(), 
+																									boost::ref(pnlsr)
+							,routerPollux,polluxAdj1,polluxAdj2));
 	
 	
 }

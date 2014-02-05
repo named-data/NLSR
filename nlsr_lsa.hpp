@@ -56,7 +56,7 @@ public:
 	{
 		lifeTime=lt;
 	}
-	string getLsaKey();
+	//string getLsaKey();
 protected:
 	string origRouter;
 	uint8_t lsType;
@@ -83,6 +83,8 @@ public:
 	{
 		npl.insertIntoNpl(name);
 	}
+
+	string getNameLsaKey();
 
 	string getNameLsaData();
 	
@@ -113,7 +115,7 @@ public:
 	{
 		adl.insert(adj);
 	}
-
+	string getAdjLsaKey();
 	string getAdjLsaData();
 	uint32_t getNoLink()
 	{
@@ -138,6 +140,7 @@ public:
 
 	CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
 	      																							, double r, double theta);
+	string getCorLsaKey();
 	string getCorLsaData();
 	
 	double getCorRadius()

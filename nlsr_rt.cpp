@@ -22,6 +22,7 @@ RoutingTable::calculate(nlsr& pnlsr)
 		{
 			if(pnlsr.getIsBuildAdjLsaSheduled() != 1)
 			{
+				cout<<"CLearing old routing table ....."<<endl;
 				clearRoutingTable();
 				clearDryRoutingTable(); // for dry run options
 				// calculate Link State routing
@@ -52,7 +53,7 @@ RoutingTable::calculate(nlsr& pnlsr)
 		else
 		{
 			cout<<"No Adj LSA of router itself,";
-			cout<<	" so Routint table can not be calculated :("<<endl;	
+			cout<<	" so Routing table can not be calculated :("<<endl;	
 			clearRoutingTable();
 		  clearDryRoutingTable(); // for dry run options
 		  // need to update NPT here
@@ -73,15 +74,13 @@ RoutingTable::calculate(nlsr& pnlsr)
 void 
 RoutingTable::calculateLsRoutingTable(nlsr& pnlsr)
 {
+	cout<<"RoutingTable::calculateLsRoutingTable Called"<<endl;
 	Map vMap;
 	vMap.createMapFromAdjLsdb(pnlsr);
 	int numOfRouter=vMap.getMapSize();
 
 	LinkStateRoutingTableCalculator lsrtc(numOfRouter);
-	lsrtc.allocateAdjMatrix();
-	lsrtc.makeAdjMatrix(pnlsr,vMap);
 	lsrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
-	lsrtc.freeAdjMatrix();
 	
 	
 }
@@ -101,12 +100,18 @@ RoutingTable::calculateHypDryRoutingTable(nlsr&pnlsr)
 void 
 RoutingTable::clearRoutingTable()
 {
-	rTable.clear();
+	if( rTable.size() > 0 )
+	{
+		rTable.clear();
+	}
 }
 
 void 
 RoutingTable::clearDryRoutingTable()
 {
-	dryTable.clear();
+	if (dryTable.size()>0 )
+	{
+		dryTable.clear();
+	}
 }
 

@@ -33,7 +33,7 @@ Lsdb::doesLsaExist(string key, int lsType)
 
 static bool
 nameLsaCompareByKey(NameLsa& nlsa1, string& key){
-	return nlsa1.getLsaKey()==key;
+	return nlsa1.getNameLsaKey()==key;
 }
 
 
@@ -69,7 +69,7 @@ Lsdb::getNameLsa(string key)
 bool 
 Lsdb::installNameLsa(NameLsa &nlsa)
 {
-	bool doesLsaExist_ = doesNameLsaExist(nlsa.getLsaKey());
+	bool doesLsaExist_ = doesNameLsaExist(nlsa.getNameLsaKey());
 	if ( !doesLsaExist_ )
 	{
 		// add name LSA
@@ -81,7 +81,7 @@ Lsdb::installNameLsa(NameLsa &nlsa)
 	else
 	{
 		// check for newer name LSA
-		NameLsa oldNameLsa=getNameLsa(nlsa.getLsaKey());
+		NameLsa oldNameLsa=getNameLsa(nlsa.getNameLsaKey());
 		// Discard or Update Name lsa, NPT, FIB
 		// if its not own LSA
 	}
@@ -94,7 +94,7 @@ Lsdb::addNameLsa(NameLsa &nlsa)
 {
 	std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(), 
 																		nameLsdb.end(),	
-   													  bind(nameLsaCompareByKey, _1, nlsa.getLsaKey()));
+   													  bind(nameLsaCompareByKey, _1, nlsa.getNameLsaKey()));
 
 	if( it == nameLsdb.end())
 	{
@@ -152,7 +152,7 @@ corLsaCompare(CorLsa& clsa1, CorLsa& clsa2){
 */
 static bool
 corLsaCompareByKey(CorLsa& clsa, string& key){
-	return clsa.getLsaKey()==key;
+	return clsa.getCorLsaKey()==key;
 }
 
 bool 
@@ -184,7 +184,7 @@ Lsdb::getCorLsa(string key)
 bool 
 Lsdb::installCorLsa(CorLsa &clsa)
 {
-	bool doesLsaExist_ = doesCorLsaExist(clsa.getLsaKey());
+	bool doesLsaExist_ = doesCorLsaExist(clsa.getCorLsaKey());
 	if ( !doesLsaExist_ )
 	{
 		// add cor LSA
@@ -196,7 +196,7 @@ Lsdb::installCorLsa(CorLsa &clsa)
 	else
 	{
 		// check for newer cor LSA
-		CorLsa oldCorLsa=getCorLsa(clsa.getLsaKey());
+		CorLsa oldCorLsa=getCorLsa(clsa.getCorLsaKey());
 		
 	}
 	
@@ -208,7 +208,7 @@ Lsdb::addCorLsa(CorLsa& clsa)
 {
 	std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(), 
 																		corLsdb.end(),	
-   														bind(corLsaCompareByKey, _1, clsa.getLsaKey()));
+   														bind(corLsaCompareByKey, _1, clsa.getCorLsaKey()));
 
 	if( it == corLsdb.end())
 	{
@@ -268,7 +268,7 @@ adjLsaCompare(AdjLsa& alsa1, AdjLsa& alsa2){
 */
 static bool
 adjLsaCompareByKey(AdjLsa& alsa, string& key){
-	return alsa.getLsaKey()==key;
+	return alsa.getAdjLsaKey()==key;
 }
 
 
@@ -315,7 +315,7 @@ Lsdb::addAdjLsa(AdjLsa &alsa)
 {
 	std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(), 
 																		adjLsdb.end(),	
-   														bind(adjLsaCompareByKey, _1, alsa.getLsaKey()));
+   														bind(adjLsaCompareByKey, _1, alsa.getAdjLsaKey()));
 
 	if( it == adjLsdb.end()){
 		adjLsdb.push_back(alsa);
@@ -340,7 +340,7 @@ Lsdb::getAdjLsa(string key)
 bool 
 Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
 {
-	bool doesLsaExist_ = doesAdjLsaExist(alsa.getLsaKey());
+	bool doesLsaExist_ = doesAdjLsaExist(alsa.getAdjLsaKey());
 	if ( !doesLsaExist_ )
 	{
 		// add Adj LSA
@@ -357,7 +357,7 @@ Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
 	else
 	{
 		// check for newer name LSA
-		AdjLsa oldAdjLsa=getAdjLsa(alsa.getLsaKey());
+		AdjLsa oldAdjLsa=getAdjLsa(alsa.getAdjLsaKey());
 		
 	}
 

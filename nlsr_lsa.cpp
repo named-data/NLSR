@@ -8,11 +8,12 @@
 
 using namespace std;
 
-string 
-Lsa::getLsaKey()
+
+string
+NameLsa::getNameLsaKey()
 {
 	string key;
-	key=origRouter + "/" + boost::lexical_cast<std::string>(lsType);
+	key=origRouter + "/" + boost::lexical_cast<std::string>(1);
 	return key;
 }
 
@@ -72,6 +73,7 @@ operator<<(std::ostream& os, NameLsa& nLsa)
 }
 
 
+
 CorLsa::CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
 	      																							, double r, double theta)
 {
@@ -81,6 +83,14 @@ CorLsa::CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
 	lifeTime=lt;
 	corRad=r;
 	corTheta=theta;
+}
+
+string
+CorLsa::getCorLsaKey()
+{
+	string key;
+	key=origRouter + "/" + boost::lexical_cast<std::string>(3);
+	return key;
 }
 
 string 
@@ -129,6 +139,14 @@ AdjLsa::AdjLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
 				addAdjacentToLsa((*it));
 		}
 	}
+}
+
+string
+AdjLsa::getAdjLsaKey()
+{
+	string key;
+	key=origRouter + "/" + boost::lexical_cast<std::string>(2);
+	return key;
 }
 
 string 

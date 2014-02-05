@@ -1,6 +1,13 @@
 #ifndef NLSR_SM_HPP
 #define NLSR_SM_HPP
 
+#include<list>
+#include<string>
+#include <ndn-cpp-dev/face.hpp>
+
+
+using namespace std;
+
 class SequencingManager
 {
 public:
