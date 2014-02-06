@@ -6,6 +6,7 @@
 #include "nlsr.hpp"
 #include "nlsr_map.hpp"
 #include "nlsr_rtc.hpp"
+#include "nlsr_rte.hpp"
 
 using namespace std;
 
@@ -59,6 +60,8 @@ RoutingTable::calculate(nlsr& pnlsr)
 		  // need to update NPT here
 		}
 
+		printRoutingTable();
+
 		pnlsr.setIsRouteCalculationScheduled(0); //clear scheduled flag
 		pnlsr.setIsRoutingTableCalculating(0); //unsetting routing table calculation
 	}
@@ -81,21 +84,106 @@ RoutingTable::calculateLsRoutingTable(nlsr& pnlsr)
 
 	LinkStateRoutingTableCalculator lsrtc(numOfRouter);
 	lsrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
-	
-	
 }
 
 void 
 RoutingTable::calculateHypRoutingTable(nlsr& pnlsr)
 {
-	
+	Map vMap;
+	vMap.createMapFromAdjLsdb(pnlsr);
+	int numOfRouter=vMap.getMapSize();
+	HypRoutingTableCalculator hrtc(numOfRouter,0);
+	hrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
 }
 
 void 
-RoutingTable::calculateHypDryRoutingTable(nlsr&pnlsr)
+RoutingTable::calculateHypDryRoutingTable(nlsr& pnlsr)
 {
+	Map vMap;
+	vMap.createMapFromAdjLsdb(pnlsr);
+	int numOfRouter=vMap.getMapSize();
+	HypRoutingTableCalculator hrtc(numOfRouter,1);
+	hrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
+}
+
+static bool
+routingTableEntryCompare(RoutingTableEntry& rte, string& destRouter){
+	return rte.getDestination()==destRouter;
+}
+
+// function related to manipulation of routing table
+void 
+RoutingTable::addNextHop(string destRouter, NextHop& nh)
+{
+	std::pair<RoutingTableEntry&, bool> rte=findRoutingTableEntry(destRouter);
+	if( !rte.second )
+	{
+		RoutingTableEntry rte(destRouter);
+		rte.getNhl().addNextHop(nh);
+		rTable.push_back(rte);
+	}
+	else
+	{
+		(rte.first).getNhl().addNextHop(nh);
+	}
+}
+
+std::pair<RoutingTableEntry&, bool> 
+RoutingTable::findRoutingTableEntry(string destRouter)
+{
+	std::list<RoutingTableEntry >::iterator it = std::find_if( rTable.begin(), 
+									rTable.end(),	
+   								bind(&routingTableEntryCompare, _1, destRouter));
+  if ( it != rTable.end() )
+  {
+  		return std::make_pair(boost::ref((*it)),true);
+  }
+  RoutingTableEntry rteEmpty;
+  return std::make_pair(boost::ref(rteEmpty),false);
+}
+
+void
+RoutingTable::printRoutingTable()
+{
+	cout<<"---------------Routing Table------------------"<<endl;
+	for(std::list<RoutingTableEntry>::iterator it=rTable.begin() ;
+															                       it != rTable.end(); ++it)
+	{
+			cout<<(*it)<<endl;
+	}
+}
+
+
+//function related to manipulation of dry routing table
+void 
+RoutingTable::addNextHopToDryTable(string destRouter, NextHop& nh)
+{
+	std::list<RoutingTableEntry >::iterator it = std::find_if( dryTable.begin(), 
+									dryTable.end(),	
+   								bind(&routingTableEntryCompare, _1, destRouter));
+	if ( it == dryTable.end() ){
+		RoutingTableEntry rte(destRouter);
+		rte.getNhl().addNextHop(nh);
+		dryTable.push_back(rte);
+	}	
+	else
+	{
+		(*it).getNhl().addNextHop(nh);
+	}
 	
 }
+
+void
+RoutingTable::printDryRoutingTable()
+{
+	cout<<"--------Dry Run's Routing Table--------------"<<endl;
+	for(std::list<RoutingTableEntry>::iterator it=dryTable.begin() ;
+															                      it != dryTable.end(); ++it)
+	{
+		cout<<(*it)<<endl;
+	}
+}
+
 
 void 
 RoutingTable::clearRoutingTable()

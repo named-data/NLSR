@@ -87,7 +87,7 @@ void
 nlsrTest::secheduledAddCorLsa(nlsr& pnlsr,string router, double r, double angle)
 {
 	CorLsa corLsa(router,3,1,3600,r,angle);
-	pnlsr.getLsdb().installCorLsa(corLsa);
+	pnlsr.getLsdb().installCorLsa(pnlsr, corLsa);
 }
 
 void 

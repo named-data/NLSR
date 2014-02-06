@@ -38,7 +38,7 @@ class Adjacent{
 			return connectingFace;
 		}
 		 
-		void getConnectingFace(int cf){
+		void setConnectingFace(int cf){
 			connectingFace=cf;
 		}
 

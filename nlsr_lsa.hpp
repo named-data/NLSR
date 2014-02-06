@@ -145,7 +145,14 @@ public:
 	
 	double getCorRadius()
 	{
-		return corRad;
+		if ( corRad >= 0 )
+		{	
+			return corRad;
+		}
+		else 
+		{
+			return -1;
+		}
 	}
 	
 	void setCorRadius(double cr)

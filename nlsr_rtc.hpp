@@ -25,6 +25,7 @@ public:
 	}
 protected:
 	void allocateAdjMatrix();
+	void initMatrix();
 	void makeAdjMatrix(nlsr& pnlsr,Map pMap);
 	void printAdjMatrix();
 	int getNumOfLinkfromAdjMatrix(int sRouter);
@@ -32,9 +33,23 @@ protected:
 	void adjustAdMatrix(int source, int link, double linkCost);
 	void getLinksFromAdjMatrix(int *links, double *linkCosts, int source);
 
+	void allocateLinks();
+	void allocateLinkCosts();
+	void freeLinks();
+	void freeLinksCosts();
+
+	void setNoLink(int nl)
+	{
+		vNoLink=nl;
+	}
+
 protected:
 	double ** adjMatrix;
 	int numOfRouter;
+
+	int vNoLink;
+	int *links;
+	double *linkCosts;
 };
 
 class LinkStateRoutingTableCalculator: public RoutingTableCalculator
@@ -44,13 +59,11 @@ public:
 		: EMPTY_PARENT(-12345)
 		, INF_DISTANCE(2147483647)
 		, NO_MAPPING_NUM(-1)
+		, NO_NEXT_HOP(-12345)
 	{
 		numOfRouter=rn;
 	}
-	void setNoLink(int nl)
-	{
-		vNoLink=nl;
-	}
+	
 
 	void calculatePath(Map& pMap, RoutingTable& rt, nlsr& pnlsr);
 	
@@ -61,28 +74,27 @@ private:
 	int isNotExplored(int *Q, int u,int start, int element);
 	void printAllLsPath(int sourceRouter);
 	void printLsPath(int destRouter);
+	void addAllLsNextHopsToRoutingTable(nlsr& pnlsr, RoutingTable& rt,
+	                                                  Map& pMap,int sourceRouter);
+	int getLsNextHop(int dest, int source);
 
 	void allocateParent();
 	void allocateDistance();
 	void freeParent();
 	void freeDistance();
 
-	void allocateLinks();
-	void allocateLinkCosts();
-	void freeLinks();
-	void freeLinksCosts();
+
 	
 
 private:	
 	int *parent;
 	double *distance;
 
-	int vNoLink;
-	int *links;
-	double *linkCosts;
+	
 	const int EMPTY_PARENT;
 	const double INF_DISTANCE;
 	const int NO_MAPPING_NUM;
+	const int NO_NEXT_HOP;
 
 };
 
@@ -90,23 +102,40 @@ class HypRoutingTableCalculator: public RoutingTableCalculator
 {
 public:
 	HypRoutingTableCalculator(int rn)
+		:  MATH_PI(3.141592654)
 	{
 		numOfRouter=rn;
+		isDryRun=0;		
+	}
+	HypRoutingTableCalculator(int rn, int idr)
+		:  MATH_PI(3.141592654)
+	{
+		numOfRouter=rn;
+		isDryRun=idr;
 	}
 
 	void calculatePath(Map& pMap, RoutingTable& rt, nlsr& pnlsr);
 
-};
+private:
+	void allocateLinkFaces();
+	void allocateDistanceToNeighbor();
+	void allocateDistFromNbrToDest();
+	void freeLinkFaces();
+	void freeDistanceToNeighbor();
+	void freeDistFromNbrToDest();	
 
-class HypDryRoutingTableCalculator: public RoutingTableCalculator
-{
-	public:
-	HypDryRoutingTableCalculator(int rn)
-	{
-		numOfRouter=rn;
-	}
+	double getHyperbolicDistance(nlsr& pnlsr,Map& pMap, int src, int dest);
+	void addHypNextHopsToRoutingTable(nlsr& pnlsr,Map& pMap,
+	                                      RoutingTable& rt, int noFaces,int dest);
 
-	void calculatePath(Map& pMap, RoutingTable& rt, nlsr& pnlsr);
+private:
+	int isDryRun;
+
+	int *linkFaces;
+	double *distanceToNeighbor;
+	double *distFromNbrToDest;
+
+	const double MATH_PI;
 
 };
 

@@ -46,6 +46,22 @@ Adl::updateAdjacentStatus(string adjName, int s){
 
 }
 
+Adjacent 
+Adl::getAdjacent(string adjName)
+{
+	Adjacent adj(adjName);
+	
+	std::list<Adjacent >::iterator it = std::find_if( adjList.begin(), 
+								adjList.end(),	
+   								bind(&adjacent_compare, _1, adj));
+
+	if( it != adjList.end()){
+		return (*it);
+	}
+
+	return adj;
+}
+
 int 
 Adl::updateAdjacentLinkCost(string adjName, double lc){
 	Adjacent adj(adjName);

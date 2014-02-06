@@ -164,7 +164,7 @@ Lsdb::buildAndInstallOwnCorLsa(nlsr& pnlsr){
 					, pnlsr.getConfParameter().getCorR()
 					, pnlsr.getConfParameter().getCorTheta() );
 	pnlsr.getSm().setCorLsaSeq(pnlsr.getSm().getCorLsaSeq()+1);
-	installCorLsa(corLsa);
+	installCorLsa(pnlsr, corLsa);
 
 	return true;
 }
@@ -182,16 +182,27 @@ Lsdb::getCorLsa(string key)
 }
 
 bool 
-Lsdb::installCorLsa(CorLsa &clsa)
+Lsdb::installCorLsa(nlsr& pnlsr, CorLsa &clsa)
 {
 	bool doesLsaExist_ = doesCorLsaExist(clsa.getCorLsaKey());
 	if ( !doesLsaExist_ )
 	{
 		// add cor LSA
 		addCorLsa(clsa);
+		printCorLsdb(); //debugging purpose
 		//schedule routing table calculation only if 
 		//hyperbolic calculation is scheduled
-		printCorLsdb();
+		if (pnlsr.getConfParameter().getIsHyperbolicCalc() >=1 )
+		{
+			if ( pnlsr.getIsRouteCalculationScheduled() != 1 )
+			{
+				pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
+								ndn::bind(&RoutingTable::calculate, 
+								&pnlsr.getRoutingTable(),boost::ref(pnlsr)));
+				pnlsr.setIsRouteCalculationScheduled(1);
+			}	
+		}
+		
 	}
 	else
 	{

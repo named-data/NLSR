@@ -25,7 +25,7 @@ public:
 	//function related to Cor LSDB
 	bool buildAndInstallOwnCorLsa(nlsr& pnlsr);
 	CorLsa& getCorLsa(string key);
-	bool installCorLsa(CorLsa &clsa);
+	bool installCorLsa(nlsr& pnlsr, CorLsa &clsa);
 	bool removeCorLsa(string& key);
 	void printCorLsdb(); //debugging
 

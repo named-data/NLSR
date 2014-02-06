@@ -27,8 +27,10 @@ Nhl::addNextHop(NextHop& nh)
 	if ( it == nexthopList.end() ){
 		nexthopList.push_back(nh);
 	}
-
-	(*it).setRouteCost(nh.getRouteCost());
+	if ( (*it).getRouteCost() > nh.getRouteCost() )
+	{
+		(*it).setRouteCost(nh.getRouteCost());
+	}
 }
 
 

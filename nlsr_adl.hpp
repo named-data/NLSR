@@ -27,6 +27,7 @@ public:
 
 	bool isAdjLsaBuildable(nlsr& pnlsr);
 	int getNumOfActiveNeighbor();
+	Adjacent getAdjacent(string adjName);
 
 	int getAdlSize()
 	{
