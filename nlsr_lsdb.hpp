@@ -1,6 +1,7 @@
 #ifndef NLSR_LSDB_HPP
 #define NLSR_LSDB_HPP
 
+#include <utility>
 #include "nlsr_lsa.hpp"
 
 using namespace std;
@@ -17,14 +18,14 @@ public:
 	bool doesLsaExist(string key, int lsType);
 	// function related to Name LSDB 
 	bool buildAndInstallOwnNameLsa(nlsr& pnlsr);
-	NameLsa& getNameLsa(string key);
-	bool installNameLsa(NameLsa &nlsa);
+	std::pair<NameLsa&, bool>  getNameLsa(string key);
+	bool installNameLsa(nlsr& pnlsr, NameLsa &nlsa);
 	bool removeNameLsa(string& key);
 	void printNameLsdb(); //debugging
 
 	//function related to Cor LSDB
 	bool buildAndInstallOwnCorLsa(nlsr& pnlsr);
-	CorLsa& getCorLsa(string key);
+	std::pair<CorLsa&, bool> getCorLsa(string key);
 	bool installCorLsa(nlsr& pnlsr, CorLsa &clsa);
 	bool removeCorLsa(string& key);
 	void printCorLsdb(); //debugging
@@ -34,7 +35,7 @@ public:
 	bool buildAndInstallOwnAdjLsa(nlsr& pnlsr);
 	bool removeAdjLsa(string& key);
 	bool installAdjLsa(nlsr& pnlsr, AdjLsa &alsa);
-	AdjLsa& getAdjLsa(string key);
+	std::pair<AdjLsa& , bool> getAdjLsa(string key);
 	std::list<AdjLsa>& getAdjLsdb();
 	void printAdjLsdb();
 	

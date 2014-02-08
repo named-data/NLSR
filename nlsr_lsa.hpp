@@ -84,6 +84,11 @@ public:
 		npl.insertIntoNpl(name);
 	}
 
+	void removeNameFromLsa(string& name)
+	{
+		npl.removeFromNpl(name);
+	}
+
 	string getNameLsaKey();
 
 	string getNameLsaData();

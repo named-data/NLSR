@@ -7,12 +7,15 @@
 #include "nlsr_map.hpp"
 #include "nlsr_rtc.hpp"
 #include "nlsr_rte.hpp"
+#include "nlsr_npt.hpp"
 
 using namespace std;
 
 void
 RoutingTable::calculate(nlsr& pnlsr)
 {
+	//debugging purpose
+	pnlsr.getNpt().printNpt();
 
 	if ( 	pnlsr.getIsRoutingTableCalculating() == 0 )
 	{
@@ -44,6 +47,12 @@ RoutingTable::calculate(nlsr& pnlsr)
 				}
 
 				//need to update NPT here
+				pnlsr.getNpt().updateNptWithNewRoute(pnlsr);
+				//debugging purpose
+				printRoutingTable();
+				pnlsr.getNpt().printNpt();
+				pnlsr.getFib().printFib();
+				//debugging purpose end
 			}
 			else
 			{
@@ -58,9 +67,14 @@ RoutingTable::calculate(nlsr& pnlsr)
 			clearRoutingTable();
 		  clearDryRoutingTable(); // for dry run options
 		  // need to update NPT here
+		  pnlsr.getNpt().updateNptWithNewRoute(pnlsr);
+		  //debugging purpose
+		  	printRoutingTable();
+			pnlsr.getNpt().printNpt();
+			pnlsr.getFib().printFib();
+			//debugging purpose end
 		}
 
-		printRoutingTable();
 
 		pnlsr.setIsRouteCalculationScheduled(0); //clear scheduled flag
 		pnlsr.setIsRoutingTableCalculating(0); //unsetting routing table calculation
@@ -71,6 +85,7 @@ RoutingTable::calculate(nlsr& pnlsr)
 									 ndn::bind(&RoutingTable::calculate,this,boost::ref(pnlsr)));
 		pnlsr.setIsRouteCalculationScheduled(1);
 	}
+
 }
 
 

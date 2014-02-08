@@ -13,6 +13,8 @@
 #include "nlsr_lsdb.hpp"
 #include "nlsr_sm.hpp"
 #include "nlsr_rt.hpp"
+#include "nlsr_npt.hpp"
+#include "nlsr_fib.hpp"
 //testing
 #include "nlsr_test.hpp"
 
@@ -41,6 +43,8 @@ public:
     , isRouteCalculationScheduled(0)
     , isRoutingTableCalculating(0)
     , routingTable()
+    , npt()
+    , fib()
     , nlsrTesting()
 	{
 		isDaemonProcess=false;
@@ -123,6 +127,16 @@ public:
 		return routingTable;
 	}
 
+	Npt& getNpt()
+	{
+		return npt;
+	}
+
+	Fib& getFib()
+	{
+		return fib;
+	}
+
 	long int getAdjBuildCount()
 	{
 		return adjBuildCount;
@@ -200,7 +214,8 @@ private:
 	
 	Lsdb nlsrLsdb;
 	RoutingTable routingTable;
-	
+	Npt npt;
+	Fib fib;
 	
 
 	long int adjBuildCount;

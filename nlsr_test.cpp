@@ -17,7 +17,7 @@ nlsrTest::schedlueAddingLsas(nlsr& pnlsr)
 	string router("/ndn/memphis.edu/cs/altair");
 	string name1("/ndn/memphis.edu/cs/altair/name1");
 	string name2("/ndn/memphis.edu/cs/altair/name2");
-	string name3("/ndn/memphis.edu/cs/altair/name3");
+	string name3("/ndn/memphis.edu/cs/broadcast");
 	Adjacent adj1("/ndn/memphis.edu/cs/pollux",7,17,1,0);
 	Adjacent adj2("/ndn/memphis.edu/cs/maia",15,27,1,0);
 	
@@ -38,7 +38,7 @@ nlsrTest::schedlueAddingLsas(nlsr& pnlsr)
 	string routerMaia("/ndn/memphis.edu/cs/maia");
 	string maiaName1("/ndn/memphis.edu/maia/name1");
 	string maiaName2("/ndn/memphis.edu/maia/name2");
-	string maiaName3("/ndn/memphis.edu/maia/name3");
+	string maiaName3("/ndn/memphis.edu/cs/broadcast");
 	Adjacent maiaAdj1("/ndn/memphis.edu/cs/pollux",8,25,1,0);
 	Adjacent maiaAdj2("/ndn/memphis.edu/cs/altair",11,15,1,0);
 
@@ -79,7 +79,7 @@ nlsrTest::secheduledAddNameLsa(nlsr& pnlsr, string router,
 	npl.insertIntoNpl(name2);
 	npl.insertIntoNpl(name3);
 	NameLsa nameLsa(router,1,1,3600,npl);
-	pnlsr.getLsdb().installNameLsa(nameLsa);
+	pnlsr.getLsdb().installNameLsa(pnlsr, nameLsa);
 	
 }
 																		 

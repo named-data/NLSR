@@ -10,6 +10,18 @@ nexthopCompare(NextHop& nh1, NextHop& nh2){
 	return nh1.getConnectingFace()==nh2.getConnectingFace();
 }
 
+static bool
+nexthopRemoveCompare(NextHop& nh1, NextHop& nh2){
+	return (nh1.getConnectingFace()==nh2.getConnectingFace() && 
+	       nh1.getRouteCost() == nh2.getRouteCost()) ;
+}
+
+static bool
+nextHopSortingComparator(NextHop& nh1, NextHop& nh2)
+{
+	return nh1.getRouteCost() < nh2.getRouteCost();
+}
+
 /** 
 Add next hop to the Next Hop list
 If next hop is new it is added
@@ -33,6 +45,27 @@ Nhl::addNextHop(NextHop& nh)
 	}
 }
 
+/**
+Remove a next hop only if both next hop face and route cost are same
+
+*/
+
+void 
+Nhl::removeNextHop(NextHop &nh)
+{
+	std::list<NextHop >::iterator it = std::find_if( nexthopList.begin(), 
+									nexthopList.end(),	
+   								bind(&nexthopRemoveCompare, _1, nh));
+  if ( it != nexthopList.end() ){
+		nexthopList.erase(it);
+	}
+}
+
+void
+Nhl::sortNhl()
+{
+	nexthopList.sort(nextHopSortingComparator);
+}
 
 ostream&
 operator<<(ostream& os, Nhl& nhl)

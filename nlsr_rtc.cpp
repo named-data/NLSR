@@ -459,26 +459,29 @@ HypRoutingTableCalculator::getHyperbolicDistance(nlsr& pnlsr,
 	string srcRouterKey=pMap.getRouterNameByMappingNo(src)+"/3";
 	string destRouterKey=pMap.getRouterNameByMappingNo(dest)+"/3";
 
-	double srcRadius=pnlsr.getLsdb().getCorLsa(srcRouterKey).getCorRadius();
-	double srcTheta=pnlsr.getLsdb().getCorLsa(srcRouterKey).getCorTheta();
+	double srcRadius=(pnlsr.getLsdb().getCorLsa(srcRouterKey).first).getCorRadius();
+	double srcTheta=(pnlsr.getLsdb().getCorLsa(srcRouterKey).first).getCorTheta();
 
-	double destRadius=pnlsr.getLsdb().getCorLsa(destRouterKey).getCorRadius();
-	double destTheta=pnlsr.getLsdb().getCorLsa(destRouterKey).getCorTheta();
+	double destRadius=(pnlsr.getLsdb().getCorLsa(destRouterKey).first).getCorRadius();
+	double destTheta=(pnlsr.getLsdb().getCorLsa(destRouterKey).first).getCorTheta();
 
 
 	double diffTheta = fabs (srcTheta - destTheta);
 
-	if (diffTheta > MATH_PI){
+	if (diffTheta > MATH_PI)
+	{
 		diffTheta = 2 * MATH_PI - diffTheta; 	
 	}
 
-	if ( srcRadius != -1 && destRadius != -1 ){
+	if ( srcRadius != -1 && destRadius != -1 )
+	{
 		if (diffTheta == 0)
 			distance = fabs (srcRadius - destRadius); 
 		else
 			distance = acosh((cosh(srcRadius)*cosh(destRadius))-
 					(sinh(srcRadius)*sinh(destRadius)*cos(diffTheta)));
-	}else{
+	}else
+	{
 		distance = -1;
 	}
 

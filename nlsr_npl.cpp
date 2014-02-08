@@ -33,6 +33,26 @@ Npl::insertIntoNpl(string& name){
 
 }
 
+int 
+Npl::removeFromNpl(string& name)
+{
+	std::list<string >::iterator it = std::find_if( nameList.begin(), 
+								nameList.end(),	
+   								bind(&nameCompare, _1 , name));
+
+	if( it != nameList.end() ){
+		nameList.erase(it);
+	}
+
+	return -1;
+}
+
+void
+Npl::sortNpl()
+{
+	nameList.sort();
+}
+
 void
 Npl::printNpl(){
 	int i=1;

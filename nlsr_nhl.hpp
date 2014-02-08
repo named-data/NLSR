@@ -21,6 +21,19 @@ public:
 	{
 	}
 	void addNextHop(NextHop &nh);
+	void removeNextHop(NextHop &nh);
+	void sortNhl();
+	int getNhlSize()
+	{
+		return nexthopList.size();
+	}
+	void resetNhl()
+	{
+		if (nexthopList.size() > 0 )
+		{
+			nexthopList.clear();
+		}
+	}
 	std::list< NextHop >& getNextHopList()
 	{
 		return nexthopList;

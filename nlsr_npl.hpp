@@ -14,6 +14,8 @@ public:
 	~Npl();
 
 	int insertIntoNpl(string& name);
+	int removeFromNpl(string& name);
+	void sortNpl();
 	int getNplSize()
 	{
 		return nameList.size();
