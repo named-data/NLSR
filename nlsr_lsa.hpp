@@ -127,6 +127,10 @@ public:
 		return noLink;
 	}
 
+	bool isLsaContentEqual(AdjLsa& alsa);
+	void addNptEntriesForAdjLsa(nlsr& pnlsr);
+	void removeNptEntriesForAdjLsa(nlsr& pnlsr);
+
 private:
 	uint32_t noLink;
 	Adl adl;
@@ -173,6 +177,8 @@ public:
 	void setCorTheta(double ct){
 		corTheta=ct;
 	}
+
+	bool isLsaContentEqual(CorLsa& clsa);
 private:
 	double corRad;
 	double corTheta;

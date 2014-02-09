@@ -58,6 +58,7 @@ Fib::updateFib(string name, Nhl& nextHopList, int maxFacesPerPrefix)
   				(*it).getNhl().addNextHop((*nhit));
   			}
   		}
+  		(*it).getNhl().sortNhl();
   }
   else
   {
@@ -67,6 +68,7 @@ Fib::updateFib(string name, Nhl& nextHopList, int maxFacesPerPrefix)
   		{
   			newEntry.getNhl().addNextHop((*nhit));
   		}
+  		newEntry.getNhl().sortNhl();
   		fibTable.push_back(newEntry);	
   }
 }
@@ -127,6 +129,7 @@ Fib::printFib()
 	for(std::list<FibEntry>::iterator it = fibTable.begin(); it!=fibTable.end();
 	                                                                         ++it)
 	{
+		//(*it).getNhl().sortNhl();
 		cout<<(*it);
 	}
 }

@@ -65,6 +65,8 @@ class Adjacent{
 		void setInterestTimedOutNo(int iton){
 			interestTimedOutNo=iton;
 		}
+
+		bool isAdjacentEqual(Adjacent& adj);
 	private:
 		string adjacentName;
 		int connectingFace;

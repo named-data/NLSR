@@ -24,14 +24,25 @@ public:
 	int getStatusOfNeighbor(string& neighbor);
 	void setStatusOfNeighbor(string& neighbor, int status);
 	void setTimedOutInterestCount(string& neighbor, int count);
+	void addAdjacentsFromAdl(Adl& adl);
 
 	bool isAdjLsaBuildable(nlsr& pnlsr);
 	int getNumOfActiveNeighbor();
 	Adjacent getAdjacent(string adjName);
 
+	bool isAdlEqual(Adl &adl);
+
 	int getAdlSize()
 	{
 		return adjList.size();
+	}
+
+	void resetAdl()
+	{
+		if( adjList.size() > 0 )
+		{
+			adjList.clear();
+		}
 	}
 
 	void printAdl();

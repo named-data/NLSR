@@ -1,5 +1,7 @@
 #include<iostream>
 #include<string>
+#include<cmath>
+#include<limits>
 
 #include "nlsr_adjacent.hpp"
 
@@ -11,6 +13,15 @@ Adjacent::Adjacent(const string& an, int cf, double lc, int s, int iton){
 	linkCost=lc;
 	status=s;
 	interestTimedOutNo=iton;
+}
+
+bool 
+Adjacent::isAdjacentEqual(Adjacent& adj)
+{
+	return ( adjacentName == adj.getAdjacentName() ) && 
+	       ( connectingFace == adj.getConnectingFace() ) &&
+	       (std::abs(linkCost - adj.getLinkCost()) < 
+	                                    std::numeric_limits<double>::epsilon()) ;
 }
 
 std::ostream&

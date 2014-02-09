@@ -28,6 +28,17 @@ Adl::insert(Adjacent& adj){
 	adjList.push_back(adj);
 	return 0;
 }
+
+void 
+Adl::addAdjacentsFromAdl(Adl& adl)
+{
+	for(std::list<Adjacent >::iterator it=adl.getAdjList().begin();
+	                                             it!=adl.getAdjList().end(); ++it)
+	{
+		insert((*it));
+	}
+}
+
 int
 Adl::updateAdjacentStatus(string adjName, int s){
 	Adjacent adj(adjName);
@@ -61,6 +72,37 @@ Adl::getAdjacent(string adjName)
 
 	return adj;
 }
+
+
+bool 
+Adl::isAdlEqual(Adl &adl)
+{
+	if ( getAdlSize() != adl.getAdlSize() )
+	{
+		return false;
+	}
+
+	adjList.sort(adjacent_compare);	
+	adl.getAdjList().sort(adjacent_compare);
+	int equalAdjCount=0;
+
+	std::list< Adjacent > adjList2=adl.getAdjList();
+
+	std::list<Adjacent>::iterator it1;
+	std::list<Adjacent>::iterator it2;
+	for(it1=adjList.begin() , it2=adjList2.begin() ; 
+	                                              it1!=adjList.end(); it1++,it2++)
+	{
+		if ( !(*it1).isAdjacentEqual((*it2)) )
+		{
+			break;
+		}
+		equalAdjCount++;
+	}
+
+	return equalAdjCount==getAdlSize();
+}
+
 
 int 
 Adl::updateAdjacentLinkCost(string adjName, double lc){

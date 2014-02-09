@@ -1,10 +1,13 @@
 #include<string>
 #include<iostream>
 #include<algorithm>
+#include<cmath>
+#include<limits>
 
 #include "nlsr_lsa.hpp"
 #include "nlsr_npl.hpp"
 #include "nlsr_adjacent.hpp"
+#include "nlsr.hpp"
 
 using namespace std;
 
@@ -93,6 +96,15 @@ CorLsa::getCorLsaKey()
 	return key;
 }
 
+bool 
+CorLsa::isLsaContentEqual(CorLsa& clsa)
+{
+	return (std::abs(corRad - clsa.getCorRadius()) < 
+	                                    std::numeric_limits<double>::epsilon()) &&
+	       (std::abs(corTheta - clsa.getCorTheta()) < 
+	                                    std::numeric_limits<double>::epsilon());
+}
+
 string 
 CorLsa::getCorLsaData()
 {
@@ -149,6 +161,13 @@ AdjLsa::getAdjLsaKey()
 	return key;
 }
 
+bool 
+AdjLsa::isLsaContentEqual(AdjLsa& alsa)
+{
+	return adl.isAdlEqual(alsa.getAdl());
+}
+
+
 string 
 AdjLsa::getAdjLsaData(){
 	string adjLsaData;
@@ -171,6 +190,29 @@ AdjLsa::getAdjLsaData(){
 	}
 	return adjLsaData;
 }
+
+
+void 
+AdjLsa::addNptEntriesForAdjLsa(nlsr& pnlsr)
+{
+	if ( getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
+	{
+		pnlsr.getNpt().addNpte(getOrigRouter(), getOrigRouter(),pnlsr);
+	}
+
+}
+
+
+void 
+AdjLsa::removeNptEntriesForAdjLsa(nlsr& pnlsr)
+{
+	if ( getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
+	{
+		pnlsr.getNpt().removeNpte(getOrigRouter(), getOrigRouter(),pnlsr);
+	}
+}
+
+
 
 std::ostream& 
 operator<<(std::ostream& os, AdjLsa& aLsa) 
