@@ -42,10 +42,18 @@ Lsdb::getNameLsa(string key)
 }
 
 
+void 
+Lsdb::scheduleNameLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
+{
+	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+								                      ndn::bind(&Lsdb::exprireOrRefreshNameLsa,
+								                      this,boost::ref(pnlsr), key, seqNo));
+}
 
 bool 
 Lsdb::installNameLsa(nlsr& pnlsr, NameLsa &nlsa)
 {
+	int timeToExpire=lsaRefreshTime;
 	std::pair<NameLsa& , bool> chkNameLsa=getNameLsa(nlsa.getNameLsaKey());
 	if ( !chkNameLsa.second )
 	{
@@ -62,7 +70,14 @@ Lsdb::installNameLsa(nlsr& pnlsr, NameLsa &nlsa)
 					pnlsr.getNpt().addNpte((*it),nlsa.getOrigRouter(),pnlsr);
 				}
 			}
-		} 
+		}
+
+		if(nlsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
+		{
+			timeToExpire=nlsa.getLifeTime();
+		}
+		scheduleNameLsaExpiration( pnlsr, nlsa.getNameLsaKey(),
+			                                         nlsa.getLsSeqNo(), timeToExpire);
 	}
 	else
 	{
@@ -110,8 +125,14 @@ Lsdb::installNameLsa(nlsr& pnlsr, NameLsa &nlsa)
       				pnlsr.getNpt().removeNpte((*it),nlsa.getOrigRouter(),pnlsr);
       			}
       		}
-      }  
-			
+      } 
+
+			if(nlsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
+			{
+				timeToExpire=nlsa.getLifeTime();
+			}
+			scheduleNameLsaExpiration( pnlsr, nlsa.getNameLsaKey(),
+			                                         nlsa.getLsSeqNo(), timeToExpire);
 		}
 	}
 	
@@ -122,8 +143,7 @@ bool
 Lsdb::addNameLsa(NameLsa &nlsa)
 {
 	std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(), 
-																		nameLsdb.end(),	
-   													  bind(nameLsaCompareByKey, _1, nlsa.getNameLsaKey()));
+					 nameLsdb.end(), bind(nameLsaCompareByKey, _1, nlsa.getNameLsaKey()));
 
 	if( it == nameLsdb.end())
 	{
@@ -222,9 +242,18 @@ Lsdb::getCorLsa(string key)
 	return std::make_pair(boost::ref(clsa),false);
 }
 
+void
+Lsdb::scheduleCorLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
+{
+	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+								                      ndn::bind(&Lsdb::exprireOrRefreshCorLsa,
+								                      this,boost::ref(pnlsr),key,seqNo));
+}
+
 bool 
 Lsdb::installCorLsa(nlsr& pnlsr, CorLsa &clsa)
 {
+	int timeToExpire=lsaRefreshTime;
 	std::pair<CorLsa& , bool> chkCorLsa=getCorLsa(clsa.getCorLsaKey());
 	if ( !chkCorLsa.second )
 	{
@@ -236,14 +265,15 @@ Lsdb::installCorLsa(nlsr& pnlsr, CorLsa &clsa)
 		}
 		if (pnlsr.getConfParameter().getIsHyperbolicCalc() >=1 )
 		{
-			if ( pnlsr.getIsRouteCalculationScheduled() != 1 )
-			{
-				pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
-								ndn::bind(&RoutingTable::calculate, 
-								&pnlsr.getRoutingTable(),boost::ref(pnlsr)));
-				pnlsr.setIsRouteCalculationScheduled(1);
-			}	
+			pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);	
 		}
+
+		if(clsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
+		{
+				timeToExpire=clsa.getLifeTime();
+		}
+	  scheduleCorLsaExpiration(pnlsr,clsa.getCorLsaKey(),
+	                                         clsa.getLsSeqNo(), timeToExpire);
 		
 	}
 	else
@@ -259,16 +289,17 @@ Lsdb::installCorLsa(nlsr& pnlsr, CorLsa &clsa)
 
 				if (pnlsr.getConfParameter().getIsHyperbolicCalc() >=1 )
 				{
-					if ( pnlsr.getIsRouteCalculationScheduled() != 1 )
-					{
-						pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
-								ndn::bind(&RoutingTable::calculate, 
-								&pnlsr.getRoutingTable(),boost::ref(pnlsr)));
-						pnlsr.setIsRouteCalculationScheduled(1);
-					}	
+					pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);	
 				}
 				
 			}
+
+			if(clsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
+			{
+				timeToExpire=clsa.getLifeTime();
+			}
+			scheduleCorLsaExpiration(pnlsr,clsa.getCorLsaKey(),
+	                                         clsa.getLsSeqNo(), timeToExpire);
 		}
 		
 	}
@@ -337,12 +368,7 @@ Lsdb::printCorLsdb() //debugging
 
 
 // Adj LSA and LSDB related function starts here
-/*
-static bool
-adjLsaCompare(AdjLsa& alsa1, AdjLsa& alsa2){
-	return alsa1.getLsaKey()==alsa1.getLsaKey();
-}
-*/
+
 static bool
 adjLsaCompareByKey(AdjLsa& alsa, string& key){
 	return alsa.getAdjLsaKey()==key;
@@ -366,10 +392,9 @@ Lsdb::scheduledAdjLsaBuild(nlsr& pnlsr)
 			}
 			else
 			{
-				//remove if there is any adj lsa in LSDB
 				string key=pnlsr.getConfParameter().getRouterPrefix()+"/2";
 				removeAdjLsa(pnlsr,key);
-				// Remove alll fib entries as per NPT
+				pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
 			}
 			pnlsr.setAdjBuildCount(pnlsr.getAdjBuildCount()-adjBuildCount);
 		}		
@@ -378,7 +403,7 @@ Lsdb::scheduledAdjLsaBuild(nlsr& pnlsr)
 	{
 		pnlsr.setIsBuildAdjLsaSheduled(1);
 		int schedulingTime=pnlsr.getConfParameter().getInterestRetryNumber()*
-		                   pnlsr.getConfParameter().getInterestRetryNumber();
+		                   pnlsr.getConfParameter().getInterestResendTime();
 		pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(schedulingTime),
 							ndn::bind(&Lsdb::scheduledAdjLsaBuild, pnlsr.getLsdb(), 
 																									boost::ref(pnlsr)));
@@ -417,21 +442,34 @@ Lsdb::getAdjLsa(string key)
 	return std::make_pair(boost::ref(alsa),false);
 }
 
+
+
+void 
+Lsdb::scheduleAdjLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
+{
+	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+								                      ndn::bind(&Lsdb::exprireOrRefreshAdjLsa,
+								                      this,boost::ref(pnlsr),key,seqNo));
+}
+
 bool 
 Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
 {
+	int timeToExpire=lsaRefreshTime;
 	std::pair<AdjLsa& , bool> chkAdjLsa=getAdjLsa(alsa.getAdjLsaKey());
 	if ( !chkAdjLsa.second )
 	{
 		addAdjLsa(alsa);
 		alsa.addNptEntriesForAdjLsa(pnlsr);
-		if ( pnlsr.getIsRouteCalculationScheduled() != 1 )
+		pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
+
+		if(alsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
 		{
-			pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
-								ndn::bind(&RoutingTable::calculate, 
-								&pnlsr.getRoutingTable(),boost::ref(pnlsr)));
-			pnlsr.setIsRouteCalculationScheduled(1);
+				timeToExpire=alsa.getLifeTime();
 		}
+		scheduleAdjLsaExpiration(pnlsr,alsa.getAdjLsaKey(),
+		                                            alsa.getLsSeqNo(),timeToExpire);
+		
 	}
 	else
 	{
@@ -444,14 +482,15 @@ Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
 			{
 				chkAdjLsa.first.getAdl().resetAdl();
 				chkAdjLsa.first.getAdl().addAdjacentsFromAdl(alsa.getAdl());
-				if ( pnlsr.getIsRouteCalculationScheduled() != 1 )
-				{
-					pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
-								ndn::bind(&RoutingTable::calculate, 
-								&pnlsr.getRoutingTable(),boost::ref(pnlsr)));
-					pnlsr.setIsRouteCalculationScheduled(1);
-				}	
+				pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);	
 			}
+			
+			if(alsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
+			{
+				timeToExpire=alsa.getLifeTime();
+			}
+			scheduleAdjLsaExpiration(pnlsr,alsa.getAdjLsaKey(),
+		                                            alsa.getLsSeqNo(),timeToExpire);
 		}
 		
 	}
@@ -508,6 +547,107 @@ std::list<AdjLsa>&
 Lsdb::getAdjLsdb()
 {
 		return adjLsdb;
+}
+
+void 
+Lsdb::setLsaRefreshTime(int lrt)
+{
+	lsaRefreshTime=lrt;
+}
+
+void 
+Lsdb::setThisRouterPrefix(string trp)
+{
+	thisRouterPrefix=trp;
+}
+
+void 
+Lsdb::exprireOrRefreshNameLsa(nlsr& pnlsr, string lsaKey, int seqNo)
+{
+	cout<<"Lsdb::exprireOrRefreshNameLsa Called "<<endl;
+	cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;
+	std::pair<NameLsa& , bool> chkNameLsa=getNameLsa(lsaKey);
+	if( chkNameLsa.second )
+	{
+		cout<<" LSA Exists with seq no: "<<chkNameLsa.first.getLsSeqNo()<<endl;
+		if ( chkNameLsa.first.getLsSeqNo() == seqNo )
+		{
+			if(chkNameLsa.first.getOrigRouter() == thisRouterPrefix )
+			{
+				cout<<"Own Name LSA, so refreshing name LSA"<<endl;
+				chkNameLsa.first.setLsSeqNo(chkNameLsa.first.getLsSeqNo()+1);
+				pnlsr.getSm().setNameLsaSeq(chkNameLsa.first.getLsSeqNo());
+				// publish routing update
+			}
+			else
+			{
+				cout<<"Other's Name LSA, so removing form LSDB"<<endl;
+				removeNameLsa(pnlsr, lsaKey);
+			}
+		}
+	}
+}
+
+void 
+Lsdb::exprireOrRefreshAdjLsa(nlsr& pnlsr, string lsaKey, int seqNo)
+{
+	cout<<"Lsdb::exprireOrRefreshAdjLsa Called "<<endl;
+	cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;
+	std::pair<AdjLsa& , bool> chkAdjLsa=getAdjLsa(lsaKey);
+	if( chkAdjLsa.second )
+	{
+		cout<<" LSA Exists with seq no: "<<chkAdjLsa.first.getLsSeqNo()<<endl;
+		if ( chkAdjLsa.first.getLsSeqNo() == seqNo )
+		{
+			if(chkAdjLsa.first.getOrigRouter() == thisRouterPrefix )
+			{
+				cout<<"Own Adj LSA, so refreshing Adj LSA"<<endl;
+				chkAdjLsa.first.setLsSeqNo(chkAdjLsa.first.getLsSeqNo()+1);
+				pnlsr.getSm().setAdjLsaSeq(chkAdjLsa.first.getLsSeqNo());
+				// publish routing update
+			}
+			else
+			{
+				cout<<"Other's Adj LSA, so removing form LSDB"<<endl;
+				removeAdjLsa(pnlsr, lsaKey);
+			}
+
+			// schedule Routing table calculaiton
+			pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
+		}
+	}
+}
+
+void 
+Lsdb::exprireOrRefreshCorLsa(nlsr& pnlsr, string lsaKey, int seqNo)
+{
+	cout<<"Lsdb::exprireOrRefreshCorLsa Called "<<endl;
+	cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;
+	std::pair<CorLsa& , bool> chkCorLsa=getCorLsa(lsaKey);
+	if( chkCorLsa.second )
+	{
+		cout<<" LSA Exists with seq no: "<<chkCorLsa.first.getLsSeqNo()<<endl;
+		if ( chkCorLsa.first.getLsSeqNo() == seqNo )
+		{
+			if(chkCorLsa.first.getOrigRouter() == thisRouterPrefix )
+			{
+				cout<<"Own Cor LSA, so refreshing Cor LSA"<<endl;
+				chkCorLsa.first.setLsSeqNo(chkCorLsa.first.getLsSeqNo()+1);
+				pnlsr.getSm().setCorLsaSeq(chkCorLsa.first.getLsSeqNo());
+				// publish routing update
+			}
+			else
+			{
+				cout<<"Other's Cor LSA, so removing form LSDB"<<endl;
+				removeCorLsa(pnlsr, lsaKey);
+			}
+
+			if (pnlsr.getConfParameter().getIsHyperbolicCalc() >=1 )
+			{
+				pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);	
+			}
+		}
+	}
 }
 
 

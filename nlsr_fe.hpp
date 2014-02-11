@@ -14,6 +14,7 @@ class FibEntry
 public:
 	FibEntry()
 		: name()
+		, timeToRefresh(0)
 	{
 	}
 
@@ -32,10 +33,21 @@ public:
 		return nhl;
 	}
 
+	int getTimeToRefresh()
+	{
+		return timeToRefresh;
+	}
+
+	void setTimeToRefresh(int ttr)
+	{
+		timeToRefresh=ttr;
+	}
+
 	bool isEqualNextHops(Nhl &nhlOther);
 	
 private:
 	string name;
+	int timeToRefresh;
 	Nhl nhl;
 };
 

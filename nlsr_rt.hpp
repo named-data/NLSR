@@ -26,6 +26,7 @@ public:
 	void addNextHopToDryTable(string destRouter, NextHop& nh);
 	void printDryRoutingTable();
 	std::pair<RoutingTableEntry&, bool> findRoutingTableEntry(string destRouter);
+	void scheduleRoutingTableCalculation(nlsr& pnlsr);
 
 private:
 	void calculateLsRoutingTable(nlsr& pnlsr);

@@ -2,6 +2,7 @@
 #include "nlsr_fe.hpp"
 #include "nlsr_fib.hpp"
 #include "nlsr_nhl.hpp"
+#include "nlsr.hpp"
 
 using namespace std;
 
@@ -29,13 +30,6 @@ Fib::removeFromFib(string name)
   }
 }
 
-/**
-If NHL is equal for current FIB and NPT then to change
-Otherwise
- Add the first Nexthop to FIB
- remove all old nexthop from FIB
- And add all other Nexthop to FIB
-*/
 
 void 
 Fib::updateFib(string name, Nhl& nextHopList, int maxFacesPerPrefix)
@@ -46,6 +40,7 @@ Fib::updateFib(string name, Nhl& nextHopList, int maxFacesPerPrefix)
 									       fibTable.end(), bind(&fibEntryNameCompare, _1, name));
   if( it != fibTable.end() )
   {
+  		nextHopList.sortNhl();
   		if ( !(*it).isEqualNextHops(nextHopList) ) 
   		{
   			std::list<NextHop>::iterator nhit=nextHopList.getNextHopList().begin();
@@ -57,20 +52,54 @@ Fib::updateFib(string name, Nhl& nextHopList, int maxFacesPerPrefix)
   			{
   				(*it).getNhl().addNextHop((*nhit));
   			}
+
+  			(*it).setTimeToRefresh(fibEntryRefreshTime);
   		}
   		(*it).getNhl().sortNhl();
+  		//update NDN-FIB
   }
   else
   {
+  		nextHopList.sortNhl();
   		FibEntry newEntry(name);
-  		for(std::list<NextHop>::iterator nhit=nextHopList.getNextHopList().begin();
-  															nhit!=nextHopList.getNextHopList().end();++nhit)
+  		std::list<NextHop>::iterator nhit=nextHopList.getNextHopList().begin();
+  		for(int i=startFace; i< endFace ; i++)
   		{
   			newEntry.getNhl().addNextHop((*nhit));
+  			++nhit;
   		}
   		newEntry.getNhl().sortNhl();
+  		newEntry.setTimeToRefresh(fibEntryRefreshTime);
   		fibTable.push_back(newEntry);	
+  		//Update NDN-FIB
   }
+}
+
+void
+Fib::refreshFib(nlsr& pnlsr)
+{
+	for ( std::list<FibEntry >::iterator it = fibTable.begin() ;
+																		               it != fibTable.end() ; ++it)
+	{
+		(*it).setTimeToRefresh((*it).getTimeToRefresh()-60);
+		if( (*it).getTimeToRefresh() < 0 )
+		{
+			cout<<"Refreshing FIB entry : "<<endl;
+			cout<<(*it)<<endl;
+			(*it).setTimeToRefresh(fibEntryRefreshTime);
+			//update NDN-FIB
+		}
+	}
+
+	printFib();
+	scheduleFibRefreshing(pnlsr,60);
+}
+
+void 
+Fib::scheduleFibRefreshing(nlsr& pnlsr, int refreshTime)
+{
+		pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(refreshTime),
+								         ndn::bind(&Fib::refreshFib,this,boost::ref(pnlsr)));
 }
 
 void Fib::cleanFib()
@@ -93,12 +122,12 @@ void Fib::cleanFib()
 
 
 void 
-Fib::removeFibEntryHop(Nhl& nl, int doNotRemoveHop)
+Fib::removeFibEntryHop(Nhl& nl, int doNotRemoveHopFaceId)
 {
 	for( std::list<NextHop >::iterator it=nl.getNextHopList().begin(); 
 	                                      it != nl.getNextHopList().end();   ++it)
 	{
-		if ( (*it).getConnectingFace() != doNotRemoveHop )
+		if ( (*it).getConnectingFace() != doNotRemoveHopFaceId )
 		{
 			nl.getNextHopList().erase(it);
 		}
@@ -129,7 +158,6 @@ Fib::printFib()
 	for(std::list<FibEntry>::iterator it = fibTable.begin(); it!=fibTable.end();
 	                                                                         ++it)
 	{
-		//(*it).getNhl().sortNhl();
 		cout<<(*it);
 	}
 }

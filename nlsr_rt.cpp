@@ -81,9 +81,7 @@ RoutingTable::calculate(nlsr& pnlsr)
 	}
 	else
 	{
-		pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
-									 ndn::bind(&RoutingTable::calculate,this,boost::ref(pnlsr)));
-		pnlsr.setIsRouteCalculationScheduled(1);
+		scheduleRoutingTableCalculation(pnlsr);
 	}
 
 }
@@ -119,6 +117,17 @@ RoutingTable::calculateHypDryRoutingTable(nlsr& pnlsr)
 	int numOfRouter=vMap.getMapSize();
 	HypRoutingTableCalculator hrtc(numOfRouter,1);
 	hrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
+}
+
+void
+RoutingTable::scheduleRoutingTableCalculation(nlsr& pnlsr)
+{
+	if ( pnlsr.getIsRouteCalculationScheduled() != 1 )
+	{
+		pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
+								ndn::bind(&RoutingTable::calculate,this,boost::ref(pnlsr)));
+		pnlsr.setIsRouteCalculationScheduled(1);
+	}
 }
 
 static bool

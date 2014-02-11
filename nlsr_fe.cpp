@@ -39,6 +39,7 @@ ostream&
 operator<<(ostream& os, FibEntry& fe)
 {
 	os<<"Name Prefix: "<<fe.getName()<<endl;
+	os<<"Time to Refresh: "<<fe.getTimeToRefresh()<<endl;
 	os<<fe.getNhl()<<endl;
 	return os;
 }
