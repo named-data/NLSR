@@ -12,15 +12,14 @@ using namespace std;
 using namespace ndn;
 
 void
-DataManager::processContent(nlsr& pnlsr, 
-                  const ndn::ptr_lib::shared_ptr<const ndn::Interest> &interest,
-								               const ndn::ptr_lib::shared_ptr<ndn::Data> &data)
+DataManager::processContent(nlsr& pnlsr, const ndn::Interest &interest,
+								               const ndn::Data & data)
 {
 
-	cout << "I: " << interest->toUri() << endl;
+	cout << "I: " << interest.toUri() << endl;
 
-	string dataName(data->getName().toUri());
-	string dataContent((char *)data->getContent().value());
+	string dataName(data.getName().toUri());
+	string dataContent((char *)data.getContent().value());
 	
   	cout << "D: " << dataName << endl;
 	cout << "Data Content: " << dataContent << endl;

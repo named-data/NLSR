@@ -17,7 +17,7 @@ using namespace ndn;
 using namespace std;
 
 void
-nlsr::nlsrRegistrationFailed(const ptr_lib::shared_ptr<const Name>&)
+nlsr::nlsrRegistrationFailed(const ndn::Name& name)
 {
   cerr << "ERROR: Failed to register prefix in local hub's daemon" << endl;
   getNlsrFace().shutdown();

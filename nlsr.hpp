@@ -51,7 +51,7 @@ public:
 		configFileName="nlsr.conf";	
 	}
 
-	void nlsrRegistrationFailed(const ptr_lib::shared_ptr<const Name>&);
+	void nlsrRegistrationFailed(const ndn::Name& name);
 
 	void setInterestFilterNlsr(const string& name);
 	void startEventLoop();

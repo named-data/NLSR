@@ -16,14 +16,13 @@ public:
 	interestManager()
 	{
 	}
-  void processInterest(nlsr& pnlsr, const ptr_lib::shared_ptr<const Name> &name, 
-							            const ptr_lib::shared_ptr<const Interest> &interest);
+  void processInterest(nlsr& pnlsr, const ndn::Name &name, 
+							                                   const ndn::Interest &interest);
 	void processInterestInfo(nlsr& pnlsr, string& neighbor, 
-							            const ptr_lib::shared_ptr<const Interest> &interest);
-  void processInterestTimedOut(nlsr& pnlsr,
-                 const ndn::ptr_lib::shared_ptr<const ndn::Interest> &interest);
+							                                   const ndn::Interest &interest);
+  void processInterestTimedOut(nlsr& pnlsr, const ndn::Interest &interest);
   void processInterestTimedOutInfo(nlsr& pnlsr, string& neighbor,
-                 const ndn::ptr_lib::shared_ptr<const ndn::Interest> &interest);
+                                                 const ndn::Interest &interest);
   void expressInterest(nlsr& pnlsr,const string& interestNamePrefix, int scope, 
                                                                    int seconds);
   void sendScheduledInfoInterest(nlsr& pnlsr, int seconds);

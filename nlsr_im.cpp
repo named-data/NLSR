@@ -14,12 +14,12 @@ using namespace ndn;
 
 void 
 interestManager::processInterest( nlsr& pnlsr,
-                                  const ptr_lib::shared_ptr<const Name> &name, 
-                            const ptr_lib::shared_ptr<const Interest> &interest)
+                                  const ndn::Name &name, 
+                                  const ndn::Interest &interest)
 {
 
-	cout << "<< I: " << *interest << endl;
-	string intName=interest->getName().toUri();
+	cout << "<< I: " << interest << endl;
+	string intName=interest.getName().toUri();
 	cout << "Interest Received for Name: "<< intName <<endl;
 	nlsrTokenizer nt(intName,"/");
 	string chkString("info");
@@ -39,11 +39,11 @@ interestManager::processInterest( nlsr& pnlsr,
 
 void 
 interestManager::processInterestInfo(nlsr& pnlsr, string& neighbor,
-							            const ptr_lib::shared_ptr<const Interest> &interest)
+							                                    const ndn::Interest &interest)
 {
 	if ( pnlsr.getAdl().isNeighbor(neighbor) )
 	{
-		Data data(ndn::Name(interest->getName()).appendVersion());
+		Data data(ndn::Name(interest.getName()).appendVersion());
   		data.setFreshnessPeriod(1000); // 10 sec
   		data.setContent((const uint8_t*)"info", sizeof("info"));
   		pnlsr.getKeyChain().sign(data);
@@ -63,10 +63,10 @@ interestManager::processInterestInfo(nlsr& pnlsr, string& neighbor,
 
 void 
 interestManager::processInterestTimedOut(nlsr& pnlsr,
-                 const ndn::ptr_lib::shared_ptr<const ndn::Interest> &interest)
+                                                  const ndn::Interest &interest)
 {
-  	cout << "Timed out interest : " << interest->getName().toUri() << endl;
-	string intName=	interest->getName().toUri();
+  	cout << "Timed out interest : " << interest.getName().toUri() << endl;
+	string intName=	interest.getName().toUri();
 	nlsrTokenizer nt(intName,"/");
 	string chkString("info");
 	if( nt.doesTokenExist(chkString) ){
@@ -79,7 +79,7 @@ interestManager::processInterestTimedOut(nlsr& pnlsr,
 
 void 
 interestManager::processInterestTimedOutInfo(nlsr& pnlsr, string& neighbor,
-                 const ndn::ptr_lib::shared_ptr<const ndn::Interest> &interest)
+                                                  const ndn::Interest &interest)
 {
 	pnlsr.getAdl().incrementTimedOutInterestCount(neighbor);
 	int status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
