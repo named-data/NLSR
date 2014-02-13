@@ -52,8 +52,8 @@ def build (bld):
         target="nlsr",
         source = bld.path.ant_glob('src/*.cpp'),
         use = 'BOOST NDNCPP ChronoSync',
-        #cwd = bld.path.find_dir ("src"),
-        #includes = ['src'],
+        cwd = bld.path.find_dir ("src"),
+        includes = ['src'],
         )
 
     #bld.install_files (
