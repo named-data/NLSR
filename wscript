@@ -7,7 +7,6 @@ from waflib import Configure, Build, Logs
 
 def options(opt):
     opt.load('compiler_cxx boost')
-    # opt.load('ndnx', tooldir=["waf-tools"])
 
     syncopt = opt.add_option_group ("nlsr Options")
 
@@ -52,7 +51,7 @@ def build (bld):
         target="nlsr",
         source = bld.path.ant_glob('src/*.cpp'),
         use = 'BOOST NDNCPP ChronoSync',
-        cwd = bld.path.find_dir ("src"),
+        #cwd = bld.path.find_dir ("src"),
         includes = ['src'],
         )
 
