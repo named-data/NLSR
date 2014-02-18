@@ -4,7 +4,7 @@ from waflib import Build, Logs, Utils, Task, TaskGen, Configure
 
 def options(opt):
     opt.load('compiler_c compiler_cxx gnu_dirs c_osx')
-    opt.load('boost', tooldir=['.waf-tools'])
+    opt.load('boost', tooldir=['waf-tools'])
 
     opt = opt.add_option_group('Options')
     opt.add_option('--debug',action='store_true',default=False,dest='debug',help='''debugging mode''')
