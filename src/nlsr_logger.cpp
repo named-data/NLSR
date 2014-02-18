@@ -30,29 +30,31 @@ NlsrLogger::initNlsrLogger(std::string dirPath)
 	string logDirPath(dirPath);
 	if( dirPath.empty() )
 	{
-		logDirPath=getUserHomeDirectory();
+		logDirPath=getUserHomeDirectory()+"/nlsrLog";
 	}
-	 
+	cout<<"Log Dir Path: "<< logDirPath<<endl;
+
+	//Create a text file sink
 	typedef sinks::synchronous_sink< sinks::text_file_backend > file_sink;
 	shared_ptr< file_sink > sink(new file_sink(
-		keywords::file_name = "NLSR%Y%m%d%H%M%S_%3N.log",  // file name pattern
-		keywords::rotation_size = 128 * 1024 * 1024 ,// rotation size, in characters
-		keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0)
+		keywords::file_name = logDirPath+"/NLSR%Y%m%d%H%M%S_%3N.log", // file name pattern
+		keywords::rotation_size = 128 * 1024 * 1024 ,         // rotation size, in characters
+		keywords::time_based_rotation = sinks::file::rotation_at_time_point(12, 0, 0),
+		keywords::auto_flush = true 
 		));
-		
+	//Set up where the rotated files will be stored
 	sink->locked_backend()->set_file_collector(sinks::file::make_collector(
 		keywords::target = logDirPath,                // where to store rotated files
-		keywords::max_size = 64 * 1024 * 1024 * 1024, // maximum total size of the stored files, in bytes
+		keywords::max_size = 16 * 1024 * 1024 * 1024, // maximum total size of the stored files, in bytes
 		keywords::min_free_space = 128 * 1024 * 1024  // minimum free space on the drive, in bytes
- 		));
+		));
 
-	sink->set_formatter
-  (
+	sink->set_formatter(
 		expr::format("%1%: %2%")
 				% getEpochTime()
 				% expr::smessage
-	);
+		);
 
-  // Add it to the core
+	// Add it to the core
 	logging::core::get()->add_sink(sink);
 }

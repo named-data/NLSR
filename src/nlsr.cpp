@@ -3,13 +3,14 @@
 #include <ndn-cpp-dev/util/scheduler.hpp>
 
 #include <cstdlib>
-#include<string>
+#include <string>
 #include <sstream>
 
 #include "nlsr.hpp"
 #include "nlsr_conf_param.hpp"
 #include "nlsr_conf_processor.hpp"
 #include "nlsr_lsdb.hpp"
+#include "nlsr_logger.hpp"
 //test purpose of NLSR
 #include "nlsr_test.hpp" 
 
@@ -94,9 +95,14 @@ main(int argc, char **argv){
 	
 	nlsr.getConfParameter().buildRouterPrefix();
 	nlsr.getNlsrLogger().initNlsrLogger(nlsr.getConfParameter().getLogDir());
+	//src::logger lg;
+	//BOOST_LOG(lg) << "Some log record from nlsr.cpp";
+	//for(int j=0; j< 1000; j++)
+	//{
+	//	BOOST_LOG(lg) << "Some log record from nlsr.cpp "<<j;
+	//}
 	nlsr.getLsdb().setLsaRefreshTime(nlsr.getConfParameter().getLsaRefreshTime());
 	nlsr.getFib().setFibEntryRefreshTime(2*nlsr.getConfParameter().getLsaRefreshTime());
-	//nlsr.getFib().scheduleFibRefreshing(nlsr, 60);
 	nlsr.getLsdb().setThisRouterPrefix(nlsr.getConfParameter().getRouterPrefix());
 
 	/* debugging purpose start */
@@ -108,11 +114,13 @@ main(int argc, char **argv){
 	nlsr.getLsdb().buildAndInstallOwnNameLsa(nlsr);
 	nlsr.getLsdb().buildAndInstallOwnCorLsa(nlsr);
 
-	//testing purpose
-	nlsr.getNlsrTesting().schedlueAddingLsas(nlsr);
+	
+	
 
 	nlsr.setInterestFilterNlsr(nlsr.getConfParameter().getRouterPrefix());
 	nlsr.getIm().scheduleInfoInterest(nlsr,1);
+	//testing purpose
+	nlsr.getNlsrTesting().schedlueAddingLsas(nlsr);
 
 	
 	

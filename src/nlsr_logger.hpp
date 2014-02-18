@@ -22,6 +22,7 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 
+
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
 namespace src = boost::log::sources;
@@ -33,7 +34,6 @@ using boost::shared_ptr;
 using namespace std;
 
 
-
 class NlsrLogger
 {
 public:
@@ -43,7 +43,7 @@ public:
 
 	void initNlsrLogger(std::string dirPath);
 
-	boost::log::sources::logger& getLogger()
+  src::logger& getLogger()
 	{
 		return mLogger;
 	}		
@@ -53,7 +53,7 @@ private:
 	string getUserHomeDirectory();
 
 private:
-	boost::log::sources::logger mLogger;
+	src::logger mLogger;
 };
 
 #endif
