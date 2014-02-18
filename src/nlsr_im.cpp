@@ -147,7 +147,7 @@ interestManager::sendScheduledInfoInterest(nlsr& pnlsr, int seconds)
 void 
 interestManager::scheduleInfoInterest(nlsr& pnlsr, int seconds)
 {
-	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(seconds),
+	EventId eid=pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(seconds),
 							ndn::bind(&interestManager::sendScheduledInfoInterest, this, 
 																									boost::ref(pnlsr),seconds));
 }

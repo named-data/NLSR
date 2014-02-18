@@ -7,6 +7,7 @@
 class nlsr;
 
 using namespace std;
+using namespace ndn;
 
 class Fib
 {
@@ -15,10 +16,9 @@ public:
 	{
 	}
 
-	void removeFromFib(string name);
-	void updateFib(string name, Nhl& nextHopList, int maxFacesPerPrefix);
-	void scheduleFibRefreshing(nlsr& pnlsr, int refreshTime);
-	void cleanFib();
+	void removeFromFib(nlsr& pnlsr, string name);
+	void updateFib(nlsr& pnlsr, string name, Nhl& nextHopList, int maxFacesPerPrefix);
+	void cleanFib(nlsr& pnlsr);
 	void setFibEntryRefreshTime(int fert)
 	{
 		fibEntryRefreshTime=fert;
@@ -29,7 +29,10 @@ public:
 private:
 	void removeFibEntryHop(Nhl& nl, int doNotRemoveHopFaceId);
 	int getNumberOfFacesForName(Nhl& nextHopList, int maxFacesPerPrefix);
-	void refreshFib(nlsr& pnlsr);
+	ndn::EventId 
+	scheduleFibEntryRefreshing(nlsr& pnlsr, string name, int feSeqNum, int refreshTime);
+	void cancelScheduledFeExpiringEvent(nlsr& pnlsr, EventId eid);
+	void refreshFibEntry(string name, int feSeqNum);
 	
 private:
 	std::list<FibEntry> fibTable;	

@@ -1,11 +1,13 @@
 #ifndef NLSR_LSA_HPP
 #define NLSR_LSA_HPP
 
+#include <ndn-cpp-dev/util/scheduler.hpp>
 #include "nlsr_adjacent.hpp"
 #include "nlsr_npl.hpp"
 #include "nlsr_adl.hpp"
 
 using namespace std;
+using namespace ndn;
 
 class Lsa{
 public:
@@ -13,6 +15,7 @@ public:
 		: origRouter()
 		, lsSeqNo()
 		, lifeTime()
+		, lsaExpiringEventId()
 	{
 	}	
 
@@ -56,12 +59,24 @@ public:
 	{
 		lifeTime=lt;
 	}
-	//string getLsaKey();
+
+	void setLsaExpiringEventId(ndn::EventId leei)
+	{
+		lsaExpiringEventId=leei;
+	}
+
+	ndn::EventId getLsaExpiringEventId()
+	{
+		return lsaExpiringEventId;
+	}
+	
+	
 protected:
 	string origRouter;
 	uint8_t lsType;
 	uint32_t lsSeqNo;
 	uint32_t lifeTime;
+	ndn::EventId lsaExpiringEventId;
 };
 
 class NameLsa:public Lsa{

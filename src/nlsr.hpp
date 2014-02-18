@@ -15,6 +15,7 @@
 #include "nlsr_rt.hpp"
 #include "nlsr_npt.hpp"
 #include "nlsr_fib.hpp"
+#include "nlsr_logger.hpp"
 //testing
 #include "nlsr_test.hpp"
 
@@ -45,6 +46,7 @@ public:
     , routingTable()
     , npt()
     , fib()
+    , nlsrLogger()
     , nlsrTesting()
 	{
 		isDaemonProcess=false;
@@ -196,6 +198,11 @@ public:
 	{
 		isRouteCalculationScheduled=ircs;
 	}
+
+	NlsrLogger& getNlsrLogger()
+	{
+		return nlsrLogger;
+	}
 	
 private:
 	ConfParameter confParam;
@@ -216,7 +223,7 @@ private:
 	RoutingTable routingTable;
 	Npt npt;
 	Fib fib;
-	
+	NlsrLogger nlsrLogger;
 
 	long int adjBuildCount;
 	int isBuildAdjLsaSheduled;

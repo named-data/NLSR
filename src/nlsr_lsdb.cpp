@@ -5,6 +5,12 @@
 
 using namespace std;
 
+void 
+Lsdb::cancelScheduleLsaExpiringEvent(nlsr& pnlsr, EventId eid)
+{
+	pnlsr.getScheduler().cancelEvent(eid);
+}
+
 static bool
 nameLsaCompareByKey(NameLsa& nlsa1, string& key){
 	return nlsa1.getNameLsaKey()==key;
@@ -42,10 +48,10 @@ Lsdb::getNameLsa(string key)
 }
 
 
-void 
+ndn::EventId
 Lsdb::scheduleNameLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
 {
-	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+	return pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
 								                      ndn::bind(&Lsdb::exprireOrRefreshNameLsa,
 								                      this,boost::ref(pnlsr), key, seqNo));
 }
@@ -76,8 +82,8 @@ Lsdb::installNameLsa(nlsr& pnlsr, NameLsa &nlsa)
 		{
 			timeToExpire=nlsa.getLifeTime();
 		}
-		scheduleNameLsaExpiration( pnlsr, nlsa.getNameLsaKey(),
-			                                         nlsa.getLsSeqNo(), timeToExpire);
+		nlsa.setLsaExpiringEventId(scheduleNameLsaExpiration( pnlsr, 
+		                     nlsa.getNameLsaKey(), nlsa.getLsSeqNo(), timeToExpire));
 	}
 	else
 	{
@@ -131,8 +137,10 @@ Lsdb::installNameLsa(nlsr& pnlsr, NameLsa &nlsa)
 			{
 				timeToExpire=nlsa.getLifeTime();
 			}
-			scheduleNameLsaExpiration( pnlsr, nlsa.getNameLsaKey(),
-			                                         nlsa.getLsSeqNo(), timeToExpire);
+			cancelScheduleLsaExpiringEvent(pnlsr,
+			                                chkNameLsa.first.getLsaExpiringEventId());
+			chkNameLsa.first.setLsaExpiringEventId(scheduleNameLsaExpiration( pnlsr, 
+											 nlsa.getNameLsaKey(), nlsa.getLsSeqNo(), timeToExpire));
 		}
 	}
 	
@@ -242,10 +250,10 @@ Lsdb::getCorLsa(string key)
 	return std::make_pair(boost::ref(clsa),false);
 }
 
-void
+ndn::EventId
 Lsdb::scheduleCorLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
 {
-	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+	return pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
 								                      ndn::bind(&Lsdb::exprireOrRefreshCorLsa,
 								                      this,boost::ref(pnlsr),key,seqNo));
 }
@@ -298,8 +306,11 @@ Lsdb::installCorLsa(nlsr& pnlsr, CorLsa &clsa)
 			{
 				timeToExpire=clsa.getLifeTime();
 			}
-			scheduleCorLsaExpiration(pnlsr,clsa.getCorLsaKey(),
-	                                         clsa.getLsSeqNo(), timeToExpire);
+			cancelScheduleLsaExpiringEvent(pnlsr,
+			                                chkCorLsa.first.getLsaExpiringEventId());
+			chkCorLsa.first.setLsaExpiringEventId(scheduleCorLsaExpiration(pnlsr,
+			                clsa.getCorLsaKey(),
+	                                         clsa.getLsSeqNo(), timeToExpire));
 		}
 		
 	}
@@ -444,10 +455,10 @@ Lsdb::getAdjLsa(string key)
 
 
 
-void 
+ndn::EventId 
 Lsdb::scheduleAdjLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
 {
-	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+	return pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
 								                      ndn::bind(&Lsdb::exprireOrRefreshAdjLsa,
 								                      this,boost::ref(pnlsr),key,seqNo));
 }
@@ -489,8 +500,10 @@ Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
 			{
 				timeToExpire=alsa.getLifeTime();
 			}
-			scheduleAdjLsaExpiration(pnlsr,alsa.getAdjLsaKey(),
-		                                            alsa.getLsSeqNo(),timeToExpire);
+			cancelScheduleLsaExpiringEvent(pnlsr,
+			                                chkAdjLsa.first.getLsaExpiringEventId());
+			chkAdjLsa.first.setLsaExpiringEventId(scheduleAdjLsaExpiration(pnlsr,
+			                    alsa.getAdjLsaKey(), alsa.getLsSeqNo(),timeToExpire));
 		}
 		
 	}

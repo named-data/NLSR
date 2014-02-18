@@ -54,16 +54,21 @@ private:
 
 	bool addAdjLsa(AdjLsa &alsa);
 	bool doesAdjLsaExist(string key);
-  
-	void scheduleNameLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
+
+  ndn::EventId
+  scheduleNameLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
 	void exprireOrRefreshNameLsa(nlsr& pnlsr, string lsaKey, int seqNo);
-	void scheduleAdjLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
+	ndn::EventId
+	scheduleAdjLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
 	void exprireOrRefreshAdjLsa(nlsr& pnlsr, string lsaKey, int seqNo);
-	void scheduleCorLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
+	ndn::EventId
+	scheduleCorLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
 	void exprireOrRefreshCorLsa(nlsr& pnlsr, string lsaKey, int seqNo);
 	
 
 private:
+	void cancelScheduleLsaExpiringEvent(nlsr& pnlsr, EventId eid);
+
 	std::list<NameLsa> nameLsdb;
 	std::list<AdjLsa> adjLsdb;
 	std::list<CorLsa> corLsdb;

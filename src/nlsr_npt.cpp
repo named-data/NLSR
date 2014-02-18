@@ -28,7 +28,7 @@ Npt::addNpte(string name, RoutingTableEntry& rte, nlsr& pnlsr)
   		newEntry.generateNhlfromRteList();
   		npteList.push_back(newEntry);
   		// update FIB here with nhl list newEntry.getNhl()
-  		pnlsr.getFib().updateFib(name,newEntry.getNhl(),
+  		pnlsr.getFib().updateFib(pnlsr, name,newEntry.getNhl(),
   		                         pnlsr.getConfParameter().getMaxFacesPerPrefix());
   }	
   else
@@ -36,7 +36,7 @@ Npt::addNpte(string name, RoutingTableEntry& rte, nlsr& pnlsr)
   		(*it).addRoutingTableEntry(rte);
   		(*it).generateNhlfromRteList();
   		// update FIB here with nhl list from (*it).getNhl()
-  		pnlsr.getFib().updateFib(name,(*it).getNhl() ,
+  		pnlsr.getFib().updateFib(pnlsr, name,(*it).getNhl() ,
   		                         pnlsr.getConfParameter().getMaxFacesPerPrefix());
   }
 }
@@ -58,14 +58,14 @@ Npt::removeNpte(string name, RoutingTableEntry& rte, nlsr& pnlsr)
   		{
   			npteList.erase(it); // remove entry from NPT
   			// remove FIB entry with this name
-  			pnlsr.getFib().removeFromFib(name);
+  			pnlsr.getFib().removeFromFib(pnlsr,name);
   			
   		}
   		else
   		{
   			(*it).generateNhlfromRteList();
   			// update FIB entry with new NHL
-  			pnlsr.getFib().updateFib(name,(*it).getNhl(),
+  			pnlsr.getFib().updateFib(pnlsr, name,(*it).getNhl(),
   			                         pnlsr.getConfParameter().getMaxFacesPerPrefix());
   		}
   }

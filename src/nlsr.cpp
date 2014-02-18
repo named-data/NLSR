@@ -95,7 +95,7 @@ main(int argc, char **argv){
 	nlsr.getConfParameter().buildRouterPrefix();
 	nlsr.getLsdb().setLsaRefreshTime(nlsr.getConfParameter().getLsaRefreshTime());
 	nlsr.getFib().setFibEntryRefreshTime(2*nlsr.getConfParameter().getLsaRefreshTime());
-	nlsr.getFib().scheduleFibRefreshing(nlsr, 60);
+	//nlsr.getFib().scheduleFibRefreshing(nlsr, 60);
 	nlsr.getLsdb().setThisRouterPrefix(nlsr.getConfParameter().getRouterPrefix());
 
 	/* debugging purpose start */
