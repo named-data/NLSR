@@ -1,12 +1,12 @@
 #include<iostream>
 #include<cstdlib>
 
-
-
 #include "nlsr.hpp"
 #include "nlsr_dm.hpp"
 #include "nlsr_tokenizer.hpp"
 #include "nlsr_lsdb.hpp"
+
+namespace nlsr {
 
 using namespace std;
 using namespace ndn;
@@ -76,7 +76,6 @@ DataManager::processContentInfo(Nlsr& pnlsr, string& dataName,
 		}
 		
 	}
-
-	
-	
 }
+
+}//namespace nlsr

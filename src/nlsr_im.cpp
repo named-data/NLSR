@@ -9,6 +9,8 @@
 #include "nlsr_tokenizer.hpp"
 #include "nlsr_lsdb.hpp"
 
+namespace nlsr {
+
 using namespace std;
 using namespace ndn;
 
@@ -152,3 +154,5 @@ interestManager::scheduleInfoInterest(Nlsr& pnlsr, int seconds)
 																									boost::ref(pnlsr),seconds));
 }
 
+
+} //namespace nlsr

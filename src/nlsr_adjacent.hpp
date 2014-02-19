@@ -1,6 +1,8 @@
 #ifndef ADJACENT_HPP
 #define ADJACENT_HPP
 
+namespace nlsr {
+
 using namespace std;
 
 class Adjacent{
@@ -77,5 +79,7 @@ class Adjacent{
 
 std::ostream&
 operator << (std::ostream &os, Adjacent &adj);
+
+} // namespace nlsr
 
 #endif

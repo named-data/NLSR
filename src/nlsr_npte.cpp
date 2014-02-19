@@ -4,6 +4,8 @@
 #include "nlsr_rte.hpp"
 #include "nlsr_nexthop.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 void
@@ -76,3 +78,5 @@ operator<<(ostream& os, Npte& npte)
 
 	return os;
 }
+
+}//namespace nlsr

@@ -5,6 +5,8 @@
 #include "nlsr_adjacent.hpp"
 #include "nlsr.hpp"
 
+namespace nlsr {
+
 Adl::Adl(){
 }
 
@@ -262,3 +264,5 @@ Adl::printAdl(){
 		cout<< (*it) <<endl;
 	}
 }
+
+} //namespace nlsr

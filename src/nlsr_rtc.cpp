@@ -7,6 +7,8 @@
 #include "nlsr_nexthop.hpp"
 #include "nlsr.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 void 
@@ -129,6 +131,7 @@ void RoutingTableCalculator::allocateLinkCosts()
 {
 	linkCosts=new double[vNoLink];
 }
+
 
 void 
 RoutingTableCalculator::freeLinks()
@@ -523,3 +526,5 @@ HypRoutingTableCalculator::freeDistFromNbrToDest()
 {
 	delete [] distFromNbrToDest;
 }
+
+}//namespace nlsr

@@ -8,6 +8,8 @@
 #include <list>
 #include <ndn-cpp-dev/face.hpp>
 
+namespace nlsr {
+
 using namespace std;
 using namespace boost;
 
@@ -56,4 +58,5 @@ class nlsrTokenizer{
 		std::list<string> tokenList;
 };
 
+}//namespace nlsr
 #endif

@@ -3,6 +3,8 @@
 
 #include "nlsr_npl.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 Npl::Npl(){
@@ -61,3 +63,5 @@ Npl::printNpl(){
 		i++;
 	}
 }
+
+}//namespace nlsr

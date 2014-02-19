@@ -5,6 +5,8 @@
 #include "nlsr.hpp"
 #include "nlsr_test.hpp"
 
+namespace nlsr {
+
 using namespace std;
 using namespace ndn;
 
@@ -101,4 +103,6 @@ NlsrTest::scheduledAddAdjacentLsa(Nlsr& pnlsr, string router,
 	pnlsr.getLsdb().installAdjLsa(pnlsr, adjLsa);
 	
 }
+
+}//namespace nlsr
 	                                                

@@ -3,6 +3,8 @@
 
 #include "nlsr.hpp" 
 
+namespace nlsr {
+
 using namespace std;
 
 class ConfFileProcessor{
@@ -43,4 +45,5 @@ class ConfFileProcessor{
 		string confFileName;
 };
 
+} //namespace nlsr
 #endif

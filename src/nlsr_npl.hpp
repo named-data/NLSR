@@ -5,6 +5,8 @@
 #include<string>
 #include <ndn-cpp-dev/face.hpp>
 
+namespace nlsr {
+
 using namespace std;
 
 class Npl{
@@ -30,5 +32,7 @@ private:
 	std::list<string> nameList;
 
 };
+
+}//namespace nlsr
 
 #endif

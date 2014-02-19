@@ -5,6 +5,8 @@
 #include "nlsr_npte.hpp"
 #include "nlsr_rte.hpp"
 
+namespace nlsr{
+
 using namespace std;
 
 class Nlsr;
@@ -25,5 +27,7 @@ private:
 private:
 	std::list<Npte> npteList;
 };
+
+}//namespace nlsr
 
 #endif

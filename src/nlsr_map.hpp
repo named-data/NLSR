@@ -6,6 +6,8 @@
 
 #include <ndn-cpp-dev/face.hpp>
 
+namespace nlsr {
+
 class Nlsr;
 
 using namespace std;
@@ -81,4 +83,5 @@ private:
 ostream&
 operator<<(ostream& os, Map& rMap);
 
+} // namespace nlsr
 #endif

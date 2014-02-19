@@ -3,6 +3,8 @@
 
 #include<iostream>
 
+namespace nlsr {
+
 using namespace std;
 
 class NextHop
@@ -47,5 +49,7 @@ private:
 
 ostream&
 operator<<(ostream& os, NextHop& nh);
+
+}//namespace nlsr
 
 #endif

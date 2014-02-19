@@ -19,7 +19,7 @@
 //testing
 #include "nlsr_test.hpp"
 
-
+namespace nlsr {
 
 using namespace ndn;
 using namespace std;
@@ -234,5 +234,7 @@ private:
 	
 
 };
+
+} //namespace nlsr
 
 #endif

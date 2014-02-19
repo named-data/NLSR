@@ -8,6 +8,8 @@
 
 #include "nlsr_nexthop.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 class Nhl
@@ -45,5 +47,7 @@ private:
 
 ostream&
 operator<<(ostream& os, Nhl& nhl);
+
+}//namespace nlsr
 
 #endif

@@ -5,6 +5,8 @@
 #include "nlsr_adjacent.hpp"
 #include<list>
 
+namespace nlsr {
+
 class Nlsr;
 
 using namespace std;
@@ -51,4 +53,5 @@ private:
 	std::list< Adjacent > adjList;
 };	
 
+} //namespace nlsr
 #endif

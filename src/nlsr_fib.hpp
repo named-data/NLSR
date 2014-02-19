@@ -4,6 +4,8 @@
 #include <list>
 #include "nlsr_fe.hpp"
 
+namespace nlsr {
+
 class Nlsr;
 
 using namespace std;
@@ -39,4 +41,5 @@ private:
 	int fibEntryRefreshTime;
 };
 
+}//namespace nlsr
 #endif

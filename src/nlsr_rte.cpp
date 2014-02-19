@@ -3,6 +3,8 @@
 
 #include "nlsr_rte.hpp"
 
+namespace nlsr{
+
 using namespace std;
 
 ostream&
@@ -19,3 +21,5 @@ operator<<(ostream& os, RoutingTableEntry &rte)
 	}
 	return os;
 }
+
+}//namespace nlsr

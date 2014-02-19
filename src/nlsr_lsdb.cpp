@@ -3,6 +3,8 @@
 #include "nlsr_lsdb.hpp"
 #include "nlsr.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 void 
@@ -695,4 +697,5 @@ Lsdb::doesLsaExist(string key, int lsType)
 	return false;	
 }
 
+}//namespace nlsr
 

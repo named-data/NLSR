@@ -14,6 +14,8 @@
 //test purpose of NLSR
 #include "nlsr_test.hpp" 
 
+namespace nlsr {
+
 using namespace ndn;
 using namespace std;
 
@@ -55,9 +57,14 @@ Nlsr::usage(const string& progname)
         exit(EXIT_FAILURE);
 }
 
+
+} // namespace nlsr
+
+using namespace nlsr;
+
 int 
 main(int argc, char **argv){
-	Nlsr nlsr_;
+	nlsr::Nlsr nlsr_;
 	string programName(argv[0]);
 	nlsr_.setConfFileName("nlsr.conf");
 

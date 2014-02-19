@@ -5,6 +5,8 @@
 
 #include "nlsr_adjacent.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 Adjacent::Adjacent(const string& an, int cf, double lc, int s, int iton){
@@ -33,3 +35,5 @@ operator << (std::ostream &os, Adjacent &adj){
 	cout<<"Interest Timed out: "<<adj.getInterestTimedOutNo()<<endl;
 	return os;
 }
+
+} //namespace nlsr

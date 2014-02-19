@@ -6,6 +6,8 @@
 #include "nlsr_npte.hpp"
 #include "nlsr.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 static bool
@@ -137,4 +139,6 @@ Npt::printNpt()
 	{
 		cout <<(*it)<<endl;
 	}
+}
+
 }

@@ -7,6 +7,8 @@
 
 #include "nlsr_rte.hpp"
 
+namespace nlsr {
+
 class Nlsr;
 class NextHop;
 
@@ -41,5 +43,7 @@ private:
 	std::list< RoutingTableEntry > rTable;
 	std::list< RoutingTableEntry > dryTable;
 };
+
+}//namespace nlsr
 
 #endif

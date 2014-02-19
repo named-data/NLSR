@@ -22,6 +22,7 @@
 #include <boost/log/sinks/sync_frontend.hpp>
 #include <boost/log/sinks/text_file_backend.hpp>
 
+namespace nlsr {
 
 namespace logging = boost::log;
 namespace attrs = boost::log::attributes;
@@ -56,4 +57,5 @@ private:
 	src::logger mLogger;
 };
 
+}//namespace nlsr
 #endif

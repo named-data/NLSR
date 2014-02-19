@@ -7,6 +7,7 @@
 #include "nlsr_lsdb.hpp"
 #include "nlsr_map.hpp"
 
+namespace nlsr {
 
 using namespace std;
 
@@ -115,3 +116,5 @@ operator<<(ostream& os, Map& rMap)
 
 	return os;
 }
+
+} //namespace nlsr

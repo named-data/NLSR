@@ -3,6 +3,8 @@
 #include "nlsr_nhl.hpp"
 #include "nlsr_nexthop.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 static bool
@@ -79,3 +81,5 @@ operator<<(ostream& os, Nhl& nhl)
 	}
 	return os;
 }
+
+}//namespace nlsr

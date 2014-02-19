@@ -8,6 +8,8 @@
 #include "nlsr_nexthop.hpp"
 #include "nlsr_nhl.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 class FibEntry
@@ -76,5 +78,7 @@ private:
 };
 
 ostream& operator<<(ostream& os, FibEntry& fe);
+
+} //namespace nlsr
 
 #endif

@@ -5,6 +5,8 @@
 
 #include "nlsr_nhl.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 class RoutingTableEntry
@@ -44,5 +46,7 @@ private:
 
 ostream&
 operator<<(ostream& os, RoutingTableEntry &rte);
+
+}
 
 #endif

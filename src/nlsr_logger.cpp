@@ -1,5 +1,6 @@
 #include "nlsr_logger.hpp"
 
+namespace nlsr {
 
 string 
 NlsrLogger::getEpochTime()
@@ -58,3 +59,5 @@ NlsrLogger::initNlsrLogger(std::string dirPath)
 	// Add it to the core
 	logging::core::get()->add_sink(sink);
 }
+
+}//namespace nlsr

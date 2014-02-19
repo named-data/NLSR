@@ -9,6 +9,8 @@
 #include "nlsr_adjacent.hpp"
 #include "nlsr.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 
@@ -236,3 +238,5 @@ operator<<(std::ostream& os, AdjLsa& aLsa)
 	
 	return os;  
 }
+
+}//namespace nlsr

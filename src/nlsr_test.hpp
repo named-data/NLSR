@@ -10,6 +10,8 @@
 #include "nlsr_npl.hpp"
 #include "nlsr_adjacent.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 class Nlsr;
@@ -31,4 +33,5 @@ private:
 
 };
 
+} //namespace nlsr
 #endif

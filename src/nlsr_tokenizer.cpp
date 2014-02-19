@@ -6,6 +6,8 @@
 
 #include "nlsr_tokenizer.hpp"
 
+namespace nlsr {
+
 using namespace std;
 using namespace boost;
 
@@ -114,3 +116,5 @@ nlsrTokenizer::doesTokenExist(string token){
 
 	return false;
 }
+
+}//namespace nlsr

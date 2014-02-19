@@ -10,6 +10,8 @@
 #include "nlsr_adjacent.hpp"
 
 
+namespace nlsr {
+
 using namespace std;
 
 int 
@@ -382,4 +384,6 @@ ConfFileProcessor::processConfCommandLinkCost(Nlsr& pnlsr, string command){
 	}
 	return 0;
 }
+
+} //namespace nlsr
 

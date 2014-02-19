@@ -6,6 +6,8 @@
 #include "nlsr_npl.hpp"
 #include "nlsr_adl.hpp"
 
+namespace nlsr {
+
 using namespace std;
 using namespace ndn;
 
@@ -204,6 +206,6 @@ std::ostream&
 operator<<(std::ostream& os, CorLsa& cLsa);
 
 
-
+}//namespace nlsr
 
 #endif

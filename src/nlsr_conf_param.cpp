@@ -1,6 +1,8 @@
 #include<iostream>
 #include "nlsr_conf_param.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 ostream&
@@ -25,3 +27,5 @@ operator << (ostream &os, ConfParameter& cfp){
 
 	return os;
 }
+
+} //namespace nlsr

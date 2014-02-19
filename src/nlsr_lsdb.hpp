@@ -4,6 +4,8 @@
 #include <utility>
 #include "nlsr_lsa.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 class Nlsr;
@@ -77,5 +79,7 @@ private:
 	string thisRouterPrefix;
 
 };
+
+}//namespace nlsr
 
 #endif

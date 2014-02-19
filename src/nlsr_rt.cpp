@@ -9,6 +9,8 @@
 #include "nlsr_rte.hpp"
 #include "nlsr_npt.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 void
@@ -226,4 +228,6 @@ RoutingTable::clearDryRoutingTable()
 		dryTable.clear();
 	}
 }
+
+}//namespace nlsr
 

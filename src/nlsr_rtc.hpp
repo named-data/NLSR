@@ -4,7 +4,7 @@
 #include <list>
 #include <iostream>
 
-
+namespace nlsr {
 
 class Map;
 class RoutingTable;
@@ -138,5 +138,7 @@ private:
 	const double MATH_PI;
 
 };
+
+}//namespace nlsr
 
 #endif

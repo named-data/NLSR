@@ -5,6 +5,7 @@
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/util/scheduler.hpp>
 
+namespace nlsr {
 
 using namespace ndn;
 using namespace std;
@@ -22,5 +23,5 @@ private:
   
 };
 
-
+}//namespace nlsr
 #endif

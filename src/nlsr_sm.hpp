@@ -5,6 +5,7 @@
 #include<string>
 #include <ndn-cpp-dev/face.hpp>
 
+namespace nlsr {
 
 using namespace std;
 
@@ -58,4 +59,6 @@ private:
 	uint32_t corLsaSeq;
 };
 
+
+}//namespace nlsr
 #endif

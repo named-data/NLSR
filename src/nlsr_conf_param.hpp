@@ -3,6 +3,8 @@
 
 #include<iostream>
 
+namespace nlsr {
+
 using namespace std;
 
 class ConfParameter{
@@ -205,5 +207,7 @@ private:
 
 std::ostream&
 operator << (std::ostream &os, ConfParameter &cfp);
+
+} // namespace nlsr
 
 #endif

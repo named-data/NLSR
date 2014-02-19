@@ -2,6 +2,8 @@
 #include "nlsr_fe.hpp"
 #include "nlsr_nexthop.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 bool 
@@ -43,3 +45,5 @@ operator<<(ostream& os, FibEntry& fe)
 	os<<fe.getNhl()<<endl;
 	return os;
 }
+
+}//namespace nlsr

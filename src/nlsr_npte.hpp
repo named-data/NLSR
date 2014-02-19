@@ -5,6 +5,8 @@
 #include <utility>
 #include "nlsr_rte.hpp"
 
+namespace nlsr {
+
 using namespace std;
 
 class Npte
@@ -52,5 +54,7 @@ private:
 
 ostream&
 operator<<(ostream& os, Npte& npte);
+
+}//namespace nlsr
 
 #endif

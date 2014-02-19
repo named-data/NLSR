@@ -4,6 +4,8 @@
 #include "nlsr_nhl.hpp"
 #include "nlsr.hpp"
 
+namespace nlsr {
+
 using namespace std;
 using namespace ndn;
 
@@ -166,3 +168,5 @@ Fib::printFib()
 		cout<<(*it);
 	}
 }
+
+} //namespace nlsr
