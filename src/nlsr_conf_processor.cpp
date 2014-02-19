@@ -13,7 +13,7 @@
 using namespace std;
 
 int 
-ConfFileProcessor::processConfFile(nlsr& pnlsr){
+ConfFileProcessor::processConfFile(Nlsr& pnlsr){
 	int ret=0;
 
 	if ( !confFileName.empty()){
@@ -42,7 +42,7 @@ ConfFileProcessor::processConfFile(nlsr& pnlsr){
 
 
 int 
-ConfFileProcessor::processConfCommand(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommand(Nlsr& pnlsr, string command){
 	int ret=0;
 	nlsrTokenizer nt(command," ");
 	if( (nt.getFirstToken() == "network")){
@@ -104,7 +104,7 @@ ConfFileProcessor::processConfCommand(nlsr& pnlsr, string command){
 }
 
 int
-ConfFileProcessor::processConfCommandNetwork(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandNetwork(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Network can not be null or empty :( !"<<endl;
 		return -1;
@@ -121,7 +121,7 @@ ConfFileProcessor::processConfCommandNetwork(nlsr& pnlsr, string command){
 }
 
 int 
-ConfFileProcessor::processConfCommandSiteName(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandSiteName(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<"Site name can not be null or empty :( !"<<endl;
 		return -1;
@@ -138,7 +138,7 @@ ConfFileProcessor::processConfCommandSiteName(nlsr& pnlsr, string command){
 }
 
 int 
-ConfFileProcessor::processConfCommandRouterName(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandRouterName(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Router name can not be null or empty :( !"<<endl;
 		return -1;
@@ -155,7 +155,7 @@ ConfFileProcessor::processConfCommandRouterName(nlsr& pnlsr, string command){
 }
 
 int 
-ConfFileProcessor::processConfCommandInterestRetryNumber(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandInterestRetryNumber(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [interest-retry-num n]"<<endl;
 	}else{
@@ -170,7 +170,7 @@ ConfFileProcessor::processConfCommandInterestRetryNumber(nlsr& pnlsr, string com
 }
 
 int 
-ConfFileProcessor::processConfCommandInterestResendTime(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandInterestResendTime(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [interest-resend-time s]"<<endl;
 	}else{
@@ -185,7 +185,7 @@ ConfFileProcessor::processConfCommandInterestResendTime(nlsr& pnlsr, string comm
 }
 
 int 
-ConfFileProcessor::processConfCommandLsaRefreshTime(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandLsaRefreshTime(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [interest-resend-time s]"<<endl;
 	}else{
@@ -200,7 +200,7 @@ ConfFileProcessor::processConfCommandLsaRefreshTime(nlsr& pnlsr, string command)
 }
 
 int 
-ConfFileProcessor::processConfCommandMaxFacesPerPrefix(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandMaxFacesPerPrefix(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [max-faces-per-prefix n]"<<endl;
 	}else{
@@ -215,7 +215,7 @@ ConfFileProcessor::processConfCommandMaxFacesPerPrefix(nlsr& pnlsr, string comma
 }
 
 int
-ConfFileProcessor::processConfCommandTunnelType(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandTunnelType(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [tunnel-type tcp/udp]!"<<endl;
 	}else{
@@ -232,7 +232,7 @@ ConfFileProcessor::processConfCommandTunnelType(nlsr& pnlsr, string command){
 }
 
 int
-ConfFileProcessor::processConfCommandChronosyncSyncPrefix(nlsr& pnlsr, 
+ConfFileProcessor::processConfCommandChronosyncSyncPrefix(Nlsr& pnlsr, 
 																string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [chronosync-sync-prefix name/prefix]!"<<endl;
@@ -244,7 +244,7 @@ ConfFileProcessor::processConfCommandChronosyncSyncPrefix(nlsr& pnlsr,
 
 
 int
-ConfFileProcessor::processConfCommandLogDir(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandLogDir(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [log-dir /path/to/log/dir]!"<<endl;
 	}else{
@@ -254,7 +254,7 @@ ConfFileProcessor::processConfCommandLogDir(nlsr& pnlsr, string command){
 }
 
 int
-ConfFileProcessor::processConfCommandDebugging(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandDebugging(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [debugging on/of]!"<<endl;
 	}else{
@@ -271,7 +271,7 @@ ConfFileProcessor::processConfCommandDebugging(nlsr& pnlsr, string command){
 }
 
 int
-ConfFileProcessor::processConfCommandDetailedLogging(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandDetailedLogging(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [detailed-logging on/off]!"<<endl;
 	}else{
@@ -288,7 +288,7 @@ ConfFileProcessor::processConfCommandDetailedLogging(nlsr& pnlsr, string command
 }
 
 int
-ConfFileProcessor::processConfCommandIsHyperbolicCalc(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandIsHyperbolicCalc(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [hyperbolic-routing on/off/dry-run]!"<<endl;
 	}else{
@@ -308,7 +308,7 @@ ConfFileProcessor::processConfCommandIsHyperbolicCalc(nlsr& pnlsr, string comman
 }
 
 int
-ConfFileProcessor::processConfCommandHyperbolicCordinate(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandHyperbolicCordinate(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [hyperbolic-cordinate r 0]!"<<endl;
 		if (pnlsr.getConfParameter().getIsHyperbolicCalc() > 0 ){
@@ -331,7 +331,7 @@ ConfFileProcessor::processConfCommandHyperbolicCordinate(nlsr& pnlsr, string com
 
 
 int 
-ConfFileProcessor::processConfCommandNdnNeighbor(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandNdnNeighbor(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [ndnneighbor /nbr/name/ FaceId]!"<<endl;
 	}else{
@@ -354,7 +354,7 @@ ConfFileProcessor::processConfCommandNdnNeighbor(nlsr& pnlsr, string command){
 }
 
 int 
-ConfFileProcessor::processConfCommandNdnName(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandNdnName(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [ndnname name/prefix]!"<<endl;
 	}else{
@@ -365,7 +365,7 @@ ConfFileProcessor::processConfCommandNdnName(nlsr& pnlsr, string command){
 
 
 int 
-ConfFileProcessor::processConfCommandLinkCost(nlsr& pnlsr, string command){
+ConfFileProcessor::processConfCommandLinkCost(Nlsr& pnlsr, string command){
 	if(command.empty() ){
 		cerr <<" Wrong command format ! [link-cost nbr/name cost]!"<<endl;
 		if (pnlsr.getConfParameter().getIsHyperbolicCalc() > 0 ){

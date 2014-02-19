@@ -12,7 +12,7 @@ using namespace std;
 using namespace ndn;
 
 void
-DataManager::processContent(nlsr& pnlsr, const ndn::Interest &interest,
+DataManager::processContent(Nlsr& pnlsr, const ndn::Interest &interest,
 								               const ndn::Data & data)
 {
 
@@ -33,7 +33,7 @@ DataManager::processContent(nlsr& pnlsr, const ndn::Interest &interest,
 }
 
 void
-DataManager::processContentInfo(nlsr& pnlsr, string& dataName,
+DataManager::processContentInfo(Nlsr& pnlsr, string& dataName,
                                                            string& dataContent)
 {
 	nlsrTokenizer nt(dataName,"/");

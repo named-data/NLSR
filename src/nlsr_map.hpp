@@ -6,7 +6,7 @@
 
 #include <ndn-cpp-dev/face.hpp>
 
-class nlsr;
+class Nlsr;
 
 using namespace std;
 
@@ -56,7 +56,7 @@ public:
 
 	
 	void addMapElement(string& rtrName);
-	void createMapFromAdjLsdb(nlsr& pnlsr);
+	void createMapFromAdjLsdb(Nlsr& pnlsr);
 	string getRouterNameByMappingNo(int mn);
 	int getMappingNoByRouterName(string& rName);
 	void resetMap();

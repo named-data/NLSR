@@ -24,10 +24,10 @@
 using namespace ndn;
 using namespace std;
 
-class nlsr
+class Nlsr
 {
 public:
-	nlsr()
+	Nlsr()
 		: io(ndn::make_shared<boost::asio::io_service>())
 		, nlsrFace(io)
 		, scheduler(*io)
@@ -164,7 +164,7 @@ public:
 		isBuildAdjLsaSheduled=iabls;
 	}
 
-	nlsrTest& getNlsrTesting()
+	NlsrTest& getNlsrTesting()
 	{
 		return nlsrTesting;
 	}
@@ -230,7 +230,7 @@ private:
 	int isRouteCalculationScheduled;
 	int isRoutingTableCalculating;
 
-	nlsrTest nlsrTesting;
+	NlsrTest nlsrTesting;
 	
 
 };

@@ -7,7 +7,7 @@
 
 #include "nlsr_rte.hpp"
 
-class nlsr;
+class Nlsr;
 class NextHop;
 
 using namespace std;
@@ -19,19 +19,19 @@ public:
 		: NO_NEXT_HOP(-12345)
 	{
 	}
-	void calculate(nlsr& pnlsr);
+	void calculate(Nlsr& pnlsr);
 	void addNextHop(string destRouter, NextHop& nh);
 	void printRoutingTable();
 
 	void addNextHopToDryTable(string destRouter, NextHop& nh);
 	void printDryRoutingTable();
 	std::pair<RoutingTableEntry&, bool> findRoutingTableEntry(string destRouter);
-	void scheduleRoutingTableCalculation(nlsr& pnlsr);
+	void scheduleRoutingTableCalculation(Nlsr& pnlsr);
 
 private:
-	void calculateLsRoutingTable(nlsr& pnlsr);
-	void calculateHypRoutingTable(nlsr& pnlsr);
-	void calculateHypDryRoutingTable(nlsr&pnlsr);
+	void calculateLsRoutingTable(Nlsr& pnlsr);
+	void calculateHypRoutingTable(Nlsr& pnlsr);
+	void calculateHypDryRoutingTable(Nlsr&pnlsr);
 	
 	void clearRoutingTable();
 	void clearDryRoutingTable();

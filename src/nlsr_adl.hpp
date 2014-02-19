@@ -5,7 +5,7 @@
 #include "nlsr_adjacent.hpp"
 #include<list>
 
-class nlsr;
+class Nlsr;
 
 using namespace std;
 
@@ -26,7 +26,7 @@ public:
 	void setTimedOutInterestCount(string& neighbor, int count);
 	void addAdjacentsFromAdl(Adl& adl);
 
-	bool isAdjLsaBuildable(nlsr& pnlsr);
+	bool isAdjLsaBuildable(Nlsr& pnlsr);
 	int getNumOfActiveNeighbor();
 	Adjacent getAdjacent(string adjName);
 

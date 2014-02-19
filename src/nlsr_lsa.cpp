@@ -193,7 +193,7 @@ AdjLsa::getAdjLsaData(){
 
 
 void 
-AdjLsa::addNptEntriesForAdjLsa(nlsr& pnlsr)
+AdjLsa::addNptEntriesForAdjLsa(Nlsr& pnlsr)
 {
 	if ( getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
 	{
@@ -204,7 +204,7 @@ AdjLsa::addNptEntriesForAdjLsa(nlsr& pnlsr)
 
 
 void 
-AdjLsa::removeNptEntriesForAdjLsa(nlsr& pnlsr)
+AdjLsa::removeNptEntriesForAdjLsa(Nlsr& pnlsr)
 {
 	if ( getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
 	{

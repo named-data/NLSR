@@ -78,7 +78,7 @@ Map::getMappingNoByRouterName(string& rName)
 }
 
 void 
-Map::createMapFromAdjLsdb(nlsr& pnlsr)
+Map::createMapFromAdjLsdb(Nlsr& pnlsr)
 {
 	std::list<AdjLsa> adjLsdb=pnlsr.getLsdb().getAdjLsdb();
 	for( std::list<AdjLsa>::iterator it=adjLsdb.begin(); 

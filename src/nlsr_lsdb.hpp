@@ -6,7 +6,7 @@
 
 using namespace std;
 
-class nlsr;
+class Nlsr;
 
 class Lsdb{
 public:
@@ -18,29 +18,29 @@ public:
 	
 	bool doesLsaExist(string key, int lsType);
 	// function related to Name LSDB 
-	bool buildAndInstallOwnNameLsa(nlsr& pnlsr);
+	bool buildAndInstallOwnNameLsa(Nlsr& pnlsr);
 	std::pair<NameLsa&, bool>  getNameLsa(string key);
-	bool installNameLsa(nlsr& pnlsr, NameLsa &nlsa);
-	bool removeNameLsa(nlsr& pnlsr, string& key);
+	bool installNameLsa(Nlsr& pnlsr, NameLsa &nlsa);
+	bool removeNameLsa(Nlsr& pnlsr, string& key);
 	void printNameLsdb(); //debugging
 
 	//function related to Cor LSDB
-	bool buildAndInstallOwnCorLsa(nlsr& pnlsr);
+	bool buildAndInstallOwnCorLsa(Nlsr& pnlsr);
 	std::pair<CorLsa&, bool> getCorLsa(string key);
-	bool installCorLsa(nlsr& pnlsr, CorLsa &clsa);
-	bool removeCorLsa(nlsr& pnlsr, string& key);
+	bool installCorLsa(Nlsr& pnlsr, CorLsa &clsa);
+	bool removeCorLsa(Nlsr& pnlsr, string& key);
 	void printCorLsdb(); //debugging
 
 	//function related to Adj LSDB
-	void scheduledAdjLsaBuild(nlsr& pnlsr);
-	bool buildAndInstallOwnAdjLsa(nlsr& pnlsr);
-	bool removeAdjLsa(nlsr& pnlsr, string& key);
-	bool installAdjLsa(nlsr& pnlsr, AdjLsa &alsa);
+	void scheduledAdjLsaBuild(Nlsr& pnlsr);
+	bool buildAndInstallOwnAdjLsa(Nlsr& pnlsr);
+	bool removeAdjLsa(Nlsr& pnlsr, string& key);
+	bool installAdjLsa(Nlsr& pnlsr, AdjLsa &alsa);
 	std::pair<AdjLsa& , bool> getAdjLsa(string key);
 	std::list<AdjLsa>& getAdjLsdb();
 	void printAdjLsdb();
 
-	//void scheduleRefreshLsdb(nlsr& pnlsr, int interval);
+	//void scheduleRefreshLsdb(Nlsr& pnlsr, int interval);
 	void setLsaRefreshTime(int lrt);
 	void setThisRouterPrefix(string trp);
 	
@@ -56,18 +56,18 @@ private:
 	bool doesAdjLsaExist(string key);
 
   ndn::EventId
-  scheduleNameLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
-	void exprireOrRefreshNameLsa(nlsr& pnlsr, string lsaKey, int seqNo);
+  scheduleNameLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime);
+	void exprireOrRefreshNameLsa(Nlsr& pnlsr, string lsaKey, int seqNo);
 	ndn::EventId
-	scheduleAdjLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
-	void exprireOrRefreshAdjLsa(nlsr& pnlsr, string lsaKey, int seqNo);
+	scheduleAdjLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime);
+	void exprireOrRefreshAdjLsa(Nlsr& pnlsr, string lsaKey, int seqNo);
 	ndn::EventId
-	scheduleCorLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime);
-	void exprireOrRefreshCorLsa(nlsr& pnlsr, string lsaKey, int seqNo);
+	scheduleCorLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime);
+	void exprireOrRefreshCorLsa(Nlsr& pnlsr, string lsaKey, int seqNo);
 	
 
 private:
-	void cancelScheduleLsaExpiringEvent(nlsr& pnlsr, EventId eid);
+	void cancelScheduleLsaExpiringEvent(Nlsr& pnlsr, EventId eid);
 
 	std::list<NameLsa> nameLsdb;
 	std::list<AdjLsa> adjLsdb;

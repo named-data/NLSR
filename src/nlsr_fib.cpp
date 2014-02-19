@@ -14,14 +14,14 @@ fibEntryNameCompare(FibEntry& fe, string name)
 }
 
 void 
-Fib::cancelScheduledFeExpiringEvent(nlsr& pnlsr, EventId eid)
+Fib::cancelScheduledFeExpiringEvent(Nlsr& pnlsr, EventId eid)
 {
 	pnlsr.getScheduler().cancelEvent(eid);
 }
 
 
 ndn::EventId 
-Fib::scheduleFibEntryRefreshing(nlsr& pnlsr, string name, int feSeqNum, int refreshTime)
+Fib::scheduleFibEntryRefreshing(Nlsr& pnlsr, string name, int feSeqNum, int refreshTime)
 {
 		return pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(refreshTime),
 				 ndn::bind(&Fib::refreshFibEntry,this,name,feSeqNum));
@@ -34,7 +34,7 @@ Fib::refreshFibEntry(string name, int feSeqNum)
 }
 
 void 
-Fib::removeFromFib(nlsr& pnlsr, string name)
+Fib::removeFromFib(Nlsr& pnlsr, string name)
 {
 	std::list<FibEntry >::iterator it = std::find_if( fibTable.begin(), 
 									       fibTable.end(), bind(&fibEntryNameCompare, _1, name));
@@ -52,7 +52,7 @@ Fib::removeFromFib(nlsr& pnlsr, string name)
 
 
 void 
-Fib::updateFib(nlsr& pnlsr,string name, Nhl& nextHopList, int maxFacesPerPrefix)
+Fib::updateFib(Nlsr& pnlsr,string name, Nhl& nextHopList, int maxFacesPerPrefix)
 {
 	int startFace=0;
 	int endFace=getNumberOfFacesForName(nextHopList,maxFacesPerPrefix);
@@ -106,7 +106,7 @@ Fib::updateFib(nlsr& pnlsr,string name, Nhl& nextHopList, int maxFacesPerPrefix)
 
 
 
-void Fib::cleanFib(nlsr& pnlsr)
+void Fib::cleanFib(Nlsr& pnlsr)
 {
 	for( std::list<FibEntry >::iterator it=fibTable.begin(); it != fibTable.end();
 	                                                                         ++it)

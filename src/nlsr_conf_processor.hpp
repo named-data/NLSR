@@ -15,28 +15,28 @@ class ConfFileProcessor{
 			confFileName=cfile;
 		}
 
-		int processConfFile(nlsr& pnlsr);
-		int processConfCommand(nlsr& pnlsr, string command);
-		int processConfCommandNetwork(nlsr& pnlsr, string command);
-		int processConfCommandSiteName(nlsr& pnlsr, string command);
-		int processConfCommandRouterName(nlsr& pnlsr, string command);
-		int processConfCommandInterestRetryNumber(nlsr& pnlsr, string command);
-		int processConfCommandInterestResendTime(nlsr& pnlsr, string command);
-		int processConfCommandLsaRefreshTime(nlsr& pnlsr, string command);
-		int processConfCommandMaxFacesPerPrefix(nlsr& pnlsr, string command);
-		int processConfCommandTunnelType(nlsr& pnlsr, string command);
+		int processConfFile(Nlsr& pnlsr);
+		int processConfCommand(Nlsr& pnlsr, string command);
+		int processConfCommandNetwork(Nlsr& pnlsr, string command);
+		int processConfCommandSiteName(Nlsr& pnlsr, string command);
+		int processConfCommandRouterName(Nlsr& pnlsr, string command);
+		int processConfCommandInterestRetryNumber(Nlsr& pnlsr, string command);
+		int processConfCommandInterestResendTime(Nlsr& pnlsr, string command);
+		int processConfCommandLsaRefreshTime(Nlsr& pnlsr, string command);
+		int processConfCommandMaxFacesPerPrefix(Nlsr& pnlsr, string command);
+		int processConfCommandTunnelType(Nlsr& pnlsr, string command);
 
-		int processConfCommandChronosyncSyncPrefix(nlsr& pnlsr, string command);
-		int processConfCommandLogDir(nlsr& pnlsr, string command);
-		int processConfCommandDebugging(nlsr& pnlsr, string command);
-		int processConfCommandDetailedLogging(nlsr& pnlsr, string command);
-		int processConfCommandIsHyperbolicCalc(nlsr& pnlsr, string command);
+		int processConfCommandChronosyncSyncPrefix(Nlsr& pnlsr, string command);
+		int processConfCommandLogDir(Nlsr& pnlsr, string command);
+		int processConfCommandDebugging(Nlsr& pnlsr, string command);
+		int processConfCommandDetailedLogging(Nlsr& pnlsr, string command);
+		int processConfCommandIsHyperbolicCalc(Nlsr& pnlsr, string command);
 
-		int processConfCommandHyperbolicCordinate(nlsr& pnlsr, string command);
+		int processConfCommandHyperbolicCordinate(Nlsr& pnlsr, string command);
 
-		int processConfCommandNdnNeighbor(nlsr& pnlsr, string command);
-		int processConfCommandNdnName(nlsr& pnlsr, string command);
-		int processConfCommandLinkCost(nlsr& pnlsr, string command);
+		int processConfCommandNdnNeighbor(Nlsr& pnlsr, string command);
+		int processConfCommandNdnName(Nlsr& pnlsr, string command);
+		int processConfCommandLinkCost(Nlsr& pnlsr, string command);
 		
 
 	private:

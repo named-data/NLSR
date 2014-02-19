@@ -9,24 +9,24 @@
 using namespace ndn;
 using namespace std;
 
-class nlsr;
+class Nlsr;
 
 class interestManager{
 public:	
 	interestManager()
 	{
 	}
-  void processInterest(nlsr& pnlsr, const ndn::Name &name, 
+  void processInterest(Nlsr& pnlsr, const ndn::Name &name, 
 							                                   const ndn::Interest &interest);
-	void processInterestInfo(nlsr& pnlsr, string& neighbor, 
+	void processInterestInfo(Nlsr& pnlsr, string& neighbor, 
 							                                   const ndn::Interest &interest);
-  void processInterestTimedOut(nlsr& pnlsr, const ndn::Interest &interest);
-  void processInterestTimedOutInfo(nlsr& pnlsr, string& neighbor,
+  void processInterestTimedOut(Nlsr& pnlsr, const ndn::Interest &interest);
+  void processInterestTimedOutInfo(Nlsr& pnlsr, string& neighbor,
                                                  const ndn::Interest &interest);
-  void expressInterest(nlsr& pnlsr,const string& interestNamePrefix, int scope, 
+  void expressInterest(Nlsr& pnlsr,const string& interestNamePrefix, int scope, 
                                                                    int seconds);
-  void sendScheduledInfoInterest(nlsr& pnlsr, int seconds);
-	void scheduleInfoInterest(nlsr& pnlsr, int seconds);
+  void sendScheduledInfoInterest(Nlsr& pnlsr, int seconds);
+	void scheduleInfoInterest(Nlsr& pnlsr, int seconds);
 
 private:	
 

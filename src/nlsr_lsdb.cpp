@@ -6,7 +6,7 @@
 using namespace std;
 
 void 
-Lsdb::cancelScheduleLsaExpiringEvent(nlsr& pnlsr, EventId eid)
+Lsdb::cancelScheduleLsaExpiringEvent(Nlsr& pnlsr, EventId eid)
 {
 	pnlsr.getScheduler().cancelEvent(eid);
 }
@@ -18,7 +18,7 @@ nameLsaCompareByKey(NameLsa& nlsa1, string& key){
 
 
 bool
-Lsdb::buildAndInstallOwnNameLsa(nlsr& pnlsr)
+Lsdb::buildAndInstallOwnNameLsa(Nlsr& pnlsr)
 {
 	NameLsa nameLsa(pnlsr.getConfParameter().getRouterPrefix()
 					, 1
@@ -49,7 +49,7 @@ Lsdb::getNameLsa(string key)
 
 
 ndn::EventId
-Lsdb::scheduleNameLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
+Lsdb::scheduleNameLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime)
 {
 	return pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
 								                      ndn::bind(&Lsdb::exprireOrRefreshNameLsa,
@@ -57,7 +57,7 @@ Lsdb::scheduleNameLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
 }
 
 bool 
-Lsdb::installNameLsa(nlsr& pnlsr, NameLsa &nlsa)
+Lsdb::installNameLsa(Nlsr& pnlsr, NameLsa &nlsa)
 {
 	int timeToExpire=lsaRefreshTime;
 	std::pair<NameLsa& , bool> chkNameLsa=getNameLsa(nlsa.getNameLsaKey());
@@ -162,7 +162,7 @@ Lsdb::addNameLsa(NameLsa &nlsa)
 }
 
 bool 
-Lsdb::removeNameLsa(nlsr& pnlsr, string& key)
+Lsdb::removeNameLsa(Nlsr& pnlsr, string& key)
 {
 	std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(), 
 																		nameLsdb.end(),	
@@ -222,7 +222,7 @@ corLsaCompareByKey(CorLsa& clsa, string& key){
 }
 
 bool 
-Lsdb::buildAndInstallOwnCorLsa(nlsr& pnlsr){
+Lsdb::buildAndInstallOwnCorLsa(Nlsr& pnlsr){
 	CorLsa corLsa(pnlsr.getConfParameter().getRouterPrefix()
 					, 3
 					, pnlsr.getSm().getCorLsaSeq()+1
@@ -251,7 +251,7 @@ Lsdb::getCorLsa(string key)
 }
 
 ndn::EventId
-Lsdb::scheduleCorLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
+Lsdb::scheduleCorLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime)
 {
 	return pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
 								                      ndn::bind(&Lsdb::exprireOrRefreshCorLsa,
@@ -259,7 +259,7 @@ Lsdb::scheduleCorLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
 }
 
 bool 
-Lsdb::installCorLsa(nlsr& pnlsr, CorLsa &clsa)
+Lsdb::installCorLsa(Nlsr& pnlsr, CorLsa &clsa)
 {
 	int timeToExpire=lsaRefreshTime;
 	std::pair<CorLsa& , bool> chkCorLsa=getCorLsa(clsa.getCorLsaKey());
@@ -334,7 +334,7 @@ Lsdb::addCorLsa(CorLsa& clsa)
 }
 
 bool 
-Lsdb::removeCorLsa(nlsr& pnlsr, string& key)
+Lsdb::removeCorLsa(Nlsr& pnlsr, string& key)
 {
 	std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(), 
 																		corLsdb.end(),	
@@ -387,7 +387,7 @@ adjLsaCompareByKey(AdjLsa& alsa, string& key){
 
 
 void 
-Lsdb::scheduledAdjLsaBuild(nlsr& pnlsr)
+Lsdb::scheduledAdjLsaBuild(Nlsr& pnlsr)
 {
 	cout<<"scheduledAdjLsaBuild Called"<<endl;
 	pnlsr.setIsBuildAdjLsaSheduled(0);
@@ -456,7 +456,7 @@ Lsdb::getAdjLsa(string key)
 
 
 ndn::EventId 
-Lsdb::scheduleAdjLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
+Lsdb::scheduleAdjLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime)
 {
 	return pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
 								                      ndn::bind(&Lsdb::exprireOrRefreshAdjLsa,
@@ -464,7 +464,7 @@ Lsdb::scheduleAdjLsaExpiration(nlsr& pnlsr, string key, int seqNo, int expTime)
 }
 
 bool 
-Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
+Lsdb::installAdjLsa(Nlsr& pnlsr, AdjLsa &alsa)
 {
 	int timeToExpire=lsaRefreshTime;
 	std::pair<AdjLsa& , bool> chkAdjLsa=getAdjLsa(alsa.getAdjLsaKey());
@@ -514,7 +514,7 @@ Lsdb::installAdjLsa(nlsr& pnlsr, AdjLsa &alsa)
 }
 
 bool 
-Lsdb::buildAndInstallOwnAdjLsa(nlsr& pnlsr)
+Lsdb::buildAndInstallOwnAdjLsa(Nlsr& pnlsr)
 {
 	AdjLsa adjLsa(pnlsr.getConfParameter().getRouterPrefix()
 					, 2
@@ -527,7 +527,7 @@ Lsdb::buildAndInstallOwnAdjLsa(nlsr& pnlsr)
 }
 
 bool 
-Lsdb::removeAdjLsa(nlsr& pnlsr, string& key)
+Lsdb::removeAdjLsa(Nlsr& pnlsr, string& key)
 {
 	std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(), 
 																		adjLsdb.end(),	
@@ -575,7 +575,7 @@ Lsdb::setThisRouterPrefix(string trp)
 }
 
 void 
-Lsdb::exprireOrRefreshNameLsa(nlsr& pnlsr, string lsaKey, int seqNo)
+Lsdb::exprireOrRefreshNameLsa(Nlsr& pnlsr, string lsaKey, int seqNo)
 {
 	cout<<"Lsdb::exprireOrRefreshNameLsa Called "<<endl;
 	cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;
@@ -602,7 +602,7 @@ Lsdb::exprireOrRefreshNameLsa(nlsr& pnlsr, string lsaKey, int seqNo)
 }
 
 void 
-Lsdb::exprireOrRefreshAdjLsa(nlsr& pnlsr, string lsaKey, int seqNo)
+Lsdb::exprireOrRefreshAdjLsa(Nlsr& pnlsr, string lsaKey, int seqNo)
 {
 	cout<<"Lsdb::exprireOrRefreshAdjLsa Called "<<endl;
 	cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;
@@ -632,7 +632,7 @@ Lsdb::exprireOrRefreshAdjLsa(nlsr& pnlsr, string lsaKey, int seqNo)
 }
 
 void 
-Lsdb::exprireOrRefreshCorLsa(nlsr& pnlsr, string lsaKey, int seqNo)
+Lsdb::exprireOrRefreshCorLsa(Nlsr& pnlsr, string lsaKey, int seqNo)
 {
 	cout<<"Lsdb::exprireOrRefreshCorLsa Called "<<endl;
 	cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;

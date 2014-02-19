@@ -30,7 +30,7 @@ RoutingTableCalculator::initMatrix()
 }
 
 void
-RoutingTableCalculator::makeAdjMatrix(nlsr& pnlsr, Map pMap)
+RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
 {
 	std::list<AdjLsa> adjLsdb=pnlsr.getLsdb().getAdjLsdb();
 	for( std::list<AdjLsa>::iterator it=adjLsdb.begin(); 
@@ -143,7 +143,7 @@ RoutingTableCalculator::freeLinksCosts()
 
 void
 LinkStateRoutingTableCalculator::calculatePath(Map& pMap, 
-                                                  RoutingTable& rt, nlsr& pnlsr)
+                                                  RoutingTable& rt, Nlsr& pnlsr)
 {
 	cout<<"LinkStateRoutingTableCalculator::calculatePath Called"<<endl;
 	allocateAdjMatrix();
@@ -247,7 +247,7 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
 }
 
 void 
-LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(nlsr& pnlsr,
+LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr,
 																 RoutingTable& rt, Map& pMap, int sourceRouter)
 {
 	cout<<"LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called";
@@ -381,7 +381,7 @@ void LinkStateRoutingTableCalculator::freeDistance()
 
 void
 HypRoutingTableCalculator::calculatePath(Map& pMap, 
-                                                  RoutingTable& rt, nlsr& pnlsr)
+                                                  RoutingTable& rt, Nlsr& pnlsr)
 {
 	makeAdjMatrix(pnlsr,pMap);
 	string routerName=pnlsr.getConfParameter().getRouterPrefix();
@@ -434,7 +434,7 @@ HypRoutingTableCalculator::calculatePath(Map& pMap,
 }
 
 void
-HypRoutingTableCalculator::addHypNextHopsToRoutingTable(nlsr& pnlsr,Map& pMap,
+HypRoutingTableCalculator::addHypNextHopsToRoutingTable(Nlsr& pnlsr,Map& pMap,
                                         RoutingTable& rt, int noFaces, int dest)
 {
 	for(int i=0 ; i < noFaces ; ++i)
@@ -451,7 +451,7 @@ HypRoutingTableCalculator::addHypNextHopsToRoutingTable(nlsr& pnlsr,Map& pMap,
 } 
 
 double 
-HypRoutingTableCalculator::getHyperbolicDistance(nlsr& pnlsr,
+HypRoutingTableCalculator::getHyperbolicDistance(Nlsr& pnlsr,
                                                   Map& pMap, int src, int dest)
 {
 	double distance=0.0;

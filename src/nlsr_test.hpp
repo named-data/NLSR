@@ -12,21 +12,21 @@
 
 using namespace std;
 
-class nlsr;
+class Nlsr;
 
-class nlsrTest
+class NlsrTest
 {
 public:
-	nlsrTest()
+	NlsrTest()
 	{
 	}
-	void schedlueAddingLsas(nlsr& pnlsr);
+	void schedlueAddingLsas(Nlsr& pnlsr);
 private:
-	void secheduledAddNameLsa(nlsr& pnlsr, string router,
+	void secheduledAddNameLsa(Nlsr& pnlsr, string router,
 																		 string name1, string name2, string name3);
-	void secheduledAddCorLsa(nlsr& pnlsr,string router, double r, double angle);
+	void secheduledAddCorLsa(Nlsr& pnlsr,string router, double r, double angle);
 
-	void scheduledAddAdjacentLsa(nlsr& pnlsr, string router, 
+	void scheduledAddAdjacentLsa(Nlsr& pnlsr, string router, 
 	                                                Adjacent adj1, Adjacent adj2);
 
 };

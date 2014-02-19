@@ -211,7 +211,7 @@ Adl::getAdjList(){
 }
 
 bool
-Adl::isAdjLsaBuildable(nlsr& pnlsr)
+Adl::isAdjLsaBuildable(Nlsr& pnlsr)
 {
 	int nbrCount=0;
 	for( std::list<Adjacent>::iterator it=adjList.begin(); 

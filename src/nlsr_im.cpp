@@ -13,7 +13,7 @@ using namespace std;
 using namespace ndn;
 
 void 
-interestManager::processInterest( nlsr& pnlsr,
+interestManager::processInterest( Nlsr& pnlsr,
                                   const ndn::Name &name, 
                                   const ndn::Interest &interest)
 {
@@ -38,7 +38,7 @@ interestManager::processInterest( nlsr& pnlsr,
 }
 
 void 
-interestManager::processInterestInfo(nlsr& pnlsr, string& neighbor,
+interestManager::processInterestInfo(Nlsr& pnlsr, string& neighbor,
 							                                    const ndn::Interest &interest)
 {
 	if ( pnlsr.getAdl().isNeighbor(neighbor) )
@@ -62,7 +62,7 @@ interestManager::processInterestInfo(nlsr& pnlsr, string& neighbor,
 }
 
 void 
-interestManager::processInterestTimedOut(nlsr& pnlsr,
+interestManager::processInterestTimedOut(Nlsr& pnlsr,
                                                   const ndn::Interest &interest)
 {
   	cout << "Timed out interest : " << interest.getName().toUri() << endl;
@@ -78,7 +78,7 @@ interestManager::processInterestTimedOut(nlsr& pnlsr,
 }
 
 void 
-interestManager::processInterestTimedOutInfo(nlsr& pnlsr, string& neighbor,
+interestManager::processInterestTimedOutInfo(Nlsr& pnlsr, string& neighbor,
                                                   const ndn::Interest &interest)
 {
 	pnlsr.getAdl().incrementTimedOutInterestCount(neighbor);
@@ -113,7 +113,7 @@ interestManager::processInterestTimedOutInfo(nlsr& pnlsr, string& neighbor,
 }
 
 void 
-interestManager::expressInterest(nlsr& pnlsr,const string& interestNamePrefix, 
+interestManager::expressInterest(Nlsr& pnlsr,const string& interestNamePrefix, 
                                   											int scope, int seconds)
 {
 	Interest i((ndn::Name(interestNamePrefix)));
@@ -130,7 +130,7 @@ interestManager::expressInterest(nlsr& pnlsr,const string& interestNamePrefix,
 
 
 void 
-interestManager::sendScheduledInfoInterest(nlsr& pnlsr, int seconds)
+interestManager::sendScheduledInfoInterest(Nlsr& pnlsr, int seconds)
 {
 	std::list<Adjacent> adjList=pnlsr.getAdl().getAdjList();
 	for(std::list<Adjacent>::iterator it=adjList.begin(); it!=adjList.end();++it)
@@ -145,7 +145,7 @@ interestManager::sendScheduledInfoInterest(nlsr& pnlsr, int seconds)
 }
 
 void 
-interestManager::scheduleInfoInterest(nlsr& pnlsr, int seconds)
+interestManager::scheduleInfoInterest(Nlsr& pnlsr, int seconds)
 {
 	EventId eid=pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(seconds),
 							ndn::bind(&interestManager::sendScheduledInfoInterest, this, 

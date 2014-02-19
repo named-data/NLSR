@@ -16,7 +16,7 @@ npteCompare(Npte& npte, string& name){
 // Following two methods will update FIB with response to change in NPT
 
 void 
-Npt::addNpte(string name, RoutingTableEntry& rte, nlsr& pnlsr)
+Npt::addNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr)
 {
 	std::list<Npte >::iterator it = std::find_if( npteList.begin(), 
 									               npteList.end(), bind(&npteCompare, _1, name));
@@ -42,7 +42,7 @@ Npt::addNpte(string name, RoutingTableEntry& rte, nlsr& pnlsr)
 }
 
 void 
-Npt::removeNpte(string name, RoutingTableEntry& rte, nlsr& pnlsr)
+Npt::removeNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr)
 {
 	std::list<Npte >::iterator it = std::find_if( npteList.begin(), 
 									               npteList.end(), bind(&npteCompare, _1, name));
@@ -73,7 +73,7 @@ Npt::removeNpte(string name, RoutingTableEntry& rte, nlsr& pnlsr)
 
 
 void 
-Npt::addNpte(string name, string destRouter, nlsr& pnlsr)
+Npt::addNpte(string name, string destRouter, Nlsr& pnlsr)
 {
 	std::pair<RoutingTableEntry& , bool> rteCheck= 
 	            pnlsr.getRoutingTable().findRoutingTableEntry(destRouter);
@@ -90,7 +90,7 @@ Npt::addNpte(string name, string destRouter, nlsr& pnlsr)
 }
 
 void 
-Npt::removeNpte(string name, string destRouter, nlsr& pnlsr)
+Npt::removeNpte(string name, string destRouter, Nlsr& pnlsr)
 {
 	std::pair<RoutingTableEntry& , bool> rteCheck= 
 	            pnlsr.getRoutingTable().findRoutingTableEntry(destRouter);
@@ -106,7 +106,7 @@ Npt::removeNpte(string name, string destRouter, nlsr& pnlsr)
 }
 
 void 
-Npt::updateNptWithNewRoute(nlsr& pnlsr)
+Npt::updateNptWithNewRoute(Nlsr& pnlsr)
 {
 	for(std::list<Npte >::iterator it=npteList.begin(); it!=npteList.end(); ++it)
 	{

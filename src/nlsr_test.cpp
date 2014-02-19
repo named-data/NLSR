@@ -9,7 +9,7 @@ using namespace std;
 using namespace ndn;
 
 void 
-nlsrTest::schedlueAddingLsas(nlsr& pnlsr)
+NlsrTest::schedlueAddingLsas(Nlsr& pnlsr)
 {
 	// scheduling adding two name lsas, two Cor Lsas and three Adj LSAs
 
@@ -22,15 +22,15 @@ nlsrTest::schedlueAddingLsas(nlsr& pnlsr)
 	Adjacent adj2("/ndn/memphis.edu/cs/maia",15,27,1,0);
 	
 	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(30),
-							ndn::bind(&nlsrTest::secheduledAddNameLsa,pnlsr.getNlsrTesting(), 
+							ndn::bind(&NlsrTest::secheduledAddNameLsa,pnlsr.getNlsrTesting(), 
 																									boost::ref(pnlsr)
 							,router,name1,name2,name3));
 	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(37),
-							ndn::bind(&nlsrTest::secheduledAddCorLsa,pnlsr.getNlsrTesting(), 
+							ndn::bind(&NlsrTest::secheduledAddCorLsa,pnlsr.getNlsrTesting(), 
 																									boost::ref(pnlsr)
 							,router,123.098,1.875));
 	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(47),
-							ndn::bind(&nlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(), 
+							ndn::bind(&NlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(), 
 																									boost::ref(pnlsr)
 							,router,adj1,adj2));
 
@@ -43,15 +43,15 @@ nlsrTest::schedlueAddingLsas(nlsr& pnlsr)
 	Adjacent maiaAdj2("/ndn/memphis.edu/cs/altair",11,15,1,0);
 
 	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(55),
-							ndn::bind(&nlsrTest::secheduledAddNameLsa,pnlsr.getNlsrTesting(), 
+							ndn::bind(&NlsrTest::secheduledAddNameLsa,pnlsr.getNlsrTesting(), 
 																									boost::ref(pnlsr)
 							,routerMaia,maiaName1,maiaName2,maiaName3));
 	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(65),
-							ndn::bind(&nlsrTest::secheduledAddCorLsa,pnlsr.getNlsrTesting(), 
+							ndn::bind(&NlsrTest::secheduledAddCorLsa,pnlsr.getNlsrTesting(), 
 																									boost::ref(pnlsr)
 							,routerMaia,12.098,0.875));
 	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(75),
-							ndn::bind(&nlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(), 
+							ndn::bind(&NlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(), 
 																									boost::ref(pnlsr)
 							,routerMaia,maiaAdj1,maiaAdj2));
 
@@ -61,7 +61,7 @@ nlsrTest::schedlueAddingLsas(nlsr& pnlsr)
 	Adjacent polluxAdj2("/ndn/memphis.edu/cs/altair",12,23,1,0);
 
 	pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(90),
-							ndn::bind(&nlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(), 
+							ndn::bind(&NlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(), 
 																									boost::ref(pnlsr)
 							,routerPollux,polluxAdj1,polluxAdj2));
 	
@@ -71,7 +71,7 @@ nlsrTest::schedlueAddingLsas(nlsr& pnlsr)
 
 
 void 
-nlsrTest::secheduledAddNameLsa(nlsr& pnlsr, string router,
+NlsrTest::secheduledAddNameLsa(Nlsr& pnlsr, string router,
 																		 string name1, string name2, string name3)
 {
 	Npl npl;
@@ -84,14 +84,14 @@ nlsrTest::secheduledAddNameLsa(nlsr& pnlsr, string router,
 }
 																		 
 void 
-nlsrTest::secheduledAddCorLsa(nlsr& pnlsr,string router, double r, double angle)
+NlsrTest::secheduledAddCorLsa(Nlsr& pnlsr,string router, double r, double angle)
 {
 	CorLsa corLsa(router,3,1,3600,r,angle);
 	pnlsr.getLsdb().installCorLsa(pnlsr, corLsa);
 }
 
 void 
-nlsrTest::scheduledAddAdjacentLsa(nlsr& pnlsr, string router, 
+NlsrTest::scheduledAddAdjacentLsa(Nlsr& pnlsr, string router, 
 	                                                Adjacent adj1, Adjacent adj2)
 {
 	Adl adl;

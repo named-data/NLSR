@@ -9,14 +9,14 @@
 using namespace ndn;
 using namespace std;
 
-class nlsr;
+class Nlsr;
 
 class DataManager
 {
 public:
-  void processContent(nlsr& pnlsr, const ndn::Interest &interest,
+  void processContent(Nlsr& pnlsr, const ndn::Interest &interest,
 								               const ndn::Data& data);
-	void processContentInfo(nlsr& pnlsr, string& dataName,
+	void processContentInfo(Nlsr& pnlsr, string& dataName,
                                                            string& dataContent);
 private:
   

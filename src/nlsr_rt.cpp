@@ -12,7 +12,7 @@
 using namespace std;
 
 void
-RoutingTable::calculate(nlsr& pnlsr)
+RoutingTable::calculate(Nlsr& pnlsr)
 {
 	//debugging purpose
 	pnlsr.getNpt().printNpt();
@@ -88,7 +88,7 @@ RoutingTable::calculate(nlsr& pnlsr)
 
 
 void 
-RoutingTable::calculateLsRoutingTable(nlsr& pnlsr)
+RoutingTable::calculateLsRoutingTable(Nlsr& pnlsr)
 {
 	cout<<"RoutingTable::calculateLsRoutingTable Called"<<endl;
 	Map vMap;
@@ -100,7 +100,7 @@ RoutingTable::calculateLsRoutingTable(nlsr& pnlsr)
 }
 
 void 
-RoutingTable::calculateHypRoutingTable(nlsr& pnlsr)
+RoutingTable::calculateHypRoutingTable(Nlsr& pnlsr)
 {
 	Map vMap;
 	vMap.createMapFromAdjLsdb(pnlsr);
@@ -110,7 +110,7 @@ RoutingTable::calculateHypRoutingTable(nlsr& pnlsr)
 }
 
 void 
-RoutingTable::calculateHypDryRoutingTable(nlsr& pnlsr)
+RoutingTable::calculateHypDryRoutingTable(Nlsr& pnlsr)
 {
 	Map vMap;
 	vMap.createMapFromAdjLsdb(pnlsr);
@@ -120,7 +120,7 @@ RoutingTable::calculateHypDryRoutingTable(nlsr& pnlsr)
 }
 
 void
-RoutingTable::scheduleRoutingTableCalculation(nlsr& pnlsr)
+RoutingTable::scheduleRoutingTableCalculation(Nlsr& pnlsr)
 {
 	if ( pnlsr.getIsRouteCalculationScheduled() != 1 )
 	{

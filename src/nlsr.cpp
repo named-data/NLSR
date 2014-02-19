@@ -18,7 +18,7 @@ using namespace ndn;
 using namespace std;
 
 void
-nlsr::nlsrRegistrationFailed(const ndn::Name& name)
+Nlsr::nlsrRegistrationFailed(const ndn::Name& name)
 {
   cerr << "ERROR: Failed to register prefix in local hub's daemon" << endl;
   getNlsrFace().shutdown();
@@ -26,23 +26,23 @@ nlsr::nlsrRegistrationFailed(const ndn::Name& name)
 
 
 void
-nlsr::setInterestFilterNlsr(const string& name)
+Nlsr::setInterestFilterNlsr(const string& name)
 {
   getNlsrFace().setInterestFilter(name,
                         func_lib::bind(&interestManager::processInterest, &im, 
                         boost::ref(*this), _1, _2),
-                        func_lib::bind(&nlsr::nlsrRegistrationFailed, this, _1));
+                        func_lib::bind(&Nlsr::nlsrRegistrationFailed, this, _1));
 }
 
 
 void
-nlsr::startEventLoop()
+Nlsr::startEventLoop()
 {
 	getNlsrFace().processEvents();
 }
 
 int 
-nlsr::usage(const string& progname)
+Nlsr::usage(const string& progname)
 {
 
         cout << "Usage: " << progname << " [OPTIONS...]"<<endl;
@@ -57,76 +57,76 @@ nlsr::usage(const string& progname)
 
 int 
 main(int argc, char **argv){
-	nlsr nlsr;
+	Nlsr nlsr_;
 	string programName(argv[0]);
-	nlsr.setConfFileName("nlsr.conf");
+	nlsr_.setConfFileName("nlsr.conf");
 
 	int opt;
   while ((opt = getopt(argc, argv, "df:p:h")) != -1) {
     switch (opt) {
     case 'f':
-      nlsr.setConfFileName(optarg);
+      nlsr_.setConfFileName(optarg);
       break;
     case 'd':
-      nlsr.setIsDaemonProcess(optarg);
+      nlsr_.setIsDaemonProcess(optarg);
       break;
     case 'p':
     		{
     			stringstream sst(optarg);
     			int ap;
     			sst>>ap;
-    			nlsr.setApiPort(ap);
+    			nlsr_.setApiPort(ap);
     		}
       break;
     case 'h':
     default:
-      nlsr.usage(programName);
+      nlsr_.usage(programName);
       return EXIT_FAILURE;
     }
   }
 	
 	
-	ConfFileProcessor cfp(nlsr.getConfFileName());
-	int res=cfp.processConfFile(nlsr);
+	ConfFileProcessor cfp(nlsr_.getConfFileName());
+	int res=cfp.processConfFile(nlsr_);
 	if ( res < 0 )
 	{
 		return EXIT_FAILURE;
 	}
 	
-	nlsr.getConfParameter().buildRouterPrefix();
-	nlsr.getNlsrLogger().initNlsrLogger(nlsr.getConfParameter().getLogDir());
+	nlsr_.getConfParameter().buildRouterPrefix();
+	nlsr_.getNlsrLogger().initNlsrLogger(nlsr_.getConfParameter().getLogDir());
 	//src::logger lg;
 	//BOOST_LOG(lg) << "Some log record from nlsr.cpp";
 	//for(int j=0; j< 1000; j++)
 	//{
 	//	BOOST_LOG(lg) << "Some log record from nlsr.cpp "<<j;
 	//}
-	nlsr.getLsdb().setLsaRefreshTime(nlsr.getConfParameter().getLsaRefreshTime());
-	nlsr.getFib().setFibEntryRefreshTime(2*nlsr.getConfParameter().getLsaRefreshTime());
-	nlsr.getLsdb().setThisRouterPrefix(nlsr.getConfParameter().getRouterPrefix());
+	nlsr_.getLsdb().setLsaRefreshTime(nlsr_.getConfParameter().getLsaRefreshTime());
+	nlsr_.getFib().setFibEntryRefreshTime(2*nlsr_.getConfParameter().getLsaRefreshTime());
+	nlsr_.getLsdb().setThisRouterPrefix(nlsr_.getConfParameter().getRouterPrefix());
 
 	/* debugging purpose start */
-	cout <<	nlsr.getConfParameter();
-	nlsr.getAdl().printAdl();
-	nlsr.getNpl().printNpl();
+	cout <<	nlsr_.getConfParameter();
+	nlsr_.getAdl().printAdl();
+	nlsr_.getNpl().printNpl();
   /* debugging purpose end */
 
-	nlsr.getLsdb().buildAndInstallOwnNameLsa(nlsr);
-	nlsr.getLsdb().buildAndInstallOwnCorLsa(nlsr);
+	nlsr_.getLsdb().buildAndInstallOwnNameLsa(nlsr_);
+	nlsr_.getLsdb().buildAndInstallOwnCorLsa(nlsr_);
 
 	
 	
 
-	nlsr.setInterestFilterNlsr(nlsr.getConfParameter().getRouterPrefix());
-	nlsr.getIm().scheduleInfoInterest(nlsr,1);
+	nlsr_.setInterestFilterNlsr(nlsr_.getConfParameter().getRouterPrefix());
+	nlsr_.getIm().scheduleInfoInterest(nlsr_,1);
 	//testing purpose
-	nlsr.getNlsrTesting().schedlueAddingLsas(nlsr);
+	nlsr_.getNlsrTesting().schedlueAddingLsas(nlsr_);
 
 	
 	
 
 	try{
-		nlsr.startEventLoop();
+		nlsr_.startEventLoop();
 	}catch(std::exception &e) {
     		std::cerr << "ERROR: " << e.what() << std::endl;
 	}

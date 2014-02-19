@@ -143,8 +143,8 @@ public:
 	}
 
 	bool isLsaContentEqual(AdjLsa& alsa);
-	void addNptEntriesForAdjLsa(nlsr& pnlsr);
-	void removeNptEntriesForAdjLsa(nlsr& pnlsr);
+	void addNptEntriesForAdjLsa(Nlsr& pnlsr);
+	void removeNptEntriesForAdjLsa(Nlsr& pnlsr);
 
 private:
 	uint32_t noLink;

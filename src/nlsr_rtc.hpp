@@ -8,7 +8,7 @@
 
 class Map;
 class RoutingTable;
-class nlsr;
+class Nlsr;
 
 
 using namespace std;
@@ -26,7 +26,7 @@ public:
 protected:
 	void allocateAdjMatrix();
 	void initMatrix();
-	void makeAdjMatrix(nlsr& pnlsr,Map pMap);
+	void makeAdjMatrix(Nlsr& pnlsr,Map pMap);
 	void printAdjMatrix();
 	int getNumOfLinkfromAdjMatrix(int sRouter);
 	void freeAdjMatrix();
@@ -65,7 +65,7 @@ public:
 	}
 	
 
-	void calculatePath(Map& pMap, RoutingTable& rt, nlsr& pnlsr);
+	void calculatePath(Map& pMap, RoutingTable& rt, Nlsr& pnlsr);
 	
 
 private:
@@ -74,7 +74,7 @@ private:
 	int isNotExplored(int *Q, int u,int start, int element);
 	void printAllLsPath(int sourceRouter);
 	void printLsPath(int destRouter);
-	void addAllLsNextHopsToRoutingTable(nlsr& pnlsr, RoutingTable& rt,
+	void addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, RoutingTable& rt,
 	                                                  Map& pMap,int sourceRouter);
 	int getLsNextHop(int dest, int source);
 
@@ -114,7 +114,7 @@ public:
 		isDryRun=idr;
 	}
 
-	void calculatePath(Map& pMap, RoutingTable& rt, nlsr& pnlsr);
+	void calculatePath(Map& pMap, RoutingTable& rt, Nlsr& pnlsr);
 
 private:
 	void allocateLinkFaces();
@@ -124,8 +124,8 @@ private:
 	void freeDistanceToNeighbor();
 	void freeDistFromNbrToDest();	
 
-	double getHyperbolicDistance(nlsr& pnlsr,Map& pMap, int src, int dest);
-	void addHypNextHopsToRoutingTable(nlsr& pnlsr,Map& pMap,
+	double getHyperbolicDistance(Nlsr& pnlsr,Map& pMap, int src, int dest);
+	void addHypNextHopsToRoutingTable(Nlsr& pnlsr,Map& pMap,
 	                                      RoutingTable& rt, int noFaces,int dest);
 
 private:
