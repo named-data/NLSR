@@ -29,14 +29,11 @@ namespace nlsr
         lsType=lst;
         lsSeqNo=lsn;
         lifeTime=lt;
-
         std::list<string> nl=npl.getNameList();
         for( std::list<string>::iterator it=nl.begin(); it != nl.end(); it++)
         {
             addNameToLsa((*it));
         }
-
-
     }
 
     string
@@ -48,14 +45,12 @@ namespace nlsr
                     + boost::lexical_cast<std::string>(lifeTime);
         nameLsaData+="|";
         nameLsaData+=boost::lexical_cast<std::string>(npl.getNplSize());
-
         std::list<string> nl=npl.getNameList();
         for( std::list<string>::iterator it=nl.begin(); it != nl.end(); it++)
         {
             nameLsaData+="|";
             nameLsaData+=(*it);
         }
-
         return nameLsaData;
     }
 
@@ -74,7 +69,6 @@ namespace nlsr
         {
             os<<"    Name "<<i<<": "<<(*it)<<endl;
         }
-
         return os;
     }
 
@@ -118,7 +112,6 @@ namespace nlsr
         corLsaData+=(boost::lexical_cast<std::string>(lifeTime) + "|");
         corLsaData+=(boost::lexical_cast<std::string>(corRad) + "|");
         corLsaData+=(boost::lexical_cast<std::string>(corTheta) + "|");
-
         return corLsaData;
     }
 
@@ -132,7 +125,6 @@ namespace nlsr
         os<<"  Ls Lifetime: "<<(unsigned int)cLsa.getLifeTime()<<endl;
         os<<"    Hyperbolic Radius: "<<cLsa.getCorRadius()<<endl;
         os<<"    Hyperbolic Theta: "<<cLsa.getCorTheta()<<endl;
-
         return os;
     }
 
@@ -145,7 +137,6 @@ namespace nlsr
         lsSeqNo=lsn;
         lifeTime=lt;
         noLink=nl;
-
         std::list<Adjacent> al=padl.getAdjList();
         for( std::list<Adjacent>::iterator it=al.begin(); it != al.end(); it++)
         {
@@ -180,7 +171,6 @@ namespace nlsr
                    + boost::lexical_cast<std::string>(lifeTime);
         adjLsaData+="|";
         adjLsaData+=boost::lexical_cast<std::string>(adl.getAdlSize());
-
         std::list<Adjacent> al=adl.getAdjList();
         for( std::list<Adjacent>::iterator it=al.begin(); it != al.end(); it++)
         {
@@ -190,7 +180,6 @@ namespace nlsr
             adjLsaData+=boost::lexical_cast<std::string>((*it).getConnectingFace());
             adjLsaData+="|";
             adjLsaData+=boost::lexical_cast<std::string>((*it).getLinkCost());
-
         }
         return adjLsaData;
     }
@@ -203,7 +192,6 @@ namespace nlsr
         {
             pnlsr.getNpt().addNpte(getOrigRouter(), getOrigRouter(),pnlsr);
         }
-
     }
 
 
@@ -237,7 +225,6 @@ namespace nlsr
             os<<"      Connecting Face: "<<(*it).getConnectingFace()<<endl;
             os<<"      Link Cost: "<<(*it).getLinkCost()<<endl;
         }
-
         return os;
     }
 

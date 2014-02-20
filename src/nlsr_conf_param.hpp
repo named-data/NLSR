@@ -17,7 +17,6 @@ namespace nlsr
             ,chronosyncLsaPrefix("/ndn/nlsr/LSA")
         {
             isStrictHierchicalKeyCheck=0;
-
             interestRetryNumber=3;
             interestResendTime=5;
             infoInterestInterval=60;

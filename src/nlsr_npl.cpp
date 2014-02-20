@@ -10,12 +10,10 @@ namespace nlsr
 
     Npl::Npl()
     {
-
     }
 
     Npl::~Npl()
     {
-
     }
 
     static bool
@@ -30,15 +28,12 @@ namespace nlsr
         std::list<string >::iterator it = std::find_if( nameList.begin(),
                                           nameList.end(),
                                           bind(&nameCompare, _1 , name));
-
         if( it != nameList.end() )
         {
             return -1;
         }
-
         nameList.push_back(name);
         return 0;
-
     }
 
     int
@@ -47,12 +42,10 @@ namespace nlsr
         std::list<string >::iterator it = std::find_if( nameList.begin(),
                                           nameList.end(),
                                           bind(&nameCompare, _1 , name));
-
         if( it != nameList.end() )
         {
             nameList.erase(it);
         }
-
         return -1;
     }
 

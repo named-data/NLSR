@@ -19,11 +19,9 @@ namespace nlsr
     {
         //debugging purpose
         pnlsr.getNpt().printNpt();
-
         if ( 	pnlsr.getIsRoutingTableCalculating() == 0 )
         {
             pnlsr.setIsRoutingTableCalculating(1); //setting routing table calculation
-
             if ( pnlsr.getLsdb().doesLsaExist(
                         pnlsr.getConfParameter().getRouterPrefix()+"/"+"2",2) )
             {
@@ -48,7 +46,6 @@ namespace nlsr
                     {
                         calculateHypDryRoutingTable(pnlsr);
                     }
-
                     //need to update NPT here
                     pnlsr.getNpt().updateNptWithNewRoute(pnlsr);
                     //debugging purpose
@@ -77,8 +74,6 @@ namespace nlsr
                 pnlsr.getFib().printFib();
                 //debugging purpose end
             }
-
-
             pnlsr.setIsRouteCalculationScheduled(0); //clear scheduled flag
             pnlsr.setIsRoutingTableCalculating(0); //unsetting routing table calculation
         }
@@ -86,7 +81,6 @@ namespace nlsr
         {
             scheduleRoutingTableCalculation(pnlsr);
         }
-
     }
 
 
@@ -97,7 +91,6 @@ namespace nlsr
         Map vMap;
         vMap.createMapFromAdjLsdb(pnlsr);
         int numOfRouter=vMap.getMapSize();
-
         LinkStateRoutingTableCalculator lsrtc(numOfRouter);
         lsrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
     }
@@ -199,7 +192,6 @@ namespace nlsr
         {
             (*it).getNhl().addNextHop(nh);
         }
-
     }
 
     void

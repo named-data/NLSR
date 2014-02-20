@@ -34,7 +34,6 @@ namespace nlsr
     void
     Fib::refreshFibEntry(string name, int feSeqNum)
     {
-
     }
 
     void
@@ -76,7 +75,6 @@ namespace nlsr
                 {
                     (*it).getNhl().addNextHop((*nhit));
                 }
-
                 (*it).setTimeToRefresh(fibEntryRefreshTime);
             }
             (*it).getNhl().sortNhl();
@@ -101,9 +99,7 @@ namespace nlsr
             newEntry.setTimeToRefresh(fibEntryRefreshTime);
             newEntry.setFeSeqNo(1);
             fibTable.push_back(newEntry);
-
             //cancelScheduledFeExpiringEvent(pnlsr, newEntry().getFeExpiringEventId());
-
             //Update NDN-FIB
         }
     }
@@ -122,7 +118,6 @@ namespace nlsr
                 //remove entry from NDN-FIB
             }
         }
-
         if ( fibTable.size() > 0 )
         {
             fibTable.clear();
@@ -156,7 +151,6 @@ namespace nlsr
         {
             return maxFacesPerPrefix;
         }
-
         return endFace;
     }
 

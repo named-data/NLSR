@@ -18,11 +18,9 @@ namespace nlsr
         char_separator<char> sep(seps.c_str());
         tokenizer< char_separator<char> >tokens(originalString, sep);
         tokenizer< char_separator<char> >::iterator tok_iter = tokens.begin();
-
         string ft(*tok_iter);
         firstToken=ft;
         ++tok_iter;
-
         for ( ; tok_iter != tokens.end(); ++tok_iter)
         {
             string oneToken(*tok_iter);
@@ -30,7 +28,6 @@ namespace nlsr
             restOfTheLine+=oneToken;
             restOfTheLine+=seps;
         }
-
         trim(restOfTheLine);
     }
 
@@ -45,7 +42,6 @@ namespace nlsr
     {
         int pos=-1;
         int i=1;
-
         for(std::list<string>::iterator it=tokenList.begin(); it!=tokenList.end(); it++)
         {
             if( (*it) == token )
@@ -54,12 +50,10 @@ namespace nlsr
             }
             i++;
         }
-
         if( i < tokenList.size() )
         {
             pos=i;
         }
-
         return pos;
     }
 
@@ -79,12 +73,9 @@ namespace nlsr
                     string oneToken((*it));
                     returnString+=seps;
                     returnString+=oneToken;
-
                 }
-
             }
         }
-
         trim(returnString);
         return returnString;
     }
@@ -105,12 +96,9 @@ namespace nlsr
                     string oneToken((*it));
                     returnString+=seps;
                     returnString+=oneToken;
-
                 }
-
             }
         }
-
         trim(returnString);
         return returnString;
     }
@@ -127,12 +115,10 @@ namespace nlsr
         std::list<string >::iterator it = std::find_if( tokenList.begin(),
                                           tokenList.end(),
                                           bind(&tokenCompare, _1 , token));
-
         if( it != tokenList.end() )
         {
             return true;
         }
-
         return false;
     }
 

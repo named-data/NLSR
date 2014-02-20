@@ -15,7 +15,6 @@ namespace nlsr
     NlsrTest::schedlueAddingLsas(Nlsr& pnlsr)
     {
         // scheduling adding two name lsas, two Cor Lsas and three Adj LSAs
-
         //Scheduling Adding LSAs for router altair
         string router("/ndn/memphis.edu/cs/altair");
         string name1("/ndn/memphis.edu/cs/altair/name1");
@@ -23,7 +22,6 @@ namespace nlsr
         string name3("/ndn/memphis.edu/cs/broadcast");
         Adjacent adj1("/ndn/memphis.edu/cs/pollux",7,17,1,0);
         Adjacent adj2("/ndn/memphis.edu/cs/maia",15,27,1,0);
-
         pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(30),
                                            ndn::bind(&NlsrTest::secheduledAddNameLsa,pnlsr.getNlsrTesting(),
                                                    boost::ref(pnlsr)
@@ -36,7 +34,6 @@ namespace nlsr
                                            ndn::bind(&NlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(),
                                                    boost::ref(pnlsr)
                                                    ,router,adj1,adj2));
-
         //Scheduling Adding LSAs for router Maia
         string routerMaia("/ndn/memphis.edu/cs/maia");
         string maiaName1("/ndn/memphis.edu/maia/name1");
@@ -44,7 +41,6 @@ namespace nlsr
         string maiaName3("/ndn/memphis.edu/cs/broadcast");
         Adjacent maiaAdj1("/ndn/memphis.edu/cs/pollux",8,25,1,0);
         Adjacent maiaAdj2("/ndn/memphis.edu/cs/altair",11,15,1,0);
-
         pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(55),
                                            ndn::bind(&NlsrTest::secheduledAddNameLsa,pnlsr.getNlsrTesting(),
                                                    boost::ref(pnlsr)
@@ -57,18 +53,14 @@ namespace nlsr
                                            ndn::bind(&NlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(),
                                                    boost::ref(pnlsr)
                                                    ,routerMaia,maiaAdj1,maiaAdj2));
-
         //sheduling Adding LSAs for Router itself
         string routerPollux("/ndn/memphis.edu/cs/pollux");
         Adjacent polluxAdj1("/ndn/memphis.edu/cs/maia",9,13,1,0);
         Adjacent polluxAdj2("/ndn/memphis.edu/cs/altair",12,23,1,0);
-
         pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(90),
                                            ndn::bind(&NlsrTest::scheduledAddAdjacentLsa,pnlsr.getNlsrTesting(),
                                                    boost::ref(pnlsr)
                                                    ,routerPollux,polluxAdj1,polluxAdj2));
-
-
     }
 
 
@@ -83,7 +75,6 @@ namespace nlsr
         npl.insertIntoNpl(name3);
         NameLsa nameLsa(router,1,1,3600,npl);
         pnlsr.getLsdb().installNameLsa(pnlsr, nameLsa);
-
     }
 
     void
@@ -102,7 +93,6 @@ namespace nlsr
         adl.insert(adj2);
         AdjLsa adjLsa(router,2,1,3600,2,adl);
         pnlsr.getLsdb().installAdjLsa(pnlsr, adjLsa);
-
     }
 
 }//namespace nlsr

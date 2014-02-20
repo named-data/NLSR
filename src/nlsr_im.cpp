@@ -20,7 +20,6 @@ namespace nlsr
                                       const ndn::Name &name,
                                       const ndn::Interest &interest)
     {
-
         cout << "<< I: " << interest << endl;
         string intName=interest.getName().toUri();
         cout << "Interest Received for Name: "<< intName <<endl;
@@ -32,7 +31,6 @@ namespace nlsr
             cout <<"Neighbor: " << nbr <<endl;
             processInterestInfo(pnlsr,nbr,interest);
         }
-
         //Data data(ndn::Name(interest->getName()).append("testApp").appendVersion());
         //data.setFreshnessPeriod(1000); // 10 sec
         //data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
@@ -53,7 +51,6 @@ namespace nlsr
             pnlsr.getKeyChain().sign(data);
             cout << ">> D: " << data << endl;
             pnlsr.getNlsrFace().put(data);
-
             int status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
             if ( status == 0 )
             {
@@ -79,7 +76,6 @@ namespace nlsr
                        +nt.getTokenString(0,nt.getTokenPosition(chkString)-1);
             processInterestTimedOutInfo( pnlsr , nbr , interest);
         }
-
     }
 
     void
@@ -92,7 +88,6 @@ namespace nlsr
         cout<<"Neighbor: "<< neighbor << endl;
         cout<<"Status: "<< status << endl;
         cout<<"Info Interest Timed out: "<< infoIntTimedOutCount <<endl;
-
         if((infoIntTimedOutCount < pnlsr.getConfParameter().getInterestRetryNumber()))
         {
             string intName=neighbor +"/"+"info"+
@@ -114,7 +109,6 @@ namespace nlsr
                                                            boost::ref(pnlsr)));
             }
         }
-
     }
 
     void
@@ -125,7 +119,6 @@ namespace nlsr
         //i.setScope(scope);
         i.setInterestLifetime(seconds*1000);
         i.setMustBeFresh(true);
-
         pnlsr.getNlsrFace().expressInterest(i,
                                             ndn::func_lib::bind(&DataManager::processContent,
                                                     &pnlsr.getDm(), boost::ref(pnlsr),_1, _2),
@@ -145,9 +138,7 @@ namespace nlsr
             expressInterest(	pnlsr,adjName,2,
                                 pnlsr.getConfParameter().getInterestResendTime());
         }
-
         scheduleInfoInterest(pnlsr, pnlsr.getConfParameter().getInfoInterestInterval());
-
     }
 
     void

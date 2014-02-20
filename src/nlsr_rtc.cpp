@@ -53,7 +53,6 @@ namespace nlsr
                     adjMatrix[row][col]=cost;
                 }
             }
-
         }
     }
 
@@ -163,7 +162,6 @@ namespace nlsr
         int noLink=getNumOfLinkfromAdjMatrix(sourceRouter);
         allocateParent();
         allocateDistance();
-
         if ( pnlsr.getConfParameter().getMaxFacesPerPrefix() == 1 )
         {
             // Single Path
@@ -179,11 +177,9 @@ namespace nlsr
             setNoLink(getNumOfLinkfromAdjMatrix(sourceRouter));
             allocateLinks();
             allocateLinkCosts();
-
             getLinksFromAdjMatrix(links, linkCosts, sourceRouter);
             for (int i=0 ; i < vNoLink; i++)
             {
-
                 adjustAdMatrix(sourceRouter,links[i], linkCosts[i]);
                 printAdjMatrix();
                 doDijkstraPathCalculation(sourceRouter);
@@ -192,11 +188,9 @@ namespace nlsr
                 //update routing table
                 addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
             }
-
             freeLinks();
             freeLinksCosts();
         }
-
         freeParent();
         freeDistance();
         freeAdjMatrix();
@@ -216,12 +210,10 @@ namespace nlsr
             distance[i]=INF_DISTANCE;
             Q[i]=i;
         }
-
         if ( sourceRouter != NO_MAPPING_NUM )
         {
             distance[sourceRouter]=0;
             sortQueueByDistance(Q,distance,head,numOfRouter);
-
             while (head < numOfRouter )
             {
                 u=Q[head];
@@ -229,7 +221,6 @@ namespace nlsr
                 {
                     break;
                 }
-
                 for(v=0 ; v <numOfRouter; v++)
                 {
                     if( adjMatrix[u][v] > 0 )
@@ -241,13 +232,9 @@ namespace nlsr
                                 distance[v]=distance[u] + adjMatrix[u][v] ;
                                 parent[v]=u;
                             }
-
                         }
-
                     }
-
                 }
-
                 head++;
                 sortQueueByDistance(Q,distance,head,numOfRouter);
             }
@@ -278,7 +265,6 @@ namespace nlsr
                 // Add next hop to routing table
                 NextHop nh(nxtHopFace,routeCost);
                 rt.addNextHop(pMap.getRouterNameByMappingNo(i),nh);
-
             }
         }
     }
@@ -291,14 +277,11 @@ namespace nlsr
         {
             nextHop=dest;
             dest=parent[dest];
-
         }
-
         if ( dest != source )
         {
             nextHop=NO_NEXT_HOP;
         }
-
         return nextHop;
     }
 
@@ -324,7 +307,6 @@ namespace nlsr
         {
             printLsPath(parent[destRouter]);
         }
-
         cout<<" "<<destRouter;
     }
 
@@ -344,7 +326,6 @@ namespace nlsr
                 }
             }
         }
-
     }
 
     int
@@ -399,9 +380,7 @@ namespace nlsr
         setNoLink(noLink);
         allocateLinks();
         allocateLinkCosts();
-
         getLinksFromAdjMatrix(links, linkCosts, sourceRouter);
-
         for(int i=0 ; i < numOfRouter ; ++i)
         {
             int k=0;
@@ -410,7 +389,6 @@ namespace nlsr
                 allocateLinkFaces();
                 allocateDistanceToNeighbor();
                 allocateDistFromNbrToDest();
-
                 for(int j=0; j<vNoLink; j++)
                 {
                     string nextHopRouterName=pMap.getRouterNameByMappingNo(links[j]);
@@ -428,15 +406,12 @@ namespace nlsr
                         k++;
                     }
                 }
-
                 addHypNextHopsToRoutingTable(pnlsr,pMap,rt,k,i);
-
                 freeLinkFaces();
                 freeDistanceToNeighbor();
                 freeDistFromNbrToDest();
             }
         }
-
         freeLinks();
         freeLinksCosts();
         freeAdjMatrix();
@@ -456,7 +431,6 @@ namespace nlsr
                 rt.addNextHopToDryTable(destRouter,nh);
             }
         }
-
     }
 
     double
@@ -464,25 +438,18 @@ namespace nlsr
             Map& pMap, int src, int dest)
     {
         double distance=0.0;
-
         string srcRouterKey=pMap.getRouterNameByMappingNo(src)+"/3";
         string destRouterKey=pMap.getRouterNameByMappingNo(dest)+"/3";
-
         double srcRadius=(pnlsr.getLsdb().getCorLsa(srcRouterKey).first).getCorRadius();
         double srcTheta=(pnlsr.getLsdb().getCorLsa(srcRouterKey).first).getCorTheta();
-
         double destRadius=(pnlsr.getLsdb().getCorLsa(
                                destRouterKey).first).getCorRadius();
         double destTheta=(pnlsr.getLsdb().getCorLsa(destRouterKey).first).getCorTheta();
-
-
         double diffTheta = fabs (srcTheta - destTheta);
-
         if (diffTheta > MATH_PI)
         {
             diffTheta = 2 * MATH_PI - diffTheta;
         }
-
         if ( srcRadius != -1 && destRadius != -1 )
         {
             if (diffTheta == 0)
@@ -495,7 +462,6 @@ namespace nlsr
         {
             distance = -1;
         }
-
         return distance;
     }
 

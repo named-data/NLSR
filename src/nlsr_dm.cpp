@@ -16,22 +16,17 @@ namespace nlsr
     DataManager::processContent(Nlsr& pnlsr, const ndn::Interest &interest,
                                 const ndn::Data & data)
     {
-
         cout << "I: " << interest.toUri() << endl;
-
         string dataName(data.getName().toUri());
         string dataContent((char *)data.getContent().value());
-
         cout << "D: " << dataName << endl;
         cout << "Data Content: " << dataContent << endl;
-
         nlsrTokenizer nt(dataName,"/");
         string chkString("info");
         if( nt.doesTokenExist(chkString) )
         {
             processContentInfo(pnlsr,dataName,dataContent);
         }
-
     }
 
     void
@@ -50,20 +45,16 @@ namespace nlsr
         cout<<"Status: "<< oldStatus << endl;
         cout<<"Info Interest Timed out: "<< infoIntTimedOutCount <<endl;
         //debugging purpose end
-
         pnlsr.getAdl().setStatusOfNeighbor(neighbor,1);
         pnlsr.getAdl().setTimedOutInterestCount(neighbor,0);
-
         int newStatus=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
         infoIntTimedOutCount=pnlsr.getAdl().getTimedOutInterestCount(neighbor);
-
         //debugging purpose
         cout <<"After Updates: " <<endl;
         cout <<"Neighbor : "<<neighbor<<endl;
         cout<<"Status: "<< newStatus << endl;
         cout<<"Info Interest Timed out: "<< infoIntTimedOutCount <<endl;
         //debugging purpose end
-
         if ( ( oldStatus-newStatus)!= 0 ) // change in Adjacency list
         {
             pnlsr.incrementAdjBuildCount();
@@ -76,7 +67,6 @@ namespace nlsr
                                                    ndn::bind(&Lsdb::scheduledAdjLsaBuild, pnlsr.getLsdb(),
                                                            boost::ref(pnlsr)));
             }
-
         }
     }
 

@@ -17,7 +17,6 @@ namespace nlsr
     {
         os<<"MapEntry: ( Router: "<<mpe.getRouter()<<" Mapping No: ";
         os<<mpe.getMappingNumber()<<" )"<<endl;
-
         return os;
     }
 
@@ -100,7 +99,6 @@ namespace nlsr
                 string linkEndRouter=(*itAdl).getAdjacentName();
                 addMapElement(linkEndRouter);
             }
-
         }
     }
 
@@ -120,7 +118,6 @@ namespace nlsr
         {
             os<< (*it);
         }
-
         return os;
     }
 

@@ -17,7 +17,6 @@ namespace nlsr
             : destination()
             , nhl()
         {
-
         }
 
         ~RoutingTableEntry()

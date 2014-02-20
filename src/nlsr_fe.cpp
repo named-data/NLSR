@@ -18,7 +18,6 @@ namespace nlsr
         {
             int nhCount=0;
             std::list<NextHop>::iterator it1, it2;
-
             for ( it1=nhl.getNextHopList().begin(),
                     it2 = nhlOther.getNextHopList().begin() ;
                     it1 != nhl.getNextHopList().end() ; it1++, it2++)
@@ -33,7 +32,6 @@ namespace nlsr
                     break;
                 }
             }
-
             return nhCount == nhl.getNhlSize();
         }
     }

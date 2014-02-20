@@ -31,7 +31,6 @@ namespace nlsr
                         , pnlsr.getNpl() );
         pnlsr.getSm().setNameLsaSeq(pnlsr.getSm().getNameLsaSeq()+1);
         return installNameLsa(pnlsr,nameLsa);
-
     }
 
     std::pair<NameLsa&, bool>
@@ -40,15 +39,12 @@ namespace nlsr
         std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
                                            nameLsdb.end(),
                                            bind(nameLsaCompareByKey, _1, key));
-
         if( it != nameLsdb.end())
         {
             return std::make_pair(boost::ref((*it)),true);
         }
-
         NameLsa nlsa;
         return std::make_pair(boost::ref(nlsa),false);
-
     }
 
 
@@ -81,7 +77,6 @@ namespace nlsr
                     }
                 }
             }
-
             if(nlsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
             {
                 timeToExpire=nlsa.getLifeTime();
@@ -95,10 +90,8 @@ namespace nlsr
             {
                 chkNameLsa.first.setLsSeqNo(nlsa.getLsSeqNo());
                 chkNameLsa.first.setLifeTime(nlsa.getLifeTime());
-
                 chkNameLsa.first.getNpl().sortNpl();
                 nlsa.getNpl().sortNpl();
-
                 std::list<string> nameToAdd;
                 std::set_difference(nlsa.getNpl().getNameList().begin(),
                                     nlsa.getNpl().getNameList().end(),
@@ -117,7 +110,6 @@ namespace nlsr
                         }
                     }
                 }
-
                 std::list<string> nameToRemove;
                 std::set_difference(chkNameLsa.first.getNpl().getNameList().begin(),
                                     chkNameLsa.first.getNpl().getNameList().end(),
@@ -136,7 +128,6 @@ namespace nlsr
                         }
                     }
                 }
-
                 if(nlsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
                 {
                     timeToExpire=nlsa.getLifeTime();
@@ -147,7 +138,6 @@ namespace nlsr
                                                        nlsa.getNameLsaKey(), nlsa.getLsSeqNo(), timeToExpire));
             }
         }
-
         return true;
     }
 
@@ -156,7 +146,6 @@ namespace nlsr
     {
         std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
                                            nameLsdb.end(), bind(nameLsaCompareByKey, _1, nlsa.getNameLsaKey()));
-
         if( it == nameLsdb.end())
         {
             nameLsdb.push_back(nlsa);
@@ -184,7 +173,6 @@ namespace nlsr
                         pnlsr.getNpt().removeNpte((*nit),(*it).getOrigRouter(),pnlsr);
                     }
                 }
-
             }
             nameLsdb.erase(it);
             return true;
@@ -198,12 +186,10 @@ namespace nlsr
         std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
                                            nameLsdb.end(),
                                            bind(nameLsaCompareByKey, _1, key));
-
         if( it == nameLsdb.end())
         {
             return false;
         }
-
         return true;
     }
 
@@ -238,7 +224,6 @@ namespace nlsr
                       , pnlsr.getConfParameter().getCorTheta() );
         pnlsr.getSm().setCorLsaSeq(pnlsr.getSm().getCorLsaSeq()+1);
         installCorLsa(pnlsr, corLsa);
-
         return true;
     }
 
@@ -248,12 +233,10 @@ namespace nlsr
         std::list< CorLsa >::iterator it = std::find_if( corLsdb.begin(),
                                            corLsdb.end(),
                                            bind(corLsaCompareByKey, _1, key));
-
         if( it != corLsdb.end())
         {
             return std::make_pair(boost::ref((*it)), true);
         }
-
         CorLsa clsa;
         return std::make_pair(boost::ref(clsa),false);
     }
@@ -283,14 +266,12 @@ namespace nlsr
             {
                 pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
             }
-
             if(clsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
             {
                 timeToExpire=clsa.getLifeTime();
             }
             scheduleCorLsaExpiration(pnlsr,clsa.getCorLsaKey(),
                                      clsa.getLsSeqNo(), timeToExpire);
-
         }
         else
         {
@@ -302,14 +283,11 @@ namespace nlsr
                 {
                     chkCorLsa.first.setCorRadius(clsa.getCorRadius());
                     chkCorLsa.first.setCorTheta(clsa.getCorTheta());
-
                     if (pnlsr.getConfParameter().getIsHyperbolicCalc() >=1 )
                     {
                         pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
                     }
-
                 }
-
                 if(clsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
                 {
                     timeToExpire=clsa.getLifeTime();
@@ -320,9 +298,7 @@ namespace nlsr
                                                       clsa.getCorLsaKey(),
                                                       clsa.getLsSeqNo(), timeToExpire));
             }
-
         }
-
         return true;
     }
 
@@ -332,7 +308,6 @@ namespace nlsr
         std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(),
                                           corLsdb.end(),
                                           bind(corLsaCompareByKey, _1, clsa.getCorLsaKey()));
-
         if( it == corLsdb.end())
         {
             corLsdb.push_back(clsa);
@@ -357,7 +332,6 @@ namespace nlsr
             return true;
         }
         return false;
-
     }
 
     bool
@@ -366,12 +340,10 @@ namespace nlsr
         std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(),
                                           corLsdb.end(),
                                           bind(corLsaCompareByKey, _1, key));
-
         if( it == corLsdb.end())
         {
             return false;
         }
-
         return true;
     }
 
@@ -401,7 +373,6 @@ namespace nlsr
     {
         cout<<"scheduledAdjLsaBuild Called"<<endl;
         pnlsr.setIsBuildAdjLsaSheduled(0);
-
         if( pnlsr.getAdl().isAdjLsaBuildable(pnlsr))
         {
             int adjBuildCount=pnlsr.getAdjBuildCount();
@@ -429,7 +400,6 @@ namespace nlsr
                                                ndn::bind(&Lsdb::scheduledAdjLsaBuild, pnlsr.getLsdb(),
                                                        boost::ref(pnlsr)));
         }
-
     }
 
 
@@ -439,14 +409,12 @@ namespace nlsr
         std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(),
                                           adjLsdb.end(),
                                           bind(adjLsaCompareByKey, _1, alsa.getAdjLsaKey()));
-
         if( it == adjLsdb.end())
         {
             adjLsdb.push_back(alsa);
             return true;
         }
         return false;
-
     }
 
     std::pair<AdjLsa& , bool>
@@ -455,12 +423,10 @@ namespace nlsr
         std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(),
                                           adjLsdb.end(),
                                           bind(adjLsaCompareByKey, _1, key));
-
         if( it != adjLsdb.end())
         {
             return std::make_pair(boost::ref((*it)),true);
         }
-
         AdjLsa alsa;
         return std::make_pair(boost::ref(alsa),false);
     }
@@ -485,14 +451,12 @@ namespace nlsr
             addAdjLsa(alsa);
             alsa.addNptEntriesForAdjLsa(pnlsr);
             pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
-
             if(alsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
             {
                 timeToExpire=alsa.getLifeTime();
             }
             scheduleAdjLsaExpiration(pnlsr,alsa.getAdjLsaKey(),
                                      alsa.getLsSeqNo(),timeToExpire);
-
         }
         else
         {
@@ -500,14 +464,12 @@ namespace nlsr
             {
                 chkAdjLsa.first.setLsSeqNo(alsa.getLsSeqNo());
                 chkAdjLsa.first.setLifeTime(alsa.getLifeTime());
-
                 if ( !	chkAdjLsa.first.isLsaContentEqual(alsa))
                 {
                     chkAdjLsa.first.getAdl().resetAdl();
                     chkAdjLsa.first.getAdl().addAdjacentsFromAdl(alsa.getAdl());
                     pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
                 }
-
                 if(alsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
                 {
                     timeToExpire=alsa.getLifeTime();
@@ -517,11 +479,8 @@ namespace nlsr
                 chkAdjLsa.first.setLsaExpiringEventId(scheduleAdjLsaExpiration(pnlsr,
                                                       alsa.getAdjLsaKey(), alsa.getLsSeqNo(),timeToExpire));
             }
-
         }
-
         printAdjLsdb();
-
         return true;
     }
 
@@ -551,7 +510,6 @@ namespace nlsr
             return true;
         }
         return false;
-
     }
 
     bool
@@ -560,12 +518,10 @@ namespace nlsr
         std::list< AdjLsa >::iterator it = std::find_if( adjLsdb.begin(),
                                            adjLsdb.end(),
                                            bind(adjLsaCompareByKey, _1, key));
-
         if( it == adjLsdb.end())
         {
             return false;
         }
-
         return true;
     }
 
@@ -637,7 +593,6 @@ namespace nlsr
                     cout<<"Other's Adj LSA, so removing form LSDB"<<endl;
                     removeAdjLsa(pnlsr, lsaKey);
                 }
-
                 // schedule Routing table calculaiton
                 pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
             }
@@ -667,7 +622,6 @@ namespace nlsr
                     cout<<"Other's Cor LSA, so removing form LSDB"<<endl;
                     removeCorLsa(pnlsr, lsaKey);
                 }
-
                 if (pnlsr.getConfParameter().getIsHyperbolicCalc() >=1 )
                 {
                     pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
@@ -704,7 +658,6 @@ namespace nlsr
         {
             return doesCorLsaExist(key);
         }
-
         return false;
     }
 

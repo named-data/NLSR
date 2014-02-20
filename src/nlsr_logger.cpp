@@ -23,7 +23,6 @@ namespace nlsr
         {
             homeDirPath = getenv("HOME");
         }
-
         return homeDirPath;
     }
 
@@ -36,7 +35,6 @@ namespace nlsr
             logDirPath=getUserHomeDirectory()+"/nlsrLog";
         }
         cout<<"Log Dir Path: "<< logDirPath<<endl;
-
         typedef sinks::synchronous_sink< sinks::text_file_backend > file_sink;
         shared_ptr< file_sink > sink(new file_sink(
                                          keywords::file_name = logDirPath
@@ -50,13 +48,11 @@ namespace nlsr
                     keywords::max_size = 16 * 1024 * 1024 * 1024,
                     keywords::min_free_space = 128 * 1024 * 1024
                 ));
-
         sink->set_formatter(
             expr::format("%1%: %2%")
             % getEpochTime()
             % expr::smessage
         );
-
         logging::core::get()->add_sink(sink);
     }
 

@@ -19,7 +19,6 @@ namespace nlsr
     ConfFileProcessor::processConfFile(Nlsr& pnlsr)
     {
         int ret=0;
-
         if ( !confFileName.empty())
         {
             std::ifstream inputFile(confFileName.c_str());
@@ -47,7 +46,6 @@ namespace nlsr
                 ret=-1;
             }
         }
-
         return ret;
     }
 
@@ -129,7 +127,6 @@ namespace nlsr
         {
             cout << "Wrong configuration Command: "<< nt.getFirstToken()<<endl;
         }
-
         return ret;
     }
 
@@ -438,11 +435,9 @@ namespace nlsr
             nlsrTokenizer nt(command," ");
             stringstream ssr(nt.getFirstToken().c_str());
             stringstream sst(nt.getRestOfLine().c_str());
-
             double r,theta;
             ssr>>r;
             sst>>theta;
-
             pnlsr.getConfParameter().setCorR(r);
             pnlsr.getConfParameter().setCorTheta(theta);
         }
@@ -507,10 +502,8 @@ namespace nlsr
         {
             nlsrTokenizer nt(command," ");
             stringstream sst(nt.getRestOfLine().c_str());
-
             double cost;
             sst>>cost;
-
             pnlsr.getAdl().updateAdjacentLinkCost(nt.getFirstToken(),cost);
         }
         return 0;

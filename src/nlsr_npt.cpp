@@ -24,7 +24,6 @@ namespace nlsr
     {
         std::list<Npte >::iterator it = std::find_if( npteList.begin(),
                                         npteList.end(), bind(&npteCompare, _1, name));
-
         if ( it == npteList.end() )
         {
             Npte newEntry(	name);
@@ -53,7 +52,6 @@ namespace nlsr
         if ( it != npteList.end() )
         {
             string destRouter=rte.getDestination();
-
             (*it).removeRoutingTableEntry(rte);
             if ( ((*it).getRteListSize() == 0 ) &&
                     (!pnlsr.getLsdb().doesLsaExist(destRouter+"/1",1) ) &&
@@ -63,7 +61,6 @@ namespace nlsr
                 npteList.erase(it); // remove entry from NPT
                 // remove FIB entry with this name
                 pnlsr.getFib().removeFromFib(pnlsr,name);
-
             }
             else
             {
@@ -90,7 +87,6 @@ namespace nlsr
             RoutingTableEntry rte(destRouter);
             addNpte(name, rte,pnlsr);
         }
-
     }
 
     void

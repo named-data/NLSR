@@ -77,7 +77,6 @@ namespace nlsr
             cout<<(*it);
         }
         os<<npte.getNhl();
-
         return os;
     }
 

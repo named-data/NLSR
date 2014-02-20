@@ -14,7 +14,6 @@ namespace nlsr
 
     Adl::~Adl()
     {
-
     }
 
     static bool
@@ -51,36 +50,28 @@ namespace nlsr
     Adl::updateAdjacentStatus(string adjName, int s)
     {
         Adjacent adj(adjName);
-
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it == adjList.end())
         {
             return -1;
         }
-
         (*it).setStatus(s);
         return 0;
-
-
     }
 
     Adjacent
     Adl::getAdjacent(string adjName)
     {
         Adjacent adj(adjName);
-
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it != adjList.end())
         {
             return (*it);
         }
-
         return adj;
     }
 
@@ -92,13 +83,10 @@ namespace nlsr
         {
             return false;
         }
-
         adjList.sort(adjacent_compare);
         adl.getAdjList().sort(adjacent_compare);
         int equalAdjCount=0;
-
         std::list< Adjacent > adjList2=adl.getAdjList();
-
         std::list<Adjacent>::iterator it1;
         std::list<Adjacent>::iterator it2;
         for(it1=adjList.begin() , it2=adjList2.begin() ;
@@ -110,7 +98,6 @@ namespace nlsr
             }
             equalAdjCount++;
         }
-
         return equalAdjCount==getAdlSize();
     }
 
@@ -119,19 +106,15 @@ namespace nlsr
     Adl::updateAdjacentLinkCost(string adjName, double lc)
     {
         Adjacent adj(adjName);
-
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it == adjList.end())
         {
             return -1;
         }
-
         (*it).setLinkCost(lc);
         return 0;
-
     }
 
     bool
@@ -141,12 +124,10 @@ namespace nlsr
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it == adjList.end())
         {
             return false;
         }
-
         return true;
     }
 
@@ -157,14 +138,11 @@ namespace nlsr
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it == adjList.end())
         {
             return ;
         }
-
         (*it).setInterestTimedOutNo((*it).getInterestTimedOutNo()+1);
-
     }
 
     void
@@ -174,7 +152,6 @@ namespace nlsr
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it != adjList.end())
         {
             (*it).setInterestTimedOutNo(count);
@@ -188,12 +165,10 @@ namespace nlsr
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it == adjList.end())
         {
             return -1;
         }
-
         return (*it).getInterestTimedOutNo();
     }
 
@@ -204,12 +179,10 @@ namespace nlsr
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it == adjList.end())
         {
             return -1;
         }
-
         return (*it).getStatus();
     }
 
@@ -220,7 +193,6 @@ namespace nlsr
         std::list<Adjacent >::iterator it = std::find_if( adjList.begin(),
                                             adjList.end(),
                                             bind(&adjacent_compare, _1, adj));
-
         if( it != adjList.end())
         {
             (*it).setStatus(status);
@@ -253,12 +225,10 @@ namespace nlsr
                 }
             }
         }
-
         if( nbrCount == adjList.size())
         {
             return true;
         }
-
         return false;
     }
 
@@ -274,7 +244,6 @@ namespace nlsr
                 actNbrCount++;
             }
         }
-
         return actNbrCount;
     }
 

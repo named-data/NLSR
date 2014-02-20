@@ -26,7 +26,6 @@ namespace nlsr
         os  <<"Hyp R: "<< cfp.getCorR()<<endl;
         os  <<"Hyp theta: "<< cfp.getCorTheta()<<endl;
         os  <<"Tunnel Type: "<< cfp.getTunnelType()<<endl;
-
         return os;
     }
 
