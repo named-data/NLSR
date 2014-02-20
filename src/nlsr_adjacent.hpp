@@ -1,84 +1,96 @@
 #ifndef ADJACENT_HPP
 #define ADJACENT_HPP
 
-namespace nlsr {
+namespace nlsr
+{
 
-using namespace std;
+    using namespace std;
 
-class Adjacent{
+    class Adjacent
+    {
 
-	public:
-		Adjacent()
-			:adjacentName()
-			,connectingFace(0)
-			,linkCost(10.0)
-			,status(0)
-			,interestTimedOutNo(0)
-		{
-		}
+    public:
+        Adjacent()
+            :adjacentName()
+            ,connectingFace(0)
+            ,linkCost(10.0)
+            ,status(0)
+            ,interestTimedOutNo(0)
+        {
+        }
 
-		Adjacent(const string& an)
-			:connectingFace(0)
-			,linkCost(0.0)
-			,status(0)
-			,interestTimedOutNo(0)
-		{
-			adjacentName=an;
-		}
+        Adjacent(const string& an)
+            :connectingFace(0)
+            ,linkCost(0.0)
+            ,status(0)
+            ,interestTimedOutNo(0)
+        {
+            adjacentName=an;
+        }
 
-		Adjacent(const string& an, int cf, double lc, int s, int iton);	
+        Adjacent(const string& an, int cf, double lc, int s, int iton);
 
-		string getAdjacentName(){
-			return adjacentName;
-		}
+        string getAdjacentName()
+        {
+            return adjacentName;
+        }
 
-		void setAdjacentName(const string& an){
-			adjacentName=an;
-		}
+        void setAdjacentName(const string& an)
+        {
+            adjacentName=an;
+        }
 
-		int getConnectingFace(){
-			return connectingFace;
-		}
-		 
-		void setConnectingFace(int cf){
-			connectingFace=cf;
-		}
+        int getConnectingFace()
+        {
+            return connectingFace;
+        }
 
-		double getLinkCost(){
-			return linkCost;
-		}
+        void setConnectingFace(int cf)
+        {
+            connectingFace=cf;
+        }
 
-		void setLinkCost(double lc){
-			linkCost=lc;
-		}
+        double getLinkCost()
+        {
+            return linkCost;
+        }
 
-		int getStatus(){
-			return status;
-		}
+        void setLinkCost(double lc)
+        {
+            linkCost=lc;
+        }
 
-		void setStatus(int s){
-			status=s;
-		}
+        int getStatus()
+        {
+            return status;
+        }
 
-		int getInterestTimedOutNo(){
-			return interestTimedOutNo;
-		}
+        void setStatus(int s)
+        {
+            status=s;
+        }
 
-		void setInterestTimedOutNo(int iton){
-			interestTimedOutNo=iton;
-		}
+        int getInterestTimedOutNo()
+        {
+            return interestTimedOutNo;
+        }
 
-		bool isAdjacentEqual(Adjacent& adj);
-	private:
-		string adjacentName;
-		int connectingFace;
-		double linkCost;
-		int status;
-		int interestTimedOutNo;
-};
+        void setInterestTimedOutNo(int iton)
+        {
+            interestTimedOutNo=iton;
+        }
 
-std::ostream&
-operator << (std::ostream &os, Adjacent &adj);
+        bool isAdjacentEqual(Adjacent& adj);
+    private:
+        string adjacentName;
+        int connectingFace;
+        double linkCost;
+        int status;
+        int interestTimedOutNo;
+    };
+
+    std::ostream&
+    operator << (std::ostream &os, Adjacent &adj);
 
 } // namespace nlsr
 

@@ -2,11 +2,12 @@
 #include <iostream>
 #include "nlsr_sm.hpp"
 
-namespace nlsr {
+namespace nlsr
+{
 
-using namespace std;
+    using namespace std;
 
-class Nlsr;
+    class Nlsr;
 
 }//namespace nlsr
 

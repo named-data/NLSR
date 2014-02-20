@@ -8,76 +8,77 @@
 #include "nlsr_nexthop.hpp"
 #include "nlsr_nhl.hpp"
 
-namespace nlsr {
-
-using namespace std;
-
-class FibEntry
+namespace nlsr
 {
-public:
-	FibEntry()
-		: name()
-		, timeToRefresh(0)
-		, feSeqNo(0)
-	{
-	}
 
-	FibEntry(string n)
-	{
-		name=n;
-	}	
+    using namespace std;
 
-	string getName()
-	{
-		return name;
-	}
+    class FibEntry
+    {
+    public:
+        FibEntry()
+            : name()
+            , timeToRefresh(0)
+            , feSeqNo(0)
+        {
+        }
 
-	Nhl& getNhl()
-	{
-		return nhl;
-	}
+        FibEntry(string n)
+        {
+            name=n;
+        }
 
-	int getTimeToRefresh()
-	{
-		return timeToRefresh;
-	}
+        string getName()
+        {
+            return name;
+        }
 
-	void setTimeToRefresh(int ttr)
-	{
-		timeToRefresh=ttr;
-	}
+        Nhl& getNhl()
+        {
+            return nhl;
+        }
 
-	void setFeExpiringEventId(ndn::EventId feid)
-	{
-		feExpiringEventId=feid;
-	}
+        int getTimeToRefresh()
+        {
+            return timeToRefresh;
+        }
 
-	ndn::EventId getFeExpiringEventId()
-	{
-		return feExpiringEventId;
-	}
+        void setTimeToRefresh(int ttr)
+        {
+            timeToRefresh=ttr;
+        }
 
-	void setFeSeqNo(int fsn)
-	{
-		feSeqNo=fsn;
-	}
+        void setFeExpiringEventId(ndn::EventId feid)
+        {
+            feExpiringEventId=feid;
+        }
 
-	int getFeSeqNo()
-	{
-		return feSeqNo;
-	}	
+        ndn::EventId getFeExpiringEventId()
+        {
+            return feExpiringEventId;
+        }
 
-	bool isEqualNextHops(Nhl &nhlOther);
-	
-private:
-	string name;
-	int timeToRefresh;
-	ndn::EventId feExpiringEventId;
-	int feSeqNo;
-	Nhl nhl;
-};
+        void setFeSeqNo(int fsn)
+        {
+            feSeqNo=fsn;
+        }
 
-ostream& operator<<(ostream& os, FibEntry& fe);
+        int getFeSeqNo()
+        {
+            return feSeqNo;
+        }
+
+        bool isEqualNextHops(Nhl &nhlOther);
+
+    private:
+        string name;
+        int timeToRefresh;
+        ndn::EventId feExpiringEventId;
+        int feSeqNo;
+        Nhl nhl;
+    };
+
+    ostream& operator<<(ostream& os, FibEntry& fe);
 
 } //namespace nlsr
 

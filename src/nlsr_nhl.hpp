@@ -8,45 +8,46 @@
 
 #include "nlsr_nexthop.hpp"
 
-namespace nlsr {
-
-using namespace std;
-
-class Nhl
+namespace nlsr
 {
-public:
-	Nhl()
-	{
-	}
 
-	~Nhl()
-	{
-	}
-	void addNextHop(NextHop &nh);
-	void removeNextHop(NextHop &nh);
-	void sortNhl();
-	int getNhlSize()
-	{
-		return nexthopList.size();
-	}
-	void resetNhl()
-	{
-		if (nexthopList.size() > 0 )
-		{
-			nexthopList.clear();
-		}
-	}
-	std::list< NextHop >& getNextHopList()
-	{
-		return nexthopList;
-	}
+    using namespace std;
 
-private:
-	std::list< NextHop > nexthopList;
-};
+    class Nhl
+    {
+    public:
+        Nhl()
+        {
+        }
 
-ostream&
-operator<<(ostream& os, Nhl& nhl);
+        ~Nhl()
+        {
+        }
+        void addNextHop(NextHop &nh);
+        void removeNextHop(NextHop &nh);
+        void sortNhl();
+        int getNhlSize()
+        {
+            return nexthopList.size();
+        }
+        void resetNhl()
+        {
+            if (nexthopList.size() > 0 )
+            {
+                nexthopList.clear();
+            }
+        }
+        std::list< NextHop >& getNextHopList()
+        {
+            return nexthopList;
+        }
+
+    private:
+        std::list< NextHop > nexthopList;
+    };
+
+    ostream&
+    operator<<(ostream& os, Nhl& nhl);
 
 }//namespace nlsr
 

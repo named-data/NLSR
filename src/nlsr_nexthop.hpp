@@ -3,52 +3,53 @@
 
 #include<iostream>
 
-namespace nlsr {
-
-using namespace std;
-
-class NextHop
+namespace nlsr
 {
-public:
-	NextHop()
-		: connectingFace(0)
-		, routeCost(0)
-	{
-	}
 
-	NextHop(int cf, double rc)
-	{
-		connectingFace=cf;
-		routeCost=rc;
-	}
+    using namespace std;
 
-	int getConnectingFace()
-	{
-		return connectingFace;
-	}	
+    class NextHop
+    {
+    public:
+        NextHop()
+            : connectingFace(0)
+            , routeCost(0)
+        {
+        }
 
-	void setConnectingFace(int cf)
-	{
-		connectingFace=cf;
-	}
+        NextHop(int cf, double rc)
+        {
+            connectingFace=cf;
+            routeCost=rc;
+        }
 
-	double getRouteCost()
-	{
-		return routeCost;
-	}
+        int getConnectingFace()
+        {
+            return connectingFace;
+        }
 
-	void setRouteCost(double rc)
-	{
-		routeCost=rc;
-	}
-private:
-	int connectingFace;
-	double routeCost;
-};
+        void setConnectingFace(int cf)
+        {
+            connectingFace=cf;
+        }
+
+        double getRouteCost()
+        {
+            return routeCost;
+        }
+
+        void setRouteCost(double rc)
+        {
+            routeCost=rc;
+        }
+    private:
+        int connectingFace;
+        double routeCost;
+    };
 
 
-ostream&
-operator<<(ostream& os, NextHop& nh);
+    ostream&
+    operator<<(ostream& os, NextHop& nh);
 
 }//namespace nlsr
 

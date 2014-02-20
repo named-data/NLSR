@@ -5,23 +5,24 @@
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/util/scheduler.hpp>
 
-namespace nlsr {
-
-using namespace ndn;
-using namespace std;
-
-class Nlsr;
-
-class DataManager
+namespace nlsr
 {
-public:
-  void processContent(Nlsr& pnlsr, const ndn::Interest &interest,
-								               const ndn::Data& data);
-	void processContentInfo(Nlsr& pnlsr, string& dataName,
-                                                           string& dataContent);
-private:
-  
-};
+
+    using namespace ndn;
+    using namespace std;
+
+    class Nlsr;
+
+    class DataManager
+    {
+    public:
+        void processContent(Nlsr& pnlsr, const ndn::Interest &interest,
+                            const ndn::Data& data);
+        void processContentInfo(Nlsr& pnlsr, string& dataName,
+                                string& dataContent);
+    private:
+
+    };
 
 }//namespace nlsr
 #endif

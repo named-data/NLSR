@@ -8,55 +8,59 @@
 #include <list>
 #include <ndn-cpp-dev/face.hpp>
 
-namespace nlsr {
+namespace nlsr
+{
 
-using namespace std;
-using namespace boost;
+    using namespace std;
+    using namespace boost;
 
-class nlsrTokenizer{
-	public:
-		nlsrTokenizer(const string& inputString)
-			:firstToken(),
-			 restOfTheLine()	
-		{
-			seps = " ";
-			originalString = inputString;
-			makeToken();
-		}
+    class nlsrTokenizer
+    {
+    public:
+        nlsrTokenizer(const string& inputString)
+            :firstToken(),
+             restOfTheLine()
+        {
+            seps = " ";
+            originalString = inputString;
+            makeToken();
+        }
 
-		nlsrTokenizer(const string& inputString, const string& separator)
-			:firstToken(),
-			 restOfTheLine()	
-		{
-			seps = separator;
-			originalString = inputString;
-			makeToken();
-		}
-		
-		string getFirstToken(){
-			return firstToken;
-		}
+        nlsrTokenizer(const string& inputString, const string& separator)
+            :firstToken(),
+             restOfTheLine()
+        {
+            seps = separator;
+            originalString = inputString;
+            makeToken();
+        }
 
-		string getRestOfLine(){
-			return restOfTheLine;
-		}
+        string getFirstToken()
+        {
+            return firstToken;
+        }
 
-		int getTokenPosition(string& token);
-		string getTokenString(int from , int to);
-		string getTokenString(int from);
-		bool doesTokenExist(string token);
+        string getRestOfLine()
+        {
+            return restOfTheLine;
+        }
 
-	private:
+        int getTokenPosition(string& token);
+        string getTokenString(int from , int to);
+        string getTokenString(int from);
+        bool doesTokenExist(string token);
 
-		void makeToken();
-		void insertToken(const string& token);
-	
-		string seps;
-		string originalString;
-		string firstToken;
-		string restOfTheLine;
-		std::list<string> tokenList;
-};
+    private:
+
+        void makeToken();
+        void insertToken(const string& token);
+
+        string seps;
+        string originalString;
+        string firstToken;
+        string restOfTheLine;
+        std::list<string> tokenList;
+    };
 
 }//namespace nlsr
 #endif

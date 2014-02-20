@@ -6,115 +6,134 @@
 
 #include "nlsr_tokenizer.hpp"
 
-namespace nlsr {
+namespace nlsr
+{
 
-using namespace std;
-using namespace boost;
+    using namespace std;
+    using namespace boost;
 
-void 
-nlsrTokenizer::makeToken(){
-	char_separator<char> sep(seps.c_str());
-	tokenizer< char_separator<char> >tokens(originalString, sep);
-	tokenizer< char_separator<char> >::iterator tok_iter = tokens.begin();
-	
-	string ft(*tok_iter);
-	firstToken=ft;
-	++tok_iter;
+    void
+    nlsrTokenizer::makeToken()
+    {
+        char_separator<char> sep(seps.c_str());
+        tokenizer< char_separator<char> >tokens(originalString, sep);
+        tokenizer< char_separator<char> >::iterator tok_iter = tokens.begin();
 
-	for ( ;tok_iter != tokens.end(); ++tok_iter){
-		string oneToken(*tok_iter);
-		this->insertToken(oneToken);
-		restOfTheLine+=oneToken;
-		restOfTheLine+=seps;
-  	}
+        string ft(*tok_iter);
+        firstToken=ft;
+        ++tok_iter;
 
-	trim(restOfTheLine);
-}
+        for ( ; tok_iter != tokens.end(); ++tok_iter)
+        {
+            string oneToken(*tok_iter);
+            this->insertToken(oneToken);
+            restOfTheLine+=oneToken;
+            restOfTheLine+=seps;
+        }
 
-void 
-nlsrTokenizer::insertToken(const string& token){
-	tokenList.push_back(token);
-}
+        trim(restOfTheLine);
+    }
 
-int 
-nlsrTokenizer::getTokenPosition(string& token){
-	int pos=-1;
-	int i=1;
+    void
+    nlsrTokenizer::insertToken(const string& token)
+    {
+        tokenList.push_back(token);
+    }
 
-	for(std::list<string>::iterator it=tokenList.begin();it!=tokenList.end();it++){
-		if( (*it) == token ){
-			break;
-		}
-		i++;
-	}
+    int
+    nlsrTokenizer::getTokenPosition(string& token)
+    {
+        int pos=-1;
+        int i=1;
 
-	if( i < tokenList.size() ){
-		pos=i;
-	}
+        for(std::list<string>::iterator it=tokenList.begin(); it!=tokenList.end(); it++)
+        {
+            if( (*it) == token )
+            {
+                break;
+            }
+            i++;
+        }
 
-	return pos;
-}
+        if( i < tokenList.size() )
+        {
+            pos=i;
+        }
 
-string 
-nlsrTokenizer::getTokenString(int from , int to){
-	string returnString;
-	if ( from >=0 && to < tokenList.size()){
-		int i=0;
-		for(std::list<string>::iterator it=tokenList.begin();
-													it!=tokenList.end();it++){
-			i++;
-			if( i >= from && i<= to ){
-				string oneToken((*it));
-				returnString+=seps;
-				returnString+=oneToken;
-				
-			}
-			
-		}
-	}
+        return pos;
+    }
 
-	trim(returnString);
-	return returnString;
-}
+    string
+    nlsrTokenizer::getTokenString(int from , int to)
+    {
+        string returnString;
+        if ( from >=0 && to < tokenList.size())
+        {
+            int i=0;
+            for(std::list<string>::iterator it=tokenList.begin();
+                    it!=tokenList.end(); it++)
+            {
+                i++;
+                if( i >= from && i<= to )
+                {
+                    string oneToken((*it));
+                    returnString+=seps;
+                    returnString+=oneToken;
 
-string 
-nlsrTokenizer::getTokenString(int from){
-	string returnString;
-	if ( from >=0 && from < tokenList.size()){
-		int i=0;
-		for(std::list<string>::iterator it=tokenList.begin();
-													it!=tokenList.end();it++){
-			i++;
-			if( i >= from){
-				string oneToken((*it));
-				returnString+=seps;
-				returnString+=oneToken;
-				
-			}
-			
-		}
-	}
+                }
 
-	trim(returnString);
-	return returnString;
-}
+            }
+        }
 
-static bool
-tokenCompare(string& s1, string& s2){
-	return s1==s2;
-}
+        trim(returnString);
+        return returnString;
+    }
 
-bool
-nlsrTokenizer::doesTokenExist(string token){
-	std::list<string >::iterator it = std::find_if( tokenList.begin(), 
-								tokenList.end(),	
-   								bind(&tokenCompare, _1 , token));
+    string
+    nlsrTokenizer::getTokenString(int from)
+    {
+        string returnString;
+        if ( from >=0 && from < tokenList.size())
+        {
+            int i=0;
+            for(std::list<string>::iterator it=tokenList.begin();
+                    it!=tokenList.end(); it++)
+            {
+                i++;
+                if( i >= from)
+                {
+                    string oneToken((*it));
+                    returnString+=seps;
+                    returnString+=oneToken;
 
-	if( it != tokenList.end() ){
-		return true;
-	}
+                }
 
-	return false;
-}
+            }
+        }
+
+        trim(returnString);
+        return returnString;
+    }
+
+    static bool
+    tokenCompare(string& s1, string& s2)
+    {
+        return s1==s2;
+    }
+
+    bool
+    nlsrTokenizer::doesTokenExist(string token)
+    {
+        std::list<string >::iterator it = std::find_if( tokenList.begin(),
+                                          tokenList.end(),
+                                          bind(&tokenCompare, _1 , token));
+
+        if( it != tokenList.end() )
+        {
+            return true;
+        }
+
+        return false;
+    }
 
 }//namespace nlsr

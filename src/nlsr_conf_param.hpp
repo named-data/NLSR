@@ -3,210 +3,248 @@
 
 #include<iostream>
 
-namespace nlsr {
+namespace nlsr
+{
 
-using namespace std;
+    using namespace std;
 
-class ConfParameter{
-	
-public:
-	ConfParameter()
-		:chronosyncSyncPrefix("ndn/nlsr/sync")
-		,chronosyncLsaPrefix("/ndn/nlsr/LSA")
-		{
-      isStrictHierchicalKeyCheck=0;
+    class ConfParameter
+    {
 
-			interestRetryNumber=3;
-			interestResendTime=5;
-			infoInterestInterval=60;
-			lsaRefreshTime=1800;
-			routerDeadInterval=3600;
-			maxFacesPerPrefix=0;
-			tunnelType=0;
-			detailedLogging=0;
-      debugging=0;
-			isHyperbolicCalc=0;	
-		}
+    public:
+        ConfParameter()
+            :chronosyncSyncPrefix("ndn/nlsr/sync")
+            ,chronosyncLsaPrefix("/ndn/nlsr/LSA")
+        {
+            isStrictHierchicalKeyCheck=0;
 
-		void setRouterName(const string& rn){  
-			routerName=rn;
-		}
+            interestRetryNumber=3;
+            interestResendTime=5;
+            infoInterestInterval=60;
+            lsaRefreshTime=1800;
+            routerDeadInterval=3600;
+            maxFacesPerPrefix=0;
+            tunnelType=0;
+            detailedLogging=0;
+            debugging=0;
+            isHyperbolicCalc=0;
+        }
 
-		string getRouterName(){
-			return routerName;
-		}
+        void setRouterName(const string& rn)
+        {
+            routerName=rn;
+        }
 
-		void setSiteName(const string& sn){  
-			siteName=sn;
-		}
+        string getRouterName()
+        {
+            return routerName;
+        }
 
-		string getSiteName(){
-			return siteName;
-		}
+        void setSiteName(const string& sn)
+        {
+            siteName=sn;
+        }
 
-		void setNetwork(const string& nn){  
-			network=nn;
-		}
+        string getSiteName()
+        {
+            return siteName;
+        }
 
-		string getNetwork(){
-			return network;
-		}
+        void setNetwork(const string& nn)
+        {
+            network=nn;
+        }
 
-		void buildRouterPrefix(){
-			routerPrefix="/"+network+"/"+siteName+"/"+routerName;
-		}
-		
-		string getRouterPrefix(){
-			return routerPrefix;
-		}
+        string getNetwork()
+        {
+            return network;
+        }
 
-		void setInterestRetryNumber(int irn){
-			interestRetryNumber=irn;
-		}
+        void buildRouterPrefix()
+        {
+            routerPrefix="/"+network+"/"+siteName+"/"+routerName;
+        }
 
-		int getInterestRetryNumber(){
-			return interestRetryNumber;
-		}
+        string getRouterPrefix()
+        {
+            return routerPrefix;
+        }
 
-		void setInterestResendTime(int irt){
-			interestResendTime=irt;
-		}
+        void setInterestRetryNumber(int irn)
+        {
+            interestRetryNumber=irn;
+        }
 
-		int getInterestResendTime(){
-			return interestResendTime;
-		}
+        int getInterestRetryNumber()
+        {
+            return interestRetryNumber;
+        }
 
-		void setLsaRefreshTime(int lrt){
-			lsaRefreshTime=lrt;
-			routerDeadInterval=2*lsaRefreshTime;
-		}
+        void setInterestResendTime(int irt)
+        {
+            interestResendTime=irt;
+        }
 
-		int getLsaRefreshTime(){
-			return lsaRefreshTime;
-		}
+        int getInterestResendTime()
+        {
+            return interestResendTime;
+        }
 
-		void setRouterDeadInterval(int rdt){
-			routerDeadInterval=rdt;
-		}
+        void setLsaRefreshTime(int lrt)
+        {
+            lsaRefreshTime=lrt;
+            routerDeadInterval=2*lsaRefreshTime;
+        }
 
-		long int getRouterDeadInterval(){
-			return routerDeadInterval;
-		}
+        int getLsaRefreshTime()
+        {
+            return lsaRefreshTime;
+        }
 
-		void setMaxFacesPerPrefix(int mfpp){
-			maxFacesPerPrefix=mfpp;
-		}
+        void setRouterDeadInterval(int rdt)
+        {
+            routerDeadInterval=rdt;
+        }
 
-		int getMaxFacesPerPrefix(){
-			return maxFacesPerPrefix;
-		}
+        long int getRouterDeadInterval()
+        {
+            return routerDeadInterval;
+        }
 
-		void setLogDir(string ld){
-			logDir=ld;
-		}
-		
-		string getLogDir(){
-			return logDir;
-		}
+        void setMaxFacesPerPrefix(int mfpp)
+        {
+            maxFacesPerPrefix=mfpp;
+        }
 
-		void setDetailedLogging(int dl){
-			detailedLogging=dl;		
-		}
+        int getMaxFacesPerPrefix()
+        {
+            return maxFacesPerPrefix;
+        }
 
-		int getDetailedLogging(){
-			return detailedLogging;
-		}
+        void setLogDir(string ld)
+        {
+            logDir=ld;
+        }
 
-		void setDebugging(int d){
-			debugging=d;
-		}
-		
-		int getDebugging(){
-			return debugging;
-		}
+        string getLogDir()
+        {
+            return logDir;
+        }
 
-		void setIsHyperbolicCalc(int ihc){
-			isHyperbolicCalc=ihc;
-		}
+        void setDetailedLogging(int dl)
+        {
+            detailedLogging=dl;
+        }
 
-		int getIsHyperbolicCalc(){
-			return isHyperbolicCalc;
-		}
+        int getDetailedLogging()
+        {
+            return detailedLogging;
+        }
 
-		void setCorR(double cr){
-			corR=cr;
-		}
+        void setDebugging(int d)
+        {
+            debugging=d;
+        }
 
-		double getCorR(){
-			return corR;
-		}
+        int getDebugging()
+        {
+            return debugging;
+        }
 
-		void setCorTheta(double ct){
-			corTheta=ct;
-		}
+        void setIsHyperbolicCalc(int ihc)
+        {
+            isHyperbolicCalc=ihc;
+        }
 
-		double getCorTheta(){
-			return corTheta;
-		}
+        int getIsHyperbolicCalc()
+        {
+            return isHyperbolicCalc;
+        }
 
-		void setTunnelType(int tt){
-			tunnelType=tt;
-		}
+        void setCorR(double cr)
+        {
+            corR=cr;
+        }
 
-		int getTunnelType(){
-			return tunnelType;
-		}
+        double getCorR()
+        {
+            return corR;
+        }
 
-		void setChronosyncSyncPrefix(const string& csp){
-			chronosyncSyncPrefix=csp;
-		} 
+        void setCorTheta(double ct)
+        {
+            corTheta=ct;
+        }
 
-		string getChronosyncSyncPrefix(){
-			return chronosyncSyncPrefix;
-		}
+        double getCorTheta()
+        {
+            return corTheta;
+        }
 
-		int getInfoInterestInterval(){
-			return infoInterestInterval;
-		}
+        void setTunnelType(int tt)
+        {
+            tunnelType=tt;
+        }
 
-		void setInfoInterestInterval(int iii){
-			infoInterestInterval=iii;
-		}
+        int getTunnelType()
+        {
+            return tunnelType;
+        }
 
-private:
-	string routerName;
-	string siteName;
-	string network;
+        void setChronosyncSyncPrefix(const string& csp)
+        {
+            chronosyncSyncPrefix=csp;
+        }
 
-	string routerPrefix;
-	string lsaRouterPrefix;
+        string getChronosyncSyncPrefix()
+        {
+            return chronosyncSyncPrefix;
+        }
 
-	string chronosyncSyncPrefix;
-	string chronosyncLsaPrefix;             
+        int getInfoInterestInterval()
+        {
+            return infoInterestInterval;
+        }
 
-	int interestRetryNumber;
-	int interestResendTime;
-	int infoInterestInterval;
-	int lsaRefreshTime;
-	int routerDeadInterval;
-        
-	int maxFacesPerPrefix;
-	string logDir;
-	string logFile;
-	int detailedLogging;
-	int debugging;
+        void setInfoInterestInterval(int iii)
+        {
+            infoInterestInterval=iii;
+        }
 
-	int isHyperbolicCalc;
-	double corR;
-	double corTheta;
+    private:
+        string routerName;
+        string siteName;
+        string network;
 
-	int tunnelType;
-	int isStrictHierchicalKeyCheck;
+        string routerPrefix;
+        string lsaRouterPrefix;
 
-};
+        string chronosyncSyncPrefix;
+        string chronosyncLsaPrefix;
 
-std::ostream&
-operator << (std::ostream &os, ConfParameter &cfp);
+        int interestRetryNumber;
+        int interestResendTime;
+        int infoInterestInterval;
+        int lsaRefreshTime;
+        int routerDeadInterval;
+
+        int maxFacesPerPrefix;
+        string logDir;
+        string logFile;
+        int detailedLogging;
+        int debugging;
+
+        int isHyperbolicCalc;
+        double corR;
+        double corTheta;
+
+        int tunnelType;
+        int isStrictHierchicalKeyCheck;
+
+    };
+
+    std::ostream&
+    operator << (std::ostream &os, ConfParameter &cfp);
 
 } // namespace nlsr
 

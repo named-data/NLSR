@@ -6,82 +6,83 @@
 
 #include <ndn-cpp-dev/face.hpp>
 
-namespace nlsr {
-
-class Nlsr;
-
-using namespace std;
-
-class MapEntry
+namespace nlsr
 {
-public:
-	MapEntry()
-		: router()
-		, mappingNumber(-1)
-	{
-	}
 
-	~MapEntry()
-	{
-	}
-	
-	MapEntry(string rtr, int mn)
-	{
-		router=rtr;
-		mappingNumber=mn;
-	}
+    class Nlsr;
 
-	string getRouter()
-	{
-		return router;
-	}
+    using namespace std;
 
-	int getMappingNumber()
-	{
-		return mappingNumber;
-	}
-private:
-	string router;
-	int mappingNumber;
-};
+    class MapEntry
+    {
+    public:
+        MapEntry()
+            : router()
+            , mappingNumber(-1)
+        {
+        }
 
-ostream&
-operator<<(ostream& os, MapEntry& mpe);
+        ~MapEntry()
+        {
+        }
 
-class Map
-{
-public:
-	Map()
-		: mappingIndex(0)
-	{
-	}
+        MapEntry(string rtr, int mn)
+        {
+            router=rtr;
+            mappingNumber=mn;
+        }
 
-	
-	void addMapElement(string& rtrName);
-	void createMapFromAdjLsdb(Nlsr& pnlsr);
-	string getRouterNameByMappingNo(int mn);
-	int getMappingNoByRouterName(string& rName);
-	void resetMap();
-	std::list< MapEntry >& getMapList()
-	{
-		return rMap;
-	}
+        string getRouter()
+        {
+            return router;
+        }
 
-	int getMapSize()
-	{
-		return rMap.size();
-	}
+        int getMappingNumber()
+        {
+            return mappingNumber;
+        }
+    private:
+        string router;
+        int mappingNumber;
+    };
 
-	
-private:
-	bool addMapElement(MapEntry& mpe);
-	
-	int mappingIndex;
-	std::list< MapEntry > rMap;
-};
+    ostream&
+    operator<<(ostream& os, MapEntry& mpe);
 
-ostream&
-operator<<(ostream& os, Map& rMap);
+    class Map
+    {
+    public:
+        Map()
+            : mappingIndex(0)
+        {
+        }
+
+
+        void addMapElement(string& rtrName);
+        void createMapFromAdjLsdb(Nlsr& pnlsr);
+        string getRouterNameByMappingNo(int mn);
+        int getMappingNoByRouterName(string& rName);
+        void resetMap();
+        std::list< MapEntry >& getMapList()
+        {
+            return rMap;
+        }
+
+        int getMapSize()
+        {
+            return rMap.size();
+        }
+
+
+    private:
+        bool addMapElement(MapEntry& mpe);
+
+        int mappingIndex;
+        std::list< MapEntry > rMap;
+    };
+
+    ostream&
+    operator<<(ostream& os, Map& rMap);
 
 } // namespace nlsr
 #endif

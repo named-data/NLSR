@@ -5,59 +5,63 @@
 #include<string>
 #include <ndn-cpp-dev/face.hpp>
 
-namespace nlsr {
-
-using namespace std;
-
-class SequencingManager
+namespace nlsr
 {
-public:
-	SequencingManager()
-		: nameLsaSeq(0)
-		, adjLsaSeq(0)
-		, corLsaSeq(0)
-	{
-	}
 
-	SequencingManager(uint32_t nlsn, uint32_t alsn, uint32_t clsn)
-	{
-		nameLsaSeq=nlsn;
-		adjLsaSeq=alsn;
-		corLsaSeq=clsn;
-	}
-	
-	uint32_t getNameLsaSeq()
-	{
-		return nameLsaSeq;
-	}
+    using namespace std;
 
-	void setNameLsaSeq(uint32_t nlsn){
-		nameLsaSeq=nlsn;
-	}
+    class SequencingManager
+    {
+    public:
+        SequencingManager()
+            : nameLsaSeq(0)
+            , adjLsaSeq(0)
+            , corLsaSeq(0)
+        {
+        }
 
-	uint32_t getAdjLsaSeq()
-	{
-		return adjLsaSeq;
-	}
+        SequencingManager(uint32_t nlsn, uint32_t alsn, uint32_t clsn)
+        {
+            nameLsaSeq=nlsn;
+            adjLsaSeq=alsn;
+            corLsaSeq=clsn;
+        }
 
-	void setAdjLsaSeq(uint32_t alsn){
-		adjLsaSeq=alsn;
-	}
+        uint32_t getNameLsaSeq()
+        {
+            return nameLsaSeq;
+        }
 
-	uint32_t getCorLsaSeq()
-	{
-		return corLsaSeq;
-	}
+        void setNameLsaSeq(uint32_t nlsn)
+        {
+            nameLsaSeq=nlsn;
+        }
 
-	void setCorLsaSeq(uint32_t clsn){
-		corLsaSeq=clsn;
-	}
+        uint32_t getAdjLsaSeq()
+        {
+            return adjLsaSeq;
+        }
 
-private:
-	uint32_t nameLsaSeq;
-	uint32_t adjLsaSeq;
-	uint32_t corLsaSeq;
-};
+        void setAdjLsaSeq(uint32_t alsn)
+        {
+            adjLsaSeq=alsn;
+        }
+
+        uint32_t getCorLsaSeq()
+        {
+            return corLsaSeq;
+        }
+
+        void setCorLsaSeq(uint32_t clsn)
+        {
+            corLsaSeq=clsn;
+        }
+
+    private:
+        uint32_t nameLsaSeq;
+        uint32_t adjLsaSeq;
+        uint32_t corLsaSeq;
+    };
 
 
 }//namespace nlsr

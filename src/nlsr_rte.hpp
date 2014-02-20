@@ -5,47 +5,48 @@
 
 #include "nlsr_nhl.hpp"
 
-namespace nlsr {
-
-using namespace std;
-
-class RoutingTableEntry
+namespace nlsr
 {
-public:
-	RoutingTableEntry()
-		: destination()
-		, nhl()
-	{
-		
-	}
 
-	~RoutingTableEntry()
-	{
-	}
+    using namespace std;
 
-	RoutingTableEntry(string dest)
-		: nhl()
-	{
-		destination=dest;
-	}
+    class RoutingTableEntry
+    {
+    public:
+        RoutingTableEntry()
+            : destination()
+            , nhl()
+        {
 
-	string getDestination()
-	{
-		return destination;
-	}
+        }
 
-	Nhl& getNhl()
-	{
-		return nhl;
-	}
-	
-private:
-	string destination;
-	Nhl nhl;
-};
+        ~RoutingTableEntry()
+        {
+        }
 
-ostream&
-operator<<(ostream& os, RoutingTableEntry &rte);
+        RoutingTableEntry(string dest)
+            : nhl()
+        {
+            destination=dest;
+        }
+
+        string getDestination()
+        {
+            return destination;
+        }
+
+        Nhl& getNhl()
+        {
+            return nhl;
+        }
+
+    private:
+        string destination;
+        Nhl nhl;
+    };
+
+    ostream&
+    operator<<(ostream& os, RoutingTableEntry &rte);
 
 }
 
