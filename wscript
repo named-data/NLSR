@@ -36,13 +36,14 @@ def configure(conf):
 
     conf.check_cfg(package='libndn-cpp-dev', args=['--cflags', '--libs'], uselib_store='NDN_CPP', mandatory=True)
     conf.check_boost(lib='system iostreams thread unit_test_framework log', uselib_store='BOOST', version='1_55', mandatory=True)
+    conf.check_cfg(package='nsync', args=['--cflags', '--libs'], uselib_store='nsync', mandatory=True)
 
 def build (bld):
     bld (
         features=['cxx', 'cxxprogram'],
         target="nlsr",
         source = bld.path.ant_glob('src/*.cpp'),
-        use = 'NDN_CPP BOOST'
+        use = 'NDN_CPP BOOST nsync',
         )
 
 @Configure.conf
