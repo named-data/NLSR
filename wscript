@@ -41,8 +41,8 @@ def build (bld):
     bld (
         features=['cxx', 'cxxprogram'],
         target="nlsr",
-        source = bld.path.ant_glob('*.cpp'),
-        use = 'NDN_CPP BOOST',
+        source = bld.path.ant_glob('src/*.cpp'),
+        use = 'NDN_CPP BOOST'
         )
 
 @Configure.conf
