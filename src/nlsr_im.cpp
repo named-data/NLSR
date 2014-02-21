@@ -48,7 +48,7 @@ namespace nlsr
             Data data(ndn::Name(interest.getName()).appendVersion());
             data.setFreshnessPeriod(1000); // 10 sec
             data.setContent((const uint8_t*)"info", sizeof("info"));
-            pnlsr.getKeyChain().sign(data);
+            pnlsr.getKeyManager().getKeyChain().sign(data);
             cout << ">> D: " << data << endl;
             pnlsr.getNlsrFace().put(data);
             int status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);

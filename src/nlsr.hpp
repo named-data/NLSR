@@ -16,6 +16,7 @@
 #include "nlsr_npt.hpp"
 #include "nlsr_fib.hpp"
 #include "nlsr_logger.hpp"
+#include "nlsr_km.hpp"
 //testing
 #include "nlsr_test.hpp"
 
@@ -39,6 +40,7 @@ namespace nlsr
             , im()
             , dm()
             , sm()
+            , km()
             , nlsrLsdb()
             , adjBuildCount(0)
             , isBuildAdjLsaSheduled(0)
@@ -111,10 +113,15 @@ namespace nlsr
             return nlsrFace;
         }
 
-        ndn::KeyChain& getKeyChain()
+        KeyManager& getKeyManager()
         {
-            return kChain;
+        	return km;
         }
+
+//		ndn::KeyChain& getKeyChain()
+//        {
+//            return kChain;
+//        }
 
         interestManager& getIm()
         {
@@ -223,10 +230,11 @@ namespace nlsr
         ndn::shared_ptr<boost::asio::io_service> io;
         ndn::Scheduler scheduler;
         ndn::Face nlsrFace;
-        ndn::KeyChain kChain;
+//      ndn::KeyChain kChain;
         interestManager im;
         DataManager dm;
         SequencingManager sm;
+        KeyManager km;
         bool isDaemonProcess;
         string configFileName;
         int apiPort;

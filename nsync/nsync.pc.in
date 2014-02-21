@@ -1,0 +1,10 @@
+prefix=@PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: nsync 
+Description: nsync library
+Version: @VERSION@
+Libs: -L${libdir} -lnsync
+Cflags: -I${includedir}
+

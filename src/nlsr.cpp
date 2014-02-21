@@ -1,7 +1,6 @@
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/util/scheduler.hpp>
-
 #include <cstdlib>
 #include <string>
 #include <sstream>
@@ -108,8 +107,9 @@ main(int argc, char **argv)
     //}
     nlsr_.getLsdb().setLsaRefreshTime(nlsr_.getConfParameter().getLsaRefreshTime());
     nlsr_.getFib().setFibEntryRefreshTime(
-        2*nlsr_.getConfParameter().getLsaRefreshTime());
+                                    2*nlsr_.getConfParameter().getLsaRefreshTime());
     nlsr_.getLsdb().setThisRouterPrefix(nlsr_.getConfParameter().getRouterPrefix());
+    nlsr_.getKeyManager().initKeyManager(nlsr_.getConfParameter());
     /* debugging purpose start */
     cout <<	nlsr_.getConfParameter();
     nlsr_.getAdl().printAdl();
