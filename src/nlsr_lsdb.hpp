@@ -26,6 +26,7 @@ namespace nlsr
         std::pair<NameLsa&, bool>  getNameLsa(string key);
         bool installNameLsa(Nlsr& pnlsr, NameLsa &nlsa);
         bool removeNameLsa(Nlsr& pnlsr, string& key);
+        bool isNameLsaNew(string key, uint64_t seqNo);
         void printNameLsdb(); //debugging
 
         //function related to Cor LSDB
@@ -33,12 +34,14 @@ namespace nlsr
         std::pair<CorLsa&, bool> getCorLsa(string key);
         bool installCorLsa(Nlsr& pnlsr, CorLsa &clsa);
         bool removeCorLsa(Nlsr& pnlsr, string& key);
+        bool isCorLsaNew(string key, uint64_t seqNo);
         void printCorLsdb(); //debugging
 
         //function related to Adj LSDB
         void scheduledAdjLsaBuild(Nlsr& pnlsr);
         bool buildAndInstallOwnAdjLsa(Nlsr& pnlsr);
         bool removeAdjLsa(Nlsr& pnlsr, string& key);
+        bool isAdjLsaNew(string key, uint64_t seqNo);
         bool installAdjLsa(Nlsr& pnlsr, AdjLsa &alsa);
         std::pair<AdjLsa& , bool> getAdjLsa(string key);
         std::list<AdjLsa>& getAdjLsdb();

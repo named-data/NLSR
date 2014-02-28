@@ -24,6 +24,7 @@ namespace nlsr
         int processConfCommand(Nlsr& pnlsr, string command);
         int processConfCommandNetwork(Nlsr& pnlsr, string command);
         int processConfCommandSiteName(Nlsr& pnlsr, string command);
+        int processConfCommandRootKeyPrefix(Nlsr& pnlsr, string command);
         int processConfCommandRouterName(Nlsr& pnlsr, string command);
         int processConfCommandInterestRetryNumber(Nlsr& pnlsr, string command);
         int processConfCommandInterestResendTime(Nlsr& pnlsr, string command);

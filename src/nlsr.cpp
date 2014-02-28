@@ -6,12 +6,9 @@
 #include <sstream>
 
 #include "nlsr.hpp"
-#include "nlsr_conf_param.hpp"
 #include "nlsr_conf_processor.hpp"
-#include "nlsr_lsdb.hpp"
-#include "nlsr_logger.hpp"
-//test purpose of NLSR
-#include "nlsr_test.hpp"
+#include "utility/nlsr_logger.hpp"
+
 
 namespace nlsr
 {
@@ -23,24 +20,37 @@ namespace nlsr
     Nlsr::nlsrRegistrationFailed(const ndn::Name& name)
     {
         cerr << "ERROR: Failed to register prefix in local hub's daemon" << endl;
-        getNlsrFace().shutdown();
+        getNlsrFace()->shutdown();
     }
 
 
     void
     Nlsr::setInterestFilterNlsr(const string& name)
     {
-        getNlsrFace().setInterestFilter(name,
-                                        func_lib::bind(&interestManager::processInterest, &im,
-                                                boost::ref(*this), _1, _2),
-                                        func_lib::bind(&Nlsr::nlsrRegistrationFailed, this, _1));
+        getNlsrFace()->setInterestFilter(name,
+                                         func_lib::bind(&interestManager::processInterest, &im,
+                                                 boost::ref(*this), _1, _2),
+                                         func_lib::bind(&Nlsr::nlsrRegistrationFailed, this, _1));
     }
 
+    void
+    Nlsr::initNlsr()
+    {
+        confParam.buildRouterPrefix();
+        nlsrLogger.initNlsrLogger(confParam.getLogDir());
+        nlsrLsdb.setLsaRefreshTime(confParam.getLsaRefreshTime());
+        nlsrLsdb.setThisRouterPrefix(confParam.getRouterPrefix());
+        fib.setFibEntryRefreshTime(2*confParam.getLsaRefreshTime());
+        km.initKeyManager(confParam);
+        sm.setSeqFileName(confParam.getSeqFileDir());
+        sm.initiateSeqNoFromFile();
+        slh.setSyncPrefix(confParam.getChronosyncSyncPrefix());
+    }
 
     void
     Nlsr::startEventLoop()
     {
-        getNlsrFace().processEvents();
+        io->run();
     }
 
     int
@@ -97,19 +107,7 @@ main(int argc, char **argv)
     {
         return EXIT_FAILURE;
     }
-    nlsr_.getConfParameter().buildRouterPrefix();
-    nlsr_.getNlsrLogger().initNlsrLogger(nlsr_.getConfParameter().getLogDir());
-    //src::logger lg;
-    //BOOST_LOG(lg) << "Some log record from nlsr.cpp";
-    //for(int j=0; j< 1000; j++)
-    //{
-    //	BOOST_LOG(lg) << "Some log record from nlsr.cpp "<<j;
-    //}
-    nlsr_.getLsdb().setLsaRefreshTime(nlsr_.getConfParameter().getLsaRefreshTime());
-    nlsr_.getFib().setFibEntryRefreshTime(
-                                    2*nlsr_.getConfParameter().getLsaRefreshTime());
-    nlsr_.getLsdb().setThisRouterPrefix(nlsr_.getConfParameter().getRouterPrefix());
-    nlsr_.getKeyManager().initKeyManager(nlsr_.getConfParameter());
+    nlsr_.initNlsr();
     /* debugging purpose start */
     cout <<	nlsr_.getConfParameter();
     nlsr_.getAdl().printAdl();
@@ -118,9 +116,15 @@ main(int argc, char **argv)
     nlsr_.getLsdb().buildAndInstallOwnNameLsa(nlsr_);
     nlsr_.getLsdb().buildAndInstallOwnCorLsa(nlsr_);
     nlsr_.setInterestFilterNlsr(nlsr_.getConfParameter().getRouterPrefix());
+    nlsr_.setInterestFilterNlsr(nlsr_.getConfParameter().getChronosyncLsaPrefix()+
+                                nlsr_.getConfParameter().getRouterPrefix());
+    nlsr_.setInterestFilterNlsr(nlsr_.getConfParameter().getRootKeyPrefix());
+    nlsr_.getSlh().createSyncSocket(nlsr_);
+    nlsr_.getSlh().publishKeyUpdate(nlsr_.getKeyManager());
+    nlsr_.getSlh().publishRoutingUpdate(nlsr_.getSm(),
+                                        nlsr_.getConfParameter().getChronosyncLsaPrefix()
+                                        + nlsr_.getConfParameter().getRouterPrefix());
     nlsr_.getIm().scheduleInfoInterest(nlsr_,1);
-    //testing purpose
-    nlsr_.getNlsrTesting().schedlueAddingLsas(nlsr_);
     try
     {
         nlsr_.startEventLoop();

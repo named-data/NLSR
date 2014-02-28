@@ -8,17 +8,18 @@
 #include "nlsr_conf_param.hpp"
 #include "nlsr_adl.hpp"
 #include "nlsr_npl.hpp"
-#include "nlsr_im.hpp"
-#include "nlsr_dm.hpp"
+#include "communication/nlsr_im.hpp"
+#include "communication/nlsr_dm.hpp"
 #include "nlsr_lsdb.hpp"
 #include "nlsr_sm.hpp"
-#include "nlsr_rt.hpp"
-#include "nlsr_npt.hpp"
-#include "nlsr_fib.hpp"
-#include "nlsr_logger.hpp"
-#include "nlsr_km.hpp"
-//testing
-#include "nlsr_test.hpp"
+#include "route/nlsr_rt.hpp"
+#include "route/nlsr_npt.hpp"
+#include "route/nlsr_fib.hpp"
+#include "utility/nlsr_logger.hpp"
+#include "security/nlsr_km.hpp"
+#include "communication/nlsr_slh.hpp"
+
+
 
 namespace nlsr
 {
@@ -31,9 +32,8 @@ namespace nlsr
     public:
         Nlsr()
             : io(ndn::make_shared<boost::asio::io_service>())
-            , nlsrFace(io)
+            , nlsrFace(make_shared<ndn::Face>(io))
             , scheduler(*io)
-            , configFileName()
             , confParam()
             , adl()
             , npl()
@@ -41,6 +41,8 @@ namespace nlsr
             , dm()
             , sm()
             , km()
+            , isDaemonProcess(false)
+            , configFileName("nlsr.conf")
             , nlsrLsdb()
             , adjBuildCount(0)
             , isBuildAdjLsaSheduled(0)
@@ -49,12 +51,9 @@ namespace nlsr
             , routingTable()
             , npt()
             , fib()
+            , slh(io)
             , nlsrLogger()
-            , nlsrTesting()
-        {
-            isDaemonProcess=false;
-            configFileName="nlsr.conf";
-        }
+        {}
 
         void nlsrRegistrationFailed(const ndn::Name& name);
 
@@ -108,20 +107,16 @@ namespace nlsr
             return scheduler;
         }
 
-        ndn::Face& getNlsrFace()
+        ndn::shared_ptr<ndn::Face> getNlsrFace()
         {
             return nlsrFace;
         }
 
         KeyManager& getKeyManager()
         {
-        	return km;
+            return km;
         }
 
-//		ndn::KeyChain& getKeyChain()
-//        {
-//            return kChain;
-//        }
 
         interestManager& getIm()
         {
@@ -183,10 +178,6 @@ namespace nlsr
             isBuildAdjLsaSheduled=iabls;
         }
 
-        NlsrTest& getNlsrTesting()
-        {
-            return nlsrTesting;
-        }
 
         void setApiPort(int ap)
         {
@@ -218,10 +209,17 @@ namespace nlsr
             isRouteCalculationScheduled=ircs;
         }
 
+        SyncLogicHandler& getSlh()
+        {
+            return slh;
+        }
+
         NlsrLogger& getNlsrLogger()
         {
             return nlsrLogger;
         }
+
+        void initNlsr();
 
     private:
         ConfParameter confParam;
@@ -229,8 +227,7 @@ namespace nlsr
         Npl npl;
         ndn::shared_ptr<boost::asio::io_service> io;
         ndn::Scheduler scheduler;
-        ndn::Face nlsrFace;
-//      ndn::KeyChain kChain;
+        ndn::shared_ptr<ndn::Face> nlsrFace;
         interestManager im;
         DataManager dm;
         SequencingManager sm;
@@ -243,6 +240,7 @@ namespace nlsr
         RoutingTable routingTable;
         Npt npt;
         Fib fib;
+        SyncLogicHandler slh;
         NlsrLogger nlsrLogger;
 
         long int adjBuildCount;
@@ -250,7 +248,6 @@ namespace nlsr
         int isRouteCalculationScheduled;
         int isRoutingTableCalculating;
 
-        NlsrTest nlsrTesting;
 
 
     };

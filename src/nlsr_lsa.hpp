@@ -113,6 +113,7 @@ namespace nlsr
         string getNameLsaKey();
 
         string getNameLsaData();
+        bool initNameLsaFromContent(string content);
 
     private:
         Npl npl;
@@ -145,6 +146,7 @@ namespace nlsr
         }
         string getAdjLsaKey();
         string getAdjLsaData();
+        bool initAdjLsaFromContent(string content);
         uint32_t getNoLink()
         {
             return noLink;
@@ -166,7 +168,9 @@ namespace nlsr
     {
     public:
         CorLsa()
-            :Lsa()
+            : Lsa()
+            , corRad(0)
+            , corTheta(0)
         {
             setLsType(3);
         }
@@ -175,7 +179,7 @@ namespace nlsr
                , double r, double theta);
         string getCorLsaKey();
         string getCorLsaData();
-
+        bool initCorLsaFromContent(string content);
         double getCorRadius()
         {
             if ( corRad >= 0 )

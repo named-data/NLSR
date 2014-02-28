@@ -1,13 +1,16 @@
 #include<string>
 #include<iostream>
+#include<sstream>
 #include<algorithm>
 #include<cmath>
 #include<limits>
 
+#include "nlsr.hpp"
 #include "nlsr_lsa.hpp"
 #include "nlsr_npl.hpp"
 #include "nlsr_adjacent.hpp"
-#include "nlsr.hpp"
+#include "utility/nlsr_tokenizer.hpp"
+
 
 namespace nlsr
 {
@@ -40,7 +43,7 @@ namespace nlsr
     NameLsa::getNameLsaData()
     {
         string nameLsaData;
-        nameLsaData=origRouter + "|" + boost::lexical_cast<std::string>(lsType) + "|"
+        nameLsaData=origRouter + "|" + boost::lexical_cast<std::string>(1) + "|"
                     + boost::lexical_cast<std::string>(lsSeqNo) + "|"
                     + boost::lexical_cast<std::string>(lifeTime);
         nameLsaData+="|";
@@ -51,7 +54,36 @@ namespace nlsr
             nameLsaData+="|";
             nameLsaData+=(*it);
         }
-        return nameLsaData;
+        return nameLsaData+"|";
+    }
+
+    bool
+    NameLsa::initNameLsaFromContent(string content)
+    {
+        uint32_t numName=0;
+        nlsrTokenizer nt(content, "|");
+        origRouter=nt.getNextToken();
+        if(origRouter.empty())
+        {
+            return false;
+        }
+        try
+        {
+            lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
+            lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
+            lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
+            numName=boost::lexical_cast<uint32_t>(nt.getNextToken());
+        }
+        catch(std::exception &e)
+        {
+            return false;
+        }
+        for(int i=0; i<numName; i++)
+        {
+            string name=nt.getNextToken();
+            addNameToLsa(name);
+        }
+        return true;
     }
 
     std::ostream&
@@ -107,12 +139,36 @@ namespace nlsr
     {
         string corLsaData;
         corLsaData=origRouter + "|";
-        corLsaData+=(boost::lexical_cast<std::string>(lsType) + "|");
+        corLsaData+=(boost::lexical_cast<std::string>(3) + "|");
         corLsaData+=(boost::lexical_cast<std::string>(lsSeqNo) + "|");
         corLsaData+=(boost::lexical_cast<std::string>(lifeTime) + "|");
         corLsaData+=(boost::lexical_cast<std::string>(corRad) + "|");
         corLsaData+=(boost::lexical_cast<std::string>(corTheta) + "|");
         return corLsaData;
+    }
+
+    bool
+    CorLsa::initCorLsaFromContent(string content)
+    {
+        nlsrTokenizer nt(content, "|");
+        origRouter=nt.getNextToken();
+        if(origRouter.empty())
+        {
+            return false;
+        }
+        try
+        {
+            lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
+            lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
+            lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
+            corRad=boost::lexical_cast<double>(nt.getNextToken());
+            corTheta=boost::lexical_cast<double>(nt.getNextToken());
+        }
+        catch(std::exception &e)
+        {
+            return false;
+        }
+        return true;
     }
 
     std::ostream&
@@ -166,7 +222,7 @@ namespace nlsr
     AdjLsa::getAdjLsaData()
     {
         string adjLsaData;
-        adjLsaData=origRouter + "|" + boost::lexical_cast<std::string>(lsType) + "|"
+        adjLsaData=origRouter + "|" + boost::lexical_cast<std::string>(2) + "|"
                    + boost::lexical_cast<std::string>(lsSeqNo) + "|"
                    + boost::lexical_cast<std::string>(lifeTime);
         adjLsaData+="|";
@@ -181,7 +237,46 @@ namespace nlsr
             adjLsaData+="|";
             adjLsaData+=boost::lexical_cast<std::string>((*it).getLinkCost());
         }
-        return adjLsaData;
+        return adjLsaData+"|";
+    }
+
+    bool
+    AdjLsa::initAdjLsaFromContent(string content)
+    {
+        uint32_t numLink=0;
+        nlsrTokenizer nt(content, "|");
+        origRouter=nt.getNextToken();
+        if(origRouter.empty())
+        {
+            return false;
+        }
+        try
+        {
+            lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
+            lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
+            lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
+            numLink=boost::lexical_cast<uint32_t>(nt.getNextToken());
+        }
+        catch(std::exception &e)
+        {
+            return false;
+        }
+        for(int i=0; i< numLink; i++)
+        {
+            try
+            {
+                string adjName=nt.getNextToken();
+                int connectingFace=boost::lexical_cast<int>(nt.getNextToken());
+                double linkCost=boost::lexical_cast<double>(nt.getNextToken());
+                Adjacent adjacent(adjName, connectingFace, linkCost, 0, 0);
+                addAdjacentToLsa(adjacent);
+            }
+            catch( std::exception &e )
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
 

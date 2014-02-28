@@ -6,7 +6,7 @@
 
 #include "nlsr_conf_processor.hpp"
 #include "nlsr_conf_param.hpp"
-#include "nlsr_tokenizer.hpp"
+#include "utility/nlsr_tokenizer.hpp"
 #include "nlsr_adjacent.hpp"
 
 
@@ -62,6 +62,10 @@ namespace nlsr
         else if( (nt.getFirstToken() == "site-name"))
         {
             ret=processConfCommandSiteName(pnlsr,nt.getRestOfLine());
+        }
+        else if ( (nt.getFirstToken() == "root-key-prefix"))
+        {
+            ret=processConfCommandRootKeyPrefix(pnlsr,nt.getRestOfLine());
         }
         else if ( (nt.getFirstToken() == "router-name"))
         {
@@ -175,6 +179,30 @@ namespace nlsr
         }
         return 0;
     }
+
+    int
+    ConfFileProcessor::processConfCommandRootKeyPrefix(Nlsr& pnlsr, string command)
+    {
+        if(command.empty() )
+        {
+            cerr <<"Root Key Prefix can not be null or empty :( !"<<endl;
+            return -1;
+        }
+        else
+        {
+            if(command[command.size()-1] == '/' )
+            {
+                command.erase(command.size() - 1);
+            }
+            if(command[0] == '/' )
+            {
+                command.erase(0,1);
+            }
+            pnlsr.getConfParameter().setRootKeyPrefix(command);
+        }
+        return 0;
+    }
+
 
     int
     ConfFileProcessor::processConfCommandRouterName(Nlsr& pnlsr, string command)

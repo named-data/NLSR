@@ -47,6 +47,23 @@ namespace nlsr
         return std::make_pair(boost::ref(nlsa),false);
     }
 
+    bool
+    Lsdb::isNameLsaNew(string key, uint64_t seqNo)
+    {
+        std::pair<NameLsa& , bool>  nameLsaCheck=getNameLsa(key);
+        if(nameLsaCheck.second)
+        {
+            if(nameLsaCheck.first.getLsSeqNo() < seqNo)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 
     ndn::EventId
     Lsdb::scheduleNameLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime)
@@ -241,6 +258,24 @@ namespace nlsr
         return std::make_pair(boost::ref(clsa),false);
     }
 
+    bool
+    Lsdb::isCorLsaNew(string key, uint64_t seqNo)
+    {
+        std::pair<CorLsa& , bool>  corLsaCheck=getCorLsa(key);
+        if(corLsaCheck.second)
+        {
+            if(corLsaCheck.first.getLsSeqNo() < seqNo)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
     ndn::EventId
     Lsdb::scheduleCorLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime)
     {
@@ -432,6 +467,24 @@ namespace nlsr
     }
 
 
+    bool
+    Lsdb::isAdjLsaNew(string key, uint64_t seqNo)
+    {
+        std::pair<AdjLsa& , bool>  adjLsaCheck=getAdjLsa(key);
+        if(adjLsaCheck.second)
+        {
+            if(adjLsaCheck.first.getLsSeqNo() < seqNo)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
 
     ndn::EventId
     Lsdb::scheduleAdjLsaExpiration(Nlsr& pnlsr, string key, int seqNo, int expTime)
@@ -480,7 +533,6 @@ namespace nlsr
                                                       alsa.getAdjLsaKey(), alsa.getLsSeqNo(),timeToExpire));
             }
         }
-        printAdjLsdb();
         return true;
     }
 
@@ -494,7 +546,10 @@ namespace nlsr
                       , pnlsr.getAdl().getNumOfActiveNeighbor()
                       , pnlsr.getAdl() );
         pnlsr.getSm().setAdjLsaSeq(pnlsr.getSm().getAdjLsaSeq()+1);
-        return installAdjLsa(pnlsr, adjLsa);
+        string lsaPrefix=pnlsr.getConfParameter().getChronosyncLsaPrefix()
+                         + pnlsr.getConfParameter().getRouterPrefix();
+        pnlsr.getSlh().publishRoutingUpdate(pnlsr.getSm(),lsaPrefix);
+        return pnlsr.getLsdb().installAdjLsa(pnlsr, adjLsa);
     }
 
     bool
@@ -547,7 +602,7 @@ namespace nlsr
     Lsdb::exprireOrRefreshNameLsa(Nlsr& pnlsr, string lsaKey, int seqNo)
     {
         cout<<"Lsdb::exprireOrRefreshNameLsa Called "<<endl;
-        cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;
+        cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<seqNo<<endl;
         std::pair<NameLsa& , bool> chkNameLsa=getNameLsa(lsaKey);
         if( chkNameLsa.second )
         {
@@ -560,6 +615,9 @@ namespace nlsr
                     chkNameLsa.first.setLsSeqNo(chkNameLsa.first.getLsSeqNo()+1);
                     pnlsr.getSm().setNameLsaSeq(chkNameLsa.first.getLsSeqNo());
                     // publish routing update
+                    string lsaPrefix=pnlsr.getConfParameter().getChronosyncLsaPrefix()
+                                     + pnlsr.getConfParameter().getRouterPrefix();
+                    pnlsr.getSlh().publishRoutingUpdate(pnlsr.getSm(),lsaPrefix);
                 }
                 else
                 {
@@ -574,7 +632,7 @@ namespace nlsr
     Lsdb::exprireOrRefreshAdjLsa(Nlsr& pnlsr, string lsaKey, int seqNo)
     {
         cout<<"Lsdb::exprireOrRefreshAdjLsa Called "<<endl;
-        cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;
+        cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<seqNo<<endl;
         std::pair<AdjLsa& , bool> chkAdjLsa=getAdjLsa(lsaKey);
         if( chkAdjLsa.second )
         {
@@ -587,6 +645,9 @@ namespace nlsr
                     chkAdjLsa.first.setLsSeqNo(chkAdjLsa.first.getLsSeqNo()+1);
                     pnlsr.getSm().setAdjLsaSeq(chkAdjLsa.first.getLsSeqNo());
                     // publish routing update
+                    string lsaPrefix=pnlsr.getConfParameter().getChronosyncLsaPrefix()
+                                     + pnlsr.getConfParameter().getRouterPrefix();
+                    pnlsr.getSlh().publishRoutingUpdate(pnlsr.getSm(),lsaPrefix);
                 }
                 else
                 {
@@ -603,7 +664,7 @@ namespace nlsr
     Lsdb::exprireOrRefreshCorLsa(Nlsr& pnlsr, string lsaKey, int seqNo)
     {
         cout<<"Lsdb::exprireOrRefreshCorLsa Called "<<endl;
-        cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<endl;
+        cout<<"LSA Key : "<<lsaKey<<" Seq No: "<<seqNo<<endl;
         std::pair<CorLsa& , bool> chkCorLsa=getCorLsa(lsaKey);
         if( chkCorLsa.second )
         {
@@ -616,6 +677,9 @@ namespace nlsr
                     chkCorLsa.first.setLsSeqNo(chkCorLsa.first.getLsSeqNo()+1);
                     pnlsr.getSm().setCorLsaSeq(chkCorLsa.first.getLsSeqNo());
                     // publish routing update
+                    string lsaPrefix=pnlsr.getConfParameter().getChronosyncLsaPrefix()
+                                     + pnlsr.getConfParameter().getRouterPrefix();
+                    pnlsr.getSlh().publishRoutingUpdate(pnlsr.getSm(),lsaPrefix);
                 }
                 else
                 {

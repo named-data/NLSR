@@ -13,21 +13,24 @@ namespace nlsr
 
     public:
         ConfParameter()
-            :chronosyncSyncPrefix("ndn/nlsr/sync")
-            ,chronosyncLsaPrefix("/ndn/nlsr/LSA")
-        {
-            isStrictHierchicalKeyCheck=0;
-            interestRetryNumber=3;
-            interestResendTime=5;
-            infoInterestInterval=60;
-            lsaRefreshTime=1800;
-            routerDeadInterval=3600;
-            maxFacesPerPrefix=0;
-            tunnelType=0;
-            detailedLogging=0;
-            debugging=0;
-            isHyperbolicCalc=0;
-        }
+            : chronosyncSyncPrefix("ndn/nlsr/sync")
+            , chronosyncLsaPrefix("/ndn/nlsr/LSA")
+            , rootKeyPrefix("/ndn/keys")
+            , isStrictHierchicalKeyCheck(0)
+            , interestRetryNumber(3)
+            , interestResendTime(5)
+            , infoInterestInterval(60)
+            , lsaRefreshTime(1800)
+            , routerDeadInterval(3600)
+            , maxFacesPerPrefix(0)
+            , tunnelType(0)
+            , detailedLogging(0)
+            , debugging(0)
+            , isHyperbolicCalc(0)
+            , seqFileDir()
+            , corR(0)
+            , corTheta(0)
+        {}
 
         void setRouterName(const string& rn)
         {
@@ -67,6 +70,16 @@ namespace nlsr
         string getRouterPrefix()
         {
             return routerPrefix;
+        }
+
+        string getRootKeyPrefix()
+        {
+            return rootKeyPrefix;
+        }
+
+        void setRootKeyPrefix(string rkp)
+        {
+            rootKeyPrefix=rkp;
         }
 
         void setInterestRetryNumber(int irn)
@@ -128,6 +141,16 @@ namespace nlsr
         string getLogDir()
         {
             return logDir;
+        }
+
+        void setSeqFileDir(string ssfd)
+        {
+            seqFileDir=ssfd;
+        }
+
+        string getSeqFileDir()
+        {
+            return seqFileDir;
         }
 
         void setDetailedLogging(int dl)
@@ -200,6 +223,16 @@ namespace nlsr
             return chronosyncSyncPrefix;
         }
 
+        void setChronosyncLsaPrefix(string clp)
+        {
+            chronosyncLsaPrefix=clp;
+        }
+
+        string getChronosyncLsaPrefix()
+        {
+            return chronosyncLsaPrefix;
+        }
+
         int getInfoInterestInterval()
         {
             return infoInterestInterval;
@@ -221,6 +254,8 @@ namespace nlsr
         string chronosyncSyncPrefix;
         string chronosyncLsaPrefix;
 
+        string rootKeyPrefix;
+
         int interestRetryNumber;
         int interestResendTime;
         int infoInterestInterval;
@@ -229,6 +264,7 @@ namespace nlsr
 
         int maxFacesPerPrefix;
         string logDir;
+        string seqFileDir;
         string logFile;
         int detailedLogging;
         int debugging;

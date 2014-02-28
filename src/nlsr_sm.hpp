@@ -17,52 +17,81 @@ namespace nlsr
             : nameLsaSeq(0)
             , adjLsaSeq(0)
             , corLsaSeq(0)
+            , combinedSeqNo(0)
+            , seqFileNameWithPath()
         {
         }
 
-        SequencingManager(uint32_t nlsn, uint32_t alsn, uint32_t clsn)
+        SequencingManager(uint64_t seqNo)
+        {
+            splittSequenceNo(seqNo);
+        }
+
+        SequencingManager(uint64_t nlsn, uint64_t alsn, uint64_t clsn)
         {
             nameLsaSeq=nlsn;
             adjLsaSeq=alsn;
             corLsaSeq=clsn;
+            combineSequenceNo();
         }
 
-        uint32_t getNameLsaSeq()
+        uint64_t getNameLsaSeq() const
         {
             return nameLsaSeq;
         }
 
-        void setNameLsaSeq(uint32_t nlsn)
+        void setNameLsaSeq(uint64_t nlsn)
         {
             nameLsaSeq=nlsn;
+            combineSequenceNo();
         }
 
-        uint32_t getAdjLsaSeq()
+        uint64_t getAdjLsaSeq() const
         {
             return adjLsaSeq;
         }
 
-        void setAdjLsaSeq(uint32_t alsn)
+        void setAdjLsaSeq(uint64_t alsn)
         {
             adjLsaSeq=alsn;
+            combineSequenceNo();
         }
 
-        uint32_t getCorLsaSeq()
+        uint64_t getCorLsaSeq() const
         {
             return corLsaSeq;
         }
 
-        void setCorLsaSeq(uint32_t clsn)
+        void setCorLsaSeq(uint64_t clsn)
         {
             corLsaSeq=clsn;
+            combineSequenceNo();
         }
 
+        uint64_t getCombinedSeqNo() const
+        {
+            return combinedSeqNo;
+        }
+
+        void writeSeqNoToFile();
+        void initiateSeqNoFromFile();
+        void setSeqFileName(string filePath);
+        string getUserHomeDirectory();
+
     private:
-        uint32_t nameLsaSeq;
-        uint32_t adjLsaSeq;
-        uint32_t corLsaSeq;
+        void splittSequenceNo(uint64_t seqNo);
+        void combineSequenceNo();
+
+
+    private:
+        uint64_t nameLsaSeq;
+        uint64_t adjLsaSeq;
+        uint64_t corLsaSeq;
+        uint64_t combinedSeqNo;
+        string seqFileNameWithPath;
     };
 
 
+    ostream& operator <<(ostream& os, const SequencingManager& sm);
 }//namespace nlsr
 #endif
