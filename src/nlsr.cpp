@@ -1,13 +1,18 @@
-#include <ndn-cpp-dev/face.hpp>
-#include <ndn-cpp-dev/security/key-chain.hpp>
-#include <ndn-cpp-dev/util/scheduler.hpp>
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <ndn-cpp-dev/face.hpp>
+#include <ndn-cpp-dev/security/key-chain.hpp>
+#include <ndn-cpp-dev/security/identity-certificate.hpp>
+#include <ndn-cpp-dev/util/scheduler.hpp>
+
 
 #include "nlsr.hpp"
 #include "nlsr_conf_processor.hpp"
 #include "utility/nlsr_logger.hpp"
+#include "security/nlsr_km.hpp"
+#include "security/nlsr_cert_store.hpp"
+#include "security/nlsr_cse.hpp"
 
 
 namespace nlsr
@@ -41,10 +46,31 @@ namespace nlsr
         nlsrLsdb.setLsaRefreshTime(confParam.getLsaRefreshTime());
         nlsrLsdb.setThisRouterPrefix(confParam.getRouterPrefix());
         fib.setFibEntryRefreshTime(2*confParam.getLsaRefreshTime());
-        km.initKeyManager(confParam);
+        if( ! km.initKeyManager(confParam) )
+        {
+            std::cerr<<"Can not initiate certificate"<<endl;
+        }
+        
         sm.setSeqFileName(confParam.getSeqFileDir());
         sm.initiateSeqNoFromFile();
+        
+        /* debugging purpose start */
+        cout <<	confParam;
+        adl.printAdl();
+        npl.printNpl();
+        /* debugging purpose end */
+        
+        nlsrLsdb.buildAndInstallOwnNameLsa(boost::ref(*this));
+        nlsrLsdb.buildAndInstallOwnCorLsa(boost::ref(*this));
+        setInterestFilterNlsr(confParam.getRouterPrefix());
+        setInterestFilterNlsr(confParam.getChronosyncLsaPrefix()+
+                                                   confParam.getRouterPrefix());
+        setInterestFilterNlsr(confParam.getRootKeyPrefix());
         slh.setSyncPrefix(confParam.getChronosyncSyncPrefix());
+        slh.createSyncSocket(boost::ref(*this));
+        slh.publishKeyUpdate(km);
+    
+        im.scheduleInfoInterest(boost::ref(*this),10);
     }
 
     void
@@ -108,23 +134,7 @@ main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     nlsr_.initNlsr();
-    /* debugging purpose start */
-    cout <<	nlsr_.getConfParameter();
-    nlsr_.getAdl().printAdl();
-    nlsr_.getNpl().printNpl();
-    /* debugging purpose end */
-    nlsr_.getLsdb().buildAndInstallOwnNameLsa(nlsr_);
-    nlsr_.getLsdb().buildAndInstallOwnCorLsa(nlsr_);
-    nlsr_.setInterestFilterNlsr(nlsr_.getConfParameter().getRouterPrefix());
-    nlsr_.setInterestFilterNlsr(nlsr_.getConfParameter().getChronosyncLsaPrefix()+
-                                nlsr_.getConfParameter().getRouterPrefix());
-    nlsr_.setInterestFilterNlsr(nlsr_.getConfParameter().getRootKeyPrefix());
-    nlsr_.getSlh().createSyncSocket(nlsr_);
-    nlsr_.getSlh().publishKeyUpdate(nlsr_.getKeyManager());
-    nlsr_.getSlh().publishRoutingUpdate(nlsr_.getSm(),
-                                        nlsr_.getConfParameter().getChronosyncLsaPrefix()
-                                        + nlsr_.getConfParameter().getRouterPrefix());
-    nlsr_.getIm().scheduleInfoInterest(nlsr_,1);
+    
     try
     {
         nlsr_.startEventLoop();

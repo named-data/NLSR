@@ -5,23 +5,12 @@
 #include <ndn-cpp-dev/data.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/security/validator.hpp>
-#include <ndn-cpp-dev/util/scheduler.hpp>
 #include <ndn-cpp-dev/util/random.hpp>
 #include <ndn-cpp-dev/security/identity-certificate.hpp>
-#include <ndn-cpp-dev/security/signature-sha256-with-rsa.hpp>
-
-#include <ndn-cpp-dev/security/sec-public-info-sqlite3.hpp>
-#include <ndn-cpp-dev/security/sec-public-info-memory.hpp>
-//TPM
-#include <ndn-cpp-dev/security/sec-tpm-file.hpp>
-#include <ndn-cpp-dev/security/sec-tpm-memory.hpp>
-
-#ifdef NDN_CPP_HAVE_OSX_SECURITY
-#include <ndn-cpp-dev/security/sec-tpm-osx.hpp>
-#endif
-
 #include <list>
 #include "nlsr_conf_param.hpp"
+#include "nlsr_cert_store.hpp"
+#include "utility/nlsr_tokenizer.hpp"
 
 namespace nlsr
 {
@@ -31,7 +20,14 @@ namespace nlsr
         KEY_TYPE_SITE,
         KEY_TYPE_OPERATOR,
         KEY_TYPE_ROUTER,
-        KEY_TYPE_PROCESS
+        KEY_TYPE_PROCESS,
+        KEY_TYPE_UNKNOWN
+    };
+    
+    enum nlsrContentType
+    {
+        CONTENT_TYPE_DATA,
+        CONTENT_TYPE_CERT
     };
 
     class KeyManager: public ndn::KeyChain, public ndn::Validator
@@ -41,10 +37,14 @@ namespace nlsr
     public:
         KeyManager()
             : certSeqNo(1)
+            , certStore()
+            , nlsrRootKeyPrefix()
         {
         }
 
-        void initKeyManager(ConfParameter &cp);
+        bool initKeyManager(ConfParameter &cp);
+        
+        
 
         void
         checkPolicy (const ndn::Data& data,
@@ -64,15 +64,31 @@ namespace nlsr
 
         void signData(ndn::Data& data)
         {
-            ndn::KeyChain::signByIdentity(data,routerIdentity);
-            //ndn::SignatureSha256WithRsa signature(data.getSignature());
-            //signature.setKeyLocator(routerCertName);
+            ndn::KeyChain::signByIdentity(data,processIdentity);
+        }
+        
+        template<typename T>
+        void signByIdentity(T& packet, ndn::Name signeeIdentity)
+        {
+            ndn::KeyChain::signByIdentity(packet,signeeIdentity);
         }
         
         ndn::shared_ptr<ndn::IdentityCertificate>
         getCertificate(ndn::Name certificateName)
         {
-            return ndn::KeyChain::getCertificate(routerCertName);
+            return ndn::KeyChain::getCertificate(certificateName);
+        }
+        
+        ndn::shared_ptr<ndn::IdentityCertificate>
+        getCertificate()
+        {
+            return getCertificate(processCertName);
+        }
+        
+        ndn::Name
+        createIdentity(const ndn::Name identityName)
+        {
+            return ndn::KeyChain::createIdentity(identityName);
         }
 
         ndn::Name
@@ -137,20 +153,118 @@ namespace nlsr
             }
             return certName;
         }
+        
+        void printCertStore()
+        {
+            certStore.printCertStore();
+        }
+        
+    private:
+        bool
+        verifyDataPacket(ndn::Data packet)
+        {
+            ndn::SignatureSha256WithRsa signature(packet.getSignature());
+            std::string signingCertName=signature.getKeyLocator().getName().toUri();
+            std::string packetName=packet.getName().toUri();
+            
+            std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> signee=
+                             certStore.getCertificateFromStore(signingCertName);
+            if( signee.second )
+            {
+                return ( getRouterName(signingCertName)== getRouterName(packetName)
+                       && verifySignature(packet, signee.first->getPublicKeyInfo()));
+            }
+            
+            return false; 
+        }
+        
+        bool 
+        verifyCertPacket(ndn::IdentityCertificate packet)
+        {
+            return true;
+        }
+        
+        template<typename T>
+        bool 
+        verify(T& packet , nlsrContentType contentType,
+                                                     nlsrKeyType signingKeyType)
+        {
+            switch(contentType)
+            {
+                case CONTENT_TYPE_DATA:
+                    return verifyDataPacket(packet);
+                    break;
+                case CONTENT_TYPE_CERT:
+                    return verifyCertPacket(packet);
+                    break;
+            }
+            
+            return false;
+        }
+        
+    public:
+        template<typename T>
+        bool 
+        verify(T& packet )
+        {
+            ndn::SignatureSha256WithRsa signature(packet.getSignature());
+            std::string signingKeyName=signature.getKeyLocator().getName().toUri();
+            std::string packetName=packet.getName().toUri();
+            nlsrTokenizer nt(packetName,"/");
+            std::string keyHandle("keys");
+            if ( nt.doesTokenExist(keyHandle) )
+            {
+                return verify(packet, CONTENT_TYPE_CERT, 
+                                            getKeyTypeFromName(signingKeyName));
+            }
+            else
+            {
+                return verify(packet, CONTENT_TYPE_DATA, 
+                                            getKeyTypeFromName(signingKeyName));
+            }
+            
+            return false;
+        }
 
+        ndn::Name getProcessCertName();
         ndn::Name getRouterCertName();
+        ndn::Name getOperatorCertName();
+        ndn::Name getSiteCertName();
+        ndn::Name getRootCertName();
 
         uint32_t getCertSeqNo();
         void setCerSeqNo(uint32_t csn);
         void initCertSeqFromFile(string certSeqFileDir);
         void writeCertSeqToFile();
+        bool isNewCertificate(std::string certName, int checkSeqNum);
+        std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool>
+        getCertificateFromStore(const std::string certName, int checkSeqNum);
+        std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool>
+        getCertificateFromStore(const std::string certName);
+        bool addCertificate(ndn::shared_ptr<ndn::IdentityCertificate> pcert
+                                                      , uint32_t csn, bool isv);
+        
+        
+    private:
+        bool loadAllCertificates(std::string certDirPath);
+        bool loadCertificate(std::string inputFile, nlsrKeyType keyType);
+        nlsrKeyType getKeyTypeFromName(const std::string keyName);
+        std::string getRouterName(const std::string name);
+        std::string getSiteName(const std::string name);
 
     private:
+        ndn::Name processIdentity;
         ndn::Name routerIdentity;
+        ndn::Name processCertName;
         ndn::Name routerCertName;
-        ndn::Name routerKeyName;
+        ndn::Name opCertName;
+        ndn::Name siteCertName;
+        ndn::Name rootCertName;
+        ndn::Name processKeyName;
         uint32_t certSeqNo;
         string certSeqFileNameWithPath;
+        string nlsrRootKeyPrefix;
+        NlsrCertificateStore certStore;
 
     };
 }

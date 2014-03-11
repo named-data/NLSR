@@ -9,6 +9,7 @@
 #include "nlsr_dm.hpp"
 #include "utility/nlsr_tokenizer.hpp"
 #include "nlsr_lsdb.hpp"
+#include "security/nlsr_km.hpp"
 
 namespace nlsr
 {
@@ -22,12 +23,7 @@ namespace nlsr
     {
         cout << "I: " << interest.toUri() << endl;
         string dataName(data.getName().toUri());
-        //cout << "D: " << dataName << endl;
-        //cout << "Data Content: " << dataContent << endl;
         nlsrTokenizer nt(dataName,"/");
-        //SignatureSha256WithRsa sig(data.getSignature());
-        //ndn::Name keyName=sig.getKeyLocator().getName();
-        //cout<<"Key Locator Name: "<<keyName.toUri()<<endl;
         string chkString("info");
         if( nt.doesTokenExist(chkString) )
         {
@@ -184,19 +180,16 @@ namespace nlsr
     void 
     DataManager::processContentKeys(Nlsr& pnlsr, const ndn::Data& data)
     {
-        std::ofstream outFile("data_received");
-        ndn::io::save(data,outFile,ndn::io::NO_ENCODING);
         cout<<" processContentKeys called "<<endl;
-        SignatureSha256WithRsa signature(data.getSignature());
-        cout<<"D: <<"<<data<<endl;
-        cout<<"Key Locator: "<<signature.getKeyLocator().getName().toUri()<<endl;
         ndn::shared_ptr<ndn::IdentityCertificate> cert=ndn::make_shared<ndn::IdentityCertificate>();
         cert->wireDecode(data.getContent().blockFromValue());
         cout<<*(cert)<<endl;
-        
-        if( pnlsr.getKeyManager().verifySignature(*(cert),cert->getPublicKeyInfo()))
-        {
-            cout<<"Verified Data"<<endl;
-        }
+        std::string dataName=data.getName().toUri();
+        nlsrTokenizer nt(dataName,"/");
+        std::string certName=nt.getTokenString(0,nt.getTokenNumber()-3);
+        uint32_t seqNum=boost::lexical_cast<uint32_t>(nt.getToken(nt.getTokenNumber()-2));
+        cout<<"Cert Name: "<<certName<<" Seq Num: "<<seqNum<<std::endl;
+        pnlsr.getKeyManager().addCertificate(cert, seqNum, true);
+        pnlsr.getKeyManager().printCertStore();
     }
 }//namespace nlsr

@@ -58,7 +58,8 @@ namespace nlsr
         if( nt.doesTokenExist(chkString) )
         {
             //process keys update here
-            processKeysUpdateFromSync(updateName,seqNo, pnlsr);
+            std::string certName=nt.getTokenString(0);
+            processKeysUpdateFromSync(certName,seqNo, pnlsr);
         }
     }
 
@@ -108,9 +109,14 @@ namespace nlsr
     SyncLogicHandler::processKeysUpdateFromSync(std::string certName,
             uint64_t seqNo, Nlsr& pnlsr)
     {
-        string certNamePrefix=certName + "/" + boost::lexical_cast<string>(seqNo);
-        pnlsr.getIm().expressInterest(pnlsr, certNamePrefix, 3,
-                                      pnlsr.getConfParameter().getInterestResendTime());
+        cout<<"Cert Name: "<<certName<<std::endl;
+        if ( pnlsr.getKeyManager().isNewCertificate(certName,seqNo) )
+        {
+            string certNamePrefix=certName + "/" + 
+                                             boost::lexical_cast<string>(seqNo);
+            pnlsr.getIm().expressInterest(pnlsr, certNamePrefix, 3,
+                              pnlsr.getConfParameter().getInterestResendTime());
+        }
     }
 
     void
@@ -124,7 +130,11 @@ namespace nlsr
     void
     SyncLogicHandler::publishKeyUpdate(KeyManager& km)
     {
-        publishSyncUpdate(km.getRouterCertName().toUri(),km.getCertSeqNo());
+        publishSyncUpdate(km.getRootCertName().toUri(), 10);
+        publishSyncUpdate(km.getSiteCertName().toUri(), 10);
+        publishSyncUpdate(km.getOperatorCertName().toUri(), 10);
+        publishSyncUpdate(km.getRouterCertName().toUri(), km.getCertSeqNo());
+        publishSyncUpdate(km.getProcessCertName().toUri(),km.getCertSeqNo());
     }
 
     void

@@ -99,9 +99,13 @@ namespace nlsr
         {
             processConfCommandMaxFacesPerPrefix(pnlsr,nt.getRestOfLine());
         }
-        else if( (nt.getFirstToken() == "logdir"))
+        else if( (nt.getFirstToken() == "log-dir"))
         {
             processConfCommandLogDir(pnlsr,nt.getRestOfLine());
+        }
+        else if( (nt.getFirstToken() == "cert-dir"))
+        {
+            processConfCommandCertDir(pnlsr,nt.getRestOfLine());
         }
         else if( (nt.getFirstToken() == "detailed-logging") )
         {
@@ -361,6 +365,20 @@ namespace nlsr
         else
         {
             pnlsr.getConfParameter().setLogDir(command);
+        }
+        return 0;
+    }
+    
+    int
+    ConfFileProcessor::processConfCommandCertDir(Nlsr& pnlsr, string command)
+    {
+        if(command.empty() )
+        {
+            cerr <<" Wrong command format ! [cert-dir /path/to/cert/dir]!"<<endl;
+        }
+        else
+        {
+            pnlsr.getConfParameter().setCertDir(command);
         }
         return 0;
     }

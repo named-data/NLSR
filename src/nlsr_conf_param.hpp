@@ -25,6 +25,7 @@ namespace nlsr
             , maxFacesPerPrefix(0)
             , tunnelType(0)
             , detailedLogging(0)
+            , certDir()
             , debugging(0)
             , isHyperbolicCalc(0)
             , seqFileDir()
@@ -141,6 +142,16 @@ namespace nlsr
         string getLogDir()
         {
             return logDir;
+        }
+        
+        void setCertDir(std::string cd)
+        {
+            certDir=cd;
+        }
+        
+        std::string getCertDir()
+        {
+            return certDir;
         }
 
         void setSeqFileDir(string ssfd)
@@ -264,6 +275,7 @@ namespace nlsr
 
         int maxFacesPerPrefix;
         string logDir;
+        string certDir;
         string seqFileDir;
         string logFile;
         int detailedLogging;

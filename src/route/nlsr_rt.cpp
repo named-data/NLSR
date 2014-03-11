@@ -70,6 +70,7 @@ namespace nlsr
                 clearRoutingTable();
                 clearDryRoutingTable(); // for dry run options
                 // need to update NPT here
+                std::cout<<"Calling Update NPT With new Route"<<std::endl;
                 pnlsr.getNpt().updateNptWithNewRoute(pnlsr);
                 //debugging purpose
                 printRoutingTable();

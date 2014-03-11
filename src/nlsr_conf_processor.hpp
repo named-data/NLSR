@@ -21,6 +21,8 @@ namespace nlsr
         }
 
         int processConfFile(Nlsr& pnlsr);
+        
+    private:    
         int processConfCommand(Nlsr& pnlsr, string command);
         int processConfCommandNetwork(Nlsr& pnlsr, string command);
         int processConfCommandSiteName(Nlsr& pnlsr, string command);
@@ -34,6 +36,7 @@ namespace nlsr
 
         int processConfCommandChronosyncSyncPrefix(Nlsr& pnlsr, string command);
         int processConfCommandLogDir(Nlsr& pnlsr, string command);
+        int processConfCommandCertDir(Nlsr& pnlsr, string command);
         int processConfCommandDebugging(Nlsr& pnlsr, string command);
         int processConfCommandDetailedLogging(Nlsr& pnlsr, string command);
         int processConfCommandIsHyperbolicCalc(Nlsr& pnlsr, string command);

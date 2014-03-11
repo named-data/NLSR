@@ -63,6 +63,7 @@ def build (bld):
         use = 'NDN_CPP BOOST CRYPTOPP SQLITE3 nsync',
         includes = ". src"
         )
+    bld.recurse("CertTool")
 
 @Configure.conf
 def add_supported_cxxflags(self, cxxflags):
@@ -78,4 +79,3 @@ def add_supported_cxxflags(self, cxxflags):
 
     self.end_msg (' '.join (supportedFlags))
     self.env.CXXFLAGS += supportedFlags
-

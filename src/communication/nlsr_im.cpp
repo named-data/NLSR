@@ -186,15 +186,34 @@ namespace nlsr
     void
     interestManager::processInterestKeys(Nlsr& pnlsr,const ndn::Interest &interest)
     {
-        cout<<" processInterestKeys called "<<endl;
-        ndn::shared_ptr<ndn::IdentityCertificate> cert=pnlsr.getKeyManager().getCertificate("dummy");
+        cout<<"processInterestKeys called "<<endl;
+        string intName=interest.getName().toUri();
+        cout<<"Interest Name for Key: "<<intName<<std::endl;
+        nlsrTokenizer nt(intName,"/");
+        std::string certName=nt.getTokenString(0,nt.getTokenNumber()-2);
+        uint32_t seqNum=boost::lexical_cast<uint32_t>(nt.getToken(nt.getTokenNumber()-1));
+        cout<<"Cert Name: "<<certName<<" Seq Num: "<<seqNum<<std::endl;
+        std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> chkCert=
+                pnlsr.getKeyManager().getCertificateFromStore(certName,seqNum);
+        if( chkCert.second )
+        {
+           Data data(ndn::Name(interest.getName()).appendVersion()); 
+           data.setFreshnessPeriod(1000); //10 sec
+           data.setContent(chkCert.first->wireEncode());
+           pnlsr.getKeyManager().signData(data);
+           pnlsr.getNlsrFace()->put(data);
+        }
+        //std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> chkCert=
+        /*
+        ndn::shared_ptr<ndn::IdentityCertificate> cert=pnlsr.getKeyManager().getCertificate();
         Data data(ndn::Name(interest.getName()).appendVersion());
         data.setFreshnessPeriod(1000); // 10 sec
         data.setContent(cert->wireEncode());
         pnlsr.getKeyManager().signData(data);
-        std::ofstream outFile("data_sent");
-        ndn::io::save(data,outFile,ndn::io::NO_ENCODING);
+        //std::ofstream outFile("data_sent");
+        //ndn::io::save(data,outFile,ndn::io::NO_ENCODING);
         pnlsr.getNlsrFace()->put(data);
+        */ 
     }
 
 
