@@ -7,42 +7,43 @@
 namespace nlsr
 {
 
-    class Nlsr;
+  class Nlsr;
 
-    using namespace std;
-    using namespace ndn;
+  using namespace std;
+  using namespace ndn;
 
-    class Fib
+  class Fib
+  {
+  public:
+    Fib()
+      : fibTable()
+      , fibEntryRefreshTime(0)
     {
-    public:
-        Fib()
-        {
-        }
+    }
 
-        void removeFromFib(Nlsr& pnlsr, string name);
-        void updateFib(Nlsr& pnlsr, string name, Nhl& nextHopList,
-                       int maxFacesPerPrefix);
-        void cleanFib(Nlsr& pnlsr);
-        void setFibEntryRefreshTime(int fert)
-        {
-            fibEntryRefreshTime=fert;
-        }
+    void removeFromFib(Nlsr& pnlsr, string name);
+    void updateFib(Nlsr& pnlsr, string name, Nhl& nextHopList);
+    void cleanFib(Nlsr& pnlsr);
+    void setFibEntryRefreshTime(int fert)
+    {
+      fibEntryRefreshTime=fert;
+    }
 
-        void printFib();
+    void printFib();
 
-    private:
-        void removeFibEntryHop(Nhl& nl, int doNotRemoveHopFaceId);
-        int getNumberOfFacesForName(Nhl& nextHopList, int maxFacesPerPrefix);
-        ndn::EventId
-        scheduleFibEntryRefreshing(Nlsr& pnlsr, string name, int feSeqNum,
-                                   int refreshTime);
-        void cancelScheduledFeExpiringEvent(Nlsr& pnlsr, EventId eid);
-        void refreshFibEntry(string name, int feSeqNum);
+  private:
+    void removeFibEntryHop(Nlsr& pnlsr, Nhl& nl, int doNotRemoveHopFaceId);
+    int getNumberOfFacesForName(Nhl& nextHopList, int maxFacesPerPrefix);
+    ndn::EventId
+    scheduleFibEntryRefreshing(Nlsr& pnlsr, string name, int feSeqNum,
+                               int refreshTime);
+    void cancelScheduledFeExpiringEvent(Nlsr& pnlsr, EventId eid);
+    void refreshFibEntry(string name, int feSeqNum);
 
-    private:
-        std::list<FibEntry> fibTable;
-        int fibEntryRefreshTime;
-    };
+  private:
+    std::list<FibEntry> fibTable;
+    int fibEntryRefreshTime;
+  };
 
 }//namespace nlsr
 #endif

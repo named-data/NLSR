@@ -6,50 +6,50 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class NextHop
+  class NextHop
+  {
+  public:
+    NextHop()
+      : connectingFace(0)
+      , routeCost(0)
     {
-    public:
-        NextHop()
-            : connectingFace(0)
-            , routeCost(0)
-        {
-        }
+    }
 
-        NextHop(int cf, double rc)
-        {
-            connectingFace=cf;
-            routeCost=rc;
-        }
+    NextHop(int cf, double rc)
+    {
+      connectingFace=cf;
+      routeCost=rc;
+    }
 
-        int getConnectingFace()
-        {
-            return connectingFace;
-        }
+    int getConnectingFace() const
+    {
+      return connectingFace;
+    }
 
-        void setConnectingFace(int cf)
-        {
-            connectingFace=cf;
-        }
+    void setConnectingFace(int cf)
+    {
+      connectingFace=cf;
+    }
 
-        double getRouteCost()
-        {
-            return routeCost;
-        }
+    double getRouteCost() const
+    {
+      return routeCost;
+    }
 
-        void setRouteCost(double rc)
-        {
-            routeCost=rc;
-        }
-    private:
-        int connectingFace;
-        double routeCost;
-    };
+    void setRouteCost(double rc)
+    {
+      routeCost=rc;
+    }
+  private:
+    int connectingFace;
+    double routeCost;
+  };
 
 
-    ostream&
-    operator<<(ostream& os, NextHop& nh);
+  ostream&
+  operator<<(ostream& os, NextHop& nh);
 
 }//namespace nlsr
 

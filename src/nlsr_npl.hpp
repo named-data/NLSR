@@ -8,32 +8,32 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class Npl
+  class Npl
+  {
+
+  public:
+    Npl();
+    ~Npl();
+
+    int insertIntoNpl(string& name);
+    int removeFromNpl(string& name);
+    void sortNpl();
+    int getNplSize()
     {
+      return nameList.size();
+    }
+    std::list<string>& getNameList()
+    {
+      return nameList;
+    }
+    void printNpl();
 
-    public:
-        Npl();
-        ~Npl();
+  private:
+    std::list<string> nameList;
 
-        int insertIntoNpl(string& name);
-        int removeFromNpl(string& name);
-        void sortNpl();
-        int getNplSize()
-        {
-            return nameList.size();
-        }
-        std::list<string>& getNameList()
-        {
-            return nameList;
-        }
-        void printNpl();
-
-    private:
-        std::list<string> nameList;
-
-    };
+  };
 
 }//namespace nlsr
 

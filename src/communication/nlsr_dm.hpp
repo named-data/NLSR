@@ -10,31 +10,31 @@
 namespace nlsr
 {
 
-    using namespace ndn;
-    using namespace std;
+  using namespace ndn;
+  using namespace std;
 
-    class Nlsr;
+  class Nlsr;
 
-    class DataManager
-    {
-    public:
-        void processContent(Nlsr& pnlsr, const ndn::Interest &interest,
-                            const ndn::Data& data, interestManager& im);
-    private:
-        void processContentInfo(Nlsr& pnlsr, string& dataName,
-                                string& dataContent);
-        void processContentLsa(Nlsr& pnlsr, string& dataName,
-                               string& dataContent);
-        void processContentNameLsa(Nlsr& pnlsr, string lsaKey,
-                                   uint32_t lsSeqNo, string& dataContent);
-        void processContentAdjLsa(Nlsr& pnlsr, string lsaKey,
-                                  uint32_t lsSeqNo, string& dataContent);
-        void processContentCorLsa(Nlsr& pnlsr, string lsaKey,
-                                  uint32_t lsSeqNo, string& dataContent);
-        void processContentKeys(Nlsr& pnlsr, const ndn::Data& data);
-        
+  class DataManager
+  {
+  public:
+    void processContent(Nlsr& pnlsr, const ndn::Interest &interest,
+                        const ndn::Data& data, interestManager& im);
+  private:
+    void processContentInfo(Nlsr& pnlsr, string& dataName,
+                            string& dataContent);
+    void processContentLsa(Nlsr& pnlsr, string& dataName,
+                           string& dataContent);
+    void processContentNameLsa(Nlsr& pnlsr, string lsaKey,
+                               uint32_t lsSeqNo, string& dataContent);
+    void processContentAdjLsa(Nlsr& pnlsr, string lsaKey,
+                              uint32_t lsSeqNo, string& dataContent);
+    void processContentCorLsa(Nlsr& pnlsr, string lsaKey,
+                              uint32_t lsSeqNo, string& dataContent);
+    void processContentKeys(Nlsr& pnlsr, const ndn::Data& data);
 
-    };
+
+  };
 
 }//namespace nlsr
 #endif

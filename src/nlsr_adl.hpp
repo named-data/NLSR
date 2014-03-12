@@ -8,52 +8,52 @@
 namespace nlsr
 {
 
-    class Nlsr;
+  class Nlsr;
 
-    using namespace std;
+  using namespace std;
 
-    class Adl
+  class Adl
+  {
+
+  public:
+    Adl();
+    ~Adl();
+    int insert(Adjacent& adj);
+    int updateAdjacentStatus(string adjName, int s);
+    int updateAdjacentLinkCost(string adjName, double lc);
+    std::list<Adjacent>& getAdjList();
+    bool isNeighbor(string adjName);
+    void incrementTimedOutInterestCount(string& neighbor);
+    int getTimedOutInterestCount(string& neighbor);
+    int getStatusOfNeighbor(string& neighbor);
+    void setStatusOfNeighbor(string& neighbor, int status);
+    void setTimedOutInterestCount(string& neighbor, int count);
+    void addAdjacentsFromAdl(Adl& adl);
+
+    bool isAdjLsaBuildable(Nlsr& pnlsr);
+    int getNumOfActiveNeighbor();
+    Adjacent getAdjacent(string adjName);
+
+    bool isAdlEqual(Adl &adl);
+
+    int getAdlSize()
     {
+      return adjList.size();
+    }
 
-    public:
-        Adl();
-        ~Adl();
-        int insert(Adjacent& adj);
-        int updateAdjacentStatus(string adjName, int s);
-        int updateAdjacentLinkCost(string adjName, double lc);
-        std::list<Adjacent>& getAdjList();
-        bool isNeighbor(string adjName);
-        void incrementTimedOutInterestCount(string& neighbor);
-        int getTimedOutInterestCount(string& neighbor);
-        int getStatusOfNeighbor(string& neighbor);
-        void setStatusOfNeighbor(string& neighbor, int status);
-        void setTimedOutInterestCount(string& neighbor, int count);
-        void addAdjacentsFromAdl(Adl& adl);
+    void resetAdl()
+    {
+      if( adjList.size() > 0 )
+      {
+        adjList.clear();
+      }
+    }
 
-        bool isAdjLsaBuildable(Nlsr& pnlsr);
-        int getNumOfActiveNeighbor();
-        Adjacent getAdjacent(string adjName);
+    void printAdl();
 
-        bool isAdlEqual(Adl &adl);
-
-        int getAdlSize()
-        {
-            return adjList.size();
-        }
-
-        void resetAdl()
-        {
-            if( adjList.size() > 0 )
-            {
-                adjList.clear();
-            }
-        }
-
-        void printAdl();
-
-    private:
-        std::list< Adjacent > adjList;
-    };
+  private:
+    std::list< Adjacent > adjList;
+  };
 
 } //namespace nlsr
 #endif

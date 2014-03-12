@@ -8,53 +8,65 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class Npte
+  class Npte
+  {
+  public:
+    Npte()
+      : namePrefix()
+      , nhl()
     {
-    public:
-        Npte()
-            : namePrefix()
-            , nhl()
-        {
-        }
-        Npte(string np)
-            : nhl()
-        {
-            namePrefix=np;
-        }
+    }
+    Npte(string np)
+      : nhl()
+    {
+      namePrefix=np;
+    }
 
-        string getNamePrefix()
+    string getNamePrefix()
+    {
+      return namePrefix;
+    }
+
+    std::list<RoutingTableEntry>& getRteList()
+    {
+      return rteList;
+    }
+
+    void resetRteListNextHop()
+    {
+      if (rteList.size() > 0 )
+      {
+        for( std::list<RoutingTableEntry>::iterator it=rteList.begin();
+             it != rteList.end(); ++it )
         {
-            return namePrefix;
+          (*it).getNhl().resetNhl();
         }
+      }
+    }
 
-        std::list<RoutingTableEntry>& getRteList()
-        {
-            return rteList;
-        }
+    int getRteListSize()
+    {
+      return rteList.size();
+    }
 
-        int getRteListSize()
-        {
-            return rteList.size();
-        }
+    Nhl& getNhl()
+    {
+      return nhl;
+    }
+    void generateNhlfromRteList();
+    void removeRoutingTableEntry(RoutingTableEntry& rte);
+    void addRoutingTableEntry(RoutingTableEntry &rte);
 
-        Nhl& getNhl()
-        {
-            return nhl;
-        }
-        void generateNhlfromRteList();
-        void removeRoutingTableEntry(RoutingTableEntry& rte);
-        void addRoutingTableEntry(RoutingTableEntry &rte);
+  private:
+    string namePrefix;
+    std::list<RoutingTableEntry> rteList;
+    Nhl nhl;
+  };
 
-    private:
-        string namePrefix;
-        std::list<RoutingTableEntry> rteList;
-        Nhl nhl;
-    };
-
-    ostream&
-    operator<<(ostream& os, Npte& npte);
+  ostream&
+  operator<<(ostream& os, Npte& npte);
 
 }//namespace nlsr
 

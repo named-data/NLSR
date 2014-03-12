@@ -25,41 +25,41 @@ class ConfParameter;
 
 namespace nlsr
 {
-    class SyncLogicHandler
+  class SyncLogicHandler
+  {
+  public:
+    SyncLogicHandler(ndn::shared_ptr<boost::asio::io_service> ioService)
+      : validator(new ndn::ValidatorNull())
+      , syncFace(new ndn::Face(ioService))
+    {}
+
+
+    void createSyncSocket(Nlsr& pnlsr);
+    void nsyncUpdateCallBack(const vector<MissingDataInfo> &v,
+                             SyncSocket *socket, Nlsr& pnlsr );
+    void nsyncRemoveCallBack(const string& prefix, Nlsr &pnlsr);
+    void removeRouterFromSyncing(string& routerPrefix);
+    void publishRoutingUpdate(SequencingManager& sm, string updatePrefix);
+    void publishKeyUpdate(KeyManager& km);
+    void publishIdentityUpdate(string identityName);
+    void setSyncPrefix(string sp)
     {
-    public:
-        SyncLogicHandler(ndn::shared_ptr<boost::asio::io_service> ioService)
-            : validator(new ndn::ValidatorNull())
-            , syncFace(new ndn::Face(ioService))
-        {}
-
-
-        void createSyncSocket(Nlsr& pnlsr);
-        void nsyncUpdateCallBack(const vector<MissingDataInfo> &v,
-                                 SyncSocket *socket, Nlsr& pnlsr );
-        void nsyncRemoveCallBack(const string& prefix, Nlsr &pnlsr);
-        void removeRouterFromSyncing(string& routerPrefix);
-        void publishRoutingUpdate(SequencingManager& sm, string updatePrefix);
-        void publishKeyUpdate(KeyManager& km);
-        void publishIdentityUpdate(string identityName);
-        void setSyncPrefix(string sp)
-        {
-            syncPrefix.clear();
-            syncPrefix.set(sp);
-        }
-    private:
-        void processUpdateFromSync(std::string updateName, uint64_t seqNo,
+      syncPrefix.clear();
+      syncPrefix.set(sp);
+    }
+  private:
+    void processUpdateFromSync(std::string updateName, uint64_t seqNo,
+                               Nlsr& pnlsr);
+    void processRoutingUpdateFromSync(std::string routerName, uint64_t seqNo,
+                                      Nlsr& pnlsr);
+    void processKeysUpdateFromSync(std::string certName, uint64_t seqNo,
                                    Nlsr& pnlsr);
-        void processRoutingUpdateFromSync(std::string routerName, uint64_t seqNo,
-                                          Nlsr& pnlsr);
-        void processKeysUpdateFromSync(std::string certName, uint64_t seqNo,
-                                       Nlsr& pnlsr);
-        void publishSyncUpdate(string updatePrefix, uint64_t seqNo);
-    private:
-        ndn::shared_ptr<ndn::ValidatorNull> validator;
-        ndn::shared_ptr<ndn::Face> syncFace;
-        ndn::shared_ptr<SyncSocket> syncSocket;
-        ndn::Name syncPrefix;
-    };
+    void publishSyncUpdate(string updatePrefix, uint64_t seqNo);
+  private:
+    ndn::shared_ptr<ndn::ValidatorNull> validator;
+    ndn::shared_ptr<ndn::Face> syncFace;
+    ndn::shared_ptr<SyncSocket> syncSocket;
+    ndn::Name syncPrefix;
+  };
 }
 #endif

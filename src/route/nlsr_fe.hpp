@@ -11,74 +11,78 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class FibEntry
+  class FibEntry
+  {
+  public:
+    FibEntry()
+      : name()
+      , timeToRefresh(0)
+      , feSeqNo(0)
+      , nhl()
     {
-    public:
-        FibEntry()
-            : name()
-            , timeToRefresh(0)
-            , feSeqNo(0)
-        {
-        }
+    }
 
-        FibEntry(string n)
-        {
-            name=n;
-        }
+    FibEntry(string n)
+      : timeToRefresh(0)
+      , feSeqNo(0)
+      , nhl()
+    {
+      name=n;
+    }
 
-        string getName()
-        {
-            return name;
-        }
+    string getName()
+    {
+      return name;
+    }
 
-        Nhl& getNhl()
-        {
-            return nhl;
-        }
+    Nhl& getNhl()
+    {
+      return nhl;
+    }
 
-        int getTimeToRefresh()
-        {
-            return timeToRefresh;
-        }
+    int getTimeToRefresh()
+    {
+      return timeToRefresh;
+    }
 
-        void setTimeToRefresh(int ttr)
-        {
-            timeToRefresh=ttr;
-        }
+    void setTimeToRefresh(int ttr)
+    {
+      timeToRefresh=ttr;
+    }
 
-        void setFeExpiringEventId(ndn::EventId feid)
-        {
-            feExpiringEventId=feid;
-        }
+    void setFeExpiringEventId(ndn::EventId feid)
+    {
+      feExpiringEventId=feid;
+    }
 
-        ndn::EventId getFeExpiringEventId()
-        {
-            return feExpiringEventId;
-        }
+    ndn::EventId getFeExpiringEventId()
+    {
+      return feExpiringEventId;
+    }
 
-        void setFeSeqNo(int fsn)
-        {
-            feSeqNo=fsn;
-        }
+    void setFeSeqNo(int fsn)
+    {
+      feSeqNo=fsn;
+    }
 
-        int getFeSeqNo()
-        {
-            return feSeqNo;
-        }
+    int getFeSeqNo()
+    {
+      return feSeqNo;
+    }
 
-        bool isEqualNextHops(Nhl &nhlOther);
+    bool isEqualNextHops(Nhl &nhlOther);
 
-    private:
-        string name;
-        int timeToRefresh;
-        ndn::EventId feExpiringEventId;
-        int feSeqNo;
-        Nhl nhl;
-    };
+  private:
+    string name;
+    int timeToRefresh;
+    ndn::EventId feExpiringEventId;
+    int feSeqNo;
+    Nhl nhl;
+  };
 
-    ostream& operator<<(ostream& os, FibEntry& fe);
+  ostream& operator<<(ostream& os,FibEntry fe);
 
 } //namespace nlsr
 

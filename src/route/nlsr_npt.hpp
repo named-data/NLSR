@@ -8,26 +8,26 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class Nlsr;
+  class Nlsr;
 
-    class Npt
+  class Npt
+  {
+  public:
+    Npt()
     {
-    public:
-        Npt()
-        {
-        }
-        void addNpte(string name, string destRouter, Nlsr& pnlsr);
-        void removeNpte(string name, string destRouter, Nlsr& pnlsr);
-        void updateNptWithNewRoute(Nlsr& pnlsr);
-        void printNpt();
-    private:
-        void addNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr);
-        void removeNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr);
-    private:
-        std::list<Npte> npteList;
-    };
+    }
+    void addNpteByDestName(string name, string destRouter, Nlsr& pnlsr);
+    void removeNpte(string name, string destRouter, Nlsr& pnlsr);
+    void updateNptWithNewRoute(Nlsr& pnlsr);
+    void printNpt();
+  private:
+    void addNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr);
+    void removeNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr);
+  private:
+    std::list<Npte> npteList;
+  };
 
 }//namespace nlsr
 

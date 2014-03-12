@@ -6,51 +6,51 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class ConfFileProcessor
+  class ConfFileProcessor
+  {
+  public:
+    ConfFileProcessor()
+      :confFileName()
     {
-    public:
-        ConfFileProcessor()
-            :confFileName()
-        {
-        }
-        ConfFileProcessor(const string& cfile)
-        {
-            confFileName=cfile;
-        }
+    }
+    ConfFileProcessor(const string& cfile)
+    {
+      confFileName=cfile;
+    }
 
-        int processConfFile(Nlsr& pnlsr);
-        
-    private:    
-        int processConfCommand(Nlsr& pnlsr, string command);
-        int processConfCommandNetwork(Nlsr& pnlsr, string command);
-        int processConfCommandSiteName(Nlsr& pnlsr, string command);
-        int processConfCommandRootKeyPrefix(Nlsr& pnlsr, string command);
-        int processConfCommandRouterName(Nlsr& pnlsr, string command);
-        int processConfCommandInterestRetryNumber(Nlsr& pnlsr, string command);
-        int processConfCommandInterestResendTime(Nlsr& pnlsr, string command);
-        int processConfCommandLsaRefreshTime(Nlsr& pnlsr, string command);
-        int processConfCommandMaxFacesPerPrefix(Nlsr& pnlsr, string command);
-        int processConfCommandTunnelType(Nlsr& pnlsr, string command);
+    int processConfFile(Nlsr& pnlsr);
 
-        int processConfCommandChronosyncSyncPrefix(Nlsr& pnlsr, string command);
-        int processConfCommandLogDir(Nlsr& pnlsr, string command);
-        int processConfCommandCertDir(Nlsr& pnlsr, string command);
-        int processConfCommandDebugging(Nlsr& pnlsr, string command);
-        int processConfCommandDetailedLogging(Nlsr& pnlsr, string command);
-        int processConfCommandIsHyperbolicCalc(Nlsr& pnlsr, string command);
+  private:
+    int processConfCommand(Nlsr& pnlsr, string command);
+    int processConfCommandNetwork(Nlsr& pnlsr, string command);
+    int processConfCommandSiteName(Nlsr& pnlsr, string command);
+    int processConfCommandRootKeyPrefix(Nlsr& pnlsr, string command);
+    int processConfCommandRouterName(Nlsr& pnlsr, string command);
+    int processConfCommandInterestRetryNumber(Nlsr& pnlsr, string command);
+    int processConfCommandInterestResendTime(Nlsr& pnlsr, string command);
+    int processConfCommandLsaRefreshTime(Nlsr& pnlsr, string command);
+    int processConfCommandMaxFacesPerPrefix(Nlsr& pnlsr, string command);
+    int processConfCommandTunnelType(Nlsr& pnlsr, string command);
 
-        int processConfCommandHyperbolicCordinate(Nlsr& pnlsr, string command);
+    int processConfCommandChronosyncSyncPrefix(Nlsr& pnlsr, string command);
+    int processConfCommandLogDir(Nlsr& pnlsr, string command);
+    int processConfCommandCertDir(Nlsr& pnlsr, string command);
+    int processConfCommandDebugging(Nlsr& pnlsr, string command);
+    int processConfCommandDetailedLogging(Nlsr& pnlsr, string command);
+    int processConfCommandIsHyperbolicCalc(Nlsr& pnlsr, string command);
 
-        int processConfCommandNdnNeighbor(Nlsr& pnlsr, string command);
-        int processConfCommandNdnName(Nlsr& pnlsr, string command);
-        int processConfCommandLinkCost(Nlsr& pnlsr, string command);
+    int processConfCommandHyperbolicCordinate(Nlsr& pnlsr, string command);
+
+    int processConfCommandNdnNeighbor(Nlsr& pnlsr, string command);
+    int processConfCommandNdnName(Nlsr& pnlsr, string command);
+    int processConfCommandLinkCost(Nlsr& pnlsr, string command);
 
 
-    private:
-        string confFileName;
-    };
+  private:
+    string confFileName;
+  };
 
 } //namespace nlsr
 #endif

@@ -8,44 +8,44 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class RoutingTableEntry
+  class RoutingTableEntry
+  {
+  public:
+    RoutingTableEntry()
+      : destination()
+      , nhl()
     {
-    public:
-        RoutingTableEntry()
-            : destination()
-            , nhl()
-        {
-        }
+    }
 
-        ~RoutingTableEntry()
-        {
-        }
+    ~RoutingTableEntry()
+    {
+    }
 
-        RoutingTableEntry(string dest)
-            : nhl()
-        {
-            destination=dest;
-        }
+    RoutingTableEntry(string dest)
+      : nhl()
+    {
+      destination=dest;
+    }
 
-        string getDestination()
-        {
-            return destination;
-        }
+    string getDestination()
+    {
+      return destination;
+    }
 
-        Nhl& getNhl()
-        {
-            return nhl;
-        }
+    Nhl& getNhl()
+    {
+      return nhl;
+    }
 
-    private:
-        string destination;
-        Nhl nhl;
-    };
+  private:
+    string destination;
+    Nhl nhl;
+  };
 
-    ostream&
-    operator<<(ostream& os, RoutingTableEntry &rte);
+  ostream&
+  operator<<(ostream& os, RoutingTableEntry &rte);
 
 }
 

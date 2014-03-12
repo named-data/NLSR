@@ -10,40 +10,40 @@
 namespace nlsr
 {
 
-    class Nlsr;
-    class NextHop;
+  class Nlsr;
+  class NextHop;
 
-    using namespace std;
+  using namespace std;
 
-    class RoutingTable
+  class RoutingTable
+  {
+  public:
+    RoutingTable()
+      : NO_NEXT_HOP(-12345)
     {
-    public:
-        RoutingTable()
-            : NO_NEXT_HOP(-12345)
-        {
-        }
-        void calculate(Nlsr& pnlsr);
-        void addNextHop(string destRouter, NextHop& nh);
-        void printRoutingTable();
+    }
+    void calculate(Nlsr& pnlsr);
+    void addNextHop(string destRouter, NextHop& nh);
+    void printRoutingTable();
 
-        void addNextHopToDryTable(string destRouter, NextHop& nh);
-        void printDryRoutingTable();
-        std::pair<RoutingTableEntry&, bool> findRoutingTableEntry(string destRouter);
-        void scheduleRoutingTableCalculation(Nlsr& pnlsr);
+    void addNextHopToDryTable(string destRouter, NextHop& nh);
+    void printDryRoutingTable();
+    std::pair<RoutingTableEntry&, bool> findRoutingTableEntry(string destRouter);
+    void scheduleRoutingTableCalculation(Nlsr& pnlsr);
 
-    private:
-        void calculateLsRoutingTable(Nlsr& pnlsr);
-        void calculateHypRoutingTable(Nlsr& pnlsr);
-        void calculateHypDryRoutingTable(Nlsr&pnlsr);
+  private:
+    void calculateLsRoutingTable(Nlsr& pnlsr);
+    void calculateHypRoutingTable(Nlsr& pnlsr);
+    void calculateHypDryRoutingTable(Nlsr&pnlsr);
 
-        void clearRoutingTable();
-        void clearDryRoutingTable();
+    void clearRoutingTable();
+    void clearDryRoutingTable();
 
-        const int NO_NEXT_HOP;
+    const int NO_NEXT_HOP;
 
-        std::list< RoutingTableEntry > rTable;
-        std::list< RoutingTableEntry > dryTable;
-    };
+    std::list< RoutingTableEntry > rTable;
+    std::list< RoutingTableEntry > dryTable;
+  };
 
 }//namespace nlsr
 

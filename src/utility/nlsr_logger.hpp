@@ -25,38 +25,38 @@
 namespace nlsr
 {
 
-    namespace logging = boost::log;
-    namespace attrs = boost::log::attributes;
-    namespace src = boost::log::sources;
-    namespace sinks = boost::log::sinks;
-    namespace expr = boost::log::expressions;
-    namespace keywords = boost::log::keywords;
+  namespace logging = boost::log;
+  namespace attrs = boost::log::attributes;
+  namespace src = boost::log::sources;
+  namespace sinks = boost::log::sinks;
+  namespace expr = boost::log::expressions;
+  namespace keywords = boost::log::keywords;
 
-    using boost::shared_ptr;
-    using namespace std;
+  using boost::shared_ptr;
+  using namespace std;
 
 
-    class NlsrLogger
+  class NlsrLogger
+  {
+  public:
+    NlsrLogger()
     {
-    public:
-        NlsrLogger()
-        {
-        }
+    }
 
-        void initNlsrLogger(std::string dirPath);
+    void initNlsrLogger(std::string dirPath);
 
-        src::logger& getLogger()
-        {
-            return mLogger;
-        }
+    src::logger& getLogger()
+    {
+      return mLogger;
+    }
 
-    private:
-        string getEpochTime();
-        string getUserHomeDirectory();
+  private:
+    string getEpochTime();
+    string getUserHomeDirectory();
 
-    private:
-        src::logger mLogger;
-    };
+  private:
+    src::logger mLogger;
+  };
 
 }//namespace nlsr
 #endif

@@ -15,312 +15,312 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
 
-    string
-    NameLsa::getNameLsaKey()
+  string
+  NameLsa::getNameLsaKey()
+  {
+    string key;
+    key=origRouter + "/" + boost::lexical_cast<std::string>(1);
+    return key;
+  }
+
+  NameLsa::NameLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt, Npl npl)
+  {
+    origRouter=origR;
+    lsType=lst;
+    lsSeqNo=lsn;
+    lifeTime=lt;
+    std::list<string> nl=npl.getNameList();
+    for( std::list<string>::iterator it=nl.begin(); it != nl.end(); it++)
     {
-        string key;
-        key=origRouter + "/" + boost::lexical_cast<std::string>(1);
-        return key;
+      addNameToLsa((*it));
     }
+  }
 
-    NameLsa::NameLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt, Npl npl)
+  string
+  NameLsa::getNameLsaData()
+  {
+    string nameLsaData;
+    nameLsaData=origRouter + "|" + boost::lexical_cast<std::string>(1) + "|"
+                + boost::lexical_cast<std::string>(lsSeqNo) + "|"
+                + boost::lexical_cast<std::string>(lifeTime);
+    nameLsaData+="|";
+    nameLsaData+=boost::lexical_cast<std::string>(npl.getNplSize());
+    std::list<string> nl=npl.getNameList();
+    for( std::list<string>::iterator it=nl.begin(); it != nl.end(); it++)
     {
-        origRouter=origR;
-        lsType=lst;
-        lsSeqNo=lsn;
-        lifeTime=lt;
-        std::list<string> nl=npl.getNameList();
-        for( std::list<string>::iterator it=nl.begin(); it != nl.end(); it++)
-        {
-            addNameToLsa((*it));
-        }
+      nameLsaData+="|";
+      nameLsaData+=(*it);
     }
+    return nameLsaData+"|";
+  }
 
-    string
-    NameLsa::getNameLsaData()
+  bool
+  NameLsa::initNameLsaFromContent(string content)
+  {
+    uint32_t numName=0;
+    nlsrTokenizer nt(content, "|");
+    origRouter=nt.getNextToken();
+    if(origRouter.empty())
     {
-        string nameLsaData;
-        nameLsaData=origRouter + "|" + boost::lexical_cast<std::string>(1) + "|"
-                    + boost::lexical_cast<std::string>(lsSeqNo) + "|"
-                    + boost::lexical_cast<std::string>(lifeTime);
-        nameLsaData+="|";
-        nameLsaData+=boost::lexical_cast<std::string>(npl.getNplSize());
-        std::list<string> nl=npl.getNameList();
-        for( std::list<string>::iterator it=nl.begin(); it != nl.end(); it++)
-        {
-            nameLsaData+="|";
-            nameLsaData+=(*it);
-        }
-        return nameLsaData+"|";
+      return false;
     }
-
-    bool
-    NameLsa::initNameLsaFromContent(string content)
+    try
     {
-        uint32_t numName=0;
-        nlsrTokenizer nt(content, "|");
-        origRouter=nt.getNextToken();
-        if(origRouter.empty())
-        {
-            return false;
-        }
-        try
-        {
-            lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
-            lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
-            lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
-            numName=boost::lexical_cast<uint32_t>(nt.getNextToken());
-        }
-        catch(std::exception &e)
-        {
-            return false;
-        }
-        for(int i=0; i<numName; i++)
-        {
-            string name=nt.getNextToken();
-            addNameToLsa(name);
-        }
-        return true;
+      lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
+      lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
+      lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
+      numName=boost::lexical_cast<uint32_t>(nt.getNextToken());
     }
-
-    std::ostream&
-    operator<<(std::ostream& os, NameLsa& nLsa)
+    catch(std::exception &e)
     {
-        os<<"Name Lsa: "<<endl;
-        os<<"  Origination Router: "<<nLsa.getOrigRouter()<<endl;
-        os<<"  Ls Type: "<<(unsigned short)nLsa.getLsType()<<endl;
-        os<<"  Ls Seq No: "<<(unsigned int)nLsa.getLsSeqNo()<<endl;
-        os<<"  Ls Lifetime: "<<(unsigned int)nLsa.getLifeTime()<<endl;
-        os<<"  Names: "<<endl;
-        int i=1;
-        std::list<string> nl=nLsa.getNpl().getNameList();
-        for( std::list<string>::iterator it=nl.begin(); it != nl.end(); it++)
-        {
-            os<<"    Name "<<i<<": "<<(*it)<<endl;
-        }
-        return os;
+      return false;
     }
-
-
-
-    CorLsa::CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
-                   , double r, double theta)
+    for(int i=0; i<numName; i++)
     {
-        origRouter=origR;
-        lsType=lst;
-        lsSeqNo=lsn;
-        lifeTime=lt;
-        corRad=r;
-        corTheta=theta;
+      string name=nt.getNextToken();
+      addNameToLsa(name);
     }
+    return true;
+  }
 
-    string
-    CorLsa::getCorLsaKey()
+  std::ostream&
+  operator<<(std::ostream& os, NameLsa& nLsa)
+  {
+    os<<"Name Lsa: "<<endl;
+    os<<"  Origination Router: "<<nLsa.getOrigRouter()<<endl;
+    os<<"  Ls Type: "<<(unsigned short)nLsa.getLsType()<<endl;
+    os<<"  Ls Seq No: "<<(unsigned int)nLsa.getLsSeqNo()<<endl;
+    os<<"  Ls Lifetime: "<<(unsigned int)nLsa.getLifeTime()<<endl;
+    os<<"  Names: "<<endl;
+    int i=1;
+    std::list<string> nl=nLsa.getNpl().getNameList();
+    for( std::list<string>::iterator it=nl.begin(); it != nl.end(); it++)
     {
-        string key;
-        key=origRouter + "/" + boost::lexical_cast<std::string>(3);
-        return key;
+      os<<"    Name "<<i<<": "<<(*it)<<endl;
     }
+    return os;
+  }
 
-    bool
-    CorLsa::isLsaContentEqual(CorLsa& clsa)
+
+
+  CorLsa::CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
+                 , double r, double theta)
+  {
+    origRouter=origR;
+    lsType=lst;
+    lsSeqNo=lsn;
+    lifeTime=lt;
+    corRad=r;
+    corTheta=theta;
+  }
+
+  string
+  CorLsa::getCorLsaKey()
+  {
+    string key;
+    key=origRouter + "/" + boost::lexical_cast<std::string>(3);
+    return key;
+  }
+
+  bool
+  CorLsa::isLsaContentEqual(CorLsa& clsa)
+  {
+    return (std::abs(corRad - clsa.getCorRadius()) <
+            std::numeric_limits<double>::epsilon()) &&
+           (std::abs(corTheta - clsa.getCorTheta()) <
+            std::numeric_limits<double>::epsilon());
+  }
+
+  string
+  CorLsa::getCorLsaData()
+  {
+    string corLsaData;
+    corLsaData=origRouter + "|";
+    corLsaData+=(boost::lexical_cast<std::string>(3) + "|");
+    corLsaData+=(boost::lexical_cast<std::string>(lsSeqNo) + "|");
+    corLsaData+=(boost::lexical_cast<std::string>(lifeTime) + "|");
+    corLsaData+=(boost::lexical_cast<std::string>(corRad) + "|");
+    corLsaData+=(boost::lexical_cast<std::string>(corTheta) + "|");
+    return corLsaData;
+  }
+
+  bool
+  CorLsa::initCorLsaFromContent(string content)
+  {
+    nlsrTokenizer nt(content, "|");
+    origRouter=nt.getNextToken();
+    if(origRouter.empty())
     {
-        return (std::abs(corRad - clsa.getCorRadius()) <
-                std::numeric_limits<double>::epsilon()) &&
-               (std::abs(corTheta - clsa.getCorTheta()) <
-                std::numeric_limits<double>::epsilon());
+      return false;
     }
-
-    string
-    CorLsa::getCorLsaData()
+    try
     {
-        string corLsaData;
-        corLsaData=origRouter + "|";
-        corLsaData+=(boost::lexical_cast<std::string>(3) + "|");
-        corLsaData+=(boost::lexical_cast<std::string>(lsSeqNo) + "|");
-        corLsaData+=(boost::lexical_cast<std::string>(lifeTime) + "|");
-        corLsaData+=(boost::lexical_cast<std::string>(corRad) + "|");
-        corLsaData+=(boost::lexical_cast<std::string>(corTheta) + "|");
-        return corLsaData;
+      lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
+      lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
+      lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
+      corRad=boost::lexical_cast<double>(nt.getNextToken());
+      corTheta=boost::lexical_cast<double>(nt.getNextToken());
     }
-
-    bool
-    CorLsa::initCorLsaFromContent(string content)
+    catch(std::exception &e)
     {
-        nlsrTokenizer nt(content, "|");
-        origRouter=nt.getNextToken();
-        if(origRouter.empty())
-        {
-            return false;
-        }
-        try
-        {
-            lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
-            lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
-            lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
-            corRad=boost::lexical_cast<double>(nt.getNextToken());
-            corTheta=boost::lexical_cast<double>(nt.getNextToken());
-        }
-        catch(std::exception &e)
-        {
-            return false;
-        }
-        return true;
+      return false;
     }
+    return true;
+  }
 
-    std::ostream&
-    operator<<(std::ostream& os, CorLsa& cLsa)
+  std::ostream&
+  operator<<(std::ostream& os, CorLsa& cLsa)
+  {
+    os<<"Cor Lsa: "<<endl;
+    os<<"  Origination Router: "<<cLsa.getOrigRouter()<<endl;
+    os<<"  Ls Type: "<<(unsigned short)cLsa.getLsType()<<endl;
+    os<<"  Ls Seq No: "<<(unsigned int)cLsa.getLsSeqNo()<<endl;
+    os<<"  Ls Lifetime: "<<(unsigned int)cLsa.getLifeTime()<<endl;
+    os<<"    Hyperbolic Radius: "<<cLsa.getCorRadius()<<endl;
+    os<<"    Hyperbolic Theta: "<<cLsa.getCorTheta()<<endl;
+    return os;
+  }
+
+
+  AdjLsa::AdjLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
+                 uint32_t nl ,Adl padl)
+  {
+    origRouter=origR;
+    lsType=lst;
+    lsSeqNo=lsn;
+    lifeTime=lt;
+    noLink=nl;
+    std::list<Adjacent> al=padl.getAdjList();
+    for( std::list<Adjacent>::iterator it=al.begin(); it != al.end(); it++)
     {
-        os<<"Cor Lsa: "<<endl;
-        os<<"  Origination Router: "<<cLsa.getOrigRouter()<<endl;
-        os<<"  Ls Type: "<<(unsigned short)cLsa.getLsType()<<endl;
-        os<<"  Ls Seq No: "<<(unsigned int)cLsa.getLsSeqNo()<<endl;
-        os<<"  Ls Lifetime: "<<(unsigned int)cLsa.getLifeTime()<<endl;
-        os<<"    Hyperbolic Radius: "<<cLsa.getCorRadius()<<endl;
-        os<<"    Hyperbolic Theta: "<<cLsa.getCorTheta()<<endl;
-        return os;
+      if((*it).getStatus()==1)
+      {
+        addAdjacentToLsa((*it));
+      }
     }
+  }
+
+  string
+  AdjLsa::getAdjLsaKey()
+  {
+    string key;
+    key=origRouter + "/" + boost::lexical_cast<std::string>(2);
+    return key;
+  }
+
+  bool
+  AdjLsa::isLsaContentEqual(AdjLsa& alsa)
+  {
+    return adl.isAdlEqual(alsa.getAdl());
+  }
 
 
-    AdjLsa::AdjLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
-                   uint32_t nl ,Adl padl)
+  string
+  AdjLsa::getAdjLsaData()
+  {
+    string adjLsaData;
+    adjLsaData=origRouter + "|" + boost::lexical_cast<std::string>(2) + "|"
+               + boost::lexical_cast<std::string>(lsSeqNo) + "|"
+               + boost::lexical_cast<std::string>(lifeTime);
+    adjLsaData+="|";
+    adjLsaData+=boost::lexical_cast<std::string>(adl.getAdlSize());
+    std::list<Adjacent> al=adl.getAdjList();
+    for( std::list<Adjacent>::iterator it=al.begin(); it != al.end(); it++)
     {
-        origRouter=origR;
-        lsType=lst;
-        lsSeqNo=lsn;
-        lifeTime=lt;
-        noLink=nl;
-        std::list<Adjacent> al=padl.getAdjList();
-        for( std::list<Adjacent>::iterator it=al.begin(); it != al.end(); it++)
-        {
-            if((*it).getStatus()==1)
-            {
-                addAdjacentToLsa((*it));
-            }
-        }
+      adjLsaData+="|";
+      adjLsaData+=(*it).getAdjacentName();
+      adjLsaData+="|";
+      adjLsaData+=boost::lexical_cast<std::string>((*it).getConnectingFace());
+      adjLsaData+="|";
+      adjLsaData+=boost::lexical_cast<std::string>((*it).getLinkCost());
     }
+    return adjLsaData+"|";
+  }
 
-    string
-    AdjLsa::getAdjLsaKey()
+  bool
+  AdjLsa::initAdjLsaFromContent(string content)
+  {
+    uint32_t numLink=0;
+    nlsrTokenizer nt(content, "|");
+    origRouter=nt.getNextToken();
+    if(origRouter.empty())
     {
-        string key;
-        key=origRouter + "/" + boost::lexical_cast<std::string>(2);
-        return key;
+      return false;
     }
-
-    bool
-    AdjLsa::isLsaContentEqual(AdjLsa& alsa)
+    try
     {
-        return adl.isAdlEqual(alsa.getAdl());
+      lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
+      lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
+      lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
+      numLink=boost::lexical_cast<uint32_t>(nt.getNextToken());
     }
-
-
-    string
-    AdjLsa::getAdjLsaData()
+    catch(std::exception &e)
     {
-        string adjLsaData;
-        adjLsaData=origRouter + "|" + boost::lexical_cast<std::string>(2) + "|"
-                   + boost::lexical_cast<std::string>(lsSeqNo) + "|"
-                   + boost::lexical_cast<std::string>(lifeTime);
-        adjLsaData+="|";
-        adjLsaData+=boost::lexical_cast<std::string>(adl.getAdlSize());
-        std::list<Adjacent> al=adl.getAdjList();
-        for( std::list<Adjacent>::iterator it=al.begin(); it != al.end(); it++)
-        {
-            adjLsaData+="|";
-            adjLsaData+=(*it).getAdjacentName();
-            adjLsaData+="|";
-            adjLsaData+=boost::lexical_cast<std::string>((*it).getConnectingFace());
-            adjLsaData+="|";
-            adjLsaData+=boost::lexical_cast<std::string>((*it).getLinkCost());
-        }
-        return adjLsaData+"|";
+      return false;
     }
-
-    bool
-    AdjLsa::initAdjLsaFromContent(string content)
+    for(int i=0; i< numLink; i++)
     {
-        uint32_t numLink=0;
-        nlsrTokenizer nt(content, "|");
-        origRouter=nt.getNextToken();
-        if(origRouter.empty())
-        {
-            return false;
-        }
-        try
-        {
-            lsType=boost::lexical_cast<uint8_t>(nt.getNextToken());
-            lsSeqNo=boost::lexical_cast<uint32_t>(nt.getNextToken());
-            lifeTime=boost::lexical_cast<uint32_t>(nt.getNextToken());
-            numLink=boost::lexical_cast<uint32_t>(nt.getNextToken());
-        }
-        catch(std::exception &e)
-        {
-            return false;
-        }
-        for(int i=0; i< numLink; i++)
-        {
-            try
-            {
-                string adjName=nt.getNextToken();
-                int connectingFace=boost::lexical_cast<int>(nt.getNextToken());
-                double linkCost=boost::lexical_cast<double>(nt.getNextToken());
-                Adjacent adjacent(adjName, connectingFace, linkCost, 0, 0);
-                addAdjacentToLsa(adjacent);
-            }
-            catch( std::exception &e )
-            {
-                return false;
-            }
-        }
-        return true;
+      try
+      {
+        string adjName=nt.getNextToken();
+        int connectingFace=boost::lexical_cast<int>(nt.getNextToken());
+        double linkCost=boost::lexical_cast<double>(nt.getNextToken());
+        Adjacent adjacent(adjName, connectingFace, linkCost, 0, 0);
+        addAdjacentToLsa(adjacent);
+      }
+      catch( std::exception &e )
+      {
+        return false;
+      }
     }
+    return true;
+  }
 
 
-    void
-    AdjLsa::addNptEntriesForAdjLsa(Nlsr& pnlsr)
+  void
+  AdjLsa::addNptEntriesForAdjLsa(Nlsr& pnlsr)
+  {
+    if ( getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
     {
-        if ( getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
-        {
-            pnlsr.getNpt().addNpte(getOrigRouter(), getOrigRouter(),pnlsr);
-        }
+      pnlsr.getNpt().addNpteByDestName(getOrigRouter(), getOrigRouter(),pnlsr);
     }
+  }
 
 
-    void
-    AdjLsa::removeNptEntriesForAdjLsa(Nlsr& pnlsr)
+  void
+  AdjLsa::removeNptEntriesForAdjLsa(Nlsr& pnlsr)
+  {
+    if ( getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
     {
-        if ( getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
-        {
-            pnlsr.getNpt().removeNpte(getOrigRouter(), getOrigRouter(),pnlsr);
-        }
+      pnlsr.getNpt().removeNpte(getOrigRouter(), getOrigRouter(),pnlsr);
     }
+  }
 
 
 
-    std::ostream&
-    operator<<(std::ostream& os, AdjLsa& aLsa)
+  std::ostream&
+  operator<<(std::ostream& os, AdjLsa& aLsa)
+  {
+    os<<"Adj Lsa: "<<endl;
+    os<<"  Origination Router: "<<aLsa.getOrigRouter()<<endl;
+    os<<"  Ls Type: "<<(unsigned short)aLsa.getLsType()<<endl;
+    os<<"  Ls Seq No: "<<(unsigned int)aLsa.getLsSeqNo()<<endl;
+    os<<"  Ls Lifetime: "<<(unsigned int)aLsa.getLifeTime()<<endl;
+    os<<"  No Link: "<<(unsigned int)aLsa.getNoLink()<<endl;
+    os<<"  Adjacents: "<<endl;
+    int i=1;
+    std::list<Adjacent> al=aLsa.getAdl().getAdjList();
+    for( std::list<Adjacent>::iterator it=al.begin(); it != al.end(); it++)
     {
-        os<<"Adj Lsa: "<<endl;
-        os<<"  Origination Router: "<<aLsa.getOrigRouter()<<endl;
-        os<<"  Ls Type: "<<(unsigned short)aLsa.getLsType()<<endl;
-        os<<"  Ls Seq No: "<<(unsigned int)aLsa.getLsSeqNo()<<endl;
-        os<<"  Ls Lifetime: "<<(unsigned int)aLsa.getLifeTime()<<endl;
-        os<<"  No Link: "<<(unsigned int)aLsa.getNoLink()<<endl;
-        os<<"  Adjacents: "<<endl;
-        int i=1;
-        std::list<Adjacent> al=aLsa.getAdl().getAdjList();
-        for( std::list<Adjacent>::iterator it=al.begin(); it != al.end(); it++)
-        {
-            os<<"    Adjacent "<<i<<": "<<endl;
-            os<<"      Adjacent Name: "<<(*it).getAdjacentName()<<endl;
-            os<<"      Connecting Face: "<<(*it).getConnectingFace()<<endl;
-            os<<"      Link Cost: "<<(*it).getLinkCost()<<endl;
-        }
-        return os;
+      os<<"    Adjacent "<<i<<": "<<endl;
+      os<<"      Adjacent Name: "<<(*it).getAdjacentName()<<endl;
+      os<<"      Connecting Face: "<<(*it).getConnectingFace()<<endl;
+      os<<"      Link Cost: "<<(*it).getLinkCost()<<endl;
     }
+    return os;
+  }
 
 }//namespace nlsr

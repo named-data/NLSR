@@ -4,93 +4,93 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class Adjacent
+  class Adjacent
+  {
+
+  public:
+    Adjacent()
+      :adjacentName()
+      ,connectingFace(0)
+      ,linkCost(10.0)
+      ,status(0)
+      ,interestTimedOutNo(0)
     {
+    }
 
-    public:
-        Adjacent()
-            :adjacentName()
-            ,connectingFace(0)
-            ,linkCost(10.0)
-            ,status(0)
-            ,interestTimedOutNo(0)
-        {
-        }
+    Adjacent(const string& an)
+      :connectingFace(0)
+      ,linkCost(0.0)
+      ,status(0)
+      ,interestTimedOutNo(0)
+    {
+      adjacentName=an;
+    }
 
-        Adjacent(const string& an)
-            :connectingFace(0)
-            ,linkCost(0.0)
-            ,status(0)
-            ,interestTimedOutNo(0)
-        {
-            adjacentName=an;
-        }
+    Adjacent(const string& an, int cf, double lc, int s, int iton);
 
-        Adjacent(const string& an, int cf, double lc, int s, int iton);
+    string getAdjacentName()
+    {
+      return adjacentName;
+    }
 
-        string getAdjacentName()
-        {
-            return adjacentName;
-        }
+    void setAdjacentName(const string& an)
+    {
+      adjacentName=an;
+    }
 
-        void setAdjacentName(const string& an)
-        {
-            adjacentName=an;
-        }
+    int getConnectingFace()
+    {
+      return connectingFace;
+    }
 
-        int getConnectingFace()
-        {
-            return connectingFace;
-        }
+    void setConnectingFace(int cf)
+    {
+      connectingFace=cf;
+    }
 
-        void setConnectingFace(int cf)
-        {
-            connectingFace=cf;
-        }
+    double getLinkCost()
+    {
+      return linkCost;
+    }
 
-        double getLinkCost()
-        {
-            return linkCost;
-        }
+    void setLinkCost(double lc)
+    {
+      linkCost=lc;
+    }
 
-        void setLinkCost(double lc)
-        {
-            linkCost=lc;
-        }
+    int getStatus()
+    {
+      return status;
+    }
 
-        int getStatus()
-        {
-            return status;
-        }
+    void setStatus(int s)
+    {
+      status=s;
+    }
 
-        void setStatus(int s)
-        {
-            status=s;
-        }
+    int getInterestTimedOutNo()
+    {
+      return interestTimedOutNo;
+    }
 
-        int getInterestTimedOutNo()
-        {
-            return interestTimedOutNo;
-        }
+    void setInterestTimedOutNo(int iton)
+    {
+      interestTimedOutNo=iton;
+    }
 
-        void setInterestTimedOutNo(int iton)
-        {
-            interestTimedOutNo=iton;
-        }
+    bool isAdjacentEqual(Adjacent& adj);
+  private:
+    string adjacentName;
+    int connectingFace;
+    double linkCost;
+    int status;
+    int interestTimedOutNo;
+  };
 
-        bool isAdjacentEqual(Adjacent& adj);
-    private:
-        string adjacentName;
-        int connectingFace;
-        double linkCost;
-        int status;
-        int interestTimedOutNo;
-    };
-
-    std::ostream&
-    operator << (std::ostream &os, Adjacent &adj);
+  std::ostream&
+  operator << (std::ostream &os, Adjacent &adj);
 
 } // namespace nlsr
 

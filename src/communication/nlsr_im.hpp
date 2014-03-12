@@ -8,44 +8,44 @@
 namespace nlsr
 {
 
-    using namespace ndn;
-    using namespace std;
+  using namespace ndn;
+  using namespace std;
 
-    class Nlsr;
+  class Nlsr;
 
-    class interestManager
+  class interestManager
+  {
+  public:
+    interestManager()
     {
-    public:
-        interestManager()
-        {
-        }
-        void processInterest(Nlsr& pnlsr, const ndn::Name &name,
+    }
+    void processInterest(Nlsr& pnlsr, const ndn::Name &name,
+                         const ndn::Interest &interest);
+    void processInterestInfo(Nlsr& pnlsr, string& neighbor,
                              const ndn::Interest &interest);
-        void processInterestInfo(Nlsr& pnlsr, string& neighbor,
-                                 const ndn::Interest &interest);
-        void processInterestLsa(Nlsr& pnlsr,const ndn::Interest &interest);
-        void processInterestForNameLsa(Nlsr& pnlsr, const ndn::Interest &interest,
-                                       string lsaKey, uint32_t interestedlsSeqNo);
-        void processInterestForAdjLsa(Nlsr& pnlsr, const ndn::Interest &interest,
-                                      string lsaKey, uint32_t interestedlsSeqNo);
-        void processInterestForCorLsa(Nlsr& pnlsr, const ndn::Interest &interest,
-                                      string lsaKey, uint32_t interestedlsSeqNo);
+    void processInterestLsa(Nlsr& pnlsr,const ndn::Interest &interest);
+    void processInterestForNameLsa(Nlsr& pnlsr, const ndn::Interest &interest,
+                                   string lsaKey, uint32_t interestedlsSeqNo);
+    void processInterestForAdjLsa(Nlsr& pnlsr, const ndn::Interest &interest,
+                                  string lsaKey, uint32_t interestedlsSeqNo);
+    void processInterestForCorLsa(Nlsr& pnlsr, const ndn::Interest &interest,
+                                  string lsaKey, uint32_t interestedlsSeqNo);
 
-        void processInterestKeys(Nlsr& pnlsr,const ndn::Interest &interest);
+    void processInterestKeys(Nlsr& pnlsr,const ndn::Interest &interest);
 
-        void processInterestTimedOut(Nlsr& pnlsr, const ndn::Interest &interest);
-        void processInterestTimedOutInfo(Nlsr& pnlsr, string& neighbor,
-                                         const ndn::Interest &interest);
-        void processInterestTimedOutLsa(Nlsr& pnlsr,const ndn::Interest &interest);
-        void expressInterest(Nlsr& pnlsr,const string& interestNamePrefix, int scope,
-                             int seconds);
-        void sendScheduledInfoInterest(Nlsr& pnlsr, int seconds);
-        void scheduleInfoInterest(Nlsr& pnlsr, int seconds);
+    void processInterestTimedOut(Nlsr& pnlsr, const ndn::Interest &interest);
+    void processInterestTimedOutInfo(Nlsr& pnlsr, string& neighbor,
+                                     const ndn::Interest &interest);
+    void processInterestTimedOutLsa(Nlsr& pnlsr,const ndn::Interest &interest);
+    void expressInterest(Nlsr& pnlsr,const string& interestNamePrefix, int scope,
+                         int seconds);
+    void sendScheduledInfoInterest(Nlsr& pnlsr, int seconds);
+    void scheduleInfoInterest(Nlsr& pnlsr, int seconds);
 
-    private:
+  private:
 
 
-    };
+  };
 
 }//namespace nlsr
 

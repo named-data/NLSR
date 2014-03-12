@@ -11,43 +11,44 @@
 namespace nlsr
 {
 
-    using namespace std;
+  using namespace std;
 
-    class Nhl
+  class Nhl
+  {
+  public:
+    Nhl()
+      : nexthopList()
     {
-    public:
-        Nhl()
-        {
-        }
+    }
 
-        ~Nhl()
-        {
-        }
-        void addNextHop(NextHop &nh);
-        void removeNextHop(NextHop &nh);
-        void sortNhl();
-        int getNhlSize()
-        {
-            return nexthopList.size();
-        }
-        void resetNhl()
-        {
-            if (nexthopList.size() > 0 )
-            {
-                nexthopList.clear();
-            }
-        }
-        std::list< NextHop >& getNextHopList()
-        {
-            return nexthopList;
-        }
+    ~Nhl()
+    {
+    }
+    void addNextHop(NextHop &nh);
+    void removeNextHop(NextHop &nh);
+    void sortNhl();
+    int getNhlSize()
+    {
+      return nexthopList.size();
+    }
+    void resetNhl()
+    {
+      if (nexthopList.size() > 0 )
+      {
+        nexthopList.clear();
+      }
+    }
+    std::list< NextHop >& getNextHopList()
+    {
+      return nexthopList;
+    }
 
-    private:
-        std::list< NextHop > nexthopList;
-    };
+  private:
+    std::list< NextHop > nexthopList;
+  };
 
-    ostream&
-    operator<<(ostream& os, Nhl& nhl);
+  ostream&
+  operator<<(ostream& os, Nhl& nhl);
 
 }//namespace nlsr
 
