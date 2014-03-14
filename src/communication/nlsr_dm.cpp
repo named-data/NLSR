@@ -191,21 +191,26 @@ namespace nlsr
   void
   DataManager::processContentKeys(Nlsr& pnlsr, const ndn::Data& data)
   {
-    cout<<" processContentKeys called "<<endl;
+    std::cout<<" processContentKeys called "<<endl;
     ndn::shared_ptr<ndn::IdentityCertificate> cert=
       ndn::make_shared<ndn::IdentityCertificate>();
     cert->wireDecode(data.getContent().blockFromValue());
-    cout<<*(cert)<<endl;
+    std::cout<<*(cert)<<endl;
     std::string dataName=data.getName().toUri();
     nlsrTokenizer nt(dataName,"/");
     std::string certName=nt.getTokenString(0,nt.getTokenNumber()-3);
     uint32_t seqNum=boost::lexical_cast<uint32_t>(nt.getToken(
                       nt.getTokenNumber()-2));
     cout<<"Cert Name: "<<certName<<" Seq Num: "<<seqNum<<std::endl;
-    if ( pnlsr.getKeyManager().verify(*(cert)))
+    if ( pnlsr.getKeyManager().verify(pnlsr, *(cert)))
     {
       pnlsr.getKeyManager().addCertificate(cert, seqNum, true);
-      //pnlsr.getKeyManager().printCertStore();
     }
+    else
+    {
+      pnlsr.getKeyManager().addCertificate(cert, seqNum, false);
+    }
+    
+    pnlsr.getKeyManager().printCertStore();
   }
 }//namespace nlsr

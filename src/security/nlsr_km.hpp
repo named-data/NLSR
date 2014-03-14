@@ -14,6 +14,7 @@
 
 namespace nlsr
 {
+  class Nlsr;
   enum nlsrKeyType
   {
     KEY_TYPE_ROOT,
@@ -173,18 +174,14 @@ namespace nlsr
         std::string routerNameFromPacketName=getRouterName(packetName);
         std::string routerNameFromCertName=getRouterName(signingCertName);
         return ( (routerNameFromPacketName== routerNameFromCertName) &&
-                 verifySignature(packet, signee.first->getPublicKeyInfo()));
+                 verifySignature(packet, signee.first->getPublicKeyInfo()) &&
+                 certStore.getCertificateIsVerified(signingCertName));
       }
       return false;
     }
 
     bool
-    verifyCertPacket(ndn::IdentityCertificate packet)
-    {
-      std::cout<<"KeyManager::verifyCertPacket Called"<<std::endl;
-      return true;
-    }
-
+    verifyCertPacket(Nlsr& pnlsr, ndn::IdentityCertificate& packet);
 
   public:
     template<typename T>
@@ -192,18 +189,16 @@ namespace nlsr
     verify(T& packet )
     {
       std::cout<<"KeyManager::verify Called"<<std::endl;
-      std::string packetName=packet.getName().toUri();
-      nlsrTokenizer nt(packetName,"/");
-      std::string keyHandle("keys");
-      if ( nt.doesTokenExist(keyHandle) )
-      {
-        return verifyCertPacket(packet);
-      }
-      else
-      {
-        return verifyDataPacket(packet);
-      }
+      
+      return verifyDataPacket(packet);
+      
       return false;
+    }
+    
+    bool
+    verify(Nlsr& pnlsr, ndn::IdentityCertificate& packet)
+    {
+      return verifyCertPacket(pnlsr, packet);
     }
 
     ndn::Name getProcessCertName();
@@ -213,6 +208,7 @@ namespace nlsr
     ndn::Name getRootCertName();
 
     uint32_t getCertSeqNo();
+    std::pair<uint32_t, bool> getCertificateSeqNum(std::string certName);
     void setCerSeqNo(uint32_t csn);
     void initCertSeqFromFile(string certSeqFileDir);
     void writeCertSeqToFile();
@@ -231,6 +227,7 @@ namespace nlsr
     nlsrKeyType getKeyTypeFromName(const std::string keyName);
     std::string getRouterName(const std::string name);
     std::string getSiteName(const std::string name);
+    std::string getRootName(const std::string name);
 
   private:
     ndn::Name processIdentity;

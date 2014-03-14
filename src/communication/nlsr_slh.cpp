@@ -130,10 +130,10 @@ namespace nlsr
   void
   SyncLogicHandler::publishKeyUpdate(KeyManager& km)
   {
-    publishSyncUpdate(km.getRootCertName().toUri(), 10);
-    publishSyncUpdate(km.getSiteCertName().toUri(), 10);
-    publishSyncUpdate(km.getOperatorCertName().toUri(), 10);
-    publishSyncUpdate(km.getRouterCertName().toUri(), km.getCertSeqNo());
+    //publishSyncUpdate(km.getRootCertName().toUri(), 10);
+    //publishSyncUpdate(km.getSiteCertName().toUri(), 10);
+    //publishSyncUpdate(km.getOperatorCertName().toUri(), 10);
+    //publishSyncUpdate(km.getRouterCertName().toUri(), km.getCertSeqNo());
     publishSyncUpdate(km.getProcessCertName().toUri(),km.getCertSeqNo());
   }
 

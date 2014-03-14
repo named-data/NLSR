@@ -48,7 +48,7 @@ namespace nlsr
     fib.setFibEntryRefreshTime(2*confParam.getLsaRefreshTime());
     if( ! km.initKeyManager(confParam) )
     {
-      std::cerr<<"Can not initiate certificate"<<endl;
+      std::cerr<<"Can not initiate/load certificate"<<endl;
     }
     sm.setSeqFileName(confParam.getSeqFileDir());
     sm.initiateSeqNoFromFile();

@@ -43,12 +43,6 @@ namespace nlsr
     {
       processInterestKeys(pnlsr,interest);
     }
-    //Data data(ndn::Name(interest->getName()).append("testApp").appendVersion());
-    //data.setFreshnessPeriod(1000); // 10 sec
-    //data.setContent((const uint8_t*)"HELLO KITTY", sizeof("HELLO KITTY"));
-    //pnlsr.getKeyChain().sign(data);
-    //cout << ">> D: " << data << endl;
-    //pnlsr.getNlsrFace().put(data);
   }
 
   void
@@ -190,31 +184,54 @@ namespace nlsr
     string intName=interest.getName().toUri();
     cout<<"Interest Name for Key: "<<intName<<std::endl;
     nlsrTokenizer nt(intName,"/");
-    std::string certName=nt.getTokenString(0,nt.getTokenNumber()-2);
-    uint32_t seqNum=boost::lexical_cast<uint32_t>(nt.getToken(
-                      nt.getTokenNumber()-1));
-    cout<<"Cert Name: "<<certName<<" Seq Num: "<<seqNum<<std::endl;
-    std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> chkCert=
-      pnlsr.getKeyManager().getCertificateFromStore(certName,seqNum);
+    std::string chkString("ID-CERT");
+    std::string certName;
+    uint32_t seqNum;
+    ndn::Name dataName;
+    std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> chkCert;
+    if( nt.getTokenPosition(chkString) == nt.getTokenNumber()-1 )
+    {
+      certName=nt.getTokenString(0,nt.getTokenNumber()-1);
+      cout<<"Cert Name: "<<certName<<std::endl;
+      chkCert=pnlsr.getKeyManager().getCertificateFromStore(certName);
+    }
+    else
+    {
+      certName=nt.getTokenString(0,nt.getTokenNumber()-2);
+      seqNum=boost::lexical_cast<uint32_t>(nt.getToken(nt.getTokenNumber()-1));
+      cout<<"Cert Name: "<<certName<<" Seq Num: "<<seqNum<<std::endl;
+      chkCert=pnlsr.getKeyManager().getCertificateFromStore(certName,seqNum);
+    }
     if( chkCert.second )
     {
-      Data data(ndn::Name(interest.getName()).appendVersion());
+      if(nt.getTokenPosition(chkString) == nt.getTokenNumber()-1)
+      {
+        std::string dn;
+        dataName=ndn::Name(interest.getName()).appendVersion();
+        std::pair<uint32_t, bool> seqChk = 
+                           pnlsr.getKeyManager().getCertificateSeqNum(certName);
+        if( seqChk.second )
+        {
+          dn=dataName.toUri()+"/"+boost::lexical_cast<std::string>(seqChk.first);
+          dataName=ndn::Name(dn);
+        }
+        else
+        {
+          dn=dataName.toUri()+"/"+boost::lexical_cast<std::string>(10);
+          dataName=ndn::Name(dn);
+        }
+        
+      }
+      else
+      {
+        dataName=ndn::Name(interest.getName());
+      }
+      Data data(dataName.appendVersion());
       data.setFreshnessPeriod(1000); //10 sec
       data.setContent(chkCert.first->wireEncode());
       pnlsr.getKeyManager().signData(data);
       pnlsr.getNlsrFace()->put(data);
     }
-    //std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> chkCert=
-    /*
-    ndn::shared_ptr<ndn::IdentityCertificate> cert=pnlsr.getKeyManager().getCertificate();
-    Data data(ndn::Name(interest.getName()).appendVersion());
-    data.setFreshnessPeriod(1000); // 10 sec
-    data.setContent(cert->wireEncode());
-    pnlsr.getKeyManager().signData(data);
-    //std::ofstream outFile("data_sent");
-    //ndn::io::save(data,outFile,ndn::io::NO_ENCODING);
-    pnlsr.getNlsrFace()->put(data);
-    */
   }
 
 

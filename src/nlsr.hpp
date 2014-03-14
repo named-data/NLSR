@@ -20,7 +20,6 @@
 #include "communication/nlsr_slh.hpp"
 
 
-
 namespace nlsr
 {
 

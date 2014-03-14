@@ -1,4 +1,8 @@
+#include <ndn-cpp-dev/security/signature-sha256-with-rsa.hpp> 
+#include <ndn-cpp-dev/security/key-chain.hpp>
 #include "nlsr_cert_store.hpp"
+#include "nlsr_wle.hpp"
+#include "nlsr_km.hpp"
 
 namespace nlsr
 {
@@ -6,9 +10,13 @@ namespace nlsr
   nlsrCertificateStoreEntryCompare(NlsrCertificateStoreEntry& ncse1,
                                    NlsrCertificateStoreEntry& ncse2)
 
-  {
-    return ncse1.getCert()->getName().toUri() ==
-           ncse2.getCert()->getName().toUri() ;
+  {    
+    int sizeDiff=ncse1.getCert()->getName().size()-
+                                              ncse2.getCert()->getName().size();
+    return (ncse2.getCert()->getName().isPrefixOf(ncse1.getCert()->getName()) &&
+                                               (sizeDiff <= 1 && sizeDiff>= 0));
+  
+    
   }
 
   static bool
@@ -17,8 +25,59 @@ namespace nlsr
 
   {
     ndn::Name ccn(compCertName);
-    return ( ncse1.getCert()->getName().toUri() == compCertName ||
-             ccn.isPrefixOf(ncse1.getCert()->getName()) );
+    int sizeDiff= ncse1.getCert()->getName().size() -ccn.size();
+    return ( ccn.isPrefixOf(ncse1.getCert()->getName()) &&
+                                               (sizeDiff <= 1 && sizeDiff>= 0));
+  }
+  
+  void 
+  NlsrCertificateStore::updateWaitingList(std::string respCertName)
+  {
+    ndn::Name tmpName(respCertName);
+    respCertName=tmpName.getPrefix(-1).toUri();
+    std::pair<WaitingListEntry, bool> chkWle=
+                              waitingList.getWaitingListEntry(respCertName);
+    if( chkWle.second )
+    {
+      std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> sc=
+                                          getCertificateFromStore(respCertName);
+      std::list<std::string> waitees=(chkWle.first).getWaitingCerts();
+      for(std::list<std::string>::iterator it = waitees.begin();
+                                                       it != waitees.end();++it)
+      {
+        KeyManager km;
+        std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> wc=
+                                                 getCertificateFromStore(*(it));
+        if( wc.second && sc.second )
+        {
+          if(km.verifySignature(*(wc.first),sc.first->getPublicKeyInfo()))
+          {
+            //1. Update Certificate Store
+            setCertificateIsVerified(*(it),true);
+            //2. Call updateWaitingList for waitee ( *(it) )
+            updateWaitingList(*(it));
+          }
+        }
+      }
+    }
+    
+    //remove that entry from waiting list
+    waitingList.removeFromWaitingList(respCertName);
+  }
+  
+  void
+  NlsrCertificateStore::updateWaitingList(NlsrCertificateStoreEntry& ncse)
+  {
+    if( ncse.getIsSignerVerified())
+    {
+      updateWaitingList(ncse.getCert()->getName().toUri());
+    }
+    else
+    {
+      ndn::SignatureSha256WithRsa signature(ncse.getCert()->getSignature());
+      waitingList.addtoWaitingList(signature.getKeyLocator().getName().toUri(), 
+                                             ncse.getCert()->getName().toUri());
+    }
   }
 
   bool
@@ -30,14 +89,16 @@ namespace nlsr
     if(it == certTable.end())
     {
       certTable.push_back(ncse);
+      updateWaitingList(ncse);
       return true;
     }
-    if( it !=  certTable.end() )
+    else if( it !=  certTable.end() )
     {
       if ( (*it).getCertSeqNum() < ncse.getCertSeqNum() )
       {
         certTable.erase(it);
         certTable.push_back(ncse);
+        updateWaitingList(ncse);
         return true;
       }
     }
@@ -52,6 +113,48 @@ namespace nlsr
     return addCertificate(ncse);
   }
 
+  std::pair<uint32_t, bool>
+  NlsrCertificateStore::getCertificateSeqNum(std::string certName)
+  {
+    std::list<NlsrCertificateStoreEntry>::iterator it =
+      std::find_if( certTable.begin(), certTable.end(),
+                    bind(&nlsrCertificateStoreEntryCompareByName, _1, certName));
+    if(it == certTable.end())
+    {
+      return std::make_pair(0,false);
+    }
+    return std::make_pair((*it).getCertSeqNum(),true);
+  }
+  
+ 
+  
+  void 
+  NlsrCertificateStore::setCertificateIsVerified(std::string certName, 
+                                                                bool isVerified)
+  {
+    std::list<NlsrCertificateStoreEntry>::iterator it =
+      std::find_if( certTable.begin(), certTable.end(),
+                    bind(&nlsrCertificateStoreEntryCompareByName, _1, certName));
+    if(it != certTable.end())
+    {
+      it->setIsSignerVerified(true);
+    }
+  }
+  
+  bool
+  NlsrCertificateStore::getCertificateIsVerified( std::string certName )
+  {
+    std::list<NlsrCertificateStoreEntry>::iterator it =
+      std::find_if( certTable.begin(), certTable.end(),
+                    bind(&nlsrCertificateStoreEntryCompareByName, _1, certName));
+    if(it != certTable.end())
+    {
+      return it->getIsSignerVerified();
+    }
+    
+    return false;
+  }
+
   std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool>
   NlsrCertificateStore::getCertificateFromStore(const std::string certName)
   {
@@ -61,7 +164,7 @@ namespace nlsr
     if(it == certTable.end())
     {
       ndn::shared_ptr<ndn::IdentityCertificate> cert=
-        ndn::make_shared<ndn::IdentityCertificate>();
+                                    ndn::make_shared<ndn::IdentityCertificate>();
       return std::make_pair(cert,false);
     }
     return std::make_pair((*it).getCert(),true);
@@ -126,5 +229,6 @@ namespace nlsr
     {
       std::cout<<(*it)<<std::endl;
     }
+    std::cout<<waitingList<<std::endl;
   }
 }
