@@ -105,7 +105,7 @@ namespace
                         }
                         return identityName;
                     }
-                    ndn::KeyChain::addCertificate(*(certificate));
+                    ndn::KeyChain::addCertificateAsIdentityDefault(*(certificate));
                 }
                 
                 certName=certificate->getName();
@@ -130,7 +130,7 @@ namespace
             try
             {
                 ndn::KeyChain::deleteCertificate(cert->getName());
-                ndn::KeyChain::addCertificate(*(cert));
+                ndn::KeyChain::addCertificateAsIdentityDefault(*(cert));
                 return true;
             }
             catch(InfoError& e)
