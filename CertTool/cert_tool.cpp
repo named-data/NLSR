@@ -39,7 +39,12 @@ namespace
                         ndn::make_shared<ndn::IdentityCertificate>() , false);
             }
         }
-        
+
+        void
+        deleteIdentity(const ndn::Name identityName)
+        {
+           ndn::KeyChain::deleteIdentity(identityName); 
+        }
 
         
         /* Return Certificate Name */
@@ -105,7 +110,7 @@ namespace
                         }
                         return identityName;
                     }
-                    ndn::KeyChain::addCertificateAsIdentityDefault(*(certificate));
+                    ndn::KeyChain::addCertificate(*(certificate));
                 }
                 
                 certName=certificate->getName();
@@ -130,7 +135,7 @@ namespace
             try
             {
                 ndn::KeyChain::deleteCertificate(cert->getName());
-                ndn::KeyChain::addCertificateAsIdentityDefault(*(cert));
+                ndn::KeyChain::addCertificate(*(cert));
                 return true;
             }
             catch(InfoError& e)
@@ -215,6 +220,25 @@ loadCertificate(std::string inputFile)
     }
 }
 
+void 
+deleteIdentity(std::string identityName)
+{
+    ndn::Name idName(identityName);
+    try
+    {
+        CertTool ct;
+        ct.deleteIdentity(idName);
+        
+        std::cout<<"Identity Deleted"<<std::endl;
+        
+    }
+    catch(std::exception&  e)
+    {
+        std::cout << e.what() <<std::endl;
+    }
+    
+}
+
 
 static int
 usage(const std::string& program)
@@ -235,6 +259,7 @@ int main(int argc, char **argv)
     bool isCreate=false;
     bool isSign=false;
     bool isLoad=false;
+    bool isDelete=false;
     int operationCount=0;
     std::string programName(argv[0]);
     std::string inputFile;
@@ -242,7 +267,7 @@ int main(int argc, char **argv)
     std::string identityName;
     std::string signeeIdentityName;
     int opt;
-    while ((opt = getopt(argc, argv, "cslf:I:i:f:o:h")) != -1)
+    while ((opt = getopt(argc, argv, "dcslf:I:i:f:o:h")) != -1)
     {
         switch (opt)
         {
@@ -256,6 +281,10 @@ int main(int argc, char **argv)
                 break;
             case 'l':
                 isLoad=true;
+                operationCount++;
+                break;
+            case 'd':
+                isDelete=true;
                 operationCount++;
                 break;
             case 'f':
@@ -313,6 +342,15 @@ int main(int argc, char **argv)
         
         loadCertificate(inputFile);
         
+    }
+    
+    if( isDelete )
+    {
+        if ( identityName.empty() )
+        {
+            usage(programName);
+        }
+        deleteIdentity(identityName);
     }
     
     return EXIT_SUCCESS;
