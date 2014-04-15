@@ -34,15 +34,15 @@ namespace nlsr
   private:
     void calculateLsRoutingTable(Nlsr& pnlsr);
     void calculateHypRoutingTable(Nlsr& pnlsr);
-    void calculateHypDryRoutingTable(Nlsr&pnlsr);
+    void calculateHypDryRoutingTable(Nlsr& pnlsr);
 
     void clearRoutingTable();
     void clearDryRoutingTable();
 
     const int NO_NEXT_HOP;
 
-    std::list< RoutingTableEntry > rTable;
-    std::list< RoutingTableEntry > dryTable;
+    std::list< RoutingTableEntry > m_rTable;
+    std::list< RoutingTableEntry > m_dryTable;
   };
 
 }//namespace nlsr

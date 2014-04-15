@@ -42,7 +42,7 @@ namespace Sync {
 class SyncInterestTable
 {
 public:
-  SyncInterestTable (boost::asio::io_service& io, ndn::time::Duration lifetime);
+  SyncInterestTable (boost::asio::io_service& io, ndn::time::system_clock::Duration lifetime);
   ~SyncInterestTable ();
 
   /**
@@ -81,7 +81,7 @@ private:
   expireInterests ();
 
 private:
-  ndn::time::Duration m_entryLifetime;
+  ndn::time::system_clock::Duration m_entryLifetime;
   InterestContainer m_table;
 
   ndn::Scheduler m_scheduler;

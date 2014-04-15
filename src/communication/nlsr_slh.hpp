@@ -20,7 +20,7 @@ using namespace ndn;
 using namespace Sync;
 using namespace std;
 
-class interestManager;
+class InterestManager;
 class ConfParameter;
 
 namespace nlsr
@@ -29,23 +29,23 @@ namespace nlsr
   {
   public:
     SyncLogicHandler(ndn::shared_ptr<boost::asio::io_service> ioService)
-      : validator(new ndn::ValidatorNull())
-      , syncFace(new ndn::Face(ioService))
+      : m_validator(new ndn::ValidatorNull())
+      , m_syncFace(new ndn::Face(ioService))
     {}
 
 
     void createSyncSocket(Nlsr& pnlsr);
-    void nsyncUpdateCallBack(const vector<MissingDataInfo> &v,
+    void nsyncUpdateCallBack(const vector<MissingDataInfo>& v,
                              SyncSocket *socket, Nlsr& pnlsr );
-    void nsyncRemoveCallBack(const string& prefix, Nlsr &pnlsr);
+    void nsyncRemoveCallBack(const string& prefix, Nlsr& pnlsr);
     void removeRouterFromSyncing(string& routerPrefix);
     void publishRoutingUpdate(SequencingManager& sm, string updatePrefix);
     void publishKeyUpdate(KeyManager& km);
     void publishIdentityUpdate(string identityName);
     void setSyncPrefix(string sp)
     {
-      syncPrefix.clear();
-      syncPrefix.set(sp);
+      m_syncPrefix.clear();
+      m_syncPrefix.set(sp);
     }
   private:
     void processUpdateFromSync(std::string updateName, uint64_t seqNo,
@@ -56,10 +56,10 @@ namespace nlsr
                                    Nlsr& pnlsr);
     void publishSyncUpdate(string updatePrefix, uint64_t seqNo);
   private:
-    ndn::shared_ptr<ndn::ValidatorNull> validator;
-    ndn::shared_ptr<ndn::Face> syncFace;
-    ndn::shared_ptr<SyncSocket> syncSocket;
-    ndn::Name syncPrefix;
+    ndn::shared_ptr<ndn::ValidatorNull> m_validator;
+    ndn::shared_ptr<ndn::Face> m_syncFace;
+    ndn::shared_ptr<SyncSocket> m_syncSocket;
+    ndn::Name m_syncPrefix;
   };
 }
 #endif

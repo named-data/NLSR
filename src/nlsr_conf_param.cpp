@@ -1,5 +1,7 @@
 #include<iostream>
 #include "nlsr_conf_param.hpp"
+#include "utility/nlsr_logger.hpp"
+#define THIS_FILE "nlsr_conf_param.cpp"
 
 namespace nlsr
 {
@@ -7,7 +9,7 @@ namespace nlsr
   using namespace std;
 
   ostream&
-  operator << (ostream &os, ConfParameter& cfp)
+  operator << (ostream& os, ConfParameter& cfp)
   {
     os  <<"Router Name: "<< cfp.getRouterName()<<endl;
     os  <<"Site Name: "<< cfp.getSiteName()<<endl;

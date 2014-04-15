@@ -8,6 +8,9 @@
 #include "nlsr_conf_param.hpp"
 #include "utility/nlsr_tokenizer.hpp"
 #include "nlsr_adjacent.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_conf_processor.cpp"
 
 
 namespace nlsr
@@ -19,9 +22,9 @@ namespace nlsr
   ConfFileProcessor::processConfFile(Nlsr& pnlsr)
   {
     int ret=0;
-    if ( !confFileName.empty())
+    if ( !m_confFileName.empty())
     {
-      std::ifstream inputFile(confFileName.c_str());
+      std::ifstream inputFile(m_confFileName.c_str());
       if ( inputFile.is_open())
       {
         for( string line; getline( inputFile, line ); )
@@ -41,7 +44,7 @@ namespace nlsr
       }
       else
       {
-        std::cerr <<"Configuration file: ("<<confFileName<<") does not exist :(";
+        std::cerr <<"Configuration file: ("<<m_confFileName<<") does not exist :(";
         std::cerr <<endl;
         ret=-1;
       }
@@ -527,7 +530,7 @@ namespace nlsr
     }
     else
     {
-      pnlsr.getNpl().insertIntoNpl(command);
+      pnlsr.getNpl().insert(command);
     }
     return 0;
   }

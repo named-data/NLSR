@@ -8,6 +8,9 @@
 #include "nlsr_rtc.hpp"
 #include "nlsr_rte.hpp"
 #include "nlsr_npt.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_rt.cpp"
 
 namespace nlsr
 {
@@ -19,7 +22,7 @@ namespace nlsr
   {
     //debugging purpose
     std::cout<<pnlsr.getConfParameter()<<std::endl;
-    pnlsr.getNpt().printNpt();
+    pnlsr.getNpt().print();
     pnlsr.getLsdb().printAdjLsdb();
     pnlsr.getLsdb().printCorLsdb();
     pnlsr.getLsdb().printNameLsdb();
@@ -51,11 +54,11 @@ namespace nlsr
             calculateHypDryRoutingTable(pnlsr);
           }
           //need to update NPT here
-          pnlsr.getNpt().updateNptWithNewRoute(pnlsr);
+          pnlsr.getNpt().updateWithNewRoute(pnlsr);
           //debugging purpose
           printRoutingTable();
-          pnlsr.getNpt().printNpt();
-          pnlsr.getFib().printFib();
+          pnlsr.getNpt().print();
+          pnlsr.getFib().print();
           //debugging purpose end
         }
         else
@@ -72,11 +75,11 @@ namespace nlsr
         clearDryRoutingTable(); // for dry run options
         // need to update NPT here
         std::cout<<"Calling Update NPT With new Route"<<std::endl;
-        pnlsr.getNpt().updateNptWithNewRoute(pnlsr);
+        pnlsr.getNpt().updateWithNewRoute(pnlsr);
         //debugging purpose
         printRoutingTable();
-        pnlsr.getNpt().printNpt();
-        pnlsr.getFib().printFib();
+        pnlsr.getNpt().print();
+        pnlsr.getFib().print();
         //debugging purpose end
       }
       pnlsr.setIsRouteCalculationScheduled(0); //clear scheduled flag
@@ -94,7 +97,7 @@ namespace nlsr
   {
     cout<<"RoutingTable::calculateLsRoutingTable Called"<<endl;
     Map vMap;
-    vMap.createMapFromAdjLsdb(pnlsr);
+    vMap.createFromAdjLsdb(pnlsr);
     int numOfRouter=vMap.getMapSize();
     LinkStateRoutingTableCalculator lsrtc(numOfRouter);
     lsrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
@@ -104,7 +107,7 @@ namespace nlsr
   RoutingTable::calculateHypRoutingTable(Nlsr& pnlsr)
   {
     Map vMap;
-    vMap.createMapFromAdjLsdb(pnlsr);
+    vMap.createFromAdjLsdb(pnlsr);
     int numOfRouter=vMap.getMapSize();
     HypRoutingTableCalculator hrtc(numOfRouter,0);
     hrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
@@ -114,7 +117,7 @@ namespace nlsr
   RoutingTable::calculateHypDryRoutingTable(Nlsr& pnlsr)
   {
     Map vMap;
-    vMap.createMapFromAdjLsdb(pnlsr);
+    vMap.createFromAdjLsdb(pnlsr);
     int numOfRouter=vMap.getMapSize();
     HypRoutingTableCalculator hrtc(numOfRouter,1);
     hrtc.calculatePath(vMap,boost::ref(*this),pnlsr);
@@ -146,7 +149,7 @@ namespace nlsr
     {
       RoutingTableEntry rte(destRouter);
       rte.getNhl().addNextHop(nh);
-      rTable.push_back(rte);
+      m_rTable.push_back(rte);
     }
     else
     {
@@ -157,10 +160,10 @@ namespace nlsr
   std::pair<RoutingTableEntry&, bool>
   RoutingTable::findRoutingTableEntry(string destRouter)
   {
-    std::list<RoutingTableEntry >::iterator it = std::find_if( rTable.begin(),
-        rTable.end(),
+    std::list<RoutingTableEntry >::iterator it = std::find_if( m_rTable.begin(),
+        m_rTable.end(),
         bind(&routingTableEntryCompare, _1, destRouter));
-    if ( it != rTable.end() )
+    if ( it != m_rTable.end() )
     {
       return std::make_pair(boost::ref((*it)),true);
     }
@@ -172,8 +175,8 @@ namespace nlsr
   RoutingTable::printRoutingTable()
   {
     cout<<"---------------Routing Table------------------"<<endl;
-    for(std::list<RoutingTableEntry>::iterator it=rTable.begin() ;
-        it != rTable.end(); ++it)
+    for(std::list<RoutingTableEntry>::iterator it=m_rTable.begin() ;
+        it != m_rTable.end(); ++it)
     {
       cout<<(*it)<<endl;
     }
@@ -184,14 +187,14 @@ namespace nlsr
   void
   RoutingTable::addNextHopToDryTable(string destRouter, NextHop& nh)
   {
-    std::list<RoutingTableEntry >::iterator it = std::find_if( dryTable.begin(),
-        dryTable.end(),
+    std::list<RoutingTableEntry >::iterator it = std::find_if( m_dryTable.begin(),
+        m_dryTable.end(),
         bind(&routingTableEntryCompare, _1, destRouter));
-    if ( it == dryTable.end() )
+    if ( it == m_dryTable.end() )
     {
       RoutingTableEntry rte(destRouter);
       rte.getNhl().addNextHop(nh);
-      dryTable.push_back(rte);
+      m_dryTable.push_back(rte);
     }
     else
     {
@@ -203,8 +206,8 @@ namespace nlsr
   RoutingTable::printDryRoutingTable()
   {
     cout<<"--------Dry Run's Routing Table--------------"<<endl;
-    for(std::list<RoutingTableEntry>::iterator it=dryTable.begin() ;
-        it != dryTable.end(); ++it)
+    for(std::list<RoutingTableEntry>::iterator it=m_dryTable.begin() ;
+        it != m_dryTable.end(); ++it)
     {
       cout<<(*it)<<endl;
     }
@@ -214,18 +217,18 @@ namespace nlsr
   void
   RoutingTable::clearRoutingTable()
   {
-    if( rTable.size() > 0 )
+    if( m_rTable.size() > 0 )
     {
-      rTable.clear();
+      m_rTable.clear();
     }
   }
 
   void
   RoutingTable::clearDryRoutingTable()
   {
-    if (dryTable.size()>0 )
+    if (m_dryTable.size()>0 )
     {
-      dryTable.clear();
+      m_dryTable.clear();
     }
   }
 

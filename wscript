@@ -1,16 +1,23 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+VERSION='1.0'
+NAME="NLSR"
 
 from waflib import Build, Logs, Utils, Task, TaskGen, Configure
+from waflib.Tools import c_preproc
 
 def options(opt):
     opt.load('compiler_c compiler_cxx gnu_dirs c_osx')
-    opt.load('boost cryptopp', tooldir=['waf-tools'])
+    opt.load('boost openssl cryptopp', tooldir=['waf-tools'])
 
-    opt = opt.add_option_group('Options')
+    opt = opt.add_option_group('NLSR Options')
+
     opt.add_option('--debug',action='store_true',default=False,dest='debug',help='''debugging mode''')
 
+
 def configure(conf):
-    conf.load("compiler_c compiler_cxx boost gnu_dirs c_osx cryptopp")
+    conf.load("compiler_c compiler_cxx boost gnu_dirs c_osx openssl cryptopp")
+
+    conf.check_openssl()
 
     if conf.options.debug:
         conf.define ('_DEBUG', 1)
@@ -30,15 +37,22 @@ def configure(conf):
 
         conf.add_supported_cxxflags (cxxflags = flags)
     else:
-        flags = ['-O3', '-g','-Wno-unused-variable', '-Wno-tautological-compare',
-                         '-Wno-unused-function', '-Wno-deprecated-declarations']
+        flags = ['-O3', '-g', '-Wno-tautological-compare', '-Wno-unused-function', '-Wno-deprecated-declarations']
         conf.add_supported_cxxflags (cxxflags = flags)
 
+
     conf.check_cfg(package='libndn-cpp-dev', args=['--cflags', '--libs'], uselib_store='NDN_CPP', mandatory=True)
-    conf.check_boost(lib='system iostreams thread unit_test_framework log', uselib_store='BOOST', version='1_55', mandatory=True)
     conf.check_cfg(package='nsync', args=['--cflags', '--libs'], uselib_store='nsync', mandatory=True)
     conf.check_cfg(package='sqlite3', args=['--cflags', '--libs'], uselib_store='SQLITE3', mandatory=True)
     conf.check_cryptopp(path=conf.options.cryptopp_dir, mandatory=True)
+    conf.check_boost(lib='system iostreams thread unit_test_framework log', uselib_store='BOOST', mandatory=True)
+    if conf.env.BOOST_VERSION_NUMBER < 105400:
+        Logs.error ("Minimum required boost version is 1.54.0")
+        Logs.error ("Please upgrade your distribution or install custom boost libraries")
+        return
+
+
+
 
 def build (bld):
     bld (

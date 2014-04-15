@@ -10,6 +10,9 @@
 #include "nlsr_dm.hpp"
 #include "utility/nlsr_tokenizer.hpp"
 #include "nlsr_lsdb.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_im.cpp"
 
 namespace nlsr
 {
@@ -18,9 +21,9 @@ namespace nlsr
   using namespace ndn;
 
   void
-  interestManager::processInterest( Nlsr& pnlsr,
-                                    const ndn::Name &name,
-                                    const ndn::Interest &interest)
+  InterestManager::processInterest( Nlsr& pnlsr,
+                                    const ndn::Name& name,
+                                    const ndn::Interest& interest)
   {
     cout << "<< I: " << interest << endl;
     string intName=interest.getName().toUri();
@@ -46,13 +49,13 @@ namespace nlsr
   }
 
   void
-  interestManager::processInterestInfo(Nlsr& pnlsr, string& neighbor,
-                                       const ndn::Interest &interest)
+  InterestManager::processInterestInfo(Nlsr& pnlsr, string& neighbor,
+                                       const ndn::Interest& interest)
   {
     if ( pnlsr.getAdl().isNeighbor(neighbor) )
     {
       Data data(ndn::Name(interest.getName()).appendVersion());
-      data.setFreshnessPeriod(1000); // 10 sec
+      data.setFreshnessPeriod(time::seconds(10)); // 10 sec
       data.setContent((const uint8_t*)"info", sizeof("info"));
       pnlsr.getKeyManager().signData(data);
       cout << ">> D: " << data << endl;
@@ -69,7 +72,7 @@ namespace nlsr
   }
 
   void
-  interestManager::processInterestLsa(Nlsr& pnlsr,const ndn::Interest &interest)
+  InterestManager::processInterestLsa(Nlsr& pnlsr,const ndn::Interest& interest)
   {
     string intName=interest.getName().toUri();
     nlsrTokenizer nt(intName,"/");
@@ -115,8 +118,8 @@ namespace nlsr
   }
 
   void
-  interestManager::processInterestForNameLsa(Nlsr& pnlsr,
-      const ndn::Interest &interest,
+  InterestManager::processInterestForNameLsa(Nlsr& pnlsr,
+      const ndn::Interest& interest,
       string lsaKey, uint32_t interestedlsSeqNo)
   {
     std::pair<NameLsa&, bool>  nameLsa=pnlsr.getLsdb().getNameLsa(lsaKey);
@@ -125,8 +128,8 @@ namespace nlsr
       if ( nameLsa.first.getLsSeqNo() >= interestedlsSeqNo )
       {
         Data data(ndn::Name(interest.getName()).appendVersion());
-        data.setFreshnessPeriod(1000); // 10 sec
-        string content=nameLsa.first.getNameLsaData();
+        data.setFreshnessPeriod(time::seconds(10)); // 10 sec
+        string content=nameLsa.first.getData();
         data.setContent((const uint8_t*)content.c_str(),content.size());
         pnlsr.getKeyManager().signData(data);
         cout << ">> D: " << data << endl;
@@ -136,8 +139,8 @@ namespace nlsr
   }
 
   void
-  interestManager::processInterestForAdjLsa(Nlsr& pnlsr,
-      const ndn::Interest &interest,
+  InterestManager::processInterestForAdjLsa(Nlsr& pnlsr,
+      const ndn::Interest& interest,
       string lsaKey, uint32_t interestedlsSeqNo)
   {
     std::pair<AdjLsa&, bool>  adjLsa=pnlsr.getLsdb().getAdjLsa(lsaKey);
@@ -146,8 +149,8 @@ namespace nlsr
       if ( adjLsa.first.getLsSeqNo() >= interestedlsSeqNo )
       {
         Data data(ndn::Name(interest.getName()).appendVersion());
-        data.setFreshnessPeriod(1000); // 10 sec
-        string content=adjLsa.first.getAdjLsaData();
+        data.setFreshnessPeriod(time::seconds(10)); // 10 sec
+        string content=adjLsa.first.getData();
         data.setContent((const uint8_t*)content.c_str(),content.size());
         pnlsr.getKeyManager().signData(data);
         cout << ">> D: " << data << endl;
@@ -157,8 +160,8 @@ namespace nlsr
   }
 
   void
-  interestManager::processInterestForCorLsa(Nlsr& pnlsr,
-      const ndn::Interest &interest,
+  InterestManager::processInterestForCorLsa(Nlsr& pnlsr,
+      const ndn::Interest& interest,
       string lsaKey, uint32_t interestedlsSeqNo)
   {
     std::pair<CorLsa&, bool>  corLsa=pnlsr.getLsdb().getCorLsa(lsaKey);
@@ -167,8 +170,8 @@ namespace nlsr
       if ( corLsa.first.getLsSeqNo() >= interestedlsSeqNo )
       {
         Data data(ndn::Name(interest.getName()).appendVersion());
-        data.setFreshnessPeriod(1000); // 10 sec
-        string content=corLsa.first.getCorLsaData();
+        data.setFreshnessPeriod(time::seconds(10)); // 10 sec
+        string content=corLsa.first.getData();
         data.setContent((const uint8_t*)content.c_str(),content.size());
         pnlsr.getKeyManager().signData(data);
         cout << ">> D: " << data << endl;
@@ -178,7 +181,7 @@ namespace nlsr
   }
 
   void
-  interestManager::processInterestKeys(Nlsr& pnlsr,const ndn::Interest &interest)
+  InterestManager::processInterestKeys(Nlsr& pnlsr,const ndn::Interest& interest)
   {
     cout<<"processInterestKeys called "<<endl;
     string intName=interest.getName().toUri();
@@ -227,7 +230,7 @@ namespace nlsr
         dataName=ndn::Name(interest.getName());
       }
       Data data(dataName.appendVersion());
-      data.setFreshnessPeriod(1000); //10 sec
+      data.setFreshnessPeriod(time::seconds(10)); //10 sec
       data.setContent(chkCert.first->wireEncode());
       pnlsr.getKeyManager().signData(data);
       pnlsr.getNlsrFace()->put(data);
@@ -236,8 +239,8 @@ namespace nlsr
 
 
   void
-  interestManager::processInterestTimedOut(Nlsr& pnlsr,
-      const ndn::Interest &interest)
+  InterestManager::processInterestTimedOut(Nlsr& pnlsr,
+      const ndn::Interest& interest)
   {
     cout << "Timed out interest : " << interest.getName().toUri() << endl;
     string intName=	interest.getName().toUri();
@@ -256,8 +259,8 @@ namespace nlsr
   }
 
   void
-  interestManager::processInterestTimedOutInfo(Nlsr& pnlsr, string& neighbor,
-      const ndn::Interest &interest)
+  InterestManager::processInterestTimedOutInfo(Nlsr& pnlsr, string& neighbor,
+      const ndn::Interest& interest)
   {
     pnlsr.getAdl().incrementTimedOutInterestCount(neighbor);
     int status=pnlsr.getAdl().getStatusOfNeighbor(neighbor);
@@ -289,35 +292,35 @@ namespace nlsr
   }
 
   void
-  interestManager::processInterestTimedOutLsa(Nlsr& pnlsr,
-      const ndn::Interest &interest)
+  InterestManager::processInterestTimedOutLsa(Nlsr& pnlsr,
+      const ndn::Interest& interest)
   {
   }
 
   void
-  interestManager::expressInterest(Nlsr& pnlsr,const string& interestNamePrefix,
+  InterestManager::expressInterest(Nlsr& pnlsr,const string& interestNamePrefix,
                                    int scope, int seconds)
   {
     cout<<"Expressing Interest :"<<interestNamePrefix<<endl;
     ndn::Interest i((ndn::Name(interestNamePrefix)));
     //i.setScope(scope);
-    i.setInterestLifetime(seconds*1000);
+    i.setInterestLifetime(time::seconds(seconds));
     i.setMustBeFresh(true);
     pnlsr.getNlsrFace()->expressInterest(i,
                                          ndn::func_lib::bind(&DataManager::processContent,
                                              &pnlsr.getDm(), boost::ref(pnlsr),_1, _2,boost::ref(*this)),
-                                         ndn::func_lib::bind(&interestManager::processInterestTimedOut,
+                                         ndn::func_lib::bind(&InterestManager::processInterestTimedOut,
                                              this,boost::ref(pnlsr),_1));
   }
 
 
   void
-  interestManager::sendScheduledInfoInterest(Nlsr& pnlsr, int seconds)
+  InterestManager::sendScheduledInfoInterest(Nlsr& pnlsr, int seconds)
   {
     std::list<Adjacent> adjList=pnlsr.getAdl().getAdjList();
     for(std::list<Adjacent>::iterator it=adjList.begin(); it!=adjList.end(); ++it)
     {
-      string adjName=(*it).getAdjacentName()+"/"+"info"+
+      string adjName=(*it).getName()+"/"+"info"+
                      pnlsr.getConfParameter().getRouterPrefix();
       expressInterest(	pnlsr,adjName,2,
                         pnlsr.getConfParameter().getInterestResendTime());
@@ -326,10 +329,10 @@ namespace nlsr
   }
 
   void
-  interestManager::scheduleInfoInterest(Nlsr& pnlsr, int seconds)
+  InterestManager::scheduleInfoInterest(Nlsr& pnlsr, int seconds)
   {
     EventId eid=pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(seconds),
-                ndn::bind(&interestManager::sendScheduledInfoInterest, this,
+                ndn::bind(&InterestManager::sendScheduledInfoInterest, this,
                           boost::ref(pnlsr),seconds));
   }
 

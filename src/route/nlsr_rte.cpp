@@ -2,6 +2,9 @@
 #include <string>
 
 #include "nlsr_rte.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_rte.cpp"
 
 namespace nlsr
 {
@@ -9,7 +12,7 @@ namespace nlsr
   using namespace std;
 
   ostream&
-  operator<<(ostream& os, RoutingTableEntry &rte)
+  operator<<(ostream& os, RoutingTableEntry& rte)
   {
     os<<"Destination: "<<rte.getDestination()<<endl;
     os<<"Nexthops: "<<endl;

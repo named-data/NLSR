@@ -51,7 +51,7 @@ public:
    *
    * This value can be used to randomize reconciliation waiting time in SyncApp
    */
-  ndn::time::Duration
+  ndn::time::system_clock::Duration
   getTimeFromLastUpdate () const;
 
   /**
@@ -70,7 +70,7 @@ public:
   remove (NameInfoConstPtr info);
   
 private:
-  ndn::time::Point m_lastUpdated; ///< @brief Time when state was updated last time
+  ndn::time::system_clock::TimePoint m_lastUpdated; ///< @brief Time when state was updated last time
   DigestPtr m_digest;
 };
 

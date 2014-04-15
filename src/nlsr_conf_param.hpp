@@ -13,285 +13,285 @@ namespace nlsr
 
   public:
     ConfParameter()
-      : chronosyncSyncPrefix("ndn/nlsr/sync")
-      , chronosyncLsaPrefix("/ndn/nlsr/LSA")
-      , rootKeyPrefix("/ndn/keys")
+      : m_chronosyncSyncPrefix("ndn/nlsr/sync")
+      , m_chronosyncLsaPrefix("/ndn/nlsr/LSA")
+      , m_rootKeyPrefix("/ndn/keys")
       , isStrictHierchicalKeyCheck(0)
-      , interestRetryNumber(3)
-      , interestResendTime(5)
-      , infoInterestInterval(60)
-      , lsaRefreshTime(1800)
-      , routerDeadInterval(3600)
-      , maxFacesPerPrefix(0)
-      , tunnelType(0)
-      , detailedLogging(0)
-      , certDir()
-      , debugging(0)
+      , m_interestRetryNumber(3)
+      , m_interestResendTime(5)
+      , m_infoInterestInterval(60)
+      , m_lsaRefreshTime(1800)
+      , m_routerDeadInterval(3600)
+      , m_maxFacesPerPrefix(0)
+      , m_tunnelType(0)
+      , m_detailedLogging(0)
+      , m_certDir()
+      , m_debugging(0)
       , isHyperbolicCalc(0)
-      , seqFileDir()
-      , corR(0)
-      , corTheta(0)
+      , m_seqFileDir()
+      , m_corR(0)
+      , m_corTheta(0)
     {}
 
     void setRouterName(const string& rn)
     {
-      routerName=rn;
+      m_routerName=rn;
     }
 
     string getRouterName()
     {
-      return routerName;
+      return m_routerName;
     }
 
     void setSiteName(const string& sn)
     {
-      siteName=sn;
+      m_siteName=sn;
     }
 
     string getSiteName()
     {
-      return siteName;
+      return m_siteName;
     }
 
     void setNetwork(const string& nn)
     {
-      network=nn;
+      m_network=nn;
     }
 
     string getNetwork()
     {
-      return network;
+      return m_network;
     }
 
     void buildRouterPrefix()
     {
-      routerPrefix="/"+network+"/"+siteName+"/"+routerName;
+      m_routerPrefix="/"+m_network+"/"+m_siteName+"/"+m_routerName;
     }
 
     string getRouterPrefix()
     {
-      return routerPrefix;
+      return m_routerPrefix;
     }
 
     string getRootKeyPrefix()
     {
-      return rootKeyPrefix;
+      return m_rootKeyPrefix;
     }
 
     void setRootKeyPrefix(string rkp)
     {
-      rootKeyPrefix=rkp;
+      m_rootKeyPrefix=rkp;
     }
 
     void setInterestRetryNumber(int irn)
     {
-      interestRetryNumber=irn;
+      m_interestRetryNumber=irn;
     }
 
     int getInterestRetryNumber()
     {
-      return interestRetryNumber;
+      return m_interestRetryNumber;
     }
 
     void setInterestResendTime(int irt)
     {
-      interestResendTime=irt;
+      m_interestResendTime=irt;
     }
 
     int getInterestResendTime()
     {
-      return interestResendTime;
+      return m_interestResendTime;
     }
 
     void setLsaRefreshTime(int lrt)
     {
-      lsaRefreshTime=lrt;
-      routerDeadInterval=2*lsaRefreshTime;
+      m_lsaRefreshTime=lrt;
+      m_routerDeadInterval=2*m_lsaRefreshTime;
     }
 
     int getLsaRefreshTime()
     {
-      return lsaRefreshTime;
+      return m_lsaRefreshTime;
     }
 
     void setRouterDeadInterval(int rdt)
     {
-      routerDeadInterval=rdt;
+      m_routerDeadInterval=rdt;
     }
 
     long int getRouterDeadInterval()
     {
-      return routerDeadInterval;
+      return m_routerDeadInterval;
     }
 
     void setMaxFacesPerPrefix(int mfpp)
     {
-      maxFacesPerPrefix=mfpp;
+      m_maxFacesPerPrefix=mfpp;
     }
 
     int getMaxFacesPerPrefix()
     {
-      return maxFacesPerPrefix;
+      return m_maxFacesPerPrefix;
     }
 
     void setLogDir(string ld)
     {
-      logDir=ld;
+      m_logDir=ld;
     }
 
     string getLogDir()
     {
-      return logDir;
+      return m_logDir;
     }
 
     void setCertDir(std::string cd)
     {
-      certDir=cd;
+      m_certDir=cd;
     }
 
     std::string getCertDir()
     {
-      return certDir;
+      return m_certDir;
     }
 
     void setSeqFileDir(string ssfd)
     {
-      seqFileDir=ssfd;
+      m_seqFileDir=ssfd;
     }
 
     string getSeqFileDir()
     {
-      return seqFileDir;
+      return m_seqFileDir;
     }
 
     void setDetailedLogging(int dl)
     {
-      detailedLogging=dl;
+      m_detailedLogging=dl;
     }
 
     int getDetailedLogging()
     {
-      return detailedLogging;
+      return m_detailedLogging;
     }
 
     void setDebugging(int d)
     {
-      debugging=d;
+      m_debugging=d;
     }
 
     int getDebugging()
     {
-      return debugging;
+      return m_debugging;
     }
 
-    void setIsHyperbolicCalc(int ihc)
+    void setIsHyperbolicCalc(bool ihc)
     {
       isHyperbolicCalc=ihc;
     }
 
-    int getIsHyperbolicCalc()
+    bool getIsHyperbolicCalc()
     {
       return isHyperbolicCalc;
     }
 
     void setCorR(double cr)
     {
-      corR=cr;
+      m_corR=cr;
     }
 
     double getCorR()
     {
-      return corR;
+      return m_corR;
     }
 
     void setCorTheta(double ct)
     {
-      corTheta=ct;
+      m_corTheta=ct;
     }
 
     double getCorTheta()
     {
-      return corTheta;
+      return m_corTheta;
     }
 
     void setTunnelType(int tt)
     {
-      tunnelType=tt;
+      m_tunnelType=tt;
     }
 
     int getTunnelType()
     {
-      return tunnelType;
+      return m_tunnelType;
     }
 
     void setChronosyncSyncPrefix(const string& csp)
     {
-      chronosyncSyncPrefix=csp;
+      m_chronosyncSyncPrefix=csp;
     }
 
     string getChronosyncSyncPrefix()
     {
-      return chronosyncSyncPrefix;
+      return m_chronosyncSyncPrefix;
     }
 
     void setChronosyncLsaPrefix(string clp)
     {
-      chronosyncLsaPrefix=clp;
+      m_chronosyncLsaPrefix=clp;
     }
 
     string getChronosyncLsaPrefix()
     {
-      return chronosyncLsaPrefix;
+      return m_chronosyncLsaPrefix;
     }
 
     int getInfoInterestInterval()
     {
-      return infoInterestInterval;
+      return m_infoInterestInterval;
     }
 
     void setInfoInterestInterval(int iii)
     {
-      infoInterestInterval=iii;
+      m_infoInterestInterval=iii;
     }
 
   private:
-    string routerName;
-    string siteName;
-    string network;
+    string m_routerName;
+    string m_siteName;
+    string m_network;
 
-    string routerPrefix;
-    string lsaRouterPrefix;
+    string m_routerPrefix;
+    string m_lsaRouterPrefix;
 
-    string chronosyncSyncPrefix;
-    string chronosyncLsaPrefix;
+    string m_chronosyncSyncPrefix;
+    string m_chronosyncLsaPrefix;
 
-    string rootKeyPrefix;
+    string m_rootKeyPrefix;
 
-    int interestRetryNumber;
-    int interestResendTime;
-    int infoInterestInterval;
-    int lsaRefreshTime;
-    int routerDeadInterval;
+    int m_interestRetryNumber;
+    int m_interestResendTime;
+    int m_infoInterestInterval;
+    int m_lsaRefreshTime;
+    int m_routerDeadInterval;
 
-    int maxFacesPerPrefix;
-    string logDir;
-    string certDir;
-    string seqFileDir;
-    string logFile;
-    int detailedLogging;
-    int debugging;
+    int m_maxFacesPerPrefix;
+    string m_logDir;
+    string m_certDir;
+    string m_seqFileDir;
+    string m_logFile;
+    int m_detailedLogging;
+    int m_debugging;
 
-    int isHyperbolicCalc;
-    double corR;
-    double corTheta;
+    bool isHyperbolicCalc;
+    double m_corR;
+    double m_corTheta;
 
-    int tunnelType;
-    int isStrictHierchicalKeyCheck;
+    int m_tunnelType;
+    bool isStrictHierchicalKeyCheck;
 
   };
 
   std::ostream&
-  operator << (std::ostream &os, ConfParameter &cfp);
+  operator << (std::ostream& os, ConfParameter& cfp);
 
 } // namespace nlsr
 

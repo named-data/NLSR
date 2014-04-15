@@ -30,28 +30,28 @@ namespace nlsr
   {
   public:
     Nlsr()
-      : io(ndn::make_shared<boost::asio::io_service>())
-      , nlsrFace(make_shared<ndn::Face>(io))
-      , scheduler(*io)
-      , confParam()
-      , adl()
-      , npl()
-      , im()
-      , dm()
-      , sm()
-      , km()
+      : m_io(ndn::make_shared<boost::asio::io_service>())
+      , m_nlsrFace(make_shared<ndn::Face>(m_io))
+      , m_scheduler(*m_io)
+      , m_confParam()
+      , m_adl()
+      , m_npl()
+      , m_im()
+      , m_dm()
+      , m_sm()
+      , m_km()
       , isDaemonProcess(false)
-      , configFileName("nlsr.conf")
-      , nlsrLsdb()
-      , adjBuildCount(0)
+      , m_configFileName("nlsr.conf")
+      , m_nlsrLsdb()
+      , m_adjBuildCount(0)
       , isBuildAdjLsaSheduled(0)
       , isRouteCalculationScheduled(0)
       , isRoutingTableCalculating(0)
-      , routingTable()
-      , npt()
-      , fib()
-      , slh(io)
-      , nlsrLogger()
+      , m_routingTable()
+      , m_npt()
+      , m_fib()
+      , m_slh(m_io)
+      , m_nlsrLogger()
     {}
 
     void nlsrRegistrationFailed(const ndn::Name& name);
@@ -63,15 +63,15 @@ namespace nlsr
 
     string getConfFileName()
     {
-      return configFileName;
+      return m_configFileName;
     }
 
     void setConfFileName(const string& fileName)
     {
-      configFileName=fileName;
+      m_configFileName=fileName;
     }
 
-    bool isSetDaemonProcess()
+    bool getIsSetDaemonProcess()
     {
       return isDaemonProcess;
     }
@@ -83,88 +83,88 @@ namespace nlsr
 
     ConfParameter& getConfParameter()
     {
-      return confParam;
+      return m_confParam;
     }
 
     Adl& getAdl()
     {
-      return adl;
+      return m_adl;
     }
 
     Npl& getNpl()
     {
-      return npl;
+      return m_npl;
     }
 
     ndn::shared_ptr<boost::asio::io_service>& getIo()
     {
-      return io;
+      return m_io;
     }
 
     ndn::Scheduler& getScheduler()
     {
-      return scheduler;
+      return m_scheduler;
     }
 
     ndn::shared_ptr<ndn::Face> getNlsrFace()
     {
-      return nlsrFace;
+      return m_nlsrFace;
     }
 
     KeyManager& getKeyManager()
     {
-      return km;
+      return m_km;
     }
 
 
-    interestManager& getIm()
+    InterestManager& getIm()
     {
-      return im;
+      return m_im;
     }
 
     DataManager& getDm()
     {
-      return dm;
+      return m_dm;
     }
 
     SequencingManager& getSm()
     {
-      return sm;
+      return m_sm;
     }
 
     Lsdb& getLsdb()
     {
-      return nlsrLsdb;
+      return m_nlsrLsdb;
     }
 
     RoutingTable& getRoutingTable()
     {
-      return routingTable;
+      return m_routingTable;
     }
 
     Npt& getNpt()
     {
-      return npt;
+      return m_npt;
     }
 
     Fib& getFib()
     {
-      return fib;
+      return m_fib;
     }
 
     long int getAdjBuildCount()
     {
-      return adjBuildCount;
+      return m_adjBuildCount;
     }
 
     void incrementAdjBuildCount()
     {
-      adjBuildCount++;
+      m_adjBuildCount++;
     }
 
     void setAdjBuildCount(long int abc)
     {
-      adjBuildCount=abc;
+      m_adjBuildCount=abc;
     }
 
     int getIsBuildAdjLsaSheduled()
@@ -172,7 +172,7 @@ namespace nlsr
       return isBuildAdjLsaSheduled;
     }
 
-    void setIsBuildAdjLsaSheduled(int iabls)
+    void setIsBuildAdjLsaSheduled(bool iabls)
     {
       isBuildAdjLsaSheduled=iabls;
     }
@@ -180,72 +180,72 @@ namespace nlsr
 
     void setApiPort(int ap)
     {
-      apiPort=ap;
+      m_apiPort=ap;
     }
 
     int getApiPort()
     {
-      return apiPort;
+      return m_apiPort;
     }
 
-    int getIsRoutingTableCalculating()
+    bool getIsRoutingTableCalculating()
     {
       return isRoutingTableCalculating;
     }
 
-    void setIsRoutingTableCalculating(int irtc)
+    void setIsRoutingTableCalculating(bool irtc)
     {
       isRoutingTableCalculating=irtc;
     }
 
-    int getIsRouteCalculationScheduled()
+    bool getIsRouteCalculationScheduled()
     {
       return isRouteCalculationScheduled;
     }
 
-    void setIsRouteCalculationScheduled(int ircs)
+    void setIsRouteCalculationScheduled(bool ircs)
     {
       isRouteCalculationScheduled=ircs;
     }
 
     SyncLogicHandler& getSlh()
     {
-      return slh;
+      return m_slh;
     }
 
     NlsrLogger& getNlsrLogger()
     {
-      return nlsrLogger;
+      return m_nlsrLogger;
     }
 
-    void initNlsr();
+    void initialize();
 
   private:
-    ConfParameter confParam;
-    Adl adl;
-    Npl npl;
-    ndn::shared_ptr<boost::asio::io_service> io;
-    ndn::Scheduler scheduler;
-    ndn::shared_ptr<ndn::Face> nlsrFace;
-    interestManager im;
-    DataManager dm;
-    SequencingManager sm;
-    KeyManager km;
+    ConfParameter m_confParam;
+    Adl m_adl;
+    Npl m_npl;
+    ndn::shared_ptr<boost::asio::io_service> m_io;
+    ndn::Scheduler m_scheduler;
+    ndn::shared_ptr<ndn::Face> m_nlsrFace;
+    InterestManager m_im;
+    DataManager m_dm;
+    SequencingManager m_sm;
+    KeyManager m_km;
     bool isDaemonProcess;
-    string configFileName;
-    int apiPort;
+    string m_configFileName;
+    int m_apiPort;
 
-    Lsdb nlsrLsdb;
-    RoutingTable routingTable;
-    Npt npt;
-    Fib fib;
-    SyncLogicHandler slh;
-    NlsrLogger nlsrLogger;
+    Lsdb m_nlsrLsdb;
+    RoutingTable m_routingTable;
+    Npt m_npt;
+    Fib m_fib;
+    SyncLogicHandler m_slh;
+    NlsrLogger m_nlsrLogger;
 
-    long int adjBuildCount;
-    int isBuildAdjLsaSheduled;
-    int isRouteCalculationScheduled;
-    int isRoutingTableCalculating;
+    long int m_adjBuildCount;
+    bool isBuildAdjLsaSheduled;
+    bool isRouteCalculationScheduled;
+    bool isRoutingTableCalculating;
 
 
 

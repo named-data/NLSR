@@ -15,8 +15,8 @@ namespace nlsr
   void
   nlsrTokenizer::makeToken()
   {
-    char_separator<char> sep(seps.c_str());
-    tokenizer< char_separator<char> >tokens(originalString, sep);
+    char_separator<char> sep(m_seps.c_str());
+    tokenizer< char_separator<char> >tokens(m_originalString, sep);
     tokenizer< char_separator<char> >::iterator tok_iter = tokens.begin();
     for ( ; tok_iter != tokens.end(); ++tok_iter)
     {
@@ -27,15 +27,15 @@ namespace nlsr
         insertToken(oneToken);
       }
     }
-    firstToken=vTokenList[0];
+    m_firstToken=m_vTokenList[0];
     makeRestOfTheLine();
   }
 
   void
   nlsrTokenizer::insertToken(const string& token)
   {
-    tokenList.push_back(token);
-    vTokenList.push_back(token);
+    m_tokenList.push_back(token);
+    m_vTokenList.push_back(token);
   }
 
   int
@@ -43,8 +43,8 @@ namespace nlsr
   {
     int pos=-1;
     int i=0;
-    for(std::list<string>::iterator it=tokenList.begin();
-        it!=tokenList.end(); it++)
+    for(std::list<string>::iterator it=m_tokenList.begin();
+        it!=m_tokenList.end(); it++)
     {
       if( (*it) == token )
       {
@@ -52,7 +52,7 @@ namespace nlsr
       }
       i++;
     }
-    if( i < tokenList.size() )
+    if( i < m_tokenList.size() )
     {
       pos=i;
     }
@@ -63,13 +63,13 @@ namespace nlsr
   nlsrTokenizer::getTokenString(int from , int to)
   {
     string returnString="";
-    if((from>=0 && to<tokenList.size()) &&
-        (to>=from && to <tokenList.size()))
+    if((from>=0 && to<m_tokenList.size()) &&
+        (to>=from && to <m_tokenList.size()))
     {
       for(int i=from; i<=to; i++)
       {
-        returnString+=seps;
-        returnString+=vTokenList[i];
+        returnString+=m_seps;
+        returnString+=m_vTokenList[i];
       }
     }
     trim(returnString);
@@ -79,7 +79,7 @@ namespace nlsr
   string
   nlsrTokenizer::getTokenString(int from)
   {
-    return getTokenString(from,tokenList.size()-1);
+    return getTokenString(from,m_tokenList.size()-1);
   }
 
   static bool
@@ -91,16 +91,16 @@ namespace nlsr
   void
   nlsrTokenizer::makeRestOfTheLine()
   {
-    restOfTheLine=getTokenString(1);
+    m_restOfTheLine=getTokenString(1);
   }
 
   bool
   nlsrTokenizer::doesTokenExist(string token)
   {
-    std::list<string >::iterator it = std::find_if( tokenList.begin(),
-                                      tokenList.end(),
+    std::list<string >::iterator it = std::find_if( m_tokenList.begin(),
+                                      m_tokenList.end(),
                                       bind(&tokenCompare, _1 , token));
-    if( it != tokenList.end() )
+    if( it != m_tokenList.end() )
     {
       return true;
     }

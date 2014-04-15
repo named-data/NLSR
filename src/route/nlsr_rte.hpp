@@ -14,8 +14,8 @@ namespace nlsr
   {
   public:
     RoutingTableEntry()
-      : destination()
-      , nhl()
+      : m_destination()
+      , m_nhl()
     {
     }
 
@@ -24,28 +24,28 @@ namespace nlsr
     }
 
     RoutingTableEntry(string dest)
-      : nhl()
+      : m_nhl()
     {
-      destination=dest;
+      m_destination=dest;
     }
 
     string getDestination()
     {
-      return destination;
+      return m_destination;
     }
 
     Nhl& getNhl()
     {
-      return nhl;
+      return m_nhl;
     }
 
   private:
-    string destination;
-    Nhl nhl;
+    string m_destination;
+    Nhl m_nhl;
   };
 
   ostream&
-  operator<<(ostream& os, RoutingTableEntry &rte);
+  operator<<(ostream& os, RoutingTableEntry& rte);
 
 }
 

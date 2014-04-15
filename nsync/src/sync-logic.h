@@ -176,6 +176,12 @@ private:
   
 private:
   FullStatePtr m_state;
+  
+  int m_unknownDigestStoreTime;
+  int m_syncResponseFreshness;
+  int m_syncInterestReexpress;
+  int m_defaultRecoveryRetransmitInterval;
+  
   DiffStateContainer m_log;
 
   ndn::Name m_outstandingInterestName;
@@ -197,11 +203,14 @@ private:
   boost::variate_generator<boost::mt19937&, boost::uniform_int<> > m_rangeUniformRandom;
   boost::variate_generator<boost::mt19937&, boost::uniform_int<> > m_reexpressionJitter;
 
+  /*
   static const int m_unknownDigestStoreTime = 10; // seconds
   static const int m_syncResponseFreshness = 1000; // MUST BE dividable by 1000!!!
   static const int m_syncInterestReexpress = 4; // seconds
 
   static const int m_defaultRecoveryRetransmitInterval = 200; // milliseconds
+  */
+  
   uint32_t m_recoveryRetransmissionInterval; // milliseconds
   
   ndn::EventId m_delayedInterestProcessingId;

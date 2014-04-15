@@ -1,7 +1,9 @@
 #include <iostream>
-
+#include "utility/nlsr_logger.hpp"
 #include "nlsr_nhl.hpp"
 #include "nlsr_nexthop.hpp"
+
+#define THIS_FILE "nlsr_nhl.cpp"
 
 namespace nlsr
 {
@@ -38,12 +40,12 @@ namespace nlsr
   void
   Nhl::addNextHop(NextHop& nh)
   {
-    std::list<NextHop >::iterator it = std::find_if( nexthopList.begin(),
-                                       nexthopList.end(),
+    std::list<NextHop >::iterator it = std::find_if( m_nexthopList.begin(),
+                                       m_nexthopList.end(),
                                        bind(&nexthopCompare, _1, nh));
-    if ( it == nexthopList.end() )
+    if ( it == m_nexthopList.end() )
     {
-      nexthopList.push_back(nh);
+      m_nexthopList.push_back(nh);
     }
     if ( (*it).getRouteCost() > nh.getRouteCost() )
     {
@@ -59,19 +61,19 @@ namespace nlsr
   void
   Nhl::removeNextHop(NextHop &nh)
   {
-    std::list<NextHop >::iterator it = std::find_if( nexthopList.begin(),
-                                       nexthopList.end(),
+    std::list<NextHop >::iterator it = std::find_if( m_nexthopList.begin(),
+                                       m_nexthopList.end(),
                                        bind(&nexthopRemoveCompare, _1, nh));
-    if ( it != nexthopList.end() )
+    if ( it != m_nexthopList.end() )
     {
-      nexthopList.erase(it);
+      m_nexthopList.erase(it);
     }
   }
 
   void
-  Nhl::sortNhl()
+  Nhl::sort()
   {
-    nexthopList.sort(nextHopSortingComparator);
+    m_nexthopList.sort(nextHopSortingComparator);
   }
 
   ostream&

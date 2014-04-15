@@ -19,62 +19,62 @@ namespace nlsr
   {
   public:
     nlsrTokenizer(const string& inputString)
-      : firstToken()
-      , restOfTheLine()
-      , currentPosition(0)
+      : m_firstToken()
+      , m_restOfTheLine()
+      , m_currentPosition(0)
     {
-      seps = " ";
-      originalString = inputString;
+      m_seps = " ";
+      m_originalString = inputString;
       makeToken();
     }
 
     nlsrTokenizer(const string& inputString, const string& separator)
-      : firstToken()
-      , restOfTheLine()
-      , currentPosition(0)
+      : m_firstToken()
+      , m_restOfTheLine()
+      , m_currentPosition(0)
     {
-      seps = separator;
-      originalString = inputString;
+      m_seps = separator;
+      m_originalString = inputString;
       makeToken();
     }
 
     string getFirstToken()
     {
-      return firstToken;
+      return m_firstToken;
     }
 
     string getRestOfLine()
     {
-      return restOfTheLine;
+      return m_restOfTheLine;
     }
 
     void resetCurrentPosition(uint32_t cp=0)
     {
-      if( cp >=0 && cp <= vTokenList.size() )
+      if( cp >=0 && cp <= m_vTokenList.size() )
       {
-        currentPosition=cp;
+        m_currentPosition=cp;
       }
     }
 
     string getNextToken()
     {
-      if(currentPosition >= 0 && currentPosition <= (vTokenList.size()-1))
+      if(m_currentPosition >= 0 && m_currentPosition <= (m_vTokenList.size()-1))
       {
-        return vTokenList[currentPosition++];
+        return m_vTokenList[m_currentPosition++];
       }
       return "";
     }
 
     uint32_t getTokenNumber()
     {
-      return tokenList.size();
+      return m_tokenList.size();
     }
 
     string getToken(int position)
     {
-      if( position >=0 && position <vTokenList.size() )
+      if( position >=0 && position <m_vTokenList.size() )
       {
-        return vTokenList[position];
+        return m_vTokenList[position];
       }
       return "";
     }
@@ -91,13 +91,13 @@ namespace nlsr
     void insertToken(const string& token);
     void makeRestOfTheLine();
 
-    string seps;
-    string originalString;
-    string firstToken;
-    string restOfTheLine;
-    std::list<string> tokenList;
-    std::vector<string> vTokenList;
-    uint32_t currentPosition;
+    string m_seps;
+    string m_originalString;
+    string m_firstToken;
+    string m_restOfTheLine;
+    std::list<string> m_tokenList;
+    std::vector<string> m_vTokenList;
+    uint32_t m_currentPosition;
   };
 
 }//namespace nlsr

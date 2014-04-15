@@ -9,20 +9,20 @@ namespace nlsr
   {
     public:
       WaitingList()
-        : waitingTable()
+        : m_waitingTable()
       {}
       
       std::list<WaitingListEntry>& getWaitingTable()
       {
-        return waitingTable;
+        return m_waitingTable;
       }
       
-      bool addtoWaitingList(std::string respCert, std::string waitee);
+      bool add(std::string respCert, std::string waitee);
       std::pair<WaitingListEntry, bool> getWaitingListEntry(std::string respCert);
-      bool removeFromWaitingList(std::string respCert);
+      bool remove(std::string respCert);
       
     private:
-      std::list<WaitingListEntry> waitingTable;
+      std::list<WaitingListEntry> m_waitingTable;
   };
   
   std::ostream& operator<<(std::ostream& os, WaitingList wl);

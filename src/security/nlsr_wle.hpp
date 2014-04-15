@@ -10,35 +10,35 @@ namespace nlsr
   {
     public:
       WaitingListEntry()
-        : responsibleCert()
-        , waitingCerts()
+        : m_responsibleCert()
+        , m_waitingCerts()
       {}
       
       WaitingListEntry(std::string resCert)
-        : responsibleCert(resCert)
-        , waitingCerts()
+        : m_responsibleCert(resCert)
+        , m_waitingCerts()
       {}
       
       std::string getResponsibleCert() const
       {
-        return responsibleCert;
+        return m_responsibleCert;
       }
       
       void setResponsibleCert(std::string resCert)
       {
-        responsibleCert=resCert;
+        m_responsibleCert=resCert;
       }
       
       std::list<std::string> getWaitingCerts() const
       {
-        return waitingCerts;
+        return m_waitingCerts;
       }
       
       bool addWaitee(std::string waiteeName);
       
     private:
-      std::string responsibleCert;
-      std::list<std::string> waitingCerts;
+      std::string m_responsibleCert;
+      std::list<std::string> m_waitingCerts;
   };
   
   std::ostream& operator<<(std::ostream& os, const WaitingListEntry& we);

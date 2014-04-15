@@ -16,33 +16,33 @@ namespace nlsr
   {
   public:
     Fib()
-      : fibTable()
-      , fibEntryRefreshTime(0)
+      : m_table()
+      , m_refreshTime(0)
     {
     }
 
-    void removeFromFib(Nlsr& pnlsr, string name);
-    void updateFib(Nlsr& pnlsr, string name, Nhl& nextHopList);
-    void cleanFib(Nlsr& pnlsr);
-    void setFibEntryRefreshTime(int fert)
+    void remove(Nlsr& pnlsr, string name);
+    void update(Nlsr& pnlsr, string name, Nhl& nextHopList);
+    void clean(Nlsr& pnlsr);
+    void setEntryRefreshTime(int fert)
     {
-      fibEntryRefreshTime=fert;
+      m_refreshTime=fert;
     }
 
-    void printFib();
+    void print();
 
   private:
-    void removeFibEntryHop(Nlsr& pnlsr, Nhl& nl, int doNotRemoveHopFaceId);
+    void removeHop(Nlsr& pnlsr, Nhl& nl, int doNotRemoveHopFaceId);
     int getNumberOfFacesForName(Nhl& nextHopList, int maxFacesPerPrefix);
     ndn::EventId
-    scheduleFibEntryRefreshing(Nlsr& pnlsr, string name, int feSeqNum,
+    scheduleEntryRefreshing(Nlsr& pnlsr, string name, int feSeqNum,
                                int refreshTime);
-    void cancelScheduledFeExpiringEvent(Nlsr& pnlsr, EventId eid);
-    void refreshFibEntry(string name, int feSeqNum);
+    void cancelScheduledExpiringEvent(Nlsr& pnlsr, EventId eid);
+    void refreshEntry(string name, int feSeqNum);
 
   private:
-    std::list<FibEntry> fibTable;
-    int fibEntryRefreshTime;
+    std::list<FibEntry> m_table;
+    int m_refreshTime;
   };
 
 }//namespace nlsr

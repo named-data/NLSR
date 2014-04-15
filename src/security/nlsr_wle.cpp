@@ -3,6 +3,8 @@
 #include <ndn-cpp-dev/face.hpp>
 #include "nlsr_wle.hpp"
 
+#define THIS_FILE "nlsr_wle.cpp"
+
 namespace nlsr
 {
   static bool
@@ -14,11 +16,11 @@ namespace nlsr
   bool
   WaitingListEntry::addWaitee(std::string waiteeName)
   {
-    std::list<std::string>::iterator it = std::find_if( waitingCerts.begin(),
-                waitingCerts.end(),ndn::bind(&waiteeCompare, _1, waiteeName));
-    if( it == waitingCerts.end() )
+    std::list<std::string>::iterator it = std::find_if( m_waitingCerts.begin(),
+                m_waitingCerts.end(),ndn::bind(&waiteeCompare, _1, waiteeName));
+    if( it == m_waitingCerts.end() )
     {
-      waitingCerts.push_back(waiteeName);
+      m_waitingCerts.push_back(waiteeName);
       return true;
     }
     

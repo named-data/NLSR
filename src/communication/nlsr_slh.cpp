@@ -2,16 +2,19 @@
 #include "nlsr_slh.hpp"
 #include "security/nlsr_km.hpp"
 #include "utility/nlsr_tokenizer.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_slh.cpp"
 
 
 namespace nlsr
 {
   void
-  SyncLogicHandler::createSyncSocket(Nlsr &pnlsr )
+  SyncLogicHandler::createSyncSocket(Nlsr& pnlsr )
   {
     cout<<"Creating Sync socket ......"<<endl;
-    cout<<"Sync prefix: "<<syncPrefix.toUri()<<endl;
-    syncSocket=make_shared<SyncSocket>(syncPrefix, validator, syncFace,
+    cout<<"Sync prefix: "<<m_syncPrefix.toUri()<<endl;
+    m_syncSocket=make_shared<SyncSocket>(m_syncPrefix, m_validator, m_syncFace,
                                        bind(&SyncLogicHandler::nsyncUpdateCallBack,this,
                                             _1, _2,boost::ref(pnlsr)),
                                        bind(&SyncLogicHandler::nsyncRemoveCallBack, this,
@@ -130,10 +133,6 @@ namespace nlsr
   void
   SyncLogicHandler::publishKeyUpdate(KeyManager& km)
   {
-    //publishSyncUpdate(km.getRootCertName().toUri(), 10);
-    //publishSyncUpdate(km.getSiteCertName().toUri(), 10);
-    //publishSyncUpdate(km.getOperatorCertName().toUri(), 10);
-    //publishSyncUpdate(km.getRouterCertName().toUri(), km.getCertSeqNo());
     publishSyncUpdate(km.getProcessCertName().toUri(),km.getCertSeqNo());
   }
 
@@ -151,7 +150,7 @@ namespace nlsr
     cout<<"Seq No: "<<seqNo<<endl;
     ndn::Name updateName(updatePrefix);
     string data("NoData");
-    syncSocket->publishData(updateName,0,data.c_str(),data.size(),1000,seqNo);
+    m_syncSocket->publishData(updateName,0,data.c_str(),data.size(),1000,seqNo);
   }
 
 }

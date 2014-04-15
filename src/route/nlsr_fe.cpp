@@ -1,6 +1,9 @@
 #include <list>
 #include "nlsr_fe.hpp"
 #include "nlsr_nexthop.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_fe.cpp"
 
 namespace nlsr
 {
@@ -8,9 +11,9 @@ namespace nlsr
   using namespace std;
 
   bool
-  FibEntry::isEqualNextHops(Nhl &nhlOther)
+  FibEntry::isEqualNextHops(Nhl& nhlOther)
   {
-    if ( nhl.getNhlSize() != nhlOther.getNhlSize() )
+    if ( m_nhl.getSize() != nhlOther.getSize() )
     {
       return false;
     }
@@ -18,9 +21,9 @@ namespace nlsr
     {
       int nhCount=0;
       std::list<NextHop>::iterator it1, it2;
-      for ( it1=nhl.getNextHopList().begin(),
+      for ( it1=m_nhl.getNextHopList().begin(),
             it2 = nhlOther.getNextHopList().begin() ;
-            it1 != nhl.getNextHopList().end() ; it1++, it2++)
+            it1 != m_nhl.getNextHopList().end() ; it1++, it2++)
       {
         if (it1->getConnectingFace() == it2->getConnectingFace() )
         {
@@ -32,7 +35,7 @@ namespace nlsr
           break;
         }
       }
-      return nhCount == nhl.getNhlSize();
+      return nhCount == m_nhl.getSize();
     }
   }
 

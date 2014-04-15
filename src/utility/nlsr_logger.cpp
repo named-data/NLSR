@@ -49,7 +49,7 @@ namespace nlsr
           keywords::min_free_space = 64 * 1024 * 1024
         ));
     sink->set_formatter(
-      expr::format("%1%: %2%")
+      expr::format("%1% %2%")
       % getEpochTime()
       % expr::smessage
     );

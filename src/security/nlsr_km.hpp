@@ -37,35 +37,35 @@ namespace nlsr
     typedef SecTpm::Error TpmError;
   public:
     KeyManager()
-      : certSeqNo(1)
-      , certStore()
-      , nlsrRootKeyPrefix()
+      : m_certSeqNo(1)
+      , m_certStore()
+      , m_nlsrRootKeyPrefix()
     {
     }
 
-    bool initKeyManager(ConfParameter &cp);
+    bool initialize(ConfParameter &cp);
 
 
 
     void
     checkPolicy (const ndn::Data& data,
                  int stepCount,
-                 const ndn::OnDataValidated &onValidated,
-                 const ndn::OnDataValidationFailed &onValidationFailed,
-                 std::vector<ndn::shared_ptr<ndn::ValidationRequest> > &nextSteps)
+                 const ndn::OnDataValidated& onValidated,
+                 const ndn::OnDataValidationFailed& onValidationFailed,
+                 std::vector<ndn::shared_ptr<ndn::ValidationRequest> >& nextSteps)
     {}
 
     void
     checkPolicy (const ndn::Interest& interest,
                  int stepCount,
-                 const ndn::OnInterestValidated &onValidated,
-                 const ndn::OnInterestValidationFailed &onValidationFailed,
-                 std::vector<ndn::shared_ptr<ndn::ValidationRequest> > &nextSteps)
+                 const ndn::OnInterestValidated& onValidated,
+                 const ndn::OnInterestValidationFailed& onValidationFailed,
+                 std::vector<ndn::shared_ptr<ndn::ValidationRequest> >& nextSteps)
     {}
 
     void signData(ndn::Data& data)
     {
-      ndn::KeyChain::signByIdentity(data,processIdentity);
+      ndn::KeyChain::signByIdentity(data,m_processIdentity);
     }
 
     template<typename T>
@@ -83,7 +83,7 @@ namespace nlsr
     ndn::shared_ptr<ndn::IdentityCertificate>
     getCertificate()
     {
-      return getCertificate(processCertName);
+      return getCertificate(m_processCertName);
     }
 
     ndn::Name
@@ -127,8 +127,8 @@ namespace nlsr
         certificateName.append("KEY").append(
           keyName.get(-1)).append("ID-CERT").appendVersion();
         certificate->setName(certificateName);
-        certificate->setNotBefore(ndn::getNow());
-        certificate->setNotAfter(ndn::getNow() + 31536000 /* 1 year*/);
+        certificate->setNotBefore(ndn::time::system_clock::now());
+        certificate->setNotAfter(ndn::time::system_clock::now() + ndn::time::days(7300) /* 1 year*/);
         certificate->setPublicKeyInfo(*pubKey);
         certificate->addSubjectDescription(
           ndn::CertificateSubjectDescription("2.5.4.41",
@@ -156,7 +156,7 @@ namespace nlsr
 
     void printCertStore()
     {
-      certStore.printCertStore();
+      m_certStore.print();
     }
 
   private:
@@ -168,14 +168,14 @@ namespace nlsr
       std::string signingCertName=signature.getKeyLocator().getName().toUri();
       std::string packetName=packet.getName().toUri();
       std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> signee=
-        certStore.getCertificateFromStore(signingCertName);
+        m_certStore.getCertificateFromStore(signingCertName);
       if( signee.second )
       {
         std::string routerNameFromPacketName=getRouterName(packetName);
         std::string routerNameFromCertName=getRouterName(signingCertName);
         return ( (routerNameFromPacketName== routerNameFromCertName) &&
                  verifySignature(packet, signee.first->getPublicKeyInfo()) &&
-                 certStore.getCertificateIsVerified(signingCertName));
+                 m_certStore.getCertificateIsVerified(signingCertName));
       }
       return false;
     }
@@ -230,18 +230,18 @@ namespace nlsr
     std::string getRootName(const std::string name);
 
   private:
-    ndn::Name processIdentity;
-    ndn::Name routerIdentity;
-    ndn::Name processCertName;
-    ndn::Name routerCertName;
-    ndn::Name opCertName;
-    ndn::Name siteCertName;
-    ndn::Name rootCertName;
-    ndn::Name processKeyName;
-    uint32_t certSeqNo;
-    string certSeqFileNameWithPath;
-    string nlsrRootKeyPrefix;
-    NlsrCertificateStore certStore;
+    ndn::Name m_processIdentity;
+    ndn::Name m_routerIdentity;
+    ndn::Name m_processCertName;
+    ndn::Name m_routerCertName;
+    ndn::Name m_opCertName;
+    ndn::Name m_siteCertName;
+    ndn::Name m_rootCertName;
+    ndn::Name m_processKeyName;
+    uint32_t m_certSeqNo;
+    string m_certSeqFileNameWithPath;
+    string m_nlsrRootKeyPrefix;
+    NlsrCertificateStore m_certStore;
 
   };
 }

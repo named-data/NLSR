@@ -6,6 +6,9 @@
 #include "nlsr_lsa.hpp"
 #include "nlsr_nexthop.hpp"
 #include "nlsr.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_rtc.cpp"
 
 namespace nlsr
 {
@@ -45,7 +48,7 @@ namespace nlsr
       for( std::list<Adjacent>::iterator itAdl=adl.begin();
            itAdl!= adl.end() ; itAdl++)
       {
-        string linkEndRouter=(*itAdl).getAdjacentName();
+        string linkEndRouter=(*itAdl).getName();
         int col=pMap.getMappingNoByRouterName(linkEndRouter);
         double cost=(*itAdl).getLinkCost();
         if ( (row >= 0 && row<numOfRouter) && (col >= 0 && col<numOfRouter) )
@@ -206,18 +209,18 @@ namespace nlsr
     /* Initiate the Parent */
     for (i = 0 ; i < numOfRouter; i++)
     {
-      parent[i]=EMPTY_PARENT;
-      distance[i]=INF_DISTANCE;
+      m_parent[i]=EMPTY_PARENT;
+      m_distance[i]=INF_DISTANCE;
       Q[i]=i;
     }
     if ( sourceRouter != NO_MAPPING_NUM )
     {
-      distance[sourceRouter]=0;
-      sortQueueByDistance(Q,distance,head,numOfRouter);
+      m_distance[sourceRouter]=0;
+      sortQueueByDistance(Q,m_distance,head,numOfRouter);
       while (head < numOfRouter )
       {
         u=Q[head];
-        if(distance[u] == INF_DISTANCE)
+        if(m_distance[u] == INF_DISTANCE)
         {
           break;
         }
@@ -227,16 +230,16 @@ namespace nlsr
           {
             if ( isNotExplored(Q,v,head+1,numOfRouter) )
             {
-              if( distance[u] + adjMatrix[u][v] <  distance[v])
+              if( m_distance[u] + adjMatrix[u][v] <  m_distance[v])
               {
-                distance[v]=distance[u] + adjMatrix[u][v] ;
-                parent[v]=u;
+                m_distance[v]=m_distance[u] + adjMatrix[u][v] ;
+                m_parent[v]=u;
               }
             }
           }
         }
         head++;
-        sortQueueByDistance(Q,distance,head,numOfRouter);
+        sortQueueByDistance(Q,m_distance,head,numOfRouter);
       }
     }
     delete [] Q;
@@ -255,7 +258,7 @@ namespace nlsr
         int nextHopRouter=getLsNextHop(i,sourceRouter);
         if ( nextHopRouter != NO_NEXT_HOP )
         {
-          double routeCost=distance[i];
+          double routeCost=m_distance[i];
           string nextHopRouterName=
             pMap.getRouterNameByMappingNo(nextHopRouter);
           int nxtHopFace=
@@ -277,10 +280,10 @@ namespace nlsr
   LinkStateRoutingTableCalculator::getLsNextHop(int dest, int source)
   {
     int nextHop;
-    while ( parent[dest] != EMPTY_PARENT )
+    while ( m_parent[dest] != EMPTY_PARENT )
     {
       nextHop=dest;
-      dest=parent[dest];
+      dest=m_parent[dest];
     }
     if ( dest != source )
     {
@@ -307,9 +310,9 @@ namespace nlsr
   void
   LinkStateRoutingTableCalculator::printLsPath(int destRouter)
   {
-    if (parent[destRouter] != EMPTY_PARENT )
+    if (m_parent[destRouter] != EMPTY_PARENT )
     {
-      printLsPath(parent[destRouter]);
+      printLsPath(m_parent[destRouter]);
     }
     cout<<" "<<destRouter;
   }
@@ -351,24 +354,24 @@ namespace nlsr
   void
   LinkStateRoutingTableCalculator::allocateParent()
   {
-    parent=new int[numOfRouter];
+    m_parent=new int[numOfRouter];
   }
 
   void
   LinkStateRoutingTableCalculator::allocateDistance()
   {
-    distance= new double[numOfRouter];
+    m_distance= new double[numOfRouter];
   }
 
   void
   LinkStateRoutingTableCalculator::freeParent()
   {
-    delete [] parent;
+    delete [] m_parent;
   }
 
   void LinkStateRoutingTableCalculator::freeDistance()
   {
-    delete [] distance;
+    delete [] m_distance;
   }
 
 
@@ -404,9 +407,9 @@ namespace nlsr
                                    pMap,links[j],i);
           if ( distToDestFromNbr >= 0 )
           {
-            linkFaces[k] = nextHopFace;
-            distanceToNeighbor[k] = distToNbr;
-            distFromNbrToDest[k] = distToDestFromNbr;
+            m_linkFaces[k] = nextHopFace;
+            m_distanceToNeighbor[k] = distToNbr;
+            m_distFromNbrToDest[k] = distToDestFromNbr;
             k++;
           }
         }
@@ -428,9 +431,9 @@ namespace nlsr
     for(int i=0 ; i < noFaces ; ++i)
     {
       string destRouter=pMap.getRouterNameByMappingNo(dest);
-      NextHop nh(linkFaces[i],distFromNbrToDest[i]);
+      NextHop nh(m_linkFaces[i],m_distFromNbrToDest[i]);
       rt.addNextHop(destRouter,nh);
-      if( isDryRun == 1 )
+      if( m_isDryRun)
       {
         rt.addNextHopToDryTable(destRouter,nh);
       }
@@ -472,37 +475,37 @@ namespace nlsr
   void
   HypRoutingTableCalculator::allocateLinkFaces()
   {
-    linkFaces=new int[vNoLink];
+    m_linkFaces=new int[vNoLink];
   }
 
   void
   HypRoutingTableCalculator::allocateDistanceToNeighbor()
   {
-    distanceToNeighbor=new double[vNoLink];
+    m_distanceToNeighbor=new double[vNoLink];
   }
 
   void
   HypRoutingTableCalculator::allocateDistFromNbrToDest()
   {
-    distFromNbrToDest=new double[vNoLink];
+    m_distFromNbrToDest=new double[vNoLink];
   }
 
   void
   HypRoutingTableCalculator::freeLinkFaces()
   {
-    delete [] linkFaces;
+    delete [] m_linkFaces;
   }
 
   void
   HypRoutingTableCalculator::freeDistanceToNeighbor()
   {
-    delete [] distanceToNeighbor;
+    delete [] m_distanceToNeighbor;
   }
 
   void
   HypRoutingTableCalculator::freeDistFromNbrToDest()
   {
-    delete [] distFromNbrToDest;
+    delete [] m_distFromNbrToDest;
   }
 
 }//namespace nlsr

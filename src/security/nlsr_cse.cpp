@@ -1,6 +1,8 @@
 #include <ndn-cpp-dev/security/signature-sha256-with-rsa.hpp>
 #include "nlsr_cse.hpp"
 
+#define THIS_FILE "nlsr_cse.cpp"
+
 namespace nlsr
 {
   std::ostream&

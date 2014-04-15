@@ -1,4 +1,6 @@
 #include "nlsr_nexthop.hpp"
+#include "utility/nlsr_logger.hpp"
+#define THIS_FILE "nlsr_nexthop.cpp"
 
 namespace nlsr
 {

@@ -17,8 +17,8 @@ namespace nlsr
   {
   public:
     MapEntry()
-      : router()
-      , mappingNumber(-1)
+      : m_router()
+      , m_mappingNumber(-1)
     {
     }
 
@@ -28,22 +28,22 @@ namespace nlsr
 
     MapEntry(string rtr, int mn)
     {
-      router=rtr;
-      mappingNumber=mn;
+      m_router=rtr;
+      m_mappingNumber=mn;
     }
 
     string getRouter()
     {
-      return router;
+      return m_router;
     }
 
     int getMappingNumber()
     {
-      return mappingNumber;
+      return m_mappingNumber;
     }
   private:
-    string router;
-    int mappingNumber;
+    string m_router;
+    int m_mappingNumber;
   };
 
   ostream&
@@ -53,36 +53,36 @@ namespace nlsr
   {
   public:
     Map()
-      : mappingIndex(0)
+      : m_mappingIndex(0)
     {
     }
 
 
-    void addMapElement(string& rtrName);
-    void createMapFromAdjLsdb(Nlsr& pnlsr);
+    void addElement(string& rtrName);
+    void createFromAdjLsdb(Nlsr& pnlsr);
     string getRouterNameByMappingNo(int mn);
     int getMappingNoByRouterName(string& rName);
-    void resetMap();
+    void reset();
     std::list< MapEntry >& getMapList()
     {
-      return rMap;
+      return m_table;
     }
 
     int getMapSize()
     {
-      return rMap.size();
+      return m_table.size();
     }
 
 
   private:
-    bool addMapElement(MapEntry& mpe);
+    bool addElement(MapEntry& mpe);
 
-    int mappingIndex;
-    std::list< MapEntry > rMap;
+    int m_mappingIndex;
+    std::list< MapEntry > m_table;
   };
 
   ostream&
-  operator<<(ostream& os, Map& rMap);
+  operator<<(ostream& os, Map& map);
 
 } // namespace nlsr
 #endif

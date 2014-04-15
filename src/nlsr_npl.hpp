@@ -17,21 +17,21 @@ namespace nlsr
     Npl();
     ~Npl();
 
-    int insertIntoNpl(string& name);
-    int removeFromNpl(string& name);
-    void sortNpl();
-    int getNplSize()
+    int insert(string& name);
+    int remove(string& name);
+    void sort();
+    int getSize()
     {
-      return nameList.size();
+      return m_nameList.size();
     }
     std::list<string>& getNameList()
     {
-      return nameList;
+      return m_nameList;
     }
-    void printNpl();
+    void print();
 
   private:
-    std::list<string> nameList;
+    std::list<string> m_nameList;
 
   };
 

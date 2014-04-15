@@ -29,7 +29,7 @@ INIT_LOGGER ("SyncInterestTable");
 namespace Sync
 {
 
-SyncInterestTable::SyncInterestTable (boost::asio::io_service& io, ndn::time::Duration lifetime)
+SyncInterestTable::SyncInterestTable (boost::asio::io_service& io, ndn::time::system_clock::Duration lifetime)
   : m_entryLifetime (lifetime)
   , m_scheduler(io)
 {
@@ -103,7 +103,7 @@ SyncInterestTable::remove (DigestConstPtr digest)
 void SyncInterestTable::expireInterests ()
 { 
   uint32_t count = 0;
-  ndn::time::Point expireTime = ndn::time::now() - m_entryLifetime;
+  ndn::time::system_clock::TimePoint expireTime = ndn::time::system_clock::now() - m_entryLifetime;
   
   while (m_table.size () > 0)
     {

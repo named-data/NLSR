@@ -45,12 +45,12 @@ namespace nlsr
     }
 
   protected:
-    double ** adjMatrix;
+    double** adjMatrix;
     int numOfRouter;
 
     int vNoLink;
-    int *links;
-    double *linkCosts;
+    int* links;
+    double* linkCosts;
   };
 
   class LinkStateRoutingTableCalculator: public RoutingTableCalculator
@@ -71,8 +71,8 @@ namespace nlsr
 
   private:
     void doDijkstraPathCalculation(int sourceRouter);
-    void sortQueueByDistance(int *Q, double *dist,int start,int element);
-    int isNotExplored(int *Q, int u,int start, int element);
+    void sortQueueByDistance(int* Q, double* dist,int start,int element);
+    int isNotExplored(int* Q, int u,int start, int element);
     void printAllLsPath(int sourceRouter);
     void printLsPath(int destRouter);
     void addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, RoutingTable& rt,
@@ -88,8 +88,8 @@ namespace nlsr
 
 
   private:
-    int *parent;
-    double *distance;
+    int* m_parent;
+    double* m_distance;
 
 
     const int EMPTY_PARENT;
@@ -106,13 +106,13 @@ namespace nlsr
       :  MATH_PI(3.141592654)
     {
       numOfRouter=rn;
-      isDryRun=0;
+      m_isDryRun=0;
     }
     HypRoutingTableCalculator(int rn, int idr)
       :  MATH_PI(3.141592654)
     {
       numOfRouter=rn;
-      isDryRun=idr;
+      m_isDryRun=idr;
     }
 
     void calculatePath(Map& pMap, RoutingTable& rt, Nlsr& pnlsr);
@@ -130,11 +130,11 @@ namespace nlsr
                                       RoutingTable& rt, int noFaces,int dest);
 
   private:
-    int isDryRun;
+    bool m_isDryRun;
 
-    int *linkFaces;
-    double *distanceToNeighbor;
-    double *distFromNbrToDest;
+    int* m_linkFaces;
+    double* m_distanceToNeighbor;
+    double* m_distFromNbrToDest;
 
     const double MATH_PI;
 

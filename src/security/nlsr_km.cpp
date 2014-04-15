@@ -6,17 +6,19 @@
 #include "nlsr_km.hpp"
 #include "nlsr.hpp"
 
+#define THIS_FILE "nlsr_km.cpp"
+
 namespace nlsr
 {
   bool
-  KeyManager::initKeyManager(ConfParameter &cp)
+  KeyManager::initialize(ConfParameter &cp)
   {
     initCertSeqFromFile(cp.getSeqFileDir());
     if( !loadAllCertificates(cp.getCertDir()) )
     {
       return false;
     }
-    nlsrRootKeyPrefix=cp.getRootKeyPrefix();
+    m_nlsrRootKeyPrefix=cp.getRootKeyPrefix();
     string processIdentityName(cp.getRootKeyPrefix());
     processIdentityName += "/";
     processIdentityName += cp.getSiteName();
@@ -26,22 +28,22 @@ namespace nlsr
     processIdentityName += cp.getRouterName();
     ndn::Name ri(processIdentityName);
     std::cout<<"Router Identity: "<<ri.toUri()<<std::endl;
-    routerIdentity=ri;
+    m_routerIdentity=ri;
     processIdentityName += "/";
     processIdentityName += "nlsr";
     cout<<"Proces Identity Name: "<<processIdentityName<<endl;
     ndn::Name identityName(processIdentityName);
-    processIdentity=identityName;
-    ndn::KeyChain::deleteIdentity(processIdentity);
-    processCertName = ndn::KeyChain::createIdentity(processIdentity);
-    cout<<"Certificate Name: "<<processCertName.toUri()<<endl;
-    processKeyName=processCertName.getPrefix(-2);
-    cout<<"Key Name: "<<processKeyName.toUri()<<endl;
+    m_processIdentity=identityName;
+    ndn::KeyChain::deleteIdentity(m_processIdentity);
+    m_processCertName = ndn::KeyChain::createIdentity(m_processIdentity);
+    cout<<"Certificate Name: "<<m_processCertName.toUri()<<endl;
+    m_processKeyName=m_processCertName.getPrefix(-2);
+    cout<<"Key Name: "<<m_processKeyName.toUri()<<endl;
     ndn::shared_ptr<ndn::IdentityCertificate> cert = 
-                                                getCertificate(processCertName);
-    signByIdentity(*(cert),routerIdentity);
-    certStore.addCertificate(cert, certSeqNo, true);
-    certStore.printCertStore();
+                                                getCertificate(m_processCertName);
+    signByIdentity(*(cert),m_routerIdentity);
+    m_certStore.addCertificate(cert, m_certSeqNo, true);
+    m_certStore.print();
     return true;
   }
 
@@ -70,35 +72,35 @@ namespace nlsr
         ndn::io::load<ndn::IdentityCertificate>(inputFile, ndn::io::BASE_64);
       ndn::Name certName=cert->getName();
       switch(keyType)
-      {
+        {
         case KEY_TYPE_ROOT:
-          certStore.addCertificate(cert, 10, true);
-          rootCertName=certName;
-          std::cout<<"Root Cert: "<<rootCertName<<std::endl;
+          m_certStore.addCertificate(cert, 10, true);
+          m_rootCertName=certName;
+          std::cout<<"Root Cert: "<<m_rootCertName<<std::endl;
           break;
         case KEY_TYPE_SITE:
-          certStore.addCertificate(cert, 10, true);
-          siteCertName=certName;
-          std::cout<<"Site Cert: "<<siteCertName<<std::endl;
+          m_certStore.addCertificate(cert, 10, true);
+          m_siteCertName=certName;
+          std::cout<<"Site Cert: "<<m_siteCertName<<std::endl;
           break;
         case KEY_TYPE_OPERATOR:
-          certStore.addCertificate(cert, 10, true);
-          opCertName=certName;
-          std::cout<<"Operator Cert: "<<opCertName<<std::endl;
+          m_certStore.addCertificate(cert, 10, true);
+          m_opCertName=certName;
+          std::cout<<"Operator Cert: "<<m_opCertName<<std::endl;
           break;
         case KEY_TYPE_ROUTER:
-          certStore.addCertificate(cert, certSeqNo, true);
-          routerCertName=certName;
-          std::cout<<"Router Cert: "<<routerCertName<<std::endl;
+          m_certStore.addCertificate(cert, m_certSeqNo, true);
+          m_routerCertName=certName;
+          std::cout<<"Router Cert: "<<m_routerCertName<<std::endl;
           break;
         case KEY_TYPE_PROCESS:
-          certStore.addCertificate(cert, certSeqNo, true);
-          processCertName=certName;
-          std::cout<<"Process Cert: "<<processCertName<<std::endl;
+          m_certStore.addCertificate(cert, m_certSeqNo, true);
+          m_processCertName=certName;
+          std::cout<<"Process Cert: "<<m_processCertName<<std::endl;
           break;
         default:
           break;
-      }
+        }
       return true;
     }
     catch(std::exception& e)
@@ -111,65 +113,65 @@ namespace nlsr
   ndn::Name
   KeyManager::getProcessCertName()
   {
-    return processCertName;
+    return m_processCertName;
   }
 
   ndn::Name
   KeyManager::getRouterCertName()
   {
-    return routerCertName;
+    return m_routerCertName;
   }
 
   ndn::Name
   KeyManager::getOperatorCertName()
   {
-    return opCertName;
+    return m_opCertName;
   }
 
   ndn::Name
   KeyManager::getSiteCertName()
   {
-    return siteCertName;
+    return m_siteCertName;
   }
 
   ndn::Name
   KeyManager::getRootCertName()
   {
-    return rootCertName;
+    return m_rootCertName;
   }
 
   uint32_t
   KeyManager::getCertSeqNo()
   {
-    return certSeqNo;
+    return m_certSeqNo;
   }
 
   void
   KeyManager::setCerSeqNo(uint32_t csn)
   {
-    certSeqNo=csn;
+    m_certSeqNo=csn;
   }
 
   void
   KeyManager::initCertSeqFromFile(string certSeqFileDir)
   {
-    certSeqFileNameWithPath=certSeqFileDir;
-    if( certSeqFileNameWithPath.empty() )
+    m_certSeqFileNameWithPath=certSeqFileDir;
+    if( m_certSeqFileNameWithPath.empty() )
     {
       SequencingManager sm;
-      certSeqFileNameWithPath=sm.getUserHomeDirectory();
+      m_certSeqFileNameWithPath=sm.getUserHomeDirectory();
     }
-    certSeqFileNameWithPath += "/nlsrCertSeqNo.txt";
-    cout<<"Key Seq File Name: "<< certSeqFileNameWithPath<<endl;
-    std::ifstream inputFile(certSeqFileNameWithPath.c_str(),ios::binary);
+    m_certSeqFileNameWithPath += "/nlsrCertSeqNo.txt";
+    cout<<"Key Seq File Name: "<< m_certSeqFileNameWithPath<<endl;
+    std::ifstream inputFile(m_certSeqFileNameWithPath.c_str(),ios::binary);
     if ( inputFile.good() )
     {
-      inputFile>>certSeqNo;
-      certSeqNo++;
+      inputFile>>m_certSeqNo;
+      m_certSeqNo++;
     }
     else
     {
-      certSeqNo=1;
+      m_certSeqNo=1;
     }
     writeCertSeqToFile();
   }
@@ -177,40 +179,40 @@ namespace nlsr
   void
   KeyManager::writeCertSeqToFile()
   {
-    std::ofstream outputFile(certSeqFileNameWithPath.c_str(),ios::binary);
-    outputFile<<certSeqNo;
+    std::ofstream outputFile(m_certSeqFileNameWithPath.c_str(),ios::binary);
+    outputFile<<m_certSeqNo;
     outputFile.close();
   }
 
   bool
   KeyManager::isNewCertificate(std::string certName, int checkSeqNum)
   {
-    return certStore.isCertificateNewInStore(certName,checkSeqNum);
+    return m_certStore.isCertificateNewInStore(certName,checkSeqNum);
   }
 
   std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool>
   KeyManager::getCertificateFromStore(const std::string certName, int checkSeqNum)
   {
-    return certStore.getCertificateFromStore(certName, checkSeqNum);
+    return m_certStore.getCertificateFromStore(certName, checkSeqNum);
   }
 
   std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool>
   KeyManager::getCertificateFromStore(const std::string certName)
   {
-    return certStore.getCertificateFromStore(certName);
+    return m_certStore.getCertificateFromStore(certName);
   }
 
   bool
   KeyManager::addCertificate(ndn::shared_ptr<ndn::IdentityCertificate> pcert
                              , uint32_t csn, bool isv)
   {
-    return certStore.addCertificate(pcert, csn, isv);
+    return m_certStore.addCertificate(pcert, csn, isv);
   }
   
   std::pair<uint32_t, bool> 
   KeyManager::getCertificateSeqNum(std::string certName)
   {
-    return certStore.getCertificateSeqNum(certName);
+    return m_certStore.getCertificateSeqNum(certName);
   }
 
   nlsrKeyType
@@ -221,7 +223,7 @@ namespace nlsr
     std::string opHandle("O.Start");
     std::string routerHandle("R.Start");
     std::string processHandle("nlsr");
-    if ( nt.getTokenString(0,nt.getTokenPosition(KEY)-1) == nlsrRootKeyPrefix)
+    if ( nt.getTokenString(0,nt.getTokenPosition(KEY)-1) == m_nlsrRootKeyPrefix)
     {
       return KEY_TYPE_ROOT;
     }
@@ -249,7 +251,7 @@ namespace nlsr
   KeyManager::getRouterName(const std::string name)
   {
     std::string routerName;
-    std::string rkp(nlsrRootKeyPrefix);
+    std::string rkp(m_nlsrRootKeyPrefix);
     nlsrTokenizer ntRkp(rkp,"/");
     nlsrTokenizer nt(name,"/");
     std::string KEY("KEY");
@@ -295,7 +297,7 @@ namespace nlsr
   {
     std::string siteName;
     std::string routerName;
-    std::string rkp(nlsrRootKeyPrefix);
+    std::string rkp(m_nlsrRootKeyPrefix);
     nlsrTokenizer ntRkp(rkp,"/");
     nlsrTokenizer nt(name,"/");
     std::string KEY("KEY");
@@ -324,7 +326,7 @@ namespace nlsr
   {
     std::string rName;
     nlsrTokenizer nt(name,"/");
-    std::string rkp(nlsrRootKeyPrefix);
+    std::string rkp(m_nlsrRootKeyPrefix);
     nlsrTokenizer ntRkp(rkp,"/");
     rName=nt.getTokenString(0,ntRkp.getTokenNumber()-1);
     return rName;
@@ -356,37 +358,37 @@ namespace nlsr
       }
       
       std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> signee=
-                             certStore.getCertificateFromStore(signingCertName);
+                             m_certStore.getCertificateFromStore(signingCertName);
       
       if( signee.second )
       {
         switch(paketCertType)
-        {
+          {
           case KEY_TYPE_ROOT:
-            return ((getRootName(packetName) == nlsrRootKeyPrefix) &&
+            return ((getRootName(packetName) == m_nlsrRootKeyPrefix) &&
                      verifySignature(packet,signee.first->getPublicKeyInfo()));
             break;
           case KEY_TYPE_SITE:
             return ((getRootName(packetName) == getRootName(signingCertName)) &&
                       verifySignature(packet,signee.first->getPublicKeyInfo()) &&
-                      certStore.getCertificateIsVerified(signingCertName));                   
+                      m_certStore.getCertificateIsVerified(signingCertName));                   
             break;
           case KEY_TYPE_OPERATOR:
             return ((getSiteName(packetName) == getSiteName(signingCertName)) &&
                      verifySignature(packet,signee.first->getPublicKeyInfo()) &&
-                     certStore.getCertificateIsVerified(signingCertName)); 
+                     m_certStore.getCertificateIsVerified(signingCertName)); 
             break;
           case KEY_TYPE_ROUTER:
             return ((getSiteName(packetName) == getSiteName(signingCertName)) &&
                      verifySignature(packet,signee.first->getPublicKeyInfo()) &&
-                     certStore.getCertificateIsVerified(signingCertName));
+                     m_certStore.getCertificateIsVerified(signingCertName));
             break;
           case KEY_TYPE_PROCESS:
             return ((getRouterName(packetName) == getRouterName(signingCertName)) &&
                      verifySignature(packet,signee.first->getPublicKeyInfo()) &&
-                     certStore.getCertificateIsVerified(signingCertName));
+                     m_certStore.getCertificateIsVerified(signingCertName));
             break;
-        }
+          }
       }
       else
       {

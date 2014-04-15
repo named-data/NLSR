@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
+#include <cstdio>
 #include <ndn-cpp-dev/face.hpp>
 #include <ndn-cpp-dev/security/key-chain.hpp>
 #include <ndn-cpp-dev/security/identity-certificate.hpp>
@@ -14,6 +15,7 @@
 #include "security/nlsr_cert_store.hpp"
 #include "security/nlsr_cse.hpp"
 
+#define THIS_FILE "nlsr.cpp"
 
 namespace nlsr
 {
@@ -33,46 +35,49 @@ namespace nlsr
   Nlsr::setInterestFilterNlsr(const string& name)
   {
     getNlsrFace()->setInterestFilter(name,
-                                     func_lib::bind(&interestManager::processInterest, &im,
+                                     func_lib::bind(&InterestManager::processInterest, &m_im,
                                          boost::ref(*this), _1, _2),
                                      func_lib::bind(&Nlsr::nlsrRegistrationFailed, this, _1));
   }
 
   void
-  Nlsr::initNlsr()
+  Nlsr::initialize()
   {
-    confParam.buildRouterPrefix();
-    nlsrLogger.initNlsrLogger(confParam.getLogDir());
-    nlsrLsdb.setLsaRefreshTime(confParam.getLsaRefreshTime());
-    nlsrLsdb.setThisRouterPrefix(confParam.getRouterPrefix());
-    fib.setFibEntryRefreshTime(2*confParam.getLsaRefreshTime());
-    if( ! km.initKeyManager(confParam) )
+    src::logger lg;
+    m_confParam.buildRouterPrefix();
+    m_nlsrLogger.initNlsrLogger(m_confParam.getLogDir());
+    m_nlsrLsdb.setLsaRefreshTime(m_confParam.getLsaRefreshTime());
+    m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix());
+    m_fib.setEntryRefreshTime(2*m_confParam.getLsaRefreshTime());
+    if( ! m_km.initialize(m_confParam) )
     {
       std::cerr<<"Can not initiate/load certificate"<<endl;
+      BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Certificate initiation"
+                   <<" error";
     }
-    sm.setSeqFileName(confParam.getSeqFileDir());
-    sm.initiateSeqNoFromFile();
+    m_sm.setSeqFileName(m_confParam.getSeqFileDir());
+    m_sm.initiateSeqNoFromFile();
     /* debugging purpose start */
-    cout <<	confParam;
-    adl.printAdl();
-    npl.printNpl();
+    cout <<	m_confParam;
+    m_adl.printAdl();
+    m_npl.print();
     /* debugging purpose end */
-    nlsrLsdb.buildAndInstallOwnNameLsa(boost::ref(*this));
-    nlsrLsdb.buildAndInstallOwnCorLsa(boost::ref(*this));
-    setInterestFilterNlsr(confParam.getRouterPrefix());
-    setInterestFilterNlsr(confParam.getChronosyncLsaPrefix()+
-                          confParam.getRouterPrefix());
-    setInterestFilterNlsr(confParam.getRootKeyPrefix());
-    slh.setSyncPrefix(confParam.getChronosyncSyncPrefix());
-    slh.createSyncSocket(boost::ref(*this));
-    slh.publishKeyUpdate(km);
-    im.scheduleInfoInterest(boost::ref(*this),10);
+    m_nlsrLsdb.buildAndInstallOwnNameLsa(boost::ref(*this));
+    m_nlsrLsdb.buildAndInstallOwnCorLsa(boost::ref(*this));
+    setInterestFilterNlsr(m_confParam.getRouterPrefix());
+    setInterestFilterNlsr(m_confParam.getChronosyncLsaPrefix()+
+                          m_confParam.getRouterPrefix());
+    setInterestFilterNlsr(m_confParam.getRootKeyPrefix());
+    m_slh.setSyncPrefix(m_confParam.getChronosyncSyncPrefix());
+    m_slh.createSyncSocket(boost::ref(*this));
+    m_slh.publishKeyUpdate(m_km);
+    m_im.scheduleInfoInterest(boost::ref(*this),10);
   }
 
   void
   Nlsr::startEventLoop()
   {
-    io->run();
+    m_io->run();
   }
 
   int
@@ -95,6 +100,7 @@ using namespace nlsr;
 int
 main(int argc, char **argv)
 {
+  src::logger lg;
   nlsr::Nlsr nlsr_;
   string programName(argv[0]);
   nlsr_.setConfFileName("nlsr.conf");
@@ -102,7 +108,7 @@ main(int argc, char **argv)
   while ((opt = getopt(argc, argv, "df:p:h")) != -1)
   {
     switch (opt)
-    {
+      {
       case 'f':
         nlsr_.setConfFileName(optarg);
         break;
@@ -121,15 +127,16 @@ main(int argc, char **argv)
       default:
         nlsr_.usage(programName);
         return EXIT_FAILURE;
-    }
+      }
   }
   ConfFileProcessor cfp(nlsr_.getConfFileName());
   int res=cfp.processConfFile(nlsr_);
   if ( res < 0 )
   {
+    std::cerr<<"Error in configuration file processing! Exiting from NLSR"<<std::endl;
     return EXIT_FAILURE;
   }
-  nlsr_.initNlsr();
+  nlsr_.initialize();
   try
   {
     nlsr_.startEventLoop();

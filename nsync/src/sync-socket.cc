@@ -56,7 +56,7 @@ SyncSocket::publishData(const Name &prefix, uint64_t session, const char *buf, s
 {
   shared_ptr<Data> data = make_shared<Data>();
   data->setContent(reinterpret_cast<const uint8_t*>(buf), len);
-  data->setFreshnessPeriod(1000*freshness);
+  data->setFreshnessPeriod(time::seconds(freshness));
 
   m_ioService->post(bind(&SyncSocket::publishDataInternal, this, data, prefix, session,seq));
 

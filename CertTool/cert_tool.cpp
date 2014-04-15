@@ -86,8 +86,8 @@ namespace
                 certificateName.append("KEY").append(
                     keyName.get(-1)).append("ID-CERT").appendVersion();
                 certificate->setName(certificateName);
-                certificate->setNotBefore(ndn::getNow());
-                certificate->setNotAfter(ndn::getNow() + 63072000 /* 2 years*/);
+                certificate->setNotBefore(ndn::time::system_clock::now());
+                certificate->setNotAfter(ndn::time::system_clock::now() + ndn::time::days(730) /* 2 years*/);
                 certificate->setPublicKeyInfo(*pubKey);
                 certificate->addSubjectDescription(
                     ndn::CertificateSubjectDescription("2.5.4.41",
@@ -110,7 +110,7 @@ namespace
                         }
                         return identityName;
                     }
-                    ndn::KeyChain::addCertificate(*(certificate));
+                    ndn::KeyChain::addCertificateAsIdentityDefault(*(certificate));
                 }
                 
                 certName=certificate->getName();
@@ -135,7 +135,7 @@ namespace
             try
             {
                 ndn::KeyChain::deleteCertificate(cert->getName());
-                ndn::KeyChain::addCertificate(*(cert));
+                ndn::KeyChain::addCertificateAsIdentityDefault(*(cert));
                 return true;
             }
             catch(InfoError& e)

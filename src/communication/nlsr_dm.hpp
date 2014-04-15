@@ -18,8 +18,8 @@ namespace nlsr
   class DataManager
   {
   public:
-    void processContent(Nlsr& pnlsr, const ndn::Interest &interest,
-                        const ndn::Data& data, interestManager& im);
+    void processContent(Nlsr& pnlsr, const ndn::Interest& interest,
+                        const ndn::Data& data, InterestManager& im);
   private:
     void processContentInfo(Nlsr& pnlsr, string& dataName,
                             string& dataContent);

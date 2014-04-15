@@ -12,39 +12,39 @@ namespace nlsr
   {
   public:
     NextHop()
-      : connectingFace(0)
-      , routeCost(0)
+      : m_connectingFace(0)
+      , m_routeCost(0)
     {
     }
 
     NextHop(int cf, double rc)
     {
-      connectingFace=cf;
-      routeCost=rc;
+      m_connectingFace=cf;
+      m_routeCost=rc;
     }
 
     int getConnectingFace() const
     {
-      return connectingFace;
+      return m_connectingFace;
     }
 
     void setConnectingFace(int cf)
     {
-      connectingFace=cf;
+      m_connectingFace=cf;
     }
 
     double getRouteCost() const
     {
-      return routeCost;
+      return m_routeCost;
     }
 
     void setRouteCost(double rc)
     {
-      routeCost=rc;
+      m_routeCost=rc;
     }
   private:
-    int connectingFace;
-    double routeCost;
+    int m_connectingFace;
+    double m_routeCost;
   };
 
 

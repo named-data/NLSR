@@ -10,6 +10,9 @@
 #include "utility/nlsr_tokenizer.hpp"
 #include "nlsr_lsdb.hpp"
 #include "security/nlsr_km.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_dm.cpp"
 
 namespace nlsr
 {
@@ -19,7 +22,7 @@ namespace nlsr
 
   void
   DataManager::processContent(Nlsr& pnlsr, const ndn::Interest &interest,
-                              const ndn::Data & data, interestManager& im)
+                              const ndn::Data & data, InterestManager& im)
   {
     cout << "I: " << interest.toUri() << endl;
     string dataName(data.getName().toUri());
@@ -141,7 +144,7 @@ namespace nlsr
     if ( pnlsr.getLsdb().isNameLsaNew(lsaKey,lsSeqNo))
     {
       NameLsa nameLsa;
-      if( nameLsa.initNameLsaFromContent(dataContent) )
+      if( nameLsa.initializeFromContent(dataContent) )
       {
         pnlsr.getLsdb().installNameLsa(pnlsr, nameLsa);
       }
@@ -159,7 +162,7 @@ namespace nlsr
     if ( pnlsr.getLsdb().isAdjLsaNew(lsaKey,lsSeqNo))
     {
       AdjLsa adjLsa;
-      if( adjLsa.initAdjLsaFromContent(dataContent) )
+      if( adjLsa.initializeFromContent(dataContent) )
       {
         pnlsr.getLsdb().installAdjLsa(pnlsr, adjLsa);
       }
@@ -177,7 +180,7 @@ namespace nlsr
     if ( pnlsr.getLsdb().isCorLsaNew(lsaKey,lsSeqNo))
     {
       CorLsa corLsa;
-      if( corLsa.initCorLsaFromContent(dataContent) )
+      if( corLsa.initializeFromContent(dataContent) )
       {
         pnlsr.getLsdb().installCorLsa(pnlsr, corLsa);
       }

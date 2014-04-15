@@ -6,6 +6,9 @@
 #include "nlsr_lsa.hpp"
 #include "nlsr_lsdb.hpp"
 #include "nlsr_map.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_map.cpp"
 
 namespace nlsr
 {
@@ -33,25 +36,25 @@ namespace nlsr
   }
 
   void
-  Map::addMapElement(string& rtrName)
+  Map::addElement(string& rtrName)
   {
-    MapEntry me(rtrName,mappingIndex);
-    if (  addMapElement(me) )
+    MapEntry me(rtrName,m_mappingIndex);
+    if (  addElement(me) )
     {
-      mappingIndex++;
+      m_mappingIndex++;
     }
   }
 
   bool
-  Map::addMapElement(MapEntry& mpe)
+  Map::addElement(MapEntry& mpe)
   {
     //cout << mpe;
-    std::list<MapEntry >::iterator it = std::find_if( rMap.begin(),
-                                        rMap.end(),
+    std::list<MapEntry >::iterator it = std::find_if( m_table.begin(),
+                                        m_table.end(),
                                         bind(&mapEntryCompareByRouter, _1, mpe.getRouter()));
-    if ( it == rMap.end() )
+    if ( it == m_table.end() )
     {
-      rMap.push_back(mpe);
+      m_table.push_back(mpe);
       return true;
     }
     return false;
@@ -60,10 +63,10 @@ namespace nlsr
   string
   Map::getRouterNameByMappingNo(int mn)
   {
-    std::list<MapEntry >::iterator it = std::find_if( rMap.begin(),
-                                        rMap.end(),
+    std::list<MapEntry >::iterator it = std::find_if( m_table.begin(),
+                                        m_table.end(),
                                         bind(&mapEntryCompareByMappingNo, _1, mn));
-    if ( it != rMap.end() )
+    if ( it != m_table.end() )
     {
       return (*it).getRouter();
     }
@@ -73,10 +76,10 @@ namespace nlsr
   int
   Map::getMappingNoByRouterName(string& rName)
   {
-    std::list<MapEntry >::iterator it = std::find_if( rMap.begin(),
-                                        rMap.end(),
+    std::list<MapEntry >::iterator it = std::find_if( m_table.begin(),
+                                        m_table.end(),
                                         bind(&mapEntryCompareByRouter, _1, rName));
-    if ( it != rMap.end() )
+    if ( it != m_table.end() )
     {
       return (*it).getMappingNumber();
     }
@@ -84,36 +87,36 @@ namespace nlsr
   }
 
   void
-  Map::createMapFromAdjLsdb(Nlsr& pnlsr)
+  Map::createFromAdjLsdb(Nlsr& pnlsr)
   {
     std::list<AdjLsa> adjLsdb=pnlsr.getLsdb().getAdjLsdb();
     for( std::list<AdjLsa>::iterator it=adjLsdb.begin();
          it!= adjLsdb.end() ; it++)
     {
       string linkStartRouter=(*it).getOrigRouter();
-      addMapElement(linkStartRouter);
+      addElement(linkStartRouter);
       std::list<Adjacent> adl=(*it).getAdl().getAdjList();
       for( std::list<Adjacent>::iterator itAdl=adl.begin();
            itAdl!= adl.end() ; itAdl++)
       {
-        string linkEndRouter=(*itAdl).getAdjacentName();
-        addMapElement(linkEndRouter);
+        string linkEndRouter=(*itAdl).getName();
+        addElement(linkEndRouter);
       }
     }
   }
 
   void
-  Map::resetMap()
+  Map::reset()
   {
-    rMap.clear();
-    mappingIndex=0;
+    m_table.clear();
+    m_mappingIndex=0;
   }
 
   ostream&
-  operator<<(ostream& os, Map& rMap)
+  operator<<(ostream& os, Map& map)
   {
     os<<"---------------Map----------------------"<<endl;
-    std::list< MapEntry > ml=rMap.getMapList();
+    std::list< MapEntry > ml=map.getMapList();
     for( std::list<MapEntry>::iterator it=ml.begin(); it!= ml.end() ; it++)
     {
       os<< (*it);

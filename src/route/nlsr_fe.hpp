@@ -17,69 +17,69 @@ namespace nlsr
   {
   public:
     FibEntry()
-      : name()
-      , timeToRefresh(0)
-      , feSeqNo(0)
-      , nhl()
+      : m_name()
+      , m_timeToRefresh(0)
+      , m_seqNo(0)
+      , m_nhl()
     {
     }
 
     FibEntry(string n)
-      : timeToRefresh(0)
-      , feSeqNo(0)
-      , nhl()
+      : m_timeToRefresh(0)
+      , m_seqNo(0)
+      , m_nhl()
     {
-      name=n;
+      m_name=n;
     }
 
     string getName()
     {
-      return name;
+      return m_name;
     }
 
     Nhl& getNhl()
     {
-      return nhl;
+      return m_nhl;
     }
 
     int getTimeToRefresh()
     {
-      return timeToRefresh;
+      return m_timeToRefresh;
     }
 
     void setTimeToRefresh(int ttr)
     {
-      timeToRefresh=ttr;
+      m_timeToRefresh=ttr;
     }
 
-    void setFeExpiringEventId(ndn::EventId feid)
+    void setExpiringEventId(ndn::EventId feid)
     {
-      feExpiringEventId=feid;
+      m_expiringEventId=feid;
     }
 
-    ndn::EventId getFeExpiringEventId()
+    ndn::EventId getExpiringEventId()
     {
-      return feExpiringEventId;
+      return m_expiringEventId;
     }
 
-    void setFeSeqNo(int fsn)
+    void setSeqNo(int fsn)
     {
-      feSeqNo=fsn;
+      m_seqNo=fsn;
     }
 
-    int getFeSeqNo()
+    int getSeqNo()
     {
-      return feSeqNo;
+      return m_seqNo;
     }
 
-    bool isEqualNextHops(Nhl &nhlOther);
+    bool isEqualNextHops(Nhl& nhlOther);
 
   private:
-    string name;
-    int timeToRefresh;
-    ndn::EventId feExpiringEventId;
-    int feSeqNo;
-    Nhl nhl;
+    string m_name;
+    int m_timeToRefresh;
+    ndn::EventId m_expiringEventId;
+    int m_seqNo;
+    Nhl m_nhl;
   };
 
   ostream& operator<<(ostream& os,FibEntry fe);

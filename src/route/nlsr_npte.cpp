@@ -3,6 +3,9 @@
 #include "nlsr_npte.hpp"
 #include "nlsr_rte.hpp"
 #include "nlsr_nexthop.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_npte.cpp"
 
 namespace nlsr
 {
@@ -12,14 +15,14 @@ namespace nlsr
   void
   Npte::generateNhlfromRteList()
   {
-    nhl.resetNhl();
-    for( std::list<RoutingTableEntry>::iterator it=rteList.begin();
-         it != rteList.end(); ++it )
+    m_nhl.reset();
+    for( std::list<RoutingTableEntry>::iterator it=m_rteList.begin();
+         it != m_rteList.end(); ++it )
     {
       for(std::list< NextHop >::iterator nhit=(*it).getNhl().getNextHopList().begin();
           nhit != (*it).getNhl().getNextHopList().end(); ++nhit)
       {
-        nhl.addNextHop((*nhit));
+        m_nhl.addNextHop((*nhit));
       }
     }
   }
@@ -35,28 +38,28 @@ namespace nlsr
   void
   Npte::removeRoutingTableEntry(RoutingTableEntry& rte)
   {
-    std::list<RoutingTableEntry >::iterator it = std::find_if( rteList.begin(),
-        rteList.end(),
+    std::list<RoutingTableEntry >::iterator it = std::find_if( m_rteList.begin(),
+        m_rteList.end(),
         bind(&rteCompare, _1, rte.getDestination()));
-    if ( it != rteList.end() )
+    if ( it != m_rteList.end() )
     {
-      rteList.erase(it);
+      m_rteList.erase(it);
     }
   }
 
   void
   Npte::addRoutingTableEntry(RoutingTableEntry &rte)
   {
-    std::list<RoutingTableEntry >::iterator it = std::find_if( rteList.begin(),
-        rteList.end(),
+    std::list<RoutingTableEntry >::iterator it = std::find_if( m_rteList.begin(),
+        m_rteList.end(),
         bind(&rteCompare, _1, rte.getDestination()));
-    if ( it == rteList.end() )
+    if ( it == m_rteList.end() )
     {
-      rteList.push_back(rte);
+      m_rteList.push_back(rte);
     }
     else
     {
-      (*it).getNhl().resetNhl(); // reseting existing routing table's next hop
+      (*it).getNhl().reset(); // reseting existing routing table's next hop
       for(std::list< NextHop >::iterator nhit=rte.getNhl().getNextHopList().begin();
           nhit != rte.getNhl().getNextHopList().end(); ++nhit)
       {

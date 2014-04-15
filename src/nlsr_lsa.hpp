@@ -16,71 +16,70 @@ namespace nlsr
   {
   public:
     Lsa()
-      : origRouter()
-      , lsSeqNo()
-      , lifeTime()
-      , lsaExpiringEventId()
+      : m_origRouter()
+      , m_lsSeqNo()
+      , m_lifeTime()
+      , m_expiringEventId()
     {
     }
 
 
     void setLsType(uint8_t lst)
     {
-      lsType=lst;
+      m_lsType=lst;
     }
 
     uint8_t getLsType()
     {
-      return lsType;
+      return m_lsType;
     }
 
     void setLsSeqNo(uint32_t lsn)
     {
-      lsSeqNo=lsn;
+      m_lsSeqNo=lsn;
     }
 
     uint32_t getLsSeqNo()
     {
-      return lsSeqNo;
+      return m_lsSeqNo;
     }
 
     string& getOrigRouter()
     {
-      return origRouter;
+      return m_origRouter;
     }
 
     void setOrigRouter(string& org)
     {
-      origRouter=org;
+      m_origRouter=org;
     }
 
     uint32_t getLifeTime()
     {
-      return lifeTime;
+      return m_lifeTime;
     }
 
     void setLifeTime(uint32_t lt)
     {
-      lifeTime=lt;
+      m_lifeTime=lt;
     }
 
-    void setLsaExpiringEventId(ndn::EventId leei)
+    void setExpiringEventId(ndn::EventId leei)
     {
-      lsaExpiringEventId=leei;
+      m_expiringEventId=leei;
     }
 
-    ndn::EventId getLsaExpiringEventId()
+    ndn::EventId getExpiringEventId()
     {
-      return lsaExpiringEventId;
+      return m_expiringEventId;
     }
-
 
   protected:
-    string origRouter;
-    uint8_t lsType;
-    uint32_t lsSeqNo;
-    uint32_t lifeTime;
-    ndn::EventId lsaExpiringEventId;
+    string m_origRouter;
+    uint8_t m_lsType;
+    uint32_t m_lsSeqNo;
+    uint32_t m_lifeTime;
+    ndn::EventId m_expiringEventId;
   };
 
   class NameLsa:public Lsa
@@ -88,7 +87,7 @@ namespace nlsr
   public:
     NameLsa()
       : Lsa()
-      , npl()
+      , m_npl()
     {
       setLsType(1);
     }
@@ -97,26 +96,27 @@ namespace nlsr
 
     Npl& getNpl()
     {
-      return npl;
+      return m_npl;
     }
 
-    void addNameToLsa(string& name)
+    void addName(string& name)
     {
-      npl.insertIntoNpl(name);
+      m_npl.insert(name);
     }
 
-    void removeNameFromLsa(string& name)
+    void removeName(string& name)
     {
-      npl.removeFromNpl(name);
+      m_npl.remove(name);
     }
 
-    string getNameLsaKey();
+    string getKey();
 
-    string getNameLsaData();
-    bool initNameLsaFromContent(string content);
+    string getData();
+    bool initializeFromContent(string content);
+    void writeLog();
 
   private:
-    Npl npl;
+    Npl m_npl;
 
   };
 
@@ -128,7 +128,7 @@ namespace nlsr
   public:
     AdjLsa()
       : Lsa()
-      , adl()
+      , m_adl()
     {
       setLsType(2);
     }
@@ -137,28 +137,28 @@ namespace nlsr
            uint32_t nl ,Adl padl);
     Adl& getAdl()
     {
-      return adl;
+      return m_adl;
     }
 
-    void addAdjacentToLsa(Adjacent adj)
+    void addAdjacent(Adjacent adj)
     {
-      adl.insert(adj);
+      m_adl.insert(adj);
     }
-    string getAdjLsaKey();
-    string getAdjLsaData();
-    bool initAdjLsaFromContent(string content);
+    string getKey();
+    string getData();
+    bool initializeFromContent(string content);
     uint32_t getNoLink()
     {
-      return noLink;
+      return m_noLink;
     }
 
-    bool isLsaContentEqual(AdjLsa& alsa);
-    void addNptEntriesForAdjLsa(Nlsr& pnlsr);
-    void removeNptEntriesForAdjLsa(Nlsr& pnlsr);
+    bool isEqual(AdjLsa& alsa);
+    void addNptEntries(Nlsr& pnlsr);
+    void removeNptEntries(Nlsr& pnlsr);
 
   private:
-    uint32_t noLink;
-    Adl adl;
+    uint32_t m_noLink;
+    Adl m_adl;
   };
 
   std::ostream&
@@ -169,22 +169,22 @@ namespace nlsr
   public:
     CorLsa()
       : Lsa()
-      , corRad(0)
-      , corTheta(0)
+      , m_corRad(0)
+      , m_corTheta(0)
     {
       setLsType(3);
     }
 
     CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
            , double r, double theta);
-    string getCorLsaKey();
-    string getCorLsaData();
-    bool initCorLsaFromContent(string content);
+    string getKey();
+    string getData();
+    bool initializeFromContent(string content);
     double getCorRadius()
     {
-      if ( corRad >= 0 )
+      if ( m_corRad >= 0 )
       {
-        return corRad;
+        return m_corRad;
       }
       else
       {
@@ -194,23 +194,23 @@ namespace nlsr
 
     void setCorRadius(double cr)
     {
-      corRad=cr;
+      m_corRad=cr;
     }
 
     double getCorTheta()
     {
-      return corTheta;
+      return m_corTheta;
     }
 
     void setCorTheta(double ct)
     {
-      corTheta=ct;
+      m_corTheta=ct;
     }
 
-    bool isLsaContentEqual(CorLsa& clsa);
+    bool isEqual(CorLsa& clsa);
   private:
-    double corRad;
-    double corTheta;
+    double m_corRad;
+    double m_corTheta;
 
   };
 

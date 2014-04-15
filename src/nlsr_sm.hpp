@@ -14,11 +14,11 @@ namespace nlsr
   {
   public:
     SequencingManager()
-      : nameLsaSeq(0)
-      , adjLsaSeq(0)
-      , corLsaSeq(0)
-      , combinedSeqNo(0)
-      , seqFileNameWithPath()
+      : m_nameLsaSeq(0)
+      , m_adjLsaSeq(0)
+      , m_corLsaSeq(0)
+      , m_combinedSeqNo(0)
+      , m_seqFileNameWithPath()
     {
     }
 
@@ -29,48 +29,48 @@ namespace nlsr
 
     SequencingManager(uint64_t nlsn, uint64_t alsn, uint64_t clsn)
     {
-      nameLsaSeq=nlsn;
-      adjLsaSeq=alsn;
-      corLsaSeq=clsn;
+      m_nameLsaSeq=nlsn;
+      m_adjLsaSeq=alsn;
+      m_corLsaSeq=clsn;
       combineSequenceNo();
     }
 
     uint64_t getNameLsaSeq() const
     {
-      return nameLsaSeq;
+      return m_nameLsaSeq;
     }
 
     void setNameLsaSeq(uint64_t nlsn)
     {
-      nameLsaSeq=nlsn;
+      m_nameLsaSeq=nlsn;
       combineSequenceNo();
     }
 
     uint64_t getAdjLsaSeq() const
     {
-      return adjLsaSeq;
+      return m_adjLsaSeq;
     }
 
     void setAdjLsaSeq(uint64_t alsn)
     {
-      adjLsaSeq=alsn;
+      m_adjLsaSeq=alsn;
       combineSequenceNo();
     }
 
     uint64_t getCorLsaSeq() const
     {
-      return corLsaSeq;
+      return m_corLsaSeq;
     }
 
     void setCorLsaSeq(uint64_t clsn)
     {
-      corLsaSeq=clsn;
+      m_corLsaSeq=clsn;
       combineSequenceNo();
     }
 
     uint64_t getCombinedSeqNo() const
     {
-      return combinedSeqNo;
+      return m_combinedSeqNo;
     }
 
     void writeSeqNoToFile();
@@ -84,11 +84,11 @@ namespace nlsr
 
 
   private:
-    uint64_t nameLsaSeq;
-    uint64_t adjLsaSeq;
-    uint64_t corLsaSeq;
-    uint64_t combinedSeqNo;
-    string seqFileNameWithPath;
+    uint64_t m_nameLsaSeq;
+    uint64_t m_adjLsaSeq;
+    uint64_t m_corLsaSeq;
+    uint64_t m_combinedSeqNo;
+    string m_seqFileNameWithPath;
   };
 
 

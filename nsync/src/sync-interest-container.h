@@ -47,14 +47,14 @@ struct Interest
   Interest (DigestConstPtr digest, const std::string &name, bool unknown=false)
   : m_digest (digest)
   , m_name (name)
-  , m_time (ndn::time::now())
+  , m_time (ndn::time::system_clock::now())
   , m_unknown (unknown)
   {
   }
   
   DigestConstPtr   m_digest;
   std::string      m_name;
-  ndn::time::Point m_time;
+  ndn::time::system_clock::TimePoint m_time;
   bool             m_unknown;
 };
 
@@ -87,7 +87,7 @@ struct InterestContainer : public mi::multi_index_container<
     
     mi::ordered_non_unique<
       mi::tag<timed>,
-      BOOST_MULTI_INDEX_MEMBER(Interest, ndn::time::Point, m_time)
+      BOOST_MULTI_INDEX_MEMBER(Interest, ndn::time::system_clock::TimePoint, m_time)
       >
     >
   >

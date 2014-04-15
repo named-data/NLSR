@@ -11,52 +11,52 @@ namespace nlsr
   {
   public:
     NlsrCertificateStoreEntry()
-      : cert(ndn::make_shared<ndn::IdentityCertificate>())
-      , certSeqNum(0)
-      , isSignerVerified(false)
+      : m_cert(ndn::make_shared<ndn::IdentityCertificate>())
+      , m_certSeqNum(0)
+      , m_isSignerVerified(false)
     {}
 
     NlsrCertificateStoreEntry(ndn::shared_ptr<ndn::IdentityCertificate> pcert
                               , uint32_t csn, bool isv)
-      : cert(pcert)
-      , certSeqNum(csn)
-      , isSignerVerified(isv)
+      : m_cert(pcert)
+      , m_certSeqNum(csn)
+      , m_isSignerVerified(isv)
     {}
 
     ndn::shared_ptr<ndn::IdentityCertificate> getCert() const
     {
-      return cert;
+      return m_cert;
     }
 
     void setCert(ndn::shared_ptr<ndn::IdentityCertificate> pcert)
     {
-      cert=pcert;
+      m_cert=pcert;
     }
 
     uint32_t getCertSeqNum() const
     {
-      return certSeqNum;
+      return m_certSeqNum;
     }
 
     void setCertSeqNum(uint32_t csn)
     {
-      certSeqNum=csn;
+      m_certSeqNum=csn;
     }
 
     bool getIsSignerVerified() const
     {
-      return isSignerVerified;
+      return m_isSignerVerified;
     }
 
     void setIsSignerVerified(bool isv)
     {
-      isSignerVerified=isv;
+      m_isSignerVerified=isv;
     }
 
   private:
-    ndn::shared_ptr<ndn::IdentityCertificate> cert;
-    uint32_t certSeqNum;
-    bool isSignerVerified;
+    ndn::shared_ptr<ndn::IdentityCertificate> m_cert;
+    uint32_t m_certSeqNum;
+    bool m_isSignerVerified;
   };
   /* Debugging Purpose */
   std::ostream&

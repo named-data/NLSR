@@ -12,11 +12,11 @@ namespace nlsr
   {
   public:
     NlsrCertificateStore()
-        : certTable()
-        , waitingList()
+        : m_certTable()
+        , m_waitingList()
     {}
 
-    bool addCertificate(NlsrCertificateStoreEntry & ncse);
+    bool addCertificate(NlsrCertificateStoreEntry& ncse);
     bool addCertificate(ndn::shared_ptr<ndn::IdentityCertificate> pcert
                         , uint32_t csn, bool isv);
     std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool>
@@ -26,7 +26,7 @@ namespace nlsr
     bool removeCertificateFromStroe(const std::string certName);
     bool isCertificateNewInStore(const std::string certName, int checkSeqNo);
     std::pair<uint32_t, bool> getCertificateSeqNum(std::string certName);
-    void printCertStore();
+    void print();
     void setCertificateIsVerified(std::string certName, bool isVerified);
     bool getCertificateIsVerified(std::string certName);
   private:
@@ -34,8 +34,8 @@ namespace nlsr
     void updateWaitingList(std::string respCertName);
     
   private:
-    std::list<NlsrCertificateStoreEntry> certTable;
-    WaitingList waitingList;
+    std::list<NlsrCertificateStoreEntry> m_certTable;
+    WaitingList m_waitingList;
   };
 }
 

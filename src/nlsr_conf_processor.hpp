@@ -12,12 +12,12 @@ namespace nlsr
   {
   public:
     ConfFileProcessor()
-      :confFileName()
+      :m_confFileName()
     {
     }
     ConfFileProcessor(const string& cfile)
     {
-      confFileName=cfile;
+      m_confFileName=cfile;
     }
 
     int processConfFile(Nlsr& pnlsr);
@@ -49,7 +49,7 @@ namespace nlsr
 
 
   private:
-    string confFileName;
+    string m_confFileName;
   };
 
 } //namespace nlsr

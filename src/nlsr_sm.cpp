@@ -6,6 +6,9 @@
 #include <unistd.h>
 
 #include "nlsr_sm.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_sm.cpp"
 
 namespace nlsr
 {
@@ -15,41 +18,41 @@ namespace nlsr
   void
   SequencingManager::splittSequenceNo(uint64_t seqNo)
   {
-    combinedSeqNo=seqNo;
-    adjLsaSeq = (combinedSeqNo & 0xFFFFF);
-    corLsaSeq = ((combinedSeqNo >> 20) & 0xFFFFF);
-    nameLsaSeq = ((combinedSeqNo >> 40) & 0xFFFFF);
+    m_combinedSeqNo=seqNo;
+    m_adjLsaSeq = (m_combinedSeqNo & 0xFFFFF);
+    m_corLsaSeq = ((m_combinedSeqNo >> 20) & 0xFFFFF);
+    m_nameLsaSeq = ((m_combinedSeqNo >> 40) & 0xFFFFF);
   }
 
   void
   SequencingManager::combineSequenceNo()
   {
-    combinedSeqNo=0;
-    combinedSeqNo = combinedSeqNo | adjLsaSeq;
-    combinedSeqNo = combinedSeqNo | (corLsaSeq<<20);
-    combinedSeqNo = combinedSeqNo | (nameLsaSeq<<40);
+    m_combinedSeqNo=0;
+    m_combinedSeqNo = m_combinedSeqNo | m_adjLsaSeq;
+    m_combinedSeqNo = m_combinedSeqNo | (m_corLsaSeq<<20);
+    m_combinedSeqNo = m_combinedSeqNo | (m_nameLsaSeq<<40);
   }
 
   void
   SequencingManager::writeSeqNoToFile()
   {
-    std::ofstream outputFile(seqFileNameWithPath.c_str(),ios::binary);
-    outputFile<<combinedSeqNo;
+    std::ofstream outputFile(m_seqFileNameWithPath.c_str(),ios::binary);
+    outputFile<<m_combinedSeqNo;
     outputFile.close();
   }
 
   void
   SequencingManager::initiateSeqNoFromFile()
   {
-    cout<<"Seq File Name: "<< seqFileNameWithPath<<endl;
-    std::ifstream inputFile(seqFileNameWithPath.c_str(),ios::binary);
+    cout<<"Seq File Name: "<< m_seqFileNameWithPath<<endl;
+    std::ifstream inputFile(m_seqFileNameWithPath.c_str(),ios::binary);
     if ( inputFile.good() )
     {
-      inputFile>>combinedSeqNo;
-      splittSequenceNo(combinedSeqNo);
-      adjLsaSeq+=10;
-      corLsaSeq+=10;
-      nameLsaSeq+=10;
+      inputFile>>m_combinedSeqNo;
+      splittSequenceNo(m_combinedSeqNo);
+      m_adjLsaSeq+=10;
+      m_corLsaSeq+=10;
+      m_nameLsaSeq+=10;
       combineSequenceNo();
       inputFile.close();
     }
@@ -62,12 +65,12 @@ namespace nlsr
   void
   SequencingManager::setSeqFileName(string filePath)
   {
-    seqFileNameWithPath=filePath;
-    if( seqFileNameWithPath.empty() )
+    m_seqFileNameWithPath=filePath;
+    if( m_seqFileNameWithPath.empty() )
     {
-      seqFileNameWithPath=getUserHomeDirectory();
+      m_seqFileNameWithPath=getUserHomeDirectory();
     }
-    seqFileNameWithPath=seqFileNameWithPath+"/nlsrSeqNo.txt";
+    m_seqFileNameWithPath=m_seqFileNameWithPath+"/nlsrSeqNo.txt";
   }
 
   string

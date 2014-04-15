@@ -11,82 +11,82 @@ namespace nlsr
 
   public:
     Adjacent()
-      :adjacentName()
-      ,connectingFace(0)
-      ,linkCost(10.0)
-      ,status(0)
-      ,interestTimedOutNo(0)
+      :m_name()
+      ,m_connectingFace(0)
+      ,m_linkCost(10.0)
+      ,m_status(0)
+      ,m_interestTimedOutNo(0)
     {
     }
 
     Adjacent(const string& an)
-      :connectingFace(0)
-      ,linkCost(0.0)
-      ,status(0)
-      ,interestTimedOutNo(0)
+      :m_connectingFace(0)
+      ,m_linkCost(0.0)
+      ,m_status(0)
+      ,m_interestTimedOutNo(0)
     {
-      adjacentName=an;
+      m_name=an;
     }
 
     Adjacent(const string& an, int cf, double lc, int s, int iton);
 
-    string getAdjacentName()
+    string getName()
     {
-      return adjacentName;
+      return m_name;
     }
 
-    void setAdjacentName(const string& an)
+    void setName(const string& an)
     {
-      adjacentName=an;
+      m_name=an;
     }
 
     int getConnectingFace()
     {
-      return connectingFace;
+      return m_connectingFace;
     }
 
     void setConnectingFace(int cf)
     {
-      connectingFace=cf;
+      m_connectingFace=cf;
     }
 
     double getLinkCost()
     {
-      return linkCost;
+      return m_linkCost;
     }
 
     void setLinkCost(double lc)
     {
-      linkCost=lc;
+      m_linkCost=lc;
     }
 
     int getStatus()
     {
-      return status;
+      return m_status;
     }
 
     void setStatus(int s)
     {
-      status=s;
+      m_status=s;
     }
 
     int getInterestTimedOutNo()
     {
-      return interestTimedOutNo;
+      return m_interestTimedOutNo;
     }
 
     void setInterestTimedOutNo(int iton)
     {
-      interestTimedOutNo=iton;
+      m_interestTimedOutNo=iton;
     }
 
-    bool isAdjacentEqual(Adjacent& adj);
+    bool isEqual(Adjacent& adj);
   private:
-    string adjacentName;
-    int connectingFace;
-    double linkCost;
-    int status;
-    int interestTimedOutNo;
+    string m_name;
+    int m_connectingFace;
+    double m_linkCost;
+    int m_status;
+    int m_interestTimedOutNo;
   };
 
   std::ostream&

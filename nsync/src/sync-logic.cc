@@ -63,6 +63,10 @@ SyncLogic::SyncLogic (const Name& syncPrefix,
                       LogicUpdateCallback onUpdate,
                       LogicRemoveCallback onRemove)
   : m_state (new FullState)
+  , m_unknownDigestStoreTime(10)
+  , m_syncResponseFreshness(1000)
+  , m_syncInterestReexpress(4)
+  , m_defaultRecoveryRetransmitInterval(200)
   , m_syncInterestTable (*face->ioService(), time::seconds(m_syncInterestReexpress))
   , m_syncPrefix (syncPrefix)
   , m_onUpdate (onUpdate)
@@ -424,7 +428,7 @@ SyncLogic::processSyncData (const Name &name, DigestConstPtr digest, const char 
       // satisfyPendingSyncInterests (diffLog); // if there are interests in PIT, there is a point to satisfy them using new state
   
       // if state has changed, then it is safe to express a new interest
-      time::Duration after = time::milliseconds(GET_RANDOM (m_reexpressionJitter));
+      time::system_clock::Duration after = time::milliseconds(GET_RANDOM (m_reexpressionJitter));
       // cout << "------------ reexpress interest after: " << after << endl;
       EventId eventId = m_scheduler.scheduleEvent (after,
                                                    bind (&SyncLogic::sendSyncInterest, this));
@@ -596,7 +600,7 @@ SyncLogic::sendSyncRecoveryInterests (DigestConstPtr digest)
   Name interestName = m_syncPrefix;
   interestName.append("recovery").append(os.str());
 
-  time::Duration nextRetransmission = time::milliseconds (m_recoveryRetransmissionInterval + GET_RANDOM (m_reexpressionJitter));
+  time::system_clock::Duration nextRetransmission = time::milliseconds (m_recoveryRetransmissionInterval + GET_RANDOM (m_reexpressionJitter));
 
   m_recoveryRetransmissionInterval <<= 1;
     
@@ -634,7 +638,7 @@ SyncLogic::sendSyncData (const Name &name, DigestConstPtr digest, SyncStateMsg &
 
   Data syncData(name);
   syncData.setContent(reinterpret_cast<const uint8_t*>(wireData), size);
-  syncData.setFreshnessPeriod(m_syncResponseFreshness);
+  syncData.setFreshnessPeriod(time::seconds(m_syncResponseFreshness));
   
   m_keyChain->sign(syncData);
   
@@ -652,7 +656,7 @@ SyncLogic::sendSyncData (const Name &name, DigestConstPtr digest, SyncStateMsg &
     {
       _LOG_DEBUG_ID ("Satisfied our own Interest. Re-expressing (hopefully with a new digest)");
       
-      time::Duration after = time::milliseconds(GET_RANDOM (m_reexpressionJitter));
+      time::system_clock::Duration after = time::milliseconds(GET_RANDOM (m_reexpressionJitter));
       // cout << "------------ reexpress interest after: " << after << endl;
       EventId eventId = m_scheduler.scheduleEvent (after,
                                                    bind (&SyncLogic::sendSyncInterest, this));

@@ -17,7 +17,7 @@ namespace nlsr
   {
   public:
     Nhl()
-      : nexthopList()
+      : m_nexthopList()
     {
     }
 
@@ -26,25 +26,25 @@ namespace nlsr
     }
     void addNextHop(NextHop &nh);
     void removeNextHop(NextHop &nh);
-    void sortNhl();
-    int getNhlSize()
+    void sort();
+    int getSize()
     {
-      return nexthopList.size();
+      return m_nexthopList.size();
     }
-    void resetNhl()
+    void reset()
     {
-      if (nexthopList.size() > 0 )
+      if (m_nexthopList.size() > 0 )
       {
-        nexthopList.clear();
+        m_nexthopList.clear();
       }
     }
     std::list< NextHop >& getNextHopList()
     {
-      return nexthopList;
+      return m_nexthopList;
     }
 
   private:
-    std::list< NextHop > nexthopList;
+    std::list< NextHop > m_nexthopList;
   };
 
   ostream&

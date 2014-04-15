@@ -34,25 +34,25 @@ namespace nlsr
     int getNumOfActiveNeighbor();
     Adjacent getAdjacent(string adjName);
 
-    bool isAdlEqual(Adl &adl);
+    bool isEqual(Adl& adl);
 
-    int getAdlSize()
+    int getSize()
     {
-      return adjList.size();
+      return m_adjList.size();
     }
 
-    void resetAdl()
+    void reset()
     {
-      if( adjList.size() > 0 )
+      if( m_adjList.size() > 0 )
       {
-        adjList.clear();
+        m_adjList.clear();
       }
     }
 
     void printAdl();
 
   private:
-    std::list< Adjacent > adjList;
+    std::list< Adjacent > m_adjList;
   };
 
 } //namespace nlsr

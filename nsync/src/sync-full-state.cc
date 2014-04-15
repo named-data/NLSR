@@ -45,10 +45,10 @@ FullState::~FullState ()
 {
 }
 
-ndn::time::Duration
+ndn::time::system_clock::Duration
 FullState::getTimeFromLastUpdate () const
 {
-  return ndn::time::now() - m_lastUpdated;
+  return ndn::time::system_clock::now() - m_lastUpdated;
 }
 
 DigestConstPtr
@@ -81,7 +81,7 @@ FullState::getDigest ()
 boost::tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
 FullState::update (NameInfoConstPtr info, const SeqNo &seq)
 {
-  m_lastUpdated = ndn::time::now();
+  m_lastUpdated = ndn::time::system_clock::now();
 
 
   m_digest.reset ();
@@ -109,7 +109,7 @@ FullState::update (NameInfoConstPtr info, const SeqNo &seq)
 bool
 FullState::remove (NameInfoConstPtr info)
 {
-  m_lastUpdated = ndn::time::now();
+  m_lastUpdated = ndn::time::system_clock::now();
 
   m_digest.reset ();
 

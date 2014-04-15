@@ -1,6 +1,8 @@
 #include <ndn-cpp-dev/face.hpp>
 #include "nlsr_wl.hpp"
 
+#define THIS_FILE "nlsr_wl.cpp"
+
 namespace nlsr
 {
   static bool
@@ -12,9 +14,9 @@ namespace nlsr
   std::pair<WaitingListEntry, bool> 
   WaitingList::getWaitingListEntry(std::string respCert)
   {
-    std::list<WaitingListEntry>::iterator it = std::find_if( waitingTable.begin(),
-                waitingTable.end(),ndn::bind(&waitingListCompare, _1, respCert));
-    if( it != waitingTable.end() )
+    std::list<WaitingListEntry>::iterator it = std::find_if( m_waitingTable.begin(),
+                m_waitingTable.end(),ndn::bind(&waitingListCompare, _1, respCert));
+    if( it != m_waitingTable.end() )
     {
       return std::make_pair(*(it),true);
     }
@@ -25,15 +27,15 @@ namespace nlsr
   }
   
   bool 
-  WaitingList::addtoWaitingList(std::string respCert, std::string waitee)
+  WaitingList::add(std::string respCert, std::string waitee)
   {
-    std::list<WaitingListEntry>::iterator it = std::find_if( waitingTable.begin(),
-                waitingTable.end(),ndn::bind(&waitingListCompare, _1, respCert));
-    if( it == waitingTable.end() )
+    std::list<WaitingListEntry>::iterator it = std::find_if( m_waitingTable.begin(),
+                m_waitingTable.end(),ndn::bind(&waitingListCompare, _1, respCert));
+    if( it == m_waitingTable.end() )
     {
       WaitingListEntry newWle(respCert);
       newWle.addWaitee(waitee);
-      waitingTable.push_back(newWle);
+      m_waitingTable.push_back(newWle);
       return true;
     }
     else
@@ -44,17 +46,17 @@ namespace nlsr
   }
   
   bool 
-  WaitingList::removeFromWaitingList(std::string respCert)
+  WaitingList::remove(std::string respCert)
   {
-    std::list<WaitingListEntry>::iterator it = std::find_if( waitingTable.begin(),
-                waitingTable.end(),ndn::bind(&waitingListCompare, _1, respCert));
-    if( it == waitingTable.end() )
+    std::list<WaitingListEntry>::iterator it = std::find_if( m_waitingTable.begin(),
+                m_waitingTable.end(),ndn::bind(&waitingListCompare, _1, respCert));
+    if( it == m_waitingTable.end() )
     {
       return false;
     }
     else
     {
-      waitingTable.erase(it);
+      m_waitingTable.erase(it);
       return true;
     }
     return false;

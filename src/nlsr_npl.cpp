@@ -2,6 +2,9 @@
 #include<algorithm>
 
 #include "nlsr_npl.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_npl.cpp"
 
 namespace nlsr
 {
@@ -23,43 +26,43 @@ namespace nlsr
   }
 
   int
-  Npl::insertIntoNpl(string& name)
+  Npl::insert(string& name)
   {
-    std::list<string >::iterator it = std::find_if( nameList.begin(),
-                                      nameList.end(),
+    std::list<string >::iterator it = std::find_if( m_nameList.begin(),
+                                      m_nameList.end(),
                                       bind(&nameCompare, _1 , name));
-    if( it != nameList.end() )
+    if( it != m_nameList.end() )
     {
       return -1;
     }
-    nameList.push_back(name);
+    m_nameList.push_back(name);
     return 0;
   }
 
   int
-  Npl::removeFromNpl(string& name)
+  Npl::remove(string& name)
   {
-    std::list<string >::iterator it = std::find_if( nameList.begin(),
-                                      nameList.end(),
+    std::list<string >::iterator it = std::find_if( m_nameList.begin(),
+                                      m_nameList.end(),
                                       bind(&nameCompare, _1 , name));
-    if( it != nameList.end() )
+    if( it != m_nameList.end() )
     {
-      nameList.erase(it);
+      m_nameList.erase(it);
     }
     return -1;
   }
 
   void
-  Npl::sortNpl()
+  Npl::sort()
   {
-    nameList.sort();
+    m_nameList.sort();
   }
 
   void
-  Npl::printNpl()
+  Npl::print()
   {
     int i=1;
-    for( std::list<string>::iterator it=nameList.begin(); it != nameList.end();
+    for( std::list<string>::iterator it=m_nameList.begin(); it != m_nameList.end();
          it++)
     {
       cout<<"Name "<<i<<" : "<<(*it)<<endl;

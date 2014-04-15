@@ -14,55 +14,55 @@ namespace nlsr
   {
   public:
     Npte()
-      : namePrefix()
-      , nhl()
+      : m_namePrefix()
+      , m_nhl()
     {
     }
     Npte(string np)
-      : nhl()
+      : m_nhl()
     {
-      namePrefix=np;
+      m_namePrefix=np;
     }
 
     string getNamePrefix()
     {
-      return namePrefix;
+      return m_namePrefix;
     }
 
     std::list<RoutingTableEntry>& getRteList()
     {
-      return rteList;
+      return m_rteList;
     }
 
     void resetRteListNextHop()
     {
-      if (rteList.size() > 0 )
+      if (m_rteList.size() > 0 )
       {
-        for( std::list<RoutingTableEntry>::iterator it=rteList.begin();
-             it != rteList.end(); ++it )
+        for( std::list<RoutingTableEntry>::iterator it=m_rteList.begin();
+             it != m_rteList.end(); ++it )
         {
-          (*it).getNhl().resetNhl();
+          (*it).getNhl().reset();
         }
       }
     }
 
     int getRteListSize()
     {
-      return rteList.size();
+      return m_rteList.size();
     }
 
     Nhl& getNhl()
     {
-      return nhl;
+      return m_nhl;
     }
     void generateNhlfromRteList();
     void removeRoutingTableEntry(RoutingTableEntry& rte);
     void addRoutingTableEntry(RoutingTableEntry &rte);
 
   private:
-    string namePrefix;
-    std::list<RoutingTableEntry> rteList;
-    Nhl nhl;
+    string m_namePrefix;
+    std::list<RoutingTableEntry> m_rteList;
+    Nhl m_nhl;
   };
 
   ostream&

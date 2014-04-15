@@ -2,6 +2,9 @@
 #include<utility>
 #include "nlsr_lsdb.hpp"
 #include "nlsr.hpp"
+#include "utility/nlsr_logger.hpp"
+
+#define THIS_FILE "nlsr_lsdb.cpp"
 
 namespace nlsr
 {
@@ -17,7 +20,7 @@ namespace nlsr
   static bool
   nameLsaCompareByKey(NameLsa& nlsa1, string& key)
   {
-    return nlsa1.getNameLsaKey()==key;
+    return nlsa1.getKey()==key;
   }
 
 
@@ -76,11 +79,14 @@ namespace nlsr
   bool
   Lsdb::installNameLsa(Nlsr& pnlsr, NameLsa &nlsa)
   {
+    src::logger lg;
     int timeToExpire=lsaRefreshTime;
-    std::pair<NameLsa& , bool> chkNameLsa=getNameLsa(nlsa.getNameLsaKey());
+    std::pair<NameLsa& , bool> chkNameLsa=getNameLsa(nlsa.getKey());
     if ( !chkNameLsa.second )
     {
+      BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Adding name lsa";
       addNameLsa(nlsa);
+      nlsa.writeLog();
       printNameLsdb();
       if ( nlsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
       {
@@ -99,17 +105,19 @@ namespace nlsr
       {
         timeToExpire=nlsa.getLifeTime();
       }
-      nlsa.setLsaExpiringEventId(scheduleNameLsaExpiration( pnlsr,
-                                 nlsa.getNameLsaKey(), nlsa.getLsSeqNo(), timeToExpire));
+      nlsa.setExpiringEventId(scheduleNameLsaExpiration( pnlsr,
+                                 nlsa.getKey(), nlsa.getLsSeqNo(), timeToExpire));
     }
     else
     {
       if ( chkNameLsa.first.getLsSeqNo() < nlsa.getLsSeqNo() )
       {
+        BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Deleting name lsa";
+        chkNameLsa.first.writeLog();
         chkNameLsa.first.setLsSeqNo(nlsa.getLsSeqNo());
         chkNameLsa.first.setLifeTime(nlsa.getLifeTime());
-        chkNameLsa.first.getNpl().sortNpl();
-        nlsa.getNpl().sortNpl();
+        chkNameLsa.first.getNpl().sort();
+        nlsa.getNpl().sort();
         std::list<string> nameToAdd;
         std::set_difference(nlsa.getNpl().getNameList().begin(),
                             nlsa.getNpl().getNameList().end(),
@@ -119,7 +127,7 @@ namespace nlsr
         for(std::list<string>::iterator it=nameToAdd.begin(); it!=nameToAdd.end();
             ++it)
         {
-          chkNameLsa.first.addNameToLsa((*it));
+          chkNameLsa.first.addName((*it));
           if ( nlsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
           {
             if ( (*it) !=pnlsr.getConfParameter().getRouterPrefix())
@@ -137,7 +145,7 @@ namespace nlsr
         for(std::list<string>::iterator it=nameToRemove.begin();
             it!=nameToRemove.end(); ++it)
         {
-          chkNameLsa.first.removeNameFromLsa((*it));
+          chkNameLsa.first.removeName((*it));
           if ( nlsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
           {
             if ( (*it) !=pnlsr.getConfParameter().getRouterPrefix())
@@ -151,9 +159,11 @@ namespace nlsr
           timeToExpire=nlsa.getLifeTime();
         }
         cancelScheduleLsaExpiringEvent(pnlsr,
-                                       chkNameLsa.first.getLsaExpiringEventId());
-        chkNameLsa.first.setLsaExpiringEventId(scheduleNameLsaExpiration( pnlsr,
-                                               nlsa.getNameLsaKey(), nlsa.getLsSeqNo(), timeToExpire));
+                                       chkNameLsa.first.getExpiringEventId());
+        chkNameLsa.first.setExpiringEventId(scheduleNameLsaExpiration( pnlsr,
+                                               nlsa.getKey(), nlsa.getLsSeqNo(), timeToExpire));
+        BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Adding name lsa";
+        chkNameLsa.first.writeLog();
       }
     }
     return true;
@@ -163,7 +173,7 @@ namespace nlsr
   Lsdb::addNameLsa(NameLsa &nlsa)
   {
     std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
-                                       nameLsdb.end(), bind(nameLsaCompareByKey, _1, nlsa.getNameLsaKey()));
+                                       nameLsdb.end(), bind(nameLsaCompareByKey, _1, nlsa.getKey()));
     if( it == nameLsdb.end())
     {
       nameLsdb.push_back(nlsa);
@@ -175,11 +185,14 @@ namespace nlsr
   bool
   Lsdb::removeNameLsa(Nlsr& pnlsr, string& key)
   {
+    src::logger lg;
     std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
                                        nameLsdb.end(),
                                        bind(nameLsaCompareByKey, _1, key));
     if ( it != nameLsdb.end() )
     {
+      BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Deleting name lsa";
+      (*it).writeLog();
       if ( (*it).getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix()  )
       {
         pnlsr.getNpt().removeNpte((*it).getOrigRouter(),(*it).getOrigRouter(),pnlsr);
@@ -228,7 +241,7 @@ namespace nlsr
   static bool
   corLsaCompareByKey(CorLsa& clsa, string& key)
   {
-    return clsa.getCorLsaKey()==key;
+    return clsa.getKey()==key;
   }
 
   bool
@@ -289,7 +302,7 @@ namespace nlsr
   Lsdb::installCorLsa(Nlsr& pnlsr, CorLsa &clsa)
   {
     int timeToExpire=lsaRefreshTime;
-    std::pair<CorLsa& , bool> chkCorLsa=getCorLsa(clsa.getCorLsaKey());
+    std::pair<CorLsa& , bool> chkCorLsa=getCorLsa(clsa.getKey());
     if ( !chkCorLsa.second )
     {
       addCorLsa(clsa);
@@ -307,7 +320,7 @@ namespace nlsr
       {
         timeToExpire=clsa.getLifeTime();
       }
-      scheduleCorLsaExpiration(pnlsr,clsa.getCorLsaKey(),
+      scheduleCorLsaExpiration(pnlsr,clsa.getKey(),
                                clsa.getLsSeqNo(), timeToExpire);
     }
     else
@@ -316,7 +329,7 @@ namespace nlsr
       {
         chkCorLsa.first.setLsSeqNo(clsa.getLsSeqNo());
         chkCorLsa.first.setLifeTime(clsa.getLifeTime());
-        if ( !chkCorLsa.first.isLsaContentEqual(clsa) )
+        if ( !chkCorLsa.first.isEqual(clsa) )
         {
           chkCorLsa.first.setCorRadius(clsa.getCorRadius());
           chkCorLsa.first.setCorTheta(clsa.getCorTheta());
@@ -330,9 +343,9 @@ namespace nlsr
           timeToExpire=clsa.getLifeTime();
         }
         cancelScheduleLsaExpiringEvent(pnlsr,
-                                       chkCorLsa.first.getLsaExpiringEventId());
-        chkCorLsa.first.setLsaExpiringEventId(scheduleCorLsaExpiration(pnlsr,
-                                              clsa.getCorLsaKey(),
+                                       chkCorLsa.first.getExpiringEventId());
+        chkCorLsa.first.setExpiringEventId(scheduleCorLsaExpiration(pnlsr,
+                                              clsa.getKey(),
                                               clsa.getLsSeqNo(), timeToExpire));
       }
     }
@@ -344,7 +357,7 @@ namespace nlsr
   {
     std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(),
                                       corLsdb.end(),
-                                      bind(corLsaCompareByKey, _1, clsa.getCorLsaKey()));
+                                      bind(corLsaCompareByKey, _1, clsa.getKey()));
     if( it == corLsdb.end())
     {
       corLsdb.push_back(clsa);
@@ -401,7 +414,7 @@ namespace nlsr
   static bool
   adjLsaCompareByKey(AdjLsa& alsa, string& key)
   {
-    return alsa.getAdjLsaKey()==key;
+    return alsa.getKey()==key;
   }
 
 
@@ -445,7 +458,7 @@ namespace nlsr
   {
     std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(),
                                       adjLsdb.end(),
-                                      bind(adjLsaCompareByKey, _1, alsa.getAdjLsaKey()));
+                                      bind(adjLsaCompareByKey, _1, alsa.getKey()));
     if( it == adjLsdb.end())
     {
       adjLsdb.push_back(alsa);
@@ -500,17 +513,17 @@ namespace nlsr
   Lsdb::installAdjLsa(Nlsr& pnlsr, AdjLsa &alsa)
   {
     int timeToExpire=lsaRefreshTime;
-    std::pair<AdjLsa& , bool> chkAdjLsa=getAdjLsa(alsa.getAdjLsaKey());
+    std::pair<AdjLsa& , bool> chkAdjLsa=getAdjLsa(alsa.getKey());
     if ( !chkAdjLsa.second )
     {
       addAdjLsa(alsa);
-      alsa.addNptEntriesForAdjLsa(pnlsr);
+      alsa.addNptEntries(pnlsr);
       pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
       if(alsa.getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
       {
         timeToExpire=alsa.getLifeTime();
       }
-      scheduleAdjLsaExpiration(pnlsr,alsa.getAdjLsaKey(),
+      scheduleAdjLsaExpiration(pnlsr,alsa.getKey(),
                                alsa.getLsSeqNo(),timeToExpire);
     }
     else
@@ -519,9 +532,9 @@ namespace nlsr
       {
         chkAdjLsa.first.setLsSeqNo(alsa.getLsSeqNo());
         chkAdjLsa.first.setLifeTime(alsa.getLifeTime());
-        if ( !	chkAdjLsa.first.isLsaContentEqual(alsa))
+        if ( !	chkAdjLsa.first.isEqual(alsa))
         {
-          chkAdjLsa.first.getAdl().resetAdl();
+          chkAdjLsa.first.getAdl().reset();
           chkAdjLsa.first.getAdl().addAdjacentsFromAdl(alsa.getAdl());
           pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
         }
@@ -530,9 +543,9 @@ namespace nlsr
           timeToExpire=alsa.getLifeTime();
         }
         cancelScheduleLsaExpiringEvent(pnlsr,
-                                       chkAdjLsa.first.getLsaExpiringEventId());
-        chkAdjLsa.first.setLsaExpiringEventId(scheduleAdjLsaExpiration(pnlsr,
-                                              alsa.getAdjLsaKey(), alsa.getLsSeqNo(),timeToExpire));
+                                       chkAdjLsa.first.getExpiringEventId());
+        chkAdjLsa.first.setExpiringEventId(scheduleAdjLsaExpiration(pnlsr,
+                                              alsa.getKey(), alsa.getLsSeqNo(),timeToExpire));
       }
     }
     return true;
@@ -562,7 +575,7 @@ namespace nlsr
                                       bind(adjLsaCompareByKey, _1, key));
     if ( it != adjLsdb.end() )
     {
-      (*it).removeNptEntriesForAdjLsa(pnlsr);
+      (*it).removeNptEntries(pnlsr);
       adjLsdb.erase(it);
       return true;
     }
@@ -613,9 +626,14 @@ namespace nlsr
       {
         if(chkNameLsa.first.getOrigRouter() == thisRouterPrefix )
         {
+          src::logger lg;
+          BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Deleting name lsa";
+          chkNameLsa.first.writeLog();
           cout<<"Own Name LSA, so refreshing name LSA"<<endl;
           chkNameLsa.first.setLsSeqNo(chkNameLsa.first.getLsSeqNo()+1);
           pnlsr.getSm().setNameLsaSeq(chkNameLsa.first.getLsSeqNo());
+          BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Adding name lsa";
+          chkNameLsa.first.writeLog();
           // publish routing update
           string lsaPrefix=pnlsr.getConfParameter().getChronosyncLsaPrefix()
                            + pnlsr.getConfParameter().getRouterPrefix();

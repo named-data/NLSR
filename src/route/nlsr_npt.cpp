@@ -1,10 +1,12 @@
 #include <list>
 #include <utility>
 #include <algorithm>
-
+#include "utility/nlsr_logger.hpp"
 #include "nlsr_npt.hpp"
 #include "nlsr_npte.hpp"
 #include "nlsr.hpp"
+
+#define THIS_FILE "nlsr_npt.cpp"
 
 namespace nlsr
 {
@@ -22,34 +24,34 @@ namespace nlsr
   void
   Npt::addNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr)
   {
-    std::list<Npte >::iterator it = std::find_if( npteList.begin(),
-                                    npteList.end(), bind(&npteCompare, _1, name));
-    if ( it == npteList.end() )
+    std::list<Npte >::iterator it = std::find_if( m_npteList.begin(),
+                                    m_npteList.end(), bind(&npteCompare, _1, name));
+    if ( it == m_npteList.end() )
     {
       Npte newEntry(name);
       newEntry.addRoutingTableEntry(rte);
       newEntry.generateNhlfromRteList();
-      newEntry.getNhl().sortNhl();
-      npteList.push_back(newEntry);
-      if(rte.getNhl().getNhlSize()> 0)
+      newEntry.getNhl().sort();
+      m_npteList.push_back(newEntry);
+      if(rte.getNhl().getSize()> 0)
       {
-        pnlsr.getFib().updateFib(pnlsr, name,newEntry.getNhl());
+        pnlsr.getFib().update(pnlsr, name,newEntry.getNhl());
       }
     }
     else
     {
-      if ( rte.getNhl().getNhlSize()> 0 )
+      if ( rte.getNhl().getSize()> 0 )
       {
         (*it).addRoutingTableEntry(rte);
         (*it).generateNhlfromRteList();
-        (*it).getNhl().sortNhl();
-        pnlsr.getFib().updateFib(pnlsr, name,(*it).getNhl());
+        (*it).getNhl().sort();
+        pnlsr.getFib().update(pnlsr, name,(*it).getNhl());
       }
       else
       {
         (*it).resetRteListNextHop();
-        (*it).getNhl().resetNhl();
-        pnlsr.getFib().removeFromFib(pnlsr,name);
+        (*it).getNhl().reset();
+        pnlsr.getFib().remove(pnlsr,name);
       }
     }
   }
@@ -57,9 +59,9 @@ namespace nlsr
   void
   Npt::removeNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr)
   {
-    std::list<Npte >::iterator it = std::find_if( npteList.begin(),
-                                    npteList.end(), bind(&npteCompare, _1, name));
-    if ( it != npteList.end() )
+    std::list<Npte >::iterator it = std::find_if( m_npteList.begin(),
+                                    m_npteList.end(), bind(&npteCompare, _1, name));
+    if ( it != m_npteList.end() )
     {
       string destRouter=rte.getDestination();
       (*it).removeRoutingTableEntry(rte);
@@ -68,13 +70,13 @@ namespace nlsr
            (!pnlsr.getLsdb().doesLsaExist(destRouter+"/2",2) ) &&
            (!pnlsr.getLsdb().doesLsaExist(destRouter+"/3",3) )   )
       {
-        npteList.erase(it);
-        pnlsr.getFib().removeFromFib(pnlsr,name);
+        m_npteList.erase(it);
+        pnlsr.getFib().remove(pnlsr,name);
       }
       else
       {
         (*it).generateNhlfromRteList();
-        pnlsr.getFib().updateFib(pnlsr, name,(*it).getNhl());
+        pnlsr.getFib().update(pnlsr, name,(*it).getNhl());
       }
     }
   }
@@ -113,9 +115,9 @@ namespace nlsr
   }
 
   void
-  Npt::updateNptWithNewRoute(Nlsr& pnlsr)
+  Npt::updateWithNewRoute(Nlsr& pnlsr)
   {
-    for(std::list<Npte >::iterator it=npteList.begin(); it!=npteList.end(); ++it)
+    for(std::list<Npte >::iterator it=m_npteList.begin(); it!=m_npteList.end(); ++it)
     {
       std::list<RoutingTableEntry> rteList=(*it).getRteList();
       for(std::list<RoutingTableEntry >::iterator rteit=rteList.begin();
@@ -137,10 +139,10 @@ namespace nlsr
   }
 
   void
-  Npt::printNpt()
+  Npt::print()
   {
     cout<<"----------------NPT----------------------"<<endl;
-    for(std::list<Npte >::iterator it=npteList.begin(); it!=npteList.end(); ++it)
+    for(std::list<Npte >::iterator it=m_npteList.begin(); it!=m_npteList.end(); ++it)
     {
       cout <<(*it)<<endl;
     }
