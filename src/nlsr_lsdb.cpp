@@ -39,10 +39,10 @@ namespace nlsr
   std::pair<NameLsa&, bool>
   Lsdb::getNameLsa(string key)
   {
-    std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
-                                       nameLsdb.end(),
+    std::list<NameLsa >::iterator it = std::find_if( m_nameLsdb.begin(),
+                                       m_nameLsdb.end(),
                                        bind(nameLsaCompareByKey, _1, key));
-    if( it != nameLsdb.end())
+    if( it != m_nameLsdb.end())
     {
       return std::make_pair(boost::ref((*it)),true);
     }
@@ -80,7 +80,7 @@ namespace nlsr
   Lsdb::installNameLsa(Nlsr& pnlsr, NameLsa &nlsa)
   {
     src::logger lg;
-    int timeToExpire=lsaRefreshTime;
+    int timeToExpire=m_lsaRefreshTime;
     std::pair<NameLsa& , bool> chkNameLsa=getNameLsa(nlsa.getKey());
     if ( !chkNameLsa.second )
     {
@@ -172,11 +172,11 @@ namespace nlsr
   bool
   Lsdb::addNameLsa(NameLsa &nlsa)
   {
-    std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
-                                       nameLsdb.end(), bind(nameLsaCompareByKey, _1, nlsa.getKey()));
-    if( it == nameLsdb.end())
+    std::list<NameLsa >::iterator it = std::find_if( m_nameLsdb.begin(),
+                                       m_nameLsdb.end(), bind(nameLsaCompareByKey, _1, nlsa.getKey()));
+    if( it == m_nameLsdb.end())
     {
-      nameLsdb.push_back(nlsa);
+      m_nameLsdb.push_back(nlsa);
       return true;
     }
     return false;
@@ -186,10 +186,10 @@ namespace nlsr
   Lsdb::removeNameLsa(Nlsr& pnlsr, string& key)
   {
     src::logger lg;
-    std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
-                                       nameLsdb.end(),
+    std::list<NameLsa >::iterator it = std::find_if( m_nameLsdb.begin(),
+                                       m_nameLsdb.end(),
                                        bind(nameLsaCompareByKey, _1, key));
-    if ( it != nameLsdb.end() )
+    if ( it != m_nameLsdb.end() )
     {
       BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Deleting name lsa";
       (*it).writeLog();
@@ -205,7 +205,7 @@ namespace nlsr
           }
         }
       }
-      nameLsdb.erase(it);
+      m_nameLsdb.erase(it);
       return true;
     }
     return false;
@@ -214,10 +214,10 @@ namespace nlsr
   bool
   Lsdb::doesNameLsaExist(string key)
   {
-    std::list<NameLsa >::iterator it = std::find_if( nameLsdb.begin(),
-                                       nameLsdb.end(),
+    std::list<NameLsa >::iterator it = std::find_if( m_nameLsdb.begin(),
+                                       m_nameLsdb.end(),
                                        bind(nameLsaCompareByKey, _1, key));
-    if( it == nameLsdb.end())
+    if( it == m_nameLsdb.end())
     {
       return false;
     }
@@ -228,8 +228,8 @@ namespace nlsr
   Lsdb::printNameLsdb()
   {
     cout<<"---------------Name LSDB-------------------"<<endl;
-    for( std::list<NameLsa>::iterator it=nameLsdb.begin();
-         it!= nameLsdb.end() ; it++)
+    for( std::list<NameLsa>::iterator it=m_nameLsdb.begin();
+         it!= m_nameLsdb.end() ; it++)
     {
       cout<< (*it) <<endl;
     }
@@ -261,10 +261,10 @@ namespace nlsr
   std::pair<CorLsa&, bool>
   Lsdb::getCorLsa(string key)
   {
-    std::list< CorLsa >::iterator it = std::find_if( corLsdb.begin(),
-                                       corLsdb.end(),
+    std::list< CorLsa >::iterator it = std::find_if( m_corLsdb.begin(),
+                                       m_corLsdb.end(),
                                        bind(corLsaCompareByKey, _1, key));
-    if( it != corLsdb.end())
+    if( it != m_corLsdb.end())
     {
       return std::make_pair(boost::ref((*it)), true);
     }
@@ -301,7 +301,7 @@ namespace nlsr
   bool
   Lsdb::installCorLsa(Nlsr& pnlsr, CorLsa &clsa)
   {
-    int timeToExpire=lsaRefreshTime;
+    int timeToExpire=m_lsaRefreshTime;
     std::pair<CorLsa& , bool> chkCorLsa=getCorLsa(clsa.getKey());
     if ( !chkCorLsa.second )
     {
@@ -355,12 +355,12 @@ namespace nlsr
   bool
   Lsdb::addCorLsa(CorLsa& clsa)
   {
-    std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(),
-                                      corLsdb.end(),
+    std::list<CorLsa >::iterator it = std::find_if( m_corLsdb.begin(),
+                                      m_corLsdb.end(),
                                       bind(corLsaCompareByKey, _1, clsa.getKey()));
-    if( it == corLsdb.end())
+    if( it == m_corLsdb.end())
     {
-      corLsdb.push_back(clsa);
+      m_corLsdb.push_back(clsa);
       return true;
     }
     return false;
@@ -369,16 +369,16 @@ namespace nlsr
   bool
   Lsdb::removeCorLsa(Nlsr& pnlsr, string& key)
   {
-    std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(),
-                                      corLsdb.end(),
+    std::list<CorLsa >::iterator it = std::find_if( m_corLsdb.begin(),
+                                      m_corLsdb.end(),
                                       bind(corLsaCompareByKey, _1, key));
-    if ( it != corLsdb.end() )
+    if ( it != m_corLsdb.end() )
     {
       if ( (*it).getOrigRouter() !=pnlsr.getConfParameter().getRouterPrefix() )
       {
         pnlsr.getNpt().removeNpte((*it).getOrigRouter(),(*it).getOrigRouter(),pnlsr);
       }
-      corLsdb.erase(it);
+      m_corLsdb.erase(it);
       return true;
     }
     return false;
@@ -387,10 +387,10 @@ namespace nlsr
   bool
   Lsdb::doesCorLsaExist(string key)
   {
-    std::list<CorLsa >::iterator it = std::find_if( corLsdb.begin(),
-                                      corLsdb.end(),
+    std::list<CorLsa >::iterator it = std::find_if( m_corLsdb.begin(),
+                                      m_corLsdb.end(),
                                       bind(corLsaCompareByKey, _1, key));
-    if( it == corLsdb.end())
+    if( it == m_corLsdb.end())
     {
       return false;
     }
@@ -401,8 +401,8 @@ namespace nlsr
   Lsdb::printCorLsdb() //debugging
   {
     cout<<"---------------Cor LSDB-------------------"<<endl;
-    for( std::list<CorLsa>::iterator it=corLsdb.begin();
-         it!= corLsdb.end() ; it++)
+    for( std::list<CorLsa>::iterator it=m_corLsdb.begin();
+         it!= m_corLsdb.end() ; it++)
     {
       cout<< (*it) <<endl;
     }
@@ -456,12 +456,12 @@ namespace nlsr
   bool
   Lsdb::addAdjLsa(AdjLsa &alsa)
   {
-    std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(),
-                                      adjLsdb.end(),
+    std::list<AdjLsa >::iterator it = std::find_if( m_adjLsdb.begin(),
+                                      m_adjLsdb.end(),
                                       bind(adjLsaCompareByKey, _1, alsa.getKey()));
-    if( it == adjLsdb.end())
+    if( it == m_adjLsdb.end())
     {
-      adjLsdb.push_back(alsa);
+      m_adjLsdb.push_back(alsa);
       return true;
     }
     return false;
@@ -470,10 +470,10 @@ namespace nlsr
   std::pair<AdjLsa& , bool>
   Lsdb::getAdjLsa(string key)
   {
-    std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(),
-                                      adjLsdb.end(),
+    std::list<AdjLsa >::iterator it = std::find_if( m_adjLsdb.begin(),
+                                      m_adjLsdb.end(),
                                       bind(adjLsaCompareByKey, _1, key));
-    if( it != adjLsdb.end())
+    if( it != m_adjLsdb.end())
     {
       return std::make_pair(boost::ref((*it)),true);
     }
@@ -512,7 +512,7 @@ namespace nlsr
   bool
   Lsdb::installAdjLsa(Nlsr& pnlsr, AdjLsa &alsa)
   {
-    int timeToExpire=lsaRefreshTime;
+    int timeToExpire=m_lsaRefreshTime;
     std::pair<AdjLsa& , bool> chkAdjLsa=getAdjLsa(alsa.getKey());
     if ( !chkAdjLsa.second )
     {
@@ -570,13 +570,13 @@ namespace nlsr
   bool
   Lsdb::removeAdjLsa(Nlsr& pnlsr, string& key)
   {
-    std::list<AdjLsa >::iterator it = std::find_if( adjLsdb.begin(),
-                                      adjLsdb.end(),
+    std::list<AdjLsa >::iterator it = std::find_if( m_adjLsdb.begin(),
+                                      m_adjLsdb.end(),
                                       bind(adjLsaCompareByKey, _1, key));
-    if ( it != adjLsdb.end() )
+    if ( it != m_adjLsdb.end() )
     {
       (*it).removeNptEntries(pnlsr);
-      adjLsdb.erase(it);
+      m_adjLsdb.erase(it);
       return true;
     }
     return false;
@@ -585,10 +585,10 @@ namespace nlsr
   bool
   Lsdb::doesAdjLsaExist(string key)
   {
-    std::list< AdjLsa >::iterator it = std::find_if( adjLsdb.begin(),
-                                       adjLsdb.end(),
+    std::list< AdjLsa >::iterator it = std::find_if( m_adjLsdb.begin(),
+                                       m_adjLsdb.end(),
                                        bind(adjLsaCompareByKey, _1, key));
-    if( it == adjLsdb.end())
+    if( it == m_adjLsdb.end())
     {
       return false;
     }
@@ -598,19 +598,19 @@ namespace nlsr
   std::list<AdjLsa>&
   Lsdb::getAdjLsdb()
   {
-    return adjLsdb;
+    return m_adjLsdb;
   }
 
   void
   Lsdb::setLsaRefreshTime(int lrt)
   {
-    lsaRefreshTime=lrt;
+    m_lsaRefreshTime=lrt;
   }
 
   void
   Lsdb::setThisRouterPrefix(string trp)
   {
-    thisRouterPrefix=trp;
+    m_thisRouterPrefix=trp;
   }
 
   void
@@ -624,7 +624,7 @@ namespace nlsr
       cout<<" LSA Exists with seq no: "<<chkNameLsa.first.getLsSeqNo()<<endl;
       if ( chkNameLsa.first.getLsSeqNo() == seqNo )
       {
-        if(chkNameLsa.first.getOrigRouter() == thisRouterPrefix )
+        if(chkNameLsa.first.getOrigRouter() == m_thisRouterPrefix )
         {
           src::logger lg;
           BOOST_LOG(lg)<<" "<<THIS_FILE<<" "<<__LINE__<<": "<<"Deleting name lsa";
@@ -659,7 +659,7 @@ namespace nlsr
       cout<<" LSA Exists with seq no: "<<chkAdjLsa.first.getLsSeqNo()<<endl;
       if ( chkAdjLsa.first.getLsSeqNo() == seqNo )
       {
-        if(chkAdjLsa.first.getOrigRouter() == thisRouterPrefix )
+        if(chkAdjLsa.first.getOrigRouter() == m_thisRouterPrefix )
         {
           cout<<"Own Adj LSA, so refreshing Adj LSA"<<endl;
           chkAdjLsa.first.setLsSeqNo(chkAdjLsa.first.getLsSeqNo()+1);
@@ -691,7 +691,7 @@ namespace nlsr
       cout<<" LSA Exists with seq no: "<<chkCorLsa.first.getLsSeqNo()<<endl;
       if ( chkCorLsa.first.getLsSeqNo() == seqNo )
       {
-        if(chkCorLsa.first.getOrigRouter() == thisRouterPrefix )
+        if(chkCorLsa.first.getOrigRouter() == m_thisRouterPrefix )
         {
           cout<<"Own Cor LSA, so refreshing Cor LSA"<<endl;
           chkCorLsa.first.setLsSeqNo(chkCorLsa.first.getLsSeqNo()+1);
@@ -719,8 +719,8 @@ namespace nlsr
   Lsdb::printAdjLsdb()
   {
     cout<<"---------------Adj LSDB-------------------"<<endl;
-    for( std::list<AdjLsa>::iterator it=adjLsdb.begin();
-         it!= adjLsdb.end() ; it++)
+    for( std::list<AdjLsa>::iterator it=m_adjLsdb.begin();
+         it!= m_adjLsdb.end() ; it++)
     {
       cout<< (*it) <<endl;
     }

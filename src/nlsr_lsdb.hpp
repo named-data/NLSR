@@ -15,7 +15,7 @@ namespace nlsr
   {
   public:
     Lsdb()
-      : lsaRefreshTime(0)
+      : m_lsaRefreshTime(0)
     {
     }
 
@@ -76,12 +76,12 @@ namespace nlsr
   private:
     void cancelScheduleLsaExpiringEvent(Nlsr& pnlsr, EventId eid);
 
-    std::list<NameLsa> nameLsdb;
-    std::list<AdjLsa> adjLsdb;
-    std::list<CorLsa> corLsdb;
+    std::list<NameLsa> m_nameLsdb;
+    std::list<AdjLsa> m_adjLsdb;
+    std::list<CorLsa> m_corLsdb;
 
-    int lsaRefreshTime;
-    string thisRouterPrefix;
+    int m_lsaRefreshTime;
+    string m_thisRouterPrefix;
 
   };
 
