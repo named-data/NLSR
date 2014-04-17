@@ -2,6 +2,7 @@
 #define NLSR_LOGGER_HPP
 
 #define BOOST_LOG_DYN_LINK 1
+#include "boost-log.hpp"
 
 #include <stdexcept>
 #include <string>
@@ -15,12 +16,9 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/date_time/local_time/local_time.hpp>
-#include <boost/log/common.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/attributes.hpp>
-#include <boost/log/sources/logger.hpp>
-#include <boost/log/sinks/sync_frontend.hpp>
-#include <boost/log/sinks/text_file_backend.hpp>
+
+
+
 
 namespace nlsr
 {

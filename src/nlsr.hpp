@@ -26,12 +26,18 @@ namespace nlsr
   using namespace ndn;
   using namespace std;
 
+  inline static void
+  NullDeleter(boost::asio::io_service* variable)
+  {
+    // do nothing
+  }
+
   class Nlsr
   {
   public:
     Nlsr()
-      : m_io(ndn::make_shared<boost::asio::io_service>())
-      , m_nlsrFace(make_shared<ndn::Face>(m_io))
+      : m_io(new boost::asio::io_service)
+      , m_nlsrFace(new Face(shared_ptr<boost::asio::io_service>(&*m_io, &NullDeleter)))
       , m_scheduler(*m_io)
       , m_confParam()
       , m_adl()

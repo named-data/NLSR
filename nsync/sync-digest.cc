@@ -25,8 +25,8 @@
 
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
-typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info_str; 
-typedef boost::error_info<struct tag_errmsg, int> errmsg_info_int; 
+typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info_str;
+typedef boost::error_info<struct tag_errmsg, int> errmsg_info_int;
 
 // for printing, may be disabled in optimized build
 
@@ -35,9 +35,7 @@ typedef boost::error_info<struct tag_errmsg, int> errmsg_info_int;
 // #include <boost/archive/iterators/binary_from_base64.hpp>
 // #endif
 
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/iterator/transform_iterator.hpp>
-#include <boost/archive/iterators/dataflow_exception.hpp>
+#include "boost-archive.h"
 
 using namespace boost;
 using namespace boost::archive::iterators;
@@ -90,7 +88,7 @@ struct hex_to_4_bit
       value = lookup_table [(unsigned)ch];
     if (value == -1)
       BOOST_THROW_EXCEPTION (Sync::Error::DigestCalculationError () << errmsg_info_int ((int)ch));
-    
+
     return value;
   }
 };
@@ -147,7 +145,7 @@ Digest::finalize ()
   if (!m_buffer.empty ()) return;
 
   m_buffer.resize (HASH_FUNCTION_LEN);
-  
+
   unsigned int tmp;
   int ok = EVP_DigestFinal_ex (m_context,
 			       &m_buffer[0], &tmp);
@@ -161,14 +159,14 @@ std::size_t
 Digest::getHash () const
 {
   if (isZero ()) return 0;
-  
+
   if (sizeof (std::size_t) > m_buffer.size ())
     {
       BOOST_THROW_EXCEPTION (Error::DigestCalculationError ()
                              << errmsg_info_str ("Hash is not zero and length is less than size_t")
                              << errmsg_info_int (m_buffer.size ()));
     }
-  
+
   // just getting first sizeof(std::size_t) bytes
   // not ideal, but should work pretty well
   return *(reinterpret_cast<const std::size_t*> (&m_buffer[0]));
@@ -193,7 +191,7 @@ void
 Digest::update (const uint8_t *buffer, size_t size)
 {
   // cout << "Update: " << (void*)buffer << " / size: " << size << "\n";
-  
+
   // cannot update Digest when it has been finalized
   if (!m_buffer.empty ())
     BOOST_THROW_EXCEPTION (Error::DigestCalculationError ()
@@ -210,7 +208,7 @@ Digest::update (const uint8_t *buffer, size_t size)
 Digest &
 Digest::operator << (const Digest &src)
 {
-  if (src.m_buffer.empty ()) 
+  if (src.m_buffer.empty ())
     BOOST_THROW_EXCEPTION (Error::DigestCalculationError ()
                            << errmsg_info_str ("Digest has not been yet finalized"));
 
@@ -223,7 +221,7 @@ std::ostream &
 operator << (std::ostream &os, const Digest &digest)
 {
   BOOST_ASSERT (!digest.m_buffer.empty ());
-  
+
   ostreambuf_iterator<char> out_it (os); // ostream iterator
   // need to encode to base64
   copy (string_from_binary (digest.m_buffer.begin ()),
@@ -242,7 +240,7 @@ operator >> (std::istream &is, Digest &digest)
   if (str.size () == 0)
     BOOST_THROW_EXCEPTION (Error::DigestCalculationError ()
                            << errmsg_info_str ("Input is empty"));
-  
+
   // uint8_t padding = (3 - str.size () % 3) % 3;
   // for (uint8_t i = 0; i < padding; i++) str.push_back ('=');
 
@@ -252,7 +250,7 @@ operator >> (std::istream &is, Digest &digest)
                            << errmsg_info_str ("Digest has been already finalized"));
 
   digest.m_buffer.clear ();
-  
+
   copy (string_to_binary (str.begin ()),
         string_to_binary (str.end ()),
         std::back_inserter (digest.m_buffer));
@@ -262,4 +260,3 @@ operator >> (std::istream &is, Digest &digest)
 
 
 } // Sync
-

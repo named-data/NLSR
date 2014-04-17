@@ -114,7 +114,7 @@ public:
   std::map<std::string, bool>
   getBranchPrefixes() const;
 
-private: 
+private:
   void
   delayedChecksLoop ();
 
@@ -143,12 +143,12 @@ private:
   void
   processSyncData (const ndn::Name &name,
                    DigestConstPtr digest, const char *wireData, size_t len);
-  
+
   void
   processSyncRecoveryInterest (const ndn::Name &name,
                                DigestConstPtr digest);
-  
-  void 
+
+  void
   insertToDiffLog (DiffStatePtr diff);
 
   void
@@ -173,15 +173,10 @@ private:
 
   size_t
   getNumberOfBranches () const;
-  
+
 private:
   FullStatePtr m_state;
-  
-  int m_unknownDigestStoreTime;
-  int m_syncResponseFreshness;
-  int m_syncInterestReexpress;
-  int m_defaultRecoveryRetransmitInterval;
-  
+
   DiffStateContainer m_log;
 
   ndn::Name m_outstandingInterestName;
@@ -203,20 +198,19 @@ private:
   boost::variate_generator<boost::mt19937&, boost::uniform_int<> > m_rangeUniformRandom;
   boost::variate_generator<boost::mt19937&, boost::uniform_int<> > m_reexpressionJitter;
 
-  /*
-  static const int m_unknownDigestStoreTime = 10; // seconds
-  static const int m_syncResponseFreshness = 1000; // MUST BE dividable by 1000!!!
-  static const int m_syncInterestReexpress = 4; // seconds
 
+  static const int m_unknownDigestStoreTime = 10; // seconds
+  static const int m_syncResponseFreshness; // MUST BE dividable by 1000!!!
+  static const int m_syncInterestReexpress; // seconds
   static const int m_defaultRecoveryRetransmitInterval = 200; // milliseconds
-  */
-  
+
+
   uint32_t m_recoveryRetransmissionInterval; // milliseconds
-  
+
   ndn::EventId m_delayedInterestProcessingId;
   ndn::EventId m_reexpressingInterestId;
   ndn::EventId m_reexpressingRecoveryInterestId;
-  
+
   std::string m_instanceId;
   static int m_instanceCounter;
 };

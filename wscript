@@ -1,4 +1,24 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+"""
+Copyright (c) 2014  University of Memphis,
+                    Regents of the University of California
+
+This file is part of NLSR (Named-data Link State Routing).
+See AUTHORS.md for complete list of NLSR authors and contributors.
+
+NLSR is free software: you can redistribute it and/or modify it under the terms
+of the GNU General Public License as published by the Free Software Foundation,
+either version 3 of the License, or (at your option) any later version.
+
+NLSR is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+PURPOSE.  See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 VERSION='1.0'
 NAME="NLSR"
 
@@ -6,75 +26,77 @@ from waflib import Build, Logs, Utils, Task, TaskGen, Configure
 from waflib.Tools import c_preproc
 
 def options(opt):
-    opt.load('compiler_c compiler_cxx gnu_dirs c_osx')
-    opt.load('boost openssl cryptopp', tooldir=['waf-tools'])
+    opt.load(['compiler_cxx', 'gnu_dirs'])
+    opt.load(['default-compiler-flags', 'coverage',
+              'boost', 'protoc', 'openssl',
+              'doxygen', 'sphinx_build'],
+            tooldir=['.waf-tools'])
 
-    opt = opt.add_option_group('NLSR Options')
+    nlsropt = opt.add_option_group('NLSR Options')
 
-    opt.add_option('--debug',action='store_true',default=False,dest='debug',help='''debugging mode''')
+    nlsropt.add_option('--with-tests', action='store_true', default=False, dest='with_tests',
+                       help='''build unit tests''')
 
 
 def configure(conf):
-    conf.load("compiler_c compiler_cxx boost gnu_dirs c_osx openssl cryptopp")
+    conf.load("compiler_cxx gnu_dirs boost openssl")
 
-    conf.check_openssl()
+    conf.load('default-compiler-flags')
 
-    if conf.options.debug:
-        conf.define ('_DEBUG', 1)
-        flags = ['-O0',
-                 '-Wall',
-                 # '-Werror',
-                 '-Wno-unused-variable',
-                 '-g3',
-                 '-Wno-unused-private-field', # only clang supports
-                 '-fcolor-diagnostics',       # only clang supports
-                 '-Qunused-arguments',        # only clang supports
-                 '-Wno-tautological-compare', # suppress warnings from CryptoPP
-                 '-Wno-unused-function',      # another annoying warning from CryptoPP
+    conf.check_cfg(package='libndn-cpp-dev', args=['--cflags', '--libs'],
+                   uselib_store='NDN_CPP', mandatory=True)
 
-                 '-Wno-deprecated-declarations',
-                 ]
+    boost_libs = 'system chrono program_options log iostreams thread'
+    if conf.options.with_tests:
+        conf.env['WITH_TESTS'] = 1
+        conf.define('WITH_TESTS', 1);
+        boost_libs += ' unit_test_framework'
 
-        conf.add_supported_cxxflags (cxxflags = flags)
-    else:
-        flags = ['-O3', '-g', '-Wno-tautological-compare', '-Wno-unused-function', '-Wno-deprecated-declarations']
-        conf.add_supported_cxxflags (cxxflags = flags)
+    conf.check_boost(lib=boost_libs)
 
-
-    conf.check_cfg(package='libndn-cpp-dev', args=['--cflags', '--libs'], uselib_store='NDN_CPP', mandatory=True)
-    conf.check_cfg(package='nsync', args=['--cflags', '--libs'], uselib_store='nsync', mandatory=True)
-    conf.check_cfg(package='sqlite3', args=['--cflags', '--libs'], uselib_store='SQLITE3', mandatory=True)
-    conf.check_cryptopp(path=conf.options.cryptopp_dir, mandatory=True)
-    conf.check_boost(lib='system iostreams thread unit_test_framework log', uselib_store='BOOST', mandatory=True)
     if conf.env.BOOST_VERSION_NUMBER < 105400:
-        Logs.error ("Minimum required boost version is 1.54.0")
-        Logs.error ("Please upgrade your distribution or install custom boost libraries")
+        Logs.error("Minimum required boost version is 1.54.0")
+        Logs.error("Please upgrade your distribution or install custom boost libraries")
         return
 
+    conf.load('protoc')
 
+    conf.load('coverage')
+
+    conf.define('DEFAULT_CONFIG_FILE', '%s/ndn/nlsr.conf' % conf.env['SYSCONFDIR'])
+
+    conf.write_config_header('config.hpp')
 
 
 def build (bld):
-    bld (
-        features=['cxx', 'cxxprogram'],
-        target="nlsr",
-        source = bld.path.ant_glob('src/**/*.cpp'),
-        use = 'NDN_CPP BOOST CRYPTOPP SQLITE3 nsync',
-        includes = ". src"
+    nsync_objects = bld(
+        target='nsync-objects',
+        name='nsync-objects',
+        features='cxx',
+        source=bld.path.ant_glob(['nsync/**/*.cc', 'nsync/**/*.proto']),
+        use='BOOST NDN_CPP OPENSSL',
+        includes='nsync',
+        export_includes='nsync',
         )
-    bld.recurse("CertTool")
 
-@Configure.conf
-def add_supported_cxxflags(self, cxxflags):
-    """
-    Check which cxxflags are supported by compiler and add them to env.CXXFLAGS variable
-    """
-    self.start_msg('Checking allowed flags for c++ compiler')
+    nlsr_objects = bld(
+        target='nlsr-objects',
+        name='nlsr-objects',
+        features='cxx',
+        source=bld.path.ant_glob(['src/**/*.cpp'],
+                                 excl=['src/main.cpp']),
+        use='nsync-objects NDN_CPP BOOST',
+        includes='. src',
+        export_includes='. src',
+        )
 
-    supportedFlags = []
-    for flag in cxxflags:
-        if self.check_cxx (cxxflags=[flag], mandatory=False):
-            supportedFlags += [flag]
+    nlsr = bld(
+        target='bin/nlsr',
+        features='cxx cxxprogram',
+        source='src/main.cpp',
+        use='nlsr-objects',
+        )
 
-    self.end_msg (' '.join (supportedFlags))
-    self.env.CXXFLAGS += supportedFlags
+    if bld.env['WITH_TESTS']:
+        bld.recurse('tests')
+        bld.recurse('tests-integrated')
