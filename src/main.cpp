@@ -19,14 +19,13 @@
  **/
 
 #include "nlsr.hpp"
-#include "nlsr_conf_processor.hpp"
+#include "conf-file-processor.hpp"
 
 using namespace nlsr;
 
 int
-main(int argc, char **argv)
+main(int argc, char** argv)
 {
-  src::logger lg;
   nlsr::Nlsr nlsr_;
   string programName(argv[0]);
   nlsr_.setConfFileName("nlsr.conf");
@@ -42,24 +41,26 @@ main(int argc, char **argv)
         nlsr_.setIsDaemonProcess(optarg);
         break;
       case 'p':
-        {
-          stringstream sst(optarg);
-          int ap;
-          sst>>ap;
-          nlsr_.setApiPort(ap);
-        }
-        break;
+      {
+        stringstream sst(optarg);
+        int ap;
+        sst >> ap;
+        nlsr_.setApiPort(ap);
+      }
+      break;
       case 'h':
+
       default:
         nlsr_.usage(programName);
         return EXIT_FAILURE;
       }
   }
   ConfFileProcessor cfp(nlsr_.getConfFileName());
-  int res=cfp.processConfFile(nlsr_);
-  if ( res < 0 )
+  int res = cfp.processConfFile(nlsr_);
+  if (res < 0)
   {
-    std::cerr<<"Error in configuration file processing! Exiting from NLSR"<<std::endl;
+    std::cerr << "Error in configuration file processing! Exiting from NLSR" <<
+              std::endl;
     return EXIT_FAILURE;
   }
   nlsr_.initialize();
@@ -67,7 +68,7 @@ main(int argc, char **argv)
   {
     nlsr_.startEventLoop();
   }
-  catch(std::exception &e)
+  catch (std::exception& e)
   {
     std::cerr << "ERROR: " << e.what() << std::endl;
   }
