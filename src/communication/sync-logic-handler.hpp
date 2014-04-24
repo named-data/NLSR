@@ -10,7 +10,7 @@
 
 #include "sequencing-manager.hpp"
 
-class KeyManager;
+// class KeyManager;
 
 extern "C" {
 #include <unistd.h>
@@ -46,8 +46,8 @@ public:
   void
   publishRoutingUpdate(SequencingManager& sm, string updatePrefix);
 
-  void
-  publishKeyUpdate(KeyManager& km);
+  // void
+  // publishKeyUpdate(KeyManager& km);
 
   void
   publishIdentityUpdate(string identityName);
@@ -67,8 +67,8 @@ private:
   processRoutingUpdateFromSync(std::string routerName, uint64_t seqNo,
                                Nlsr& pnlsr);
 
-  void
-  processKeysUpdateFromSync(std::string certName, uint64_t seqNo, Nlsr& pnlsr);
+  // void
+  // processKeysUpdateFromSync(std::string certName, uint64_t seqNo, Nlsr& pnlsr);
 
   void
   publishSyncUpdate(string updatePrefix, uint64_t seqNo);

@@ -62,6 +62,7 @@ public:
 private:
   Nlsr& m_nlsr;
 
+  ndn::KeyChain m_keyChain;
 };
 
 }//namespace nlsr

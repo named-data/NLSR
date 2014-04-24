@@ -9,7 +9,7 @@
 #include "data-manager.hpp"
 #include "utility/tokenizer.hpp"
 #include "lsdb.hpp"
-#include "security/key-manager.hpp"
+// #include "security/key-manager.hpp"
 
 namespace nlsr {
 
@@ -30,7 +30,7 @@ DataManager::processContent(const ndn::Interest& interest,
   }
   else
   {
-    if (m_nlsr.getKeyManager().verify(data))
+    // if (m_nlsr.getKeyManager().verify(data))
     {
       std::cout << "Verified Data Content" << std::endl;
       chkString = "info";
@@ -46,10 +46,10 @@ DataManager::processContent(const ndn::Interest& interest,
         processContentLsa(dataName, dataContent);
       }
     }
-    else
-    {
-      std::cout << "Unverified Data Content. Discarded" << std::endl;
-    }
+    // else
+    // {
+    //   std::cout << "Unverified Data Content. Discarded" << std::endl;
+    // }
   }
 }
 
@@ -200,14 +200,14 @@ DataManager::processContentKeys(const ndn::Data& data)
   uint32_t seqNum = boost::lexical_cast<uint32_t>(nt.getToken(
                                                     nt.getTokenNumber() - 2));
   std::cout << "Cert Name: " << certName << " Seq Num: " << seqNum << std::endl;
-  if (m_nlsr.getKeyManager().verify(m_nlsr, *(cert)))
-  {
-    m_nlsr.getKeyManager().addCertificate(cert, seqNum, true);
-  }
-  else
-  {
-    m_nlsr.getKeyManager().addCertificate(cert, seqNum, false);
-  }
-  m_nlsr.getKeyManager().printCertStore();
+  // if (m_nlsr.getKeyManager().verify(m_nlsr, *(cert)))
+  // {
+  //   m_nlsr.getKeyManager().addCertificate(cert, seqNum, true);
+  // }
+  // else
+  // {
+  //   m_nlsr.getKeyManager().addCertificate(cert, seqNum, false);
+  // }
+  // m_nlsr.getKeyManager().printCertStore();
 }
 }//namespace nlsr

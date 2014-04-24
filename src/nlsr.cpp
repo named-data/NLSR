@@ -39,14 +39,14 @@ Nlsr::initialize()
   m_nlsrLsdb.setLsaRefreshTime(m_confParam.getLsaRefreshTime());
   m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix());
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());
-  if (!m_km.initialize(m_confParam))
-  {
-    std::cerr << "Can not initiate/load certificate" << endl;
-  }
+  // if (!m_km.initialize(m_confParam))
+  // {
+  //   std::cerr << "Can not initiate/load certificate" << endl;
+  // }
   m_sm.setSeqFileName(m_confParam.getSeqFileDir());
   m_sm.initiateSeqNoFromFile();
   /* debugging purpose start */
-  cout <<	m_confParam;
+  cout << m_confParam;
   m_adl.printAdl();
   m_npl.print();
   /* debugging purpose end */
@@ -58,7 +58,7 @@ Nlsr::initialize()
   setInterestFilterNlsr(m_confParam.getRootKeyPrefix());
   m_slh.setSyncPrefix(m_confParam.getChronosyncSyncPrefix());
   m_slh.createSyncSocket(boost::ref(*this));
-  m_slh.publishKeyUpdate(m_km);
+  // m_slh.publishKeyUpdate(m_km);
   m_im.scheduleInfoInterest(10);
 }
 

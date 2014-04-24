@@ -15,7 +15,7 @@
 #include "route/routing-table.hpp"
 #include "route/npt.hpp"
 #include "route/fib.hpp"
-#include "security/key-manager.hpp"
+// #include "security/key-manager.hpp"
 #include "communication/sync-logic-handler.hpp"
 
 
@@ -41,7 +41,7 @@ public:
     , m_im(*this)
     , m_dm(*this)
     , m_sm()
-    , m_km()
+    // , m_km()
     , m_isDaemonProcess(false)
     , m_configFileName("nlsr.conf")
     , m_nlsrLsdb()
@@ -127,11 +127,11 @@ public:
     return m_nlsrFace;
   }
 
-  KeyManager&
-  getKeyManager()
-  {
-    return m_km;
-  }
+  // KeyManager&
+  // getKeyManager()
+  // {
+  //   return m_km;
+  // }
 
 
   InterestManager&
@@ -262,7 +262,7 @@ private:
   InterestManager m_im;
   DataManager m_dm;
   SequencingManager m_sm;
-  KeyManager m_km;
+  // KeyManager m_km;
   bool m_isDaemonProcess;
   string m_configFileName;
 

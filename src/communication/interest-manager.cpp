@@ -52,7 +52,8 @@ InterestManager::processInterestInfo(const string& neighbor,
     Data data(ndn::Name(interest.getName()).appendVersion());
     data.setFreshnessPeriod(time::seconds(10)); // 10 sec
     data.setContent((const uint8_t*)"info", sizeof("info"));
-    m_nlsr.getKeyManager().signData(data);
+    // m_nlsr.getKeyManager().signData(data);
+    m_keyChain.sign(data);
     cout << ">> D: " << data << endl;
     m_nlsr.getNlsrFace()->put(data);
     int status = m_nlsr.getAdl().getStatusOfNeighbor(neighbor);
@@ -125,7 +126,8 @@ InterestManager::processInterestForNameLsa(const ndn::Interest& interest,
       data.setFreshnessPeriod(time::seconds(10)); // 10 sec
       string content = nameLsa->getData();
       data.setContent((const uint8_t*)content.c_str(), content.size());
-      m_nlsr.getKeyManager().signData(data);
+      // m_nlsr.getKeyManager().signData(data);
+      m_keyChain.sign(data);
       std::cout << ">> D: " << data << std::endl;
       m_nlsr.getNlsrFace()->put(data);
     }
@@ -145,7 +147,8 @@ InterestManager::processInterestForAdjLsa(const ndn::Interest& interest,
       data.setFreshnessPeriod(time::seconds(10)); // 10 sec
       string content = adjLsa->getData();
       data.setContent((const uint8_t*)content.c_str(), content.size());
-      m_nlsr.getKeyManager().signData(data);
+      // m_nlsr.getKeyManager().signData(data);
+      m_keyChain.sign(data);
       std::cout << ">> D: " << data << std::endl;
       m_nlsr.getNlsrFace()->put(data);
     }
@@ -165,7 +168,8 @@ InterestManager::processInterestForCorLsa(const ndn::Interest& interest,
       data.setFreshnessPeriod(time::seconds(10)); // 10 sec
       string content = corLsa->getData();
       data.setContent((const uint8_t*)content.c_str(), content.size());
-      m_nlsr.getKeyManager().signData(data);
+      // m_nlsr.getKeyManager().signData(data);
+      m_keyChain.sign(data);
       std::cout << ">> D: " << data << std::endl;
       m_nlsr.getNlsrFace()->put(data);
     }
@@ -176,56 +180,56 @@ void
 InterestManager::processInterestKeys(const ndn::Interest& interest)
 {
   std::cout << "processInterestKeys called " << std::endl;
-  string intName = interest.getName().toUri();
-  std::cout << "Interest Name for Key: " << intName << std::endl;
-  Tokenizer nt(intName, "/");
-  std::string chkString("ID-CERT");
-  std::string certName;
-  uint32_t seqNum;
-  ndn::Name dataName;
-  std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> chkCert;
-  if (nt.getTokenPosition(chkString) == nt.getTokenNumber() - 1)
-  {
-    certName = nt.getTokenString(0, nt.getTokenNumber() - 1);
-    cout << "Cert Name: " << certName << std::endl;
-    chkCert = m_nlsr.getKeyManager().getCertificateFromStore(certName);
-  }
-  else
-  {
-    certName = nt.getTokenString(0, nt.getTokenNumber() - 2);
-    seqNum = boost::lexical_cast<uint32_t>(nt.getToken(nt.getTokenNumber() - 1));
-    std::cout << "Cert Name: " << certName << " Seq Num: " << seqNum << std::endl;
-    chkCert = m_nlsr.getKeyManager().getCertificateFromStore(certName, seqNum);
-  }
-  if (chkCert.second)
-  {
-    if (nt.getTokenPosition(chkString) == nt.getTokenNumber() - 1)
-    {
-      std::string dn;
-      dataName = ndn::Name(interest.getName()).appendVersion();
-      std::pair<uint32_t, bool> seqChk =
-        m_nlsr.getKeyManager().getCertificateSeqNum(certName);
-      if (seqChk.second)
-      {
-        dn = dataName.toUri() + "/" + boost::lexical_cast<std::string>(seqChk.first);
-        dataName = ndn::Name(dn);
-      }
-      else
-      {
-        dn = dataName.toUri() + "/" + boost::lexical_cast<std::string>(10);
-        dataName = ndn::Name(dn);
-      }
-    }
-    else
-    {
-      dataName = ndn::Name(interest.getName());
-    }
-    Data data(dataName.appendVersion());
-    data.setFreshnessPeriod(time::seconds(10)); //10 sec
-    data.setContent(chkCert.first->wireEncode());
-    m_nlsr.getKeyManager().signData(data);
-    m_nlsr.getNlsrFace()->put(data);
-  }
+  // string intName = interest.getName().toUri();
+  // std::cout << "Interest Name for Key: " << intName << std::endl;
+  // Tokenizer nt(intName, "/");
+  // std::string chkString("ID-CERT");
+  // std::string certName;
+  // uint32_t seqNum;
+  // ndn::Name dataName;
+  // std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> chkCert;
+  // if (nt.getTokenPosition(chkString) == nt.getTokenNumber() - 1)
+  // {
+  //   certName = nt.getTokenString(0, nt.getTokenNumber() - 1);
+  //   cout << "Cert Name: " << certName << std::endl;
+  //   chkCert = m_nlsr.getKeyManager().getCertificateFromStore(certName);
+  // }
+  // else
+  // {
+  //   certName = nt.getTokenString(0, nt.getTokenNumber() - 2);
+  //   seqNum = boost::lexical_cast<uint32_t>(nt.getToken(nt.getTokenNumber() - 1));
+  //   std::cout << "Cert Name: " << certName << " Seq Num: " << seqNum << std::endl;
+  //   chkCert = m_nlsr.getKeyManager().getCertificateFromStore(certName, seqNum);
+  // }
+  // if (chkCert.second)
+  // {
+  //   if (nt.getTokenPosition(chkString) == nt.getTokenNumber() - 1)
+  //   {
+  //     std::string dn;
+  //     dataName = ndn::Name(interest.getName()).appendVersion();
+  //     std::pair<uint32_t, bool> seqChk =
+  //       m_nlsr.getKeyManager().getCertificateSeqNum(certName);
+  //     if (seqChk.second)
+  //     {
+  //       dn = dataName.toUri() + "/" + boost::lexical_cast<std::string>(seqChk.first);
+  //       dataName = ndn::Name(dn);
+  //     }
+  //     else
+  //     {
+  //       dn = dataName.toUri() + "/" + boost::lexical_cast<std::string>(10);
+  //       dataName = ndn::Name(dn);
+  //     }
+  //   }
+  //   else
+  //   {
+  //     dataName = ndn::Name(interest.getName());
+  //   }
+  //   Data data(dataName.appendVersion());
+  //   data.setFreshnessPeriod(time::seconds(10)); //10 sec
+  //   data.setContent(chkCert.first->wireEncode());
+  //   m_nlsr.getKeyManager().signData(data);
+  //   m_nlsr.getNlsrFace()->put(data);
+  // }
 }
 
 

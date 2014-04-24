@@ -1,6 +1,6 @@
 #include "nlsr.hpp"
 #include "sync-logic-handler.hpp"
-#include "security/key-manager.hpp"
+// #include "security/key-manager.hpp"
 #include "utility/tokenizer.hpp"
 
 
@@ -61,7 +61,7 @@ SyncLogicHandler::processUpdateFromSync(std::string updateName,
   {
     //process keys update here
     std::string certName = nt.getTokenString(0);
-    processKeysUpdateFromSync(certName, seqNo, pnlsr);
+    // processKeysUpdateFromSync(certName, seqNo, pnlsr);
   }
 }
 
@@ -107,19 +107,19 @@ SyncLogicHandler::processRoutingUpdateFromSync(std::string routerName,
   }
 }
 
-void
-SyncLogicHandler::processKeysUpdateFromSync(std::string certName,
-                                            uint64_t seqNo, Nlsr& pnlsr)
-{
-  std::cout << "Cert Name: " << certName << std::endl;
-  if (pnlsr.getKeyManager().isNewCertificate(certName, seqNo))
-  {
-    string certNamePrefix = certName + "/" +
-                            boost::lexical_cast<string>(seqNo);
-    pnlsr.getIm().expressInterest(certNamePrefix, 3,
-                                  pnlsr.getConfParameter().getInterestResendTime());
-  }
-}
+// void
+// SyncLogicHandler::processKeysUpdateFromSync(std::string certName,
+//                                             uint64_t seqNo, Nlsr& pnlsr)
+// {
+//   std::cout << "Cert Name: " << certName << std::endl;
+//   // if (pnlsr.getKeyManager().isNewCertificate(certName, seqNo))
+//   {
+//     string certNamePrefix = certName + "/" +
+//                             boost::lexical_cast<string>(seqNo);
+//     pnlsr.getIm().expressInterest(certNamePrefix, 3,
+//                                   pnlsr.getConfParameter().getInterestResendTime());
+//   }
+// }
 
 void
 SyncLogicHandler::publishRoutingUpdate(SequencingManager& sm,
@@ -129,11 +129,11 @@ SyncLogicHandler::publishRoutingUpdate(SequencingManager& sm,
   publishSyncUpdate(updatePrefix, sm.getCombinedSeqNo());
 }
 
-void
-SyncLogicHandler::publishKeyUpdate(KeyManager& km)
-{
-  publishSyncUpdate(km.getProcessCertName().toUri(), km.getCertSeqNo());
-}
+// void
+// SyncLogicHandler::publishKeyUpdate(KeyManager& km)
+// {
+//   publishSyncUpdate(km.getProcessCertName().toUri(), km.getCertSeqNo());
+// }
 
 void
 SyncLogicHandler::publishIdentityUpdate(string identityName)
