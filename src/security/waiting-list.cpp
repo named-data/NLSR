@@ -17,10 +17,8 @@ WaitingList::getWaitingListEntry(std::string respCert)
   {
     return std::make_pair(*(it), true);
   }
-
   WaitingListEntry wle;
   return std::make_pair(wle, false);
-
 }
 
 bool

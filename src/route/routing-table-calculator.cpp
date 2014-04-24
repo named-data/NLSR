@@ -448,13 +448,14 @@ HypRoutingTableCalculator::getHyperbolicDistance(Nlsr& pnlsr,
   double distance = 0.0;
   string srcRouterKey = pMap.getRouterNameByMappingNo(src) + "/3";
   string destRouterKey = pMap.getRouterNameByMappingNo(dest) + "/3";
-  double srcRadius = (pnlsr.getLsdb().getCorLsa(
-                        srcRouterKey).first).getCorRadius();
-  double srcTheta = (pnlsr.getLsdb().getCorLsa(srcRouterKey).first).getCorTheta();
-  double destRadius = (pnlsr.getLsdb().getCorLsa(
-                         destRouterKey).first).getCorRadius();
-  double destTheta = (pnlsr.getLsdb().getCorLsa(
-                        destRouterKey).first).getCorTheta();
+  double srcRadius = (pnlsr.getLsdb().findCoordinateLsa(
+                        srcRouterKey))->getCorRadius();
+  double srcTheta = (pnlsr.getLsdb().findCoordinateLsa(
+                       srcRouterKey))->getCorTheta();
+  double destRadius = (pnlsr.getLsdb().findCoordinateLsa(
+                         destRouterKey))->getCorRadius();
+  double destTheta = (pnlsr.getLsdb().findCoordinateLsa(
+                        destRouterKey))->getCorTheta();
   double diffTheta = fabs(srcTheta - destTheta);
   if (diffTheta > MATH_PI)
   {

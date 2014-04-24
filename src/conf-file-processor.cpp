@@ -15,7 +15,7 @@ namespace nlsr {
 using namespace std;
 
 int
-ConfFileProcessor::processConfFile(Nlsr& pnlsr)
+ConfFileProcessor::processConfFile()
 {
   int ret = 0;
   if (!m_confFileName.empty())
@@ -29,7 +29,7 @@ ConfFileProcessor::processConfFile(Nlsr& pnlsr)
         {
           if (line[0] != '#' && line[0] != '!')
           {
-            ret = processConfCommand(pnlsr, line);
+            ret = processConfCommand(line);
             if (ret == -1)
             {
               break;
@@ -50,85 +50,85 @@ ConfFileProcessor::processConfFile(Nlsr& pnlsr)
 
 
 int
-ConfFileProcessor::processConfCommand(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommand(string command)
 {
   int ret = 0;
   Tokenizer nt(command, " ");
   if ((nt.getFirstToken() == "network"))
   {
-    ret = processConfCommandNetwork(pnlsr, nt.getRestOfLine());
+    ret = processConfCommandNetwork(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "site-name"))
   {
-    ret = processConfCommandSiteName(pnlsr, nt.getRestOfLine());
+    ret = processConfCommandSiteName(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "root-key-prefix"))
   {
-    ret = processConfCommandRootKeyPrefix(pnlsr, nt.getRestOfLine());
+    ret = processConfCommandRootKeyPrefix(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "router-name"))
   {
-    ret = processConfCommandRouterName(pnlsr, nt.getRestOfLine());
+    ret = processConfCommandRouterName(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "ndnneighbor"))
   {
-    ret = processConfCommandNdnNeighbor(pnlsr, nt.getRestOfLine());
+    ret = processConfCommandNdnNeighbor(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "link-cost"))
   {
-    ret = processConfCommandLinkCost(pnlsr, nt.getRestOfLine());
+    ret = processConfCommandLinkCost(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "ndnname"))
   {
-    ret = processConfCommandNdnName(pnlsr, nt.getRestOfLine());
+    ret = processConfCommandNdnName(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "interest-retry-num"))
   {
-    processConfCommandInterestRetryNumber(pnlsr, nt.getRestOfLine());
+    processConfCommandInterestRetryNumber(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "interest-resend-time"))
   {
-    processConfCommandInterestResendTime(pnlsr, nt.getRestOfLine());
+    processConfCommandInterestResendTime(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "lsa-refresh-time"))
   {
-    processConfCommandLsaRefreshTime(pnlsr, nt.getRestOfLine());
+    processConfCommandLsaRefreshTime(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "max-faces-per-prefix"))
   {
-    processConfCommandMaxFacesPerPrefix(pnlsr, nt.getRestOfLine());
+    processConfCommandMaxFacesPerPrefix(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "log-dir"))
   {
-    processConfCommandLogDir(pnlsr, nt.getRestOfLine());
+    processConfCommandLogDir(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "cert-dir"))
   {
-    processConfCommandCertDir(pnlsr, nt.getRestOfLine());
+    processConfCommandCertDir(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "detailed-logging"))
   {
-    processConfCommandDetailedLogging(pnlsr, nt.getRestOfLine());
+    processConfCommandDetailedLogging(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "debugging"))
   {
-    processConfCommandDebugging(pnlsr, nt.getRestOfLine());
+    processConfCommandDebugging(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "chronosync-sync-prefix"))
   {
-    processConfCommandChronosyncSyncPrefix(pnlsr, nt.getRestOfLine());
+    processConfCommandChronosyncSyncPrefix(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "hyperbolic-cordinate"))
   {
-    processConfCommandHyperbolicCordinate(pnlsr, nt.getRestOfLine());
+    processConfCommandHyperbolicCordinate(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "hyperbolic-routing"))
   {
-    processConfCommandIsHyperbolicCalc(pnlsr, nt.getRestOfLine());
+    processConfCommandIsHyperbolicCalc(nt.getRestOfLine());
   }
   else if ((nt.getFirstToken() == "tunnel-type"))
   {
-    processConfCommandTunnelType(pnlsr, nt.getRestOfLine());
+    processConfCommandTunnelType(nt.getRestOfLine());
   }
   else
   {
@@ -138,7 +138,7 @@ ConfFileProcessor::processConfCommand(Nlsr& pnlsr, string command)
 }
 
 int
-ConfFileProcessor::processConfCommandNetwork(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandNetwork(string command)
 {
   if (command.empty())
   {
@@ -155,13 +155,13 @@ ConfFileProcessor::processConfCommandNetwork(Nlsr& pnlsr, string command)
     {
       command.erase(0, 1);
     }
-    pnlsr.getConfParameter().setNetwork(command);
+    m_nlsr.getConfParameter().setNetwork(command);
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandSiteName(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandSiteName(string command)
 {
   if (command.empty())
   {
@@ -178,13 +178,13 @@ ConfFileProcessor::processConfCommandSiteName(Nlsr& pnlsr, string command)
     {
       command.erase(0, 1);
     }
-    pnlsr.getConfParameter().setSiteName(command);
+    m_nlsr.getConfParameter().setSiteName(command);
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandRootKeyPrefix(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandRootKeyPrefix(string command)
 {
   if (command.empty())
   {
@@ -201,14 +201,14 @@ ConfFileProcessor::processConfCommandRootKeyPrefix(Nlsr& pnlsr, string command)
     {
       command.erase(0, 1);
     }
-    pnlsr.getConfParameter().setRootKeyPrefix(command);
+    m_nlsr.getConfParameter().setRootKeyPrefix(command);
   }
   return 0;
 }
 
 
 int
-ConfFileProcessor::processConfCommandRouterName(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandRouterName(string command)
 {
   if (command.empty())
   {
@@ -225,14 +225,13 @@ ConfFileProcessor::processConfCommandRouterName(Nlsr& pnlsr, string command)
     {
       command.erase(0, 1);
     }
-    pnlsr.getConfParameter().setRouterName(command);
+    m_nlsr.getConfParameter().setRouterName(command);
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandInterestRetryNumber(Nlsr& pnlsr,
-                                                         string command)
+ConfFileProcessor::processConfCommandInterestRetryNumber(string command)
 {
   if (command.empty())
   {
@@ -245,15 +244,14 @@ ConfFileProcessor::processConfCommandInterestRetryNumber(Nlsr& pnlsr,
     ss >> irn;
     if (irn >= 1 && irn <= 5)
     {
-      pnlsr.getConfParameter().setInterestRetryNumber(irn);
+      m_nlsr.getConfParameter().setInterestRetryNumber(irn);
     }
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandInterestResendTime(Nlsr& pnlsr,
-                                                        string command)
+ConfFileProcessor::processConfCommandInterestResendTime(string command)
 {
   if (command.empty())
   {
@@ -266,14 +264,14 @@ ConfFileProcessor::processConfCommandInterestResendTime(Nlsr& pnlsr,
     ss >> irt;
     if (irt >= 1 && irt <= 20)
     {
-      pnlsr.getConfParameter().setInterestResendTime(irt);
+      m_nlsr.getConfParameter().setInterestResendTime(irt);
     }
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandLsaRefreshTime(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandLsaRefreshTime(string command)
 {
   if (command.empty())
   {
@@ -286,15 +284,14 @@ ConfFileProcessor::processConfCommandLsaRefreshTime(Nlsr& pnlsr, string command)
     ss >> lrt;
     if (lrt >= 240 && lrt <= 7200)
     {
-      pnlsr.getConfParameter().setLsaRefreshTime(lrt);
+      m_nlsr.getConfParameter().setLsaRefreshTime(lrt);
     }
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandMaxFacesPerPrefix(Nlsr& pnlsr,
-                                                       string command)
+ConfFileProcessor::processConfCommandMaxFacesPerPrefix(string command)
 {
   if (command.empty())
   {
@@ -307,14 +304,14 @@ ConfFileProcessor::processConfCommandMaxFacesPerPrefix(Nlsr& pnlsr,
     ss >> mfpp;
     if (mfpp >= 0 && mfpp <= 60)
     {
-      pnlsr.getConfParameter().setMaxFacesPerPrefix(mfpp);
+      m_nlsr.getConfParameter().setMaxFacesPerPrefix(mfpp);
     }
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandTunnelType(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandTunnelType(string command)
 {
   if (command.empty())
   {
@@ -324,11 +321,11 @@ ConfFileProcessor::processConfCommandTunnelType(Nlsr& pnlsr, string command)
   {
     if (command == "tcp" || command == "TCP")
     {
-      pnlsr.getConfParameter().setTunnelType(1);
+      m_nlsr.getConfParameter().setTunnelType(1);
     }
     else if (command == "udp" || command == "UDP")
     {
-      pnlsr.getConfParameter().setTunnelType(0);
+      m_nlsr.getConfParameter().setTunnelType(0);
     }
     else
     {
@@ -339,8 +336,7 @@ ConfFileProcessor::processConfCommandTunnelType(Nlsr& pnlsr, string command)
 }
 
 int
-ConfFileProcessor::processConfCommandChronosyncSyncPrefix(Nlsr& pnlsr,
-                                                          string command)
+ConfFileProcessor::processConfCommandChronosyncSyncPrefix(string command)
 {
   if (command.empty())
   {
@@ -348,14 +344,14 @@ ConfFileProcessor::processConfCommandChronosyncSyncPrefix(Nlsr& pnlsr,
   }
   else
   {
-    pnlsr.getConfParameter().setChronosyncSyncPrefix(command);
+    m_nlsr.getConfParameter().setChronosyncSyncPrefix(command);
   }
   return 0;
 }
 
 
 int
-ConfFileProcessor::processConfCommandLogDir(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandLogDir(string command)
 {
   if (command.empty())
   {
@@ -363,13 +359,13 @@ ConfFileProcessor::processConfCommandLogDir(Nlsr& pnlsr, string command)
   }
   else
   {
-    pnlsr.getConfParameter().setLogDir(command);
+    m_nlsr.getConfParameter().setLogDir(command);
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandCertDir(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandCertDir(string command)
 {
   if (command.empty())
   {
@@ -377,13 +373,13 @@ ConfFileProcessor::processConfCommandCertDir(Nlsr& pnlsr, string command)
   }
   else
   {
-    pnlsr.getConfParameter().setCertDir(command);
+    m_nlsr.getConfParameter().setCertDir(command);
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandDebugging(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandDebugging(string command)
 {
   if (command.empty())
   {
@@ -393,11 +389,11 @@ ConfFileProcessor::processConfCommandDebugging(Nlsr& pnlsr, string command)
   {
     if (command == "on" || command == "ON")
     {
-      pnlsr.getConfParameter().setDebugging(1);
+      m_nlsr.getConfParameter().setDebugging(1);
     }
     else if (command == "off" || command == "off")
     {
-      pnlsr.getConfParameter().setDebugging(0);
+      m_nlsr.getConfParameter().setDebugging(0);
     }
     else
     {
@@ -408,8 +404,7 @@ ConfFileProcessor::processConfCommandDebugging(Nlsr& pnlsr, string command)
 }
 
 int
-ConfFileProcessor::processConfCommandDetailedLogging(Nlsr& pnlsr,
-                                                     string command)
+ConfFileProcessor::processConfCommandDetailedLogging(string command)
 {
   if (command.empty())
   {
@@ -419,11 +414,11 @@ ConfFileProcessor::processConfCommandDetailedLogging(Nlsr& pnlsr,
   {
     if (command == "on" || command == "ON")
     {
-      pnlsr.getConfParameter().setDetailedLogging(1);
+      m_nlsr.getConfParameter().setDetailedLogging(1);
     }
     else if (command == "off" || command == "off")
     {
-      pnlsr.getConfParameter().setDetailedLogging(0);
+      m_nlsr.getConfParameter().setDetailedLogging(0);
     }
     else
     {
@@ -434,8 +429,7 @@ ConfFileProcessor::processConfCommandDetailedLogging(Nlsr& pnlsr,
 }
 
 int
-ConfFileProcessor::processConfCommandIsHyperbolicCalc(Nlsr& pnlsr,
-                                                      string command)
+ConfFileProcessor::processConfCommandIsHyperbolicCalc(string command)
 {
   if (command.empty())
   {
@@ -445,15 +439,15 @@ ConfFileProcessor::processConfCommandIsHyperbolicCalc(Nlsr& pnlsr,
   {
     if (command == "on" || command == "ON")
     {
-      pnlsr.getConfParameter().setIsHyperbolicCalc(1);
+      m_nlsr.getConfParameter().setIsHyperbolicCalc(1);
     }
     else if (command == "dry-run" || command == "DRY-RUN")
     {
-      pnlsr.getConfParameter().setIsHyperbolicCalc(2);
+      m_nlsr.getConfParameter().setIsHyperbolicCalc(2);
     }
     else if (command == "off" || command == "off")
     {
-      pnlsr.getConfParameter().setIsHyperbolicCalc(0);
+      m_nlsr.getConfParameter().setIsHyperbolicCalc(0);
     }
     else
     {
@@ -464,13 +458,12 @@ ConfFileProcessor::processConfCommandIsHyperbolicCalc(Nlsr& pnlsr,
 }
 
 int
-ConfFileProcessor::processConfCommandHyperbolicCordinate(Nlsr& pnlsr,
-                                                         string command)
+ConfFileProcessor::processConfCommandHyperbolicCordinate(string command)
 {
   if (command.empty())
   {
     cerr << " Wrong command format ! [hyperbolic-cordinate r 0]!" << endl;
-    if (pnlsr.getConfParameter().getIsHyperbolicCalc() > 0)
+    if (m_nlsr.getConfParameter().getIsHyperbolicCalc() > 0)
     {
       return -1;
     }
@@ -483,15 +476,15 @@ ConfFileProcessor::processConfCommandHyperbolicCordinate(Nlsr& pnlsr,
     double r, theta;
     ssr >> r;
     sst >> theta;
-    pnlsr.getConfParameter().setCorR(r);
-    pnlsr.getConfParameter().setCorTheta(theta);
+    m_nlsr.getConfParameter().setCorR(r);
+    m_nlsr.getConfParameter().setCorTheta(theta);
   }
   return 0;
 }
 
 
 int
-ConfFileProcessor::processConfCommandNdnNeighbor(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandNdnNeighbor(string command)
 {
   if (command.empty())
   {
@@ -511,14 +504,14 @@ ConfFileProcessor::processConfCommandNdnNeighbor(Nlsr& pnlsr, string command)
       int faceId;
       sst >> faceId;
       Adjacent adj(nt.getFirstToken(), faceId, 0.0, 0, 0);
-      pnlsr.getAdl().insert(adj);
+      m_nlsr.getAdl().insert(adj);
     }
   }
   return 0;
 }
 
 int
-ConfFileProcessor::processConfCommandNdnName(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandNdnName(string command)
 {
   if (command.empty())
   {
@@ -526,19 +519,19 @@ ConfFileProcessor::processConfCommandNdnName(Nlsr& pnlsr, string command)
   }
   else
   {
-    pnlsr.getNpl().insert(command);
+    m_nlsr.getNpl().insert(command);
   }
   return 0;
 }
 
 
 int
-ConfFileProcessor::processConfCommandLinkCost(Nlsr& pnlsr, string command)
+ConfFileProcessor::processConfCommandLinkCost(string command)
 {
   if (command.empty())
   {
     cerr << " Wrong command format ! [link-cost nbr/name cost]!" << endl;
-    if (pnlsr.getConfParameter().getIsHyperbolicCalc() > 0)
+    if (m_nlsr.getConfParameter().getIsHyperbolicCalc() > 0)
     {
       return -1;
     }
@@ -549,7 +542,7 @@ ConfFileProcessor::processConfCommandLinkCost(Nlsr& pnlsr, string command)
     stringstream sst(nt.getRestOfLine().c_str());
     double cost;
     sst >> cost;
-    pnlsr.getAdl().updateAdjacentLinkCost(nt.getFirstToken(), cost);
+    m_nlsr.getAdl().updateAdjacentLinkCost(nt.getFirstToken(), cost);
   }
   return 0;
 }

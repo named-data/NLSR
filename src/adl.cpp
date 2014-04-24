@@ -45,7 +45,7 @@ Adl::addAdjacentsFromAdl(Adl& adl)
 }
 
 int
-Adl::updateAdjacentStatus(string adjName, int s)
+Adl::updateAdjacentStatus(const string& adjName, int s)
 {
   std::list<Adjacent>::iterator it = find(adjName);
   if (it == m_adjList.end())
@@ -57,7 +57,7 @@ Adl::updateAdjacentStatus(string adjName, int s)
 }
 
 Adjacent
-Adl::getAdjacent(string adjName)
+Adl::getAdjacent(const string& adjName)
 {
   Adjacent adj(adjName);
   std::list<Adjacent>::iterator it = find(adjName);
@@ -96,7 +96,7 @@ Adl::isEqual(Adl& adl)
 
 
 int
-Adl::updateAdjacentLinkCost(string adjName, double lc)
+Adl::updateAdjacentLinkCost(const string& adjName, double lc)
 {
   std::list<Adjacent>::iterator it = find(adjName);
   if (it == m_adjList.end())
@@ -108,7 +108,7 @@ Adl::updateAdjacentLinkCost(string adjName, double lc)
 }
 
 bool
-Adl::isNeighbor(string adjName)
+Adl::isNeighbor(const string& adjName)
 {
   std::list<Adjacent>::iterator it = find(adjName);
   if (it == m_adjList.end())
@@ -119,7 +119,7 @@ Adl::isNeighbor(string adjName)
 }
 
 void
-Adl::incrementTimedOutInterestCount(string& neighbor)
+Adl::incrementTimedOutInterestCount(const string& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it == m_adjList.end())
@@ -130,7 +130,7 @@ Adl::incrementTimedOutInterestCount(string& neighbor)
 }
 
 void
-Adl::setTimedOutInterestCount(string& neighbor, int count)
+Adl::setTimedOutInterestCount(const string& neighbor, int count)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it != m_adjList.end())
@@ -140,7 +140,7 @@ Adl::setTimedOutInterestCount(string& neighbor, int count)
 }
 
 int
-Adl::getTimedOutInterestCount(string& neighbor)
+Adl::getTimedOutInterestCount(const string& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it == m_adjList.end())
@@ -151,7 +151,7 @@ Adl::getTimedOutInterestCount(string& neighbor)
 }
 
 int
-Adl::getStatusOfNeighbor(string& neighbor)
+Adl::getStatusOfNeighbor(const string& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it == m_adjList.end())
@@ -162,7 +162,7 @@ Adl::getStatusOfNeighbor(string& neighbor)
 }
 
 void
-Adl::setStatusOfNeighbor(string& neighbor, int status)
+Adl::setStatusOfNeighbor(const string& neighbor, int status)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it != m_adjList.end())

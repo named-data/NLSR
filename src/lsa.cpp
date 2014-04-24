@@ -18,7 +18,7 @@ using namespace std;
 
 
 string
-NameLsa::getKey()
+NameLsa::getKey() const
 {
   string key;
   key = m_origRouter + "/" + boost::lexical_cast<std::string>(1);
@@ -110,8 +110,9 @@ operator<<(std::ostream& os, NameLsa& nLsa)
 
 
 
-CorLsa::CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
-               , double r, double theta)
+CoordinateLsa::CoordinateLsa(string origR, uint8_t lst, uint32_t lsn,
+                             uint32_t lt
+                             , double r, double theta)
 {
   m_origRouter = origR;
   m_lsType = lst;
@@ -122,7 +123,7 @@ CorLsa::CorLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt
 }
 
 string
-CorLsa::getKey()
+CoordinateLsa::getKey() const
 {
   string key;
   key = m_origRouter + "/" + boost::lexical_cast<std::string>(3);
@@ -130,7 +131,7 @@ CorLsa::getKey()
 }
 
 bool
-CorLsa::isEqual(CorLsa& clsa)
+CoordinateLsa::isEqual(const CoordinateLsa& clsa)
 {
   return (std::abs(m_corRad - clsa.getCorRadius()) <
           std::numeric_limits<double>::epsilon()) &&
@@ -139,7 +140,7 @@ CorLsa::isEqual(CorLsa& clsa)
 }
 
 string
-CorLsa::getData()
+CoordinateLsa::getData()
 {
   string corLsaData;
   corLsaData = m_origRouter + "|";
@@ -152,7 +153,7 @@ CorLsa::getData()
 }
 
 bool
-CorLsa::initializeFromContent(string content)
+CoordinateLsa::initializeFromContent(string content)
 {
   Tokenizer nt(content, "|");
   m_origRouter = nt.getNextToken();
@@ -176,7 +177,7 @@ CorLsa::initializeFromContent(string content)
 }
 
 std::ostream&
-operator<<(std::ostream& os, CorLsa& cLsa)
+operator<<(std::ostream& os, const CoordinateLsa& cLsa)
 {
   os << "Cor Lsa: " << endl;
   os << "  Origination Router: " << cLsa.getOrigRouter() << endl;

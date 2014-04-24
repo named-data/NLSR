@@ -28,9 +28,8 @@ void
 Nlsr::setInterestFilterNlsr(const string& name)
 {
   getNlsrFace()->setInterestFilter(name,
-                                   func_lib::bind(&InterestManager::processInterest, &m_im,
-                                                  boost::ref(*this), _1, _2),
-                                   func_lib::bind(&Nlsr::registrationFailed, this, _1));
+                                   ndn::bind(&InterestManager::processInterest, &m_im,_1, _2),
+                                   ndn::bind(&Nlsr::registrationFailed, this, _1));
 }
 
 void
@@ -52,7 +51,7 @@ Nlsr::initialize()
   m_npl.print();
   /* debugging purpose end */
   m_nlsrLsdb.buildAndInstallOwnNameLsa(boost::ref(*this));
-  m_nlsrLsdb.buildAndInstallOwnCorLsa(boost::ref(*this));
+  m_nlsrLsdb.buildAndInstallOwnCoordinateLsa(boost::ref(*this));
   setInterestFilterNlsr(m_confParam.getRouterPrefix());
   setInterestFilterNlsr(m_confParam.getChronosyncLsaPrefix() +
                         m_confParam.getRouterPrefix());
@@ -60,7 +59,7 @@ Nlsr::initialize()
   m_slh.setSyncPrefix(m_confParam.getChronosyncSyncPrefix());
   m_slh.createSyncSocket(boost::ref(*this));
   m_slh.publishKeyUpdate(m_km);
-  m_im.scheduleInfoInterest(boost::ref(*this), 10);
+  m_im.scheduleInfoInterest(10);
 }
 
 void

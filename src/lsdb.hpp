@@ -23,8 +23,8 @@ public:
   bool
   buildAndInstallOwnNameLsa(Nlsr& pnlsr);
 
-  std::pair<NameLsa&, bool>
-  getNameLsa(std::string key);
+  NameLsa*
+  findNameLsa(const std::string key);
 
   bool
   installNameLsa(Nlsr& pnlsr, NameLsa& nlsa);
@@ -40,19 +40,19 @@ public:
 
   //function related to Cor LSDB
   bool
-  buildAndInstallOwnCorLsa(Nlsr& pnlsr);
+  buildAndInstallOwnCoordinateLsa(Nlsr& pnlsr);
 
-  std::pair<CorLsa&, bool>
-  getCorLsa(std::string key);
-
-  bool
-  installCorLsa(Nlsr& pnlsr, CorLsa& clsa);
+  CoordinateLsa*
+  findCoordinateLsa(const std::string& key);
 
   bool
-  removeCorLsa(Nlsr& pnlsr, std::string& key);
+  installCoordinateLsa(Nlsr& pnlsr, CoordinateLsa& clsa);
 
   bool
-  isCorLsaNew(std::string key, uint64_t seqNo);
+  removeCoordinateLsa(Nlsr& pnlsr, const std::string& key);
+
+  bool
+  isCoordinateLsaNew(const std::string& key, uint64_t seqNo);
 
   void
   printCorLsdb(); //debugging
@@ -72,8 +72,8 @@ public:
   bool
   installAdjLsa(Nlsr& pnlsr, AdjLsa& alsa);
 
-  std::pair<AdjLsa&, bool>
-  getAdjLsa(std::string key);
+  AdjLsa*
+  findAdjLsa(std::string key);
 
   std::list<AdjLsa>&
   getAdjLsdb();
@@ -97,10 +97,10 @@ private:
 
 
   bool
-  addCorLsa(CorLsa& clsa);
+  addCoordinateLsa(CoordinateLsa& clsa);
 
   bool
-  doesCorLsaExist(std::string key);
+  doesCoordinateLsaExist(const std::string& key);
 
   bool
   addAdjLsa(AdjLsa& alsa);
@@ -121,10 +121,12 @@ private:
   exprireOrRefreshAdjLsa(Nlsr& pnlsr, std::string lsaKey, uint64_t seqNo);
 
   ndn::EventId
-  scheduleCorLsaExpiration(Nlsr& pnlsr, std::string key, int seqNo, int expTime);
+  scheduleCoordinateLsaExpiration(Nlsr& pnlsr, const std::string& key, int seqNo,
+                                  int expTime);
 
   void
-  exprireOrRefreshCorLsa(Nlsr& pnlsr, std::string lsaKey, uint64_t seqNo);
+  exprireOrRefreshCoordinateLsa(Nlsr& pnlsr, const std::string& lsaKey,
+                                uint64_t seqNo);
 
 
 private:
@@ -133,7 +135,7 @@ private:
 
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
-  std::list<CorLsa> m_corLsdb;
+  std::list<CoordinateLsa> m_corLsdb;
 
   int m_lsaRefreshTime;
   std::string m_thisRouterPrefix;

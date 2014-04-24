@@ -180,9 +180,7 @@ public:
   verify(T& packet)
   {
     std::cout << "KeyManager::verify Called" << std::endl;
-
     return verifyDataPacket(packet);
-
     return false;
   }
 

@@ -26,47 +26,46 @@ using namespace nlsr;
 int
 main(int argc, char** argv)
 {
-  nlsr::Nlsr nlsr_;
+  nlsr::Nlsr nlsr;
   string programName(argv[0]);
-  nlsr_.setConfFileName("nlsr.conf");
+  nlsr.setConfFileName("nlsr.conf");
   int opt;
   while ((opt = getopt(argc, argv, "df:p:h")) != -1)
   {
     switch (opt)
-      {
+     {
       case 'f':
-        nlsr_.setConfFileName(optarg);
+        nlsr.setConfFileName(optarg);
         break;
       case 'd':
-        nlsr_.setIsDaemonProcess(optarg);
+        nlsr.setIsDaemonProcess(optarg);
         break;
       case 'p':
       {
         stringstream sst(optarg);
         int ap;
         sst >> ap;
-        nlsr_.setApiPort(ap);
+        nlsr.setApiPort(ap);
       }
       break;
       case 'h':
-
       default:
-        nlsr_.usage(programName);
+        nlsr.usage(programName);
         return EXIT_FAILURE;
-      }
+     }
   }
-  ConfFileProcessor cfp(nlsr_.getConfFileName());
-  int res = cfp.processConfFile(nlsr_);
+  ConfFileProcessor cfp(nlsr, nlsr.getConfFileName());
+  int res = cfp.processConfFile();
   if (res < 0)
   {
     std::cerr << "Error in configuration file processing! Exiting from NLSR" <<
               std::endl;
     return EXIT_FAILURE;
   }
-  nlsr_.initialize();
+  nlsr.initialize();
   try
   {
-    nlsr_.startEventLoop();
+    nlsr.startEventLoop();
   }
   catch (std::exception& e)
   {

@@ -140,8 +140,8 @@ routingTableEntryCompare(RoutingTableEntry& rte, string& destRouter)
 void
 RoutingTable::addNextHop(string destRouter, NextHop& nh)
 {
-  std::pair<RoutingTableEntry&, bool> rte = findRoutingTableEntry(destRouter);
-  if (!rte.second)
+  RoutingTableEntry* rteChk = findRoutingTableEntry(destRouter);
+  if (rteChk == 0)
   {
     RoutingTableEntry rte(destRouter);
     rte.getNhl().addNextHop(nh);
@@ -149,22 +149,21 @@ RoutingTable::addNextHop(string destRouter, NextHop& nh)
   }
   else
   {
-    (rte.first).getNhl().addNextHop(nh);
+    rteChk->getNhl().addNextHop(nh);
   }
 }
 
-std::pair<RoutingTableEntry&, bool>
-RoutingTable::findRoutingTableEntry(string destRouter)
+RoutingTableEntry*
+RoutingTable::findRoutingTableEntry(const string destRouter)
 {
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_rTable.begin(),
                                                            m_rTable.end(),
                                                            bind(&routingTableEntryCompare, _1, destRouter));
   if (it != m_rTable.end())
   {
-    return std::make_pair(boost::ref((*it)), true);
+    return &(*it);
   }
-  RoutingTableEntry rteEmpty;
-  return std::make_pair(boost::ref(rteEmpty), false);
+  return 0;
 }
 
 void

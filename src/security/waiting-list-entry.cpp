@@ -20,7 +20,6 @@ WaitingListEntry::addWaitee(std::string waiteeName)
     m_waitingCerts.push_back(waiteeName);
     return true;
   }
-
   return false;
 }
 

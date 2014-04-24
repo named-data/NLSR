@@ -4,85 +4,83 @@
 #include "nlsr.hpp"
 
 namespace nlsr {
+
 class ConfFileProcessor
 {
 public:
-  ConfFileProcessor()
-    : m_confFileName()
+  ConfFileProcessor(Nlsr& nlsr, const string& cfile)
+    : m_confFileName(cfile)
+    , m_nlsr(nlsr)
   {
   }
 
-  ConfFileProcessor(const string& cfile)
-  {
-    m_confFileName = cfile;
-  }
-
-  int processConfFile(Nlsr& pnlsr);
+  int processConfFile();
 
 private:
   int
-  processConfCommand(Nlsr& pnlsr, string command);
+  processConfCommand(string command);
 
   int
-  processConfCommandNetwork(Nlsr& pnlsr, string command);
+  processConfCommandNetwork(string command);
 
   int
-  processConfCommandSiteName(Nlsr& pnlsr, string command);
+  processConfCommandSiteName(string command);
 
   int
-  processConfCommandRootKeyPrefix(Nlsr& pnlsr, string command);
+  processConfCommandRootKeyPrefix(string command);
 
   int
-  processConfCommandRouterName(Nlsr& pnlsr, string command);
+  processConfCommandRouterName(string command);
 
   int
-  processConfCommandInterestRetryNumber(Nlsr& pnlsr, string command);
+  processConfCommandInterestRetryNumber(string command);
 
   int
-  processConfCommandInterestResendTime(Nlsr& pnlsr, string command);
+  processConfCommandInterestResendTime(string command);
 
   int
-  processConfCommandLsaRefreshTime(Nlsr& pnlsr, string command);
+  processConfCommandLsaRefreshTime(string command);
 
   int
-  processConfCommandMaxFacesPerPrefix(Nlsr& pnlsr, string command);
+  processConfCommandMaxFacesPerPrefix(string command);
 
   int
-  processConfCommandTunnelType(Nlsr& pnlsr, string command);
+  processConfCommandTunnelType(string command);
 
   int
-  processConfCommandChronosyncSyncPrefix(Nlsr& pnlsr, string command);
+  processConfCommandChronosyncSyncPrefix(string command);
 
   int
-  processConfCommandLogDir(Nlsr& pnlsr, string command);
+  processConfCommandLogDir(string command);
 
   int
-  processConfCommandCertDir(Nlsr& pnlsr, string command);
+  processConfCommandCertDir(string command);
 
   int
-  processConfCommandDebugging(Nlsr& pnlsr, string command);
+  processConfCommandDebugging(string command);
 
   int
-  processConfCommandDetailedLogging(Nlsr& pnlsr, string command);
+  processConfCommandDetailedLogging(string command);
 
   int
-  processConfCommandIsHyperbolicCalc(Nlsr& pnlsr, string command);
+  processConfCommandIsHyperbolicCalc(string command);
 
   int
-  processConfCommandHyperbolicCordinate(Nlsr& pnlsr, string command);
+  processConfCommandHyperbolicCordinate(string command);
 
   int
-  processConfCommandNdnNeighbor(Nlsr& pnlsr, string command);
+  processConfCommandNdnNeighbor(string command);
 
   int
-  processConfCommandNdnName(Nlsr& pnlsr, string command);
+  processConfCommandNdnName(string command);
 
   int
-  processConfCommandLinkCost(Nlsr& pnlsr, string command);
+  processConfCommandLinkCost(string command);
 
 
 private:
   string m_confFileName;
+  Nlsr& m_nlsr;
 };
 
 } //namespace nlsr

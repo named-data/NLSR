@@ -118,7 +118,7 @@ public:
   }
 
   std::string
-  getKey();
+  getKey() const;
 
   std::string
   getData();
@@ -194,10 +194,10 @@ private:
 std::ostream&
 operator<<(std::ostream& os, AdjLsa& aLsa);
 
-class CorLsa: public Lsa
+class CoordinateLsa: public Lsa
 {
 public:
-  CorLsa()
+  CoordinateLsa()
     : Lsa()
     , m_corRad(0)
     , m_corTheta(0)
@@ -205,11 +205,11 @@ public:
     setLsType(3);
   }
 
-  CorLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt
-         , double r, double theta);
+  CoordinateLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt
+                , double r, double theta);
 
   std::string
-  getKey();
+  getKey() const;
 
   std::string
   getData();
@@ -218,7 +218,7 @@ public:
   initializeFromContent(std::string content);
 
   double
-  getCorRadius()
+  getCorRadius() const
   {
     if (m_corRad >= 0)
     {
@@ -237,7 +237,7 @@ public:
   }
 
   double
-  getCorTheta()
+  getCorTheta() const
   {
     return m_corTheta;
   }
@@ -249,7 +249,7 @@ public:
   }
 
   bool
-  isEqual(CorLsa& clsa);
+  isEqual(const CoordinateLsa& clsa);
 
 private:
   double m_corRad;
@@ -258,7 +258,7 @@ private:
 };
 
 std::ostream&
-operator<<(std::ostream& os, CorLsa& cLsa);
+operator<<(std::ostream& os, const CoordinateLsa& cLsa);
 
 
 }//namespace nlsr

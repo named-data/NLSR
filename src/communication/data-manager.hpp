@@ -13,32 +13,37 @@ class Nlsr;
 class DataManager
 {
 public:
+  DataManager(Nlsr& nlsr)
+    : m_nlsr(nlsr)
+  {}
   void
-  processContent(Nlsr& pnlsr, const ndn::Interest& interest,
+  processContent(const ndn::Interest& interest,
                  const ndn::Data& data, InterestManager& im);
 private:
   void
-  processContentInfo(Nlsr& pnlsr, std::string& dataName,
+  processContentInfo(const std::string& dataName,
                      std::string& dataContent);
 
   void
-  processContentLsa(Nlsr& pnlsr, std::string& dataName,
-                    std::string& dataContent);
+  processContentLsa(const std::string& dataName, std::string& dataContent);
 
   void
-  processContentNameLsa(Nlsr& pnlsr, std::string lsaKey,
+  processContentNameLsa(const std::string& lsaKey,
                         uint32_t lsSeqNo, std::string& dataContent);
 
   void
-  processContentAdjLsa(Nlsr& pnlsr, std::string lsaKey,
+  processContentAdjLsa(const std::string& lsaKey,
                        uint32_t lsSeqNo, std::string& dataContent);
 
   void
-  processContentCorLsa(Nlsr& pnlsr, std::string lsaKey,
+  processContentCorLsa(const std::string& lsaKey,
                        uint32_t lsSeqNo, std::string& dataContent);
 
   void
-  processContentKeys(Nlsr& pnlsr, const ndn::Data& data);
+  processContentKeys(const ndn::Data& data);
+
+private:
+  Nlsr& m_nlsr;
 
 
 };

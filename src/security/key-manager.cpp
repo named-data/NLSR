@@ -339,27 +339,21 @@ KeyManager::verifyCertPacket(Nlsr& pnlsr, ndn::IdentityCertificate& packet)
   ndn::SignatureSha256WithRsa signature(packet.getSignature());
   std::string signingCertName = signature.getKeyLocator().getName().toUri();
   std::string packetName = packet.getName().toUri();
-
   std::cout << "Packet Name: " << packetName << std::endl;
   std::cout << "Signee Name: " << signingCertName << std::endl;
-
   int paketCertType = getKeyTypeFromName(packetName);
   int signingCertType = getKeyTypeFromName(signingCertName);
-
   if (signingCertType > paketCertType)  //lower level Cert can not sign
   {
     //upper level Cert
     return false;
   }
-
   if ((signingCertType == paketCertType) && (paketCertType != KEY_TYPE_ROOT))
   {
     return false;
   }
-
   std::pair<ndn::shared_ptr<ndn::IdentityCertificate>, bool> signee =
     m_certStore.getCertificateFromStore(signingCertName);
-
   if (signee.second)
   {
     switch (paketCertType)
@@ -393,7 +387,7 @@ KeyManager::verifyCertPacket(Nlsr& pnlsr, ndn::IdentityCertificate& packet)
   else
   {
     std::cout << "Certificate Not Found in store. Sending Interest" << std::endl;
-    pnlsr.getIm().expressInterest(pnlsr, signingCertName, 3,
+    pnlsr.getIm().expressInterest(signingCertName, 3,
                                   pnlsr.getConfParameter().getInterestResendTime());
     return false;
   }

@@ -81,7 +81,7 @@ SyncLogicHandler::processRoutingUpdateFromSync(std::string routerName,
         pnlsr.getConfParameter().getChronosyncLsaPrefix() +
         routerName + "/1/" +
         boost::lexical_cast<std::string>(sm.getNameLsaSeq());
-      pnlsr.getIm().expressInterest(pnlsr, lsaPrefix, 3,
+      pnlsr.getIm().expressInterest(lsaPrefix, 3,
                                     pnlsr.getConfParameter().getInterestResendTime());
     }
     if (pnlsr.getLsdb().isAdjLsaNew(routerName + "/2", sm.getAdjLsaSeq()))
@@ -91,17 +91,17 @@ SyncLogicHandler::processRoutingUpdateFromSync(std::string routerName,
         pnlsr.getConfParameter().getChronosyncLsaPrefix() +
         routerName + "/2/" +
         boost::lexical_cast<std::string>(sm.getAdjLsaSeq());
-      pnlsr.getIm().expressInterest(pnlsr, lsaPrefix, 3,
+      pnlsr.getIm().expressInterest(lsaPrefix, 3,
                                     pnlsr.getConfParameter().getInterestResendTime());
     }
-    if (pnlsr.getLsdb().isCorLsaNew(routerName + "/3", sm.getCorLsaSeq()))
+    if (pnlsr.getLsdb().isCoordinateLsaNew(routerName + "/3", sm.getCorLsaSeq()))
     {
       std::cout << "Updated Cor LSA. Need to fetch it" << std::endl;
       string lsaPrefix =
         pnlsr.getConfParameter().getChronosyncLsaPrefix() +
         routerName + "/3/" +
         boost::lexical_cast<std::string>(sm.getCorLsaSeq());
-      pnlsr.getIm().expressInterest(pnlsr, lsaPrefix, 3,
+      pnlsr.getIm().expressInterest(lsaPrefix, 3,
                                     pnlsr.getConfParameter().getInterestResendTime());
     }
   }
@@ -116,7 +116,7 @@ SyncLogicHandler::processKeysUpdateFromSync(std::string certName,
   {
     string certNamePrefix = certName + "/" +
                             boost::lexical_cast<string>(seqNo);
-    pnlsr.getIm().expressInterest(pnlsr, certNamePrefix, 3,
+    pnlsr.getIm().expressInterest(certNamePrefix, 3,
                                   pnlsr.getConfParameter().getInterestResendTime());
   }
 }

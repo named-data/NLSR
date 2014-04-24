@@ -19,31 +19,31 @@ public:
   insert(Adjacent& adj);
 
   int
-  updateAdjacentStatus(std::string adjName, int s);
+  updateAdjacentStatus(const std::string& adjName, int s);
 
   int
-  updateAdjacentLinkCost(std::string adjName, double lc);
+  updateAdjacentLinkCost(const std::string& adjName, double lc);
 
   std::list<Adjacent>&
   getAdjList();
 
   bool
-  isNeighbor(std::string adjName);
+  isNeighbor(const std::string& adjName);
 
   void
-  incrementTimedOutInterestCount(std::string& neighbor);
+  incrementTimedOutInterestCount(const std::string& neighbor);
 
   int
-  getTimedOutInterestCount(std::string& neighbor);
+  getTimedOutInterestCount(const std::string& neighbor);
 
   int
-  getStatusOfNeighbor(std::string& neighbor);
+  getStatusOfNeighbor(const std::string& neighbor);
 
   void
-  setStatusOfNeighbor(std::string& neighbor, int status);
+  setStatusOfNeighbor(const std::string& neighbor, int status);
 
   void
-  setTimedOutInterestCount(std::string& neighbor, int count);
+  setTimedOutInterestCount(const std::string& neighbor, int count);
 
   void
   addAdjacentsFromAdl(Adl& adl);
@@ -55,7 +55,7 @@ public:
   getNumOfActiveNeighbor();
 
   Adjacent
-  getAdjacent(std::string adjName);
+  getAdjacent(const std::string& adjName);
 
   bool
   isEqual(Adl& adl);

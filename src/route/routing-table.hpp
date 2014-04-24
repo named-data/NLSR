@@ -34,8 +34,8 @@ public:
   void
   printDryRoutingTable();
 
-  std::pair<RoutingTableEntry&, bool>
-  findRoutingTableEntry(std::string destRouter);
+  RoutingTableEntry*
+  findRoutingTableEntry(const std::string destRouter);
 
   void
   scheduleRoutingTableCalculation(Nlsr& pnlsr);

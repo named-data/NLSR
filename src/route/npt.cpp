@@ -83,11 +83,11 @@ Npt::removeNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr)
 void
 Npt::addNpteByDestName(string name, string destRouter, Nlsr& pnlsr)
 {
-  std::pair<RoutingTableEntry&, bool> rteCheck =
+  RoutingTableEntry* rteCheck =
     pnlsr.getRoutingTable().findRoutingTableEntry(destRouter);
-  if (rteCheck.second)
+  if (rteCheck != 0)
   {
-    addNpte(name, rteCheck.first, pnlsr);
+    addNpte(name, *(rteCheck) , pnlsr);
   }
   else
   {
@@ -99,11 +99,11 @@ Npt::addNpteByDestName(string name, string destRouter, Nlsr& pnlsr)
 void
 Npt::removeNpte(string name, string destRouter, Nlsr& pnlsr)
 {
-  std::pair<RoutingTableEntry&, bool> rteCheck =
+  RoutingTableEntry* rteCheck =
     pnlsr.getRoutingTable().findRoutingTableEntry(destRouter);
-  if (rteCheck.second)
+  if (rteCheck != 0)
   {
-    removeNpte(name, rteCheck.first, pnlsr);
+    removeNpte(name, *(rteCheck), pnlsr);
   }
   else
   {
@@ -122,11 +122,11 @@ Npt::updateWithNewRoute(Nlsr& pnlsr)
     for (std::list<RoutingTableEntry>::iterator rteit = rteList.begin();
          rteit != rteList.end(); ++rteit)
     {
-      std::pair<RoutingTableEntry&, bool> rteCheck =
+      RoutingTableEntry* rteCheck =
         pnlsr.getRoutingTable().findRoutingTableEntry((*rteit).getDestination());
-      if (rteCheck.second)
+      if (rteCheck != 0)
       {
-        addNpte((*it).getNamePrefix(), rteCheck.first, pnlsr);
+        addNpte((*it).getNamePrefix(), *(rteCheck), pnlsr);
       }
       else
       {

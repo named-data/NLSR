@@ -17,7 +17,7 @@ using namespace std;
 using namespace ndn;
 
 void
-DataManager::processContent(Nlsr& pnlsr, const ndn::Interest& interest,
+DataManager::processContent(const ndn::Interest& interest,
                             const ndn::Data& data, InterestManager& im)
 {
   std::cout << "I: " << interest.toUri() << std::endl;
@@ -26,24 +26,24 @@ DataManager::processContent(Nlsr& pnlsr, const ndn::Interest& interest,
   std::string chkString("keys");
   if (nt.doesTokenExist(chkString))
   {
-    processContentKeys(pnlsr, data);
+    processContentKeys(data);
   }
   else
   {
-    if (pnlsr.getKeyManager().verify(data))
+    if (m_nlsr.getKeyManager().verify(data))
     {
       std::cout << "Verified Data Content" << std::endl;
       chkString = "info";
       if (nt.doesTokenExist(chkString))
       {
         string dataContent((char*)data.getContent().value());
-        processContentInfo(pnlsr, dataName, dataContent);
+        processContentInfo(dataName, dataContent);
       }
       chkString = "LSA";
       if (nt.doesTokenExist(chkString))
       {
         string dataContent((char*)data.getContent().value());
-        processContentLsa(pnlsr, dataName, dataContent);
+        processContentLsa(dataName, dataContent);
       }
     }
     else
@@ -54,24 +54,24 @@ DataManager::processContent(Nlsr& pnlsr, const ndn::Interest& interest,
 }
 
 void
-DataManager::processContentInfo(Nlsr& pnlsr, string& dataName,
+DataManager::processContentInfo(const string& dataName,
                                 string& dataContent)
 {
   Tokenizer nt(dataName, "/");
   string chkString("info");
   string neighbor = nt.getTokenString(0, nt.getTokenPosition(chkString) - 1);
-  int oldStatus = pnlsr.getAdl().getStatusOfNeighbor(neighbor);
-  int infoIntTimedOutCount = pnlsr.getAdl().getTimedOutInterestCount(neighbor);
+  int oldStatus = m_nlsr.getAdl().getStatusOfNeighbor(neighbor);
+  int infoIntTimedOutCount = m_nlsr.getAdl().getTimedOutInterestCount(neighbor);
   //debugging purpose start
   std::cout << "Before Updates: " << std::endl;
   std::cout << "Neighbor : " << neighbor << std::endl;
   std::cout << "Status: " << oldStatus << std::endl;
   std::cout << "Info Interest Timed out: " << infoIntTimedOutCount << std::endl;
   //debugging purpose end
-  pnlsr.getAdl().setStatusOfNeighbor(neighbor, 1);
-  pnlsr.getAdl().setTimedOutInterestCount(neighbor, 0);
-  int newStatus = pnlsr.getAdl().getStatusOfNeighbor(neighbor);
-  infoIntTimedOutCount = pnlsr.getAdl().getTimedOutInterestCount(neighbor);
+  m_nlsr.getAdl().setStatusOfNeighbor(neighbor, 1);
+  m_nlsr.getAdl().setTimedOutInterestCount(neighbor, 0);
+  int newStatus = m_nlsr.getAdl().getStatusOfNeighbor(neighbor);
+  infoIntTimedOutCount = m_nlsr.getAdl().getTimedOutInterestCount(neighbor);
   //debugging purpose
   std::cout << "After Updates: " << std::endl;
   std::cout << "Neighbor : " << neighbor << std::endl;
@@ -80,22 +80,21 @@ DataManager::processContentInfo(Nlsr& pnlsr, string& dataName,
   //debugging purpose end
   if ((oldStatus - newStatus) != 0)  // change in Adjacency list
   {
-    pnlsr.incrementAdjBuildCount();
+    m_nlsr.incrementAdjBuildCount();
     /* Need to schedule event for Adjacency LSA building */
-    if (pnlsr.getIsBuildAdjLsaSheduled() == 0)
+    if (m_nlsr.getIsBuildAdjLsaSheduled() == 0)
     {
-      pnlsr.setIsBuildAdjLsaSheduled(1);
+      m_nlsr.setIsBuildAdjLsaSheduled(1);
       // event here
-      pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
-                                         ndn::bind(&Lsdb::scheduledAdjLsaBuild, pnlsr.getLsdb(),
-                                                   boost::ref(pnlsr)));
+      m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
+                                          ndn::bind(&Lsdb::scheduledAdjLsaBuild, m_nlsr.getLsdb(),
+                                                    boost::ref(m_nlsr)));
     }
   }
 }
 
 void
-DataManager::processContentLsa(Nlsr& pnlsr, string& dataName,
-                               string& dataContent)
+DataManager::processContentLsa(const string& dataName, string& dataContent)
 {
   Tokenizer nt(dataName, "/");
   string chkString("LSA");
@@ -114,17 +113,17 @@ DataManager::processContentLsa(Nlsr& pnlsr, string& dataName,
   }
   if (lsTypeString == "1")  //Name Lsa
   {
-    processContentNameLsa(pnlsr, origRouter + "/" + lsTypeString,
+    processContentNameLsa(origRouter + "/" + lsTypeString,
                           interestedLsSeqNo, dataContent);
   }
   else if (lsTypeString == "2")  //Adj Lsa
   {
-    processContentAdjLsa(pnlsr, origRouter + "/" + lsTypeString,
+    processContentAdjLsa(origRouter + "/" + lsTypeString,
                          interestedLsSeqNo, dataContent);
   }
   else if (lsTypeString == "3")  //Cor Lsa
   {
-    processContentCorLsa(pnlsr, origRouter + "/" + lsTypeString,
+    processContentCorLsa(origRouter + "/" + lsTypeString,
                          interestedLsSeqNo, dataContent);
   }
   else
@@ -134,15 +133,15 @@ DataManager::processContentLsa(Nlsr& pnlsr, string& dataName,
 }
 
 void
-DataManager::processContentNameLsa(Nlsr& pnlsr, string lsaKey,
+DataManager::processContentNameLsa(const string& lsaKey,
                                    uint32_t lsSeqNo, string& dataContent)
 {
-  if (pnlsr.getLsdb().isNameLsaNew(lsaKey, lsSeqNo))
+  if (m_nlsr.getLsdb().isNameLsaNew(lsaKey, lsSeqNo))
   {
     NameLsa nameLsa;
     if (nameLsa.initializeFromContent(dataContent))
     {
-      pnlsr.getLsdb().installNameLsa(pnlsr, nameLsa);
+      m_nlsr.getLsdb().installNameLsa(m_nlsr, nameLsa);
     }
     else
     {
@@ -152,15 +151,15 @@ DataManager::processContentNameLsa(Nlsr& pnlsr, string lsaKey,
 }
 
 void
-DataManager::processContentAdjLsa(Nlsr& pnlsr, string lsaKey,
+DataManager::processContentAdjLsa(const string& lsaKey,
                                   uint32_t lsSeqNo, string& dataContent)
 {
-  if (pnlsr.getLsdb().isAdjLsaNew(lsaKey, lsSeqNo))
+  if (m_nlsr.getLsdb().isAdjLsaNew(lsaKey, lsSeqNo))
   {
     AdjLsa adjLsa;
     if (adjLsa.initializeFromContent(dataContent))
     {
-      pnlsr.getLsdb().installAdjLsa(pnlsr, adjLsa);
+      m_nlsr.getLsdb().installAdjLsa(m_nlsr, adjLsa);
     }
     else
     {
@@ -170,15 +169,15 @@ DataManager::processContentAdjLsa(Nlsr& pnlsr, string lsaKey,
 }
 
 void
-DataManager::processContentCorLsa(Nlsr& pnlsr, string lsaKey,
+DataManager::processContentCorLsa(const string& lsaKey,
                                   uint32_t lsSeqNo, string& dataContent)
 {
-  if (pnlsr.getLsdb().isCorLsaNew(lsaKey, lsSeqNo))
+  if (m_nlsr.getLsdb().isCoordinateLsaNew(lsaKey, lsSeqNo))
   {
-    CorLsa corLsa;
+    CoordinateLsa corLsa;
     if (corLsa.initializeFromContent(dataContent))
     {
-      pnlsr.getLsdb().installCorLsa(pnlsr, corLsa);
+      m_nlsr.getLsdb().installCoordinateLsa(m_nlsr, corLsa);
     }
     else
     {
@@ -188,7 +187,7 @@ DataManager::processContentCorLsa(Nlsr& pnlsr, string lsaKey,
 }
 
 void
-DataManager::processContentKeys(Nlsr& pnlsr, const ndn::Data& data)
+DataManager::processContentKeys(const ndn::Data& data)
 {
   std::cout << " processContentKeys called " << std::endl;
   ndn::shared_ptr<ndn::IdentityCertificate> cert =
@@ -201,15 +200,14 @@ DataManager::processContentKeys(Nlsr& pnlsr, const ndn::Data& data)
   uint32_t seqNum = boost::lexical_cast<uint32_t>(nt.getToken(
                                                     nt.getTokenNumber() - 2));
   std::cout << "Cert Name: " << certName << " Seq Num: " << seqNum << std::endl;
-  if (pnlsr.getKeyManager().verify(pnlsr, *(cert)))
+  if (m_nlsr.getKeyManager().verify(m_nlsr, *(cert)))
   {
-    pnlsr.getKeyManager().addCertificate(cert, seqNum, true);
+    m_nlsr.getKeyManager().addCertificate(cert, seqNum, true);
   }
   else
   {
-    pnlsr.getKeyManager().addCertificate(cert, seqNum, false);
+    m_nlsr.getKeyManager().addCertificate(cert, seqNum, false);
   }
-
-  pnlsr.getKeyManager().printCertStore();
+  m_nlsr.getKeyManager().printCertStore();
 }
 }//namespace nlsr

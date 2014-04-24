@@ -58,7 +58,6 @@ CertificateStore::updateWaitingList(std::string respCertName)
       }
     }
   }
-
   //remove that entry from waiting list
   m_waitingList.remove(respCertName);
 }
@@ -149,7 +148,6 @@ CertificateStore::getCertificateIsVerified(std::string certName)
   {
     return it->getIsSignerVerified();
   }
-
   return false;
 }
 
