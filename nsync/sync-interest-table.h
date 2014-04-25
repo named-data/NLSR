@@ -23,7 +23,7 @@
 #ifndef SYNC_INTEREST_TABLE_H
 #define SYNC_INTEREST_TABLE_H
 
-#include <ndn-cpp-dev/util/scheduler.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 #include <string>
 #include <vector>

@@ -7,7 +7,7 @@
 
 #include "nlsr.hpp"
 #include "lsa.hpp"
-#include "npl.hpp"
+#include "name-prefix-list.hpp"
 #include "adjacent.hpp"
 #include "utility/tokenizer.hpp"
 
@@ -25,7 +25,8 @@ NameLsa::getKey() const
   return key;
 }
 
-NameLsa::NameLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt, Npl npl)
+NameLsa::NameLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
+                 NamePrefixList npl)
 {
   m_origRouter = origR;
   m_lsType = lst;
@@ -191,14 +192,14 @@ operator<<(std::ostream& os, const CoordinateLsa& cLsa)
 
 
 AdjLsa::AdjLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
-               uint32_t nl , Adl padl)
+               uint32_t nl , AdjacencyList adl)
 {
   m_origRouter = origR;
   m_lsType = lst;
   m_lsSeqNo = lsn;
   m_lifeTime = lt;
   m_noLink = nl;
-  std::list<Adjacent> al = padl.getAdjList();
+  std::list<Adjacent> al = adl.getAdjList();
   for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++)
   {
     if ((*it).getStatus() == 1)
@@ -290,7 +291,8 @@ AdjLsa::addNptEntries(Nlsr& pnlsr)
 {
   if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
   {
-    pnlsr.getNpt().addNpteByDestName(getOrigRouter(), getOrigRouter(), pnlsr);
+    pnlsr.getNamePrefixTable().addNpteByDestName(getOrigRouter(), getOrigRouter(),
+                                                 pnlsr);
   }
 }
 
@@ -300,7 +302,7 @@ AdjLsa::removeNptEntries(Nlsr& pnlsr)
 {
   if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
   {
-    pnlsr.getNpt().removeNpte(getOrigRouter(), getOrigRouter(), pnlsr);
+    pnlsr.getNamePrefixTable().removeNpte(getOrigRouter(), getOrigRouter(), pnlsr);
   }
 }
 

@@ -1,19 +1,20 @@
 #ifndef NLSR_ADL_HPP
 #define NLSR_ADL_HPP
 
-#include <ndn-cpp-dev/face.hpp>
-#include "adjacent.hpp"
+#include <ndn-cxx/common.hpp>
 #include <list>
+
+#include "adjacent.hpp"
 
 namespace nlsr {
 class Nlsr;
 
-class Adl
+class AdjacencyList
 {
 
 public:
-  Adl();
-  ~Adl();
+  AdjacencyList();
+  ~AdjacencyList();
 
   int
   insert(Adjacent& adj);
@@ -46,7 +47,7 @@ public:
   setTimedOutInterestCount(const std::string& neighbor, int count);
 
   void
-  addAdjacentsFromAdl(Adl& adl);
+  addAdjacentsFromAdl(AdjacencyList& adl);
 
   bool
   isAdjLsaBuildable(Nlsr& pnlsr);
@@ -58,7 +59,7 @@ public:
   getAdjacent(const std::string& adjName);
 
   bool
-  isEqual(Adl& adl);
+  isEqual(AdjacencyList& adl);
 
   int
   getSize()
@@ -76,7 +77,7 @@ public:
   }
 
   void
-  printAdl();
+  print();
 
 private:
   std::list<Adjacent>::iterator

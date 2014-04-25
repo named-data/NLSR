@@ -1,19 +1,19 @@
 #ifndef NLSR_HPP
 #define NLSR_HPP
 
-#include <ndn-cpp-dev/face.hpp>
-#include <ndn-cpp-dev/security/key-chain.hpp>
-#include <ndn-cpp-dev/util/scheduler.hpp>
+#include <ndn-cxx/face.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 #include "conf-parameter.hpp"
-#include "adl.hpp"
-#include "npl.hpp"
+#include "adjacency-list.hpp"
+#include "name-prefix-list.hpp"
 #include "communication/interest-manager.hpp"
 #include "communication/data-manager.hpp"
 #include "lsdb.hpp"
 #include "sequencing-manager.hpp"
 #include "route/routing-table.hpp"
-#include "route/npt.hpp"
+#include "route/name-prefix-table.hpp"
 #include "route/fib.hpp"
 // #include "security/key-manager.hpp"
 #include "communication/sync-logic-handler.hpp"
@@ -36,11 +36,11 @@ public:
                                                                    &NullDeleter)))
     , m_scheduler(*m_io)
     , m_confParam()
-    , m_adl()
-    , m_npl()
-    , m_im(*this)
-    , m_dm(*this)
-    , m_sm()
+    , m_adjacencyList()
+    , m_namePrefixList()
+    , m_interestManager(*this)
+    , m_dataManager(*this)
+    , m_sequencingManager()
     // , m_km()
     , m_isDaemonProcess(false)
     , m_configFileName("nlsr.conf")
@@ -50,9 +50,9 @@ public:
     , m_isRouteCalculationScheduled(false)
     , m_isRoutingTableCalculating(false)
     , m_routingTable()
-    , m_npt()
+    , m_namePrefixTable()
     , m_fib()
-    , m_slh(m_io)
+    , m_syncLogicHandler(m_io)
   {}
 
   void
@@ -97,16 +97,16 @@ public:
     return m_confParam;
   }
 
-  Adl&
-  getAdl()
+  AdjacencyList&
+  getAdjacencyList()
   {
-    return m_adl;
+    return m_adjacencyList;
   }
 
-  Npl&
-  getNpl()
+  NamePrefixList&
+  getNamePrefixList()
   {
-    return m_npl;
+    return m_namePrefixList;
   }
 
   ndn::shared_ptr<boost::asio::io_service>&
@@ -135,21 +135,21 @@ public:
 
 
   InterestManager&
-  getIm()
+  getInterestManager()
   {
-    return m_im;
+    return m_interestManager;
   }
 
   DataManager&
-  getDm()
+  getDataManager()
   {
-    return m_dm;
+    return m_dataManager;
   }
 
   SequencingManager&
-  getSm()
+  getSequencingManager()
   {
-    return m_sm;
+    return m_sequencingManager;
   }
 
   Lsdb&
@@ -164,10 +164,10 @@ public:
     return m_routingTable;
   }
 
-  Npt&
-  getNpt()
+  NamePrefixTable&
+  getNamePrefixTable()
   {
-    return m_npt;
+    return m_namePrefixTable;
   }
 
   Fib&
@@ -244,9 +244,9 @@ public:
   }
 
   SyncLogicHandler&
-  getSlh()
+  getSyncLogicHandler()
   {
-    return m_slh;
+    return m_syncLogicHandler;
   }
 
   void
@@ -257,11 +257,11 @@ private:
   ndn::shared_ptr<ndn::Face> m_nlsrFace;
   ndn::Scheduler m_scheduler;
   ConfParameter m_confParam;
-  Adl m_adl;
-  Npl m_npl;
-  InterestManager m_im;
-  DataManager m_dm;
-  SequencingManager m_sm;
+  AdjacencyList m_adjacencyList;
+  NamePrefixList m_namePrefixList;
+  InterestManager m_interestManager;
+  DataManager m_dataManager;
+  SequencingManager m_sequencingManager;
   // KeyManager m_km;
   bool m_isDaemonProcess;
   string m_configFileName;
@@ -276,9 +276,9 @@ private:
   bool m_isRoutingTableCalculating;
 
   RoutingTable m_routingTable;
-  Npt m_npt;
+  NamePrefixTable m_namePrefixTable;
   Fib m_fib;
-  SyncLogicHandler m_slh;
+  SyncLogicHandler m_syncLogicHandler;
 
   int m_apiPort;
 

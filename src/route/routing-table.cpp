@@ -7,7 +7,7 @@
 #include "map.hpp"
 #include "routing-table-calculator.hpp"
 #include "routing-table-entry.hpp"
-#include "npt.hpp"
+#include "name-prefix-table.hpp"
 
 namespace nlsr {
 
@@ -18,7 +18,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
 {
   //debugging purpose
   std::cout << pnlsr.getConfParameter() << std::endl;
-  pnlsr.getNpt().print();
+  pnlsr.getNamePrefixTable().print();
   pnlsr.getLsdb().printAdjLsdb();
   pnlsr.getLsdb().printCorLsdb();
   pnlsr.getLsdb().printNameLsdb();
@@ -50,10 +50,10 @@ RoutingTable::calculate(Nlsr& pnlsr)
           calculateHypDryRoutingTable(pnlsr);
         }
         //need to update NPT here
-        pnlsr.getNpt().updateWithNewRoute(pnlsr);
+        pnlsr.getNamePrefixTable().updateWithNewRoute(pnlsr);
         //debugging purpose
         printRoutingTable();
-        pnlsr.getNpt().print();
+        pnlsr.getNamePrefixTable().print();
         pnlsr.getFib().print();
         //debugging purpose end
       }
@@ -71,10 +71,10 @@ RoutingTable::calculate(Nlsr& pnlsr)
       clearDryRoutingTable(); // for dry run options
       // need to update NPT here
       std::cout << "Calling Update NPT With new Route" << std::endl;
-      pnlsr.getNpt().updateWithNewRoute(pnlsr);
+      pnlsr.getNamePrefixTable().updateWithNewRoute(pnlsr);
       //debugging purpose
       printRoutingTable();
-      pnlsr.getNpt().print();
+      pnlsr.getNamePrefixTable().print();
       pnlsr.getFib().print();
       //debugging purpose end
     }

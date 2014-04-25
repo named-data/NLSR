@@ -1,10 +1,10 @@
 #ifndef NLSR_LSA_HPP
 #define NLSR_LSA_HPP
 
-#include <ndn-cpp-dev/util/scheduler.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 #include "adjacent.hpp"
-#include "npl.hpp"
-#include "adl.hpp"
+#include "name-prefix-list.hpp"
+#include "adjacency-list.hpp"
 
 namespace nlsr {
 class Lsa
@@ -97,9 +97,10 @@ public:
     setLsType(1);
   }
 
-  NameLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt, Npl npl);
+  NameLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
+          NamePrefixList npl);
 
-  Npl&
+  NamePrefixList&
   getNpl()
   {
     return m_npl;
@@ -130,7 +131,7 @@ public:
   writeLog();
 
 private:
-  Npl m_npl;
+  NamePrefixList m_npl;
 
 };
 
@@ -148,9 +149,9 @@ public:
   }
 
   AdjLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
-         uint32_t nl , Adl padl);
+         uint32_t nl , AdjacencyList adl);
 
-  Adl&
+  AdjacencyList&
   getAdl()
   {
     return m_adl;
@@ -188,7 +189,7 @@ public:
 
 private:
   uint32_t m_noLink;
-  Adl m_adl;
+  AdjacencyList m_adl;
 };
 
 std::ostream&

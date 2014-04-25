@@ -3,16 +3,16 @@
 
 #include <list>
 #include <string>
-#include <ndn-cpp-dev/face.hpp>
+
 
 namespace nlsr {
-class Npl
+class NamePrefixList
 {
 
 public:
-  Npl();
+  NamePrefixList();
 
-  ~Npl();
+  ~NamePrefixList();
 
   int
   insert(std::string& name);

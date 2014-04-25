@@ -33,7 +33,7 @@ main(int argc, char** argv)
   while ((opt = getopt(argc, argv, "df:p:h")) != -1)
   {
     switch (opt)
-     {
+    {
       case 'f':
         nlsr.setConfFileName(optarg);
         break;
@@ -52,7 +52,7 @@ main(int argc, char** argv)
       default:
         nlsr.usage(programName);
         return EXIT_FAILURE;
-     }
+    }
   }
   ConfFileProcessor cfp(nlsr, nlsr.getConfFileName());
   int res = cfp.processConfFile();

@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "nhl.hpp"
+#include "nexthop-list.hpp"
 
 namespace nlsr {
 
@@ -32,7 +32,7 @@ public:
     return m_destination;
   }
 
-  Nhl&
+  NexthopList&
   getNhl()
   {
     return m_nhl;
@@ -40,7 +40,7 @@ public:
 
 private:
   std::string m_destination;
-  Nhl m_nhl;
+  NexthopList m_nhl;
 };
 
 std::ostream&

@@ -1,8 +1,10 @@
 #include <list>
+
+#include "nlsr.hpp"
 #include "fib-entry.hpp"
 #include "fib.hpp"
-#include "nhl.hpp"
-#include "nlsr.hpp"
+#include "nexthop-list.hpp"
+
 
 
 namespace nlsr {
@@ -40,7 +42,8 @@ void
 Fib::remove(Nlsr& pnlsr, string name)
 {
   std::list<FibEntry>::iterator it = std::find_if(m_table.begin(),
-                                                  m_table.end(), bind(&fibEntryNameCompare, _1, name));
+                                                  m_table.end(), 
+                                                  bind(&fibEntryNameCompare, _1, name));
   if (it != m_table.end())
   {
     for (std::list<NextHop>::iterator nhit =
@@ -56,7 +59,7 @@ Fib::remove(Nlsr& pnlsr, string name)
 
 
 void
-Fib::update(Nlsr& pnlsr, string name, Nhl& nextHopList)
+Fib::update(Nlsr& pnlsr, string name, NexthopList& nextHopList)
 {
   std::cout << "Fib::updateFib Called" << std::endl;
   int startFace = 0;
@@ -145,7 +148,7 @@ Fib::clean(Nlsr& pnlsr)
 }
 
 int
-Fib::getNumberOfFacesForName(Nhl& nextHopList, int maxFacesPerPrefix)
+Fib::getNumberOfFacesForName(NexthopList& nextHopList, int maxFacesPerPrefix)
 {
   int endFace = 0;
   if ((maxFacesPerPrefix == 0) || (nextHopList.getSize() <= maxFacesPerPrefix))
@@ -160,7 +163,7 @@ Fib::getNumberOfFacesForName(Nhl& nextHopList, int maxFacesPerPrefix)
 }
 
 void
-Fib::removeHop(Nlsr& pnlsr, Nhl& nl, int doNotRemoveHopFaceId)
+Fib::removeHop(Nlsr& pnlsr, NexthopList& nl, int doNotRemoveHopFaceId)
 {
   for (std::list<NextHop>::iterator it = nl.getNextHopList().begin();
        it != nl.getNextHopList().end();   ++it)

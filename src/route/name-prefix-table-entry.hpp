@@ -9,16 +9,16 @@ namespace nlsr {
 
 using namespace std;
 
-class Npte
+class NamePrefixTableEntry
 {
 public:
-  Npte()
+  NamePrefixTableEntry()
     : m_namePrefix()
     , m_nhl()
   {
   }
 
-  Npte(string np)
+  NamePrefixTableEntry(string np)
     : m_nhl()
   {
     m_namePrefix = np;
@@ -55,7 +55,7 @@ public:
     return m_rteList.size();
   }
 
-  Nhl&
+  NexthopList&
   getNhl()
   {
     return m_nhl;
@@ -73,11 +73,11 @@ public:
 private:
   std::string m_namePrefix;
   std::list<RoutingTableEntry> m_rteList;
-  Nhl m_nhl;
+  NexthopList m_nhl;
 };
 
 std::ostream&
-operator<<(std::ostream& os, Npte& npte);
+operator<<(std::ostream& os, NamePrefixTableEntry& npte);
 
 }//namespace nlsr
 

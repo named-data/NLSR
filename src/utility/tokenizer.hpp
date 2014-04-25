@@ -7,7 +7,6 @@
 #include <string>
 #include <list>
 #include <vector>
-#include <ndn-cpp-dev/face.hpp>
 
 namespace nlsr {
 

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <list>
 
-#include <ndn-cpp-dev/face.hpp>
+#include <ndn-cxx/face.hpp>
 
 namespace nlsr {
 

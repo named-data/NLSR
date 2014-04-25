@@ -504,7 +504,7 @@ ConfFileProcessor::processConfCommandNdnNeighbor(string command)
       int faceId;
       sst >> faceId;
       Adjacent adj(nt.getFirstToken(), faceId, 0.0, 0, 0);
-      m_nlsr.getAdl().insert(adj);
+      m_nlsr.getAdjacencyList().insert(adj);
     }
   }
   return 0;
@@ -519,7 +519,7 @@ ConfFileProcessor::processConfCommandNdnName(string command)
   }
   else
   {
-    m_nlsr.getNpl().insert(command);
+    m_nlsr.getNamePrefixList().insert(command);
   }
   return 0;
 }
@@ -542,7 +542,7 @@ ConfFileProcessor::processConfCommandLinkCost(string command)
     stringstream sst(nt.getRestOfLine().c_str());
     double cost;
     sst >> cost;
-    m_nlsr.getAdl().updateAdjacentLinkCost(nt.getFirstToken(), cost);
+    m_nlsr.getAdjacencyList().updateAdjacentLinkCost(nt.getFirstToken(), cost);
   }
   return 0;
 }

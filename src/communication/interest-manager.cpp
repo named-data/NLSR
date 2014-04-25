@@ -2,8 +2,8 @@
 #include <cstdlib>
 
 
-#include <ndn-cpp-dev/security/identity-certificate.hpp>
-#include <ndn-cpp-dev/util/io.hpp>
+#include <ndn-cxx/security/identity-certificate.hpp>
+#include <ndn-cxx/util/io.hpp>
 
 #include "nlsr.hpp"
 #include "interest-manager.hpp"
@@ -47,7 +47,7 @@ void
 InterestManager::processInterestInfo(const string& neighbor,
                                      const ndn::Interest& interest)
 {
-  if (m_nlsr.getAdl().isNeighbor(neighbor))
+  if (m_nlsr.getAdjacencyList().isNeighbor(neighbor))
   {
     Data data(ndn::Name(interest.getName()).appendVersion());
     data.setFreshnessPeriod(time::seconds(10)); // 10 sec
@@ -56,7 +56,7 @@ InterestManager::processInterestInfo(const string& neighbor,
     m_keyChain.sign(data);
     cout << ">> D: " << data << endl;
     m_nlsr.getNlsrFace()->put(data);
-    int status = m_nlsr.getAdl().getStatusOfNeighbor(neighbor);
+    int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
     if (status == 0)
     {
       string intName = neighbor + "/" + "info" +
@@ -256,9 +256,10 @@ void
 InterestManager::processInterestTimedOutInfo(const string& neighbor,
                                              const ndn::Interest& interest)
 {
-  m_nlsr.getAdl().incrementTimedOutInterestCount(neighbor);
-  int status = m_nlsr.getAdl().getStatusOfNeighbor(neighbor);
-  int infoIntTimedOutCount = m_nlsr.getAdl().getTimedOutInterestCount(neighbor);
+  m_nlsr.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
+  int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
+  int infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(
+                               neighbor);
   std::cout << "Neighbor: " << neighbor << std::endl;
   std::cout << "Status: " << status << std::endl;
   std::cout << "Info Interest Timed out: " << infoIntTimedOutCount << std::endl;
@@ -272,7 +273,7 @@ InterestManager::processInterestTimedOutInfo(const string& neighbor,
   else if ((status == 1) &&
            (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber()))
   {
-    m_nlsr.getAdl().setStatusOfNeighbor(neighbor, 0);
+    m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, 0);
     m_nlsr.incrementAdjBuildCount();
     if (m_nlsr.getIsBuildAdjLsaSheduled() == 0)
     {
@@ -301,7 +302,7 @@ InterestManager::expressInterest(const string& interestNamePrefix,
   i.setMustBeFresh(true);
   m_nlsr.getNlsrFace()->expressInterest(i,
                                         ndn::bind(&DataManager::processContent,
-                                                  &m_nlsr.getDm(),
+                                                  &m_nlsr.getDataManager(),
                                                   _1, _2, boost::ref(*this)),
                                         ndn::bind(&InterestManager::processInterestTimedOut,
                                                   this, _1));
@@ -311,7 +312,7 @@ InterestManager::expressInterest(const string& interestNamePrefix,
 void
 InterestManager::sendScheduledInfoInterest(int seconds)
 {
-  std::list<Adjacent> adjList = m_nlsr.getAdl().getAdjList();
+  std::list<Adjacent> adjList = m_nlsr.getAdjacencyList().getAdjList();
   for (std::list<Adjacent>::iterator it = adjList.begin(); it != adjList.end();
        ++it)
   {

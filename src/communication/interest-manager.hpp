@@ -1,9 +1,9 @@
 #ifndef NLSR_IM_HPP
 #define NLSR_IM_HPP
 
-#include <ndn-cpp-dev/face.hpp>
-#include <ndn-cpp-dev/security/key-chain.hpp>
-#include <ndn-cpp-dev/util/scheduler.hpp>
+#include <ndn-cxx/face.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {
 

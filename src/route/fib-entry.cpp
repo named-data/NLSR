@@ -7,7 +7,7 @@ namespace nlsr {
 using namespace std;
 
 bool
-FibEntry::isEqualNextHops(Nhl& nhlOther)
+FibEntry::isEqualNextHops(NexthopList& nhlOther)
 {
   if (m_nhl.getSize() != nhlOther.getSize())
   {

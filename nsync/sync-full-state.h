@@ -23,7 +23,7 @@
 #ifndef SYNC_FULL_STATE_H
 #define SYNC_FULL_STATE_H
 
-#include <ndn-cpp-dev/util/time.hpp>
+#include <ndn-cxx/util/time.hpp>
 #include "sync-state.h"
 
 namespace Sync {

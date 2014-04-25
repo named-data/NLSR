@@ -3,10 +3,10 @@
 
 #include <iostream>
 
-#include <ndn-cpp-dev/face.hpp>
+#include <ndn-cxx/face.hpp>
 #include <nsync/sync-socket.h>
-#include <ndn-cpp-dev/security/validator-null.hpp>
-#include <ndn-cpp-dev/util/scheduler.hpp>
+#include <ndn-cxx/security/validator-null.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 #include "sequencing-manager.hpp"
 

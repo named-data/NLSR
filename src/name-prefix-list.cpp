@@ -1,32 +1,34 @@
 #include <iostream>
 #include <algorithm>
 
-#include "npl.hpp"
+#include <ndn-cxx/common.hpp>
+
+#include "name-prefix-list.hpp"
 
 namespace nlsr {
 
 using namespace std;
 
-Npl::Npl()
+NamePrefixList::NamePrefixList()
 {
 }
 
-Npl::~Npl()
+NamePrefixList::~NamePrefixList()
 {
 }
 
 static bool
-nameCompare(string& s1, string& s2)
+nameCompare(const string& s1, const string& s2)
 {
   return s1 == s2;
 }
 
 int
-Npl::insert(string& name)
+NamePrefixList::insert(string& name)
 {
   std::list<string>::iterator it = std::find_if(m_nameList.begin(),
                                                 m_nameList.end(),
-                                                bind(&nameCompare, _1 , name));
+                                                ndn::bind(&nameCompare, _1 , name));
   if (it != m_nameList.end())
   {
     return -1;
@@ -36,11 +38,11 @@ Npl::insert(string& name)
 }
 
 int
-Npl::remove(string& name)
+NamePrefixList::remove(string& name)
 {
   std::list<string>::iterator it = std::find_if(m_nameList.begin(),
                                                 m_nameList.end(),
-                                                bind(&nameCompare, _1 , name));
+                                                ndn::bind(&nameCompare, _1 , name));
   if (it != m_nameList.end())
   {
     m_nameList.erase(it);
@@ -49,13 +51,13 @@ Npl::remove(string& name)
 }
 
 void
-Npl::sort()
+NamePrefixList::sort()
 {
   m_nameList.sort();
 }
 
 void
-Npl::print()
+NamePrefixList::print()
 {
   int i = 1;
   for (std::list<string>::iterator it = m_nameList.begin();

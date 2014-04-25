@@ -2,16 +2,16 @@
 #define NLSR_NPT_HPP
 
 #include <list>
-#include "npte.hpp"
+#include "name-prefix-table-entry.hpp"
 #include "routing-table-entry.hpp"
 
 namespace nlsr {
 class Nlsr;
 
-class Npt
+class NamePrefixTable
 {
 public:
-  Npt()
+  NamePrefixTable()
   {
   }
   void
@@ -34,7 +34,7 @@ private:
   removeNpte(std::string name, RoutingTableEntry& rte, Nlsr& pnlsr);
 
 private:
-  std::list<Npte> m_npteList;
+  std::list<NamePrefixTableEntry> m_npteList;
 };
 
 }//namespace nlsr

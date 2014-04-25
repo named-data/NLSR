@@ -2,11 +2,6 @@
 #include <string>
 #include <sstream>
 #include <cstdio>
-#include <ndn-cpp-dev/face.hpp>
-#include <ndn-cpp-dev/security/key-chain.hpp>
-#include <ndn-cpp-dev/security/identity-certificate.hpp>
-#include <ndn-cpp-dev/util/scheduler.hpp>
-
 
 #include "nlsr.hpp"
 
@@ -28,7 +23,7 @@ void
 Nlsr::setInterestFilterNlsr(const string& name)
 {
   getNlsrFace()->setInterestFilter(name,
-                                   ndn::bind(&InterestManager::processInterest, &m_im,_1, _2),
+                                   ndn::bind(&InterestManager::processInterest, &m_interestManager, _1, _2),
                                    ndn::bind(&Nlsr::registrationFailed, this, _1));
 }
 
@@ -43,12 +38,12 @@ Nlsr::initialize()
   // {
   //   std::cerr << "Can not initiate/load certificate" << endl;
   // }
-  m_sm.setSeqFileName(m_confParam.getSeqFileDir());
-  m_sm.initiateSeqNoFromFile();
+  m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
+  m_sequencingManager.initiateSeqNoFromFile();
   /* debugging purpose start */
   cout << m_confParam;
-  m_adl.printAdl();
-  m_npl.print();
+  m_adjacencyList.print();
+  m_namePrefixList.print();
   /* debugging purpose end */
   m_nlsrLsdb.buildAndInstallOwnNameLsa(boost::ref(*this));
   m_nlsrLsdb.buildAndInstallOwnCoordinateLsa(boost::ref(*this));
@@ -56,10 +51,10 @@ Nlsr::initialize()
   setInterestFilterNlsr(m_confParam.getChronosyncLsaPrefix() +
                         m_confParam.getRouterPrefix());
   setInterestFilterNlsr(m_confParam.getRootKeyPrefix());
-  m_slh.setSyncPrefix(m_confParam.getChronosyncSyncPrefix());
-  m_slh.createSyncSocket(boost::ref(*this));
+  m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncSyncPrefix());
+  m_syncLogicHandler.createSyncSocket(boost::ref(*this));
   // m_slh.publishKeyUpdate(m_km);
-  m_im.scheduleInfoInterest(10);
+  m_interestManager.scheduleInfoInterest(10);
 }
 
 void

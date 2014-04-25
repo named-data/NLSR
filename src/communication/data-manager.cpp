@@ -1,9 +1,9 @@
 #include <iostream>
 #include <cstdlib>
 
-#include <ndn-cpp-dev/security/signature-sha256-with-rsa.hpp>
-#include <ndn-cpp-dev/security/identity-certificate.hpp>
-#include <ndn-cpp-dev/util/io.hpp>
+#include <ndn-cxx/security/signature-sha256-with-rsa.hpp>
+#include <ndn-cxx/security/identity-certificate.hpp>
+#include <ndn-cxx/util/io.hpp>
 
 #include "nlsr.hpp"
 #include "data-manager.hpp"
@@ -60,18 +60,20 @@ DataManager::processContentInfo(const string& dataName,
   Tokenizer nt(dataName, "/");
   string chkString("info");
   string neighbor = nt.getTokenString(0, nt.getTokenPosition(chkString) - 1);
-  int oldStatus = m_nlsr.getAdl().getStatusOfNeighbor(neighbor);
-  int infoIntTimedOutCount = m_nlsr.getAdl().getTimedOutInterestCount(neighbor);
+  int oldStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
+  int infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(
+                               neighbor);
   //debugging purpose start
   std::cout << "Before Updates: " << std::endl;
   std::cout << "Neighbor : " << neighbor << std::endl;
   std::cout << "Status: " << oldStatus << std::endl;
   std::cout << "Info Interest Timed out: " << infoIntTimedOutCount << std::endl;
   //debugging purpose end
-  m_nlsr.getAdl().setStatusOfNeighbor(neighbor, 1);
-  m_nlsr.getAdl().setTimedOutInterestCount(neighbor, 0);
-  int newStatus = m_nlsr.getAdl().getStatusOfNeighbor(neighbor);
-  infoIntTimedOutCount = m_nlsr.getAdl().getTimedOutInterestCount(neighbor);
+  m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, 1);
+  m_nlsr.getAdjacencyList().setTimedOutInterestCount(neighbor, 0);
+  int newStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
+  infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(
+                           neighbor);
   //debugging purpose
   std::cout << "After Updates: " << std::endl;
   std::cout << "Neighbor : " << neighbor << std::endl;

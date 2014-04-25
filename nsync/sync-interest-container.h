@@ -23,7 +23,7 @@
 #ifndef SYNC_INTEREST_CONTAINER_H
 #define SYNC_INTEREST_CONTAINER_H
 
-#include <ndn-cpp-dev/util/time.hpp>
+#include <ndn-cxx/util/time.hpp>
 
 #include "sync-digest.h"
 

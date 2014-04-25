@@ -1,6 +1,6 @@
 #include <list>
 #include <utility>
-#include "npte.hpp"
+#include "name-prefix-table-entry.hpp"
 #include "routing-table-entry.hpp"
 #include "nexthop.hpp"
 
@@ -9,7 +9,7 @@ namespace nlsr {
 using namespace std;
 
 void
-Npte::generateNhlfromRteList()
+NamePrefixTableEntry::generateNhlfromRteList()
 {
   m_nhl.reset();
   for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
@@ -33,7 +33,7 @@ rteCompare(RoutingTableEntry& rte, string& destRouter)
 }
 
 void
-Npte::removeRoutingTableEntry(RoutingTableEntry& rte)
+NamePrefixTableEntry::removeRoutingTableEntry(RoutingTableEntry& rte)
 {
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_rteList.begin(),
                                                            m_rteList.end(),
@@ -45,7 +45,7 @@ Npte::removeRoutingTableEntry(RoutingTableEntry& rte)
 }
 
 void
-Npte::addRoutingTableEntry(RoutingTableEntry& rte)
+NamePrefixTableEntry::addRoutingTableEntry(RoutingTableEntry& rte)
 {
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_rteList.begin(),
                                                            m_rteList.end(),
@@ -67,7 +67,7 @@ Npte::addRoutingTableEntry(RoutingTableEntry& rte)
 
 //debugging purpose
 ostream&
-operator<<(ostream& os, Npte& npte)
+operator<<(ostream& os, NamePrefixTableEntry& npte)
 {
   os << "Name: " << npte.getNamePrefix() << endl;
   std::list<RoutingTableEntry> rteList = npte.getRteList();

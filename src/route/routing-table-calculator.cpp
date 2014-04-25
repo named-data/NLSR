@@ -262,7 +262,7 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr,
         string nextHopRouterName =
           pMap.getRouterNameByMappingNo(nextHopRouter);
         int nxtHopFace =
-          pnlsr.getAdl().getAdjacent(nextHopRouterName).getConnectingFace();
+          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFace();
         std::cout << "Dest Router: " << pMap.getRouterNameByMappingNo(i) << std::endl;
         std::cout << "Next hop Router: " << nextHopRouterName << std::endl;
         std::cout << "Next hop Face: " << nxtHopFace << std::endl;
@@ -401,7 +401,7 @@ HypRoutingTableCalculator::calculatePath(Map& pMap,
       {
         string nextHopRouterName = pMap.getRouterNameByMappingNo(links[j]);
         int nextHopFace =
-          pnlsr.getAdl().getAdjacent(nextHopRouterName).getConnectingFace();
+          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFace();
         double distToNbr = getHyperbolicDistance(pnlsr, pMap,
                                                  sourceRouter, links[j]);
         double distToDestFromNbr = getHyperbolicDistance(pnlsr,

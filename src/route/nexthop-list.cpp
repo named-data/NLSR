@@ -1,5 +1,5 @@
 #include <iostream>
-#include "nhl.hpp"
+#include "nexthop-list.hpp"
 #include "nexthop.hpp"
 
 namespace nlsr {
@@ -34,7 +34,7 @@ cost with new next hop's route cost
 */
 
 void
-Nhl::addNextHop(NextHop& nh)
+NexthopList::addNextHop(NextHop& nh)
 {
   std::list<NextHop>::iterator it = std::find_if(m_nexthopList.begin(),
                                                  m_nexthopList.end(),
@@ -55,7 +55,7 @@ Remove a next hop only if both next hop face and route cost are same
 */
 
 void
-Nhl::removeNextHop(NextHop& nh)
+NexthopList::removeNextHop(NextHop& nh)
 {
   std::list<NextHop>::iterator it = std::find_if(m_nexthopList.begin(),
                                                  m_nexthopList.end(),
@@ -67,13 +67,13 @@ Nhl::removeNextHop(NextHop& nh)
 }
 
 void
-Nhl::sort()
+NexthopList::sort()
 {
   m_nexthopList.sort(nextHopSortingComparator);
 }
 
 ostream&
-operator<<(ostream& os, Nhl& nhl)
+operator<<(ostream& os, NexthopList& nhl)
 {
   std::list<NextHop> nexthopList = nhl.getNextHopList();
   int i = 1;

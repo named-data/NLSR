@@ -24,7 +24,7 @@ public:
   remove(Nlsr& pnlsr, string name);
 
   void
-  update(Nlsr& pnlsr, string name, Nhl& nextHopList);
+  update(Nlsr& pnlsr, string name, NexthopList& nextHopList);
 
   void
   clean(Nlsr& pnlsr);
@@ -40,10 +40,10 @@ public:
 
 private:
   void
-  removeHop(Nlsr& pnlsr, Nhl& nl, int doNotRemoveHopFaceId);
+  removeHop(Nlsr& pnlsr, NexthopList& nl, int doNotRemoveHopFaceId);
 
   int
-  getNumberOfFacesForName(Nhl& nextHopList, int maxFacesPerPrefix);
+  getNumberOfFacesForName(NexthopList& nextHopList, int maxFacesPerPrefix);
 
   ndn::EventId
   scheduleEntryRefreshing(Nlsr& pnlsr, string name, int feSeqNum,

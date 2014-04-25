@@ -3,10 +3,10 @@
 
 #include <list>
 #include <iostream>
-#include <ndn-cpp-dev/util/scheduler.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 #include "nexthop.hpp"
-#include "nhl.hpp"
+#include "nexthop-list.hpp"
 
 namespace nlsr {
 
@@ -37,7 +37,7 @@ public:
     return m_name;
   }
 
-  Nhl&
+  NexthopList&
   getNhl()
   {
     return m_nhl;
@@ -80,14 +80,14 @@ public:
   }
 
   bool
-  isEqualNextHops(Nhl& nhlOther);
+  isEqualNextHops(NexthopList& nhlOther);
 
 private:
   std::string m_name;
   int m_timeToRefresh;
   ndn::EventId m_expiringEventId;
   int m_seqNo;
-  Nhl m_nhl;
+  NexthopList m_nhl;
 };
 
 std::ostream&

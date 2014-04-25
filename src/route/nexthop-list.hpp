@@ -1,7 +1,7 @@
 #ifndef NLSR_NHL_HPP
 #define NLSR_NHL_HPP
 
-#include <ndn-cpp-dev/face.hpp>
+#include <ndn-cxx/face.hpp>
 #include <list>
 #include <iostream>
 
@@ -10,15 +10,15 @@
 
 namespace nlsr {
 
-class Nhl
+class NexthopList
 {
 public:
-  Nhl()
+  NexthopList()
     : m_nexthopList()
   {
   }
 
-  ~Nhl()
+  ~NexthopList()
   {
   }
   void
@@ -56,7 +56,7 @@ private:
 };
 
 std::ostream&
-operator<<(std::ostream& os, Nhl& nhl);
+operator<<(std::ostream& os, NexthopList& nhl);
 
 }//namespace nlsr
 

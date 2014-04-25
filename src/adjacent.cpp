@@ -2,6 +2,7 @@
 #include <string>
 #include <cmath>
 #include <limits>
+
 #include "adjacent.hpp"
 
 namespace nlsr {

@@ -4,6 +4,8 @@
 #include <string>
 #include <algorithm>
 
+#include <ndn-cxx/face.hpp>
+
 #include "tokenizer.hpp"
 
 namespace nlsr {
@@ -98,7 +100,7 @@ Tokenizer::doesTokenExist(string token)
 {
   std::list<string>::iterator it = std::find_if(m_tokenList.begin(),
                                                 m_tokenList.end(),
-                                                bind(&tokenCompare, _1 , token));
+                                                ndn::bind(&tokenCompare, _1 , token));
   if (it != m_tokenList.end())
   {
     return true;

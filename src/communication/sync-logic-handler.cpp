@@ -81,8 +81,8 @@ SyncLogicHandler::processRoutingUpdateFromSync(std::string routerName,
         pnlsr.getConfParameter().getChronosyncLsaPrefix() +
         routerName + "/1/" +
         boost::lexical_cast<std::string>(sm.getNameLsaSeq());
-      pnlsr.getIm().expressInterest(lsaPrefix, 3,
-                                    pnlsr.getConfParameter().getInterestResendTime());
+      pnlsr.getInterestManager().expressInterest(lsaPrefix, 3,
+                                                 pnlsr.getConfParameter().getInterestResendTime());
     }
     if (pnlsr.getLsdb().isAdjLsaNew(routerName + "/2", sm.getAdjLsaSeq()))
     {
@@ -91,8 +91,8 @@ SyncLogicHandler::processRoutingUpdateFromSync(std::string routerName,
         pnlsr.getConfParameter().getChronosyncLsaPrefix() +
         routerName + "/2/" +
         boost::lexical_cast<std::string>(sm.getAdjLsaSeq());
-      pnlsr.getIm().expressInterest(lsaPrefix, 3,
-                                    pnlsr.getConfParameter().getInterestResendTime());
+      pnlsr.getInterestManager().expressInterest(lsaPrefix, 3,
+                                                 pnlsr.getConfParameter().getInterestResendTime());
     }
     if (pnlsr.getLsdb().isCoordinateLsaNew(routerName + "/3", sm.getCorLsaSeq()))
     {
@@ -101,8 +101,8 @@ SyncLogicHandler::processRoutingUpdateFromSync(std::string routerName,
         pnlsr.getConfParameter().getChronosyncLsaPrefix() +
         routerName + "/3/" +
         boost::lexical_cast<std::string>(sm.getCorLsaSeq());
-      pnlsr.getIm().expressInterest(lsaPrefix, 3,
-                                    pnlsr.getConfParameter().getInterestResendTime());
+      pnlsr.getInterestManager().expressInterest(lsaPrefix, 3,
+                                                 pnlsr.getConfParameter().getInterestResendTime());
     }
   }
 }

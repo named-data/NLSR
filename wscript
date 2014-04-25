@@ -43,7 +43,7 @@ def configure(conf):
 
     conf.load('default-compiler-flags')
 
-    conf.check_cfg(package='libndn-cpp-dev', args=['--cflags', '--libs'],
+    conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
                    uselib_store='NDN_CPP', mandatory=True)
 
     boost_libs = 'system chrono program_options log iostreams thread'
@@ -54,7 +54,7 @@ def configure(conf):
 
     conf.check_boost(lib=boost_libs)
 
-    if conf.env.BOOST_VERSION_NUMBER < 105400:
+    if conf.env.BOOST_VERSION_NUMBER < 104800:
         Logs.error("Minimum required boost version is 1.54.0")
         Logs.error("Please upgrade your distribution or install custom boost libraries")
         return

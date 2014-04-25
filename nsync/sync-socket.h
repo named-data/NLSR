@@ -21,9 +21,9 @@
 #ifndef _SYNC_SOCKET_H
 #define _SYNC_SOCKET_H
 
-#include <ndn-cpp-dev/face.hpp>
-#include <ndn-cpp-dev/security/validator.hpp>
-#include <ndn-cpp-dev/security/key-chain.hpp>
+#include <ndn-cxx/face.hpp>
+#include <ndn-cxx/security/validator.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
 
 #include "sync-logic.h"
 #include "sync-seq-no.h"
