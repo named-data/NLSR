@@ -1,7 +1,8 @@
 #include <string>
+#include <boost/cstdint.hpp>
 
-#ifndef ADJACENT_HPP
-#define ADJACENT_HPP
+#ifndef NLSR_ADJACENT_HPP
+#define NLSR_ADJACENT_HPP
 
 namespace nlsr {
 class Adjacent
@@ -26,10 +27,10 @@ public:
     m_name = an;
   }
 
-  Adjacent(const std::string& an, int cf, double lc, int s, int iton);
+  Adjacent(const std::string& an, uint32_t cf, double lc, uint32_t s, uint32_t iton);
 
   std::string
-  getName()
+  getName() const
   {
     return m_name;
   }
@@ -40,20 +41,20 @@ public:
     m_name = an;
   }
 
-  int
-  getConnectingFace()
+  uint32_t
+  getConnectingFace() const
   {
     return m_connectingFace;
   }
 
   void
-  setConnectingFace(int cf)
+  setConnectingFace(uint32_t cf)
   {
     m_connectingFace = cf;
   }
 
   double
-  getLinkCost()
+  getLinkCost() const
   {
     return m_linkCost;
   }
@@ -64,44 +65,47 @@ public:
     m_linkCost = lc;
   }
 
-  int
-  getStatus()
+  uint32_t
+  getStatus() const
   {
     return m_status;
   }
 
   void
-  setStatus(int s)
+  setStatus(uint32_t s)
   {
     m_status = s;
   }
 
-  int
-  getInterestTimedOutNo()
+  uint32_t
+  getInterestTimedOutNo() const
   {
     return m_interestTimedOutNo;
   }
 
   void
-  setInterestTimedOutNo(int iton)
+  setInterestTimedOutNo(uint32_t iton)
   {
     m_interestTimedOutNo = iton;
   }
 
   bool
-  isEqual(Adjacent& adj);
+  operator==(const Adjacent& adjacent) const;
 
+  bool
+  compareName(const Adjacent& adjacent);
+  
 private:
   std::string m_name;
-  int m_connectingFace;
+  uint32_t m_connectingFace;
   double m_linkCost;
-  int m_status;
-  int m_interestTimedOutNo;
+  uint32_t m_status;
+  uint32_t m_interestTimedOutNo;
 };
 
 std::ostream&
-operator<<(std::ostream& os, Adjacent& adj);
+operator<<(std::ostream& os, const Adjacent& adj);
 
 } // namespace nlsr
 
-#endif //ADJACENT_HPP
+#endif //NLSR_ADJACENT_HPP

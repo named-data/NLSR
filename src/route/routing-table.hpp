@@ -1,9 +1,10 @@
-#ifndef NLSR_RT_HPP
-#define NLSR_RT_HPP
+#ifndef NLSR_ROUTING_TABLE_HPP
+#define NLSR_ROUTING_TABLE_HPP
 
 #include <iostream>
 #include <utility>
 #include <string>
+#include <boost/cstdint.hpp>
 
 #include "routing-table-entry.hpp"
 
@@ -70,4 +71,4 @@ private:
 
 }//namespace nlsr
 
-#endif //NLSR_RT_HPP
+#endif //NLSR_ROUTING_TABLE_HPP

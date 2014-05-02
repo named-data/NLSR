@@ -2,6 +2,7 @@
 #define NLSR_NEXTHOP_HPP
 
 #include <iostream>
+#include <boost/cstdint.hpp>
 
 namespace nlsr {
 class NextHop
@@ -13,20 +14,20 @@ public:
   {
   }
 
-  NextHop(int cf, double rc)
+  NextHop(uint32_t cf, double rc)
   {
     m_connectingFace = cf;
     m_routeCost = rc;
   }
 
-  int
+  uint32_t
   getConnectingFace() const
   {
     return m_connectingFace;
   }
 
   void
-  setConnectingFace(int cf)
+  setConnectingFace(uint32_t cf)
   {
     m_connectingFace = cf;
   }
@@ -44,7 +45,7 @@ public:
   }
 
 private:
-  int m_connectingFace;
+  uint32_t m_connectingFace;
   double m_routeCost;
 };
 

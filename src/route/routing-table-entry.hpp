@@ -1,5 +1,5 @@
-#ifndef NLSR_RTE_HPP
-#define NLSR_RTE_HPP
+#ifndef NLSR_ROUTING_TABLE_ENTRY_HPP
+#define NLSR_ROUTING_TABLE_ENTRY_HPP
 
 #include <iostream>
 
@@ -11,8 +11,6 @@ class RoutingTableEntry
 {
 public:
   RoutingTableEntry()
-    : m_destination()
-    , m_nhl()
   {
   }
 
@@ -20,8 +18,7 @@ public:
   {
   }
 
-  RoutingTableEntry(std::string dest)
-    : m_nhl()
+  RoutingTableEntry(const std::string& dest)
   {
     m_destination = dest;
   }
@@ -33,19 +30,31 @@ public:
   }
 
   NexthopList&
-  getNhl()
+  getNexthopList()
   {
-    return m_nhl;
+    return m_nexthopList;
   }
 
 private:
   std::string m_destination;
-  NexthopList m_nhl;
+  NexthopList m_nexthopList;
 };
 
-std::ostream&
-operator<<(std::ostream& os, RoutingTableEntry& rte);
+inline std::ostream&
+operator<<(std::ostream& os, RoutingTableEntry& rte)
+{
+  os << "Destination: " << rte.getDestination() << std::endl;
+  os << "Nexthops: " << std::endl;
+  int32_t i = 1;
+  std::list<NextHop> nhl = rte.getNexthopList().getNextHops();
+  for (std::list<NextHop>::iterator it = nhl.begin();
+       it != nhl.end() ; it++, i++)
+  {
+    os << "  Nexthop " << i << ": " << (*it) << std::endl;
+  }
+  return os;
+}
 
 } //namespace nlsr
 
-#endif //NLSR_RTE_HPP
+#endif //NLSR_ROUTING_TABLE_ENTRY_HPP

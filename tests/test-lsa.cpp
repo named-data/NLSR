@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
   NameLsa nlsa1("router1", 1, 12, 1800, npl1);
   NameLsa nlsa2("router2", 1, 12, 1500, npl1);
 
-  BOOST_CHECK_EQUAL(nlsa1.getLsType(), 1);
+  BOOST_CHECK_EQUAL(nlsa1.getLsType(), (uint8_t)1);
 
   BOOST_CHECK(nlsa1.getLifeTime() != nlsa2.getLifeTime());
 
@@ -47,12 +47,12 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
   AdjLsa alsa1("router1", 2, 12, 1800, 1, adjList);
   AdjLsa alsa2("router1", 2, 12, 1800, 1, adjList);
 
-  BOOST_CHECK_EQUAL(alsa1.getLsType(), 2);
-  BOOST_CHECK_EQUAL(alsa1.getLsSeqNo(), 12);
-  BOOST_CHECK_EQUAL(alsa1.getLifeTime(), 1800);
-  BOOST_CHECK_EQUAL(alsa1.getNoLink(), 1);
+  BOOST_CHECK_EQUAL(alsa1.getLsType(), (uint8_t)2);
+  BOOST_CHECK_EQUAL(alsa1.getLsSeqNo(), (uint32_t)12);
+  BOOST_CHECK_EQUAL(alsa1.getLifeTime(), (uint32_t)1800);
+  BOOST_CHECK_EQUAL(alsa1.getNoLink(), (uint32_t)1);
 
-  BOOST_CHECK(alsa1.isEqual(alsa2));
+  BOOST_CHECK(alsa1.isEqualContent(alsa2));
 
   alsa1.addAdjacent(adj2);
 
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaConstructorAndGetters)
   BOOST_CHECK_CLOSE(clsa1.getCorRadius(), 2.5, 0.0001);
   BOOST_CHECK_CLOSE(clsa1.getCorTheta(), 30.0, 0.0001);
 
-  BOOST_CHECK(clsa1.isEqual(clsa2));
+  BOOST_CHECK(clsa1.isEqualContent(clsa2));
 
   BOOST_CHECK_EQUAL(clsa1.getData(), clsa2.getData());
 }

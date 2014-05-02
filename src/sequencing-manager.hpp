@@ -1,8 +1,10 @@
-#ifndef NLSR_SM_HPP
-#define NLSR_SM_HPP
+#ifndef NLSR_SEQUENCING_MANAGER_HPP
+#define NLSR_SEQUENCING_MANAGER_HPP
 
 #include <list>
 #include <string>
+#include <boost/cstdint.hpp>
+
 #include <ndn-cxx/face.hpp>
 
 namespace nlsr {
@@ -70,6 +72,27 @@ public:
     combineSequenceNo();
   }
 
+  void
+  increaseNameLsaSeq()
+  {
+    m_nameLsaSeq++;
+    combineSequenceNo();
+  }
+
+  void
+  increaseAdjLsaSeq()
+  {
+    m_adjLsaSeq++;
+    combineSequenceNo();
+  }
+
+  void
+  increaseCorLsaSeq()
+  {
+    m_corLsaSeq++;
+    combineSequenceNo();
+  }
+
   uint64_t
   getCombinedSeqNo() const
   {
@@ -95,7 +118,6 @@ private:
   void
   combineSequenceNo();
 
-
 private:
   uint64_t m_nameLsaSeq;
   uint64_t m_adjLsaSeq;
@@ -109,4 +131,4 @@ std::ostream&
 operator<<(std::ostream& os, const SequencingManager& sm);
 
 }//namespace nlsr
-#endif //NLSR_SM_HPP
+#endif //NLSR_SEQUENCING_MANAGER_HPP

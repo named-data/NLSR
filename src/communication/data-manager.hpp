@@ -1,5 +1,7 @@
-#ifndef NLSR_DM_HPP
-#define NLSR_DM_HPP
+#ifndef NLSR_DATA_MANAGER_HPP
+#define NLSR_DATA_MANAGER_HPP
+
+#include <boost/cstdint.hpp>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
@@ -50,4 +52,4 @@ private:
 
 }//namespace nlsr
 
-#endif //NLSR_DM_HPP
+#endif //NLSR_DATA_MANAGER_HPP

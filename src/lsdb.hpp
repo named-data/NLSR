@@ -2,6 +2,8 @@
 #define NLSR_LSDB_HPP
 
 #include <utility>
+#include <boost/cstdint.hpp>
+
 #include "lsa.hpp"
 
 namespace nlsr {

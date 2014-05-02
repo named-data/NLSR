@@ -14,17 +14,18 @@ using namespace std;
 void
 Nlsr::registrationFailed(const ndn::Name& name)
 {
-  cerr << "ERROR: Failed to register prefix in local hub's daemon" << endl;
-  getNlsrFace()->shutdown();
+  std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << endl;
+  throw Error("Error: Prefix registration failed");
 }
 
 
 void
-Nlsr::setInterestFilterNlsr(const string& name)
+Nlsr::setInterestFilter(const string& name)
 {
-  getNlsrFace()->setInterestFilter(name,
-                                   ndn::bind(&InterestManager::processInterest, &m_interestManager, _1, _2),
-                                   ndn::bind(&Nlsr::registrationFailed, this, _1));
+  getNlsrFace().setInterestFilter(name,
+                                  ndn::bind(&InterestManager::processInterest,
+                                            &m_interestManager, _1, _2),
+                                  ndn::bind(&Nlsr::registrationFailed, this, _1));
 }
 
 void
@@ -47,10 +48,10 @@ Nlsr::initialize()
   /* debugging purpose end */
   m_nlsrLsdb.buildAndInstallOwnNameLsa(boost::ref(*this));
   m_nlsrLsdb.buildAndInstallOwnCoordinateLsa(boost::ref(*this));
-  setInterestFilterNlsr(m_confParam.getRouterPrefix());
-  setInterestFilterNlsr(m_confParam.getChronosyncLsaPrefix() +
-                        m_confParam.getRouterPrefix());
-  setInterestFilterNlsr(m_confParam.getRootKeyPrefix());
+  setInterestFilter(m_confParam.getRouterPrefix());
+  setInterestFilter(m_confParam.getChronosyncLsaPrefix() +
+                    m_confParam.getRouterPrefix());
+  setInterestFilter(m_confParam.getRootKeyPrefix());
   m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncSyncPrefix());
   m_syncLogicHandler.createSyncSocket(boost::ref(*this));
   // m_slh.publishKeyUpdate(m_km);
@@ -60,10 +61,10 @@ Nlsr::initialize()
 void
 Nlsr::startEventLoop()
 {
-  m_io->run();
+  m_nlsrFace.processEvents();
 }
 
-int
+void
 Nlsr::usage(const string& progname)
 {
   cout << "Usage: " << progname << " [OPTIONS...]" << endl;
@@ -72,7 +73,6 @@ Nlsr::usage(const string& progname)
   cout << "       -f, --config_file   Specify configuration file name" << endl;
   cout << "       -p, --api_port      port where api client will connect" << endl;
   cout << "       -h, --help          Display this help message" << endl;
-  exit(EXIT_FAILURE);
 }
 
 

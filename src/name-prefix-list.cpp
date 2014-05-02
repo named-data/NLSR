@@ -23,8 +23,8 @@ nameCompare(const string& s1, const string& s2)
   return s1 == s2;
 }
 
-int
-NamePrefixList::insert(string& name)
+int32_t
+NamePrefixList::insert(const string& name)
 {
   std::list<string>::iterator it = std::find_if(m_nameList.begin(),
                                                 m_nameList.end(),
@@ -37,8 +37,8 @@ NamePrefixList::insert(string& name)
   return 0;
 }
 
-int
-NamePrefixList::remove(string& name)
+int32_t
+NamePrefixList::remove(const string& name)
 {
   std::list<string>::iterator it = std::find_if(m_nameList.begin(),
                                                 m_nameList.end(),

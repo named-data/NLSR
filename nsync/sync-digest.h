@@ -17,16 +17,16 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_DIGEST_H
 #define SYNC_DIGEST_H
 
 #include <boost/exception/all.hpp>
-#include <openssl/evp.h>
 #include <boost/cstdint.hpp>
 #include <vector>
+#include "openssl.h"
 
 namespace Sync {
 
@@ -47,7 +47,7 @@ public:
    */
   bool
   empty () const;
-  
+
   /**
    * @brief Reset digest to the initial state
    */
@@ -84,7 +84,7 @@ public:
   bool
   operator != (const Digest &digest) const
   { return ! (*this == digest); }
-  
+
 
   /**
    * @brief Add existing digest to digest calculation
@@ -116,11 +116,11 @@ public:
    */
   bool
   isZero () const;
-  
+
 private:
   Digest &
   operator = (Digest &digest) { (void)digest; return *this; }
-  
+
   /**
    * @brief Add size bytes of buffer to the hash
    */
@@ -132,7 +132,7 @@ private:
 
   friend std::istream &
   operator >> (std::istream &is, Digest &digest);
-  
+
 private:
   EVP_MD_CTX *m_context;
   std::vector<uint8_t> m_buffer;

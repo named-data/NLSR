@@ -1,31 +1,29 @@
-#ifndef NLSR_NPTE_HPP
-#define NLSR_NPTE_HPP
+#ifndef NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
+#define NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
 
 #include <list>
 #include <utility>
+#include <boost/cstdint.hpp>
+
 #include "routing-table-entry.hpp"
 
 namespace nlsr {
-
-using namespace std;
 
 class NamePrefixTableEntry
 {
 public:
   NamePrefixTableEntry()
-    : m_namePrefix()
-    , m_nhl()
   {
   }
 
-  NamePrefixTableEntry(string np)
-    : m_nhl()
+  NamePrefixTableEntry(const std::string& namePrefix)
+    : m_nexthopList()
   {
-    m_namePrefix = np;
+    m_namePrefix = namePrefix;
   }
 
-  std::string
-  getNamePrefix()
+  const std::string&
+  getNamePrefix() const
   {
     return m_namePrefix;
   }
@@ -44,21 +42,21 @@ public:
       for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
            it != m_rteList.end(); ++it)
       {
-        (*it).getNhl().reset();
+        (*it).getNexthopList().reset();
       }
     }
   }
 
-  int
+  size_t
   getRteListSize()
   {
     return m_rteList.size();
   }
 
   NexthopList&
-  getNhl()
+  getNexthopList()
   {
-    return m_nhl;
+    return m_nexthopList;
   }
 
   void
@@ -73,7 +71,7 @@ public:
 private:
   std::string m_namePrefix;
   std::list<RoutingTableEntry> m_rteList;
-  NexthopList m_nhl;
+  NexthopList m_nexthopList;
 };
 
 std::ostream&
@@ -81,4 +79,4 @@ operator<<(std::ostream& os, NamePrefixTableEntry& npte);
 
 }//namespace nlsr
 
-#endif //NLSR_NPTE_HPP
+#endif //NLSR_NAME_PREFIX_TABLE_ENTRY_HPP

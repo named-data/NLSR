@@ -75,7 +75,7 @@ NexthopList::sort()
 ostream&
 operator<<(ostream& os, NexthopList& nhl)
 {
-  std::list<NextHop> nexthopList = nhl.getNextHopList();
+  std::list<NextHop> nexthopList = nhl.getNextHops();
   int i = 1;
   for (std::list<NextHop>::iterator it = nexthopList.begin();
        it != nexthopList.end() ; it++, i++)

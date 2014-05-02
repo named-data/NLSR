@@ -1,8 +1,9 @@
-#ifndef NLSR_ADL_HPP
-#define NLSR_ADL_HPP
+#ifndef NLSR_ADJACENCY_LIST_HPP
+#define NLSR_ADJACENCY_LIST_HPP
 
-#include <ndn-cxx/common.hpp>
 #include <list>
+#include <boost/cstdint.hpp>
+#include <ndn-cxx/common.hpp>
 
 #include "adjacent.hpp"
 
@@ -16,13 +17,13 @@ public:
   AdjacencyList();
   ~AdjacencyList();
 
-  int
-  insert(Adjacent& adj);
+  int32_t
+  insert(Adjacent& adjacent);
 
-  int
-  updateAdjacentStatus(const std::string& adjName, int s);
+  int32_t
+  updateAdjacentStatus(const std::string& adjName, int32_t s);
 
-  int
+  int32_t
   updateAdjacentLinkCost(const std::string& adjName, double lc);
 
   std::list<Adjacent>&
@@ -34,34 +35,34 @@ public:
   void
   incrementTimedOutInterestCount(const std::string& neighbor);
 
-  int
+  int32_t
   getTimedOutInterestCount(const std::string& neighbor);
 
-  int
+  uint32_t
   getStatusOfNeighbor(const std::string& neighbor);
 
   void
-  setStatusOfNeighbor(const std::string& neighbor, int status);
+  setStatusOfNeighbor(const std::string& neighbor, int32_t status);
 
   void
-  setTimedOutInterestCount(const std::string& neighbor, int count);
+  setTimedOutInterestCount(const std::string& neighbor, uint32_t count);
 
   void
-  addAdjacentsFromAdl(AdjacencyList& adl);
+  addAdjacents(AdjacencyList& adl);
 
   bool
   isAdjLsaBuildable(Nlsr& pnlsr);
 
-  int
+  int32_t
   getNumOfActiveNeighbor();
 
   Adjacent
   getAdjacent(const std::string& adjName);
 
   bool
-  isEqual(AdjacencyList& adl);
+  operator==(AdjacencyList& adl);
 
-  int
+  size_t
   getSize()
   {
     return m_adjList.size();
@@ -88,4 +89,4 @@ private:
 };
 
 } //namespace nlsr
-#endif //NLSR_ADL_HPP
+#endif //NLSR_ADJACENCY_LIST_HPP

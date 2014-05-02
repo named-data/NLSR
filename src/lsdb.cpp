@@ -8,7 +8,7 @@ namespace nlsr {
 using namespace std;
 
 void
-Lsdb::cancelScheduleLsaExpiringEvent(Nlsr& pnlsr, EventId eid)
+Lsdb::cancelScheduleLsaExpiringEvent(Nlsr& pnlsr, ndn::EventId eid)
 {
   pnlsr.getScheduler().cancelEvent(eid);
 }
@@ -23,13 +23,12 @@ nameLsaCompareByKey(const NameLsa& nlsa1, const string& key)
 bool
 Lsdb::buildAndInstallOwnNameLsa(Nlsr& pnlsr)
 {
-  NameLsa nameLsa(pnlsr.getConfParameter().getRouterPrefix()
-                  , 1
-                  , pnlsr.getSequencingManager().getNameLsaSeq() + 1
-                  , pnlsr.getConfParameter().getRouterDeadInterval()
-                  , pnlsr.getNamePrefixList());
-  pnlsr.getSequencingManager().setNameLsaSeq(
-    pnlsr.getSequencingManager().getNameLsaSeq() + 1);
+  NameLsa nameLsa(pnlsr.getConfParameter().getRouterPrefix(),
+                  1,
+                  pnlsr.getSequencingManager().getNameLsaSeq() + 1,
+                  pnlsr.getConfParameter().getRouterDeadInterval(),
+                  pnlsr.getNamePrefixList());
+  pnlsr.getSequencingManager().increaseNameLsaSeq();
   return installNameLsa(pnlsr, nameLsa);
 }
 
@@ -84,17 +83,15 @@ Lsdb::installNameLsa(Nlsr& pnlsr, NameLsa& nlsa)
     printNameLsdb();
     if (nlsa.getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
     {
-      pnlsr.getNamePrefixTable().addNpteByDestName(nlsa.getOrigRouter(),
-                                                   nlsa.getOrigRouter(),
-                                                   pnlsr);
+      pnlsr.getNamePrefixTable().addEntry(nlsa.getOrigRouter(),
+                                          nlsa.getOrigRouter(), pnlsr);
       std::list<string> nameList = nlsa.getNpl().getNameList();
       for (std::list<string>::iterator it = nameList.begin(); it != nameList.end();
            it++)
       {
         if ((*it) != pnlsr.getConfParameter().getRouterPrefix())
         {
-          pnlsr.getNamePrefixTable().addNpteByDestName((*it), nlsa.getOrigRouter(),
-                                                       pnlsr);
+          pnlsr.getNamePrefixTable().addEntry((*it), nlsa.getOrigRouter(), pnlsr);
         }
       }
     }
@@ -130,8 +127,7 @@ Lsdb::installNameLsa(Nlsr& pnlsr, NameLsa& nlsa)
         {
           if ((*it) != pnlsr.getConfParameter().getRouterPrefix())
           {
-            pnlsr.getNamePrefixTable().addNpteByDestName((*it), nlsa.getOrigRouter(),
-                                                         pnlsr);
+            pnlsr.getNamePrefixTable().addEntry((*it), nlsa.getOrigRouter(), pnlsr);
           }
         }
       }
@@ -149,7 +145,7 @@ Lsdb::installNameLsa(Nlsr& pnlsr, NameLsa& nlsa)
         {
           if ((*it) != pnlsr.getConfParameter().getRouterPrefix())
           {
-            pnlsr.getNamePrefixTable().removeNpte((*it), nlsa.getOrigRouter(), pnlsr);
+            pnlsr.getNamePrefixTable().removeEntry((*it), nlsa.getOrigRouter(), pnlsr);
           }
         }
       }
@@ -195,14 +191,14 @@ Lsdb::removeNameLsa(Nlsr& pnlsr, string& key)
     (*it).writeLog();
     if ((*it).getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
     {
-      pnlsr.getNamePrefixTable().removeNpte((*it).getOrigRouter(),
-                                            (*it).getOrigRouter(), pnlsr);
+      pnlsr.getNamePrefixTable().removeEntry((*it).getOrigRouter(),
+                                             (*it).getOrigRouter(), pnlsr);
       for (std::list<string>::iterator nit = (*it).getNpl().getNameList().begin();
            nit != (*it).getNpl().getNameList().end(); ++nit)
       {
         if ((*nit) != pnlsr.getConfParameter().getRouterPrefix())
         {
-          pnlsr.getNamePrefixTable().removeNpte((*nit), (*it).getOrigRouter(), pnlsr);
+          pnlsr.getNamePrefixTable().removeEntry((*nit), (*it).getOrigRouter(), pnlsr);
         }
       }
     }
@@ -248,14 +244,13 @@ corLsaCompareByKey(const CoordinateLsa& clsa, const string& key)
 bool
 Lsdb::buildAndInstallOwnCoordinateLsa(Nlsr& pnlsr)
 {
-  CoordinateLsa corLsa(pnlsr.getConfParameter().getRouterPrefix()
-                       , 3
-                       , pnlsr.getSequencingManager().getCorLsaSeq() + 1
-                       , pnlsr.getConfParameter().getRouterDeadInterval()
-                       , pnlsr.getConfParameter().getCorR()
-                       , pnlsr.getConfParameter().getCorTheta());
-  pnlsr.getSequencingManager().setCorLsaSeq(
-    pnlsr.getSequencingManager().getCorLsaSeq() + 1);
+  CoordinateLsa corLsa(pnlsr.getConfParameter().getRouterPrefix(),
+                       3,
+                       pnlsr.getSequencingManager().getCorLsaSeq() + 1,
+                       pnlsr.getConfParameter().getRouterDeadInterval(),
+                       pnlsr.getConfParameter().getCorR(),
+                       pnlsr.getConfParameter().getCorTheta());
+  pnlsr.getSequencingManager().increaseCorLsaSeq();
   installCoordinateLsa(pnlsr, corLsa);
   return true;
 }
@@ -312,9 +307,8 @@ Lsdb::installCoordinateLsa(Nlsr& pnlsr, CoordinateLsa& clsa)
     printCorLsdb(); //debugging purpose
     if (clsa.getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
     {
-      pnlsr.getNamePrefixTable().addNpteByDestName(clsa.getOrigRouter(),
-                                                   clsa.getOrigRouter(),
-                                                   pnlsr);
+      pnlsr.getNamePrefixTable().addEntry(clsa.getOrigRouter(),
+                                          clsa.getOrigRouter(), pnlsr);
     }
     if (pnlsr.getConfParameter().getIsHyperbolicCalc() >= 1)
     {
@@ -333,7 +327,7 @@ Lsdb::installCoordinateLsa(Nlsr& pnlsr, CoordinateLsa& clsa)
     {
       chkCorLsa->setLsSeqNo(clsa.getLsSeqNo());
       chkCorLsa->setLifeTime(clsa.getLifeTime());
-      if (!chkCorLsa->isEqual(clsa))
+      if (!chkCorLsa->isEqualContent(clsa))
       {
         chkCorLsa->setCorRadius(clsa.getCorRadius());
         chkCorLsa->setCorTheta(clsa.getCorTheta());
@@ -382,8 +376,8 @@ Lsdb::removeCoordinateLsa(Nlsr& pnlsr, const string& key)
   {
     if ((*it).getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
     {
-      pnlsr.getNamePrefixTable().removeNpte((*it).getOrigRouter(),
-                                            (*it).getOrigRouter(), pnlsr);
+      pnlsr.getNamePrefixTable().removeEntry((*it).getOrigRouter(),
+                                             (*it).getOrigRouter(), pnlsr);
     }
     m_corLsdb.erase(it);
     return true;
@@ -540,10 +534,10 @@ Lsdb::installAdjLsa(Nlsr& pnlsr, AdjLsa& alsa)
     {
       chkAdjLsa->setLsSeqNo(alsa.getLsSeqNo());
       chkAdjLsa->setLifeTime(alsa.getLifeTime());
-      if (!chkAdjLsa->isEqual(alsa))
+      if (!chkAdjLsa->isEqualContent(alsa))
       {
         chkAdjLsa->getAdl().reset();
-        chkAdjLsa->getAdl().addAdjacentsFromAdl(alsa.getAdl());
+        chkAdjLsa->getAdl().addAdjacents(alsa.getAdl());
         pnlsr.getRoutingTable().scheduleRoutingTableCalculation(pnlsr);
       }
       if (alsa.getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
@@ -563,16 +557,15 @@ Lsdb::installAdjLsa(Nlsr& pnlsr, AdjLsa& alsa)
 bool
 Lsdb::buildAndInstallOwnAdjLsa(Nlsr& pnlsr)
 {
-  AdjLsa adjLsa(pnlsr.getConfParameter().getRouterPrefix()
-                , 2
-                , pnlsr.getSequencingManager().getAdjLsaSeq() + 1
-                , pnlsr.getConfParameter().getRouterDeadInterval()
-                , pnlsr.getAdjacencyList().getNumOfActiveNeighbor()
-                , pnlsr.getAdjacencyList());
-  pnlsr.getSequencingManager().setAdjLsaSeq(
-    pnlsr.getSequencingManager().getAdjLsaSeq() + 1);
-  string lsaPrefix = pnlsr.getConfParameter().getChronosyncLsaPrefix()
-                     + pnlsr.getConfParameter().getRouterPrefix();
+  AdjLsa adjLsa(pnlsr.getConfParameter().getRouterPrefix(),
+                2,
+                pnlsr.getSequencingManager().getAdjLsaSeq() + 1,
+                pnlsr.getConfParameter().getRouterDeadInterval(),
+                pnlsr.getAdjacencyList().getNumOfActiveNeighbor(),
+                pnlsr.getAdjacencyList());
+  pnlsr.getSequencingManager().increaseAdjLsaSeq();
+  string lsaPrefix = pnlsr.getConfParameter().getChronosyncLsaPrefix() +
+                     pnlsr.getConfParameter().getRouterPrefix();
   pnlsr.getSyncLogicHandler().publishRoutingUpdate(pnlsr.getSequencingManager(),
                                                    lsaPrefix);
   return pnlsr.getLsdb().installAdjLsa(pnlsr, adjLsa);
@@ -642,6 +635,11 @@ Lsdb::exprireOrRefreshNameLsa(Nlsr& pnlsr, string lsaKey, uint64_t seqNo)
         chkNameLsa->setLsSeqNo(chkNameLsa->getLsSeqNo() + 1);
         pnlsr.getSequencingManager().setNameLsaSeq(chkNameLsa->getLsSeqNo());
         chkNameLsa->writeLog();
+        // schedule refreshing event again
+        chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(pnlsr,
+                                                                 chkNameLsa->getKey(),
+                                                                 chkNameLsa->getLsSeqNo(),
+                                                                 m_lsaRefreshTime));
         // publish routing update
         string lsaPrefix = pnlsr.getConfParameter().getChronosyncLsaPrefix()
                            + pnlsr.getConfParameter().getRouterPrefix();
@@ -673,6 +671,11 @@ Lsdb::exprireOrRefreshAdjLsa(Nlsr& pnlsr, string lsaKey, uint64_t seqNo)
         cout << "Own Adj LSA, so refreshing Adj LSA" << endl;
         chkAdjLsa->setLsSeqNo(chkAdjLsa->getLsSeqNo() + 1);
         pnlsr.getSequencingManager().setAdjLsaSeq(chkAdjLsa->getLsSeqNo());
+        // schedule refreshing event again
+        chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(pnlsr,
+                                                               chkAdjLsa->getKey(),
+                                                               chkAdjLsa->getLsSeqNo(),
+                                                               m_lsaRefreshTime));
         // publish routing update
         string lsaPrefix = pnlsr.getConfParameter().getChronosyncLsaPrefix()
                            + pnlsr.getConfParameter().getRouterPrefix();
@@ -707,6 +710,11 @@ Lsdb::exprireOrRefreshCoordinateLsa(Nlsr& pnlsr, const string& lsaKey,
         cout << "Own Cor LSA, so refreshing Cor LSA" << endl;
         chkCorLsa->setLsSeqNo(chkCorLsa->getLsSeqNo() + 1);
         pnlsr.getSequencingManager().setCorLsaSeq(chkCorLsa->getLsSeqNo());
+        // schedule refreshing event again
+        chkCorLsa->setExpiringEventId(scheduleCoordinateLsaExpiration(pnlsr,
+                                                                      chkCorLsa->getKey(),
+                                                                      chkCorLsa->getLsSeqNo(),
+                                                                      m_lsaRefreshTime));
         // publish routing update
         string lsaPrefix = pnlsr.getConfParameter().getChronosyncLsaPrefix()
                            + pnlsr.getConfParameter().getRouterPrefix();

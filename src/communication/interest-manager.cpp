@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cstdlib>
 
-
 #include <ndn-cxx/security/identity-certificate.hpp>
 #include <ndn-cxx/util/io.hpp>
 
@@ -55,7 +54,7 @@ InterestManager::processInterestInfo(const string& neighbor,
     // m_nlsr.getKeyManager().signData(data);
     m_keyChain.sign(data);
     cout << ">> D: " << data << endl;
-    m_nlsr.getNlsrFace()->put(data);
+    m_nlsr.getNlsrFace().put(data);
     int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
     if (status == 0)
     {
@@ -129,7 +128,7 @@ InterestManager::processInterestForNameLsa(const ndn::Interest& interest,
       // m_nlsr.getKeyManager().signData(data);
       m_keyChain.sign(data);
       std::cout << ">> D: " << data << std::endl;
-      m_nlsr.getNlsrFace()->put(data);
+      m_nlsr.getNlsrFace().put(data);
     }
   }
 }
@@ -150,7 +149,7 @@ InterestManager::processInterestForAdjLsa(const ndn::Interest& interest,
       // m_nlsr.getKeyManager().signData(data);
       m_keyChain.sign(data);
       std::cout << ">> D: " << data << std::endl;
-      m_nlsr.getNlsrFace()->put(data);
+      m_nlsr.getNlsrFace().put(data);
     }
   }
 }
@@ -171,7 +170,7 @@ InterestManager::processInterestForCorLsa(const ndn::Interest& interest,
       // m_nlsr.getKeyManager().signData(data);
       m_keyChain.sign(data);
       std::cout << ">> D: " << data << std::endl;
-      m_nlsr.getNlsrFace()->put(data);
+      m_nlsr.getNlsrFace().put(data);
     }
   }
 }
@@ -258,8 +257,7 @@ InterestManager::processInterestTimedOutInfo(const string& neighbor,
 {
   m_nlsr.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
   int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
-  int infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(
-                               neighbor);
+  uint32_t infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(neighbor);
   std::cout << "Neighbor: " << neighbor << std::endl;
   std::cout << "Status: " << status << std::endl;
   std::cout << "Info Interest Timed out: " << infoIntTimedOutCount << std::endl;
@@ -294,23 +292,23 @@ InterestManager::processInterestTimedOutLsa(const ndn::Interest& interest)
 
 void
 InterestManager::expressInterest(const string& interestNamePrefix,
-                                 int scope, int seconds)
+                                 int32_t scope, int32_t seconds)
 {
   std::cout << "Expressing Interest :" << interestNamePrefix << std::endl;
   ndn::Interest i((ndn::Name(interestNamePrefix)));
   i.setInterestLifetime(time::seconds(seconds));
   i.setMustBeFresh(true);
-  m_nlsr.getNlsrFace()->expressInterest(i,
-                                        ndn::bind(&DataManager::processContent,
-                                                  &m_nlsr.getDataManager(),
-                                                  _1, _2, boost::ref(*this)),
-                                        ndn::bind(&InterestManager::processInterestTimedOut,
-                                                  this, _1));
+  m_nlsr.getNlsrFace().expressInterest(i,
+                                       ndn::bind(&DataManager::processContent,
+                                                 &m_nlsr.getDataManager(),
+                                                 _1, _2, boost::ref(*this)),
+                                       ndn::bind(&InterestManager::processInterestTimedOut,
+                                                 this, _1));
 }
 
 
 void
-InterestManager::sendScheduledInfoInterest(int seconds)
+InterestManager::sendScheduledInfoInterest(int32_t seconds)
 {
   std::list<Adjacent> adjList = m_nlsr.getAdjacencyList().getAdjList();
   for (std::list<Adjacent>::iterator it = adjList.begin(); it != adjList.end();
@@ -325,7 +323,7 @@ InterestManager::sendScheduledInfoInterest(int seconds)
 }
 
 void
-InterestManager::scheduleInfoInterest(int seconds)
+InterestManager::scheduleInfoInterest(int32_t seconds)
 {
   EventId eid = m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(seconds),
                                                     ndn::bind(&InterestManager::sendScheduledInfoInterest, this,

@@ -19,8 +19,8 @@ BOOST_AUTO_TEST_CASE(MapAddElementAndSize)
   std::string router1 = "r1";
   std::string router2 = "r2";
 
-  map1.addElement(router1);
-  map1.addElement(router2);
+  map1.addEntry(router1);
+  map1.addEntry(router2);
 
   BOOST_CHECK_EQUAL(map1.getMapSize(), 2);
 }

@@ -1,6 +1,7 @@
-#ifndef CONF_PROCESSOR_HPP
-#define CONF_PROCESSOR_HPP
+#ifndef CONF_FILE_PROCESSOR_HPP
+#define CONF_FILE_PROCESSOR_HPP
 
+#include <boost/cstdint.hpp>
 #include "nlsr.hpp"
 
 namespace nlsr {
@@ -8,7 +9,7 @@ namespace nlsr {
 class ConfFileProcessor
 {
 public:
-  ConfFileProcessor(Nlsr& nlsr, const string& cfile)
+  ConfFileProcessor(Nlsr& nlsr, const std::string& cfile)
     : m_confFileName(cfile)
     , m_nlsr(nlsr)
   {
@@ -18,70 +19,70 @@ public:
 
 private:
   int
-  processConfCommand(string command);
+  processConfCommand(std::string command);
 
   int
-  processConfCommandNetwork(string command);
+  processConfCommandNetwork(std::string command);
 
   int
-  processConfCommandSiteName(string command);
+  processConfCommandSiteName(std::string command);
 
   int
-  processConfCommandRootKeyPrefix(string command);
+  processConfCommandRootKeyPrefix(std::string command);
 
   int
-  processConfCommandRouterName(string command);
+  processConfCommandRouterName(std::string command);
 
   int
-  processConfCommandInterestRetryNumber(string command);
+  processConfCommandInterestRetryNumber(std::string command);
 
   int
-  processConfCommandInterestResendTime(string command);
+  processConfCommandInterestResendTime(std::string command);
 
   int
-  processConfCommandLsaRefreshTime(string command);
+  processConfCommandLsaRefreshTime(std::string command);
 
   int
-  processConfCommandMaxFacesPerPrefix(string command);
+  processConfCommandMaxFacesPerPrefix(std::string command);
 
   int
-  processConfCommandTunnelType(string command);
+  processConfCommandTunnelType(std::string command);
 
   int
-  processConfCommandChronosyncSyncPrefix(string command);
+  processConfCommandChronosyncSyncPrefix(std::string command);
 
   int
-  processConfCommandLogDir(string command);
+  processConfCommandLogDir(std::string command);
 
   int
-  processConfCommandCertDir(string command);
+  processConfCommandCertDir(std::string command);
 
   int
-  processConfCommandDebugging(string command);
+  processConfCommandDebugging(std::string command);
 
   int
-  processConfCommandDetailedLogging(string command);
+  processConfCommandDetailedLogging(std::string command);
 
   int
-  processConfCommandIsHyperbolicCalc(string command);
+  processConfCommandIsHyperbolicCalc(std::string command);
 
   int
-  processConfCommandHyperbolicCordinate(string command);
+  processConfCommandHyperbolicCordinate(std::string command);
 
   int
-  processConfCommandNdnNeighbor(string command);
+  processConfCommandNdnNeighbor(std::string command);
 
   int
-  processConfCommandNdnName(string command);
+  processConfCommandNdnName(std::string command);
 
   int
-  processConfCommandLinkCost(string command);
+  processConfCommandLinkCost(std::string command);
 
 
 private:
-  string m_confFileName;
+  std::string m_confFileName;
   Nlsr& m_nlsr;
 };
 
 } //namespace nlsr
-#endif //CONF_PROCESSOR_HPP
+#endif //CONF_FILE_PROCESSOR_HPP

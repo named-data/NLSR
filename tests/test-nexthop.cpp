@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(NexthopSetAndGet)
 
   np1.setRouteCost(10.5);
 
-  BOOST_CHECK_EQUAL(np1.getConnectingFace(), 1);
+  BOOST_CHECK_EQUAL(np1.getConnectingFace(), (uint32_t)1);
   BOOST_CHECK_CLOSE(np1.getRouteCost(), 10.5, 0.0001);
 }
 

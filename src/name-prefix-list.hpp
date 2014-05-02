@@ -1,8 +1,9 @@
-#ifndef NPL_HPP
-#define NPL_HPP
+#ifndef NLSR_NAME_PREFIX_LIST_HPP
+#define NLSR_NAME_PREFIX_LIST_HPP
 
 #include <list>
 #include <string>
+#include <boost/cstdint.hpp>
 
 
 namespace nlsr {
@@ -14,16 +15,16 @@ public:
 
   ~NamePrefixList();
 
-  int
-  insert(std::string& name);
+  int32_t
+  insert(const std::string& name);
 
-  int
-  remove(std::string& name);
+  int32_t
+  remove(const std::string& name);
 
   void
   sort();
 
-  int
+  int32_t
   getSize()
   {
     return m_nameList.size();
@@ -45,4 +46,4 @@ private:
 
 }//namespace nlsr
 
-#endif //NPL_HPP
+#endif //NLSR_NAME_PREFIX_LIST_HPP

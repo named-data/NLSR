@@ -1,6 +1,7 @@
 #ifndef NLSR_LSA_HPP
 #define NLSR_LSA_HPP
 
+#include <boost/cstdint.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include "adjacent.hpp"
 #include "name-prefix-list.hpp"
@@ -98,7 +99,7 @@ public:
   }
 
   NameLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
-          NamePrefixList npl);
+          NamePrefixList& npl);
 
   NamePrefixList&
   getNpl()
@@ -149,7 +150,7 @@ public:
   }
 
   AdjLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
-         uint32_t nl , AdjacencyList adl);
+         uint32_t nl , AdjacencyList& adl);
 
   AdjacencyList&
   getAdl()
@@ -179,7 +180,7 @@ public:
   }
 
   bool
-  isEqual(AdjLsa& alsa);
+  isEqualContent(AdjLsa& alsa);
 
   void
   addNptEntries(Nlsr& pnlsr);
@@ -250,7 +251,7 @@ public:
   }
 
   bool
-  isEqual(const CoordinateLsa& clsa);
+  isEqualContent(const CoordinateLsa& clsa);
 
 private:
   double m_corRad;

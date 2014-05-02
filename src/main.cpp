@@ -17,19 +17,19 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
-
+#include <boost/cstdint.hpp>
 #include "nlsr.hpp"
 #include "conf-file-processor.hpp"
 
 using namespace nlsr;
 
-int
-main(int argc, char** argv)
+int32_t
+main(int32_t argc, char** argv)
 {
   nlsr::Nlsr nlsr;
-  string programName(argv[0]);
+  std::string programName(argv[0]);
   nlsr.setConfFileName("nlsr.conf");
-  int opt;
+  int32_t opt;
   while ((opt = getopt(argc, argv, "df:p:h")) != -1)
   {
     switch (opt)
@@ -42,7 +42,7 @@ main(int argc, char** argv)
         break;
       case 'p':
       {
-        stringstream sst(optarg);
+        std::stringstream sst(optarg);
         int ap;
         sst >> ap;
         nlsr.setApiPort(ap);
@@ -55,7 +55,7 @@ main(int argc, char** argv)
     }
   }
   ConfFileProcessor cfp(nlsr, nlsr.getConfFileName());
-  int res = cfp.processConfFile();
+  int32_t res = cfp.processConfFile();
   if (res < 0)
   {
     std::cerr << "Error in configuration file processing! Exiting from NLSR" <<
@@ -63,13 +63,12 @@ main(int argc, char** argv)
     return EXIT_FAILURE;
   }
   nlsr.initialize();
-  try
-  {
+  try {
     nlsr.startEventLoop();
   }
-  catch (std::exception& e)
-  {
+  catch (std::exception& e){
     std::cerr << "ERROR: " << e.what() << std::endl;
+    nlsr.getFib().clean(nlsr);
   }
   return EXIT_SUCCESS;
 }

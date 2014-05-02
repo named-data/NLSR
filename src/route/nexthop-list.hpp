@@ -1,9 +1,11 @@
-#ifndef NLSR_NHL_HPP
-#define NLSR_NHL_HPP
+#ifndef NLSR_NEXTHOP_LIST_HPP
+#define NLSR_NEXTHOP_LIST_HPP
 
-#include <ndn-cxx/face.hpp>
 #include <list>
 #include <iostream>
+#include <boost/cstdint.hpp>
+
+#include <ndn-cxx/face.hpp>
 
 #include "nexthop.hpp"
 #include "adjacent.hpp"
@@ -14,13 +16,13 @@ class NexthopList
 {
 public:
   NexthopList()
-    : m_nexthopList()
   {
   }
 
   ~NexthopList()
   {
   }
+
   void
   addNextHop(NextHop& nh);
 
@@ -30,7 +32,7 @@ public:
   void
   sort();
 
-  int
+  size_t
   getSize()
   {
     return m_nexthopList.size();
@@ -39,14 +41,11 @@ public:
   void
   reset()
   {
-    if (m_nexthopList.size() > 0)
-    {
-      m_nexthopList.clear();
-    }
+    m_nexthopList.clear();
   }
 
   std::list<NextHop>&
-  getNextHopList()
+  getNextHops()
   {
     return m_nexthopList;
   }
@@ -60,4 +59,4 @@ operator<<(std::ostream& os, NexthopList& nhl);
 
 }//namespace nlsr
 
-#endif //NLSR_NLH_HPP
+#endif //NLSR_NEXTHOP_LIST_HPP

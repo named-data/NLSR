@@ -21,7 +21,7 @@ BOOST_AUTO_TEST_CASE(AdjacenctBasic)
 
   Adjacent adjacent1(ADJ_NAME_1);
   Adjacent adjacent2(ADJ_NAME_2);
-  BOOST_CHECK(adjacent1.isEqual(adjacent2));
+  BOOST_CHECK(adjacent1 == adjacent2);
 
   adjacent1.setLinkCost(10.5);
   BOOST_CHECK_CLOSE(adjacent1.getLinkCost(), 10.5, 0.0001);

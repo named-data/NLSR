@@ -21,9 +21,9 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 
   NamePrefixList npl1;
 
-  string s1 = "name1";
-  string s2 = "name2";
-  string router1 = "router1/1";
+  std::string s1 = "name1";
+  std::string s2 = "name2";
+  std::string router1 = "router1/1";
 
   npl1.insert(s1);
   npl1.insert(s2);

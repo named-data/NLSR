@@ -1,6 +1,9 @@
 #ifndef NLSR_HPP
 #define NLSR_HPP
 
+#include <boost/cstdint.hpp>
+#include <stdexcept>
+
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
@@ -21,20 +24,21 @@
 
 namespace nlsr {
 
-inline static void
-NullDeleter(boost::asio::io_service* variable)
-{
-  // do nothing
-}
-
 class Nlsr
 {
+  class Error : public std::runtime_error
+  {
+  public:
+    explicit
+    Error(const std::string& what)
+      : std::runtime_error(what)
+    {
+    }
+  };
+
 public:
   Nlsr()
-    : m_io(new boost::asio::io_service)
-    , m_nlsrFace(new Face(ndn::shared_ptr<boost::asio::io_service>(&*m_io,
-                                                                   &NullDeleter)))
-    , m_scheduler(*m_io)
+    : m_scheduler(m_nlsrFace.getIoService())
     , m_confParam()
     , m_adjacencyList()
     , m_namePrefixList()
@@ -51,30 +55,30 @@ public:
     , m_isRoutingTableCalculating(false)
     , m_routingTable()
     , m_namePrefixTable()
-    , m_fib()
-    , m_syncLogicHandler(m_io)
+    , m_fib(m_nlsrFace)
+    , m_syncLogicHandler(m_nlsrFace.getIoService())
   {}
 
   void
   registrationFailed(const ndn::Name& name);
 
   void
-  setInterestFilterNlsr(const string& name);
+  setInterestFilter(const std::string& name);
 
   void
   startEventLoop();
 
-  int
-  usage(const string& progname);
+  void
+  usage(const std::string& progname);
 
   std::string
-  getConfFileName()
+  getConfFileName() const
   {
     return m_configFileName;
   }
 
   void
-  setConfFileName(const string& fileName)
+  setConfFileName(const std::string& fileName)
   {
     m_configFileName = fileName;
   }
@@ -109,19 +113,13 @@ public:
     return m_namePrefixList;
   }
 
-  ndn::shared_ptr<boost::asio::io_service>&
-  getIo()
-  {
-    return m_io;
-  }
-
   ndn::Scheduler&
   getScheduler()
   {
     return m_scheduler;
   }
 
-  ndn::shared_ptr<ndn::Face>
+  ndn::Face&
   getNlsrFace()
   {
     return m_nlsrFace;
@@ -189,7 +187,7 @@ public:
   }
 
   void
-  setAdjBuildCount(long int abc)
+  setAdjBuildCount(int64_t abc)
   {
     m_adjBuildCount = abc;
   }
@@ -208,12 +206,12 @@ public:
 
 
   void
-  setApiPort(int ap)
+  setApiPort(int32_t ap)
   {
     m_apiPort = ap;
   }
 
-  int
+  int32_t
   getApiPort()
   {
     return m_apiPort;
@@ -253,8 +251,7 @@ public:
   initialize();
 
 private:
-  ndn::shared_ptr<boost::asio::io_service> m_io;
-  ndn::shared_ptr<ndn::Face> m_nlsrFace;
+  ndn::Face m_nlsrFace;
   ndn::Scheduler m_scheduler;
   ConfParameter m_confParam;
   AdjacencyList m_adjacencyList;
@@ -264,25 +261,17 @@ private:
   SequencingManager m_sequencingManager;
   // KeyManager m_km;
   bool m_isDaemonProcess;
-  string m_configFileName;
-
-
+  std::string m_configFileName;
   Lsdb m_nlsrLsdb;
-
-
-  long int m_adjBuildCount;
+  int64_t m_adjBuildCount;
   bool m_isBuildAdjLsaSheduled;
   bool m_isRouteCalculationScheduled;
   bool m_isRoutingTableCalculating;
-
   RoutingTable m_routingTable;
   NamePrefixTable m_namePrefixTable;
   Fib m_fib;
   SyncLogicHandler m_syncLogicHandler;
-
-  int m_apiPort;
-
-
+  int32_t m_apiPort;
 };
 
 } //namespace nlsr

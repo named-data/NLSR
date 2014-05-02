@@ -1,8 +1,9 @@
-#ifndef NLSR_RTC_HPP
-#define NLSR_RTC_HPP
+#ifndef NLSR_ROUTING_TABLE_CALCULATOR_HPP
+#define NLSR_ROUTING_TABLE_CALCULATOR_HPP
 
 #include <list>
 #include <iostream>
+#include <boost/cstdint.hpp>
 
 namespace nlsr {
 
@@ -198,4 +199,4 @@ private:
 
 }//namespace nlsr
 
-#endif //NLSR_RTC_HPP
+#endif //NLSR_ROUTING_TABLE_CALCULATOR_HPP

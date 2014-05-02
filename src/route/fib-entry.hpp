@@ -1,16 +1,16 @@
-#ifndef NLSR_FE_HPP
-#define NLSR_FE_HPP
+#ifndef NLSR_FIB_ENTRY_HPP
+#define NLSR_FIB_ENTRY_HPP
 
 #include <list>
 #include <iostream>
+#include <boost/cstdint.hpp>
+
 #include <ndn-cxx/util/scheduler.hpp>
 
 #include "nexthop.hpp"
 #include "nexthop-list.hpp"
 
 namespace nlsr {
-
-using namespace std;
 
 class FibEntry
 {
@@ -19,38 +19,38 @@ public:
     : m_name()
     , m_timeToRefresh(0)
     , m_seqNo(0)
-    , m_nhl()
+    , m_nexthopList()
   {
   }
 
-  FibEntry(string n)
+  FibEntry(const std::string& name)
     : m_timeToRefresh(0)
     , m_seqNo(0)
-    , m_nhl()
+    , m_nexthopList()
   {
-    m_name = n;
+    m_name = name;
   }
 
-  std::string
+  const std::string&
   getName() const
   {
     return m_name;
   }
 
   NexthopList&
-  getNhl()
+  getNexthopList()
   {
-    return m_nhl;
+    return m_nexthopList;
   }
 
-  int
+  int32_t
   getTimeToRefresh() const
   {
     return m_timeToRefresh;
   }
 
   void
-  setTimeToRefresh(int ttr)
+  setTimeToRefresh(int32_t ttr)
   {
     m_timeToRefresh = ttr;
   }
@@ -68,12 +68,12 @@ public:
   }
 
   void
-  setSeqNo(int fsn)
+  setSeqNo(int32_t fsn)
   {
     m_seqNo = fsn;
   }
 
-  int
+  int32_t
   getSeqNo()
   {
     return m_seqNo;
@@ -84,10 +84,10 @@ public:
 
 private:
   std::string m_name;
-  int m_timeToRefresh;
+  int32_t m_timeToRefresh;
   ndn::EventId m_expiringEventId;
-  int m_seqNo;
-  NexthopList m_nhl;
+  int32_t m_seqNo;
+  NexthopList m_nexthopList;
 };
 
 std::ostream&
@@ -95,4 +95,4 @@ operator<<(std::ostream& os, FibEntry fe);
 
 } //namespace nlsr
 
-#endif //NLSR_FE_HPP
+#endif //NLSR_FIB_ENTRY_HPP

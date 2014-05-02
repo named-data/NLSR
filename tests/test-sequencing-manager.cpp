@@ -18,11 +18,11 @@ BOOST_AUTO_TEST_CASE(SequencingManagerBasic)
 
   SequencingManager sm2(sm1.getCombinedSeqNo());
 
-  BOOST_CHECK_EQUAL(sm2.getNameLsaSeq(), 120);
+  BOOST_CHECK_EQUAL(sm2.getNameLsaSeq(), (uint32_t)120);
 
-  BOOST_CHECK_EQUAL(sm2.getAdjLsaSeq(), 121);
+  BOOST_CHECK_EQUAL(sm2.getAdjLsaSeq(), (uint32_t)121);
 
-  BOOST_CHECK_EQUAL(sm2.getCorLsaSeq(), 122);
+  BOOST_CHECK_EQUAL(sm2.getCorLsaSeq(), (uint32_t)122);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

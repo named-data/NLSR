@@ -3,51 +3,15 @@
 
 #include <iostream>
 #include <list>
+#include <boost/cstdint.hpp>
 
-#include <ndn-cxx/face.hpp>
+#include <ndn-cxx/common.hpp>
+
+#include "map-entry.hpp"
 
 namespace nlsr {
 
 class Nlsr;
-
-class MapEntry
-{
-public:
-  MapEntry()
-    : m_router()
-    , m_mappingNumber(-1)
-  {
-  }
-
-  ~MapEntry()
-  {
-  }
-
-  MapEntry(std::string rtr, int mn)
-  {
-    m_router = rtr;
-    m_mappingNumber = mn;
-  }
-
-  std::string
-  getRouter() const
-  {
-    return m_router;
-  }
-
-  int
-  getMappingNumber() const
-  {
-    return m_mappingNumber;
-  }
-
-private:
-  std::string m_router;
-  int m_mappingNumber;
-};
-
-std::ostream&
-operator<<(std::ostream& os, MapEntry& mpe);
 
 class Map
 {
@@ -59,15 +23,15 @@ public:
 
 
   void
-  addElement(std::string& rtrName);
+  addEntry(const std::string& rtrName);
 
   void
   createFromAdjLsdb(Nlsr& pnlsr);
 
   std::string
-  getRouterNameByMappingNo(int mn);
+  getRouterNameByMappingNo(int32_t mn);
 
-  int
+  int32_t
   getMappingNoByRouterName(std::string& rName);
 
   void
@@ -88,9 +52,9 @@ public:
 
 private:
   bool
-  addElement(MapEntry& mpe);
+  addEntry(MapEntry& mpe);
 
-  int m_mappingIndex;
+  int32_t m_mappingIndex;
   std::list<MapEntry> m_table;
 };
 

@@ -29,12 +29,12 @@ BOOST_AUTO_TEST_CASE(ConfFileProcessorSample)
     "ndnname /ndn/memphis.edu/cs/macbook/name2\n\n\n"
     ;
 
-  ofstream config;
+  std::ofstream config;
   config.open("unit-test-nlsr.conf");
   config << CONFIG;
   config.close();
 
-  const string CONFIG_FILE = "unit-test-nlsr.conf";
+  const std::string CONFIG_FILE = "unit-test-nlsr.conf";
 
   ConfFileProcessor cfp1(nlsr1, CONFIG_FILE);
 

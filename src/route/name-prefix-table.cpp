@@ -13,7 +13,7 @@ namespace nlsr {
 using namespace std;
 
 static bool
-npteCompare(NamePrefixTableEntry& npte, string& name)
+npteCompare(NamePrefixTableEntry& npte, const string& name)
 {
   return npte.getNamePrefix() == name;
 }
@@ -21,46 +21,46 @@ npteCompare(NamePrefixTableEntry& npte, string& name)
 
 
 void
-NamePrefixTable::addNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr)
+NamePrefixTable::addEntry(const string& name, RoutingTableEntry& rte, Nlsr& pnlsr)
 {
-  std::list<NamePrefixTableEntry>::iterator it = std::find_if(m_npteList.begin(),
-                                                              m_npteList.end(), bind(&npteCompare, _1, name));
-  if (it == m_npteList.end())
+  std::list<NamePrefixTableEntry>::iterator it = std::find_if(m_table.begin(),
+                                                              m_table.end(), bind(&npteCompare, _1, name));
+  if (it == m_table.end())
   {
     NamePrefixTableEntry newEntry(name);
     newEntry.addRoutingTableEntry(rte);
     newEntry.generateNhlfromRteList();
-    newEntry.getNhl().sort();
-    m_npteList.push_back(newEntry);
-    if (rte.getNhl().getSize() > 0)
+    newEntry.getNexthopList().sort();
+    m_table.push_back(newEntry);
+    if (rte.getNexthopList().getSize() > 0)
     {
-      pnlsr.getFib().update(pnlsr, name, newEntry.getNhl());
+      pnlsr.getFib().update(pnlsr, name, newEntry.getNexthopList());
     }
   }
   else
   {
-    if (rte.getNhl().getSize() > 0)
+    if (rte.getNexthopList().getSize() > 0)
     {
       (*it).addRoutingTableEntry(rte);
       (*it).generateNhlfromRteList();
-      (*it).getNhl().sort();
-      pnlsr.getFib().update(pnlsr, name, (*it).getNhl());
+      (*it).getNexthopList().sort();
+      pnlsr.getFib().update(pnlsr, name, (*it).getNexthopList());
     }
     else
     {
       (*it).resetRteListNextHop();
-      (*it).getNhl().reset();
+      (*it).getNexthopList().reset();
       pnlsr.getFib().remove(pnlsr, name);
     }
   }
 }
 
 void
-NamePrefixTable::removeNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr)
+NamePrefixTable::removeEntry(const string& name, RoutingTableEntry& rte, Nlsr& pnlsr)
 {
-  std::list<NamePrefixTableEntry>::iterator it = std::find_if(m_npteList.begin(),
-                                                              m_npteList.end(), bind(&npteCompare, _1, name));
-  if (it != m_npteList.end())
+  std::list<NamePrefixTableEntry>::iterator it = std::find_if(m_table.begin(),
+                                                              m_table.end(), bind(&npteCompare, _1, name));
+  if (it != m_table.end())
   {
     string destRouter = rte.getDestination();
     (*it).removeRoutingTableEntry(rte);
@@ -69,56 +69,55 @@ NamePrefixTable::removeNpte(string name, RoutingTableEntry& rte, Nlsr& pnlsr)
         (!pnlsr.getLsdb().doesLsaExist(destRouter + "/2", 2)) &&
         (!pnlsr.getLsdb().doesLsaExist(destRouter + "/3", 3)))
     {
-      m_npteList.erase(it);
+      m_table.erase(it);
       pnlsr.getFib().remove(pnlsr, name);
     }
     else
     {
       (*it).generateNhlfromRteList();
-      pnlsr.getFib().update(pnlsr, name, (*it).getNhl());
+      pnlsr.getFib().update(pnlsr, name, (*it).getNexthopList());
     }
   }
 }
 
 
 void
-NamePrefixTable::addNpteByDestName(string name, string destRouter, Nlsr& pnlsr)
+NamePrefixTable::addEntry(const string& name, const string& destRouter, Nlsr& pnlsr)
 {
   RoutingTableEntry* rteCheck =
     pnlsr.getRoutingTable().findRoutingTableEntry(destRouter);
   if (rteCheck != 0)
   {
-    addNpte(name, *(rteCheck) , pnlsr);
+    addEntry(name, *(rteCheck) , pnlsr);
   }
   else
   {
     RoutingTableEntry rte(destRouter);
-    addNpte(name, rte, pnlsr);
+    addEntry(name, rte, pnlsr);
   }
 }
 
 void
-NamePrefixTable::removeNpte(string name, string destRouter, Nlsr& pnlsr)
+NamePrefixTable::removeEntry(const string& name, const string& destRouter, Nlsr& pnlsr)
 {
   RoutingTableEntry* rteCheck =
     pnlsr.getRoutingTable().findRoutingTableEntry(destRouter);
   if (rteCheck != 0)
   {
-    removeNpte(name, *(rteCheck), pnlsr);
+    removeEntry(name, *(rteCheck), pnlsr);
   }
   else
   {
     RoutingTableEntry rte(destRouter);
-    removeNpte(name, rte, pnlsr);
+    removeEntry(name, rte, pnlsr);
   }
 }
 
 void
 NamePrefixTable::updateWithNewRoute(Nlsr& pnlsr)
 {
-  for (std::list<NamePrefixTableEntry>::iterator it = m_npteList.begin();
-       it != m_npteList.end();
-       ++it)
+  for (std::list<NamePrefixTableEntry>::iterator it = m_table.begin();
+       it != m_table.end(); ++it)
   {
     std::list<RoutingTableEntry> rteList = (*it).getRteList();
     for (std::list<RoutingTableEntry>::iterator rteit = rteList.begin();
@@ -128,12 +127,12 @@ NamePrefixTable::updateWithNewRoute(Nlsr& pnlsr)
         pnlsr.getRoutingTable().findRoutingTableEntry((*rteit).getDestination());
       if (rteCheck != 0)
       {
-        addNpte((*it).getNamePrefix(), *(rteCheck), pnlsr);
+        addEntry((*it).getNamePrefix(), *(rteCheck), pnlsr);
       }
       else
       {
         RoutingTableEntry rte((*rteit).getDestination());
-        addNpte((*it).getNamePrefix(), rte, pnlsr);
+        addEntry((*it).getNamePrefix(), rte, pnlsr);
       }
     }
   }
@@ -143,8 +142,8 @@ void
 NamePrefixTable::print()
 {
   std::cout << "----------------NPT----------------------" << std::endl;
-  for (std::list<NamePrefixTableEntry>::iterator it = m_npteList.begin();
-       it != m_npteList.end();
+  for (std::list<NamePrefixTableEntry>::iterator it = m_table.begin();
+       it != m_table.end();
        ++it)
   {
     cout << (*it) << endl;

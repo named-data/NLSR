@@ -20,10 +20,10 @@ BOOST_AUTO_TEST_CASE(NhlAddNextHop)
   NexthopList nhl1;
 
   nhl1.addNextHop(np1);
-  BOOST_CHECK_EQUAL(nhl1.getSize(), 1);
+  BOOST_CHECK_EQUAL(nhl1.getSize(), (uint32_t)1);
 
   nhl1.removeNextHop(np1);
-  BOOST_CHECK_EQUAL(nhl1.getSize(), 0);
+  BOOST_CHECK_EQUAL(nhl1.getSize(), (uint32_t)0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

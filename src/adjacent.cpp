@@ -3,13 +3,14 @@
 #include <cmath>
 #include <limits>
 
+
 #include "adjacent.hpp"
 
 namespace nlsr {
 
 using namespace std;
 
-Adjacent::Adjacent(const string& an, int cf, double lc, int s, int iton)
+Adjacent::Adjacent(const string& an, uint32_t cf, double lc, uint32_t s, uint32_t iton)
 {
   m_name = an;
   m_connectingFace = cf;
@@ -19,18 +20,24 @@ Adjacent::Adjacent(const string& an, int cf, double lc, int s, int iton)
 }
 
 bool
-Adjacent::isEqual(Adjacent& adj)
+Adjacent::operator==(const Adjacent& adjacent) const
 {
-  return (m_name == adj.getName()) &&
-         (m_connectingFace == adj.getConnectingFace()) &&
-         (std::abs(m_linkCost - adj.getLinkCost()) <
+  return (m_name == adjacent.getName()) &&
+         (m_connectingFace == adjacent.getConnectingFace()) &&
+         (std::abs(m_linkCost - adjacent.getLinkCost()) <
           std::numeric_limits<double>::epsilon()) ;
 }
 
-std::ostream&
-operator<<(std::ostream& os, Adjacent& adj)
+bool
+Adjacent::compareName(const Adjacent& adjacent)
 {
-  os << "Adjacent : " << adj.getName()	<< endl;
+  return m_name == adjacent.getName();
+}
+
+std::ostream&
+operator<<(std::ostream& os, const Adjacent& adj)
+{
+  os << "Adjacent : " << adj.getName() << endl;
   os << "Connecting Face: " << adj.getConnectingFace() << endl;
   os << "Link Cost: " << adj.getLinkCost() << endl;
   os << "Status: " << adj.getStatus() << endl;

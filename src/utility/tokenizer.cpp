@@ -42,8 +42,8 @@ Tokenizer::insertToken(const string& token)
 uint32_t
 Tokenizer::getTokenPosition(string& token)
 {
-  int pos = -1;
-  int i = 0;
+  uint32_t pos = -1;
+  uint32_t i = 0;
   for (std::list<string>::iterator it = m_tokenList.begin();
        it != m_tokenList.end(); it++)
   {
@@ -67,7 +67,7 @@ Tokenizer::getTokenString(uint32_t from , uint32_t to)
   if ((to < m_tokenList.size()) &&
       (to >= from && to < m_tokenList.size()))
   {
-    for (int i = from; i <= to; i++)
+    for (uint32_t i = from; i <= to; i++)
     {
       returnString += m_seps;
       returnString += m_vTokenList[i];

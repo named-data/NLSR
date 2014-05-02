@@ -6,6 +6,9 @@
 
 namespace nlsr {
 
+using namespace ndn;
+using namespace std;
+
 void
 SyncLogicHandler::createSyncSocket(Nlsr& pnlsr)
 {
@@ -24,8 +27,8 @@ SyncLogicHandler::nsyncUpdateCallBack(const vector<Sync::MissingDataInfo>& v,
                                       Sync::SyncSocket* socket, Nlsr& pnlsr)
 {
   std::cout << "nsyncUpdateCallBack called ...." << std::endl;
-  int n = v.size();
-  for (int i = 0; i < n; i++)
+  int32_t n = v.size();
+  for (int32_t i = 0; i < n; i++)
   {
     std::cout << "Data Name: " << v[i].prefix << " Seq: " << v[i].high.getSeq() <<
               endl;
@@ -40,12 +43,12 @@ SyncLogicHandler::nsyncRemoveCallBack(const string& prefix, Nlsr& pnlsr)
 }
 
 void
-SyncLogicHandler::removeRouterFromSyncing(string& routerPrefix)
+SyncLogicHandler::removeRouterFromSyncing(const string& routerPrefix)
 {
 }
 
 void
-SyncLogicHandler::processUpdateFromSync(std::string updateName,
+SyncLogicHandler::processUpdateFromSync(const std::string& updateName,
                                         uint64_t seqNo,  Nlsr& pnlsr)
 {
   Tokenizer nt(updateName, "/");
@@ -66,7 +69,7 @@ SyncLogicHandler::processUpdateFromSync(std::string updateName,
 }
 
 void
-SyncLogicHandler::processRoutingUpdateFromSync(std::string routerName,
+SyncLogicHandler::processRoutingUpdateFromSync(const std::string& routerName,
                                                uint64_t seqNo,  Nlsr& pnlsr)
 {
   if (routerName != pnlsr.getConfParameter().getRouterPrefix())
@@ -123,7 +126,7 @@ SyncLogicHandler::processRoutingUpdateFromSync(std::string routerName,
 
 void
 SyncLogicHandler::publishRoutingUpdate(SequencingManager& sm,
-                                       string updatePrefix)
+                                       const string& updatePrefix)
 {
   sm.writeSeqNoToFile();
   publishSyncUpdate(updatePrefix, sm.getCombinedSeqNo());
@@ -136,13 +139,13 @@ SyncLogicHandler::publishRoutingUpdate(SequencingManager& sm,
 // }
 
 void
-SyncLogicHandler::publishIdentityUpdate(string identityName)
+SyncLogicHandler::publishIdentityUpdate(const string& identityName)
 {
   publishSyncUpdate(identityName, 0);
 }
 
 void
-SyncLogicHandler::publishSyncUpdate(string updatePrefix, uint64_t seqNo)
+SyncLogicHandler::publishSyncUpdate(const string& updatePrefix, uint64_t seqNo)
 {
   std::cout << "Publishing Sync Update ......" << std::endl;
   std::cout << "Update in prefix: " << updatePrefix << std::endl;

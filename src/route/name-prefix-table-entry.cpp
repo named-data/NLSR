@@ -11,15 +11,15 @@ using namespace std;
 void
 NamePrefixTableEntry::generateNhlfromRteList()
 {
-  m_nhl.reset();
+  m_nexthopList.reset();
   for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
        it != m_rteList.end(); ++it)
   {
     for (std::list<NextHop>::iterator nhit =
-           (*it).getNhl().getNextHopList().begin();
-         nhit != (*it).getNhl().getNextHopList().end(); ++nhit)
+           (*it).getNexthopList().getNextHops().begin();
+         nhit != (*it).getNexthopList().getNextHops().end(); ++nhit)
     {
-      m_nhl.addNextHop((*nhit));
+      m_nexthopList.addNextHop((*nhit));
     }
   }
 }
@@ -56,11 +56,11 @@ NamePrefixTableEntry::addRoutingTableEntry(RoutingTableEntry& rte)
   }
   else
   {
-    (*it).getNhl().reset(); // reseting existing routing table's next hop
-    for (std::list<NextHop>::iterator nhit = rte.getNhl().getNextHopList().begin();
-         nhit != rte.getNhl().getNextHopList().end(); ++nhit)
+    (*it).getNexthopList().reset(); // reseting existing routing table's next hop
+    for (std::list<NextHop>::iterator nhit = rte.getNexthopList().getNextHops().begin();
+         nhit != rte.getNexthopList().getNextHops().end(); ++nhit)
     {
-      (*it).getNhl().addNextHop((*nhit));
+      (*it).getNexthopList().addNextHop((*nhit));
     }
   }
 }
@@ -76,7 +76,7 @@ operator<<(ostream& os, NamePrefixTableEntry& npte)
   {
     cout << (*it);
   }
-  os << npte.getNhl();
+  os << npte.getNexthopList();
   return os;
 }
 

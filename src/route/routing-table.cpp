@@ -144,12 +144,12 @@ RoutingTable::addNextHop(string destRouter, NextHop& nh)
   if (rteChk == 0)
   {
     RoutingTableEntry rte(destRouter);
-    rte.getNhl().addNextHop(nh);
+    rte.getNexthopList().addNextHop(nh);
     m_rTable.push_back(rte);
   }
   else
   {
-    rteChk->getNhl().addNextHop(nh);
+    rteChk->getNexthopList().addNextHop(nh);
   }
 }
 
@@ -188,12 +188,12 @@ RoutingTable::addNextHopToDryTable(string destRouter, NextHop& nh)
   if (it == m_dryTable.end())
   {
     RoutingTableEntry rte(destRouter);
-    rte.getNhl().addNextHop(nh);
+    rte.getNexthopList().addNextHop(nh);
     m_dryTable.push_back(rte);
   }
   else
   {
-    (*it).getNhl().addNextHop(nh);
+    (*it).getNexthopList().addNextHop(nh);
   }
 }
 

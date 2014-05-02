@@ -26,7 +26,7 @@ NameLsa::getKey() const
 }
 
 NameLsa::NameLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
-                 NamePrefixList npl)
+                 NamePrefixList& npl)
 {
   m_origRouter = origR;
   m_lsType = lst;
@@ -132,7 +132,7 @@ CoordinateLsa::getKey() const
 }
 
 bool
-CoordinateLsa::isEqual(const CoordinateLsa& clsa)
+CoordinateLsa::isEqualContent(const CoordinateLsa& clsa)
 {
   return (std::abs(m_corRad - clsa.getCorRadius()) <
           std::numeric_limits<double>::epsilon()) &&
@@ -192,7 +192,7 @@ operator<<(std::ostream& os, const CoordinateLsa& cLsa)
 
 
 AdjLsa::AdjLsa(string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
-               uint32_t nl , AdjacencyList adl)
+               uint32_t nl , AdjacencyList& adl)
 {
   m_origRouter = origR;
   m_lsType = lst;
@@ -218,9 +218,9 @@ AdjLsa::getKey()
 }
 
 bool
-AdjLsa::isEqual(AdjLsa& alsa)
+AdjLsa::isEqualContent(AdjLsa& alsa)
 {
-  return m_adl.isEqual(alsa.getAdl());
+  return m_adl == alsa.getAdl();
 }
 
 
@@ -291,7 +291,7 @@ AdjLsa::addNptEntries(Nlsr& pnlsr)
 {
   if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
   {
-    pnlsr.getNamePrefixTable().addNpteByDestName(getOrigRouter(), getOrigRouter(),
+    pnlsr.getNamePrefixTable().addEntry(getOrigRouter(), getOrigRouter(),
                                                  pnlsr);
   }
 }
@@ -302,7 +302,7 @@ AdjLsa::removeNptEntries(Nlsr& pnlsr)
 {
   if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
   {
-    pnlsr.getNamePrefixTable().removeNpte(getOrigRouter(), getOrigRouter(), pnlsr);
+    pnlsr.getNamePrefixTable().removeEntry(getOrigRouter(), getOrigRouter(), pnlsr);
   }
 }
 

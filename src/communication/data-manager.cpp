@@ -61,8 +61,7 @@ DataManager::processContentInfo(const string& dataName,
   string chkString("info");
   string neighbor = nt.getTokenString(0, nt.getTokenPosition(chkString) - 1);
   int oldStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
-  int infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(
-                               neighbor);
+  int infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(neighbor);
   //debugging purpose start
   std::cout << "Before Updates: " << std::endl;
   std::cout << "Neighbor : " << neighbor << std::endl;
@@ -72,8 +71,7 @@ DataManager::processContentInfo(const string& dataName,
   m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, 1);
   m_nlsr.getAdjacencyList().setTimedOutInterestCount(neighbor, 0);
   int newStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
-  infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(
-                           neighbor);
+  infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(neighbor);
   //debugging purpose
   std::cout << "After Updates: " << std::endl;
   std::cout << "Neighbor : " << neighbor << std::endl;

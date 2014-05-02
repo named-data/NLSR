@@ -1,7 +1,9 @@
-#ifndef NLSR_NPT_HPP
-#define NLSR_NPT_HPP
+#ifndef NLSR_NAME_PREFIX_TABLE_HPP
+#define NLSR_NAME_PREFIX_TABLE_HPP
 
 #include <list>
+#include <boost/cstdint.hpp>
+
 #include "name-prefix-table-entry.hpp"
 #include "routing-table-entry.hpp"
 
@@ -14,11 +16,12 @@ public:
   NamePrefixTable()
   {
   }
-  void
-  addNpteByDestName(std::string name, std::string destRouter, Nlsr& pnlsr);
 
   void
-  removeNpte(std::string name, std::string destRouter, Nlsr& pnlsr);
+  addEntry(const std::string& name, const std::string& destRouter, Nlsr& pnlsr);
+
+  void
+  removeEntry(const std::string& name, const std::string& destRouter, Nlsr& pnlsr);
 
   void
   updateWithNewRoute(Nlsr& pnlsr);
@@ -28,15 +31,15 @@ public:
 
 private:
   void
-  addNpte(std::string name, RoutingTableEntry& rte, Nlsr& pnlsr);
+  addEntry(const std::string& name, RoutingTableEntry& rte, Nlsr& pnlsr);
 
   void
-  removeNpte(std::string name, RoutingTableEntry& rte, Nlsr& pnlsr);
+  removeEntry(const std::string& name, RoutingTableEntry& rte, Nlsr& pnlsr);
 
 private:
-  std::list<NamePrefixTableEntry> m_npteList;
+  std::list<NamePrefixTableEntry> m_table;
 };
 
 }//namespace nlsr
 
-#endif //NLSR_NPT_HPP
+#endif //NLSR_NAME_PREFIX_TABLE_HPP

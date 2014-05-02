@@ -1,5 +1,7 @@
-#ifndef NLSR_IM_HPP
-#define NLSR_IM_HPP
+#ifndef NLSR_INTEREST_MANAGER_HPP
+#define NLSR_INTEREST_MANAGER_HPP
+
+#include <boost/cstdint.hpp>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
@@ -51,13 +53,13 @@ public:
   processInterestTimedOutLsa(const ndn::Interest& interest);
 
   void
-  expressInterest(const std::string& interestNamePrefix, int scope, int seconds);
+  expressInterest(const std::string& interestNamePrefix, int32_t scope, int32_t seconds);
 
   void
-  sendScheduledInfoInterest(int seconds);
+  sendScheduledInfoInterest(int32_t seconds);
 
   void
-  scheduleInfoInterest(int seconds);
+  scheduleInfoInterest(int32_t seconds);
 
 private:
   Nlsr& m_nlsr;
@@ -67,4 +69,4 @@ private:
 
 }//namespace nlsr
 
-#endif //NLSR_IM_HPP
+#endif //NLSR_INTEREST_MANAGER_HPP
