@@ -2,8 +2,9 @@
 #define NLSR_MAP_ENTRY_HPP
 
 #include <boost/cstdint.hpp>
+#include <ndn-cxx/name.hpp>
 
-namespace nlsr{
+namespace nlsr {
 
 class MapEntry
 {
@@ -18,13 +19,13 @@ public:
   {
   }
 
-  MapEntry(const std::string& rtr, int32_t mn)
+  MapEntry(const ndn::Name& rtr, int32_t mn)
   {
     m_router = rtr;
     m_mappingNumber = mn;
   }
 
-  const std::string&
+  const ndn::Name&
   getRouter() const
   {
     return m_router;
@@ -37,7 +38,7 @@ public:
   }
 
 private:
-  std::string m_router;
+  ndn::Name m_router;
   int32_t m_mappingNumber;
 };
 

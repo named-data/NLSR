@@ -3,6 +3,8 @@
 
 #include <iostream>
 #include <boost/cstdint.hpp>
+#include <ndn-cxx/common.hpp>
+#include <ndn-cxx/face.hpp>
 
 namespace nlsr {
 class ConfParameter
@@ -32,10 +34,10 @@ public:
   void
   setRouterName(const std::string& rn)
   {
-    m_routerName = rn;
+    m_routerName = ndn::Name(rn);
   }
 
-  const std::string&
+  const ndn::Name&
   getRouterName()
   {
     return m_routerName;
@@ -44,10 +46,10 @@ public:
   void
   setSiteName(const std::string& sn)
   {
-    m_siteName = sn;
+    m_siteName = ndn::Name(sn);
   }
 
-  const std::string&
+  const ndn::Name&
   getSiteName()
   {
     return m_siteName;
@@ -56,10 +58,10 @@ public:
   void
   setNetwork(const std::string& nn)
   {
-    m_network = nn;
+    m_network = ndn::Name(nn);
   }
 
-  const std::string&
+  const ndn::Name&
   getNetwork()
   {
     return m_network;
@@ -68,16 +70,19 @@ public:
   void
   buildRouterPrefix()
   {
-    m_routerPrefix = "/" + m_network + "/" + m_siteName + "/" + m_routerName;
+    //m_routerPrefix = "/" + m_network + "/" + m_siteName + "/" + m_routerName;
+    m_routerPrefix = m_network;
+    m_routerPrefix.append(m_siteName);
+    m_routerPrefix.append(m_routerName);
   }
 
-  const std::string&
+  const ndn::Name&
   getRouterPrefix()
   {
     return m_routerPrefix;
   }
 
-  const std::string&
+  const ndn::Name&
   getRootKeyPrefix()
   {
     return m_rootKeyPrefix;
@@ -86,7 +91,7 @@ public:
   void
   setRootKeyPrefix(std::string rkp)
   {
-    m_rootKeyPrefix = rkp;
+    m_rootKeyPrefix = ndn::Name(rkp);
   }
 
   void
@@ -261,10 +266,10 @@ public:
   void
   setChronosyncSyncPrefix(const std::string& csp)
   {
-    m_chronosyncSyncPrefix = csp;
+    m_chronosyncSyncPrefix = ndn::Name(csp);
   }
 
-  const std::string&
+  const ndn::Name&
   getChronosyncSyncPrefix()
   {
     return m_chronosyncSyncPrefix;
@@ -273,10 +278,10 @@ public:
   void
   setChronosyncLsaPrefix(const std::string& clp)
   {
-    m_chronosyncLsaPrefix = clp;
+    m_chronosyncLsaPrefix = ndn::Name(clp);
   }
 
-  const std::string&
+  const ndn::Name&
   getChronosyncLsaPrefix()
   {
     return m_chronosyncLsaPrefix;
@@ -295,16 +300,16 @@ public:
   }
 
 private:
-  std::string m_routerName;
-  std::string m_siteName;
-  std::string m_network;
+  ndn::Name m_routerName;
+  ndn::Name m_siteName;
+  ndn::Name m_network;
 
-  std::string m_routerPrefix;
-  std::string m_lsaRouterPrefix;
+  ndn::Name m_routerPrefix;
+  ndn::Name m_lsaRouterPrefix;
 
-  std::string m_chronosyncSyncPrefix;
-  std::string m_chronosyncLsaPrefix;
-  std::string m_rootKeyPrefix;
+  ndn::Name m_chronosyncSyncPrefix;
+  ndn::Name m_chronosyncLsaPrefix;
+  ndn::Name m_rootKeyPrefix;
 
   uint32_t m_interestRetryNumber;
   int32_t m_interestResendTime;

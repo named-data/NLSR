@@ -24,10 +24,10 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
 
 //lsType is 1 for NameLsa, 3rd arg is seqNo. which will be a random number I just put in 12.
 //1800 is default lsa refresh time.
-  NameLsa nlsa1("router1", 1, 12, 1800, npl1);
-  NameLsa nlsa2("router2", 1, 12, 1500, npl1);
+  NameLsa nlsa1("router1", std::string("name"), 12, 1800, npl1);
+  NameLsa nlsa2("router2", std::string("name"), 12, 1500, npl1);
 
-  BOOST_CHECK_EQUAL(nlsa1.getLsType(), (uint8_t)1);
+  BOOST_CHECK_EQUAL(nlsa1.getLsType(), "name");
 
   BOOST_CHECK(nlsa1.getLifeTime() != nlsa2.getLifeTime());
 
@@ -44,10 +44,10 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
 
 //For AdjLsa, lsType is 2.
 //1 is the number of adjacent in adjacent list.
-  AdjLsa alsa1("router1", 2, 12, 1800, 1, adjList);
-  AdjLsa alsa2("router1", 2, 12, 1800, 1, adjList);
+  AdjLsa alsa1("router1", std::string("adjacency"), 12, 1800, 1, adjList);
+  AdjLsa alsa2("router1", std::string("adjacency"), 12, 1800, 1, adjList);
 
-  BOOST_CHECK_EQUAL(alsa1.getLsType(), (uint8_t)2);
+  BOOST_CHECK_EQUAL(alsa1.getLsType(), "adjacency");
   BOOST_CHECK_EQUAL(alsa1.getLsSeqNo(), (uint32_t)12);
   BOOST_CHECK_EQUAL(alsa1.getLifeTime(), (uint32_t)1800);
   BOOST_CHECK_EQUAL(alsa1.getNoLink(), (uint32_t)1);
@@ -63,8 +63,8 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
 BOOST_AUTO_TEST_CASE(CoordinateLsaConstructorAndGetters)
 {
 //For CoordinateLsa, lsType is 3.
-  CoordinateLsa clsa1("router1", 3, 12, 1800, 2.5, 30.0);
-  CoordinateLsa clsa2("router1", 3, 12, 1800, 2.5, 30.0);
+  CoordinateLsa clsa1("router1", std::string("coordinate"), 12, 1800, 2.5, 30.0);
+  CoordinateLsa clsa2("router1", std::string("coordinate"), 12, 1800, 2.5, 30.0);
 
   BOOST_CHECK_CLOSE(clsa1.getCorRadius(), 2.5, 0.0001);
   BOOST_CHECK_CLOSE(clsa1.getCorTheta(), 30.0, 0.0001);

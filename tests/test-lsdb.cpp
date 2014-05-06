@@ -31,17 +31,17 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 //For NameLsa lsType is 1.
 //12 is seqNo, randomly generated.
 //1800 is the default life time.
-  NameLsa nlsa1("router1", 1, 12, 1800, npl1);
+  NameLsa nlsa1("router1", std::string("name"), 12, 1800, npl1);
 
-  Lsdb lsdb1;
+  Lsdb lsdb1(nlsr1);
 
-  lsdb1.installNameLsa(nlsr1, nlsa1);
+  lsdb1.installNameLsa(nlsa1);
 
-  BOOST_CHECK(lsdb1.doesLsaExist("router1/1", 1));
+  BOOST_CHECK(lsdb1.doesLsaExist("router1/1", std::string("name")));
 
-  lsdb1.removeNameLsa(nlsr1, router1);
+  lsdb1.removeNameLsa(router1);
 
-  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist("router1/1", 1), false);
+  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist("router1/1", std::string("name")), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

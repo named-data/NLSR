@@ -17,7 +17,6 @@ void
 RoutingTable::calculate(Nlsr& pnlsr)
 {
   //debugging purpose
-  std::cout << pnlsr.getConfParameter() << std::endl;
   pnlsr.getNamePrefixTable().print();
   pnlsr.getLsdb().printAdjLsdb();
   pnlsr.getLsdb().printCorLsdb();
@@ -26,7 +25,8 @@ RoutingTable::calculate(Nlsr& pnlsr)
   {
     pnlsr.setIsRoutingTableCalculating(1); //setting routing table calculation
     if (pnlsr.getLsdb().doesLsaExist(
-          pnlsr.getConfParameter().getRouterPrefix() + "/" + "2", 2))
+          pnlsr.getConfParameter().getRouterPrefix().toUri() + "/" + "adjacency",
+          std::string("adjacency")))
     {
       if (pnlsr.getIsBuildAdjLsaSheduled() != 1)
       {
@@ -50,7 +50,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
           calculateHypDryRoutingTable(pnlsr);
         }
         //need to update NPT here
-        pnlsr.getNamePrefixTable().updateWithNewRoute(pnlsr);
+        pnlsr.getNamePrefixTable().updateWithNewRoute();
         //debugging purpose
         printRoutingTable();
         pnlsr.getNamePrefixTable().print();
@@ -71,7 +71,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
       clearDryRoutingTable(); // for dry run options
       // need to update NPT here
       std::cout << "Calling Update NPT With new Route" << std::endl;
-      pnlsr.getNamePrefixTable().updateWithNewRoute(pnlsr);
+      pnlsr.getNamePrefixTable().updateWithNewRoute();
       //debugging purpose
       printRoutingTable();
       pnlsr.getNamePrefixTable().print();
@@ -131,14 +131,14 @@ RoutingTable::scheduleRoutingTableCalculation(Nlsr& pnlsr)
 }
 
 static bool
-routingTableEntryCompare(RoutingTableEntry& rte, string& destRouter)
+routingTableEntryCompare(RoutingTableEntry& rte, ndn::Name& destRouter)
 {
   return rte.getDestination() == destRouter;
 }
 
 // function related to manipulation of routing table
 void
-RoutingTable::addNextHop(string destRouter, NextHop& nh)
+RoutingTable::addNextHop(const ndn::Name& destRouter, NextHop& nh)
 {
   RoutingTableEntry* rteChk = findRoutingTableEntry(destRouter);
   if (rteChk == 0)
@@ -154,7 +154,7 @@ RoutingTable::addNextHop(string destRouter, NextHop& nh)
 }
 
 RoutingTableEntry*
-RoutingTable::findRoutingTableEntry(const string destRouter)
+RoutingTable::findRoutingTableEntry(const ndn::Name& destRouter)
 {
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_rTable.begin(),
                                                            m_rTable.end(),
@@ -180,7 +180,7 @@ RoutingTable::printRoutingTable()
 
 //function related to manipulation of dry routing table
 void
-RoutingTable::addNextHopToDryTable(string destRouter, NextHop& nh)
+RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
 {
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_dryTable.begin(),
                                                            m_dryTable.end(),

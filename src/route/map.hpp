@@ -23,16 +23,16 @@ public:
 
 
   void
-  addEntry(const std::string& rtrName);
+  addEntry(const ndn::Name& rtrName);
 
   void
   createFromAdjLsdb(Nlsr& pnlsr);
 
-  std::string
+  const ndn::Name
   getRouterNameByMappingNo(int32_t mn);
 
   int32_t
-  getMappingNoByRouterName(std::string& rName);
+  getMappingNoByRouterName(const ndn::Name& rName);
 
   void
   reset();
@@ -43,7 +43,7 @@ public:
     return m_table;
   }
 
-  int
+  size_t
   getMapSize() const
   {
     return m_table.size();

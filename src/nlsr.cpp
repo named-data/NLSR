@@ -20,11 +20,25 @@ Nlsr::registrationFailed(const ndn::Name& name)
 
 
 void
-Nlsr::setInterestFilter(const string& name)
+Nlsr::setInfoInterestFilter()
 {
+  ndn::Name name(m_confParam.getRouterPrefix());
   getNlsrFace().setInterestFilter(name,
-                                  ndn::bind(&InterestManager::processInterest,
-                                            &m_interestManager, _1, _2),
+                                  ndn::bind(&HelloProtocol::processInterest,
+                                            &m_helloProtocol, _1, _2),
+                                  ndn::bind(&Nlsr::registrationFailed, this, _1));
+}
+
+void
+Nlsr::setLsaInterestFilter()
+{
+  // ndn::Name name(m_confParam.getChronosyncLsaPrefix() +
+  //                m_confParam.getRouterPrefix());
+  ndn::Name name = m_confParam.getChronosyncLsaPrefix();
+  name.append(m_confParam.getRouterPrefix());
+  getNlsrFace().setInterestFilter(name,
+                                  ndn::bind(&Lsdb::processInterest,
+                                            &m_nlsrLsdb, _1, _2),
                                   ndn::bind(&Nlsr::registrationFailed, this, _1));
 }
 
@@ -33,12 +47,8 @@ Nlsr::initialize()
 {
   m_confParam.buildRouterPrefix();
   m_nlsrLsdb.setLsaRefreshTime(m_confParam.getLsaRefreshTime());
-  m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix());
+  m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix().toUri());
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());
-  // if (!m_km.initialize(m_confParam))
-  // {
-  //   std::cerr << "Can not initiate/load certificate" << endl;
-  // }
   m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
   m_sequencingManager.initiateSeqNoFromFile();
   /* debugging purpose start */
@@ -46,16 +56,14 @@ Nlsr::initialize()
   m_adjacencyList.print();
   m_namePrefixList.print();
   /* debugging purpose end */
-  m_nlsrLsdb.buildAndInstallOwnNameLsa(boost::ref(*this));
-  m_nlsrLsdb.buildAndInstallOwnCoordinateLsa(boost::ref(*this));
-  setInterestFilter(m_confParam.getRouterPrefix());
-  setInterestFilter(m_confParam.getChronosyncLsaPrefix() +
-                    m_confParam.getRouterPrefix());
-  setInterestFilter(m_confParam.getRootKeyPrefix());
-  m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncSyncPrefix());
+  m_nlsrLsdb.buildAndInstallOwnNameLsa();
+  m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
+  setInfoInterestFilter();
+  setLsaInterestFilter();
+  m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncSyncPrefix().toUri());
   m_syncLogicHandler.createSyncSocket(boost::ref(*this));
-  // m_slh.publishKeyUpdate(m_km);
-  m_interestManager.scheduleInfoInterest(10);
+  //m_interestManager.scheduleInfoInterest(10);
+  m_helloProtocol.scheduleInterest(10);
 }
 
 void

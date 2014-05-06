@@ -21,31 +21,31 @@ public:
   insert(Adjacent& adjacent);
 
   int32_t
-  updateAdjacentStatus(const std::string& adjName, int32_t s);
+  updateAdjacentStatus(const ndn::Name& adjName, int32_t s);
 
   int32_t
-  updateAdjacentLinkCost(const std::string& adjName, double lc);
+  updateAdjacentLinkCost(const ndn::Name& adjName, double lc);
 
   std::list<Adjacent>&
   getAdjList();
 
   bool
-  isNeighbor(const std::string& adjName);
+  isNeighbor(const ndn::Name& adjName);
 
   void
-  incrementTimedOutInterestCount(const std::string& neighbor);
+  incrementTimedOutInterestCount(const ndn::Name& neighbor);
 
   int32_t
-  getTimedOutInterestCount(const std::string& neighbor);
+  getTimedOutInterestCount(const ndn::Name& neighbor);
 
   uint32_t
-  getStatusOfNeighbor(const std::string& neighbor);
+  getStatusOfNeighbor(const ndn::Name& neighbor);
 
   void
-  setStatusOfNeighbor(const std::string& neighbor, int32_t status);
+  setStatusOfNeighbor(const ndn::Name& neighbor, int32_t status);
 
   void
-  setTimedOutInterestCount(const std::string& neighbor, uint32_t count);
+  setTimedOutInterestCount(const ndn::Name& neighbor, uint32_t count);
 
   void
   addAdjacents(AdjacencyList& adl);
@@ -57,7 +57,7 @@ public:
   getNumOfActiveNeighbor();
 
   Adjacent
-  getAdjacent(const std::string& adjName);
+  getAdjacent(const ndn::Name& adjName);
 
   bool
   operator==(AdjacencyList& adl);
@@ -82,7 +82,7 @@ public:
 
 private:
   std::list<Adjacent>::iterator
-  find(std::string adjName);
+  find(const ndn::Name& adjName);
 
 private:
   std::list<Adjacent> m_adjList;

@@ -11,8 +11,6 @@
 
 #include "sequencing-manager.hpp"
 
-// class KeyManager;
-
 extern "C" {
 #include <unistd.h>
 }
@@ -42,16 +40,10 @@ public:
   nsyncRemoveCallBack(const std::string& prefix, Nlsr& pnlsr);
 
   void
-  removeRouterFromSyncing(const std::string& routerPrefix);
+  removeRouterFromSyncing(const ndn::Name& routerPrefix);
 
   void
-  publishRoutingUpdate(SequencingManager& sm, const std::string& updatePrefix);
-
-  // void
-  // publishKeyUpdate(KeyManager& km);
-
-  void
-  publishIdentityUpdate(const std::string& identityName);
+  publishRoutingUpdate(SequencingManager& sm, const ndn::Name& updatePrefix);
 
   void
   setSyncPrefix(const std::string& sp)
@@ -62,17 +54,15 @@ public:
 
 private:
   void
-  processUpdateFromSync(const std::string& updateName, uint64_t seqNo, Nlsr& pnlsr);
+  processUpdateFromSync(const ndn::Name& updateName, uint64_t seqNo,
+                        Nlsr& pnlsr);
 
   void
-  processRoutingUpdateFromSync(const std::string& routerName, uint64_t seqNo,
+  processRoutingUpdateFromSync(const ndn::Name& routerName, uint64_t seqNo,
                                Nlsr& pnlsr);
 
-  // void
-  // processKeysUpdateFromSync(std::string certName, uint64_t seqNo, Nlsr& pnlsr);
-
   void
-  publishSyncUpdate(const std::string& updatePrefix, uint64_t seqNo);
+  publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo);
 
 private:
   ndn::shared_ptr<ndn::ValidatorNull> m_validator;

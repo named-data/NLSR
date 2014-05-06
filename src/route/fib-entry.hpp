@@ -23,7 +23,7 @@ public:
   {
   }
 
-  FibEntry(const std::string& name)
+  FibEntry(const ndn::Name& name)
     : m_timeToRefresh(0)
     , m_seqNo(0)
     , m_nexthopList()
@@ -31,7 +31,7 @@ public:
     m_name = name;
   }
 
-  const std::string&
+  const ndn::Name&
   getName() const
   {
     return m_name;
@@ -83,7 +83,7 @@ public:
   isEqualNextHops(NexthopList& nhlOther);
 
 private:
-  std::string m_name;
+  ndn::Name m_name;
   int32_t m_timeToRefresh;
   ndn::EventId m_expiringEventId;
   int32_t m_seqNo;

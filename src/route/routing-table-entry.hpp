@@ -2,7 +2,7 @@
 #define NLSR_ROUTING_TABLE_ENTRY_HPP
 
 #include <iostream>
-
+#include <ndn-cxx/name.hpp>
 #include "nexthop-list.hpp"
 
 namespace nlsr {
@@ -18,13 +18,13 @@ public:
   {
   }
 
-  RoutingTableEntry(const std::string& dest)
+  RoutingTableEntry(const ndn::Name& dest)
   {
     m_destination = dest;
   }
 
-  std::string
-  getDestination()
+  const ndn::Name&
+  getDestination() const
   {
     return m_destination;
   }
@@ -36,7 +36,7 @@ public:
   }
 
 private:
-  std::string m_destination;
+  ndn::Name m_destination;
   NexthopList m_nexthopList;
 };
 

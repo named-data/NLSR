@@ -1,6 +1,6 @@
 #include <iostream>
 #include <algorithm>
-
+#include <ndn-cxx/common.hpp>
 #include "adjacency-list.hpp"
 #include "adjacent.hpp"
 #include "nlsr.hpp"
@@ -41,7 +41,7 @@ AdjacencyList::addAdjacents(AdjacencyList& adl)
 }
 
 int32_t
-AdjacencyList::updateAdjacentStatus(const string& adjName, int32_t s)
+AdjacencyList::updateAdjacentStatus(const ndn::Name& adjName, int32_t s)
 {
   std::list<Adjacent>::iterator it = find(adjName);
   if (it == m_adjList.end())
@@ -53,7 +53,7 @@ AdjacencyList::updateAdjacentStatus(const string& adjName, int32_t s)
 }
 
 Adjacent
-AdjacencyList::getAdjacent(const string& adjName)
+AdjacencyList::getAdjacent(const ndn::Name& adjName)
 {
   Adjacent adj(adjName);
   std::list<Adjacent>::iterator it = find(adjName);
@@ -96,7 +96,7 @@ AdjacencyList::operator==(AdjacencyList& adl)
 }
 
 int32_t
-AdjacencyList::updateAdjacentLinkCost(const string& adjName, double lc)
+AdjacencyList::updateAdjacentLinkCost(const ndn::Name& adjName, double lc)
 {
   std::list<Adjacent>::iterator it = find(adjName);
   if (it == m_adjList.end())
@@ -108,7 +108,7 @@ AdjacencyList::updateAdjacentLinkCost(const string& adjName, double lc)
 }
 
 bool
-AdjacencyList::isNeighbor(const string& adjName)
+AdjacencyList::isNeighbor(const ndn::Name& adjName)
 {
   std::list<Adjacent>::iterator it = find(adjName);
   if (it == m_adjList.end())
@@ -119,7 +119,7 @@ AdjacencyList::isNeighbor(const string& adjName)
 }
 
 void
-AdjacencyList::incrementTimedOutInterestCount(const string& neighbor)
+AdjacencyList::incrementTimedOutInterestCount(const ndn::Name& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it == m_adjList.end())
@@ -130,7 +130,8 @@ AdjacencyList::incrementTimedOutInterestCount(const string& neighbor)
 }
 
 void
-AdjacencyList::setTimedOutInterestCount(const string& neighbor, uint32_t count)
+AdjacencyList::setTimedOutInterestCount(const ndn::Name& neighbor,
+                                        uint32_t count)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it != m_adjList.end())
@@ -140,7 +141,7 @@ AdjacencyList::setTimedOutInterestCount(const string& neighbor, uint32_t count)
 }
 
 int32_t
-AdjacencyList::getTimedOutInterestCount(const string& neighbor)
+AdjacencyList::getTimedOutInterestCount(const ndn::Name& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it == m_adjList.end())
@@ -151,7 +152,7 @@ AdjacencyList::getTimedOutInterestCount(const string& neighbor)
 }
 
 uint32_t
-AdjacencyList::getStatusOfNeighbor(const string& neighbor)
+AdjacencyList::getStatusOfNeighbor(const ndn::Name& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it == m_adjList.end())
@@ -162,7 +163,7 @@ AdjacencyList::getStatusOfNeighbor(const string& neighbor)
 }
 
 void
-AdjacencyList::setStatusOfNeighbor(const string& neighbor, int32_t status)
+AdjacencyList::setStatusOfNeighbor(const ndn::Name& neighbor, int32_t status)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it != m_adjList.end())
@@ -220,12 +221,12 @@ AdjacencyList::getNumOfActiveNeighbor()
 }
 
 std::list<Adjacent>::iterator
-AdjacencyList::find(std::string adjName)
+AdjacencyList::find(const ndn::Name& adjName)
 {
-  Adjacent adj(adjName);
   std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
                                                   m_adjList.end(),
-                                                  bind(&Adjacent::compareName, &adj, _1));
+                                                  ndn::bind(&Adjacent::compare,
+                                                            _1, ndn::cref(adjName)));
   return it;
 }
 

@@ -18,17 +18,18 @@ NamePrefixList::~NamePrefixList()
 }
 
 static bool
-nameCompare(const string& s1, const string& s2)
+nameCompare(const ndn::Name& name1, const ndn::Name& name2)
 {
-  return s1 == s2;
+  return name1 == name2;
 }
 
 int32_t
-NamePrefixList::insert(const string& name)
+NamePrefixList::insert(const ndn::Name& name)
 {
-  std::list<string>::iterator it = std::find_if(m_nameList.begin(),
-                                                m_nameList.end(),
-                                                ndn::bind(&nameCompare, _1 , name));
+  std::list<ndn::Name>::iterator it = std::find_if(m_nameList.begin(),
+                                                   m_nameList.end(),
+                                                   ndn::bind(&nameCompare, _1 ,
+                                                             ndn::cref(name)));
   if (it != m_nameList.end())
   {
     return -1;
@@ -38,11 +39,12 @@ NamePrefixList::insert(const string& name)
 }
 
 int32_t
-NamePrefixList::remove(const string& name)
+NamePrefixList::remove(const ndn::Name& name)
 {
-  std::list<string>::iterator it = std::find_if(m_nameList.begin(),
-                                                m_nameList.end(),
-                                                ndn::bind(&nameCompare, _1 , name));
+  std::list<ndn::Name>::iterator it = std::find_if(m_nameList.begin(),
+                                                   m_nameList.end(),
+                                                   ndn::bind(&nameCompare, _1 ,
+                                                   ndn::cref(name)));
   if (it != m_nameList.end())
   {
     m_nameList.erase(it);
@@ -60,7 +62,7 @@ void
 NamePrefixList::print()
 {
   int i = 1;
-  for (std::list<string>::iterator it = m_nameList.begin();
+  for (std::list<ndn::Name>::iterator it = m_nameList.begin();
        it != m_nameList.end();
        it++)
   {

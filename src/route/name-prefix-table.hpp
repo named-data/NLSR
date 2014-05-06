@@ -13,30 +13,32 @@ class Nlsr;
 class NamePrefixTable
 {
 public:
-  NamePrefixTable()
+  NamePrefixTable(Nlsr& nlsr)
+    : m_nlsr(nlsr)
   {
   }
 
   void
-  addEntry(const std::string& name, const std::string& destRouter, Nlsr& pnlsr);
+  addEntry(const ndn::Name& name, const ndn::Name& destRouter);
 
   void
-  removeEntry(const std::string& name, const std::string& destRouter, Nlsr& pnlsr);
+  removeEntry(const ndn::Name& name, const ndn::Name& destRouter);
 
   void
-  updateWithNewRoute(Nlsr& pnlsr);
+  updateWithNewRoute();
 
   void
   print();
 
 private:
   void
-  addEntry(const std::string& name, RoutingTableEntry& rte, Nlsr& pnlsr);
+  addEntry(const ndn::Name& name, RoutingTableEntry& rte);
 
   void
-  removeEntry(const std::string& name, RoutingTableEntry& rte, Nlsr& pnlsr);
+  removeEntry(const ndn::Name& name, RoutingTableEntry& rte);
 
 private:
+  Nlsr& m_nlsr;
   std::list<NamePrefixTableEntry> m_table;
 };
 

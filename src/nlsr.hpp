@@ -11,15 +11,13 @@
 #include "conf-parameter.hpp"
 #include "adjacency-list.hpp"
 #include "name-prefix-list.hpp"
-#include "communication/interest-manager.hpp"
-#include "communication/data-manager.hpp"
 #include "lsdb.hpp"
 #include "sequencing-manager.hpp"
 #include "route/routing-table.hpp"
 #include "route/name-prefix-table.hpp"
 #include "route/fib.hpp"
-// #include "security/key-manager.hpp"
 #include "communication/sync-logic-handler.hpp"
+#include "hello-protocol.hpp"
 
 
 namespace nlsr {
@@ -42,28 +40,29 @@ public:
     , m_confParam()
     , m_adjacencyList()
     , m_namePrefixList()
-    , m_interestManager(*this)
-    , m_dataManager(*this)
     , m_sequencingManager()
-    // , m_km()
     , m_isDaemonProcess(false)
     , m_configFileName("nlsr.conf")
-    , m_nlsrLsdb()
+    , m_nlsrLsdb(*this)
     , m_adjBuildCount(0)
     , m_isBuildAdjLsaSheduled(false)
     , m_isRouteCalculationScheduled(false)
     , m_isRoutingTableCalculating(false)
     , m_routingTable()
-    , m_namePrefixTable()
-    , m_fib(m_nlsrFace)
+    , m_fib(*this, m_nlsrFace)
+    , m_namePrefixTable(*this)
     , m_syncLogicHandler(m_nlsrFace.getIoService())
+    , m_helloProtocol(*this)
   {}
 
   void
   registrationFailed(const ndn::Name& name);
 
   void
-  setInterestFilter(const std::string& name);
+  setInfoInterestFilter();
+
+  void
+  setLsaInterestFilter();
 
   void
   startEventLoop();
@@ -123,25 +122,6 @@ public:
   getNlsrFace()
   {
     return m_nlsrFace;
-  }
-
-  // KeyManager&
-  // getKeyManager()
-  // {
-  //   return m_km;
-  // }
-
-
-  InterestManager&
-  getInterestManager()
-  {
-    return m_interestManager;
-  }
-
-  DataManager&
-  getDataManager()
-  {
-    return m_dataManager;
   }
 
   SequencingManager&
@@ -256,10 +236,7 @@ private:
   ConfParameter m_confParam;
   AdjacencyList m_adjacencyList;
   NamePrefixList m_namePrefixList;
-  InterestManager m_interestManager;
-  DataManager m_dataManager;
   SequencingManager m_sequencingManager;
-  // KeyManager m_km;
   bool m_isDaemonProcess;
   std::string m_configFileName;
   Lsdb m_nlsrLsdb;
@@ -268,10 +245,11 @@ private:
   bool m_isRouteCalculationScheduled;
   bool m_isRoutingTableCalculating;
   RoutingTable m_routingTable;
-  NamePrefixTable m_namePrefixTable;
   Fib m_fib;
+  NamePrefixTable m_namePrefixTable;
   SyncLogicHandler m_syncLogicHandler;
   int32_t m_apiPort;
+  HelloProtocol m_helloProtocol;
 };
 
 } //namespace nlsr

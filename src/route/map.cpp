@@ -12,7 +12,7 @@ namespace nlsr {
 using namespace std;
 
 static bool
-mapEntryCompareByRouter(MapEntry& mpe1, const string& rtrName)
+mapEntryCompareByRouter(MapEntry& mpe1, const ndn::Name& rtrName)
 {
   return mpe1.getRouter() == rtrName;
 }
@@ -24,7 +24,7 @@ mapEntryCompareByMappingNo(MapEntry& mpe1, int32_t mappingNo)
 }
 
 void
-Map::addEntry(const string& rtrName)
+Map::addEntry(const ndn::Name& rtrName)
 {
   MapEntry me(rtrName, m_mappingIndex);
   if (addEntry(me))
@@ -48,7 +48,7 @@ Map::addEntry(MapEntry& mpe)
   return false;
 }
 
-string
+const ndn::Name
 Map::getRouterNameByMappingNo(int32_t mn)
 {
   std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
@@ -59,11 +59,11 @@ Map::getRouterNameByMappingNo(int32_t mn)
   {
     return (*it).getRouter();
   }
-  return "";
+  return ndn::Name();
 }
 
 int32_t
-Map::getMappingNoByRouterName(string& rName)
+Map::getMappingNoByRouterName(const ndn::Name& rName)
 {
   std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
@@ -83,14 +83,14 @@ Map::createFromAdjLsdb(Nlsr& pnlsr)
   for (std::list<AdjLsa>::iterator it = adjLsdb.begin();
        it != adjLsdb.end() ; it++)
   {
-    string linkStartRouter = (*it).getOrigRouter();
-    addEntry(linkStartRouter);
+    //ndn::Name& linkStartRouter = (*it).getOrigRouter();
+    addEntry((*it).getOrigRouter());
     std::list<Adjacent> adl = (*it).getAdl().getAdjList();
     for (std::list<Adjacent>::iterator itAdl = adl.begin();
          itAdl != adl.end() ; itAdl++)
     {
-      string linkEndRouter = (*itAdl).getName();
-      addEntry(linkEndRouter);
+      //ndn::Name& linkEndRouter = (*itAdl).getName();
+      addEntry((*itAdl).getName());
     }
   }
 }

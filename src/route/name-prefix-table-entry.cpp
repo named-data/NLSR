@@ -27,7 +27,7 @@ NamePrefixTableEntry::generateNhlfromRteList()
 
 
 static bool
-rteCompare(RoutingTableEntry& rte, string& destRouter)
+rteCompare(RoutingTableEntry& rte, ndn::Name& destRouter)
 {
   return rte.getDestination() == destRouter;
 }
@@ -57,7 +57,8 @@ NamePrefixTableEntry::addRoutingTableEntry(RoutingTableEntry& rte)
   else
   {
     (*it).getNexthopList().reset(); // reseting existing routing table's next hop
-    for (std::list<NextHop>::iterator nhit = rte.getNexthopList().getNextHops().begin();
+    for (std::list<NextHop>::iterator nhit =
+           rte.getNexthopList().getNextHops().begin();
          nhit != rte.getNexthopList().getNextHops().end(); ++nhit)
     {
       (*it).getNexthopList().addNextHop((*nhit));

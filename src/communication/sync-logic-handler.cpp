@@ -1,7 +1,7 @@
 #include "nlsr.hpp"
 #include "sync-logic-handler.hpp"
-// #include "security/key-manager.hpp"
-#include "utility/tokenizer.hpp"
+#include "utility/name-helper.hpp"
+#include "lsa.hpp"
 
 
 namespace nlsr {
@@ -13,7 +13,7 @@ void
 SyncLogicHandler::createSyncSocket(Nlsr& pnlsr)
 {
   std::cout << "Creating Sync socket ......" << std::endl;
-  std::cout << "Sync prefix: " << m_syncPrefix.toUri() << std::endl;
+  std::cout << "Sync prefix: " << m_syncPrefix << std::endl;
   m_syncSocket = make_shared<Sync::SyncSocket>(m_syncPrefix, m_validator,
                                                m_syncFace,
                                                bind(&SyncLogicHandler::nsyncUpdateCallBack, this,
@@ -43,116 +43,97 @@ SyncLogicHandler::nsyncRemoveCallBack(const string& prefix, Nlsr& pnlsr)
 }
 
 void
-SyncLogicHandler::removeRouterFromSyncing(const string& routerPrefix)
+SyncLogicHandler::removeRouterFromSyncing(const ndn::Name& routerPrefix)
 {
 }
 
 void
-SyncLogicHandler::processUpdateFromSync(const std::string& updateName,
+SyncLogicHandler::processUpdateFromSync(const ndn::Name& updateName,
                                         uint64_t seqNo,  Nlsr& pnlsr)
 {
-  Tokenizer nt(updateName, "/");
+  //const ndn::Name name(updateName);
   string chkString("LSA");
-  if (nt.doesTokenExist(chkString))
+  int32_t lasPosition = util::getNameComponentPosition(updateName, chkString);
+  if (lasPosition >= 0)
   {
-    //process LSA Update here
-    string routerName = nt.getTokenString(nt.getTokenPosition(chkString) + 1);
+    ndn::Name routerName = updateName.getSubName(lasPosition + 1);
     processRoutingUpdateFromSync(routerName, seqNo, pnlsr);
-  }
-  chkString = "keys";
-  if (nt.doesTokenExist(chkString))
-  {
-    //process keys update here
-    std::string certName = nt.getTokenString(0);
-    // processKeysUpdateFromSync(certName, seqNo, pnlsr);
+    return;
   }
 }
 
 void
-SyncLogicHandler::processRoutingUpdateFromSync(const std::string& routerName,
+SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
                                                uint64_t seqNo,  Nlsr& pnlsr)
 {
+  ndn::Name rName = routerName;
   if (routerName != pnlsr.getConfParameter().getRouterPrefix())
   {
     SequencingManager sm(seqNo);
     std::cout << sm;
     std::cout << "Router Name: " << routerName << endl;
-    if (pnlsr.getLsdb().isNameLsaNew(routerName + "/1", sm.getNameLsaSeq()))
+    try
     {
-      std::cout << "Updated Name LSA. Need to fetch it" << std::endl;
-      string lsaPrefix =
-        pnlsr.getConfParameter().getChronosyncLsaPrefix() +
-        routerName + "/1/" +
-        boost::lexical_cast<std::string>(sm.getNameLsaSeq());
-      pnlsr.getInterestManager().expressInterest(lsaPrefix, 3,
-                                                 pnlsr.getConfParameter().getInterestResendTime());
+      if (pnlsr.getLsdb().isNameLsaNew(rName.append("name"), sm.getNameLsaSeq()))
+      {
+        std::cout << "Updated Name LSA. Need to fetch it" << std::endl;
+        ndn::Name interestName(pnlsr.getConfParameter().getChronosyncLsaPrefix());
+        interestName.append(routerName);
+        interestName.append("name");
+        interestName.appendNumber(sm.getNameLsaSeq());
+        pnlsr.getLsdb().expressInterest(interestName,
+                                        pnlsr.getConfParameter().getInterestResendTime());
+      }
+      if (pnlsr.getLsdb().isAdjLsaNew(rName.append("adjacency"),
+                                      sm.getAdjLsaSeq()))
+      {
+        std::cout << "Updated Adj LSA. Need to fetch it" << std::endl;
+        ndn::Name interestName(pnlsr.getConfParameter().getChronosyncLsaPrefix());
+        interestName.append(routerName);
+        interestName.append("adjacency");
+        interestName.appendNumber(sm.getAdjLsaSeq());
+        pnlsr.getLsdb().expressInterest(interestName,
+                                        pnlsr.getConfParameter().getInterestResendTime());
+      }
+      if (pnlsr.getLsdb().isCoordinateLsaNew(rName.append("coordinate"),
+                                             sm.getCorLsaSeq()))
+      {
+        std::cout << "Updated Cor LSA. Need to fetch it" << std::endl;
+        ndn::Name interestName(pnlsr.getConfParameter().getChronosyncLsaPrefix());
+        interestName.append(routerName);
+        interestName.append("coordinate");
+        interestName.appendNumber(sm.getCorLsaSeq());
+        pnlsr.getLsdb().expressInterest(interestName,
+                                        pnlsr.getConfParameter().getInterestResendTime());
+      }
     }
-    if (pnlsr.getLsdb().isAdjLsaNew(routerName + "/2", sm.getAdjLsaSeq()))
+    catch (std::exception& e)
     {
-      std::cout << "Updated Adj LSA. Need to fetch it" << std::endl;
-      string lsaPrefix =
-        pnlsr.getConfParameter().getChronosyncLsaPrefix() +
-        routerName + "/2/" +
-        boost::lexical_cast<std::string>(sm.getAdjLsaSeq());
-      pnlsr.getInterestManager().expressInterest(lsaPrefix, 3,
-                                                 pnlsr.getConfParameter().getInterestResendTime());
-    }
-    if (pnlsr.getLsdb().isCoordinateLsaNew(routerName + "/3", sm.getCorLsaSeq()))
-    {
-      std::cout << "Updated Cor LSA. Need to fetch it" << std::endl;
-      string lsaPrefix =
-        pnlsr.getConfParameter().getChronosyncLsaPrefix() +
-        routerName + "/3/" +
-        boost::lexical_cast<std::string>(sm.getCorLsaSeq());
-      pnlsr.getInterestManager().expressInterest(lsaPrefix, 3,
-                                                 pnlsr.getConfParameter().getInterestResendTime());
+      std::cerr << e.what() << std::endl;
+      return;
     }
   }
 }
 
-// void
-// SyncLogicHandler::processKeysUpdateFromSync(std::string certName,
-//                                             uint64_t seqNo, Nlsr& pnlsr)
-// {
-//   std::cout << "Cert Name: " << certName << std::endl;
-//   // if (pnlsr.getKeyManager().isNewCertificate(certName, seqNo))
-//   {
-//     string certNamePrefix = certName + "/" +
-//                             boost::lexical_cast<string>(seqNo);
-//     pnlsr.getIm().expressInterest(certNamePrefix, 3,
-//                                   pnlsr.getConfParameter().getInterestResendTime());
-//   }
-// }
-
 void
 SyncLogicHandler::publishRoutingUpdate(SequencingManager& sm,
-                                       const string& updatePrefix)
+                                       const ndn::Name& updatePrefix)
 {
   sm.writeSeqNoToFile();
   publishSyncUpdate(updatePrefix, sm.getCombinedSeqNo());
 }
 
-// void
-// SyncLogicHandler::publishKeyUpdate(KeyManager& km)
-// {
-//   publishSyncUpdate(km.getProcessCertName().toUri(), km.getCertSeqNo());
-// }
-
 void
-SyncLogicHandler::publishIdentityUpdate(const string& identityName)
-{
-  publishSyncUpdate(identityName, 0);
-}
-
-void
-SyncLogicHandler::publishSyncUpdate(const string& updatePrefix, uint64_t seqNo)
+SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix,
+                                    uint64_t seqNo)
 {
   std::cout << "Publishing Sync Update ......" << std::endl;
   std::cout << "Update in prefix: " << updatePrefix << std::endl;
   std::cout << "Seq No: " << seqNo << std::endl;
   ndn::Name updateName(updatePrefix);
   string data("NoData");
-  m_syncSocket->publishData(updateName, 0, data.c_str(), data.size(), 1000,
+  m_syncSocket->publishData(updateName.toUri(), 0, data.c_str(), data.size(),
+                            1000,
                             seqNo);
 }
 

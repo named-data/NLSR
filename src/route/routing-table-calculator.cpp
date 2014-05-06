@@ -38,14 +38,12 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
   for (std::list<AdjLsa>::iterator it = adjLsdb.begin();
        it != adjLsdb.end() ; it++)
   {
-    string linkStartRouter = (*it).getOrigRouter();
-    int row = pMap.getMappingNoByRouterName(linkStartRouter);
+    int row = pMap.getMappingNoByRouterName((*it).getOrigRouter());
     std::list<Adjacent> adl = (*it).getAdl().getAdjList();
     for (std::list<Adjacent>::iterator itAdl = adl.begin();
          itAdl != adl.end() ; itAdl++)
     {
-      string linkEndRouter = (*itAdl).getName();
-      int col = pMap.getMappingNoByRouterName(linkEndRouter);
+      int col = pMap.getMappingNoByRouterName((*itAdl).getName());
       double cost = (*itAdl).getLinkCost();
       if ((row >= 0 && row < numOfRouter) && (col >= 0 && col < numOfRouter))
       {
@@ -158,8 +156,7 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
   makeAdjMatrix(pnlsr, pMap);
   std::cout << pMap;
   printAdjMatrix();
-  string routerName = pnlsr.getConfParameter().getRouterPrefix();
-  int sourceRouter = pMap.getMappingNoByRouterName(routerName);
+  int sourceRouter = pMap.getMappingNoByRouterName(pnlsr.getConfParameter().getRouterPrefix());
   //int noLink=getNumOfLinkfromAdjMatrix(sourceRouter);
   allocateParent();
   allocateDistance();
@@ -259,8 +256,7 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr,
       if (nextHopRouter != NO_NEXT_HOP)
       {
         double routeCost = m_distance[i];
-        string nextHopRouterName =
-          pMap.getRouterNameByMappingNo(nextHopRouter);
+        ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
         int nxtHopFace =
           pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFace();
         std::cout << "Dest Router: " << pMap.getRouterNameByMappingNo(i) << std::endl;
@@ -382,7 +378,7 @@ HypRoutingTableCalculator::calculatePath(Map& pMap,
                                          RoutingTable& rt, Nlsr& pnlsr)
 {
   makeAdjMatrix(pnlsr, pMap);
-  string routerName = pnlsr.getConfParameter().getRouterPrefix();
+  ndn::Name routerName = pnlsr.getConfParameter().getRouterPrefix();
   int sourceRouter = pMap.getMappingNoByRouterName(routerName);
   int noLink = getNumOfLinkfromAdjMatrix(sourceRouter);
   setNoLink(noLink);
@@ -399,7 +395,7 @@ HypRoutingTableCalculator::calculatePath(Map& pMap,
       allocateDistFromNbrToDest();
       for (int j = 0; j < vNoLink; j++)
       {
-        string nextHopRouterName = pMap.getRouterNameByMappingNo(links[j]);
+        ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(links[j]);
         int nextHopFace =
           pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFace();
         double distToNbr = getHyperbolicDistance(pnlsr, pMap,
@@ -431,7 +427,7 @@ HypRoutingTableCalculator::addHypNextHopsToRoutingTable(Nlsr& pnlsr, Map& pMap,
 {
   for (int i = 0 ; i < noFaces ; ++i)
   {
-    string destRouter = pMap.getRouterNameByMappingNo(dest);
+    ndn::Name destRouter = pMap.getRouterNameByMappingNo(dest);
     NextHop nh(m_linkFaces[i], m_distFromNbrToDest[i]);
     rt.addNextHop(destRouter, nh);
     if (m_isDryRun)
@@ -446,8 +442,10 @@ HypRoutingTableCalculator::getHyperbolicDistance(Nlsr& pnlsr,
                                                  Map& pMap, int src, int dest)
 {
   double distance = 0.0;
-  string srcRouterKey = pMap.getRouterNameByMappingNo(src) + "/3";
-  string destRouterKey = pMap.getRouterNameByMappingNo(dest) + "/3";
+  ndn::Name srcRouterKey = pMap.getRouterNameByMappingNo(src);
+  srcRouterKey.append("coordinate");
+  ndn::Name destRouterKey = pMap.getRouterNameByMappingNo(dest);
+  destRouterKey.append("coordinate");
   double srcRadius = (pnlsr.getLsdb().findCoordinateLsa(
                         srcRouterKey))->getCorRadius();
   double srcTheta = (pnlsr.getLsdb().findCoordinateLsa(

@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <boost/cstdint.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
 
 #include "lsa.hpp"
 
@@ -12,70 +13,71 @@ class Nlsr;
 class Lsdb
 {
 public:
-  Lsdb()
-    : m_lsaRefreshTime(0)
+  Lsdb(Nlsr& nlsr)
+    : m_nlsr(nlsr)
+    , m_lsaRefreshTime(0)
   {
   }
 
 
   bool
-  doesLsaExist(std::string key, int lsType);
+  doesLsaExist(const ndn::Name& key, const std::string& lsType);
   // function related to Name LSDB
 
   bool
-  buildAndInstallOwnNameLsa(Nlsr& pnlsr);
+  buildAndInstallOwnNameLsa();
 
   NameLsa*
-  findNameLsa(const std::string key);
+  findNameLsa(const ndn::Name& key);
 
   bool
-  installNameLsa(Nlsr& pnlsr, NameLsa& nlsa);
+  installNameLsa(NameLsa& nlsa);
 
   bool
-  removeNameLsa(Nlsr& pnlsr, std::string& key);
+  removeNameLsa(const ndn::Name& key);
 
   bool
-  isNameLsaNew(std::string key, uint64_t seqNo);
+  isNameLsaNew(const ndn::Name& key, uint64_t seqNo);
 
   void
   printNameLsdb(); //debugging
 
   //function related to Cor LSDB
   bool
-  buildAndInstallOwnCoordinateLsa(Nlsr& pnlsr);
+  buildAndInstallOwnCoordinateLsa();
 
   CoordinateLsa*
-  findCoordinateLsa(const std::string& key);
+  findCoordinateLsa(const ndn::Name& key);
 
   bool
-  installCoordinateLsa(Nlsr& pnlsr, CoordinateLsa& clsa);
+  installCoordinateLsa(CoordinateLsa& clsa);
 
   bool
-  removeCoordinateLsa(Nlsr& pnlsr, const std::string& key);
+  removeCoordinateLsa(const ndn::Name& key);
 
   bool
-  isCoordinateLsaNew(const std::string& key, uint64_t seqNo);
+  isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo);
 
   void
   printCorLsdb(); //debugging
 
   //function related to Adj LSDB
   void
-  scheduledAdjLsaBuild(Nlsr& pnlsr);
+  scheduledAdjLsaBuild();
 
   bool
-  buildAndInstallOwnAdjLsa(Nlsr& pnlsr);
+  buildAndInstallOwnAdjLsa();
 
   bool
-  removeAdjLsa(Nlsr& pnlsr, std::string& key);
+  removeAdjLsa(const ndn::Name& key);
 
   bool
-  isAdjLsaNew(std::string key, uint64_t seqNo);
+  isAdjLsaNew(const ndn::Name& key, uint64_t seqNo);
   bool
-  installAdjLsa(Nlsr& pnlsr, AdjLsa& alsa);
+  installAdjLsa(AdjLsa& alsa);
 
   AdjLsa*
-  findAdjLsa(std::string key);
+  findAdjLsa(const ndn::Name& key);
 
   std::list<AdjLsa>&
   getAdjLsdb();
@@ -95,46 +97,87 @@ private:
   addNameLsa(NameLsa& nlsa);
 
   bool
-  doesNameLsaExist(std::string key);
+  doesNameLsaExist(const ndn::Name& key);
 
 
   bool
   addCoordinateLsa(CoordinateLsa& clsa);
 
   bool
-  doesCoordinateLsaExist(const std::string& key);
+  doesCoordinateLsaExist(const ndn::Name& key);
 
   bool
   addAdjLsa(AdjLsa& alsa);
 
   bool
-  doesAdjLsaExist(std::string key);
+  doesAdjLsaExist(const ndn::Name& key);
 
   ndn::EventId
-  scheduleNameLsaExpiration(Nlsr& pnlsr, std::string key, int seqNo, int expTime);
+  scheduleNameLsaExpiration(const ndn::Name& key, int seqNo, int expTime);
 
   void
-  exprireOrRefreshNameLsa(Nlsr& pnlsr, std::string lsaKey, uint64_t seqNo);
+  exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
   ndn::EventId
-  scheduleAdjLsaExpiration(Nlsr& pnlsr, std::string key, int seqNo, int expTime);
+  scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo, int expTime);
 
   void
-  exprireOrRefreshAdjLsa(Nlsr& pnlsr, std::string lsaKey, uint64_t seqNo);
+  exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
   ndn::EventId
-  scheduleCoordinateLsaExpiration(Nlsr& pnlsr, const std::string& key, int seqNo,
+  scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                   int expTime);
 
   void
-  exprireOrRefreshCoordinateLsa(Nlsr& pnlsr, const std::string& lsaKey,
+  exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                 uint64_t seqNo);
+public:
+  void
+  expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime);
 
+  void
+  processInterest(const ndn::Name& name, const ndn::Interest& interest);
 
 private:
   void
-  cancelScheduleLsaExpiringEvent(Nlsr& pnlsr, ndn::EventId eid);
+  processInterestForNameLsa(const ndn::Interest& interest,
+                            const ndn::Name& lsaKey,
+                            uint32_t interestedlsSeqNo);
 
+  void
+  processInterestForAdjacencyLsa(const ndn::Interest& interest,
+                                 const ndn::Name& lsaKey,
+                                 uint32_t interestedlsSeqNo);
+
+  void
+  processInterestForCoordinateLsa(const ndn::Interest& interest,
+                                  const ndn::Name& lsaKey,
+                                  uint32_t interestedlsSeqNo);
+
+  void
+  processContent(const ndn::Interest& interest, const ndn::Data& data);
+
+  void
+  processContentNameLsa(const ndn::Name& lsaKey,
+                        uint32_t lsSeqNo, std::string& dataContent);
+
+  void
+  processContentAdjacencyLsa(const ndn::Name& lsaKey,
+                             uint32_t lsSeqNo, std::string& dataContent);
+
+  void
+  processContentCoordinateLsa(const ndn::Name& lsaKey,
+                              uint32_t lsSeqNo, std::string& dataContent);
+
+  void
+  processInterestTimedOut(const ndn::Interest& interest);
+
+private:
+  void
+  cancelScheduleLsaExpiringEvent(ndn::EventId eid);
+
+  Nlsr& m_nlsr;
+  ndn::KeyChain m_keyChain;
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;

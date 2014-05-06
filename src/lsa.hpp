@@ -8,6 +8,7 @@
 #include "adjacency-list.hpp"
 
 namespace nlsr {
+
 class Lsa
 {
 public:
@@ -21,12 +22,12 @@ public:
 
 
   void
-  setLsType(uint8_t lst)
+  setLsType(const std::string& lst)
   {
     m_lsType = lst;
   }
 
-  uint8_t
+  const std::string&
   getLsType() const
   {
     return m_lsType;
@@ -44,14 +45,14 @@ public:
     return m_lsSeqNo;
   }
 
-  std::string
+  const ndn::Name&
   getOrigRouter() const
   {
     return m_origRouter;
   }
 
   void
-  setOrigRouter(const std::string& org)
+  setOrigRouter(const ndn::Name& org)
   {
     m_origRouter = org;
   }
@@ -81,8 +82,8 @@ public:
   }
 
 protected:
-  std::string m_origRouter;
-  uint8_t m_lsType;
+  ndn::Name m_origRouter;
+  std::string m_lsType;
   uint32_t m_lsSeqNo;
   uint32_t m_lifeTime;
   ndn::EventId m_expiringEventId;
@@ -95,10 +96,11 @@ public:
     : Lsa()
     , m_npl()
   {
-    setLsType(1);
+    setLsType("name");
   }
 
-  NameLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
+  NameLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
+          uint32_t lt,
           NamePrefixList& npl);
 
   NamePrefixList&
@@ -108,25 +110,25 @@ public:
   }
 
   void
-  addName(std::string& name)
+  addName(const ndn::Name& name)
   {
     m_npl.insert(name);
   }
 
   void
-  removeName(std::string& name)
+  removeName(const ndn::Name& name)
   {
     m_npl.remove(name);
   }
 
-  std::string
+  const ndn::Name
   getKey() const;
 
   std::string
   getData();
 
   bool
-  initializeFromContent(std::string content);
+  initializeFromContent(const std::string& content);
 
   void
   writeLog();
@@ -146,10 +148,11 @@ public:
     : Lsa()
     , m_adl()
   {
-    setLsType(2);
+    setLsType("adjacency");
   }
 
-  AdjLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt,
+  AdjLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
+         uint32_t lt,
          uint32_t nl , AdjacencyList& adl);
 
   AdjacencyList&
@@ -164,14 +167,14 @@ public:
     m_adl.insert(adj);
   }
 
-  std::string
-  getKey();
+  const ndn::Name
+  getKey() const;
 
   std::string
   getData();
 
   bool
-  initializeFromContent(std::string content);
+  initializeFromContent(const std::string& content);
 
   uint32_t
   getNoLink()
@@ -204,20 +207,21 @@ public:
     , m_corRad(0)
     , m_corTheta(0)
   {
-    setLsType(3);
+    setLsType("coordinate");
   }
 
-  CoordinateLsa(std::string origR, uint8_t lst, uint32_t lsn, uint32_t lt
+  CoordinateLsa(const ndn::Name& origR, const std::string lst, uint32_t lsn,
+                uint32_t lt
                 , double r, double theta);
 
-  std::string
+  const ndn::Name
   getKey() const;
 
   std::string
   getData();
 
   bool
-  initializeFromContent(std::string content);
+  initializeFromContent(const std::string& content);
 
   double
   getCorRadius() const

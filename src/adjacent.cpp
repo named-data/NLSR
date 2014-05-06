@@ -10,7 +10,8 @@ namespace nlsr {
 
 using namespace std;
 
-Adjacent::Adjacent(const string& an, uint32_t cf, double lc, uint32_t s, uint32_t iton)
+Adjacent::Adjacent(const ndn::Name& an, uint32_t cf, double lc, uint32_t s,
+                   uint32_t iton)
 {
   m_name = an;
   m_connectingFace = cf;
@@ -29,9 +30,9 @@ Adjacent::operator==(const Adjacent& adjacent) const
 }
 
 bool
-Adjacent::compareName(const Adjacent& adjacent)
+Adjacent::compare(const ndn::Name& adjacencyName)
 {
-  return m_name == adjacent.getName();
+  return m_name == adjacencyName;
 }
 
 std::ostream&

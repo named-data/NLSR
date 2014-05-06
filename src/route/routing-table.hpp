@@ -24,19 +24,19 @@ public:
   calculate(Nlsr& pnlsr);
 
   void
-  addNextHop(std::string destRouter, NextHop& nh);
+  addNextHop(const ndn::Name& destRouter, NextHop& nh);
 
   void
   printRoutingTable();
 
   void
-  addNextHopToDryTable(std::string destRouter, NextHop& nh);
+  addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh);
 
   void
   printDryRoutingTable();
 
   RoutingTableEntry*
-  findRoutingTableEntry(const std::string destRouter);
+  findRoutingTableEntry(const ndn::Name& destRouter);
 
   void
   scheduleRoutingTableCalculation(Nlsr& pnlsr);

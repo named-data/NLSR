@@ -1,5 +1,6 @@
 #include <string>
 #include <boost/cstdint.hpp>
+#include <ndn-cxx/face.hpp>
 
 #ifndef NLSR_ADJACENT_HPP
 #define NLSR_ADJACENT_HPP
@@ -10,7 +11,7 @@ class Adjacent
 
 public:
   Adjacent()
-    : m_name("")
+    : m_name()
     , m_connectingFace(0)
     , m_linkCost(10.0)
     , m_status(0)
@@ -18,7 +19,7 @@ public:
   {
   }
 
-  Adjacent(const std::string& an)
+  Adjacent(const ndn::Name& an)
     : m_connectingFace(0)
     , m_linkCost(0.0)
     , m_status(0)
@@ -27,16 +28,17 @@ public:
     m_name = an;
   }
 
-  Adjacent(const std::string& an, uint32_t cf, double lc, uint32_t s, uint32_t iton);
+  Adjacent(const ndn::Name& an, uint32_t cf, double lc, uint32_t s,
+           uint32_t iton);
 
-  std::string
+  const ndn::Name&
   getName() const
   {
     return m_name;
   }
 
   void
-  setName(const std::string& an)
+  setName(const ndn::Name& an)
   {
     m_name = an;
   }
@@ -93,10 +95,10 @@ public:
   operator==(const Adjacent& adjacent) const;
 
   bool
-  compareName(const Adjacent& adjacent);
-  
+  compare(const ndn::Name& adjacencyName);
+
 private:
-  std::string m_name;
+  ndn::Name m_name;
   uint32_t m_connectingFace;
   double m_linkCost;
   uint32_t m_status;

@@ -503,7 +503,7 @@ ConfFileProcessor::processConfCommandNdnNeighbor(string command)
       stringstream sst(nt.getRestOfLine().c_str());
       int faceId;
       sst >> faceId;
-      Adjacent adj(nt.getFirstToken(), faceId, 0.0, 0, 0);
+      Adjacent adj(nt.getFirstToken(), faceId, 10, 0, 0);
       m_nlsr.getAdjacencyList().insert(adj);
     }
   }

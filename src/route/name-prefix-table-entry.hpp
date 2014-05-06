@@ -16,13 +16,13 @@ public:
   {
   }
 
-  NamePrefixTableEntry(const std::string& namePrefix)
-    : m_nexthopList()
+  NamePrefixTableEntry(const ndn::Name& namePrefix)
+    : m_namePrefix(namePrefix)
+    , m_nexthopList()
   {
-    m_namePrefix = namePrefix;
   }
 
-  const std::string&
+  const ndn::Name&
   getNamePrefix() const
   {
     return m_namePrefix;
@@ -69,7 +69,7 @@ public:
   addRoutingTableEntry(RoutingTableEntry& rte);
 
 private:
-  std::string m_namePrefix;
+  ndn::Name m_namePrefix;
   std::list<RoutingTableEntry> m_rteList;
   NexthopList m_nexthopList;
 };

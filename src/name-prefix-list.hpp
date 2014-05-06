@@ -4,6 +4,7 @@
 #include <list>
 #include <string>
 #include <boost/cstdint.hpp>
+#include <ndn-cxx/name.hpp>
 
 
 namespace nlsr {
@@ -16,21 +17,21 @@ public:
   ~NamePrefixList();
 
   int32_t
-  insert(const std::string& name);
+  insert(const ndn::Name& name);
 
   int32_t
-  remove(const std::string& name);
+  remove(const ndn::Name& name);
 
   void
   sort();
 
-  int32_t
+  size_t
   getSize()
   {
     return m_nameList.size();
   }
 
-  std::list<std::string>&
+  std::list<ndn::Name>&
   getNameList()
   {
     return m_nameList;
@@ -40,7 +41,7 @@ public:
   print();
 
 private:
-  std::list<std::string> m_nameList;
+  std::list<ndn::Name> m_nameList;
 
 };
 
