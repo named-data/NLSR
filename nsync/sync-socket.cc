@@ -40,7 +40,6 @@ SyncSocket::SyncSocket (const Name &syncPrefix,
   , m_validator(validator)
   , m_keyChain(new KeyChain())
   , m_face(face)
-  , m_ioService(face->ioService())
   , m_syncLogic (syncPrefix,
                  validator,
                  face,
@@ -53,23 +52,28 @@ SyncSocket::~SyncSocket()
 }
 
 bool
-SyncSocket::publishData(const Name &prefix, uint64_t session, const char *buf, size_t len, int freshness,uint64_t seq)
+SyncSocket::publishData(const Name &prefix, uint64_t session,
+                        const char *buf, size_t len,
+                        int freshness,uint64_t seq)
 {
   shared_ptr<Data> data = make_shared<Data>();
   data->setContent(reinterpret_cast<const uint8_t*>(buf), len);
-  data->setFreshnessPeriod(time::seconds(freshness));
+  data->setFreshnessPeriod(ndn::time::seconds(freshness));
 
-  m_ioService->post(bind(&SyncSocket::publishDataInternal, this, data, prefix, session,seq));
+  m_face->getIoService().post(bind(&SyncSocket::publishDataInternal, this,
+                                   data, prefix, session,seq));
 
   return true;
 }
 
 void
-SyncSocket::publishDataInternal(shared_ptr<Data> data, const Name &prefix, uint64_t session,uint64_t seq)
+SyncSocket::publishDataInternal(shared_ptr<Data> data,
+                                const Name &prefix, uint64_t session, uint64_t seq)
 {
   uint64_t sequence = seq;
   Name dataName = prefix;
-  dataName.append(boost::lexical_cast<string>(session)).append(boost::lexical_cast<string>(sequence));
+  dataName.append(boost::lexical_cast<string>(session))
+    .append(boost::lexical_cast<string>(sequence));
   data->setName(dataName);
 
   m_keyChain->sign(*data);
@@ -82,18 +86,23 @@ SyncSocket::publishDataInternal(shared_ptr<Data> data, const Name &prefix, uint6
 }
 
 void
-SyncSocket::fetchData(const Name &prefix, const SeqNo &seq, const OnDataValidated& onValidated, int retry)
+SyncSocket::fetchData(const Name &prefix, const SeqNo &seq,
+                      const OnDataValidated& onValidated, int retry)
 {
   Name interestName = prefix;
-  interestName.append(boost::lexical_cast<string>(seq.getSession())).append(boost::lexical_cast<string>(seq.getSeq()));
+  interestName.append(boost::lexical_cast<string>(seq.getSession()))
+    .append(boost::lexical_cast<string>(seq.getSeq()));
 
-  const OnDataValidationFailed& onValidationFailed = bind(&SyncSocket::onDataValidationFailed, this, _1);
+  const OnDataValidationFailed& onValidationFailed =
+    bind(&SyncSocket::onDataValidationFailed, this, _1);
 
   ndn::Interest interest(interestName);
   interest.setMustBeFresh(true);
   m_face->expressInterest(interest,
-                          bind(&SyncSocket::onData, this, _1, _2, onValidated, onValidationFailed),
-                          bind(&SyncSocket::onDataTimeout, this, _1, retry, onValidated, onValidationFailed));
+                          bind(&SyncSocket::onData, this, _1, _2,
+                               onValidated, onValidationFailed),
+                          bind(&SyncSocket::onDataTimeout, this, _1, retry,
+                               onValidated, onValidationFailed));
 
 }
 

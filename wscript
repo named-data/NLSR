@@ -46,7 +46,7 @@ def configure(conf):
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
                    uselib_store='NDN_CPP', mandatory=True)
 
-    boost_libs = 'system chrono program_options iostreams thread'
+    boost_libs = 'system chrono program_options iostreams thread regex'
     if conf.options.with_tests:
         conf.env['WITH_TESTS'] = 1
         conf.define('WITH_TESTS', 1);

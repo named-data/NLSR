@@ -5,7 +5,7 @@
 #include <boost/cstdint.hpp>
 
 #include <ndn-cxx/management/nfd-controller.hpp>
-
+#include "face-map.hpp"
 #include "fib-entry.hpp"
 
 namespace nlsr {
@@ -21,6 +21,7 @@ public:
     , m_table()
     , m_refreshTime(0)
     , m_controller(face)
+    , m_faceMap()
   {
   }
   ~Fib()
@@ -47,7 +48,7 @@ public:
 
 private:
   void
-  removeHop(NexthopList& nl, uint32_t doNotRemoveHopFaceId,
+  removeHop(NexthopList& nl, const std::string& doNotRemoveHopFaceUri,
             const ndn::Name& name);
 
   int
@@ -63,12 +64,25 @@ private:
   void
   refreshEntry(const ndn::Name& name, int32_t feSeqNum);
 
+public:
   void
-  registerPrefixInNfd(const ndn::Name& namePrefix, uint64_t faceId,
-                      uint64_t faceCost);
+  registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
+                 uint64_t faceCost, uint64_t timeout);
 
   void
-  unregisterPrefixFromNfd(const ndn::Name& namePrefix, uint64_t faceId);
+  registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
+                      const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout);
+  
+  void
+  setStrategy(const ndn::Name& name, const std::string& strategy);
+
+private:
+  void
+  unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri);
+
+  void
+  onRegistration(const ndn::nfd::ControlParameters& commandSuccessResult,
+                 const std::string& message, const std::string& faceUri);
 
   void
   onSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
@@ -82,6 +96,7 @@ private:
   std::list<FibEntry> m_table;
   int32_t m_refreshTime;
   ndn::nfd::Controller m_controller;
+  FaceMap m_faceMap;
 };
 
 }//namespace nlsr

@@ -42,8 +42,7 @@ SequencingManager::initiateSeqNoFromFile()
 {
   cout << "Seq File Name: " << m_seqFileNameWithPath << endl;
   std::ifstream inputFile(m_seqFileNameWithPath.c_str(), ios::binary);
-  if (inputFile.good())
-  {
+  if (inputFile.good()) {
     inputFile >> m_combinedSeqNo;
     splittSequenceNo(m_combinedSeqNo);
     m_adjLsaSeq += 10;
@@ -52,8 +51,7 @@ SequencingManager::initiateSeqNoFromFile()
     combineSequenceNo();
     inputFile.close();
   }
-  else
-  {
+  else {
     splittSequenceNo(0);
   }
 }
@@ -62,8 +60,7 @@ void
 SequencingManager::setSeqFileName(string filePath)
 {
   m_seqFileNameWithPath = filePath;
-  if (m_seqFileNameWithPath.empty())
-  {
+  if (m_seqFileNameWithPath.empty()) {
     m_seqFileNameWithPath = getUserHomeDirectory();
   }
   m_seqFileNameWithPath = m_seqFileNameWithPath + "/nlsrSeqNo.txt";
@@ -73,8 +70,7 @@ string
 SequencingManager::getUserHomeDirectory()
 {
   string homeDirPath(getpwuid(getuid())->pw_dir);
-  if (homeDirPath.empty())
-  {
+  if (homeDirPath.empty()) {
     homeDirPath = getenv("HOME");
   }
   return homeDirPath;

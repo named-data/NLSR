@@ -28,8 +28,6 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   cp1.setNetwork(NETWORK);
 
-  cp1.setRootKeyPrefix("adminRootKey");
-
   cp1.setInterestRetryNumber(2);
 
   cp1.setInterestResendTime(1000);
@@ -40,28 +38,11 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   cp1.setMaxFacesPerPrefix(50);
 
-  cp1.setLogDir("log");
-
-  cp1.setCertDir("cert");
-
-  cp1.setSeqFileDir("ssfd");
-
-  cp1.setDetailedLogging(1);
-
-  cp1.setDebugging(1);
-
-  cp1.setIsHyperbolicCalc(1);
+  cp1.setHyperbolicState(1);
 
   cp1.setCorR(2.5);
 
   cp1.setCorTheta(102.5);
-
-  cp1.setTunnelType(2);
-
-  const string a = "csp";
-  cp1.setChronosyncSyncPrefix(a);
-
-  cp1.setChronosyncLsaPrefix("cla");
 
   cp1.setInfoInterestInterval(3);
 
@@ -75,8 +56,6 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   BOOST_CHECK_EQUAL(cp1.getRouterPrefix(), "/ATT/memphis/router1");
 
-  BOOST_CHECK_EQUAL(cp1.getRootKeyPrefix(), "adminRootKey");
-
   BOOST_CHECK_EQUAL(cp1.getInterestRetryNumber(), (uint32_t)2);
 
   BOOST_CHECK_EQUAL(cp1.getInterestResendTime(), 1000);
@@ -87,25 +66,9 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   BOOST_CHECK_EQUAL(cp1.getMaxFacesPerPrefix(), 50);
 
-  BOOST_CHECK_EQUAL(cp1.getLogDir(), "log");
-
-  BOOST_CHECK_EQUAL(cp1.getCertDir(), "cert");
-
-  BOOST_CHECK_EQUAL(cp1.getSeqFileDir(), "ssfd");
-
-  BOOST_CHECK_EQUAL(cp1.getDetailedLogging(), 1);
-
-  BOOST_CHECK_EQUAL(cp1.getDebugging(), 1);
-
-  BOOST_CHECK_EQUAL(cp1.getIsHyperbolicCalc(), 1);
+  BOOST_CHECK_EQUAL(cp1.getHyperbolicState(), 1);
 
   BOOST_CHECK_CLOSE(cp1.getCorTheta(), 102.5, 0.0001);
-
-  BOOST_CHECK_EQUAL(cp1.getTunnelType(), 2);
-
-  BOOST_CHECK_EQUAL(cp1.getChronosyncSyncPrefix(), "csp");
-
-  BOOST_CHECK_EQUAL(cp1.getChronosyncLsaPrefix(), "cla");
 
   BOOST_CHECK_EQUAL(cp1.getInfoInterestInterval(), 3);
 }

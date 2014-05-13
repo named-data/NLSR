@@ -30,8 +30,7 @@ NamePrefixList::insert(const ndn::Name& name)
                                                    m_nameList.end(),
                                                    ndn::bind(&nameCompare, _1 ,
                                                              ndn::cref(name)));
-  if (it != m_nameList.end())
-  {
+  if (it != m_nameList.end()) {
     return -1;
   }
   m_nameList.push_back(name);
@@ -45,8 +44,7 @@ NamePrefixList::remove(const ndn::Name& name)
                                                    m_nameList.end(),
                                                    ndn::bind(&nameCompare, _1 ,
                                                    ndn::cref(name)));
-  if (it != m_nameList.end())
-  {
+  if (it != m_nameList.end()) {
     m_nameList.erase(it);
   }
   return -1;
@@ -63,9 +61,7 @@ NamePrefixList::print()
 {
   int i = 1;
   for (std::list<ndn::Name>::iterator it = m_nameList.begin();
-       it != m_nameList.end();
-       it++)
-  {
+       it != m_nameList.end(); it++) {
     cout << "Name " << i << " : " << (*it) << endl;
     i++;
   }

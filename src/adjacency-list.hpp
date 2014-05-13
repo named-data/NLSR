@@ -71,8 +71,7 @@ public:
   void
   reset()
   {
-    if (m_adjList.size() > 0)
-    {
+    if (m_adjList.size() > 0) {
       m_adjList.clear();
     }
   }

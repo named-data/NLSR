@@ -11,13 +11,11 @@
 #include "lsa.hpp"
 #include "name-prefix-list.hpp"
 #include "adjacent.hpp"
-#include "utility/tokenizer.hpp"
 
 
 namespace nlsr {
 
 using namespace std;
-
 
 const ndn::Name
 NameLsa::getKey() const
@@ -36,8 +34,7 @@ NameLsa::NameLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
   m_lsSeqNo = lsn;
   m_lifeTime = lt;
   std::list<ndn::Name>& nl = npl.getNameList();
-  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++)
-  {
+  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++) {
     addName((*it));
   }
 }
@@ -52,8 +49,7 @@ NameLsa::getData()
   nameLsaData += "|";
   nameLsaData += boost::lexical_cast<std::string>(m_npl.getSize());
   std::list<ndn::Name> nl = m_npl.getNameList();
-  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++)
-  {
+  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++) {
     nameLsaData += "|";
     nameLsaData += (*it).toUri();
   }
@@ -69,8 +65,7 @@ NameLsa::initializeFromContent(const std::string& content)
   boost::tokenizer<boost::char_separator<char> >::iterator tok_iter =
                                                tokens.begin();
   m_origRouter = ndn::Name(*tok_iter++);
-  if (!(m_origRouter.size() > 0))
-  {
+  if (!(m_origRouter.size() > 0)) {
     return false;
   }
   try {
@@ -82,8 +77,7 @@ NameLsa::initializeFromContent(const std::string& content)
   catch (std::exception& e) {
     return false;
   }
-  for (uint32_t i = 0; i < numName; i++)
-  {
+  for (uint32_t i = 0; i < numName; i++) {
     string name(*tok_iter++);
     addName(name);
   }
@@ -167,8 +161,7 @@ CoordinateLsa::initializeFromContent(const std::string& content)
   boost::tokenizer<boost::char_separator<char> >::iterator tok_iter =
                                                tokens.begin();
   m_origRouter = ndn::Name(*tok_iter++);
-  if (!(m_origRouter.size() > 0))
-  {
+  if (!(m_origRouter.size() > 0)) {
     return false;
   }
   try {
@@ -208,10 +201,8 @@ AdjLsa::AdjLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
   m_lifeTime = lt;
   m_noLink = nl;
   std::list<Adjacent> al = adl.getAdjList();
-  for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++)
-  {
-    if ((*it).getStatus() == 1)
-    {
+  for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++) {
+    if ((*it).getStatus() == 1) {
       addAdjacent((*it));
     }
   }
@@ -242,12 +233,11 @@ AdjLsa::getData()
   adjLsaData += "|";
   adjLsaData += boost::lexical_cast<std::string>(m_adl.getSize());
   std::list<Adjacent> al = m_adl.getAdjList();
-  for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++)
-  {
+  for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++) {
     adjLsaData += "|";
     adjLsaData += (*it).getName().toUri();
     adjLsaData += "|";
-    adjLsaData += boost::lexical_cast<std::string>((*it).getConnectingFace());
+    adjLsaData += (*it).getConnectingFaceUri();
     adjLsaData += "|";
     adjLsaData += boost::lexical_cast<std::string>((*it).getLinkCost());
   }
@@ -263,8 +253,7 @@ AdjLsa::initializeFromContent(const std::string& content)
   boost::tokenizer<boost::char_separator<char> >::iterator tok_iter =
                                                tokens.begin();
   m_origRouter = ndn::Name(*tok_iter++);
-  if (!(m_origRouter.size() > 0))
-  {
+  if (!(m_origRouter.size() > 0)) {
     return false;
   }
   try {
@@ -276,13 +265,12 @@ AdjLsa::initializeFromContent(const std::string& content)
   catch (std::exception& e) {
     return false;
   }
-  for (uint32_t i = 0; i < numLink; i++)
-  {
+  for (uint32_t i = 0; i < numLink; i++) {
     try {
       string adjName(*tok_iter++);
-      int connectingFace = boost::lexical_cast<int>(*tok_iter++);
+      std::string connectingFaceUri(*tok_iter++);
       double linkCost = boost::lexical_cast<double>(*tok_iter++);
-      Adjacent adjacent(adjName, connectingFace, linkCost, 0, 0);
+      Adjacent adjacent(adjName, connectingFaceUri, linkCost, 0, 0);
       addAdjacent(adjacent);
     }
     catch (std::exception& e) {
@@ -296,8 +284,7 @@ AdjLsa::initializeFromContent(const std::string& content)
 void
 AdjLsa::addNptEntries(Nlsr& pnlsr)
 {
-  if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
-  {
+  if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix()) {
     pnlsr.getNamePrefixTable().addEntry(getOrigRouter(), getOrigRouter());
   }
 }
@@ -306,8 +293,7 @@ AdjLsa::addNptEntries(Nlsr& pnlsr)
 void
 AdjLsa::removeNptEntries(Nlsr& pnlsr)
 {
-  if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix())
-  {
+  if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix()) {
     pnlsr.getNamePrefixTable().removeEntry(getOrigRouter(), getOrigRouter());
   }
 }
@@ -330,7 +316,7 @@ operator<<(std::ostream& os, AdjLsa& aLsa)
   {
     os << "    Adjacent " << i << ": " << endl;
     os << "      Adjacent Name: " << (*it).getName() << endl;
-    os << "      Connecting Face: " << (*it).getConnectingFace() << endl;
+    os << "      Connecting FaceUri: " << (*it).getConnectingFaceUri() << endl;
     os << "      Link Cost: " << (*it).getLinkCost() << endl;
   }
   return os;

@@ -1,7 +1,10 @@
-#ifndef CONF_FILE_PROCESSOR_HPP
-#define CONF_FILE_PROCESSOR_HPP
+#ifndef CONF_PROCESSOR_HPP
+#define CONF_PROCESSOR_HPP
 
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/cstdint.hpp>
+
 #include "nlsr.hpp"
 
 namespace nlsr {
@@ -15,69 +18,31 @@ public:
   {
   }
 
-  int processConfFile();
+  bool
+  processConfFile();
 
 private:
-  int
-  processConfCommand(std::string command);
+  bool
+  load(std::istream& input);
 
-  int
-  processConfCommandNetwork(std::string command);
+  bool
+  processSection(const std::string& section,
+                 boost::property_tree::ptree SectionAttributeTree);
 
-  int
-  processConfCommandSiteName(std::string command);
+  bool
+  processConfSectionGeneral(boost::property_tree::ptree SectionAttributeTree);
 
-  int
-  processConfCommandRootKeyPrefix(std::string command);
+  bool
+  processConfSectionNeighbors(boost::property_tree::ptree SectionAttributeTree);
 
-  int
-  processConfCommandRouterName(std::string command);
+  bool
+  processConfSectionHyperbolic(boost::property_tree::ptree SectionAttributeTree);
 
-  int
-  processConfCommandInterestRetryNumber(std::string command);
+  bool
+  processConfSectionFib(boost::property_tree::ptree SectionAttributeTree);
 
-  int
-  processConfCommandInterestResendTime(std::string command);
-
-  int
-  processConfCommandLsaRefreshTime(std::string command);
-
-  int
-  processConfCommandMaxFacesPerPrefix(std::string command);
-
-  int
-  processConfCommandTunnelType(std::string command);
-
-  int
-  processConfCommandChronosyncSyncPrefix(std::string command);
-
-  int
-  processConfCommandLogDir(std::string command);
-
-  int
-  processConfCommandCertDir(std::string command);
-
-  int
-  processConfCommandDebugging(std::string command);
-
-  int
-  processConfCommandDetailedLogging(std::string command);
-
-  int
-  processConfCommandIsHyperbolicCalc(std::string command);
-
-  int
-  processConfCommandHyperbolicCordinate(std::string command);
-
-  int
-  processConfCommandNdnNeighbor(std::string command);
-
-  int
-  processConfCommandNdnName(std::string command);
-
-  int
-  processConfCommandLinkCost(std::string command);
-
+  bool
+  processConfSectionAdvertising(boost::property_tree::ptree SectionAttributeTree);
 
 private:
   std::string m_confFileName;
@@ -85,4 +50,4 @@ private:
 };
 
 } //namespace nlsr
-#endif //CONF_FILE_PROCESSOR_HPP
+#endif //CONF_PROCESSOR_HPP

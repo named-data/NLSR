@@ -9,27 +9,27 @@ class NextHop
 {
 public:
   NextHop()
-    : m_connectingFace(0)
+    : m_connectingFaceUri()
     , m_routeCost(0)
   {
   }
 
-  NextHop(uint32_t cf, double rc)
+  NextHop(const std::string& cfu, double rc)
   {
-    m_connectingFace = cf;
+    m_connectingFaceUri = cfu;
     m_routeCost = rc;
   }
 
-  uint32_t
-  getConnectingFace() const
+  const std::string&
+  getConnectingFaceUri() const
   {
-    return m_connectingFace;
+    return m_connectingFaceUri;
   }
 
   void
-  setConnectingFace(uint32_t cf)
+  setConnectingFaceUri(const std::string& cfu)
   {
-    m_connectingFace = cf;
+    m_connectingFaceUri = cfu;
   }
 
   double
@@ -45,13 +45,18 @@ public:
   }
 
 private:
-  uint32_t m_connectingFace;
+  std::string m_connectingFaceUri;
   double m_routeCost;
 };
 
 
-std::ostream&
-operator<<(std::ostream& os, NextHop& nh);
+inline std::ostream&
+operator<<(std::ostream& os, const NextHop& nh)
+{
+  os << "Face: " << nh.getConnectingFaceUri() << "  Route Cost: " <<
+     nh.getRouteCost();
+  return os;
+}
 
 }//namespace nlsr
 

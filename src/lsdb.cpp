@@ -1,7 +1,9 @@
 #include <string>
 #include <utility>
+
 #include "lsdb.hpp"
 #include "nlsr.hpp"
+#include "conf-parameter.hpp"
 #include "utility/name-helper.hpp"
 
 namespace nlsr {
@@ -39,8 +41,7 @@ Lsdb::findNameLsa(const ndn::Name& key)
   std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
                                                  m_nameLsdb.end(),
                                                  bind(nameLsaCompareByKey, _1, key));
-  if (it != m_nameLsdb.end())
-  {
+  if (it != m_nameLsdb.end()) {
     return &(*it);
   }
   return 0;
@@ -50,14 +51,11 @@ bool
 Lsdb::isNameLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
   NameLsa* nameLsaCheck = findNameLsa(key);
-  if (nameLsaCheck != 0)
-  {
-    if (nameLsaCheck->getLsSeqNo() < seqNo)
-    {
+  if (nameLsaCheck != 0) {
+    if (nameLsaCheck->getLsSeqNo() < seqNo) {
       return true;
     }
-    else
-    {
+    else {
       return false;
     }
   }
@@ -77,37 +75,30 @@ Lsdb::installNameLsa(NameLsa& nlsa)
 {
   int timeToExpire = m_lsaRefreshTime;
   NameLsa* chkNameLsa = findNameLsa(nlsa.getKey());
-  if (chkNameLsa == 0)
-  {
+  if (chkNameLsa == 0) {
     addNameLsa(nlsa);
     nlsa.writeLog();
     printNameLsdb();
-    if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-    {
+    if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().addEntry(nlsa.getOrigRouter(),
                                            nlsa.getOrigRouter());
       std::list<ndn::Name> nameList = nlsa.getNpl().getNameList();
       for (std::list<ndn::Name>::iterator it = nameList.begin(); it != nameList.end();
-           it++)
-      {
-        if ((*it) != m_nlsr.getConfParameter().getRouterPrefix())
-        {
+           it++) {
+        if ((*it) != m_nlsr.getConfParameter().getRouterPrefix()) {
           m_nlsr.getNamePrefixTable().addEntry((*it), nlsa.getOrigRouter());
         }
       }
     }
-    if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-    {
+    if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       timeToExpire = nlsa.getLifeTime();
     }
     nlsa.setExpiringEventId(scheduleNameLsaExpiration(nlsa.getKey(),
                                                       nlsa.getLsSeqNo(),
                                                       timeToExpire));
   }
-  else
-  {
-    if (chkNameLsa->getLsSeqNo() < nlsa.getLsSeqNo())
-    {
+  else {
+    if (chkNameLsa->getLsSeqNo() < nlsa.getLsSeqNo()) {
       chkNameLsa->writeLog();
       chkNameLsa->setLsSeqNo(nlsa.getLsSeqNo());
       chkNameLsa->setLifeTime(nlsa.getLifeTime());
@@ -120,14 +111,10 @@ Lsdb::installNameLsa(NameLsa& nlsa)
                           chkNameLsa->getNpl().getNameList().end(),
                           std::inserter(nameToAdd, nameToAdd.begin()));
       for (std::list<ndn::Name>::iterator it = nameToAdd.begin();
-           it != nameToAdd.end();
-           ++it)
-      {
+           it != nameToAdd.end(); ++it) {
         chkNameLsa->addName((*it));
-        if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-        {
-          if ((*it) != m_nlsr.getConfParameter().getRouterPrefix())
-          {
+        if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+          if ((*it) != m_nlsr.getConfParameter().getRouterPrefix()) {
             m_nlsr.getNamePrefixTable().addEntry((*it), nlsa.getOrigRouter());
           }
         }
@@ -139,19 +126,15 @@ Lsdb::installNameLsa(NameLsa& nlsa)
                           nlsa.getNpl().getNameList().end(),
                           std::inserter(nameToRemove, nameToRemove.begin()));
       for (std::list<ndn::Name>::iterator it = nameToRemove.begin();
-           it != nameToRemove.end(); ++it)
-      {
+           it != nameToRemove.end(); ++it) {
         chkNameLsa->removeName((*it));
-        if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-        {
-          if ((*it) != m_nlsr.getConfParameter().getRouterPrefix())
-          {
+        if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+          if ((*it) != m_nlsr.getConfParameter().getRouterPrefix()) {
             m_nlsr.getNamePrefixTable().removeEntry((*it), nlsa.getOrigRouter());
           }
         }
       }
-      if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-      {
+      if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
         timeToExpire = nlsa.getLifeTime();
       }
       cancelScheduleLsaExpiringEvent(chkNameLsa->getExpiringEventId());
@@ -171,8 +154,7 @@ Lsdb::addNameLsa(NameLsa& nlsa)
                                                  m_nameLsdb.end(),
                                                  bind(nameLsaCompareByKey, _1,
                                                       nlsa.getKey()));
-  if (it == m_nameLsdb.end())
-  {
+  if (it == m_nameLsdb.end()) {
     m_nameLsdb.push_back(nlsa);
     return true;
   }
@@ -184,20 +166,16 @@ Lsdb::removeNameLsa(const ndn::Name& key)
 {
   std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
                                                  m_nameLsdb.end(),
-                                                 bind(nameLsaCompareByKey, _1, key));
-  if (it != m_nameLsdb.end())
-  {
+                                                 ndn::bind(nameLsaCompareByKey, _1, key));
+  if (it != m_nameLsdb.end()) {
     (*it).writeLog();
     if ((*it).getOrigRouter() !=
-        m_nlsr.getConfParameter().getRouterPrefix())
-    {
+        m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().removeEntry((*it).getOrigRouter(),
                                               (*it).getOrigRouter());
       for (std::list<ndn::Name>::iterator nit = (*it).getNpl().getNameList().begin();
-           nit != (*it).getNpl().getNameList().end(); ++nit)
-      {
-        if ((*nit) != m_nlsr.getConfParameter().getRouterPrefix())
-        {
+           nit != (*it).getNpl().getNameList().end(); ++nit) {
+        if ((*nit) != m_nlsr.getConfParameter().getRouterPrefix()) {
           m_nlsr.getNamePrefixTable().removeEntry((*nit), (*it).getOrigRouter());
         }
       }
@@ -213,9 +191,8 @@ Lsdb::doesNameLsaExist(const ndn::Name& key)
 {
   std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
                                                  m_nameLsdb.end(),
-                                                 bind(nameLsaCompareByKey, _1, key));
-  if (it == m_nameLsdb.end())
-  {
+                                                 ndn::bind(nameLsaCompareByKey, _1, key));
+  if (it == m_nameLsdb.end()) {
     return false;
   }
   return true;
@@ -226,8 +203,7 @@ Lsdb::printNameLsdb()
 {
   cout << "---------------Name LSDB-------------------" << endl;
   for (std::list<NameLsa>::iterator it = m_nameLsdb.begin();
-       it != m_nameLsdb.end() ; it++)
-  {
+       it != m_nameLsdb.end() ; it++) {
     cout << (*it) << endl;
   }
 }
@@ -260,9 +236,8 @@ Lsdb::findCoordinateLsa(const ndn::Name& key)
 {
   std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
                                                        m_corLsdb.end(),
-                                                       bind(corLsaCompareByKey, _1, key));
-  if (it != m_corLsdb.end())
-  {
+                                                       ndn::bind(corLsaCompareByKey, _1, key));
+  if (it != m_corLsdb.end()) {
     return &(*it);
   }
   return 0;
@@ -272,14 +247,11 @@ bool
 Lsdb::isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
   CoordinateLsa* clsa = findCoordinateLsa(key);
-  if (clsa != 0)
-  {
-    if (clsa->getLsSeqNo() < seqNo)
-    {
+  if (clsa != 0) {
+    if (clsa->getLsSeqNo() < seqNo) {
       return true;
     }
-    else
-    {
+    else {
       return false;
     }
   }
@@ -300,43 +272,35 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
 {
   int timeToExpire = m_lsaRefreshTime;
   CoordinateLsa* chkCorLsa = findCoordinateLsa(clsa.getKey());
-  if (chkCorLsa == 0)
-  {
+  if (chkCorLsa == 0) {
     addCoordinateLsa(clsa);
-    printCorLsdb(); //debugging purpose
-    if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-    {
+    //debugging purpose
+    printCorLsdb();
+    if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().addEntry(clsa.getOrigRouter(),
                                            clsa.getOrigRouter());
     }
-    if (m_nlsr.getConfParameter().getIsHyperbolicCalc() >= 1)
-    {
+    if (m_nlsr.getConfParameter().getHyperbolicState() >= HYPERBOLIC_STATE_ON) {
       m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
     }
-    if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-    {
+    if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       timeToExpire = clsa.getLifeTime();
     }
     scheduleCoordinateLsaExpiration(clsa.getKey(),
                                     clsa.getLsSeqNo(), timeToExpire);
   }
-  else
-  {
-    if (chkCorLsa->getLsSeqNo() < clsa.getLsSeqNo())
-    {
+  else {
+    if (chkCorLsa->getLsSeqNo() < clsa.getLsSeqNo()) {
       chkCorLsa->setLsSeqNo(clsa.getLsSeqNo());
       chkCorLsa->setLifeTime(clsa.getLifeTime());
-      if (!chkCorLsa->isEqualContent(clsa))
-      {
+      if (!chkCorLsa->isEqualContent(clsa)) {
         chkCorLsa->setCorRadius(clsa.getCorRadius());
         chkCorLsa->setCorTheta(clsa.getCorTheta());
-        if (m_nlsr.getConfParameter().getIsHyperbolicCalc() >= 1)
-        {
+        if (m_nlsr.getConfParameter().getHyperbolicState() >= HYPERBOLIC_STATE_ON) {
           m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
         }
       }
-      if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-      {
+      if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
         timeToExpire = clsa.getLifeTime();
       }
       cancelScheduleLsaExpiringEvent(chkCorLsa->getExpiringEventId());
@@ -353,10 +317,9 @@ Lsdb::addCoordinateLsa(CoordinateLsa& clsa)
 {
   std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
                                                        m_corLsdb.end(),
-                                                       bind(corLsaCompareByKey, _1,
-                                                            clsa.getKey()));
-  if (it == m_corLsdb.end())
-  {
+                                                       ndn::bind(corLsaCompareByKey, _1,
+                                                                 clsa.getKey()));
+  if (it == m_corLsdb.end()) {
     m_corLsdb.push_back(clsa);
     return true;
   }
@@ -368,12 +331,11 @@ Lsdb::removeCoordinateLsa(const ndn::Name& key)
 {
   std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
                                                        m_corLsdb.end(),
-                                                       bind(corLsaCompareByKey, _1, key));
-  if (it != m_corLsdb.end())
-  {
+                                                       ndn::bind(corLsaCompareByKey,
+                                                                 _1, key));
+  if (it != m_corLsdb.end()) {
     if ((*it).getOrigRouter() !=
-        m_nlsr.getConfParameter().getRouterPrefix())
-    {
+        m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().removeEntry((*it).getOrigRouter(),
                                               (*it).getOrigRouter());
     }
@@ -388,21 +350,21 @@ Lsdb::doesCoordinateLsaExist(const ndn::Name& key)
 {
   std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
                                                        m_corLsdb.end(),
-                                                       bind(corLsaCompareByKey, _1, key));
-  if (it == m_corLsdb.end())
-  {
+                                                       ndn::bind(corLsaCompareByKey,
+                                                                 _1, key));
+  if (it == m_corLsdb.end()) {
     return false;
   }
   return true;
 }
 
+//debugging
 void
-Lsdb::printCorLsdb() //debugging
+Lsdb::printCorLsdb()
 {
   cout << "---------------Cor LSDB-------------------" << endl;
   for (std::list<CoordinateLsa>::iterator it = m_corLsdb.begin();
-       it != m_corLsdb.end() ; it++)
-  {
+       it != m_corLsdb.end() ; it++) {
     cout << (*it) << endl;
   }
 }
@@ -422,17 +384,13 @@ Lsdb::scheduledAdjLsaBuild()
 {
   cout << "scheduledAdjLsaBuild Called" << endl;
   m_nlsr.setIsBuildAdjLsaSheduled(0);
-  if (m_nlsr.getAdjacencyList().isAdjLsaBuildable(m_nlsr))
-  {
+  if (m_nlsr.getAdjacencyList().isAdjLsaBuildable(m_nlsr)) {
     int adjBuildCount = m_nlsr.getAdjBuildCount();
-    if (adjBuildCount > 0)
-    {
-      if (m_nlsr.getAdjacencyList().getNumOfActiveNeighbor() > 0)
-      {
+    if (adjBuildCount > 0) {
+      if (m_nlsr.getAdjacencyList().getNumOfActiveNeighbor() > 0) {
         buildAndInstallOwnAdjLsa();
       }
-      else
-      {
+      else {
         ndn::Name key = m_nlsr.getConfParameter().getRouterPrefix();
         key.append("adjacency");
         removeAdjLsa(key);
@@ -441,8 +399,7 @@ Lsdb::scheduledAdjLsaBuild()
       m_nlsr.setAdjBuildCount(m_nlsr.getAdjBuildCount() - adjBuildCount);
     }
   }
-  else
-  {
+  else {
     m_nlsr.setIsBuildAdjLsaSheduled(1);
     int schedulingTime = m_nlsr.getConfParameter().getInterestRetryNumber() *
                          m_nlsr.getConfParameter().getInterestResendTime();
@@ -460,8 +417,7 @@ Lsdb::addAdjLsa(AdjLsa& alsa)
                                                 m_adjLsdb.end(),
                                                 bind(adjLsaCompareByKey, _1,
                                                      alsa.getKey()));
-  if (it == m_adjLsdb.end())
-  {
+  if (it == m_adjLsdb.end()) {
     m_adjLsdb.push_back(alsa);
     return true;
   }
@@ -474,8 +430,7 @@ Lsdb::findAdjLsa(const ndn::Name& key)
   std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
                                                 m_adjLsdb.end(),
                                                 bind(adjLsaCompareByKey, _1, key));
-  if (it != m_adjLsdb.end())
-  {
+  if (it != m_adjLsdb.end()) {
     return &(*it);
   }
   return 0;
@@ -486,14 +441,11 @@ bool
 Lsdb::isAdjLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
   AdjLsa*  adjLsaCheck = findAdjLsa(key);
-  if (adjLsaCheck != 0)
-  {
-    if (adjLsaCheck->getLsSeqNo() < seqNo)
-    {
+  if (adjLsaCheck != 0) {
+    if (adjLsaCheck->getLsSeqNo() < seqNo) {
       return true;
     }
-    else
-    {
+    else {
       return false;
     }
   }
@@ -514,32 +466,26 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
 {
   int timeToExpire = m_lsaRefreshTime;
   AdjLsa* chkAdjLsa = findAdjLsa(alsa.getKey());
-  if (chkAdjLsa == 0)
-  {
+  if (chkAdjLsa == 0) {
     addAdjLsa(alsa);
     alsa.addNptEntries(m_nlsr);
     m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
-    if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-    {
+    if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       timeToExpire = alsa.getLifeTime();
     }
     scheduleAdjLsaExpiration(alsa.getKey(),
                              alsa.getLsSeqNo(), timeToExpire);
   }
-  else
-  {
-    if (chkAdjLsa->getLsSeqNo() < alsa.getLsSeqNo())
-    {
+  else {
+    if (chkAdjLsa->getLsSeqNo() < alsa.getLsSeqNo()) {
       chkAdjLsa->setLsSeqNo(alsa.getLsSeqNo());
       chkAdjLsa->setLifeTime(alsa.getLifeTime());
-      if (!chkAdjLsa->isEqualContent(alsa))
-      {
+      if (!chkAdjLsa->isEqualContent(alsa)) {
         chkAdjLsa->getAdl().reset();
         chkAdjLsa->getAdl().addAdjacents(alsa.getAdl());
         m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
       }
-      if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix())
-      {
+      if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
         timeToExpire = alsa.getLifeTime();
       }
       cancelScheduleLsaExpiringEvent(chkAdjLsa->getExpiringEventId());
@@ -562,7 +508,7 @@ Lsdb::buildAndInstallOwnAdjLsa()
                 m_nlsr.getAdjacencyList());
   m_nlsr.getSequencingManager().increaseAdjLsaSeq();
   // publish routing update
-  ndn::Name lsaPrefix = m_nlsr.getConfParameter().getChronosyncLsaPrefix();
+  ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
   lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
   m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
                                                     lsaPrefix);
@@ -574,9 +520,8 @@ Lsdb::removeAdjLsa(const ndn::Name& key)
 {
   std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
                                                 m_adjLsdb.end(),
-                                                bind(adjLsaCompareByKey, _1, key));
-  if (it != m_adjLsdb.end())
-  {
+                                                ndn::bind(adjLsaCompareByKey, _1, key));
+  if (it != m_adjLsdb.end()) {
     (*it).removeNptEntries(m_nlsr);
     m_adjLsdb.erase(it);
     return true;
@@ -590,8 +535,7 @@ Lsdb::doesAdjLsaExist(const ndn::Name& key)
   std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
                                                 m_adjLsdb.end(),
                                                 bind(adjLsaCompareByKey, _1, key));
-  if (it == m_adjLsdb.end())
-  {
+  if (it == m_adjLsdb.end()) {
     return false;
   }
   return true;
@@ -621,13 +565,10 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
   cout << "Lsdb::exprireOrRefreshNameLsa Called " << endl;
   cout << "LSA Key : " << lsaKey << " Seq No: " << seqNo << endl;
   NameLsa* chkNameLsa = findNameLsa(lsaKey);
-  if (chkNameLsa != 0)
-  {
+  if (chkNameLsa != 0) {
     cout << " LSA Exists with seq no: " << chkNameLsa->getLsSeqNo() << endl;
-    if (chkNameLsa->getLsSeqNo() == seqNo)
-    {
-      if (chkNameLsa->getOrigRouter() == m_thisRouterPrefix)
-      {
+    if (chkNameLsa->getLsSeqNo() == seqNo) {
+      if (chkNameLsa->getOrigRouter() == m_thisRouterPrefix) {
         chkNameLsa->writeLog();
         cout << "Own Name LSA, so refreshing name LSA" << endl;
         chkNameLsa->setLsSeqNo(chkNameLsa->getLsSeqNo() + 1);
@@ -638,13 +579,12 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                                  chkNameLsa->getLsSeqNo(),
                                                                  m_lsaRefreshTime));
         // publish routing update
-        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getChronosyncLsaPrefix();
+        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
         m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
                                                           lsaPrefix);
       }
-      else
-      {
+      else {
         cout << "Other's Name LSA, so removing form LSDB" << endl;
         removeNameLsa(lsaKey);
       }
@@ -658,13 +598,10 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
   cout << "Lsdb::exprireOrRefreshAdjLsa Called " << endl;
   cout << "LSA Key : " << lsaKey << " Seq No: " << seqNo << endl;
   AdjLsa* chkAdjLsa = findAdjLsa(lsaKey);
-  if (chkAdjLsa != 0)
-  {
+  if (chkAdjLsa != 0) {
     cout << " LSA Exists with seq no: " << chkAdjLsa->getLsSeqNo() << endl;
-    if (chkAdjLsa->getLsSeqNo() == seqNo)
-    {
-      if (chkAdjLsa->getOrigRouter() == m_thisRouterPrefix)
-      {
+    if (chkAdjLsa->getLsSeqNo() == seqNo) {
+      if (chkAdjLsa->getOrigRouter() == m_thisRouterPrefix) {
         cout << "Own Adj LSA, so refreshing Adj LSA" << endl;
         chkAdjLsa->setLsSeqNo(chkAdjLsa->getLsSeqNo() + 1);
         m_nlsr.getSequencingManager().setAdjLsaSeq(chkAdjLsa->getLsSeqNo());
@@ -673,13 +610,12 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                                chkAdjLsa->getLsSeqNo(),
                                                                m_lsaRefreshTime));
         // publish routing update
-        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getChronosyncLsaPrefix();
+        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
         m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
                                                           lsaPrefix);
       }
-      else
-      {
+      else {
         cout << "Other's Adj LSA, so removing form LSDB" << endl;
         removeAdjLsa(lsaKey);
       }
@@ -696,13 +632,10 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
   cout << "Lsdb::exprireOrRefreshCorLsa Called " << endl;
   cout << "LSA Key : " << lsaKey << " Seq No: " << seqNo << endl;
   CoordinateLsa* chkCorLsa = findCoordinateLsa(lsaKey);
-  if (chkCorLsa != 0)
-  {
+  if (chkCorLsa != 0) {
     cout << " LSA Exists with seq no: " << chkCorLsa->getLsSeqNo() << endl;
-    if (chkCorLsa->getLsSeqNo() == seqNo)
-    {
-      if (chkCorLsa->getOrigRouter() == m_thisRouterPrefix)
-      {
+    if (chkCorLsa->getLsSeqNo() == seqNo) {
+      if (chkCorLsa->getOrigRouter() == m_thisRouterPrefix) {
         cout << "Own Cor LSA, so refreshing Cor LSA" << endl;
         chkCorLsa->setLsSeqNo(chkCorLsa->getLsSeqNo() + 1);
         m_nlsr.getSequencingManager().setCorLsaSeq(chkCorLsa->getLsSeqNo());
@@ -712,18 +645,16 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                         chkCorLsa->getLsSeqNo(),
                                         m_lsaRefreshTime));
         // publish routing update
-        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getChronosyncLsaPrefix();
+        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
         m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
                                                           lsaPrefix);
       }
-      else
-      {
+      else {
         cout << "Other's Cor LSA, so removing form LSDB" << endl;
         removeCoordinateLsa(lsaKey);
       }
-      if (m_nlsr.getConfParameter().getIsHyperbolicCalc() >= 1)
-      {
+      if (m_nlsr.getConfParameter().getHyperbolicState() >= HYPERBOLIC_STATE_ON) {
         m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
       }
     }
@@ -753,41 +684,36 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
   string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(interest.getName(),
                                                        chkString);
-  if (lsaPosition >= 0)
-  {
+  if (lsaPosition >= 0) {
     std::string interestedLsType;
     uint64_t interestedLsSeqNo;
     ndn::Name origRouter = intName.getSubName(lsaPosition + 1,
                                               interest.getName().size() - lsaPosition - 3);
-    interestedLsType  = intName[-2].toEscapedString();
+    interestedLsType  = intName[-2].toUri();
     interestedLsSeqNo = intName[-1].toNumber();
     std::cout << "Router Name: " << origRouter << std::endl;
     std::cout << "Ls Type    : " << interestedLsType << std::endl;
     std::cout << "Ls Seq     : " << interestedLsSeqNo << endl;
     std::cout << "Ls Type: " << interestedLsType << std::endl;
-    if (interestedLsType == "name")
-    {
+    if (interestedLsType == "name") {
       processInterestForNameLsa(interest,
                                 origRouter.append(interestedLsType),
                                 interestedLsSeqNo);
       return;
     }
-    else if (interestedLsType == "adjacency")
-    {
+    else if (interestedLsType == "adjacency") {
       processInterestForAdjacencyLsa(interest,
                                      origRouter.append(interestedLsType),
                                      interestedLsSeqNo);
       return;
     }
-    else if (interestedLsType == "coordinate")
-    {
+    else if (interestedLsType == "coordinate") {
       processInterestForCoordinateLsa(interest,
                                       origRouter.append(interestedLsType),
                                       interestedLsSeqNo);
       return;
     }
-    else
-    {
+    else {
       cout << "Unrecognized LSA Type :(" << endl;
     }
   }
@@ -799,10 +725,8 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
                                 uint32_t interestedlsSeqNo)
 {
   NameLsa*  nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
-  if (nameLsa != 0)
-  {
-    if (nameLsa->getLsSeqNo() >= interestedlsSeqNo)
-    {
+  if (nameLsa != 0) {
+    if (nameLsa->getLsSeqNo() >= interestedlsSeqNo) {
       ndn::Data data(ndn::Name(interest.getName()).appendVersion());
       data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
       std::string content = nameLsa->getData();
@@ -821,10 +745,8 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
                                      uint32_t interestedlsSeqNo)
 {
   AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
-  if (adjLsa != 0)
-  {
-    if (adjLsa->getLsSeqNo() >= interestedlsSeqNo)
-    {
+  if (adjLsa != 0) {
+    if (adjLsa->getLsSeqNo() >= interestedlsSeqNo) {
       ndn::Data data(ndn::Name(interest.getName()).appendVersion());
       data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
       std::string content = adjLsa->getData();
@@ -843,10 +765,8 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
                                       uint32_t interestedlsSeqNo)
 {
   CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
-  if (corLsa != 0)
-  {
-    if (corLsa->getLsSeqNo() >= interestedlsSeqNo)
-    {
+  if (corLsa != 0) {
+    if (corLsa->getLsSeqNo() >= interestedlsSeqNo) {
       ndn::Data data(ndn::Name(interest.getName()).appendVersion());
       data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
       std::string content = corLsa->getData();
@@ -867,37 +787,32 @@ Lsdb::processContent(const ndn::Interest& interest, const ndn::Data& data)
   string dataContent(reinterpret_cast<const char*>(data.getContent().value()));
   string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(dataName, chkString);
-  if (lsaPosition >= 0)
-  {
+  if (lsaPosition >= 0) {
     std::string interestedLsType;
     uint64_t interestedLsSeqNo;
     ndn::Name origRouter = dataName.getSubName(lsaPosition + 1,
                                                dataName.size() - lsaPosition - 4);
-    interestedLsType  = dataName[-3].toEscapedString();
+    interestedLsType  = dataName[-3].toUri();
     interestedLsSeqNo = dataName[-2].toNumber();
     std::cout << "Ls Type    : " << interestedLsType << std::endl;
     std::cout << "Ls Seq     : " << interestedLsSeqNo << std::endl;
     std::cout << "Ls Type: " << interestedLsType << std::endl;
-    if (interestedLsType == "name")
-    {
+    if (interestedLsType == "name") {
       processContentNameLsa(origRouter.append(interestedLsType),
                             interestedLsSeqNo, dataContent);
       return;
     }
-    else if (interestedLsType == "adjacency")
-    {
+    else if (interestedLsType == "adjacency") {
       processContentAdjacencyLsa(origRouter.append(interestedLsType),
                                  interestedLsSeqNo, dataContent);
       return;
     }
-    else if (interestedLsType == "coordinate")
-    {
+    else if (interestedLsType == "coordinate") {
       processContentCoordinateLsa(origRouter.append(interestedLsType),
                                   interestedLsSeqNo, dataContent);
       return;
     }
-    else
-    {
+    else {
       cout << "Unrecognized LSA Type :(" << endl;
     }
   }
@@ -907,15 +822,12 @@ void
 Lsdb::processContentNameLsa(const ndn::Name& lsaKey,
                             uint32_t lsSeqNo, std::string& dataContent)
 {
-  if (isNameLsaNew(lsaKey, lsSeqNo))
-  {
+  if (isNameLsaNew(lsaKey, lsSeqNo)) {
     NameLsa nameLsa;
-    if (nameLsa.initializeFromContent(dataContent))
-    {
+    if (nameLsa.initializeFromContent(dataContent)) {
       installNameLsa(nameLsa);
     }
-    else
-    {
+    else {
       std::cout << "LSA data decoding error :(" << std::endl;
     }
   }
@@ -925,15 +837,12 @@ void
 Lsdb::processContentAdjacencyLsa(const ndn::Name& lsaKey,
                                  uint32_t lsSeqNo, std::string& dataContent)
 {
-  if (isAdjLsaNew(lsaKey, lsSeqNo))
-  {
+  if (isAdjLsaNew(lsaKey, lsSeqNo)) {
     AdjLsa adjLsa;
-    if (adjLsa.initializeFromContent(dataContent))
-    {
+    if (adjLsa.initializeFromContent(dataContent)) {
       installAdjLsa(adjLsa);
     }
-    else
-    {
+    else {
       std::cout << "LSA data decoding error :(" << std::endl;
     }
   }
@@ -943,15 +852,12 @@ void
 Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
                                   uint32_t lsSeqNo, std::string& dataContent)
 {
-  if (isCoordinateLsaNew(lsaKey, lsSeqNo))
-  {
+  if (isCoordinateLsaNew(lsaKey, lsSeqNo)) {
     CoordinateLsa corLsa;
-    if (corLsa.initializeFromContent(dataContent))
-    {
+    if (corLsa.initializeFromContent(dataContent)) {
       installCoordinateLsa(corLsa);
     }
-    else
-    {
+    else {
       std::cout << "LSA data decoding error :(" << std::endl;
     }
   }
@@ -970,8 +876,7 @@ Lsdb::printAdjLsdb()
 {
   cout << "---------------Adj LSDB-------------------" << endl;
   for (std::list<AdjLsa>::iterator it = m_adjLsdb.begin();
-       it != m_adjLsdb.end() ; it++)
-  {
+       it != m_adjLsdb.end() ; it++) {
     cout << (*it) << endl;
   }
 }
@@ -980,16 +885,13 @@ Lsdb::printAdjLsdb()
 bool
 Lsdb::doesLsaExist(const ndn::Name& key, const std::string& lsType)
 {
-  if (lsType == "name")
-  {
+  if (lsType == "name") {
     return doesNameLsaExist(key);
   }
-  else if (lsType == "adjacency")
-  {
+  else if (lsType == "adjacency") {
     return doesAdjLsaExist(key);
   }
-  else if (lsType == "coordinate")
-  {
+  else if (lsType == "coordinate") {
     return doesCoordinateLsaExist(key);
   }
   return false;

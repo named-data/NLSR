@@ -30,8 +30,7 @@ main(int32_t argc, char** argv)
   std::string programName(argv[0]);
   nlsr.setConfFileName("nlsr.conf");
   int32_t opt;
-  while ((opt = getopt(argc, argv, "df:p:h")) != -1)
-  {
+  while ((opt = getopt(argc, argv, "df:p:h")) != -1) {
     switch (opt)
     {
       case 'f':
@@ -56,8 +55,7 @@ main(int32_t argc, char** argv)
   }
   ConfFileProcessor cfp(nlsr, nlsr.getConfFileName());
   int32_t res = cfp.processConfFile();
-  if (res < 0)
-  {
+  if (res < 0) {
     std::cerr << "Error in configuration file processing! Exiting from NLSR" <<
               std::endl;
     return EXIT_FAILURE;

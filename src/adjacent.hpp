@@ -6,30 +6,22 @@
 #define NLSR_ADJACENT_HPP
 
 namespace nlsr {
+
+enum {
+  ADJACENT_STATUS_INACTIVE = 0,
+  ADJACENT_STATUS_ACTIVE = 1
+};
+
 class Adjacent
 {
 
 public:
-  Adjacent()
-    : m_name()
-    , m_connectingFace(0)
-    , m_linkCost(10.0)
-    , m_status(0)
-    , m_interestTimedOutNo(0)
-  {
-  }
+  Adjacent();
 
-  Adjacent(const ndn::Name& an)
-    : m_connectingFace(0)
-    , m_linkCost(0.0)
-    , m_status(0)
-    , m_interestTimedOutNo(0)
-  {
-    m_name = an;
-  }
+  Adjacent(const ndn::Name& an);
 
-  Adjacent(const ndn::Name& an, uint32_t cf, double lc, uint32_t s,
-           uint32_t iton);
+  Adjacent(const ndn::Name& an, const std::string& cfu,  double lc,
+          uint32_t s, uint32_t iton);
 
   const ndn::Name&
   getName() const
@@ -43,16 +35,16 @@ public:
     m_name = an;
   }
 
-  uint32_t
-  getConnectingFace() const
+  const std::string&
+  getConnectingFaceUri() const
   {
-    return m_connectingFace;
+    return m_connectingFaceUri;
   }
 
   void
-  setConnectingFace(uint32_t cf)
+  setConnectingFaceUri(const std::string& cfu)
   {
-    m_connectingFace = cf;
+    m_connectingFaceUri = cfu;
   }
 
   double
@@ -97,9 +89,12 @@ public:
   bool
   compare(const ndn::Name& adjacencyName);
 
+public:
+  static const float DEFAULT_LINK_COST;
+
 private:
   ndn::Name m_name;
-  uint32_t m_connectingFace;
+  std::string m_connectingFaceUri;
   double m_linkCost;
   uint32_t m_status;
   uint32_t m_interestTimedOutNo;

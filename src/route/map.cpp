@@ -27,8 +27,7 @@ void
 Map::addEntry(const ndn::Name& rtrName)
 {
   MapEntry me(rtrName, m_mappingIndex);
-  if (addEntry(me))
-  {
+  if (addEntry(me)) {
     m_mappingIndex++;
   }
 }
@@ -39,9 +38,9 @@ Map::addEntry(MapEntry& mpe)
   //cout << mpe;
   std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
-                                                  bind(&mapEntryCompareByRouter, _1, mpe.getRouter()));
-  if (it == m_table.end())
-  {
+                                                  ndn::bind(&mapEntryCompareByRouter,
+                                                            _1, mpe.getRouter()));
+  if (it == m_table.end()) {
     m_table.push_back(mpe);
     return true;
   }
@@ -53,10 +52,9 @@ Map::getRouterNameByMappingNo(int32_t mn)
 {
   std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
-                                                  bind(&mapEntryCompareByMappingNo,
-                                                       _1, mn));
-  if (it != m_table.end())
-  {
+                                                  ndn::bind(&mapEntryCompareByMappingNo,
+                                                            _1, mn));
+  if (it != m_table.end()) {
     return (*it).getRouter();
   }
   return ndn::Name();
@@ -67,10 +65,9 @@ Map::getMappingNoByRouterName(const ndn::Name& rName)
 {
   std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
-                                                  bind(&mapEntryCompareByRouter,
-                                                       _1, rName));
-  if (it != m_table.end())
-  {
+                                                  ndn::bind(&mapEntryCompareByRouter,
+                                                            _1, rName));
+  if (it != m_table.end()) {
     return (*it).getMappingNumber();
   }
   return -1;
@@ -81,15 +78,11 @@ Map::createFromAdjLsdb(Nlsr& pnlsr)
 {
   std::list<AdjLsa> adjLsdb = pnlsr.getLsdb().getAdjLsdb();
   for (std::list<AdjLsa>::iterator it = adjLsdb.begin();
-       it != adjLsdb.end() ; it++)
-  {
-    //ndn::Name& linkStartRouter = (*it).getOrigRouter();
+       it != adjLsdb.end() ; it++) {
     addEntry((*it).getOrigRouter());
     std::list<Adjacent> adl = (*it).getAdl().getAdjList();
     for (std::list<Adjacent>::iterator itAdl = adl.begin();
-         itAdl != adl.end() ; itAdl++)
-    {
-      //ndn::Name& linkEndRouter = (*itAdl).getName();
+         itAdl != adl.end() ; itAdl++) {
       addEntry((*itAdl).getName());
     }
   }
@@ -107,8 +100,7 @@ operator<<(ostream& os, Map& map)
 {
   os << "---------------Map----------------------" << endl;
   std::list<MapEntry> ml = map.getMapList();
-  for (std::list<MapEntry>::iterator it = ml.begin(); it != ml.end() ; it++)
-  {
+  for (std::list<MapEntry>::iterator it = ml.begin(); it != ml.end() ; it++) {
     os << (*it);
   }
   return os;

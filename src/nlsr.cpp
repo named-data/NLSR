@@ -4,6 +4,7 @@
 #include <cstdio>
 
 #include "nlsr.hpp"
+#include "adjacent.hpp"
 
 
 namespace nlsr {
@@ -18,6 +19,10 @@ Nlsr::registrationFailed(const ndn::Name& name)
   throw Error("Error: Prefix registration failed");
 }
 
+void
+Nlsr::onRegistrationSuccess(const ndn::Name& name)
+{
+}
 
 void
 Nlsr::setInfoInterestFilter()
@@ -26,20 +31,40 @@ Nlsr::setInfoInterestFilter()
   getNlsrFace().setInterestFilter(name,
                                   ndn::bind(&HelloProtocol::processInterest,
                                             &m_helloProtocol, _1, _2),
+                                  ndn::bind(&Nlsr::onRegistrationSuccess, this, _1),
                                   ndn::bind(&Nlsr::registrationFailed, this, _1));
 }
 
 void
 Nlsr::setLsaInterestFilter()
 {
-  // ndn::Name name(m_confParam.getChronosyncLsaPrefix() +
-  //                m_confParam.getRouterPrefix());
-  ndn::Name name = m_confParam.getChronosyncLsaPrefix();
+  ndn::Name name = m_confParam.getLsaPrefix();
   name.append(m_confParam.getRouterPrefix());
   getNlsrFace().setInterestFilter(name,
                                   ndn::bind(&Lsdb::processInterest,
                                             &m_nlsrLsdb, _1, _2),
+                                  ndn::bind(&Nlsr::onRegistrationSuccess, this, _1),
                                   ndn::bind(&Nlsr::registrationFailed, this, _1));
+}
+
+void
+Nlsr::registerPrefixes()
+{
+  std::string strategy("ndn:/localhost/nfd/strategy/broadcast");
+  std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
+  for (std::list<Adjacent>::iterator it = adjacents.begin();
+       it != adjacents.end(); it++) {
+    m_fib.registerPrefix((*it).getName(), (*it).getConnectingFaceUri(),
+                         (*it).getLinkCost(), 31536000); /* One Year in seconds */
+    m_fib.registerPrefix(m_confParam.getChronosyncPrefix(),
+                         (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
+    m_fib.registerPrefix(m_confParam.getLsaPrefix(),
+                         (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
+     m_fib.setStrategy((*it).getName(), strategy);
+  }
+  
+  m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy);
+  m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy);
 }
 
 void
@@ -56,11 +81,12 @@ Nlsr::initialize()
   m_adjacencyList.print();
   m_namePrefixList.print();
   /* debugging purpose end */
+  registerPrefixes();
   m_nlsrLsdb.buildAndInstallOwnNameLsa();
   m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
   setInfoInterestFilter();
   setLsaInterestFilter();
-  m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncSyncPrefix().toUri());
+  m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncPrefix().toUri());
   m_syncLogicHandler.createSyncSocket(boost::ref(*this));
   //m_interestManager.scheduleInfoInterest(10);
   m_helloProtocol.scheduleInterest(10);

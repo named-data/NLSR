@@ -9,25 +9,20 @@ using namespace std;
 bool
 FibEntry::isEqualNextHops(NexthopList& nhlOther)
 {
-  if (m_nexthopList.getSize() != nhlOther.getSize())
-  {
+  if (m_nexthopList.getSize() != nhlOther.getSize()) {
     return false;
   }
-  else
-  {
+  else {
     uint32_t nhCount = 0;
     std::list<NextHop>::iterator it1, it2;
     for (it1 = m_nexthopList.getNextHops().begin(),
          it2 = nhlOther.getNextHops().begin() ;
-         it1 != m_nexthopList.getNextHops().end() ; it1++, it2++)
-    {
-      if (it1->getConnectingFace() == it2->getConnectingFace())
-      {
+         it1 != m_nexthopList.getNextHops().end() ; it1++, it2++) {
+      if (it1->getConnectingFaceUri() == it2->getConnectingFaceUri()) {
         it1->setRouteCost(it2->getRouteCost());
         nhCount++;
       }
-      else
-      {
+      else {
         break;
       }
     }

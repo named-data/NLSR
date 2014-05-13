@@ -41,6 +41,7 @@ private:
 private:
   Nlsr& m_nlsr;
   ndn::KeyChain m_keyChain;
+  static const std::string INFO_COMPONENT;
 };
 
 } //namespace nlsr

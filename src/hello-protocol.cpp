@@ -5,6 +5,8 @@
 
 namespace nlsr {
 
+const std::string HelloProtocol::INFO_COMPONENT="info";
+
 void
 HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
 {
@@ -25,11 +27,10 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
 {
   std::list<Adjacent> adjList = m_nlsr.getAdjacencyList().getAdjList();
   for (std::list<Adjacent>::iterator it = adjList.begin(); it != adjList.end();
-       ++it)
-  {
+       ++it) {
     ndn::Name interestName = (*it).getName() ;
-    interestName.append("info");
-    interestName.append(ndn::Name(m_nlsr.getConfParameter().getRouterPrefix()));
+    interestName.append(INFO_COMPONENT);
+    interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
     expressInterest(interestName,
                     m_nlsr.getConfParameter().getInterestResendTime());
   }
@@ -50,27 +51,24 @@ HelloProtocol::processInterest(const ndn::Name& name,
 {
   const ndn::Name interestName = interest.getName();
   std::cout << "Interest Received for Name: " << interestName << std::endl;
-  std::string chkString("info");
-  int32_t infoPosition = util::getNameComponentPosition(interestName, chkString);
-  if (infoPosition < 0)
-  {
+  if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
-  ndn::Name neighbor = interestName.getSubName(infoPosition + 1);
+  ndn::Name neighbor;
+  neighbor.wireDecode(interestName.get(-1).blockFromValue());
   std::cout << "Neighbor: " << neighbor << std::endl;
-  if (m_nlsr.getAdjacencyList().isNeighbor(neighbor))
-  {
+  if (m_nlsr.getAdjacencyList().isNeighbor(neighbor)) {
     ndn::Data data(ndn::Name(interest.getName()).appendVersion());
     data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
-    data.setContent((const uint8_t*)"info", sizeof("info"));
+    data.setContent(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.c_str()),
+                    INFO_COMPONENT.size());
     m_keyChain.sign(data);
     std::cout << ">> D: " << data << std::endl;
     m_nlsr.getNlsrFace().put(data);
     int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
-    if (status == 0)
-    {
+    if (status == 0) {
       ndn::Name interestName(neighbor);
-      interestName.append("info");
+      interestName.append(INFO_COMPONENT);
       interestName.append(m_nlsr.getConfParameter().getRouterPrefix());
       expressInterest(interestName,
                       m_nlsr.getConfParameter().getInterestResendTime());
@@ -83,13 +81,10 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
 {
   const ndn::Name interestName(interest.getName());
   std::cout << "Interest timed out for Name: " << interestName << std::endl;
-  std::string chkString("info");
-  int32_t infoPosition = util::getNameComponentPosition(interestName, chkString);
-  if (infoPosition < 0)
-  {
+  if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
-  ndn::Name neighbor = interestName.getSubName(0, infoPosition);
+  ndn::Name neighbor = interestName.getPrefix(-2);
   std::cout << "Neighbor: " << neighbor << std::endl;
   m_nlsr.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
   int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
@@ -98,22 +93,19 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   std::cout << "Neighbor: " << neighbor << std::endl;
   std::cout << "Status: " << status << std::endl;
   std::cout << "Info Interest Timed out: " << infoIntTimedOutCount << std::endl;
-  if ((infoIntTimedOutCount < m_nlsr.getConfParameter().getInterestRetryNumber()))
-  {
+  if ((infoIntTimedOutCount < m_nlsr.getConfParameter().getInterestRetryNumber())) {
     ndn::Name interestName(neighbor);
-    interestName.append("info");
-    interestName.append(m_nlsr.getConfParameter().getRouterPrefix());
+    interestName.append(INFO_COMPONENT);
+    interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
     expressInterest(interestName,
                     m_nlsr.getConfParameter().getInterestResendTime());
   }
   else if ((status == 1) &&
-           (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber()))
-  {
+           (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber())) {
     m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, 0);
     m_nlsr.incrementAdjBuildCount();
-    if (m_nlsr.getIsBuildAdjLsaSheduled() == 0)
-    {
-      m_nlsr.setIsBuildAdjLsaSheduled(1);
+    if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
+      m_nlsr.setIsBuildAdjLsaSheduled(true);
       // event here
       m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
                                           ndn::bind(&Lsdb::scheduledAdjLsaBuild,
@@ -129,11 +121,8 @@ HelloProtocol::processContent(const ndn::Interest& interest,
 {
   ndn::Name dataName = data.getName();
   std::cout << "Data received for name: " << dataName << std::endl;
-  std::string chkString("info");
-  int32_t infoPosition = util::getNameComponentPosition(dataName, chkString);
-  if (infoPosition >= 0)
-  {
-    ndn::Name neighbor = dataName.getSubName(0, infoPosition);
+  if (dataName.get(-3).toUri() == INFO_COMPONENT) {
+    ndn::Name neighbor = dataName.getPrefix(-3);
     int oldStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
     int infoIntTimedOutCount = m_nlsr.getAdjacencyList().getTimedOutInterestCount(
                                  neighbor);
@@ -154,17 +143,16 @@ HelloProtocol::processContent(const ndn::Interest& interest,
     std::cout << "Status: " << newStatus << std::endl;
     std::cout << "Info Interest Timed out: " << infoIntTimedOutCount << std::endl;
     //debugging purpose end
-    if ((oldStatus - newStatus) != 0)  // change in Adjacency list
-    {
+    // change in Adjacency list
+    if ((oldStatus - newStatus) != 0) {
       m_nlsr.incrementAdjBuildCount();
       /* Need to schedule event for Adjacency LSA building */
-      if (m_nlsr.getIsBuildAdjLsaSheduled() == 0)
-      {
-        m_nlsr.setIsBuildAdjLsaSheduled(1);
+      if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
+        m_nlsr.setIsBuildAdjLsaSheduled(true);
         // event here
         m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
                                             ndn::bind(&Lsdb::scheduledAdjLsaBuild,
-                                                      boost::ref(m_nlsr.getLsdb())));
+                                                      ndn::ref(m_nlsr.getLsdb())));
       }
     }
   }

@@ -15,8 +15,7 @@ void
 RoutingTableCalculator::allocateAdjMatrix()
 {
   adjMatrix = new double*[numOfRouter];
-  for (int i = 0; i < numOfRouter; ++i)
-  {
+  for (int i = 0; i < numOfRouter; ++i) {
     adjMatrix[i] = new double[numOfRouter];
   }
 }
@@ -24,10 +23,10 @@ RoutingTableCalculator::allocateAdjMatrix()
 void
 RoutingTableCalculator::initMatrix()
 {
-  for (int i = 0; i < numOfRouter; i++)
-  {
-    for (int j = 0; j < numOfRouter; j++)
+  for (int i = 0; i < numOfRouter; i++) {
+    for (int j = 0; j < numOfRouter; j++) {
       adjMatrix[i][j] = 0;
+    }
   }
 }
 
@@ -36,17 +35,14 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
 {
   std::list<AdjLsa> adjLsdb = pnlsr.getLsdb().getAdjLsdb();
   for (std::list<AdjLsa>::iterator it = adjLsdb.begin();
-       it != adjLsdb.end() ; it++)
-  {
+       it != adjLsdb.end() ; it++) {
     int row = pMap.getMappingNoByRouterName((*it).getOrigRouter());
     std::list<Adjacent> adl = (*it).getAdl().getAdjList();
     for (std::list<Adjacent>::iterator itAdl = adl.begin();
-         itAdl != adl.end() ; itAdl++)
-    {
+         itAdl != adl.end() ; itAdl++) {
       int col = pMap.getMappingNoByRouterName((*itAdl).getName());
       double cost = (*itAdl).getLinkCost();
-      if ((row >= 0 && row < numOfRouter) && (col >= 0 && col < numOfRouter))
-      {
+      if ((row >= 0 && row < numOfRouter) && (col >= 0 && col < numOfRouter)) {
         adjMatrix[row][col] = cost;
       }
     }
@@ -56,10 +52,10 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
 void
 RoutingTableCalculator::printAdjMatrix()
 {
-  for (int i = 0; i < numOfRouter; i++)
-  {
-    for (int j = 0; j < numOfRouter; j++)
+  for (int i = 0; i < numOfRouter; i++) {
+    for (int j = 0; j < numOfRouter; j++) {
       printf("%f ", adjMatrix[i][j]);
+    }
     printf("\n");
   }
 }
@@ -67,14 +63,11 @@ RoutingTableCalculator::printAdjMatrix()
 void
 RoutingTableCalculator::adjustAdMatrix(int source, int link, double linkCost)
 {
-  for (int i = 0; i < numOfRouter; i++)
-  {
-    if (i == link)
-    {
+  for (int i = 0; i < numOfRouter; i++) {
+    if (i == link) {
       adjMatrix[source][i] = linkCost;
     }
-    else
-    {
+    else {
       adjMatrix[source][i] = 0;
     }
   }
@@ -84,10 +77,8 @@ int
 RoutingTableCalculator::getNumOfLinkfromAdjMatrix(int sRouter)
 {
   int noLink = 0;
-  for (int i = 0; i < numOfRouter; i++)
-  {
-    if (adjMatrix[sRouter][i] > 0)
-    {
+  for (int i = 0; i < numOfRouter; i++) {
+    if (adjMatrix[sRouter][i] > 0) {
       noLink++;
     }
   }
@@ -99,10 +90,8 @@ RoutingTableCalculator::getLinksFromAdjMatrix(int* links,
                                               double* linkCosts, int source)
 {
   int j = 0;
-  for (int i = 0; i < numOfRouter; i++)
-  {
-    if (adjMatrix[source][i] > 0)
-    {
+  for (int i = 0; i < numOfRouter; i++) {
+    if (adjMatrix[source][i] > 0) {
       links[j] = i;
       linkCosts[j] = adjMatrix[source][i];
       j++;
@@ -113,8 +102,7 @@ RoutingTableCalculator::getLinksFromAdjMatrix(int* links,
 void
 RoutingTableCalculator::freeAdjMatrix()
 {
-  for (int i = 0; i < numOfRouter; ++i)
-  {
+  for (int i = 0; i < numOfRouter; ++i) {
     delete [] adjMatrix[i];
   }
   delete [] adjMatrix;
@@ -160,8 +148,7 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
   //int noLink=getNumOfLinkfromAdjMatrix(sourceRouter);
   allocateParent();
   allocateDistance();
-  if (pnlsr.getConfParameter().getMaxFacesPerPrefix() == 1)
-  {
+  if (pnlsr.getConfParameter().getMaxFacesPerPrefix() == 1) {
     // Single Path
     doDijkstraPathCalculation(sourceRouter);
     // print all ls path -- debugging purpose
@@ -169,15 +156,13 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
     // update routing table
     addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
   }
-  else
-  {
+  else {
     // Multi Path
     setNoLink(getNumOfLinkfromAdjMatrix(sourceRouter));
     allocateLinks();
     allocateLinkCosts();
     getLinksFromAdjMatrix(links, linkCosts, sourceRouter);
-    for (int i = 0 ; i < vNoLink; i++)
-    {
+    for (int i = 0 ; i < vNoLink; i++) {
       adjustAdMatrix(sourceRouter, links[i], linkCosts[i]);
       printAdjMatrix();
       doDijkstraPathCalculation(sourceRouter);
@@ -202,31 +187,23 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
   int* Q = new int[numOfRouter];
   int head = 0;
   /* Initiate the Parent */
-  for (i = 0 ; i < numOfRouter; i++)
-  {
+  for (i = 0 ; i < numOfRouter; i++) {
     m_parent[i] = EMPTY_PARENT;
     m_distance[i] = INF_DISTANCE;
     Q[i] = i;
   }
-  if (sourceRouter != NO_MAPPING_NUM)
-  {
+  if (sourceRouter != NO_MAPPING_NUM) {
     m_distance[sourceRouter] = 0;
     sortQueueByDistance(Q, m_distance, head, numOfRouter);
-    while (head < numOfRouter)
-    {
+    while (head < numOfRouter) {
       u = Q[head];
-      if (m_distance[u] == INF_DISTANCE)
-      {
+      if (m_distance[u] == INF_DISTANCE) {
         break;
       }
-      for (v = 0 ; v < numOfRouter; v++)
-      {
-        if (adjMatrix[u][v] > 0)
-        {
-          if (isNotExplored(Q, v, head + 1, numOfRouter))
-          {
-            if (m_distance[u] + adjMatrix[u][v] <  m_distance[v])
-            {
+      for (v = 0 ; v < numOfRouter; v++) {
+        if (adjMatrix[u][v] > 0) {
+          if (isNotExplored(Q, v, head + 1, numOfRouter)) {
+            if (m_distance[u] + adjMatrix[u][v] <  m_distance[v]) {
               m_distance[v] = m_distance[u] + adjMatrix[u][v] ;
               m_parent[v] = u;
             }
@@ -248,24 +225,21 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr,
             "LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called";
   std::cout << std::endl;
   int nextHopRouter = 0;
-  for (int i = 0; i < numOfRouter ; i++)
-  {
-    if (i != sourceRouter)
-    {
+  for (int i = 0; i < numOfRouter ; i++) {
+    if (i != sourceRouter) {
       nextHopRouter = getLsNextHop(i, sourceRouter);
-      if (nextHopRouter != NO_NEXT_HOP)
-      {
+      if (nextHopRouter != NO_NEXT_HOP) {
         double routeCost = m_distance[i];
         ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
-        int nxtHopFace =
-          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFace();
+        std::string nextHopFace =
+          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFaceUri();
         std::cout << "Dest Router: " << pMap.getRouterNameByMappingNo(i) << std::endl;
         std::cout << "Next hop Router: " << nextHopRouterName << std::endl;
-        std::cout << "Next hop Face: " << nxtHopFace << std::endl;
+        std::cout << "Next hop Face: " << nextHopFace << std::endl;
         std::cout << "Route Cost: " << routeCost << std::endl;
         std::cout << std::endl;
         // Add next hop to routing table
-        NextHop nh(nxtHopFace, routeCost);
+        NextHop nh(nextHopFace, routeCost);
         rt.addNextHop(pMap.getRouterNameByMappingNo(i), nh);
       }
     }
@@ -276,13 +250,11 @@ int
 LinkStateRoutingTableCalculator::getLsNextHop(int dest, int source)
 {
   int nextHop = NO_NEXT_HOP;
-  while (m_parent[dest] != EMPTY_PARENT)
-  {
+  while (m_parent[dest] != EMPTY_PARENT) {
     nextHop = dest;
     dest = m_parent[dest];
   }
-  if (dest != source)
-  {
+  if (dest != source) {
     nextHop = NO_NEXT_HOP;
   }
   return nextHop;
@@ -294,10 +266,8 @@ LinkStateRoutingTableCalculator::printAllLsPath(int sourceRouter)
   std::cout << "LinkStateRoutingTableCalculator::printAllLsPath Called" <<
             std::endl;
   std::cout << "Source Router: " << sourceRouter << std::endl;
-  for (int i = 0; i < numOfRouter ; i++)
-  {
-    if (i != sourceRouter)
-    {
+  for (int i = 0; i < numOfRouter ; i++) {
+    if (i != sourceRouter) {
       printLsPath(i);
       std::cout << std::endl;
     }
@@ -307,8 +277,7 @@ LinkStateRoutingTableCalculator::printAllLsPath(int sourceRouter)
 void
 LinkStateRoutingTableCalculator::printLsPath(int destRouter)
 {
-  if (m_parent[destRouter] != EMPTY_PARENT)
-  {
+  if (m_parent[destRouter] != EMPTY_PARENT) {
     printLsPath(m_parent[destRouter]);
   }
   std:: cout << " " << destRouter;
@@ -318,12 +287,9 @@ void
 LinkStateRoutingTableCalculator::sortQueueByDistance(int* Q,
                                                      double* dist, int start, int element)
 {
-  for (int i = start ; i < element ; i++)
-  {
-    for (int j = i + 1; j < element; j++)
-    {
-      if (dist[Q[j]] < dist[Q[i]])
-      {
+  for (int i = start ; i < element ; i++) {
+    for (int j = i + 1; j < element; j++) {
+      if (dist[Q[j]] < dist[Q[i]]) {
         int tempU = Q[j];
         Q[j] = Q[i];
         Q[i] = tempU;
@@ -337,10 +303,8 @@ LinkStateRoutingTableCalculator::isNotExplored(int* Q,
                                                int u, int start, int element)
 {
   int ret = 0;
-  for (int i = start; i < element; i++)
-  {
-    if (Q[i] == u)
-    {
+  for (int i = start; i < element; i++) {
+    if (Q[i] == u) {
       ret = 1;
       break;
     }
@@ -385,26 +349,22 @@ HypRoutingTableCalculator::calculatePath(Map& pMap,
   allocateLinks();
   allocateLinkCosts();
   getLinksFromAdjMatrix(links, linkCosts, sourceRouter);
-  for (int i = 0 ; i < numOfRouter ; ++i)
-  {
+  for (int i = 0 ; i < numOfRouter ; ++i) {
     int k = 0;
-    if (i != sourceRouter)
-    {
+    if (i != sourceRouter) {
       allocateLinkFaces();
       allocateDistanceToNeighbor();
       allocateDistFromNbrToDest();
-      for (int j = 0; j < vNoLink; j++)
-      {
+      for (int j = 0; j < vNoLink; j++) {
         ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(links[j]);
-        int nextHopFace =
-          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFace();
+        std::string nextHopFaceUri =
+          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFaceUri();
         double distToNbr = getHyperbolicDistance(pnlsr, pMap,
                                                  sourceRouter, links[j]);
         double distToDestFromNbr = getHyperbolicDistance(pnlsr,
                                                          pMap, links[j], i);
-        if (distToDestFromNbr >= 0)
-        {
-          m_linkFaces[k] = nextHopFace;
+        if (distToDestFromNbr >= 0) {
+          m_linkFaceUris[k] = nextHopFaceUri;
           m_distanceToNeighbor[k] = distToNbr;
           m_distFromNbrToDest[k] = distToDestFromNbr;
           k++;
@@ -425,13 +385,11 @@ void
 HypRoutingTableCalculator::addHypNextHopsToRoutingTable(Nlsr& pnlsr, Map& pMap,
                                                         RoutingTable& rt, int noFaces, int dest)
 {
-  for (int i = 0 ; i < noFaces ; ++i)
-  {
+  for (int i = 0 ; i < noFaces ; ++i) {
     ndn::Name destRouter = pMap.getRouterNameByMappingNo(dest);
-    NextHop nh(m_linkFaces[i], m_distFromNbrToDest[i]);
+    NextHop nh(m_linkFaceUris[i], m_distFromNbrToDest[i]);
     rt.addNextHop(destRouter, nh);
-    if (m_isDryRun)
-    {
+    if (m_isDryRun) {
       rt.addNextHopToDryTable(destRouter, nh);
     }
   }
@@ -455,20 +413,19 @@ HypRoutingTableCalculator::getHyperbolicDistance(Nlsr& pnlsr,
   double destTheta = (pnlsr.getLsdb().findCoordinateLsa(
                         destRouterKey))->getCorTheta();
   double diffTheta = fabs(srcTheta - destTheta);
-  if (diffTheta > MATH_PI)
-  {
+  if (diffTheta > MATH_PI) {
     diffTheta = 2 * MATH_PI - diffTheta;
   }
-  if (srcRadius != -1 && destRadius != -1)
-  {
-    if (diffTheta == 0)
+  if (srcRadius != -1 && destRadius != -1) {
+    if (diffTheta == 0) {
       distance = fabs(srcRadius - destRadius);
-    else
+    }
+    else {
       distance = acosh((cosh(srcRadius) * cosh(destRadius)) -
                        (sinh(srcRadius) * sinh(destRadius) * cos(diffTheta)));
+    }
   }
-  else
-  {
+  else {
     distance = -1;
   }
   return distance;
@@ -477,7 +434,7 @@ HypRoutingTableCalculator::getHyperbolicDistance(Nlsr& pnlsr,
 void
 HypRoutingTableCalculator::allocateLinkFaces()
 {
-  m_linkFaces = new int[vNoLink];
+  m_linkFaceUris.reserve(vNoLink);
 }
 
 void
@@ -495,7 +452,7 @@ HypRoutingTableCalculator::allocateDistFromNbrToDest()
 void
 HypRoutingTableCalculator::freeLinkFaces()
 {
-  delete [] m_linkFaces;
+  m_linkFaceUris.clear();
 }
 
 void

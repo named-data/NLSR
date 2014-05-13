@@ -28,7 +28,7 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   npl1.insert(s1);
   npl1.insert(s2);
 
-//For NameLsa lsType is 1.
+//For NameLsa lsType is name.
 //12 is seqNo, randomly generated.
 //1800 is the default life time.
   NameLsa nlsa1("router1", std::string("name"), 12, 1800, npl1);

@@ -7,7 +7,6 @@
 #include <ndn-cxx/face.hpp>
 #include <nsync/sync-socket.h>
 #include <ndn-cxx/security/validator-null.hpp>
-#include <ndn-cxx/util/scheduler.hpp>
 
 #include "sequencing-manager.hpp"
 
@@ -26,7 +25,8 @@ public:
   SyncLogicHandler(boost::asio::io_service& ioService)
     : m_validator(new ndn::ValidatorNull())
     , m_syncFace(new ndn::Face(ioService))
-  {}
+  {
+  }
 
 
   void

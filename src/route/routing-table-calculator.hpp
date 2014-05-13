@@ -189,7 +189,7 @@ private:
 private:
   bool m_isDryRun;
 
-  int* m_linkFaces;
+  std::vector<std::string> m_linkFaceUris;
   double* m_distanceToNeighbor;
   double* m_distFromNbrToDest;
 

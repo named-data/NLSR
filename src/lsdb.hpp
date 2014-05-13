@@ -39,8 +39,9 @@ public:
   bool
   isNameLsaNew(const ndn::Name& key, uint64_t seqNo);
 
+  //debugging
   void
-  printNameLsdb(); //debugging
+  printNameLsdb();
 
   //function related to Cor LSDB
   bool
@@ -58,8 +59,9 @@ public:
   bool
   isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo);
 
+  //debugging
   void
-  printCorLsdb(); //debugging
+  printCorLsdb();
 
   //function related to Adj LSDB
   void

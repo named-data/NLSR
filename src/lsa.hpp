@@ -152,8 +152,7 @@ public:
   }
 
   AdjLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
-         uint32_t lt,
-         uint32_t nl , AdjacencyList& adl);
+         uint32_t lt, uint32_t nl , AdjacencyList& adl);
 
   AdjacencyList&
   getAdl()
@@ -226,20 +225,13 @@ public:
   double
   getCorRadius() const
   {
-    if (m_corRad >= 0)
-    {
       return m_corRad;
-    }
-    else
-    {
-      return -1;
-    }
   }
 
   void
   setCorRadius(double cr)
   {
-    m_corRad = cr;
+      m_corRad = cr;
   }
 
   double

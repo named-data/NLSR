@@ -5,6 +5,7 @@
 #include "routing-table.hpp"
 #include "nlsr.hpp"
 #include "map.hpp"
+#include "conf-parameter.hpp"
 #include "routing-table-calculator.hpp"
 #include "routing-table-entry.hpp"
 #include "name-prefix-table.hpp"
@@ -21,32 +22,28 @@ RoutingTable::calculate(Nlsr& pnlsr)
   pnlsr.getLsdb().printAdjLsdb();
   pnlsr.getLsdb().printCorLsdb();
   pnlsr.getLsdb().printNameLsdb();
-  if (pnlsr.getIsRoutingTableCalculating() == 0)
-  {
-    pnlsr.setIsRoutingTableCalculating(1); //setting routing table calculation
+  if (pnlsr.getIsRoutingTableCalculating() == false) {
+    //setting routing table calculation
+    pnlsr.setIsRoutingTableCalculating(true);
     if (pnlsr.getLsdb().doesLsaExist(
           pnlsr.getConfParameter().getRouterPrefix().toUri() + "/" + "adjacency",
-          std::string("adjacency")))
-    {
-      if (pnlsr.getIsBuildAdjLsaSheduled() != 1)
-      {
+          std::string("adjacency"))) {
+      if (pnlsr.getIsBuildAdjLsaSheduled() != 1) {
         std::cout << "CLearing old routing table ....." << std::endl;
         clearRoutingTable();
-        clearDryRoutingTable(); // for dry run options
+        // for dry run options
+        clearDryRoutingTable();
         // calculate Link State routing
-        if ((pnlsr.getConfParameter().getIsHyperbolicCalc() == 0)
-            || (pnlsr.getConfParameter().getIsHyperbolicCalc() == 2))
-        {
+        if ((pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_OFF)
+            || (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN)) {
           calculateLsRoutingTable(pnlsr);
         }
         //calculate hyperbolic routing
-        if (pnlsr.getConfParameter().getIsHyperbolicCalc() == 1)
-        {
+        if (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
           calculateHypRoutingTable(pnlsr);
         }
         //calculate dry hyperbolic routing
-        if (pnlsr.getConfParameter().getIsHyperbolicCalc() == 2)
-        {
+        if (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
           calculateHypDryRoutingTable(pnlsr);
         }
         //need to update NPT here
@@ -57,14 +54,12 @@ RoutingTable::calculate(Nlsr& pnlsr)
         pnlsr.getFib().print();
         //debugging purpose end
       }
-      else
-      {
+      else {
         std::cout << "Adjacency building is scheduled, so ";
         std::cout << "routing table can not be calculated :(" << std::endl;
       }
     }
-    else
-    {
+    else {
       std::cout << "No Adj LSA of router itself,";
       std::cout <<	" so Routing table can not be calculated :(" << std::endl;
       clearRoutingTable();
@@ -78,11 +73,10 @@ RoutingTable::calculate(Nlsr& pnlsr)
       pnlsr.getFib().print();
       //debugging purpose end
     }
-    pnlsr.setIsRouteCalculationScheduled(0); //clear scheduled flag
-    pnlsr.setIsRoutingTableCalculating(0); //unsetting routing table calculation
+    pnlsr.setIsRouteCalculationScheduled(false); //clear scheduled flag
+    pnlsr.setIsRoutingTableCalculating(false); //unsetting routing table calculation
   }
-  else
-  {
+  else {
     scheduleRoutingTableCalculation(pnlsr);
   }
 }
@@ -96,7 +90,7 @@ RoutingTable::calculateLsRoutingTable(Nlsr& pnlsr)
   vMap.createFromAdjLsdb(pnlsr);
   int numOfRouter = vMap.getMapSize();
   LinkStateRoutingTableCalculator lsrtc(numOfRouter);
-  lsrtc.calculatePath(vMap, boost::ref(*this), pnlsr);
+  lsrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
 }
 
 void
@@ -106,7 +100,7 @@ RoutingTable::calculateHypRoutingTable(Nlsr& pnlsr)
   vMap.createFromAdjLsdb(pnlsr);
   int numOfRouter = vMap.getMapSize();
   HypRoutingTableCalculator hrtc(numOfRouter, 0);
-  hrtc.calculatePath(vMap, boost::ref(*this), pnlsr);
+  hrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
 }
 
 void
@@ -116,17 +110,17 @@ RoutingTable::calculateHypDryRoutingTable(Nlsr& pnlsr)
   vMap.createFromAdjLsdb(pnlsr);
   int numOfRouter = vMap.getMapSize();
   HypRoutingTableCalculator hrtc(numOfRouter, 1);
-  hrtc.calculatePath(vMap, boost::ref(*this), pnlsr);
+  hrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
 }
 
 void
 RoutingTable::scheduleRoutingTableCalculation(Nlsr& pnlsr)
 {
-  if (pnlsr.getIsRouteCalculationScheduled() != 1)
-  {
+  if (pnlsr.getIsRouteCalculationScheduled() != true) {
     pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
-                                       ndn::bind(&RoutingTable::calculate, this, boost::ref(pnlsr)));
-    pnlsr.setIsRouteCalculationScheduled(1);
+                                       ndn::bind(&RoutingTable::calculate, this,
+                                                 ndn::ref(pnlsr)));
+    pnlsr.setIsRouteCalculationScheduled(true);
   }
 }
 
@@ -141,14 +135,12 @@ void
 RoutingTable::addNextHop(const ndn::Name& destRouter, NextHop& nh)
 {
   RoutingTableEntry* rteChk = findRoutingTableEntry(destRouter);
-  if (rteChk == 0)
-  {
+  if (rteChk == 0) {
     RoutingTableEntry rte(destRouter);
     rte.getNexthopList().addNextHop(nh);
     m_rTable.push_back(rte);
   }
-  else
-  {
+  else {
     rteChk->getNexthopList().addNextHop(nh);
   }
 }
@@ -158,9 +150,9 @@ RoutingTable::findRoutingTableEntry(const ndn::Name& destRouter)
 {
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_rTable.begin(),
                                                            m_rTable.end(),
-                                                           bind(&routingTableEntryCompare, _1, destRouter));
-  if (it != m_rTable.end())
-  {
+                                                           ndn::bind(&routingTableEntryCompare,
+                                                                     _1, destRouter));
+  if (it != m_rTable.end()) {
     return &(*it);
   }
   return 0;
@@ -171,8 +163,7 @@ RoutingTable::printRoutingTable()
 {
   std::cout << "---------------Routing Table------------------" << std::endl;
   for (std::list<RoutingTableEntry>::iterator it = m_rTable.begin() ;
-       it != m_rTable.end(); ++it)
-  {
+       it != m_rTable.end(); ++it) {
     std::cout << (*it) << std::endl;
   }
 }
@@ -184,15 +175,14 @@ RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
 {
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_dryTable.begin(),
                                                            m_dryTable.end(),
-                                                           bind(&routingTableEntryCompare, _1, destRouter));
-  if (it == m_dryTable.end())
-  {
+                                                           ndn::bind(&routingTableEntryCompare,
+                                                                     _1, destRouter));
+  if (it == m_dryTable.end()) {
     RoutingTableEntry rte(destRouter);
     rte.getNexthopList().addNextHop(nh);
     m_dryTable.push_back(rte);
   }
-  else
-  {
+  else {
     (*it).getNexthopList().addNextHop(nh);
   }
 }
@@ -202,8 +192,7 @@ RoutingTable::printDryRoutingTable()
 {
   std::cout << "--------Dry Run's Routing Table--------------" << std::endl;
   for (std::list<RoutingTableEntry>::iterator it = m_dryTable.begin() ;
-       it != m_dryTable.end(); ++it)
-  {
+       it != m_dryTable.end(); ++it) {
     cout << (*it) << endl;
   }
 }
@@ -212,8 +201,7 @@ RoutingTable::printDryRoutingTable()
 void
 RoutingTable::clearRoutingTable()
 {
-  if (m_rTable.size() > 0)
-  {
+  if (m_rTable.size() > 0) {
     m_rTable.clear();
   }
 }
@@ -221,8 +209,7 @@ RoutingTable::clearRoutingTable()
 void
 RoutingTable::clearDryRoutingTable()
 {
-  if (m_dryTable.size() > 0)
-  {
+  if (m_dryTable.size() > 0) {
     m_dryTable.clear();
   }
 }

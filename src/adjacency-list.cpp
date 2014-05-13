@@ -22,8 +22,7 @@ int32_t
 AdjacencyList::insert(Adjacent& adjacent)
 {
   std::list<Adjacent>::iterator it = find(adjacent.getName());
-  if (it != m_adjList.end())
-  {
+  if (it != m_adjList.end()) {
     return -1;
   }
   m_adjList.push_back(adjacent);
@@ -34,8 +33,7 @@ void
 AdjacencyList::addAdjacents(AdjacencyList& adl)
 {
   for (std::list<Adjacent>::iterator it = adl.getAdjList().begin();
-       it != adl.getAdjList().end(); ++it)
-  {
+       it != adl.getAdjList().end(); ++it) {
     insert((*it));
   }
 }
@@ -44,8 +42,7 @@ int32_t
 AdjacencyList::updateAdjacentStatus(const ndn::Name& adjName, int32_t s)
 {
   std::list<Adjacent>::iterator it = find(adjName);
-  if (it == m_adjList.end())
-  {
+  if (it == m_adjList.end()) {
     return -1;
   }
   (*it).setStatus(s);
@@ -57,8 +54,7 @@ AdjacencyList::getAdjacent(const ndn::Name& adjName)
 {
   Adjacent adj(adjName);
   std::list<Adjacent>::iterator it = find(adjName);
-  if (it != m_adjList.end())
-  {
+  if (it != m_adjList.end()) {
     return (*it);
   }
   return adj;
@@ -73,8 +69,7 @@ compareAdjacent(const Adjacent& adjacent1, const Adjacent& adjacent2)
 bool
 AdjacencyList::operator==(AdjacencyList& adl)
 {
-  if (getSize() != adl.getSize())
-  {
+  if (getSize() != adl.getSize()) {
     return false;
   }
   m_adjList.sort(compareAdjacent);
@@ -84,10 +79,8 @@ AdjacencyList::operator==(AdjacencyList& adl)
   std::list<Adjacent>::iterator it1;
   std::list<Adjacent>::iterator it2;
   for (it1 = m_adjList.begin(), it2 = adjList2.begin();
-       it1 != m_adjList.end(); it1++, it2++)
-  {
-    if (!((*it1) == (*it2)))
-    {
+       it1 != m_adjList.end(); it1++, it2++) {
+    if (!((*it1) == (*it2))) {
       break;
     }
     equalAdjCount++;
@@ -99,8 +92,7 @@ int32_t
 AdjacencyList::updateAdjacentLinkCost(const ndn::Name& adjName, double lc)
 {
   std::list<Adjacent>::iterator it = find(adjName);
-  if (it == m_adjList.end())
-  {
+  if (it == m_adjList.end()) {
     return -1;
   }
   (*it).setLinkCost(lc);
@@ -122,8 +114,7 @@ void
 AdjacencyList::incrementTimedOutInterestCount(const ndn::Name& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
-  if (it == m_adjList.end())
-  {
+  if (it == m_adjList.end()) {
     return ;
   }
   (*it).setInterestTimedOutNo((*it).getInterestTimedOutNo() + 1);
@@ -134,8 +125,7 @@ AdjacencyList::setTimedOutInterestCount(const ndn::Name& neighbor,
                                         uint32_t count)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
-  if (it != m_adjList.end())
-  {
+  if (it != m_adjList.end()) {
     (*it).setInterestTimedOutNo(count);
   }
 }
@@ -144,8 +134,7 @@ int32_t
 AdjacencyList::getTimedOutInterestCount(const ndn::Name& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
-  if (it == m_adjList.end())
-  {
+  if (it == m_adjList.end()) {
     return -1;
   }
   return (*it).getInterestTimedOutNo();
@@ -155,8 +144,7 @@ uint32_t
 AdjacencyList::getStatusOfNeighbor(const ndn::Name& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
-  if (it == m_adjList.end())
-  {
+  if (it == m_adjList.end()) {
     return -1;
   }
   return (*it).getStatus();
@@ -166,8 +154,7 @@ void
 AdjacencyList::setStatusOfNeighbor(const ndn::Name& neighbor, int32_t status)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
-  if (it != m_adjList.end())
-  {
+  if (it != m_adjList.end()) {
     (*it).setStatus(status);
   }
 }
@@ -183,23 +170,18 @@ AdjacencyList::isAdjLsaBuildable(Nlsr& pnlsr)
 {
   uint32_t nbrCount = 0;
   for (std::list<Adjacent>::iterator it = m_adjList.begin();
-       it != m_adjList.end() ; it++)
-  {
-    if (((*it).getStatus() == 1))
-    {
+       it != m_adjList.end() ; it++) {
+    if (((*it).getStatus() == 1)) {
       nbrCount++;
     }
-    else
-    {
+    else {
       if ((*it).getInterestTimedOutNo() >=
-          pnlsr.getConfParameter().getInterestRetryNumber())
-      {
+          pnlsr.getConfParameter().getInterestRetryNumber()) {
         nbrCount++;
       }
     }
   }
-  if (nbrCount == m_adjList.size())
-  {
+  if (nbrCount == m_adjList.size()) {
     return true;
   }
   return false;
@@ -210,10 +192,8 @@ AdjacencyList::getNumOfActiveNeighbor()
 {
   int32_t actNbrCount = 0;
   for (std::list<Adjacent>::iterator it = m_adjList.begin();
-       it != m_adjList.end(); it++)
-  {
-    if (((*it).getStatus() == 1))
-    {
+       it != m_adjList.end(); it++) {
+    if (((*it).getStatus() == 1)) {
       actNbrCount++;
     }
   }
@@ -235,8 +215,7 @@ void
 AdjacencyList::print()
 {
   for (std::list<Adjacent>::iterator it = m_adjList.begin();
-       it != m_adjList.end(); it++)
-  {
+       it != m_adjList.end(); it++) {
     cout << (*it) << endl;
   }
 }

@@ -1,551 +1,352 @@
 #include <iostream>
 #include <fstream>
-#include <string>
-#include <cstdlib>
-#include <sstream>
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/info_parser.hpp>
+#include <boost/property_tree/ptree.hpp>
 
-#include "conf-file-processor.hpp"
+#include <ndn-cxx/name.hpp>
+
 #include "conf-parameter.hpp"
-#include "utility/tokenizer.hpp"
+#include "conf-file-processor.hpp"
 #include "adjacent.hpp"
+#include "utility/name-helper.hpp"
 
 
 namespace nlsr {
 
 using namespace std;
 
-int
+bool
 ConfFileProcessor::processConfFile()
 {
-  int ret = 0;
-  if (!m_confFileName.empty())
+  bool ret = true;
+  ifstream inputFile;
+  inputFile.open(m_confFileName.c_str());
+  if (!inputFile.is_open()) {
+    string msg = "Failed to read configuration file: ";
+    msg += m_confFileName;
+    cerr << msg << endl;
+    ret = false;
+  }
+  ret = load(inputFile);
+  inputFile.close();
+  return ret;
+}
+
+bool
+ConfFileProcessor::load(istream& input)
+{
+  boost::property_tree::ptree pt;
+  bool ret = true;
+  try {
+    boost::property_tree::read_info(input, pt);
+  }
+  catch (const boost::property_tree::info_parser_error& error) {
+    stringstream msg;
+    std::cerr << "Failed to parse configuration file " << std::endl;
+    std::cerr << m_confFileName << std::endl;
+    return false;
+  }
+  for (boost::property_tree::ptree::const_iterator tn = pt.begin();
+       tn != pt.end(); ++tn) {
+    std::string section = tn->first;
+    boost::property_tree::ptree SectionAttributeTree = tn ->second;
+    ret = processSection(section, SectionAttributeTree);
+    if (ret == false) {
+      break;
+    }
+  }
+  return ret;
+}
+
+bool
+ConfFileProcessor::processSection(const std::string& section,
+                                  boost::property_tree::ptree SectionAttributeTree)
+{
+  bool ret = true;
+  if (section == "general")
   {
-    std::ifstream inputFile(m_confFileName.c_str());
-    if (inputFile.is_open())
+    ret = processConfSectionGeneral(SectionAttributeTree);
+  }
+  else if (section == "neighbors")
+  {
+    ret = processConfSectionNeighbors(SectionAttributeTree);
+  }
+  else if (section == "hyperbolic")
+  {
+    ret = processConfSectionHyperbolic(SectionAttributeTree);
+  }
+  else if (section == "fib")
+  {
+    ret = processConfSectionFib(SectionAttributeTree);
+  }
+  else if (section == "advertising")
+  {
+    ret = processConfSectionAdvertising(SectionAttributeTree);
+  }
+  else
+  {
+    std::cerr << "Wrong configuration Command: " << section << std::endl;
+  }
+  return ret;
+}
+
+bool
+ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
+                                            SectionAttributeTree)
+{
+  try {
+    std::string network = SectionAttributeTree.get<string>("network");
+    std::string site = SectionAttributeTree.get<string>("site");
+    std::string router = SectionAttributeTree.get<string>("router");
+    ndn::Name networkName(network);
+    if (!networkName.empty()) {
+      m_nlsr.getConfParameter().setNetwork(networkName);
+    }
+    else {
+      cerr << " Network can not be null or empty or in bad URI format :(!" << endl;
+      return false;
+    }
+    ndn::Name siteName(site);
+    if (!siteName.empty()) {
+      m_nlsr.getConfParameter().setSiteName(siteName);
+    }
+    else {
+      cerr << "Site can not be null or empty or in bad URI format:( !" << endl;
+      return false;
+    }
+    ndn::Name routerName(router);
+    if (!routerName.empty()) {
+      m_nlsr.getConfParameter().setRouterName(routerName);
+    }
+    else {
+      cerr << " Router name can not be null or empty or in bad URI format:( !" << endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    cerr << ex.what() << endl;
+    return false;
+  }
+  
+  try {
+    int32_t lsaRefreshTime = SectionAttributeTree.get<int32_t>("lsa-refresh-time");
+    if (lsaRefreshTime >= LSA_REFRESH_TIME_MIN &&
+        lsaRefreshTime <= LSA_REFRESH_TIME_MAX) {
+      m_nlsr.getConfParameter().setLsaRefreshTime(lsaRefreshTime);
+    }
+    else {
+      std::cerr << "Wrong value for lsa-refresh-time ";
+      std::cerr << "Allowed value: " << LSA_REFRESH_TIME_MIN << "-";;
+      std::cerr << LSA_REFRESH_TIME_MAX << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+    return false;
+  }
+  
+  try {
+    std::string logLevel = SectionAttributeTree.get<string>("log-level");
+    if ( boost::iequals(logLevel, "info") || boost::iequals(logLevel, "debug")) {
+      m_nlsr.getConfParameter().setLogLevel(logLevel);
+    }
+    else {
+      std::cerr << "Wrong value for log-level ";
+      std::cerr << "Allowed value: INFO, DEBUG" << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+    return false;
+  }
+  
+  return true;
+}
+
+bool
+ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
+                                           SectionAttributeTree)
+{
+  try {
+    int retrials = SectionAttributeTree.get<int>("hello-retries");
+    if (retrials >= HELLO_RETRIES_MIN && retrials <= HELLO_RETRIES_MAX) {
+      m_nlsr.getConfParameter().setInterestRetryNumber(retrials);
+    }
+    else {
+      std::cerr << "Wrong value for hello-retries. ";
+      std::cerr << "Allowed value:" << HELLO_RETRIES_MIN << "-";
+      std::cerr << HELLO_RETRIES_MAX << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+    return false;
+  }
+  try {
+    int timeOut = SectionAttributeTree.get<int>("hello-timeout");
+    if (timeOut >= HELLO_TIMEOUT_MIN && timeOut <= HELLO_TIMEOUT_MAX) {
+      m_nlsr.getConfParameter().setInterestResendTime(timeOut);
+    }
+    else {
+      std::cerr << "Wrong value for hello-timeout. ";
+      std::cerr << "Allowed value:" << HELLO_TIMEOUT_MIN << "-";
+      std::cerr << HELLO_TIMEOUT_MAX << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+  }
+  try {
+    int interval = SectionAttributeTree.get<int>("hello-interval");
+    if (interval >= HELLO_INTERVAL_MIN && interval <= HELLO_INTERVAL_MAX) {
+      m_nlsr.getConfParameter().setInfoInterestInterval(interval);
+    }
+    else {
+      std::cerr << "Wrong value for hello-interval. ";
+      std::cerr << "Allowed value:" << HELLO_INTERVAL_MIN << "-";
+      std::cerr << HELLO_INTERVAL_MAX << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+  }
+  for (boost::property_tree::ptree::const_iterator tn =
+           SectionAttributeTree.begin(); tn != SectionAttributeTree.end(); ++tn) {
+      
+    if (tn->first == "neighbor")
     {
-      for (string line; getline(inputFile, line);)
-      {
-        if (!line.empty())
-        {
-          if (line[0] != '#' && line[0] != '!')
-          {
-            ret = processConfCommand(line);
-            if (ret == -1)
-            {
-              break;
-            }
-          }
+      try {
+        boost::property_tree::ptree CommandAttriTree = tn->second;
+        std::string name = CommandAttriTree.get<std::string>("name");
+        std::string faceUri = CommandAttriTree.get<std::string>("face-uri");
+        double linkCost = CommandAttriTree.get<double>("link-cost",
+                                                       Adjacent::DEFAULT_LINK_COST);
+        ndn::Name neighborName(name);
+        if (!neighborName.empty()) {
+          Adjacent adj(name, faceUri, linkCost, ADJACENT_STATUS_INACTIVE, 0);
+          m_nlsr.getAdjacencyList().insert(adj);
+        }
+        else {
+          cerr << " Wrong command format ! [name /nbr/name/ \n face-uri /uri\n]";
+          std::cerr << " or bad URI format" << std::endl;
         }
       }
-    }
-    else
-    {
-      std::cerr << "Configuration file: (" << m_confFileName << ") does not exist :(";
-      std::cerr << endl;
-      ret = -1;
+      catch (const std::exception& ex) {
+        std::cerr << ex.what() << std::endl;
+        return false;
+      }
     }
   }
-  return ret;
+  return true;
 }
 
-
-int
-ConfFileProcessor::processConfCommand(string command)
+bool
+ConfFileProcessor::processConfSectionHyperbolic(boost::property_tree::ptree
+                                                SectionAttributeTree)
 {
-  int ret = 0;
-  Tokenizer nt(command, " ");
-  if ((nt.getFirstToken() == "network"))
-  {
-    ret = processConfCommandNetwork(nt.getRestOfLine());
+  std::string state;
+  try {
+    state= SectionAttributeTree.get<string>("state","off");
+    if (boost::iequals(state, "off")) {
+      m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_OFF);
+    }
+    else if (boost::iequals(state, "on")) {
+        m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_ON);
+    }
+    else if (state == "dry-run") {
+      m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
+    }
+    else {
+      std::cerr << "Wrong format for hyperbolic state." << std::endl;
+      std::cerr << "Allowed value: off, on, dry-run" << std::endl;
+      return false;
+    }
   }
-  else if ((nt.getFirstToken() == "site-name"))
-  {
-    ret = processConfCommandSiteName(nt.getRestOfLine());
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+    return false;
   }
-  else if ((nt.getFirstToken() == "root-key-prefix"))
-  {
-    ret = processConfCommandRootKeyPrefix(nt.getRestOfLine());
+  
+  try {
+    /* Radius and angle is mandatory configuration parameter in hyperbolic section.
+     * Even if router can have hyperbolic routing calculation off but other router
+     * in the network may use hyperbolic routing calculation for FIB generation.
+     * So each router need to advertise its hyperbolic coordinates in the network
+     */
+    double radius = SectionAttributeTree.get<double>("radius");
+    double angle = SectionAttributeTree.get<double>("angle");
+    if (!m_nlsr.getConfParameter().setCorR(radius)) {
+      return false;
+    }
+    m_nlsr.getConfParameter().setCorTheta(angle);
   }
-  else if ((nt.getFirstToken() == "router-name"))
-  {
-    ret = processConfCommandRouterName(nt.getRestOfLine());
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+    if (state == "on" || state == "dry-run") {
+      return false;
+    }
   }
-  else if ((nt.getFirstToken() == "ndnneighbor"))
-  {
-    ret = processConfCommandNdnNeighbor(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "link-cost"))
-  {
-    ret = processConfCommandLinkCost(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "ndnname"))
-  {
-    ret = processConfCommandNdnName(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "interest-retry-num"))
-  {
-    processConfCommandInterestRetryNumber(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "interest-resend-time"))
-  {
-    processConfCommandInterestResendTime(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "lsa-refresh-time"))
-  {
-    processConfCommandLsaRefreshTime(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "max-faces-per-prefix"))
-  {
-    processConfCommandMaxFacesPerPrefix(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "log-dir"))
-  {
-    processConfCommandLogDir(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "cert-dir"))
-  {
-    processConfCommandCertDir(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "detailed-logging"))
-  {
-    processConfCommandDetailedLogging(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "debugging"))
-  {
-    processConfCommandDebugging(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "chronosync-sync-prefix"))
-  {
-    processConfCommandChronosyncSyncPrefix(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "hyperbolic-cordinate"))
-  {
-    processConfCommandHyperbolicCordinate(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "hyperbolic-routing"))
-  {
-    processConfCommandIsHyperbolicCalc(nt.getRestOfLine());
-  }
-  else if ((nt.getFirstToken() == "tunnel-type"))
-  {
-    processConfCommandTunnelType(nt.getRestOfLine());
-  }
-  else
-  {
-    cout << "Wrong configuration Command: " << nt.getFirstToken() << endl;
-  }
-  return ret;
+  
+  return true;
 }
 
-int
-ConfFileProcessor::processConfCommandNetwork(string command)
+bool
+ConfFileProcessor::processConfSectionFib(boost::property_tree::ptree
+                                         SectionAttributeTree)
 {
-  if (command.empty())
-  {
-    cerr << " Network can not be null or empty :( !" << endl;
-    return -1;
-  }
-  else
-  {
-    if (command[command.size() - 1] == '/')
+  try {
+    int maxFacesPerPrefixNumber =
+      SectionAttributeTree.get<int>("max-faces-per-prefix");
+    if (maxFacesPerPrefixNumber >= MAX_FACES_PER_PREFIX_MIN &&
+        maxFacesPerPrefixNumber <= MAX_FACES_PER_PREFIX_MAX)
     {
-      command.erase(command.size() - 1);
+      m_nlsr.getConfParameter().setMaxFacesPerPrefix(maxFacesPerPrefixNumber);
     }
-    if (command[0] == '/')
-    {
-      command.erase(0, 1);
+    else {
+      std::cerr << "Wrong value for max-faces-per-prefix. ";
+      std::cerr << "NLSR will user default value";
+      std::cerr << MAX_FACES_PER_PREFIX_MIN << std::endl;
+      return false;
     }
-    m_nlsr.getConfParameter().setNetwork(command);
   }
-  return 0;
+  catch (const std::exception& ex) {
+    cerr << ex.what() << endl;
+    return false;
+  }
+  return true;
 }
 
-int
-ConfFileProcessor::processConfCommandSiteName(string command)
+bool
+ConfFileProcessor::processConfSectionAdvertising(boost::property_tree::ptree
+                                                 SectionAttributeTree)
 {
-  if (command.empty())
-  {
-    cerr << "Site name can not be null or empty :( !" << endl;
-    return -1;
-  }
-  else
-  {
-    if (command[command.size() - 1] == '/')
-    {
-      command.erase(command.size() - 1);
+  for (boost::property_tree::ptree::const_iterator tn =
+         SectionAttributeTree.begin(); tn != SectionAttributeTree.end(); ++tn) {
+   if (tn->first == "prefix") {
+     try {
+       std::string prefix = tn->second.data();
+       ndn::Name namePrefix(prefix);
+       if (!namePrefix.empty()) {
+         m_nlsr.getNamePrefixList().insert(namePrefix);
+       }
+       else {
+         std::cerr << " Wrong command format ! [prefix /name/prefix] or bad URI";
+         std::cerr << std::endl;
+         return false;
+       }
+     }
+     catch (const std::exception& ex) {
+       std::cerr << ex.what() << std::endl;
+       return false;
+     }
     }
-    if (command[0] == '/')
-    {
-      command.erase(0, 1);
-    }
-    m_nlsr.getConfParameter().setSiteName(command);
   }
-  return 0;
+  return true;
 }
-
-int
-ConfFileProcessor::processConfCommandRootKeyPrefix(string command)
-{
-  if (command.empty())
-  {
-    cerr << "Root Key Prefix can not be null or empty :( !" << endl;
-    return -1;
-  }
-  else
-  {
-    if (command[command.size() - 1] == '/')
-    {
-      command.erase(command.size() - 1);
-    }
-    if (command[0] == '/')
-    {
-      command.erase(0, 1);
-    }
-    m_nlsr.getConfParameter().setRootKeyPrefix(command);
-  }
-  return 0;
-}
-
-
-int
-ConfFileProcessor::processConfCommandRouterName(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Router name can not be null or empty :( !" << endl;
-    return -1;
-  }
-  else
-  {
-    if (command[command.size() - 1] == '/')
-    {
-      command.erase(command.size() - 1);
-    }
-    if (command[0] == '/')
-    {
-      command.erase(0, 1);
-    }
-    m_nlsr.getConfParameter().setRouterName(command);
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandInterestRetryNumber(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [interest-retry-num n]" << endl;
-  }
-  else
-  {
-    int irn;
-    stringstream ss(command.c_str());
-    ss >> irn;
-    if (irn >= 1 && irn <= 5)
-    {
-      m_nlsr.getConfParameter().setInterestRetryNumber(irn);
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandInterestResendTime(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [interest-resend-time s]" << endl;
-  }
-  else
-  {
-    int irt;
-    stringstream ss(command.c_str());
-    ss >> irt;
-    if (irt >= 1 && irt <= 20)
-    {
-      m_nlsr.getConfParameter().setInterestResendTime(irt);
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandLsaRefreshTime(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [interest-resend-time s]" << endl;
-  }
-  else
-  {
-    int lrt;
-    stringstream ss(command.c_str());
-    ss >> lrt;
-    if (lrt >= 240 && lrt <= 7200)
-    {
-      m_nlsr.getConfParameter().setLsaRefreshTime(lrt);
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandMaxFacesPerPrefix(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [max-faces-per-prefix n]" << endl;
-  }
-  else
-  {
-    int mfpp;
-    stringstream ss(command.c_str());
-    ss >> mfpp;
-    if (mfpp >= 0 && mfpp <= 60)
-    {
-      m_nlsr.getConfParameter().setMaxFacesPerPrefix(mfpp);
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandTunnelType(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [tunnel-type tcp/udp]!" << endl;
-  }
-  else
-  {
-    if (command == "tcp" || command == "TCP")
-    {
-      m_nlsr.getConfParameter().setTunnelType(1);
-    }
-    else if (command == "udp" || command == "UDP")
-    {
-      m_nlsr.getConfParameter().setTunnelType(0);
-    }
-    else
-    {
-      cerr << " Wrong command format ! [tunnel-type tcp/udp]!" << endl;
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandChronosyncSyncPrefix(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [chronosync-sync-prefix name/prefix]!" << endl;
-  }
-  else
-  {
-    m_nlsr.getConfParameter().setChronosyncSyncPrefix(command);
-  }
-  return 0;
-}
-
-
-int
-ConfFileProcessor::processConfCommandLogDir(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [log-dir /path/to/log/dir]!" << endl;
-  }
-  else
-  {
-    m_nlsr.getConfParameter().setLogDir(command);
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandCertDir(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [cert-dir /path/to/cert/dir]!" << endl;
-  }
-  else
-  {
-    m_nlsr.getConfParameter().setCertDir(command);
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandDebugging(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [debugging on/of]!" << endl;
-  }
-  else
-  {
-    if (command == "on" || command == "ON")
-    {
-      m_nlsr.getConfParameter().setDebugging(1);
-    }
-    else if (command == "off" || command == "off")
-    {
-      m_nlsr.getConfParameter().setDebugging(0);
-    }
-    else
-    {
-      cerr << " Wrong command format ! [debugging on/off]!" << endl;
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandDetailedLogging(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [detailed-logging on/off]!" << endl;
-  }
-  else
-  {
-    if (command == "on" || command == "ON")
-    {
-      m_nlsr.getConfParameter().setDetailedLogging(1);
-    }
-    else if (command == "off" || command == "off")
-    {
-      m_nlsr.getConfParameter().setDetailedLogging(0);
-    }
-    else
-    {
-      cerr << " Wrong command format ! [detailed-logging on/off]!" << endl;
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandIsHyperbolicCalc(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [hyperbolic-routing on/off/dry-run]!" << endl;
-  }
-  else
-  {
-    if (command == "on" || command == "ON")
-    {
-      m_nlsr.getConfParameter().setIsHyperbolicCalc(1);
-    }
-    else if (command == "dry-run" || command == "DRY-RUN")
-    {
-      m_nlsr.getConfParameter().setIsHyperbolicCalc(2);
-    }
-    else if (command == "off" || command == "off")
-    {
-      m_nlsr.getConfParameter().setIsHyperbolicCalc(0);
-    }
-    else
-    {
-      cerr << " Wrong command format ! [hyperbolic-routing on/off/dry-run]!" << endl;
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandHyperbolicCordinate(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [hyperbolic-cordinate r 0]!" << endl;
-    if (m_nlsr.getConfParameter().getIsHyperbolicCalc() > 0)
-    {
-      return -1;
-    }
-  }
-  else
-  {
-    Tokenizer nt(command, " ");
-    stringstream ssr(nt.getFirstToken().c_str());
-    stringstream sst(nt.getRestOfLine().c_str());
-    double r, theta;
-    ssr >> r;
-    sst >> theta;
-    m_nlsr.getConfParameter().setCorR(r);
-    m_nlsr.getConfParameter().setCorTheta(theta);
-  }
-  return 0;
-}
-
-
-int
-ConfFileProcessor::processConfCommandNdnNeighbor(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [ndnneighbor /nbr/name/ FaceId]!" << endl;
-  }
-  else
-  {
-    Tokenizer nt(command, " ");
-    if (nt.getRestOfLine().empty())
-    {
-      cerr << " Wrong command format ! [ndnneighbor /nbr/name/ FaceId]!" << endl;
-      return 0;
-    }
-    else
-    {
-      stringstream sst(nt.getRestOfLine().c_str());
-      int faceId;
-      sst >> faceId;
-      Adjacent adj(nt.getFirstToken(), faceId, 10, 0, 0);
-      m_nlsr.getAdjacencyList().insert(adj);
-    }
-  }
-  return 0;
-}
-
-int
-ConfFileProcessor::processConfCommandNdnName(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [ndnname name/prefix]!" << endl;
-  }
-  else
-  {
-    m_nlsr.getNamePrefixList().insert(command);
-  }
-  return 0;
-}
-
-
-int
-ConfFileProcessor::processConfCommandLinkCost(string command)
-{
-  if (command.empty())
-  {
-    cerr << " Wrong command format ! [link-cost nbr/name cost]!" << endl;
-    if (m_nlsr.getConfParameter().getIsHyperbolicCalc() > 0)
-    {
-      return -1;
-    }
-  }
-  else
-  {
-    Tokenizer nt(command, " ");
-    stringstream sst(nt.getRestOfLine().c_str());
-    double cost;
-    sst >> cost;
-    m_nlsr.getAdjacencyList().updateAdjacentLinkCost(nt.getFirstToken(), cost);
-  }
-  return 0;
-}
-
-} //namespace nlsr
-
+}//namespace NLSR

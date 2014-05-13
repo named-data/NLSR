@@ -59,6 +59,9 @@ public:
   registrationFailed(const ndn::Name& name);
 
   void
+  onRegistrationSuccess(const ndn::Name& name);
+
+  void
   setInfoInterestFilter();
 
   void
@@ -172,7 +175,7 @@ public:
     m_adjBuildCount = abc;
   }
 
-  int
+  bool
   getIsBuildAdjLsaSheduled()
   {
     return m_isBuildAdjLsaSheduled;
@@ -229,6 +232,10 @@ public:
 
   void
   initialize();
+
+private:
+  void
+  registerPrefixes();
 
 private:
   ndn::Face m_nlsrFace;

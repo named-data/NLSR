@@ -1,6 +1,9 @@
 #ifndef NLSR_NAME_HELPER_HPP
 #define NLSR_NAME_HELPER_HPP
 
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/regex_find_format.hpp>
+#include <boost/regex.hpp>
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/name-component.hpp>
 #include <ndn-cxx/name.hpp>
@@ -20,10 +23,8 @@ getNameComponentPosition(const ndn::Name& name, const std::string& searchString)
 {
   ndn::name::Component component(searchString);
   size_t nameSize = name.size();
-  for (uint32_t i = 0; i < nameSize; i++)
-  {
-    if (component == name[i])
-    {
+  for (uint32_t i = 0; i < nameSize; i++) {
+    if (component == name[i]) {
       return (int32_t)i;
     }
   }

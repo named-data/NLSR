@@ -42,8 +42,8 @@ namespace Sync {
 class SyncSocket
 {
 public:
-  typedef ndn::function< void (const std::vector<MissingDataInfo> &, SyncSocket * ) > NewDataCallback;
-  typedef ndn::function< void (const std::string &/*prefix*/ ) > RemoveCallback;
+  typedef ndn::function<void(const std::vector<MissingDataInfo> &, SyncSocket *)> NewDataCallback;
+  typedef ndn::function<void(const std::string &/*prefix*/)> RemoveCallback;
 
   /**
    * @brief the constructor for SyncAppSocket; the parameter syncPrefix
@@ -56,47 +56,52 @@ public:
    * @param syncPrefix the name prefix for Sync Interest
    * @param dataCallback the callback to process data
    */
-  SyncSocket (const ndn::Name &syncPrefix, 
+  SyncSocket (const ndn::Name &syncPrefix,
               ndn::shared_ptr<ndn::Validator> validator,
               ndn::shared_ptr<ndn::Face> face,
-              NewDataCallback dataCallback, 
+              NewDataCallback dataCallback,
               RemoveCallback rmCallback);
 
   ~SyncSocket ();
 
-  bool 
-  publishData(const ndn::Name &prefix, uint64_t session, const char *buf, size_t len, int freshness,uint64_t seq);
+  bool
+  publishData(const ndn::Name &prefix, uint64_t session, const char *buf, size_t len,
+              int freshness,uint64_t seq);
 
-  void 
-  remove (const ndn::Name &prefix) 
+  void
+  remove (const ndn::Name &prefix)
   { m_syncLogic.remove(prefix); }
 
-  void 
-  fetchData(const ndn::Name &prefix, const SeqNo &seq, const ndn::OnDataValidated& onValidated, int retry = 0);
+  void
+  fetchData(const ndn::Name &prefix, const SeqNo &seq,
+            const ndn::OnDataValidated& onValidated, int retry = 0);
 
-  std::string 
-  getRootDigest() 
+  std::string
+  getRootDigest()
   { return m_syncLogic.getRootDigest(); }
 
   uint64_t
   getNextSeq (const ndn::Name &prefix, uint64_t session);
 
   SyncLogic &
-  getLogic () 
+  getLogic ()
   { return m_syncLogic; }
 
   // make this a static function so we don't have to create socket instance without
   // knowing the local prefix. it's a wrong place for this function anyway
   static std::string
-  GetLocalPrefix (); 
-  
+  GetLocalPrefix ();
+
 private:
   void
-  publishDataInternal(ndn::shared_ptr<ndn::Data> data, const ndn::Name &prefix, uint64_t session,uint64_t seq);
+  publishDataInternal(ndn::shared_ptr<ndn::Data> data,
+                      const ndn::Name &prefix, uint64_t session,uint64_t seq);
 
-  void 
-  passCallback(const std::vector<MissingDataInfo> &v) 
-  { m_newDataCallback(v, this); }
+  void
+  passCallback(const std::vector<MissingDataInfo> &v)
+  {
+    m_newDataCallback(v, this);
+  }
 
   void
   onData(const ndn::Interest& interest, ndn::Data& data,
@@ -104,7 +109,7 @@ private:
          const ndn::OnDataValidationFailed& onValidationFailed);
 
   void
-  onDataTimeout(const ndn::Interest& interest, 
+  onDataTimeout(const ndn::Interest& interest,
                 int retry,
                 const ndn::OnDataValidated& onValidated,
                 const ndn::OnDataValidationFailed& onValidationFailed);
@@ -119,7 +124,6 @@ private:
   ndn::shared_ptr<ndn::Validator> m_validator;
   ndn::shared_ptr<ndn::KeyChain> m_keyChain;
   ndn::shared_ptr<ndn::Face> m_face;
-  ndn::shared_ptr<boost::asio::io_service> m_ioService;
   SyncLogic      m_syncLogic;
 };
 

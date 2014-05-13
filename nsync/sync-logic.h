@@ -63,7 +63,6 @@ struct MissingDataInfo {
 class SyncLogic
 {
 public:
-  //typedef boost::function< void ( const std::string &/*prefix*/, const SeqNo &/*newSeq*/, const SeqNo &/*oldSeq*/ ) > LogicUpdateCallback;
   typedef boost::function< void (const std::vector<MissingDataInfo> & ) > LogicUpdateCallback;
   typedef boost::function< void (const std::string &/*prefix*/ ) > LogicRemoveCallback;
   typedef boost::function< void (const std::string &)> LogicPerBranchCallback;
@@ -120,6 +119,9 @@ private:
 
   void
   onSyncInterest (const ndn::Name& prefix, const ndn::Interest& interest);
+
+  void
+  onSyncRegisterSucceed(const ndn::Name& prefix);
 
   void
   onSyncRegisterFailed(const ndn::Name& prefix, const std::string& msg);

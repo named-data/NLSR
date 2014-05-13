@@ -59,8 +59,7 @@ NamePrefixTableEntry::addRoutingTableEntry(RoutingTableEntry& rte)
     (*it).getNexthopList().reset(); // reseting existing routing table's next hop
     for (std::list<NextHop>::iterator nhit =
            rte.getNexthopList().getNextHops().begin();
-         nhit != rte.getNexthopList().getNextHops().end(); ++nhit)
-    {
+         nhit != rte.getNexthopList().getNextHops().end(); ++nhit) {
       (*it).getNexthopList().addNextHop((*nhit));
     }
   }
@@ -73,8 +72,7 @@ operator<<(ostream& os, NamePrefixTableEntry& npte)
   os << "Name: " << npte.getNamePrefix() << endl;
   std::list<RoutingTableEntry> rteList = npte.getRteList();
   for (std::list<RoutingTableEntry>::iterator it = rteList.begin();
-       it != rteList.end(); ++it)
-  {
+       it != rteList.end(); ++it) {
     cout << (*it);
   }
   os << npte.getNexthopList();

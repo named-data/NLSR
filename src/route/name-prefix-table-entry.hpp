@@ -37,11 +37,9 @@ public:
   void
   resetRteListNextHop()
   {
-    if (m_rteList.size() > 0)
-    {
+    if (m_rteList.size() > 0) {
       for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
-           it != m_rteList.end(); ++it)
-      {
+           it != m_rteList.end(); ++it) {
         (*it).getNexthopList().reset();
       }
     }

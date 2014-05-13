@@ -7,58 +7,70 @@
 #include <ndn-cxx/face.hpp>
 
 namespace nlsr {
+
+enum {
+  LSA_REFRESH_TIME_MIN = 240,
+  LSA_REFRESH_TIME_DEFAULT = 1800,
+  LSA_REFRESH_TIME_MAX = 7200
+};
+
+enum {
+  HELLO_RETRIES_MIN = 1,
+  HELLO_RETRIES_DEFAULT = 3,
+  HELLO_RETRIES_MAX = 15
+};
+
+enum {
+  HELLO_TIMEOUT_MIN = 1,
+  HELLO_TIMEOUT_DEFAULT = 3,
+  HELLO_TIMEOUT_MAX = 15
+};
+
+enum {
+  HELLO_INTERVAL_MIN = 30,
+  HELLO_INTERVAL_DEFAULT = 60,
+  HELLO_INTERVAL_MAX =90
+};
+
+enum {
+  MAX_FACES_PER_PREFIX_MIN = 0,
+  MAX_FACES_PER_PREFIX_MAX = 60
+};
+
+enum {
+  HYPERBOLIC_STATE_OFF = 0,
+  HYPERBOLIC_STATE_ON = 1,
+  HYPERBOLIC_STATE_DRY_RUN = 2
+};
+
 class ConfParameter
 {
 
 public:
   ConfParameter()
-    : m_chronosyncSyncPrefix("ndn/nlsr/sync")
-    , m_chronosyncLsaPrefix("/ndn/nlsr/LSA")
-    , m_rootKeyPrefix("/ndn/keys")
-    , m_interestRetryNumber(3)
-    , m_interestResendTime(5)
-    , m_infoInterestInterval(60)
-    , m_lsaRefreshTime(1800)
-    , m_routerDeadInterval(3600)
-    , m_maxFacesPerPrefix(0)
-    , m_tunnelType(0)
-    , m_detailedLogging(0)
-    , m_certDir()
-    , m_debugging(0)
-    , m_seqFileDir()
-    , m_isHyperbolicCalc(0)
+    : m_lsaRefreshTime(LSA_REFRESH_TIME_DEFAULT)
+    , m_routerDeadInterval(2*LSA_REFRESH_TIME_DEFAULT)
+    , m_logLevel("INFO")
+    , m_interestRetryNumber(HELLO_RETRIES_DEFAULT)
+    , m_interestResendTime(HELLO_TIMEOUT_DEFAULT)
+    , m_infoInterestInterval(HELLO_INTERVAL_DEFAULT)
+    , m_hyperbolicState(HYPERBOLIC_STATE_OFF)
     , m_corR(0)
     , m_corTheta(0)
+    , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
   {}
 
   void
-  setRouterName(const std::string& rn)
+  setNetwork(const ndn::Name& networkName)
   {
-    m_routerName = ndn::Name(rn);
-  }
-
-  const ndn::Name&
-  getRouterName()
-  {
-    return m_routerName;
-  }
-
-  void
-  setSiteName(const std::string& sn)
-  {
-    m_siteName = ndn::Name(sn);
-  }
-
-  const ndn::Name&
-  getSiteName()
-  {
-    return m_siteName;
-  }
-
-  void
-  setNetwork(const std::string& nn)
-  {
-    m_network = ndn::Name(nn);
+    m_network = networkName;
+    m_chronosyncPrefix = m_network;
+    m_chronosyncPrefix.append("nlsr");
+    m_chronosyncPrefix.append("sync");
+    
+    m_lsaPrefix = m_network;
+    m_lsaPrefix.append("nlsr");
+    m_lsaPrefix.append("LSA");
   }
 
   const ndn::Name&
@@ -68,9 +80,32 @@ public:
   }
 
   void
+  setRouterName(const ndn::Name& routerName)
+  {
+    m_routerName = routerName;
+  }
+
+  const ndn::Name&
+  getRouterName()
+  {
+    return m_routerName;
+  }
+
+  void
+  setSiteName(const ndn::Name& siteName)
+  {
+    m_siteName = siteName;
+  }
+
+  const ndn::Name&
+  getSiteName()
+  {
+    return m_siteName;
+  }
+
+  void
   buildRouterPrefix()
   {
-    //m_routerPrefix = "/" + m_network + "/" + m_siteName + "/" + m_routerName;
     m_routerPrefix = m_network;
     m_routerPrefix.append(m_siteName);
     m_routerPrefix.append(m_routerName);
@@ -82,40 +117,17 @@ public:
     return m_routerPrefix;
   }
 
+
   const ndn::Name&
-  getRootKeyPrefix()
+  getChronosyncPrefix()
   {
-    return m_rootKeyPrefix;
+    return m_chronosyncPrefix;
   }
 
-  void
-  setRootKeyPrefix(std::string rkp)
+  const ndn::Name&
+  getLsaPrefix()
   {
-    m_rootKeyPrefix = ndn::Name(rkp);
-  }
-
-  void
-  setInterestRetryNumber(uint32_t irn)
-  {
-    m_interestRetryNumber = irn;
-  }
-
-  uint32_t
-  getInterestRetryNumber()
-  {
-    return m_interestRetryNumber;
-  }
-
-  void
-  setInterestResendTime(int32_t irt)
-  {
-    m_interestResendTime = irt;
-  }
-
-  int32_t
-  getInterestResendTime()
-  {
-    return m_interestResendTime;
+    return m_lsaPrefix;
   }
 
   void
@@ -142,95 +154,75 @@ public:
   {
     return m_routerDeadInterval;
   }
+  
+  void 
+  setLogLevel(const std::string& logLevel)
+  {
+    m_logLevel = logLevel;
+  }
+  
+  const std::string& 
+  getLogLevel()
+  {
+    return m_logLevel;
+  }
 
   void
-  setMaxFacesPerPrefix(int32_t mfpp)
+  setInterestRetryNumber(uint32_t irn)
   {
-    m_maxFacesPerPrefix = mfpp;
+    m_interestRetryNumber = irn;
+  }
+
+  uint32_t
+  getInterestRetryNumber()
+  {
+    return m_interestRetryNumber;
+  }
+
+  void
+  setInterestResendTime(int32_t irt)
+  {
+    m_interestResendTime = irt;
   }
 
   int32_t
-  getMaxFacesPerPrefix()
+  getInterestResendTime()
   {
-    return m_maxFacesPerPrefix;
-  }
-
-  void
-  setLogDir(const std::string& ld)
-  {
-    m_logDir = ld;
-  }
-
-  std::string
-  getLogDir()
-  {
-    return m_logDir;
-  }
-
-  void
-  setCertDir(const std::string& cd)
-  {
-    m_certDir = cd;
-  }
-
-  const std::string&
-  getCertDir()
-  {
-    return m_certDir;
-  }
-
-  void
-  setSeqFileDir(const std::string& ssfd)
-  {
-    m_seqFileDir = ssfd;
-  }
-
-  const std::string&
-  getSeqFileDir()
-  {
-    return m_seqFileDir;
-  }
-
-  void
-  setDetailedLogging(int dl)
-  {
-    m_detailedLogging = dl;
-  }
-
-  int
-  getDetailedLogging()
-  {
-    return m_detailedLogging;
-  }
-
-  void
-  setDebugging(int32_t d)
-  {
-    m_debugging = d;
+    return m_interestResendTime;
   }
 
   int32_t
-  getDebugging()
+  getInfoInterestInterval()
   {
-    return m_debugging;
+    return m_infoInterestInterval;
   }
 
   void
-  setIsHyperbolicCalc(int32_t ihc)
+  setInfoInterestInterval(int32_t iii)
   {
-    m_isHyperbolicCalc = ihc;
+    m_infoInterestInterval = iii;
+  }
+
+  void
+  setHyperbolicState(int32_t ihc)
+  {
+    m_hyperbolicState = ihc;
   }
 
   int32_t
-  getIsHyperbolicCalc()
+  getHyperbolicState()
   {
-    return m_isHyperbolicCalc;
+    return m_hyperbolicState;
   }
 
-  void
+  bool
   setCorR(double cr)
   {
-    m_corR = cr;
+    if ( cr >= 0 ) {
+     m_corR = cr;
+     return true;
+    }
+    return false;
   }
 
   double
@@ -250,54 +242,31 @@ public:
   {
     return m_corTheta;
   }
-
+  
   void
-  setTunnelType(int tt)
+  setMaxFacesPerPrefix(int32_t mfpp)
   {
-    m_tunnelType = tt;
+    m_maxFacesPerPrefix = mfpp;
   }
 
   int32_t
-  getTunnelType()
+  getMaxFacesPerPrefix()
   {
-    return m_tunnelType;
+    return m_maxFacesPerPrefix;
   }
 
   void
-  setChronosyncSyncPrefix(const std::string& csp)
+  setSeqFileDir(const std::string& ssfd)
   {
-    m_chronosyncSyncPrefix = ndn::Name(csp);
+    m_seqFileDir = ssfd;
   }
 
-  const ndn::Name&
-  getChronosyncSyncPrefix()
+  const std::string&
+  getSeqFileDir()
   {
-    return m_chronosyncSyncPrefix;
+    return m_seqFileDir;
   }
 
-  void
-  setChronosyncLsaPrefix(const std::string& clp)
-  {
-    m_chronosyncLsaPrefix = ndn::Name(clp);
-  }
-
-  const ndn::Name&
-  getChronosyncLsaPrefix()
-  {
-    return m_chronosyncLsaPrefix;
-  }
-
-  int32_t
-  getInfoInterestInterval()
-  {
-    return m_infoInterestInterval;
-  }
-
-  void
-  setInfoInterestInterval(int32_t iii)
-  {
-    m_infoInterestInterval = iii;
-  }
 
 private:
   ndn::Name m_routerName;
@@ -307,35 +276,48 @@ private:
   ndn::Name m_routerPrefix;
   ndn::Name m_lsaRouterPrefix;
 
-  ndn::Name m_chronosyncSyncPrefix;
-  ndn::Name m_chronosyncLsaPrefix;
-  ndn::Name m_rootKeyPrefix;
+  ndn::Name m_chronosyncPrefix;
+  ndn::Name m_lsaPrefix;
+
+  int32_t  m_lsaRefreshTime;
+  int64_t  m_routerDeadInterval;
+  std::string m_logLevel;
 
   uint32_t m_interestRetryNumber;
-  int32_t m_interestResendTime;
-  int32_t m_infoInterestInterval;
-  int32_t m_lsaRefreshTime;
-  int64_t m_routerDeadInterval;
-
-  int32_t m_maxFacesPerPrefix;
-  int32_t m_tunnelType;
-  int32_t m_detailedLogging;
-
-  std::string m_certDir;
-  int32_t m_debugging;
-  std::string m_seqFileDir;
-
-  int32_t m_isHyperbolicCalc;
+  int32_t  m_interestResendTime;
+  
+  
+  int32_t  m_infoInterestInterval;
+  
+  int32_t m_hyperbolicState;
   double m_corR;
   double m_corTheta;
 
-  std::string m_logFile;
-  std::string m_logDir;
+  int32_t m_maxFacesPerPrefix;
+  
+  std::string m_seqFileDir;
 
 };
 
-std::ostream&
-operator<<(std::ostream& os, ConfParameter& cfp);
+inline std::ostream&
+operator<<(std::ostream& os, ConfParameter& cfp)
+{
+  os  << "Router Name: " << cfp.getRouterName() << std::endl;
+  os  << "Site Name: " << cfp.getSiteName() << std::endl;
+  os  << "Network: " << cfp.getNetwork() << std::endl;
+  os  << "Router Prefix: " << cfp.getRouterPrefix() << std::endl;
+  os  << "ChronoSync sync Prifex: " << cfp.getChronosyncPrefix() << std::endl;
+  os  << "ChronoSync LSA prefix: " << cfp.getLsaPrefix() << std::endl;
+  os  << "Interest Retry number: " << cfp.getInterestRetryNumber() << std::endl;
+  os  << "Interest Resend second: " << cfp.getInterestResendTime() << std::endl;
+  os  << "Info Interest Interval: " << cfp.getInfoInterestInterval() << std::endl;
+  os  << "LSA refresh time: " << cfp.getLsaRefreshTime() << std::endl;
+  os  << "Max Faces Per Prefix: " << cfp.getMaxFacesPerPrefix() << std::endl;
+  os  << "Hyperbolic ROuting: " << cfp.getHyperbolicState() << std::endl;
+  os  << "Hyp R: " << cfp.getCorR() << std::endl;
+  os  << "Hyp theta: " << cfp.getCorTheta() << std::endl;
+  return  os;
+}
 
 } // namespace nlsr
 

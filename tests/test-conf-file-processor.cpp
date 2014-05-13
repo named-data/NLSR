@@ -2,7 +2,7 @@
  * Copyright (C) 2014 Regents of the University of Memphis.
  * See COPYING for copyright and distribution information.
  */
-
+#include <fstream>
 #include "conf-file-processor.hpp"
 #include "nlsr.hpp"
 #include <boost/test/unit_test.hpp>
@@ -18,16 +18,47 @@ BOOST_AUTO_TEST_CASE(ConfFileProcessorSample)
   Nlsr nlsr1;
 
   const std::string CONFIG =
-    "network ndn\n"
-    "site-name memphis.edu\n"
-    "router-name cs/macbook\n\n"
-    "ndnneighbor /ndn/memphis.edu/cs/maia 7\n"
-    "link-cost /ndn/memphis.edu/cs/maia 30\n"
-    "ndnneighbor /ndn/memphis.edu/cs/pollux 10\n"
-    "link-cost /ndn/memphis.edu/cs/pollux 25\n\n"
-    "ndnname /ndn/memphis.edu/cs/macbook/name1\n"
-    "ndnname /ndn/memphis.edu/cs/macbook/name2\n\n\n"
-    ;
+     "general\n"
+    "{\n"
+    "  network /ndn/\n"      
+    "  site /memphis.edu/\n"
+    "  router /cs/pollux/\n"
+    "  lsa-refresh-time 1800\n"
+    "  log-level  INFO\n"
+    "}\n\n"
+    "neighbors\n"
+    "{\n"
+    "  hello-retries 3\n"
+    "  hello-time-out 1\n"
+    "  hello-interval  60\n\n"
+    "  neighbor\n"
+    "  {\n"
+    "    name /ndn/memphis.edu/cs/castor\n"
+    "    face-id  15\n"
+    "    link-cost 20\n"
+    "  }\n\n"
+    "  neighbor\n"
+    "  {\n"
+    "    name /ndn/memphis.edu/cs/mira\n"
+    "    face-id  17\n"
+    "    link-cost 30\n"
+    "  }\n"
+    "}\n\n"
+    "hyperbolic\n"
+    "{\n"
+    "state off\n"
+    "radius   123.456\n"
+    "angle    1.45\n"
+    "}\n\n"
+    "fib\n"
+    "{\n"
+    "   max-faces-per-prefix 3\n"
+    "}\n\n"
+    "advertising\n"
+    "{\n"
+    "prefix /ndn/edu/memphis/cs/netlab\n"
+    "prefix /ndn/edu/memphis/sports/basketball\n"
+    "}\n";
 
   std::ofstream config;
   config.open("unit-test-nlsr.conf");
@@ -40,12 +71,12 @@ BOOST_AUTO_TEST_CASE(ConfFileProcessorSample)
 
   cfp1.processConfFile();
 
-  BOOST_CHECK(nlsr1.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/maia"));
+  BOOST_CHECK(nlsr1.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/mira"));
   BOOST_CHECK_EQUAL(
-    nlsr1.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/maia").getName(),
-    "/ndn/memphis.edu/cs/maia");
+    nlsr1.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/mira").getName(),
+    "/ndn/memphis.edu/cs/mira");
   BOOST_CHECK_EQUAL(
-    nlsr1.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/maia").getLinkCost(),
+    nlsr1.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/mira").getLinkCost(),
     30);
 
   BOOST_CHECK_EQUAL(nlsr1.getNamePrefixList().getSize(), 2);

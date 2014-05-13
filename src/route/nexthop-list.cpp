@@ -9,13 +9,13 @@ using namespace std;
 static bool
 nexthopCompare(NextHop& nh1, NextHop& nh2)
 {
-  return nh1.getConnectingFace() == nh2.getConnectingFace();
+  return nh1.getConnectingFaceUri() == nh2.getConnectingFaceUri();
 }
 
 static bool
 nexthopRemoveCompare(NextHop& nh1, NextHop& nh2)
 {
-  return (nh1.getConnectingFace() == nh2.getConnectingFace() &&
+  return (nh1.getConnectingFaceUri() == nh2.getConnectingFaceUri() &&
           nh1.getRouteCost() == nh2.getRouteCost()) ;
 }
 
@@ -38,13 +38,11 @@ NexthopList::addNextHop(NextHop& nh)
 {
   std::list<NextHop>::iterator it = std::find_if(m_nexthopList.begin(),
                                                  m_nexthopList.end(),
-                                                 bind(&nexthopCompare, _1, nh));
-  if (it == m_nexthopList.end())
-  {
+                                                 ndn::bind(&nexthopCompare, _1, nh));
+  if (it == m_nexthopList.end()) {
     m_nexthopList.push_back(nh);
   }
-  if ((*it).getRouteCost() > nh.getRouteCost())
-  {
+  if ((*it).getRouteCost() > nh.getRouteCost()) {
     (*it).setRouteCost(nh.getRouteCost());
   }
 }
@@ -59,9 +57,8 @@ NexthopList::removeNextHop(NextHop& nh)
 {
   std::list<NextHop>::iterator it = std::find_if(m_nexthopList.begin(),
                                                  m_nexthopList.end(),
-                                                 bind(&nexthopRemoveCompare, _1, nh));
-  if (it != m_nexthopList.end())
-  {
+                                                 ndn::bind(&nexthopRemoveCompare, _1, nh));
+  if (it != m_nexthopList.end()) {
     m_nexthopList.erase(it);
   }
 }
@@ -78,8 +75,7 @@ operator<<(ostream& os, NexthopList& nhl)
   std::list<NextHop> nexthopList = nhl.getNextHops();
   int i = 1;
   for (std::list<NextHop>::iterator it = nexthopList.begin();
-       it != nexthopList.end() ; it++, i++)
-  {
+       it != nexthopList.end() ; it++, i++) {
     os << "Nexthop " << i << ": " << (*it) << endl;
   }
   return os;
