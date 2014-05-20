@@ -82,6 +82,9 @@ public:
   bool
   isEqualNextHops(NexthopList& nhlOther);
 
+  void
+  writeLog();
+
 private:
   ndn::Name m_name;
   int32_t m_timeToRefresh;

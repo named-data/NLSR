@@ -6,8 +6,11 @@
 #include <unistd.h>
 
 #include "sequencing-manager.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("SequencingManager");
 
 using namespace std;
 

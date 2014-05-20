@@ -46,7 +46,10 @@ def configure(conf):
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
                    uselib_store='NDN_CPP', mandatory=True)
 
-    boost_libs = 'system chrono program_options iostreams thread regex'
+    conf.check_cfg(package='liblog4cxx', args=['--cflags', '--libs'],
+                   uselib_store='LOG4CXX', mandatory=True)
+
+    boost_libs = 'system chrono program_options iostreams thread regex filesystem'
     if conf.options.with_tests:
         conf.env['WITH_TESTS'] = 1
         conf.define('WITH_TESTS', 1);
@@ -85,7 +88,7 @@ def build (bld):
         features='cxx',
         source=bld.path.ant_glob(['src/**/*.cpp'],
                                  excl=['src/main.cpp']),
-        use='nsync-objects NDN_CPP BOOST',
+        use='nsync-objects NDN_CPP BOOST LOG4CXX',
         includes='. src',
         export_includes='. src',
         )

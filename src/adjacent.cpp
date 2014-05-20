@@ -5,8 +5,11 @@
 
 
 #include "adjacent.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("Adjacent");
 
 using namespace std;
 
@@ -53,6 +56,16 @@ bool
 Adjacent::compare(const ndn::Name& adjacencyName)
 {
   return m_name == adjacencyName;
+}
+
+void
+Adjacent::writeLog()
+{
+  _LOG_DEBUG("Adjacent : " << m_name);
+  _LOG_DEBUG("Connecting FaceUri: " << m_connectingFaceUri);
+  _LOG_DEBUG("Link Cost: " << m_linkCost);
+  _LOG_DEBUG("Status: " << m_status);
+  _LOG_DEBUG("Interest Timed out: " << m_interestTimedOutNo);
 }
 
 std::ostream&

@@ -5,9 +5,12 @@
 
 #include "nlsr.hpp"
 #include "adjacent.hpp"
+#include "logger.hpp"
 
 
 namespace nlsr {
+
+INIT_LOGGER("nlsr");
 
 using namespace ndn;
 using namespace std;
@@ -28,6 +31,7 @@ void
 Nlsr::setInfoInterestFilter()
 {
   ndn::Name name(m_confParam.getRouterPrefix());
+  _LOG_DEBUG("Setting interest filter for name: " << name);
   getNlsrFace().setInterestFilter(name,
                                   ndn::bind(&HelloProtocol::processInterest,
                                             &m_helloProtocol, _1, _2),
@@ -40,6 +44,7 @@ Nlsr::setLsaInterestFilter()
 {
   ndn::Name name = m_confParam.getLsaPrefix();
   name.append(m_confParam.getRouterPrefix());
+  _LOG_DEBUG("Setting interest filter for name: " << name);
   getNlsrFace().setInterestFilter(name,
                                   ndn::bind(&Lsdb::processInterest,
                                             &m_nlsrLsdb, _1, _2),
@@ -70,6 +75,7 @@ Nlsr::registerPrefixes()
 void
 Nlsr::initialize()
 {
+  _LOG_DEBUG("Initializing Nlsr");
   m_confParam.buildRouterPrefix();
   m_nlsrLsdb.setLsaRefreshTime(m_confParam.getLsaRefreshTime());
   m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix().toUri());
@@ -81,11 +87,16 @@ Nlsr::initialize()
   m_adjacencyList.print();
   m_namePrefixList.print();
   /* debugging purpose end */
+  /* Logging start */
+  m_confParam.writeLog();
+  m_adjacencyList.writeLog();
+  m_namePrefixList.writeLog();
+  /* Logging end */
   registerPrefixes();
-  m_nlsrLsdb.buildAndInstallOwnNameLsa();
-  m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
   setInfoInterestFilter();
   setLsaInterestFilter();
+  m_nlsrLsdb.buildAndInstallOwnNameLsa();
+  m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
   m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncPrefix().toUri());
   m_syncLogicHandler.createSyncSocket(boost::ref(*this));
   //m_interestManager.scheduleInfoInterest(10);

@@ -6,10 +6,11 @@
 #include "name-prefix-table.hpp"
 #include "name-prefix-table-entry.hpp"
 #include "routing-table.hpp"
-
-
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("NamePrefixTable");
 
 using namespace std;
 
@@ -127,6 +128,17 @@ NamePrefixTable::updateWithNewRoute()
         addEntry((*it).getNamePrefix(), rte);
       }
     }
+  }
+}
+
+void
+NamePrefixTable::writeLog()
+{
+  _LOG_DEBUG("----------------NPT----------------------");
+  for (std::list<NamePrefixTableEntry>::iterator it = m_table.begin();
+       it != m_table.end();
+       ++it) {
+    (*it).writeLog();
   }
 }
 

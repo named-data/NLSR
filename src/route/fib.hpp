@@ -76,6 +76,9 @@ public:
   void
   setStrategy(const ndn::Name& name, const std::string& strategy);
 
+  void
+  writeLog();
+
 private:
   void
   unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri);

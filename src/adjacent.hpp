@@ -89,6 +89,9 @@ public:
   bool
   compare(const ndn::Name& adjacencyName);
 
+  void
+  writeLog();
+
 public:
   static const float DEFAULT_LINK_COST;
 

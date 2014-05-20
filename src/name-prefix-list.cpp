@@ -4,8 +4,11 @@
 #include <ndn-cxx/common.hpp>
 
 #include "name-prefix-list.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("NamePrefixList");
 
 using namespace std;
 
@@ -54,6 +57,18 @@ void
 NamePrefixList::sort()
 {
   m_nameList.sort();
+}
+
+void
+NamePrefixList::writeLog()
+{
+  _LOG_DEBUG("-------Name Prefix List--------");
+  int i = 1;
+  for (std::list<ndn::Name>::iterator it = m_nameList.begin();
+       it != m_nameList.end(); it++) {
+    _LOG_DEBUG("Name " << i << " : " << (*it));
+    i++;
+  }
 }
 
 void

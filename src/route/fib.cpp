@@ -6,11 +6,13 @@
 #include "nexthop-list.hpp"
 #include "face-map.hpp"
 #include "fib.hpp"
-
+#include "logger.hpp"
 
 
 
 namespace nlsr {
+
+INIT_LOGGER("Fib");
 
 using namespace std;
 using namespace ndn;
@@ -34,6 +36,8 @@ Fib::scheduleEntryRefreshing(const ndn::Name& name, int32_t feSeqNum,
 {
   std::cout << "Fib::scheduleEntryRefreshing Called" << std::endl;
   std::cout << "Name: " << name << " Seq Num: " << feSeqNum << std::endl;
+  _LOG_DEBUG("Fib::scheduleEntryRefreshing Called");
+  _LOG_DEBUG("Name: " << name << " Seq Num: " << feSeqNum);
   return m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(refreshTime),
                                              ndn::bind(&Fib::refreshEntry, this,
                                                        name, feSeqNum));
@@ -51,6 +55,7 @@ Fib::refreshEntry(const ndn::Name& name, int32_t feSeqNum)
     std::cout << "Entry found with Seq Num: " << feSeqNum << std::endl;
     if (it->getSeqNo() == feSeqNum) {
       std::cout << "Refreshing the FIB entry" << std::endl;
+      _LOG_DEBUG("Refreshing the FIB entry. Name: " <<  name);
       for (std::list<NextHop>::iterator nhit =
              (*it).getNexthopList().getNextHops().begin();
            nhit != (*it).getNexthopList().getNextHops().end(); nhit++) {
@@ -70,6 +75,7 @@ Fib::refreshEntry(const ndn::Name& name, int32_t feSeqNum)
 void
 Fib::remove(const ndn::Name& name)
 {
+  _LOG_DEBUG("Fib::remove called");
   std::list<FibEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
                                                   bind(&fibEntryNameCompare, _1, name));
@@ -91,6 +97,7 @@ Fib::remove(const ndn::Name& name)
     }
     std::cout << "Cancellling Scheduled event" << std::endl;
     std::cout << "Name: " << name << "Seq num: " << it->getSeqNo() << std::endl;
+    _LOG_DEBUG("Cancelling Scheduled event. Name: " << name);
     cancelScheduledExpiringEvent((*it).getExpiringEventId());
     m_table.erase(it);
   }
@@ -101,6 +108,7 @@ void
 Fib::update(const ndn::Name& name, NexthopList& nextHopList)
 {
   std::cout << "Fib::updateFib Called" << std::endl;
+  _LOG_DEBUG("Fib::updateFib Called");
   int startFace = 0;
   int endFace = getNumberOfFacesForName(nextHopList,
                                         m_nlsr.getConfParameter().getMaxFacesPerPrefix());
@@ -151,6 +159,7 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
       it->setTimeToRefresh(m_refreshTime);
       std::cout << "Cancellling Scheduled event" << std::endl;
       std::cout << "Name: " << name << "Seq num: " << it->getSeqNo() << std::endl;
+      _LOG_DEBUG("Cancelling Scheduled event. Name: " << name);
       cancelScheduledExpiringEvent(it->getExpiringEventId());
       it->setSeqNo(it->getSeqNo() + 1);
       (*it).setExpiringEventId(scheduleEntryRefreshing(it->getName() ,
@@ -167,11 +176,13 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
 void
 Fib::clean()
 {
+  _LOG_DEBUG("Fib::clean called");
   for (std::list<FibEntry>::iterator it = m_table.begin(); it != m_table.end();
        ++it) {
     std::cout << "Cancellling Scheduled event" << std::endl;
     std::cout << "Name: " << it->getName() << "Seq num: " << it->getSeqNo() <<
               std::endl;
+    _LOG_DEBUG("Cancelling Scheduled event. Name: " << it->getName());
     cancelScheduledExpiringEvent((*it).getExpiringEventId());
     for (std::list<NextHop>::iterator nhit =
            (*it).getNexthopList().getNextHops().begin();
@@ -320,6 +331,15 @@ Fib::onFailure(uint32_t code, const std::string& error,
   std::cout << message << ": " << error << " (code: " << code << ")";
 }
 
+void
+Fib::writeLog()
+{
+  _LOG_DEBUG("-------------------FIB-----------------------------");
+  for (std::list<FibEntry>::iterator it = m_table.begin(); it != m_table.end();
+       ++it) {
+    (*it).writeLog();
+  }
+}
 
 void
 Fib::print()

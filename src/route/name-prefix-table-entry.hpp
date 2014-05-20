@@ -66,6 +66,9 @@ public:
   void
   addRoutingTableEntry(RoutingTableEntry& rte);
 
+  void
+  writeLog();
+
 private:
   ndn::Name m_namePrefix;
   std::list<RoutingTableEntry> m_rteList;

@@ -1,8 +1,11 @@
 #include <iostream>
 #include "nexthop-list.hpp"
 #include "nexthop.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("NexthopList");
 
 using namespace std;
 
@@ -67,6 +70,17 @@ void
 NexthopList::sort()
 {
   m_nexthopList.sort(nextHopSortingComparator);
+}
+
+void
+NexthopList::writeLog()
+{
+  int i = 1;
+  for (std::list<NextHop>::iterator it = m_nexthopList.begin();
+       it != m_nexthopList.end() ; it++, i++) {
+    _LOG_DEBUG("Nexthop " << i << ": " << (*it).getConnectingFaceUri()
+               << " Route Cost: " << (*it).getRouteCost());
+  }
 }
 
 ostream&

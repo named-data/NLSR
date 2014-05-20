@@ -79,6 +79,9 @@ public:
   void
   print();
 
+  void
+  writeLog();
+
 private:
   std::list<Adjacent>::iterator
   find(const ndn::Name& adjName);

@@ -2,8 +2,11 @@
 #include "lsdb.hpp"
 #include "hello-protocol.hpp"
 #include "utility/name-helper.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("HelloProtocol");
 
 const std::string HelloProtocol::INFO_COMPONENT="info";
 
@@ -11,6 +14,7 @@ void
 HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
 {
   std::cout << "Expressing Interest :" << interestName << std::endl;
+  _LOG_DEBUG("Expressing Interest :" << interestName);
   ndn::Interest i(interestName);
   i.setInterestLifetime(ndn::time::seconds(seconds));
   i.setMustBeFresh(true);
@@ -51,12 +55,14 @@ HelloProtocol::processInterest(const ndn::Name& name,
 {
   const ndn::Name interestName = interest.getName();
   std::cout << "Interest Received for Name: " << interestName << std::endl;
+  _LOG_DEBUG("Interest Received for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
   ndn::Name neighbor;
   neighbor.wireDecode(interestName.get(-1).blockFromValue());
   std::cout << "Neighbor: " << neighbor << std::endl;
+  _LOG_DEBUG("Neighbor: " << neighbor);
   if (m_nlsr.getAdjacencyList().isNeighbor(neighbor)) {
     ndn::Data data(ndn::Name(interest.getName()).appendVersion());
     data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
@@ -64,6 +70,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
                     INFO_COMPONENT.size());
     m_keyChain.sign(data);
     std::cout << ">> D: " << data << std::endl;
+    _LOG_DEBUG("Sending out data for name: " << data.getName());
     m_nlsr.getNlsrFace().put(data);
     int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
     if (status == 0) {
@@ -81,11 +88,13 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
 {
   const ndn::Name interestName(interest.getName());
   std::cout << "Interest timed out for Name: " << interestName << std::endl;
+  _LOG_DEBUG("Interest timed out for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
   ndn::Name neighbor = interestName.getPrefix(-2);
   std::cout << "Neighbor: " << neighbor << std::endl;
+  _LOG_DEBUG("Neighbor: " << neighbor);
   m_nlsr.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
   int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
   uint32_t infoIntTimedOutCount =
@@ -93,6 +102,8 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   std::cout << "Neighbor: " << neighbor << std::endl;
   std::cout << "Status: " << status << std::endl;
   std::cout << "Info Interest Timed out: " << infoIntTimedOutCount << std::endl;
+  _LOG_DEBUG("Status: " << status);
+  _LOG_DEBUG("Info Interest Timed out: " << infoIntTimedOutCount);
   if ((infoIntTimedOutCount < m_nlsr.getConfParameter().getInterestRetryNumber())) {
     ndn::Name interestName(neighbor);
     interestName.append(INFO_COMPONENT);
@@ -105,6 +116,7 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
     m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, 0);
     m_nlsr.incrementAdjBuildCount();
     if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
+      _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
       m_nlsr.setIsBuildAdjLsaSheduled(true);
       // event here
       m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
@@ -121,6 +133,7 @@ HelloProtocol::processContent(const ndn::Interest& interest,
 {
   ndn::Name dataName = data.getName();
   std::cout << "Data received for name: " << dataName << std::endl;
+  _LOG_DEBUG("Data received for name: " << dataName);
   if (dataName.get(-3).toUri() == INFO_COMPONENT) {
     ndn::Name neighbor = dataName.getPrefix(-3);
     int oldStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
@@ -142,12 +155,14 @@ HelloProtocol::processContent(const ndn::Interest& interest,
     std::cout << "Neighbor : " << neighbor << std::endl;
     std::cout << "Status: " << newStatus << std::endl;
     std::cout << "Info Interest Timed out: " << infoIntTimedOutCount << std::endl;
+    _LOG_DEBUG("Old Status: " << oldStatus << " New Status: " << newStatus);
     //debugging purpose end
     // change in Adjacency list
     if ((oldStatus - newStatus) != 0) {
       m_nlsr.incrementAdjBuildCount();
       /* Need to schedule event for Adjacency LSA building */
       if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
+        _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
         m_nlsr.setIsBuildAdjLsaSheduled(true);
         // event here
         m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),

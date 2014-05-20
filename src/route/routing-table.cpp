@@ -9,8 +9,11 @@
 #include "routing-table-calculator.hpp"
 #include "routing-table-entry.hpp"
 #include "name-prefix-table.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("RoutingTable");
 
 using namespace std;
 
@@ -22,6 +25,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
   pnlsr.getLsdb().printAdjLsdb();
   pnlsr.getLsdb().printCorLsdb();
   pnlsr.getLsdb().printNameLsdb();
+  pnlsr.getNamePrefixTable().writeLog();
   if (pnlsr.getIsRoutingTableCalculating() == false) {
     //setting routing table calculation
     pnlsr.setIsRoutingTableCalculating(true);
@@ -30,6 +34,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
           std::string("adjacency"))) {
       if (pnlsr.getIsBuildAdjLsaSheduled() != 1) {
         std::cout << "CLearing old routing table ....." << std::endl;
+        _LOG_DEBUG("CLearing old routing table .....");
         clearRoutingTable();
         // for dry run options
         clearDryRoutingTable();
@@ -52,16 +57,23 @@ RoutingTable::calculate(Nlsr& pnlsr)
         printRoutingTable();
         pnlsr.getNamePrefixTable().print();
         pnlsr.getFib().print();
+        writeLog();
+        pnlsr.getNamePrefixTable().writeLog();
+        pnlsr.getFib().writeLog();
         //debugging purpose end
       }
       else {
         std::cout << "Adjacency building is scheduled, so ";
         std::cout << "routing table can not be calculated :(" << std::endl;
+        _LOG_DEBUG("Adjacency building is scheduled, so"
+                   " routing table can not be calculated :(");
       }
     }
     else {
       std::cout << "No Adj LSA of router itself,";
       std::cout <<	" so Routing table can not be calculated :(" << std::endl;
+      _LOG_DEBUG("No Adj LSA of router itself,"
+                 " so Routing table can not be calculated :(");
       clearRoutingTable();
       clearDryRoutingTable(); // for dry run options
       // need to update NPT here
@@ -71,6 +83,9 @@ RoutingTable::calculate(Nlsr& pnlsr)
       printRoutingTable();
       pnlsr.getNamePrefixTable().print();
       pnlsr.getFib().print();
+      writeLog();
+      pnlsr.getNamePrefixTable().writeLog();
+      pnlsr.getFib().writeLog();
       //debugging purpose end
     }
     pnlsr.setIsRouteCalculationScheduled(false); //clear scheduled flag
@@ -156,6 +171,18 @@ RoutingTable::findRoutingTableEntry(const ndn::Name& destRouter)
     return &(*it);
   }
   return 0;
+}
+
+void
+RoutingTable::writeLog()
+{
+  _LOG_DEBUG("---------------Routing Table------------------");
+  for (std::list<RoutingTableEntry>::iterator it = m_rTable.begin() ;
+       it != m_rTable.end(); ++it) {
+    _LOG_DEBUG("Destination: " << (*it).getDestination());
+    _LOG_DEBUG("Nexthops: ");
+    (*it).getNexthopList().writeLog();
+  }
 }
 
 void

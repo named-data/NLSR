@@ -63,6 +63,9 @@ private:
   void
   clearDryRoutingTable();
 
+  void
+  writeLog();
+
   const int m_NO_NEXT_HOP;
 
   std::list<RoutingTableEntry> m_rTable;

@@ -28,6 +28,9 @@ public:
   updateWithNewRoute();
 
   void
+  writeLog();
+
+  void
   print();
 
 private:

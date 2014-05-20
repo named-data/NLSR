@@ -4,9 +4,11 @@
 #include "adjacency-list.hpp"
 #include "adjacent.hpp"
 #include "nlsr.hpp"
-
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("AdjacencyList");
 
 using namespace std;
 
@@ -208,6 +210,16 @@ AdjacencyList::find(const ndn::Name& adjName)
                                                   ndn::bind(&Adjacent::compare,
                                                             _1, ndn::cref(adjName)));
   return it;
+}
+
+void
+AdjacencyList::writeLog()
+{
+  _LOG_DEBUG("-------Adjacency List--------");
+  for (std::list<Adjacent>::iterator it = m_adjList.begin();
+       it != m_adjList.end(); it++) {
+    (*it).writeLog();
+  }
 }
 
 // used for debugging purpose

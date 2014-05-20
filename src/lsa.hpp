@@ -190,6 +190,9 @@ public:
   void
   removeNptEntries(Nlsr& pnlsr);
 
+  void
+  writeLog();
+
 private:
   uint32_t m_noLink;
   AdjacencyList m_adl;
@@ -248,6 +251,9 @@ public:
 
   bool
   isEqualContent(const CoordinateLsa& clsa);
+
+  void
+  writeLog();
 
 private:
   double m_corRad;

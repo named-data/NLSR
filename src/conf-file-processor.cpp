@@ -3,6 +3,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/filesystem.hpp>
 
 #include <ndn-cxx/name.hpp>
 
@@ -163,6 +164,72 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
     return false;
   }
   
+  try {
+    std::string logDir = SectionAttributeTree.get<string>("log-dir");
+    if (boost::filesystem::exists(logDir)) {
+      if (boost::filesystem::is_directory(logDir)) {
+        std::string testFileName=logDir+"/test.log";
+        ofstream testOutFile;
+        testOutFile.open(testFileName.c_str());
+        if (testOutFile.is_open() && testOutFile.good()) {
+          m_nlsr.getConfParameter().setLogDir(logDir);
+        }
+        else {
+          std::cerr << "User does not have read and write permission on the directory";
+          std::cerr << std::endl;
+          return false;
+        }
+        testOutFile.close();
+        remove(testFileName.c_str());
+      }
+      else {
+        std::cerr << "Provided path is not a directory" << std::endl;
+        return false;
+      }
+    }
+    else {
+      std::cerr << "Log directory provided does not exists" << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << "You must configure log directory" << std::endl;
+    std::cerr << ex.what() << std::endl;
+    return false;
+  }
+  try {
+    std::string seqDir = SectionAttributeTree.get<string>("seq-dir");
+    if (boost::filesystem::exists(seqDir)) {
+      if (boost::filesystem::is_directory(seqDir)) {
+        std::string testFileName=seqDir+"/test.seq";
+        ofstream testOutFile;
+        testOutFile.open(testFileName.c_str());
+        if (testOutFile.is_open() && testOutFile.good()) {
+          m_nlsr.getConfParameter().setSeqFileDir(seqDir);
+        }
+        else {
+          std::cerr << "User does not have read and write permission on the directory";
+          std::cerr << std::endl;
+          return false;
+        }
+        testOutFile.close();
+        remove(testFileName.c_str());
+      }
+      else {
+        std::cerr << "Provided path is not a directory" << std::endl;
+        return false;
+      }
+    }
+    else {
+      std::cerr << "Seq directory provided does not exists" << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << "You must configure sequence directory" << std::endl;
+    std::cerr << ex.what() << std::endl;
+    return false;
+  }
   return true;
 }
 
@@ -233,7 +300,7 @@ ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
           m_nlsr.getAdjacencyList().insert(adj);
         }
         else {
-          cerr << " Wrong command format ! [name /nbr/name/ \n face-uri /uri\n]";
+          std::cerr << " Wrong command format ! [name /nbr/name/ \n face-uri /uri\n]";
           std::cerr << " or bad URI format" << std::endl;
         }
       }
@@ -336,8 +403,7 @@ ConfFileProcessor::processConfSectionAdvertising(boost::property_tree::ptree
          m_nlsr.getNamePrefixList().insert(namePrefix);
        }
        else {
-         std::cerr << " Wrong command format ! [prefix /name/prefix] or bad URI";
-         std::cerr << std::endl;
+         std::cerr << " Wrong command format ! [prefix /name/prefix] or bad URI" << std::endl;
          return false;
        }
      }

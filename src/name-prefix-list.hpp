@@ -38,6 +38,9 @@ public:
   }
 
   void
+  writeLog();
+
+  void
   print();
 
 private:

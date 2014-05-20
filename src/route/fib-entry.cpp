@@ -1,8 +1,11 @@
 #include <list>
 #include "fib-entry.hpp"
 #include "nexthop.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("FibEntry");
 
 using namespace std;
 
@@ -28,6 +31,14 @@ FibEntry::isEqualNextHops(NexthopList& nhlOther)
     }
     return nhCount == m_nexthopList.getSize();
   }
+}
+
+void
+FibEntry::writeLog()
+{
+  _LOG_DEBUG("Name Prefix: " << m_name);
+  _LOG_DEBUG("Seq No: " << m_seqNo);
+  m_nexthopList.writeLog();
 }
 
 ostream&

@@ -11,9 +11,12 @@
 #include "lsa.hpp"
 #include "name-prefix-list.hpp"
 #include "adjacent.hpp"
+#include "logger.hpp"
 
 
 namespace nlsr {
+
+INIT_LOGGER("Lsa");
 
 using namespace std;
 
@@ -87,6 +90,18 @@ NameLsa::initializeFromContent(const std::string& content)
 void
 NameLsa::writeLog()
 {
+  _LOG_DEBUG("Name Lsa: ");
+  _LOG_DEBUG("  Origination Router: " << m_origRouter);
+  _LOG_DEBUG("  Ls Type: " << m_lsType);
+  _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
+  _LOG_DEBUG("  Ls Lifetime: " << m_lifeTime);
+  _LOG_DEBUG("  Names: ");
+  int i = 1;
+  std::list<ndn::Name> nl = m_npl.getNameList();
+  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++)
+  {
+    _LOG_DEBUG("    Name " << i << ": " << (*it));
+  }
 }
 
 std::ostream&
@@ -175,6 +190,18 @@ CoordinateLsa::initializeFromContent(const std::string& content)
     return false;
   }
   return true;
+}
+
+void
+CoordinateLsa::writeLog()
+{
+  _LOG_DEBUG("Cor Lsa: ");
+  _LOG_DEBUG("  Origination Router: " << m_origRouter);
+  _LOG_DEBUG("  Ls Type: " << m_lsType);
+  _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
+  _LOG_DEBUG("  Ls Lifetime: " << m_lifeTime);
+  _LOG_DEBUG("    Hyperbolic Radius: " << m_corRad);
+  _LOG_DEBUG("    Hyperbolic Theta: " << m_corRad);
 }
 
 std::ostream&
@@ -298,7 +325,25 @@ AdjLsa::removeNptEntries(Nlsr& pnlsr)
   }
 }
 
-
+void
+AdjLsa::writeLog()
+{
+  _LOG_DEBUG("Adj Lsa: ");
+  _LOG_DEBUG("  Origination Router: " << m_origRouter);
+  _LOG_DEBUG("  Ls Type: " << m_lsType);
+  _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
+  _LOG_DEBUG("  Ls Lifetime: " << m_lifeTime);
+  _LOG_DEBUG("  Adjacents: ");
+  int i = 1;
+  std::list<Adjacent> al = m_adl.getAdjList();
+  for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++)
+  {
+    _LOG_DEBUG("    Adjacent " << i << ": ");;
+    _LOG_DEBUG("      Adjacent Name: " << (*it).getName());
+    _LOG_DEBUG("      Connecting FaceUri: " << (*it).getConnectingFaceUri());
+    _LOG_DEBUG("      Link Cost: " << (*it).getLinkCost());
+  }
+}
 
 std::ostream&
 operator<<(std::ostream& os, AdjLsa& aLsa)

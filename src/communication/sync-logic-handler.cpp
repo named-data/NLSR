@@ -2,9 +2,11 @@
 #include "sync-logic-handler.hpp"
 #include "utility/name-helper.hpp"
 #include "lsa.hpp"
-
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("SyncLogicHandler");
 
 using namespace ndn;
 using namespace std;
@@ -12,6 +14,7 @@ using namespace std;
 void
 SyncLogicHandler::createSyncSocket(Nlsr& pnlsr)
 {
+  _LOG_DEBUG("Creating Sync socket. Sync Prefix: " << m_syncPrefix);
   std::cout << "Creating Sync socket ......" << std::endl;
   std::cout << "Sync prefix: " << m_syncPrefix << std::endl;
   m_syncSocket = ndn::make_shared<Sync::SyncSocket>(m_syncPrefix, m_validator,
@@ -26,9 +29,11 @@ void
 SyncLogicHandler::nsyncUpdateCallBack(const vector<Sync::MissingDataInfo>& v,
                                       Sync::SyncSocket* socket, Nlsr& pnlsr)
 {
+  _LOG_DEBUG("nsyncUpdateCallBack called ....");
   std::cout << "nsyncUpdateCallBack called ...." << std::endl;
   int32_t n = v.size();
   for (int32_t i = 0; i < n; i++){
+    _LOG_DEBUG("Data Name: " << v[i].prefix << " Seq: " << v[i].high.getSeq());
     std::cout << "Data Name: " << v[i].prefix << " Seq: " << v[i].high.getSeq() <<
               endl;
     processUpdateFromSync(v[i].prefix, v[i].high.getSeq(), pnlsr);
@@ -38,6 +43,7 @@ SyncLogicHandler::nsyncUpdateCallBack(const vector<Sync::MissingDataInfo>& v,
 void
 SyncLogicHandler::nsyncRemoveCallBack(const string& prefix, Nlsr& pnlsr)
 {
+  _LOG_DEBUG("nsyncRemoveCallBack called ....");
   std::cout << "nsyncRemoveCallBack called ...." << std::endl;
 }
 
@@ -67,10 +73,11 @@ SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
   if (routerName != pnlsr.getConfParameter().getRouterPrefix()) {
     SequencingManager sm(seqNo);
     std::cout << sm;
-    std::cout << "Router Name: " << routerName << endl;
+    //std::cout << "Router Name: " << routerName << endl;
     try {
       if (pnlsr.getLsdb().isNameLsaNew(rName.append("name"), sm.getNameLsaSeq())) {
         std::cout << "Updated Name LSA. Need to fetch it" << std::endl;
+        _LOG_DEBUG("Updated Name LSA. Need to fetch it");
         ndn::Name interestName(pnlsr.getConfParameter().getLsaPrefix());
         interestName.append(routerName);
         interestName.append("name");
@@ -81,6 +88,7 @@ SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
       if (pnlsr.getLsdb().isAdjLsaNew(rName.append("adjacency"),
                                       sm.getAdjLsaSeq())) {
         std::cout << "Updated Adj LSA. Need to fetch it" << std::endl;
+        _LOG_DEBUG("Updated Adj LSA. Need to fetch it");
         ndn::Name interestName(pnlsr.getConfParameter().getLsaPrefix());
         interestName.append(routerName);
         interestName.append("adjacency");
@@ -91,6 +99,7 @@ SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
       if (pnlsr.getLsdb().isCoordinateLsaNew(rName.append("coordinate"),
                                              sm.getCorLsaSeq())) {
         std::cout << "Updated Cor LSA. Need to fetch it" << std::endl;
+        _LOG_DEBUG("Updated Cor LSA. Need to fetch it");
         ndn::Name interestName(pnlsr.getConfParameter().getLsaPrefix());
         interestName.append(routerName);
         interestName.append("coordinate");
@@ -121,6 +130,7 @@ SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix,
   std::cout << "Publishing Sync Update ......" << std::endl;
   std::cout << "Update in prefix: " << updatePrefix << std::endl;
   std::cout << "Seq No: " << seqNo << std::endl;
+  _LOG_DEBUG("Publishing Sync Update. Prefix: " << updatePrefix << "Seq no: " << seqNo);
   ndn::Name updateName(updatePrefix);
   string data("NoData");
   m_syncSocket->publishData(updateName.toUri(), 0, data.c_str(), data.size(),

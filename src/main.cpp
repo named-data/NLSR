@@ -20,6 +20,7 @@
 #include <boost/cstdint.hpp>
 #include "nlsr.hpp"
 #include "conf-file-processor.hpp"
+#include "logger.hpp"
 
 using namespace nlsr;
 
@@ -54,12 +55,13 @@ main(int32_t argc, char** argv)
     }
   }
   ConfFileProcessor cfp(nlsr, nlsr.getConfFileName());
-  int32_t res = cfp.processConfFile();
-  if (res < 0) {
+  if(!cfp.processConfFile()) {
     std::cerr << "Error in configuration file processing! Exiting from NLSR" <<
               std::endl;
     return EXIT_FAILURE;
   }
+  INIT_LOGGERS(nlsr.getConfParameter().getLogDir());
+  INIT_LOGGER("Main");
   nlsr.initialize();
   try {
     nlsr.startEventLoop();

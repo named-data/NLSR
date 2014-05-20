@@ -6,6 +6,8 @@
 #include <ndn-cxx/common.hpp>
 #include <ndn-cxx/face.hpp>
 
+#include "logger.hpp"
+
 namespace nlsr {
 
 enum {
@@ -256,6 +258,18 @@ public:
   }
 
   void
+  setLogDir(const std::string& logDir)
+  {
+    m_logDir = logDir;
+  }
+
+  const std::string&
+  getLogDir()
+  {
+    return m_logDir;
+  }
+
+  void
   setSeqFileDir(const std::string& ssfd)
   {
     m_seqFileDir = ssfd;
@@ -267,6 +281,8 @@ public:
     return m_seqFileDir;
   }
 
+  void
+  writeLog();
 
 private:
   ndn::Name m_routerName;
@@ -295,6 +311,7 @@ private:
 
   int32_t m_maxFacesPerPrefix;
   
+  std::string m_logDir;
   std::string m_seqFileDir;
 
 };
@@ -302,20 +319,22 @@ private:
 inline std::ostream&
 operator<<(std::ostream& os, ConfParameter& cfp)
 {
-  os  << "Router Name: " << cfp.getRouterName() << std::endl;
-  os  << "Site Name: " << cfp.getSiteName() << std::endl;
-  os  << "Network: " << cfp.getNetwork() << std::endl;
-  os  << "Router Prefix: " << cfp.getRouterPrefix() << std::endl;
-  os  << "ChronoSync sync Prifex: " << cfp.getChronosyncPrefix() << std::endl;
-  os  << "ChronoSync LSA prefix: " << cfp.getLsaPrefix() << std::endl;
-  os  << "Interest Retry number: " << cfp.getInterestRetryNumber() << std::endl;
-  os  << "Interest Resend second: " << cfp.getInterestResendTime() << std::endl;
-  os  << "Info Interest Interval: " << cfp.getInfoInterestInterval() << std::endl;
-  os  << "LSA refresh time: " << cfp.getLsaRefreshTime() << std::endl;
-  os  << "Max Faces Per Prefix: " << cfp.getMaxFacesPerPrefix() << std::endl;
-  os  << "Hyperbolic ROuting: " << cfp.getHyperbolicState() << std::endl;
-  os  << "Hyp R: " << cfp.getCorR() << std::endl;
-  os  << "Hyp theta: " << cfp.getCorTheta() << std::endl;
+  os << "Router Name: " << cfp.getRouterName() << std::endl;
+  os << "Site Name: " << cfp.getSiteName() << std::endl;
+  os << "Network: " << cfp.getNetwork() << std::endl;
+  os << "Router Prefix: " << cfp.getRouterPrefix() << std::endl;
+  os << "ChronoSync sync Prifex: " << cfp.getChronosyncPrefix() << std::endl;
+  os << "ChronoSync LSA prefix: " << cfp.getLsaPrefix() << std::endl;
+  os << "Interest Retry number: " << cfp.getInterestRetryNumber() << std::endl;
+  os << "Interest Resend second: " << cfp.getInterestResendTime() << std::endl;
+  os << "Info Interest Interval: " << cfp.getInfoInterestInterval() << std::endl;
+  os << "LSA refresh time: " << cfp.getLsaRefreshTime() << std::endl;
+  os << "Max Faces Per Prefix: " << cfp.getMaxFacesPerPrefix() << std::endl;
+  os << "Hyperbolic ROuting: " << cfp.getHyperbolicState() << std::endl;
+  os << "Hyp R: " << cfp.getCorR() << std::endl;
+  os << "Hyp theta: " << cfp.getCorTheta() << std::endl;
+  os << "Log Directory: " << cfp.getLogDir() << std::endl;
+  os << "Seq Directory: " << cfp.getSeqFileDir() << std::endl;
   return  os;
 }
 

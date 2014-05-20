@@ -3,8 +3,11 @@
 #include "name-prefix-table-entry.hpp"
 #include "routing-table-entry.hpp"
 #include "nexthop.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
+
+INIT_LOGGER("NamePrefixTableEntry");
 
 using namespace std;
 
@@ -63,6 +66,19 @@ NamePrefixTableEntry::addRoutingTableEntry(RoutingTableEntry& rte)
       (*it).getNexthopList().addNextHop((*nhit));
     }
   }
+}
+
+void
+NamePrefixTableEntry::writeLog()
+{
+  _LOG_DEBUG("Name: " << m_namePrefix);
+  for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
+       it != m_rteList.end(); ++it) {
+    _LOG_DEBUG("Destination: " << (*it).getDestination());
+    _LOG_DEBUG("Nexthops: ");
+    (*it).getNexthopList().writeLog();
+  }
+  m_nexthopList.writeLog();
 }
 
 //debugging purpose

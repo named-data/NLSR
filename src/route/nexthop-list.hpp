@@ -50,6 +50,9 @@ public:
     return m_nexthopList;
   }
 
+  void
+  writeLog();
+
 private:
   std::list<NextHop> m_nexthopList;
 };
