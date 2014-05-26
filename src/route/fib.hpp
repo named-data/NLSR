@@ -5,6 +5,7 @@
 #include <boost/cstdint.hpp>
 
 #include <ndn-cxx/management/nfd-controller.hpp>
+#include <ndn-cxx/util/time.hpp>
 #include "face-map.hpp"
 #include "fib-entry.hpp"
 
@@ -56,7 +57,7 @@ private:
 
   ndn::EventId
   scheduleEntryRefreshing(const ndn::Name& name, int32_t feSeqNum,
-                          int32_t refreshTime);
+                          const ndn::time::seconds& expTime);
 
   void
   cancelScheduledExpiringEvent(ndn::EventId eid);

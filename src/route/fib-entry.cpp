@@ -37,6 +37,7 @@ void
 FibEntry::writeLog()
 {
   _LOG_DEBUG("Name Prefix: " << m_name);
+  _LOG_DEBUG("Time to Refresh: " << m_expirationTimePoint);
   _LOG_DEBUG("Seq No: " << m_seqNo);
   m_nexthopList.writeLog();
 }
@@ -45,7 +46,7 @@ ostream&
 operator<<(ostream& os, FibEntry fe)
 {
   os << "Name Prefix: " << fe.getName() << endl;
-  os << "Time to Refresh: " << fe.getTimeToRefresh() << endl;
+  os << "Time to Refresh: " << fe.getExpirationTimePoint() << endl;
   os << fe.getNexthopList() << endl;
   return os;
 }

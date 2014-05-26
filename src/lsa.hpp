@@ -3,6 +3,8 @@
 
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/util/time.hpp>
+
 #include "adjacent.hpp"
 #include "name-prefix-list.hpp"
 #include "adjacency-list.hpp"
@@ -15,7 +17,7 @@ public:
   Lsa()
     : m_origRouter()
     , m_lsSeqNo()
-    , m_lifeTime()
+    , m_expirationTimePoint()
     , m_expiringEventId()
   {
   }
@@ -57,16 +59,16 @@ public:
     m_origRouter = org;
   }
 
-  uint32_t
-  getLifeTime() const
+  const ndn::time::system_clock::TimePoint&
+  getExpirationTimePoint() const
   {
-    return m_lifeTime;
+    return m_expirationTimePoint;
   }
 
   void
-  setLifeTime(uint32_t lt)
+  setExpirationTimePoint(const ndn::time::system_clock::TimePoint& lt)
   {
-    m_lifeTime = lt;
+    m_expirationTimePoint = lt;
   }
 
   void
@@ -85,7 +87,7 @@ protected:
   ndn::Name m_origRouter;
   std::string m_lsType;
   uint32_t m_lsSeqNo;
-  uint32_t m_lifeTime;
+  ndn::time::system_clock::TimePoint m_expirationTimePoint;
   ndn::EventId m_expiringEventId;
 };
 
@@ -100,7 +102,7 @@ public:
   }
 
   NameLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
-          uint32_t lt,
+          const ndn::time::system_clock::TimePoint& lt,
           NamePrefixList& npl);
 
   NamePrefixList&
@@ -152,7 +154,8 @@ public:
   }
 
   AdjLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
-         uint32_t lt, uint32_t nl , AdjacencyList& adl);
+         const ndn::time::system_clock::TimePoint& lt,
+         uint32_t nl , AdjacencyList& adl);
 
   AdjacencyList&
   getAdl()
@@ -213,8 +216,8 @@ public:
   }
 
   CoordinateLsa(const ndn::Name& origR, const std::string lst, uint32_t lsn,
-                uint32_t lt
-                , double r, double theta);
+                const ndn::time::system_clock::TimePoint& lt,
+                double r, double theta);
 
   const ndn::Name
   getKey() const;

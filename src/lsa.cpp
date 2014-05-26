@@ -29,13 +29,13 @@ NameLsa::getKey() const
 }
 
 NameLsa::NameLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
-                 uint32_t lt,
+                 const ndn::time::system_clock::TimePoint& lt,
                  NamePrefixList& npl)
 {
   m_origRouter = origR;
   m_lsType = lst;
   m_lsSeqNo = lsn;
-  m_lifeTime = lt;
+  m_expirationTimePoint = lt;
   std::list<ndn::Name>& nl = npl.getNameList();
   for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++) {
     addName((*it));
@@ -48,7 +48,7 @@ NameLsa::getData()
   string nameLsaData;
   nameLsaData = m_origRouter.toUri() + "|" + "name" + "|"
                 + boost::lexical_cast<std::string>(m_lsSeqNo) + "|"
-                + boost::lexical_cast<std::string>(m_lifeTime);
+                + ndn::time::toIsoString(m_expirationTimePoint);
   nameLsaData += "|";
   nameLsaData += boost::lexical_cast<std::string>(m_npl.getSize());
   std::list<ndn::Name> nl = m_npl.getNameList();
@@ -74,7 +74,7 @@ NameLsa::initializeFromContent(const std::string& content)
   try {
     m_lsType = *tok_iter++;
     m_lsSeqNo = boost::lexical_cast<uint32_t>(*tok_iter++);
-    m_lifeTime = boost::lexical_cast<uint32_t>(*tok_iter++);
+    m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
     numName = boost::lexical_cast<uint32_t>(*tok_iter++);
   }
   catch (std::exception& e) {
@@ -94,7 +94,7 @@ NameLsa::writeLog()
   _LOG_DEBUG("  Origination Router: " << m_origRouter);
   _LOG_DEBUG("  Ls Type: " << m_lsType);
   _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
-  _LOG_DEBUG("  Ls Lifetime: " << m_lifeTime);
+  _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
   _LOG_DEBUG("  Names: ");
   int i = 1;
   std::list<ndn::Name> nl = m_npl.getNameList();
@@ -110,8 +110,8 @@ operator<<(std::ostream& os, NameLsa& nLsa)
   os << "Name Lsa: " << endl;
   os << "  Origination Router: " << nLsa.getOrigRouter() << endl;
   os << "  Ls Type: " << nLsa.getLsType() << endl;
-  os << "  Ls Seq No: " << (unsigned int)nLsa.getLsSeqNo() << endl;
-  os << "  Ls Lifetime: " << (unsigned int)nLsa.getLifeTime() << endl;
+  os << "  Ls Seq No: " << nLsa.getLsSeqNo() << endl;
+  os << "  Ls Lifetime: " << nLsa.getExpirationTimePoint() << endl;
   os << "  Names: " << endl;
   int i = 1;
   std::list<ndn::Name> nl = nLsa.getNpl().getNameList();
@@ -126,13 +126,13 @@ operator<<(std::ostream& os, NameLsa& nLsa)
 
 CoordinateLsa::CoordinateLsa(const ndn::Name& origR, const string lst,
                              uint32_t lsn,
-                             uint32_t lt
-                             , double r, double theta)
+                             const ndn::time::system_clock::TimePoint& lt,
+                             double r, double theta)
 {
   m_origRouter = origR;
   m_lsType = lst;
   m_lsSeqNo = lsn;
-  m_lifeTime = lt;
+  m_expirationTimePoint = lt;
   m_corRad = r;
   m_corTheta = theta;
 }
@@ -162,7 +162,7 @@ CoordinateLsa::getData()
   corLsaData += "coordinate";
   corLsaData += "|";
   corLsaData += (boost::lexical_cast<std::string>(m_lsSeqNo) + "|");
-  corLsaData += (boost::lexical_cast<std::string>(m_lifeTime) + "|");
+  corLsaData += (ndn::time::toIsoString(m_expirationTimePoint) + "|");
   corLsaData += (boost::lexical_cast<std::string>(m_corRad) + "|");
   corLsaData += (boost::lexical_cast<std::string>(m_corTheta) + "|");
   return corLsaData;
@@ -182,7 +182,7 @@ CoordinateLsa::initializeFromContent(const std::string& content)
   try {
     m_lsType   = *tok_iter++;
     m_lsSeqNo  = boost::lexical_cast<uint32_t>(*tok_iter++);
-    m_lifeTime = boost::lexical_cast<uint32_t>(*tok_iter++);
+    m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
     m_corRad   = boost::lexical_cast<double>(*tok_iter++);
     m_corTheta = boost::lexical_cast<double>(*tok_iter++);
   }
@@ -199,7 +199,7 @@ CoordinateLsa::writeLog()
   _LOG_DEBUG("  Origination Router: " << m_origRouter);
   _LOG_DEBUG("  Ls Type: " << m_lsType);
   _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
-  _LOG_DEBUG("  Ls Lifetime: " << m_lifeTime);
+  _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
   _LOG_DEBUG("    Hyperbolic Radius: " << m_corRad);
   _LOG_DEBUG("    Hyperbolic Theta: " << m_corRad);
 }
@@ -210,8 +210,8 @@ operator<<(std::ostream& os, const CoordinateLsa& cLsa)
   os << "Cor Lsa: " << endl;
   os << "  Origination Router: " << cLsa.getOrigRouter() << endl;
   os << "  Ls Type: " << cLsa.getLsType() << endl;
-  os << "  Ls Seq No: " << (unsigned int)cLsa.getLsSeqNo() << endl;
-  os << "  Ls Lifetime: " << (unsigned int)cLsa.getLifeTime() << endl;
+  os << "  Ls Seq No: " << cLsa.getLsSeqNo() << endl;
+  os << "  Ls Lifetime: " << cLsa.getExpirationTimePoint() << endl;
   os << "    Hyperbolic Radius: " << cLsa.getCorRadius() << endl;
   os << "    Hyperbolic Theta: " << cLsa.getCorTheta() << endl;
   return os;
@@ -219,13 +219,13 @@ operator<<(std::ostream& os, const CoordinateLsa& cLsa)
 
 
 AdjLsa::AdjLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
-               uint32_t lt,
+               const ndn::time::system_clock::TimePoint& lt,
                uint32_t nl , AdjacencyList& adl)
 {
   m_origRouter = origR;
   m_lsType = lst;
   m_lsSeqNo = lsn;
-  m_lifeTime = lt;
+  m_expirationTimePoint = lt;
   m_noLink = nl;
   std::list<Adjacent> al = adl.getAdjList();
   for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++) {
@@ -256,7 +256,7 @@ AdjLsa::getData()
   string adjLsaData;
   adjLsaData = m_origRouter.toUri() + "|" + "adjacency" + "|"
                + boost::lexical_cast<std::string>(m_lsSeqNo) + "|"
-               + boost::lexical_cast<std::string>(m_lifeTime);
+               + ndn::time::toIsoString(m_expirationTimePoint);
   adjLsaData += "|";
   adjLsaData += boost::lexical_cast<std::string>(m_adl.getSize());
   std::list<Adjacent> al = m_adl.getAdjList();
@@ -286,7 +286,7 @@ AdjLsa::initializeFromContent(const std::string& content)
   try {
     m_lsType   = *tok_iter++;
     m_lsSeqNo  = boost::lexical_cast<uint32_t>(*tok_iter++);
-    m_lifeTime = boost::lexical_cast<uint32_t>(*tok_iter++);
+    m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
     numLink    = boost::lexical_cast<uint32_t>(*tok_iter++);
   }
   catch (std::exception& e) {
@@ -332,7 +332,7 @@ AdjLsa::writeLog()
   _LOG_DEBUG("  Origination Router: " << m_origRouter);
   _LOG_DEBUG("  Ls Type: " << m_lsType);
   _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
-  _LOG_DEBUG("  Ls Lifetime: " << m_lifeTime);
+  _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
   _LOG_DEBUG("  Adjacents: ");
   int i = 1;
   std::list<Adjacent> al = m_adl.getAdjList();
@@ -351,9 +351,9 @@ operator<<(std::ostream& os, AdjLsa& aLsa)
   os << "Adj Lsa: " << endl;
   os << "  Origination Router: " << aLsa.getOrigRouter() << endl;
   os << "  Ls Type: " << aLsa.getLsType() << endl;
-  os << "  Ls Seq No: " << (unsigned int)aLsa.getLsSeqNo() << endl;
-  os << "  Ls Lifetime: " << (unsigned int)aLsa.getLifeTime() << endl;
-  os << "  No Link: " << (unsigned int)aLsa.getNoLink() << endl;
+  os << "  Ls Seq No: " << aLsa.getLsSeqNo() << endl;
+  os << "  Ls Lifetime: " << aLsa.getExpirationTimePoint() << endl;
+  os << "  No Link: " << aLsa.getNoLink() << endl;
   os << "  Adjacents: " << endl;
   int i = 1;
   std::list<Adjacent> al = aLsa.getAdl().getAdjList();

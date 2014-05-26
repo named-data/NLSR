@@ -4,6 +4,7 @@
 #include <utility>
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/time.hpp>
 
 #include "lsa.hpp"
 
@@ -115,20 +116,22 @@ private:
   doesAdjLsaExist(const ndn::Name& key);
 
   ndn::EventId
-  scheduleNameLsaExpiration(const ndn::Name& key, int seqNo, int expTime);
+  scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
+                            const ndn::time::seconds& expTime);
 
   void
   exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
   ndn::EventId
-  scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo, int expTime);
+  scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
+                           const ndn::time::seconds& expTime);
 
   void
   exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
   ndn::EventId
   scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
-                                  int expTime);
+                                  const ndn::time::seconds& expTime);
 
   void
   exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
@@ -173,6 +176,9 @@ private:
 
   void
   processInterestTimedOut(const ndn::Interest& interest);
+
+  ndn::time::system_clock::TimePoint
+  getLsaExpirationTimePoint();
 
 private:
   void

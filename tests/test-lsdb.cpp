@@ -8,6 +8,7 @@
 #include "lsa.hpp"
 #include "name-prefix-list.hpp"
 #include <boost/test/unit_test.hpp>
+#include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 
@@ -18,7 +19,7 @@ BOOST_AUTO_TEST_SUITE(TestLsdb)
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 {
   Nlsr nlsr1;
-
+  ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
   NamePrefixList npl1;
 
   std::string s1 = "name1";
@@ -31,7 +32,7 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 //For NameLsa lsType is name.
 //12 is seqNo, randomly generated.
 //1800 is the default life time.
-  NameLsa nlsa1("router1", std::string("name"), 12, 1800, npl1);
+  NameLsa nlsa1("router1", std::string("name"), 12, testTimePoint, npl1);
 
   Lsdb lsdb1(nlsr1);
 

@@ -32,7 +32,7 @@ Lsdb::buildAndInstallOwnNameLsa()
   NameLsa nameLsa(m_nlsr.getConfParameter().getRouterPrefix(),
                   "name",
                   m_nlsr.getSequencingManager().getNameLsaSeq() + 1,
-                  m_nlsr.getConfParameter().getRouterDeadInterval(),
+                  getLsaExpirationTimePoint(),
                   m_nlsr.getNamePrefixList());
   m_nlsr.getSequencingManager().increaseNameLsaSeq();
   return installNameLsa(nameLsa);
@@ -66,9 +66,10 @@ Lsdb::isNameLsaNew(const ndn::Name& key, uint64_t seqNo)
 }
 
 ndn::EventId
-Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo, int expTime)
+Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
+                                const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+  return m_nlsr.getScheduler().scheduleEvent(expTime,
                                              ndn::bind(&Lsdb::exprireOrRefreshNameLsa,
                                                        this, key, seqNo));
 }
@@ -76,7 +77,7 @@ Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo, int expTime)
 bool
 Lsdb::installNameLsa(NameLsa& nlsa)
 {
-  int timeToExpire = m_lsaRefreshTime;
+  ndn::time::seconds timeToExpire = ndn::time::seconds(m_lsaRefreshTime);
   NameLsa* chkNameLsa = findNameLsa(nlsa.getKey());
   if (chkNameLsa == 0) {
     addNameLsa(nlsa);
@@ -96,7 +97,9 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       }
     }
     if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-      timeToExpire = nlsa.getLifeTime();
+      ndn::time::system_clock::Duration duration = nlsa.getExpirationTimePoint() -
+                                                   ndn::time::system_clock::now();
+      timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
     }
     nlsa.setExpiringEventId(scheduleNameLsaExpiration(nlsa.getKey(),
                                                       nlsa.getLsSeqNo(),
@@ -108,7 +111,7 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       _LOG_DEBUG("Old Name LSA ");
       chkNameLsa->writeLog();
       chkNameLsa->setLsSeqNo(nlsa.getLsSeqNo());
-      chkNameLsa->setLifeTime(nlsa.getLifeTime());
+      chkNameLsa->setExpirationTimePoint(nlsa.getExpirationTimePoint());
       chkNameLsa->getNpl().sort();
       nlsa.getNpl().sort();
       std::list<ndn::Name> nameToAdd;
@@ -142,7 +145,9 @@ Lsdb::installNameLsa(NameLsa& nlsa)
         }
       }
       if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-        timeToExpire = nlsa.getLifeTime();
+        ndn::time::system_clock::Duration duration = nlsa.getExpirationTimePoint() -
+                                                     ndn::time::system_clock::now();
+        timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
       }
       cancelScheduleLsaExpiringEvent(chkNameLsa->getExpiringEventId());
       chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(nlsa.getKey(),
@@ -232,7 +237,7 @@ Lsdb::buildAndInstallOwnCoordinateLsa()
   CoordinateLsa corLsa(m_nlsr.getConfParameter().getRouterPrefix(),
                        "coordinate",
                        m_nlsr.getSequencingManager().getCorLsaSeq() + 1,
-                       m_nlsr.getConfParameter().getRouterDeadInterval(),
+                       getLsaExpirationTimePoint(),
                        m_nlsr.getConfParameter().getCorR(),
                        m_nlsr.getConfParameter().getCorTheta());
   m_nlsr.getSequencingManager().increaseCorLsaSeq();
@@ -269,9 +274,9 @@ Lsdb::isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo)
 
 ndn::EventId
 Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
-                                      int expTime)
+                                      const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+  return m_nlsr.getScheduler().scheduleEvent(expTime,
                                              ndn::bind(&Lsdb::exprireOrRefreshCoordinateLsa,
                                                        this, key, seqNo));
 }
@@ -279,7 +284,7 @@ Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
 bool
 Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
 {
-  int timeToExpire = m_lsaRefreshTime;
+  ndn::time::seconds timeToExpire = ndn::time::seconds(m_lsaRefreshTime);
   CoordinateLsa* chkCorLsa = findCoordinateLsa(clsa.getKey());
   if (chkCorLsa == 0) {
     _LOG_DEBUG("New Coordinate LSA. Adding to LSDB");
@@ -295,7 +300,9 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
       m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
     }
     if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-      timeToExpire = clsa.getLifeTime();
+      ndn::time::system_clock::Duration duration = clsa.getExpirationTimePoint() -
+                                                   ndn::time::system_clock::now();
+      timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
     }
     scheduleCoordinateLsaExpiration(clsa.getKey(),
                                     clsa.getLsSeqNo(), timeToExpire);
@@ -306,7 +313,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
       _LOG_DEBUG("Old Coordinate LSA");
       chkCorLsa->writeLog();
       chkCorLsa->setLsSeqNo(clsa.getLsSeqNo());
-      chkCorLsa->setLifeTime(clsa.getLifeTime());
+      chkCorLsa->setExpirationTimePoint(clsa.getExpirationTimePoint());
       if (!chkCorLsa->isEqualContent(clsa)) {
         chkCorLsa->setCorRadius(clsa.getCorRadius());
         chkCorLsa->setCorTheta(clsa.getCorTheta());
@@ -315,7 +322,9 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
         }
       }
       if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-        timeToExpire = clsa.getLifeTime();
+        ndn::time::system_clock::Duration duration = clsa.getExpirationTimePoint() -
+                                                     ndn::time::system_clock::now();
+        timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
       }
       cancelScheduleLsaExpiringEvent(chkCorLsa->getExpiringEventId());
       chkCorLsa->setExpiringEventId(scheduleCoordinateLsaExpiration(clsa.getKey(),
@@ -474,9 +483,10 @@ Lsdb::isAdjLsaNew(const ndn::Name& key, uint64_t seqNo)
 
 
 ndn::EventId
-Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo, int expTime)
+Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
+                               const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(expTime),
+  return m_nlsr.getScheduler().scheduleEvent(expTime,
                                              ndn::bind(&Lsdb::exprireOrRefreshAdjLsa,
                                                        this, key, seqNo));
 }
@@ -484,7 +494,7 @@ Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo, int expTime)
 bool
 Lsdb::installAdjLsa(AdjLsa& alsa)
 {
-  int timeToExpire = m_lsaRefreshTime;
+  ndn::time::seconds timeToExpire = ndn::time::seconds(m_lsaRefreshTime);
   AdjLsa* chkAdjLsa = findAdjLsa(alsa.getKey());
   if (chkAdjLsa == 0) {
     _LOG_DEBUG("New Adj LSA. Adding to LSDB");
@@ -493,7 +503,9 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
     alsa.addNptEntries(m_nlsr);
     m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
     if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-      timeToExpire = alsa.getLifeTime();
+      ndn::time::system_clock::Duration duration = alsa.getExpirationTimePoint() -
+                                                   ndn::time::system_clock::now();
+      timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
     }
     scheduleAdjLsaExpiration(alsa.getKey(),
                              alsa.getLsSeqNo(), timeToExpire);
@@ -504,14 +516,16 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
       _LOG_DEBUG("Old Adj LSA");
       chkAdjLsa->writeLog();
       chkAdjLsa->setLsSeqNo(alsa.getLsSeqNo());
-      chkAdjLsa->setLifeTime(alsa.getLifeTime());
+      chkAdjLsa->setExpirationTimePoint(alsa.getExpirationTimePoint());
       if (!chkAdjLsa->isEqualContent(alsa)) {
         chkAdjLsa->getAdl().reset();
         chkAdjLsa->getAdl().addAdjacents(alsa.getAdl());
         m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
       }
       if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-        timeToExpire = alsa.getLifeTime();
+        ndn::time::system_clock::Duration duration = alsa.getExpirationTimePoint() -
+                                                     ndn::time::system_clock::now();
+        timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
       }
       cancelScheduleLsaExpiringEvent(chkAdjLsa->getExpiringEventId());
       chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(alsa.getKey(),
@@ -530,7 +544,7 @@ Lsdb::buildAndInstallOwnAdjLsa()
   AdjLsa adjLsa(m_nlsr.getConfParameter().getRouterPrefix(),
                 "adjacency",
                 m_nlsr.getSequencingManager().getAdjLsaSeq() + 1,
-                m_nlsr.getConfParameter().getRouterDeadInterval(),
+                getLsaExpirationTimePoint(),
                 m_nlsr.getAdjacencyList().getNumOfActiveNeighbor(),
                 m_nlsr.getAdjacencyList());
   m_nlsr.getSequencingManager().increaseAdjLsaSeq();
@@ -606,11 +620,12 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         _LOG_DEBUG("Own Name LSA, so refreshing name LSA");
         chkNameLsa->setLsSeqNo(chkNameLsa->getLsSeqNo() + 1);
         m_nlsr.getSequencingManager().setNameLsaSeq(chkNameLsa->getLsSeqNo());
+        chkNameLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
         chkNameLsa->writeLog();
         // schedule refreshing event again
         chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(chkNameLsa->getKey(),
                                                                  chkNameLsa->getLsSeqNo(),
-                                                                 m_lsaRefreshTime));
+                                                                 ndn::time::seconds(m_lsaRefreshTime)));
         // publish routing update
         ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
@@ -643,10 +658,11 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         _LOG_DEBUG("Own Adj LSA, so refreshing Adj LSA");
         chkAdjLsa->setLsSeqNo(chkAdjLsa->getLsSeqNo() + 1);
         m_nlsr.getSequencingManager().setAdjLsaSeq(chkAdjLsa->getLsSeqNo());
+        chkAdjLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
         // schedule refreshing event again
         chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(chkAdjLsa->getKey(),
                                                                chkAdjLsa->getLsSeqNo(),
-                                                               m_lsaRefreshTime));
+                                                               ndn::time::seconds(m_lsaRefreshTime)));
         // publish routing update
         ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
@@ -682,11 +698,12 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
         _LOG_DEBUG("Own Cor LSA, so refreshing Cor LSA");
         chkCorLsa->setLsSeqNo(chkCorLsa->getLsSeqNo() + 1);
         m_nlsr.getSequencingManager().setCorLsaSeq(chkCorLsa->getLsSeqNo());
+        chkCorLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
         // schedule refreshing event again
         chkCorLsa->setExpiringEventId(scheduleCoordinateLsaExpiration(
                                         chkCorLsa->getKey(),
                                         chkCorLsa->getLsSeqNo(),
-                                        m_lsaRefreshTime));
+                                        ndn::time::seconds(m_lsaRefreshTime)));
         // publish routing update
         ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
@@ -921,6 +938,14 @@ Lsdb::processInterestTimedOut(const ndn::Interest& interest)
   _LOG_DEBUG("Interest timed out for  LSA(name): " << interestName);
 }
 
+ndn::time::system_clock::TimePoint
+Lsdb::getLsaExpirationTimePoint()
+{
+  ndn::time::system_clock::TimePoint expirationTimePoint = ndn::time::system_clock::now();
+  expirationTimePoint = expirationTimePoint +
+                        ndn::time::seconds(m_nlsr.getConfParameter().getRouterDeadInterval());
+  return expirationTimePoint;
+}
 
 void
 Lsdb::printAdjLsdb()

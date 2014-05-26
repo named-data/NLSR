@@ -6,6 +6,7 @@
 #include <boost/cstdint.hpp>
 
 #include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/util/time.hpp>
 
 #include "nexthop.hpp"
 #include "nexthop-list.hpp"
@@ -17,14 +18,14 @@ class FibEntry
 public:
   FibEntry()
     : m_name()
-    , m_timeToRefresh(0)
+    , m_expirationTimePoint()
     , m_seqNo(0)
     , m_nexthopList()
   {
   }
 
   FibEntry(const ndn::Name& name)
-    : m_timeToRefresh(0)
+    : m_expirationTimePoint()
     , m_seqNo(0)
     , m_nexthopList()
   {
@@ -43,16 +44,16 @@ public:
     return m_nexthopList;
   }
 
-  int32_t
-  getTimeToRefresh() const
+  const ndn::time::system_clock::TimePoint&
+  getExpirationTimePoint() const
   {
-    return m_timeToRefresh;
+    return m_expirationTimePoint;
   }
 
   void
-  setTimeToRefresh(int32_t ttr)
+  setExpirationTimePoint(const ndn::time::system_clock::TimePoint& ttr)
   {
-    m_timeToRefresh = ttr;
+    m_expirationTimePoint = ttr;
   }
 
   void
@@ -87,7 +88,7 @@ public:
 
 private:
   ndn::Name m_name;
-  int32_t m_timeToRefresh;
+  ndn::time::system_clock::TimePoint m_expirationTimePoint;
   ndn::EventId m_expiringEventId;
   int32_t m_seqNo;
   NexthopList m_nexthopList;

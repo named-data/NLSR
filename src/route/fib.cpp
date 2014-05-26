@@ -32,13 +32,13 @@ Fib::cancelScheduledExpiringEvent(EventId eid)
 
 ndn::EventId
 Fib::scheduleEntryRefreshing(const ndn::Name& name, int32_t feSeqNum,
-                             int32_t refreshTime)
+                             const ndn::time::seconds& expTime)
 {
   std::cout << "Fib::scheduleEntryRefreshing Called" << std::endl;
   std::cout << "Name: " << name << " Seq Num: " << feSeqNum << std::endl;
   _LOG_DEBUG("Fib::scheduleEntryRefreshing Called");
   _LOG_DEBUG("Name: " << name << " Seq Num: " << feSeqNum);
-  return m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(refreshTime),
+  return m_nlsr.getScheduler().scheduleEvent(expTime,
                                              ndn::bind(&Fib::refreshEntry, this,
                                                        name, feSeqNum));
 }
@@ -67,7 +67,7 @@ Fib::refreshEntry(const ndn::Name& name, int32_t feSeqNum)
       it->setSeqNo(feSeqNum + 1);
       it->setExpiringEventId(scheduleEntryRefreshing(it->getName() ,
                                                      it->getSeqNo(),
-                                                     m_refreshTime));
+                                                     ndn::time::seconds(m_refreshTime)));
     }
   }
 }
@@ -128,9 +128,12 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
                        std::ceil(nhit->getRouteCost()), m_refreshTime);
       }
       newEntry.getNexthopList().sort();
-      newEntry.setTimeToRefresh(m_refreshTime);
+      ndn::time::system_clock::TimePoint expirationTimePoint = ndn::time::system_clock::now();
+      expirationTimePoint = expirationTimePoint + ndn::time::seconds(m_refreshTime);
+      newEntry.setExpirationTimePoint(expirationTimePoint);
       newEntry.setSeqNo(1);
-      newEntry.setExpiringEventId(scheduleEntryRefreshing(name , 1, m_refreshTime));
+      newEntry.setExpiringEventId(scheduleEntryRefreshing(name , 1,
+                                                          ndn::time::seconds(m_refreshTime)));
       m_table.push_back(newEntry);
     }
   }
@@ -156,14 +159,17 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
                          std::ceil(nhit->getRouteCost()), m_refreshTime);
         }
       }
-      it->setTimeToRefresh(m_refreshTime);
+      ndn::time::system_clock::TimePoint expirationTimePoint = ndn::time::system_clock::now();
+      expirationTimePoint = expirationTimePoint + ndn::time::seconds(m_refreshTime);
+      it->setExpirationTimePoint(expirationTimePoint);
       std::cout << "Cancellling Scheduled event" << std::endl;
       std::cout << "Name: " << name << "Seq num: " << it->getSeqNo() << std::endl;
       _LOG_DEBUG("Cancelling Scheduled event. Name: " << name);
       cancelScheduledExpiringEvent(it->getExpiringEventId());
       it->setSeqNo(it->getSeqNo() + 1);
       (*it).setExpiringEventId(scheduleEntryRefreshing(it->getName() ,
-                                                       it->getSeqNo(), m_refreshTime));
+                                                       it->getSeqNo(),
+                                                       ndn::time::seconds(m_refreshTime)));
     }
     else {
       remove(name);
