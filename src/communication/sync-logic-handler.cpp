@@ -83,7 +83,8 @@ SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
         interestName.append("name");
         interestName.appendNumber(sm.getNameLsaSeq());
         pnlsr.getLsdb().expressInterest(interestName,
-                                        pnlsr.getConfParameter().getInterestResendTime());
+                                        pnlsr.getConfParameter().getInterestResendTime(),
+                                        0);
       }
       if (pnlsr.getLsdb().isAdjLsaNew(rName.append("adjacency"),
                                       sm.getAdjLsaSeq())) {
@@ -94,7 +95,8 @@ SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
         interestName.append("adjacency");
         interestName.appendNumber(sm.getAdjLsaSeq());
         pnlsr.getLsdb().expressInterest(interestName,
-                                        pnlsr.getConfParameter().getInterestResendTime());
+                                        pnlsr.getConfParameter().getInterestResendTime(),
+                                        0);
       }
       if (pnlsr.getLsdb().isCoordinateLsaNew(rName.append("coordinate"),
                                              sm.getCorLsaSeq())) {
@@ -105,7 +107,8 @@ SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
         interestName.append("coordinate");
         interestName.appendNumber(sm.getCorLsaSeq());
         pnlsr.getLsdb().expressInterest(interestName,
-                                        pnlsr.getConfParameter().getInterestResendTime());
+                                        pnlsr.getConfParameter().getInterestResendTime(),
+                                        0);
       }
     }
     catch (std::exception& e) {

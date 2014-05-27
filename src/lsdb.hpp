@@ -138,7 +138,8 @@ private:
                                 uint64_t seqNo);
 public:
   void
-  expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime);
+  expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime,
+                  uint32_t timeoutCount);
 
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
@@ -175,7 +176,7 @@ private:
                               uint32_t lsSeqNo, std::string& dataContent);
 
   void
-  processInterestTimedOut(const ndn::Interest& interest);
+  processInterestTimedOut(const ndn::Interest& interest, uint32_t timeoutCount);
 
   ndn::time::system_clock::TimePoint
   getLsaExpirationTimePoint();

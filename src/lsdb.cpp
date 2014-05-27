@@ -724,7 +724,8 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
 
 
 void
-Lsdb::expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime)
+Lsdb::expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime,
+                      uint32_t timeoutCount)
 {
   std::cout << "Expressing Interest :" << interestName << std::endl;
   _LOG_DEBUG("Expressing Interest for LSA(name): " << interestName);
@@ -735,7 +736,7 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime)
                                        ndn::bind(&Lsdb::processContent,
                                                  this, _1, _2),
                                        ndn::bind(&Lsdb::processInterestTimedOut,
-                                                 this, _1));
+                                                 this, _1, timeoutCount));
 }
 
 void
@@ -931,11 +932,17 @@ Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
 }
 
 void
-Lsdb::processInterestTimedOut(const ndn::Interest& interest)
+Lsdb::processInterestTimedOut(const ndn::Interest& interest, uint32_t timeoutCount)
 {
   const ndn::Name& interestName(interest.getName());
-  cout << "Interest timed out for LSA(name): " << interestName << endl;
   _LOG_DEBUG("Interest timed out for  LSA(name): " << interestName);
+  if ((timeoutCount + 1) <= m_nlsr.getConfParameter().getInterestRetryNumber()) {
+    _LOG_DEBUG("Interest timeoutCount: " << (timeoutCount + 1));
+    _LOG_DEBUG("Need to express interest again for LSA(name): " << interestName);
+    expressInterest(interestName,
+                    m_nlsr.getConfParameter().getInterestResendTime(),
+                    timeoutCount + 1);
+  }
 }
 
 ndn::time::system_clock::TimePoint
