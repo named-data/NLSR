@@ -58,11 +58,17 @@ private:
   processInterestTimedOut(const ndn::Interest& interest);
 
   void
-  processContent(const ndn::Interest& interest, const ndn::Data& data);
+  onContent(const ndn::Interest& interest, const ndn::Data& data);
+
+  void
+  onContentValidated(const ndn::shared_ptr<const ndn::Data>& data);
+
+  void
+  onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
+                            const std::string& msg);
 
 private:
   Nlsr& m_nlsr;
-  ndn::KeyChain m_keyChain;
   static const std::string INFO_COMPONENT;
 };
 

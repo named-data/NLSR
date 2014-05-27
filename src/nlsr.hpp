@@ -28,6 +28,7 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/certificate-cache-ttl.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 
 #include "conf-parameter.hpp"
@@ -41,8 +42,12 @@
 #include "communication/sync-logic-handler.hpp"
 #include "hello-protocol.hpp"
 
+#include "validator.hpp"
+
 
 namespace nlsr {
+
+static ndn::Name DEFAULT_BROADCAST_PREFIX("/ndn/broadcast");
 
 class Nlsr
 {
@@ -75,6 +80,9 @@ public:
     , m_namePrefixTable(*this)
     , m_syncLogicHandler(m_nlsrFace.getIoService())
     , m_helloProtocol(*this)
+
+    , m_certificateCache(new ndn::CertificateCacheTtl(m_nlsrFace.getIoService()))
+    , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
   {}
 
   void
@@ -255,11 +263,71 @@ public:
   void
   initialize();
 
+  void
+  intializeKey();
+
+  void
+  loadValidator(boost::property_tree::ptree section,
+                const std::string& filename)
+  {
+    m_validator.load(section, filename);
+  }
+
+  Validator&
+  getValidator()
+  {
+    return m_validator;
+  }
+
+  void
+  loadCertToPublish(ndn::shared_ptr<ndn::IdentityCertificate> certificate)
+  {
+    if (static_cast<bool>(certificate))
+      m_certToPublish[certificate->getName().getPrefix(-1)] = certificate; // key is cert name
+                                                                           // without version
+  }
+
+  ndn::shared_ptr<const ndn::IdentityCertificate>
+  getCertificate(const ndn::Name& certificateNameWithoutVersion)
+  {
+    CertMap::iterator it = m_certToPublish.find(certificateNameWithoutVersion);
+
+    if (it != m_certToPublish.end())
+      {
+        return it->second;
+      }
+
+    return m_certificateCache->getCertificate(certificateNameWithoutVersion);
+  }
+
+  ndn::KeyChain&
+  getKeyChain()
+  {
+    return m_keyChain;
+  }
+
+  const ndn::Name&
+  getDefaultCertName()
+  {
+    return m_defaultCertName;
+  }
+
 private:
   void
   registerPrefixes();
 
+  void
+  registerKeyPrefix();
+
+  void
+  onKeyInterest(const ndn::Name& name, const ndn::Interest& interest);
+
+  void
+  onKeyPrefixRegSuccess(const ndn::Name& name);
+
 private:
+  typedef std::map<ndn::Name, ndn::shared_ptr<ndn::IdentityCertificate> > CertMap;
+
   ndn::Face m_nlsrFace;
   ndn::Scheduler m_scheduler;
   ConfParameter m_confParam;
@@ -279,6 +347,13 @@ private:
   SyncLogicHandler m_syncLogicHandler;
   int32_t m_apiPort;
   HelloProtocol m_helloProtocol;
+
+  ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
+  CertMap m_certToPublish;
+  Validator m_validator;
+  ndn::KeyChain m_keyChain;
+  ndn::Name m_defaultIdentity;
+  ndn::Name m_defaultCertName;
 };
 
 } //namespace nlsr

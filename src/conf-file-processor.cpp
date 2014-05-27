@@ -108,6 +108,10 @@ ConfFileProcessor::processSection(const std::string& section,
   {
     ret = processConfSectionAdvertising(SectionAttributeTree);
   }
+  else if (section == "security")
+  {
+    ret = processConfSectionSecurity(SectionAttributeTree);
+  }
   else
   {
     std::cerr << "Wrong configuration Command: " << section << std::endl;
@@ -117,7 +121,7 @@ ConfFileProcessor::processSection(const std::string& section,
 
 bool
 ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
-                                            SectionAttributeTree)
+                                             SectionAttributeTree)
 {
   try {
     std::string network = SectionAttributeTree.get<string>("network");
@@ -152,7 +156,7 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
     cerr << ex.what() << endl;
     return false;
   }
-  
+
   try {
     int32_t lsaRefreshTime = SectionAttributeTree.get<int32_t>("lsa-refresh-time");
     if (lsaRefreshTime >= LSA_REFRESH_TIME_MIN &&
@@ -170,7 +174,7 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
     std::cerr << ex.what() << std::endl;
     return false;
   }
-  
+
   try {
     std::string logLevel = SectionAttributeTree.get<string>("log-level");
     if ( boost::iequals(logLevel, "info") || boost::iequals(logLevel, "debug")) {
@@ -186,7 +190,7 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
     std::cerr << ex.what() << std::endl;
     return false;
   }
-  
+
   try {
     std::string logDir = SectionAttributeTree.get<string>("log-dir");
     if (boost::filesystem::exists(logDir)) {
@@ -253,6 +257,7 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
     std::cerr << ex.what() << std::endl;
     return false;
   }
+
   return true;
 }
 
@@ -308,7 +313,7 @@ ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
   }
   for (boost::property_tree::ptree::const_iterator tn =
            SectionAttributeTree.begin(); tn != SectionAttributeTree.end(); ++tn) {
-      
+
     if (tn->first == "neighbor")
     {
       try {
@@ -362,7 +367,7 @@ ConfFileProcessor::processConfSectionHyperbolic(boost::property_tree::ptree
     std::cerr << ex.what() << std::endl;
     return false;
   }
-  
+
   try {
     /* Radius and angle is mandatory configuration parameter in hyperbolic section.
      * Even if router can have hyperbolic routing calculation off but other router
@@ -382,7 +387,7 @@ ConfFileProcessor::processConfSectionHyperbolic(boost::property_tree::ptree
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -438,4 +443,44 @@ ConfFileProcessor::processConfSectionAdvertising(boost::property_tree::ptree
   }
   return true;
 }
+
+bool
+ConfFileProcessor::processConfSectionSecurity(boost::property_tree::ptree section)
+{
+  ConfigSection::const_iterator it = section.begin();
+
+  if (it == section.end() || it->first != "validator")
+    {
+      std::cerr << "Error: Expect validator section!" << std::endl;
+      return false;
+    }
+
+  m_nlsr.loadValidator(it->second, m_confFileName);
+
+  for (; it != section.end(); it++)
+    {
+      using namespace boost::filesystem;
+      if (it->first != "cert-to-publish")
+        {
+          std::cerr << "Error: Expect cert-to-publish!" << std::endl;
+          return false;
+        }
+
+      std::string file = it->second.data();
+      path certfilePath = absolute(file, path(m_confFileName).parent_path());
+      ndn::shared_ptr<ndn::IdentityCertificate> idCert =
+        ndn::io::load<ndn::IdentityCertificate>(certfilePath.string());
+
+      if (!static_cast<bool>(idCert))
+        {
+          std::cerr << "Error: Cannot load cert-to-publish: " << file << "!" << std::endl;
+          return false;
+        }
+
+      m_nlsr.loadCertToPublish(idCert);
+    }
+
+  return true;
+}
+
 }//namespace NLSR

@@ -89,7 +89,7 @@ Nlsr::registerPrefixes()
                          (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
      m_fib.setStrategy((*it).getName(), strategy);
   }
-  
+
   m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy);
   m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy);
 }
@@ -123,6 +123,70 @@ Nlsr::initialize()
   m_syncLogicHandler.createSyncSocket(boost::ref(*this));
   //m_interestManager.scheduleInfoInterest(10);
   m_helloProtocol.scheduleInterest(10);
+
+  intializeKey();
+  registerKeyPrefix();
+}
+
+void
+Nlsr::intializeKey()
+{
+  m_defaultIdentity = m_confParam.getRouterPrefix();
+  m_defaultIdentity.append("NLSR");
+
+  ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(m_defaultIdentity);
+
+  ndn::shared_ptr<ndn::IdentityCertificate> certificate = m_keyChain.selfSign(keyName);
+  m_keyChain.signByIdentity(*certificate, m_confParam.getRouterPrefix());
+
+  m_keyChain.addCertificateAsIdentityDefault(*certificate);
+  loadCertToPublish(certificate);
+
+  m_defaultCertName = certificate->getName();
+}
+
+void
+Nlsr::registerKeyPrefix()
+{
+  ndn::Name keyPrefix = DEFAULT_BROADCAST_PREFIX;
+  keyPrefix.append("KEYS");
+  m_nlsrFace.setInterestFilter(keyPrefix,
+                                  ndn::bind(&Nlsr::onKeyInterest,
+                                            this, _1, _2),
+                                  ndn::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
+                                  ndn::bind(&Nlsr::registrationFailed, this, _1));
+
+}
+
+void
+Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
+{
+  const ndn::Name& interestName = interest.getName();
+
+  ndn::Name certName = interestName.getSubName(name.size());
+
+  if (certName[-2].toUri() == "ID-CERT")
+    {
+      certName = certName.getPrefix(-1);
+    }
+  else if (certName[-1].toUri() != "ID-CERT")
+    return; //Wrong key interest.
+
+  ndn::shared_ptr<const ndn::IdentityCertificate> cert = getCertificate(certName);
+
+  if (!static_cast<bool>(cert))
+    return; // cert is not found
+
+  Data data(interestName);
+  data.setContent(cert->wireEncode());
+  m_keyChain.signWithSha256(data);
+
+  m_nlsrFace.put(data);
+}
+
+void
+Nlsr::onKeyPrefixRegSuccess(const ndn::Name& name)
+{
 }
 
 void

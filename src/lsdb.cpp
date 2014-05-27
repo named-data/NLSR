@@ -755,7 +755,7 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime,
   interest.setInterestLifetime(ndn::time::seconds(interestLifeTime));
   interest.setMustBeFresh(true);
   m_nlsr.getNlsrFace().expressInterest(interest,
-                                       ndn::bind(&Lsdb::processContent,
+                                       ndn::bind(&Lsdb::onContent,
                                                  this, _1, _2),
                                        ndn::bind(&Lsdb::processInterestTimedOut,
                                                  this, _1, timeoutCount));
@@ -819,8 +819,7 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
       std::string content = nameLsa->getData();
       data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()),
                       content.size());
-      m_keyChain.sign(data);
-      //std::cout << ">> D: " << data << std::endl;
+      m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
       m_nlsr.getNlsrFace().put(data);
     }
   }
@@ -840,8 +839,7 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
       std::string content = adjLsa->getData();
       data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()),
                       content.size());
-      m_keyChain.sign(data);
-      //std::cout << ">> D: " << data << std::endl;
+      m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
       m_nlsr.getNlsrFace().put(data);
     }
   }
@@ -861,20 +859,28 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
       std::string content = corLsa->getData();
       data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()),
                       content.size());
-      m_keyChain.sign(data);
-      //std::cout << ">> D: " << data << std::endl;
+      m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
       m_nlsr.getNlsrFace().put(data);
     }
   }
 }
 
 void
-Lsdb::processContent(const ndn::Interest& interest, const ndn::Data& data)
+Lsdb::onContent(const ndn::Interest& interest, const ndn::Data& data)
 {
-  const ndn::Name& dataName = data.getName();
-  std::cout << "Data received for LSA(name): " << dataName << std::endl;
+  m_nlsr.getValidator().validate(data,
+                                 ndn::bind(&Lsdb::onContentValidated, this, _1),
+                                 ndn::bind(&Lsdb::onContentValidationFailed, this, _1, _2));
+
+}
+
+void
+Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
+{
+  const ndn::Name& dataName = data->getName();
+  std::cout << "Data received for name: " << dataName << std::endl;
   _LOG_DEBUG("Data received for LSA(name): " << dataName);
-  string dataContent(reinterpret_cast<const char*>(data.getContent().value()));
+  string dataContent(reinterpret_cast<const char*>(data->getContent().value()));
   string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(dataName, chkString);
   if (lsaPosition >= 0) {
@@ -906,6 +912,12 @@ Lsdb::processContent(const ndn::Interest& interest, const ndn::Data& data)
       cout << "Unrecognized LSA Type :(" << endl;
     }
   }
+}
+
+void
+Lsdb::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data, const std::string& msg)
+{
+  std::cerr << "Validation Error: " << msg << std::endl;
 }
 
 void
@@ -1003,4 +1015,3 @@ Lsdb::doesLsaExist(const ndn::Name& key, const std::string& lsType)
 }
 
 }//namespace nlsr
-

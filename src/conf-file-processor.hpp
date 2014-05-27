@@ -67,7 +67,12 @@ private:
   bool
   processConfSectionAdvertising(boost::property_tree::ptree SectionAttributeTree);
 
+  bool
+  processConfSectionSecurity(boost::property_tree::ptree SectionAttributeTree);
+
 private:
+  typedef boost::property_tree::ptree ConfigSection;
+
   std::string m_confFileName;
   Nlsr& m_nlsr;
 };

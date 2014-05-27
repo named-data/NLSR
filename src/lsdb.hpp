@@ -183,7 +183,13 @@ private:
                                   uint32_t interestedlsSeqNo);
 
   void
-  processContent(const ndn::Interest& interest, const ndn::Data& data);
+  onContent(const ndn::Interest& interest, const ndn::Data& data);
+
+  void
+  onContentValidated(const ndn::shared_ptr<const ndn::Data>& data);
+
+  void
+  onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data, const std::string& msg);
 
   void
   processContentNameLsa(const ndn::Name& lsaKey,
@@ -208,7 +214,6 @@ private:
   cancelScheduleLsaExpiringEvent(ndn::EventId eid);
 
   Nlsr& m_nlsr;
-  ndn::KeyChain m_keyChain;
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;

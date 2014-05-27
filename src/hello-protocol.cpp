@@ -41,7 +41,7 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
   i.setInterestLifetime(ndn::time::seconds(seconds));
   i.setMustBeFresh(true);
   m_nlsr.getNlsrFace().expressInterest(i,
-                                       ndn::bind(&HelloProtocol::processContent,
+                                       ndn::bind(&HelloProtocol::onContent,
                                                  this,
                                                  _1, _2),
                                        ndn::bind(&HelloProtocol::processInterestTimedOut,
@@ -90,7 +90,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
     data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
     data.setContent(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.c_str()),
                     INFO_COMPONENT.size());
-    m_keyChain.sign(data);
+    m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
     std::cout << ">> D: " << data << std::endl;
     _LOG_DEBUG("Sending out data for name: " << data.getName());
     m_nlsr.getNlsrFace().put(data);
@@ -148,12 +148,19 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   }
 }
 
+void
+HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
+{
+  m_nlsr.getValidator().validate(data,
+                                 ndn::bind(&HelloProtocol::onContentValidated, this, _1),
+                                 ndn::bind(&HelloProtocol::onContentValidationFailed,
+                                           this, _1, _2));
+}
 
 void
-HelloProtocol::processContent(const ndn::Interest& interest,
-                              const ndn::Data& data)
+HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 {
-  ndn::Name dataName = data.getName();
+  ndn::Name dataName = data->getName();
   std::cout << "Data received for name: " << dataName << std::endl;
   _LOG_DEBUG("Data received for name: " << dataName);
   if (dataName.get(-3).toUri() == INFO_COMPONENT) {
@@ -193,6 +200,13 @@ HelloProtocol::processContent(const ndn::Interest& interest,
       }
     }
   }
+}
+
+void
+HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
+                                         const std::string& msg)
+{
+  _LOG_DEBUG("Validation Error: " << msg);
 }
 
 } //namespace nlsr
