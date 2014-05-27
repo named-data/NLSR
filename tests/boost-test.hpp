@@ -16,12 +16,13 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * \author Yingdi Yu <yingdi@cs.ucla.edu>
+ *
  **/
 
-
-
-#ifndef NDN_TESTS_BOOST_TEST_HPP
-#define NDN_TESTS_BOOST_TEST_HPP
+#ifndef NLSR_TESTS_BOOST_TEST_HPP
+#define NLSR_TESTS_BOOST_TEST_HPP
 
 // suppress warnings from Boost.Test
 #pragma GCC system_header
@@ -31,4 +32,4 @@
 #include <boost/concept_check.hpp>
 #include <boost/test/output_test_stream.hpp>
 
-#endif // NDN_TESTS_BOOST_TEST_HPP
+#endif // NLSR_TESTS_BOOST_TEST_HPP
