@@ -64,14 +64,6 @@ private:
   int32_t m_mappingNumber;
 };
 
-inline std::ostream&
-operator<<(std::ostream& os, const MapEntry& mpe)
-{
-  os << "MapEntry: ( Router: " << mpe.getRouter() << " Mapping No: ";
-  os << mpe.getMappingNumber() << " )" << std::endl;
-  return os;
-}
-
 } // namespace nlsr
 
 #endif // NLSR_MAP_ENTRY_HPP

@@ -99,9 +99,6 @@ public:
   }
 
   void
-  print();
-
-  void
   writeLog();
 
 private:

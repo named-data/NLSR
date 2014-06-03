@@ -66,9 +66,6 @@ public:
     m_refreshTime = fert;
   }
 
-  void
-  print();
-
 private:
   void
   removeHop(NexthopList& nl, const std::string& doNotRemoveHopFaceUri,

@@ -133,6 +133,9 @@ public:
   std::string
   getUserHomeDirectory();
 
+  void
+  writeLog();
+
 private:
   void
   splittSequenceNo(uint64_t seqNo);
@@ -147,10 +150,6 @@ private:
   uint64_t m_combinedSeqNo;
   std::string m_seqFileNameWithPath;
 };
-
-
-std::ostream&
-operator<<(std::ostream& os, const SequencingManager& sm);
 
 }//namespace nlsr
 #endif //NLSR_SEQUENCING_MANAGER_HPP

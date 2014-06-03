@@ -28,9 +28,11 @@
 #include "lsa.hpp"
 #include "nexthop.hpp"
 #include "nlsr.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
 
+INIT_LOGGER("RoutingTableCalculator");
 using namespace std;
 
 void
@@ -72,13 +74,15 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
 }
 
 void
-RoutingTableCalculator::printAdjMatrix()
+RoutingTableCalculator::writeAdjMatrixLog()
 {
   for (int i = 0; i < numOfRouter; i++) {
+    string line="";
     for (int j = 0; j < numOfRouter; j++) {
-      printf("%f ", adjMatrix[i][j]);
+      line += boost::lexical_cast<std::string>(adjMatrix[i][j]);
+      line += " ";
     }
-    printf("\n");
+    _LOG_DEBUG(line);
   }
 }
 
@@ -159,22 +163,18 @@ void
 LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
                                                RoutingTable& rt, Nlsr& pnlsr)
 {
-  std::cout << "LinkStateRoutingTableCalculator::calculatePath Called" <<
-            std::endl;
+  _LOG_DEBUG("LinkStateRoutingTableCalculator::calculatePath Called");
   allocateAdjMatrix();
   initMatrix();
   makeAdjMatrix(pnlsr, pMap);
-  std::cout << pMap;
-  printAdjMatrix();
+  //printAdjMatrix();
+  writeAdjMatrixLog();
   int sourceRouter = pMap.getMappingNoByRouterName(pnlsr.getConfParameter().getRouterPrefix());
-  //int noLink=getNumOfLinkfromAdjMatrix(sourceRouter);
   allocateParent();
   allocateDistance();
   if (pnlsr.getConfParameter().getMaxFacesPerPrefix() == 1) {
     // Single Path
     doDijkstraPathCalculation(sourceRouter);
-    // print all ls path -- debugging purpose
-    printAllLsPath(sourceRouter);
     // update routing table
     addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
   }
@@ -186,10 +186,8 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
     getLinksFromAdjMatrix(links, linkCosts, sourceRouter);
     for (int i = 0 ; i < vNoLink; i++) {
       adjustAdMatrix(sourceRouter, links[i], linkCosts[i]);
-      printAdjMatrix();
+      writeAdjMatrixLog();
       doDijkstraPathCalculation(sourceRouter);
-      // print all ls path -- debugging purpose
-      printAllLsPath(sourceRouter);
       //update routing table
       addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
     }
@@ -243,8 +241,7 @@ void
 LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr,
                                                                 RoutingTable& rt, Map& pMap, int sourceRouter)
 {
-  std::cout <<
-            "LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called";
+  _LOG_DEBUG("LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called");
   std::cout << std::endl;
   int nextHopRouter = 0;
   for (int i = 0; i < numOfRouter ; i++) {
@@ -255,11 +252,6 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr,
         ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
         std::string nextHopFace =
           pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFaceUri();
-        std::cout << "Dest Router: " << pMap.getRouterNameByMappingNo(i) << std::endl;
-        std::cout << "Next hop Router: " << nextHopRouterName << std::endl;
-        std::cout << "Next hop Face: " << nextHopFace << std::endl;
-        std::cout << "Route Cost: " << routeCost << std::endl;
-        std::cout << std::endl;
         // Add next hop to routing table
         NextHop nh(nextHopFace, routeCost);
         rt.addNextHop(pMap.getRouterNameByMappingNo(i), nh);
@@ -283,31 +275,9 @@ LinkStateRoutingTableCalculator::getLsNextHop(int dest, int source)
 }
 
 void
-LinkStateRoutingTableCalculator::printAllLsPath(int sourceRouter)
-{
-  std::cout << "LinkStateRoutingTableCalculator::printAllLsPath Called" <<
-            std::endl;
-  std::cout << "Source Router: " << sourceRouter << std::endl;
-  for (int i = 0; i < numOfRouter ; i++) {
-    if (i != sourceRouter) {
-      printLsPath(i);
-      std::cout << std::endl;
-    }
-  }
-}
-
-void
-LinkStateRoutingTableCalculator::printLsPath(int destRouter)
-{
-  if (m_parent[destRouter] != EMPTY_PARENT) {
-    printLsPath(m_parent[destRouter]);
-  }
-  std:: cout << " " << destRouter;
-}
-
-void
 LinkStateRoutingTableCalculator::sortQueueByDistance(int* Q,
-                                                     double* dist, int start, int element)
+                                                     double* dist,
+                                                     int start, int element)
 {
   for (int i = start ; i < element ; i++) {
     for (int j = i + 1; j < element; j++) {
@@ -364,6 +334,7 @@ HypRoutingTableCalculator::calculatePath(Map& pMap,
                                          RoutingTable& rt, Nlsr& pnlsr)
 {
   makeAdjMatrix(pnlsr, pMap);
+  //std::cout << pMap;
   ndn::Name routerName = pnlsr.getConfParameter().getRouterPrefix();
   int sourceRouter = pMap.getMappingNoByRouterName(routerName);
   int noLink = getNumOfLinkfromAdjMatrix(sourceRouter);

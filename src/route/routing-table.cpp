@@ -42,11 +42,9 @@ using namespace std;
 void
 RoutingTable::calculate(Nlsr& pnlsr)
 {
-  //debugging purpose
-  pnlsr.getNamePrefixTable().print();
-  pnlsr.getLsdb().printAdjLsdb();
-  pnlsr.getLsdb().printCorLsdb();
-  pnlsr.getLsdb().printNameLsdb();
+  pnlsr.getLsdb().writeCorLsdbLog();
+  pnlsr.getLsdb().writeNameLsdbLog();
+  pnlsr.getLsdb().writeAdjLsdbLog();
   pnlsr.getNamePrefixTable().writeLog();
   if (pnlsr.getIsRoutingTableCalculating() == false) {
     //setting routing table calculation
@@ -55,7 +53,6 @@ RoutingTable::calculate(Nlsr& pnlsr)
           pnlsr.getConfParameter().getRouterPrefix().toUri() + "/" + "adjacency",
           std::string("adjacency"))) {
       if (pnlsr.getIsBuildAdjLsaSheduled() != 1) {
-        std::cout << "CLearing old routing table ....." << std::endl;
         _LOG_DEBUG("CLearing old routing table .....");
         clearRoutingTable();
         // for dry run options
@@ -74,37 +71,25 @@ RoutingTable::calculate(Nlsr& pnlsr)
           calculateHypDryRoutingTable(pnlsr);
         }
         //need to update NPT here
+        _LOG_DEBUG("Calling Update NPT With new Route");
         pnlsr.getNamePrefixTable().updateWithNewRoute();
-        //debugging purpose
-        printRoutingTable();
-        pnlsr.getNamePrefixTable().print();
-        pnlsr.getFib().print();
         writeLog();
         pnlsr.getNamePrefixTable().writeLog();
         pnlsr.getFib().writeLog();
-        //debugging purpose end
       }
       else {
-        std::cout << "Adjacency building is scheduled, so ";
-        std::cout << "routing table can not be calculated :(" << std::endl;
         _LOG_DEBUG("Adjacency building is scheduled, so"
                    " routing table can not be calculated :(");
       }
     }
     else {
-      std::cout << "No Adj LSA of router itself,";
-      std::cout <<	" so Routing table can not be calculated :(" << std::endl;
       _LOG_DEBUG("No Adj LSA of router itself,"
                  " so Routing table can not be calculated :(");
       clearRoutingTable();
       clearDryRoutingTable(); // for dry run options
       // need to update NPT here
-      std::cout << "Calling Update NPT With new Route" << std::endl;
+      _LOG_DEBUG("Calling Update NPT With new Route");
       pnlsr.getNamePrefixTable().updateWithNewRoute();
-      //debugging purpose
-      printRoutingTable();
-      pnlsr.getNamePrefixTable().print();
-      pnlsr.getFib().print();
       writeLog();
       pnlsr.getNamePrefixTable().writeLog();
       pnlsr.getFib().writeLog();
@@ -122,9 +107,10 @@ RoutingTable::calculate(Nlsr& pnlsr)
 void
 RoutingTable::calculateLsRoutingTable(Nlsr& pnlsr)
 {
-  std::cout << "RoutingTable::calculateLsRoutingTable Called" << std::endl;
+  _LOG_DEBUG("RoutingTable::calculateLsRoutingTable Called");
   Map vMap;
   vMap.createFromAdjLsdb(pnlsr);
+  vMap.writeLog();
   int numOfRouter = vMap.getMapSize();
   LinkStateRoutingTableCalculator lsrtc(numOfRouter);
   lsrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
@@ -135,6 +121,7 @@ RoutingTable::calculateHypRoutingTable(Nlsr& pnlsr)
 {
   Map vMap;
   vMap.createFromAdjLsdb(pnlsr);
+  vMap.writeLog();
   int numOfRouter = vMap.getMapSize();
   HypRoutingTableCalculator hrtc(numOfRouter, 0);
   hrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
@@ -145,6 +132,7 @@ RoutingTable::calculateHypDryRoutingTable(Nlsr& pnlsr)
 {
   Map vMap;
   vMap.createFromAdjLsdb(pnlsr);
+  vMap.writeLog();
   int numOfRouter = vMap.getMapSize();
   HypRoutingTableCalculator hrtc(numOfRouter, 1);
   hrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
@@ -207,17 +195,6 @@ RoutingTable::writeLog()
   }
 }
 
-void
-RoutingTable::printRoutingTable()
-{
-  std::cout << "---------------Routing Table------------------" << std::endl;
-  for (std::list<RoutingTableEntry>::iterator it = m_rTable.begin() ;
-       it != m_rTable.end(); ++it) {
-    std::cout << (*it) << std::endl;
-  }
-}
-
-
 //function related to manipulation of dry routing table
 void
 RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
@@ -235,17 +212,6 @@ RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
     (*it).getNexthopList().addNextHop(nh);
   }
 }
-
-void
-RoutingTable::printDryRoutingTable()
-{
-  std::cout << "--------Dry Run's Routing Table--------------" << std::endl;
-  for (std::list<RoutingTableEntry>::iterator it = m_dryTable.begin() ;
-       it != m_dryTable.end(); ++it) {
-    cout << (*it) << endl;
-  }
-}
-
 
 void
 RoutingTable::clearRoutingTable()

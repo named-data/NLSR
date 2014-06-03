@@ -65,7 +65,7 @@ SequencingManager::writeSeqNoToFile()
 void
 SequencingManager::initiateSeqNoFromFile()
 {
-  cout << "Seq File Name: " << m_seqFileNameWithPath << endl;
+  _LOG_DEBUG("Seq File Name: " << m_seqFileNameWithPath);
   std::ifstream inputFile(m_seqFileNameWithPath.c_str(), ios::binary);
   if (inputFile.good()) {
     inputFile >> m_combinedSeqNo;
@@ -101,15 +101,14 @@ SequencingManager::getUserHomeDirectory()
   return homeDirPath;
 }
 
-ostream&
-operator<<(ostream& os, const SequencingManager& sm)
+void
+SequencingManager::writeLog()
 {
-  std::cout << "----SequencingManager----" << std::endl;
-  std::cout << "Adj LSA seq no: " << sm.getAdjLsaSeq() << endl;
-  std::cout << "Cor LSA Seq no: " << sm.getCorLsaSeq() << endl;
-  std::cout << "Name LSA Seq no: " << sm.getNameLsaSeq() << endl;
-  std::cout << "Combined LSDB Seq no: " << sm.getCombinedSeqNo() << endl;
-  return os;
+  _LOG_DEBUG("----SequencingManager----");
+  _LOG_DEBUG("Adj LSA seq no: " << m_adjLsaSeq);
+  _LOG_DEBUG("Cor LSA Seq no: " << m_corLsaSeq);
+  _LOG_DEBUG("Name LSA Seq no: " << m_nameLsaSeq);
+  _LOG_DEBUG("Combined LSDB Seq no: " << m_combinedSeqNo);
 }
 
 }//namespace nlsr

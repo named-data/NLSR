@@ -125,9 +125,6 @@ private:
   uint32_t m_interestTimedOutNo;
 };
 
-std::ostream&
-operator<<(std::ostream& os, const Adjacent& adj);
-
 } // namespace nlsr
 
 #endif //NLSR_ADJACENT_HPP

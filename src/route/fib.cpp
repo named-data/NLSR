@@ -56,8 +56,6 @@ ndn::EventId
 Fib::scheduleEntryRefreshing(const ndn::Name& name, int32_t feSeqNum,
                              const ndn::time::seconds& expTime)
 {
-  std::cout << "Fib::scheduleEntryRefreshing Called" << std::endl;
-  std::cout << "Name: " << name << " Seq Num: " << feSeqNum << std::endl;
   _LOG_DEBUG("Fib::scheduleEntryRefreshing Called");
   _LOG_DEBUG("Name: " << name << " Seq Num: " << feSeqNum);
   return m_nlsr.getScheduler().scheduleEvent(expTime,
@@ -68,15 +66,13 @@ Fib::scheduleEntryRefreshing(const ndn::Name& name, int32_t feSeqNum,
 void
 Fib::refreshEntry(const ndn::Name& name, int32_t feSeqNum)
 {
-  std::cout << "Fib::refreshEntry Called" << std::endl;
-  std::cout << "Name: " << name << " Seq Num: " << feSeqNum << std::endl;
+  _LOG_DEBUG("Fib::refreshEntry Called");
+  _LOG_DEBUG("Name: " << name << " Seq Num: " << feSeqNum);
   std::list<FibEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
                                                   bind(&fibEntryNameCompare, _1, name));
   if (it != m_table.end()) {
-    std::cout << "Entry found with Seq Num: " << feSeqNum << std::endl;
     if (it->getSeqNo() == feSeqNum) {
-      std::cout << "Refreshing the FIB entry" << std::endl;
       _LOG_DEBUG("Refreshing the FIB entry. Name: " <<  name);
       for (std::list<NextHop>::iterator nhit =
              (*it).getNexthopList().getNextHops().begin();
@@ -117,8 +113,6 @@ Fib::remove(const ndn::Name& name)
         }
       }
     }
-    std::cout << "Cancellling Scheduled event" << std::endl;
-    std::cout << "Name: " << name << "Seq num: " << it->getSeqNo() << std::endl;
     _LOG_DEBUG("Cancelling Scheduled event. Name: " << name);
     cancelScheduledExpiringEvent((*it).getExpiringEventId());
     m_table.erase(it);
@@ -129,7 +123,6 @@ Fib::remove(const ndn::Name& name)
 void
 Fib::update(const ndn::Name& name, NexthopList& nextHopList)
 {
-  std::cout << "Fib::updateFib Called" << std::endl;
   _LOG_DEBUG("Fib::updateFib Called");
   int startFace = 0;
   int endFace = getNumberOfFacesForName(nextHopList,
@@ -160,7 +153,7 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
     }
   }
   else {
-    std::cout << "Old FIB Entry" << std::endl;
+    _LOG_DEBUG("Old FIB Entry");
     if (nextHopList.getSize() > 0) {
       nextHopList.sort();
       if (!it->isEqualNextHops(nextHopList)) {
@@ -184,8 +177,6 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
       ndn::time::system_clock::TimePoint expirationTimePoint = ndn::time::system_clock::now();
       expirationTimePoint = expirationTimePoint + ndn::time::seconds(m_refreshTime);
       it->setExpirationTimePoint(expirationTimePoint);
-      std::cout << "Cancellling Scheduled event" << std::endl;
-      std::cout << "Name: " << name << "Seq num: " << it->getSeqNo() << std::endl;
       _LOG_DEBUG("Cancelling Scheduled event. Name: " << name);
       cancelScheduledExpiringEvent(it->getExpiringEventId());
       it->setSeqNo(it->getSeqNo() + 1);
@@ -207,9 +198,6 @@ Fib::clean()
   _LOG_DEBUG("Fib::clean called");
   for (std::list<FibEntry>::iterator it = m_table.begin(); it != m_table.end();
        ++it) {
-    std::cout << "Cancellling Scheduled event" << std::endl;
-    std::cout << "Name: " << it->getName() << "Seq num: " << it->getSeqNo() <<
-              std::endl;
     _LOG_DEBUG("Cancelling Scheduled event. Name: " << it->getName());
     cancelScheduledExpiringEvent((*it).getExpiringEventId());
     for (std::list<NextHop>::iterator nhit =
@@ -339,9 +327,8 @@ void
 Fib::onRegistration(const ndn::nfd::ControlParameters& commandSuccessResult,
                     const std::string& message, const std::string& faceUri)
 {
-  //std::cout << message << ": " << commandSuccessResult << std::endl;
   m_faceMap.update(faceUri, commandSuccessResult.getFaceId());
-  m_faceMap.print();
+  m_faceMap.writeLog();
 }
 
 
@@ -349,14 +336,13 @@ void
 Fib::onSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                const std::string& message)
 {
-  //std::cout << message << ": " << commandSuccessResult << std::endl;
 }
 
 void
 Fib::onFailure(uint32_t code, const std::string& error,
                const std::string& message)
 {
-  std::cout << message << ": " << error << " (code: " << code << ")";
+  _LOG_DEBUG(message << ": " << error << " (code: " << code << ")");
 }
 
 void
@@ -366,16 +352,6 @@ Fib::writeLog()
   for (std::list<FibEntry>::iterator it = m_table.begin(); it != m_table.end();
        ++it) {
     (*it).writeLog();
-  }
-}
-
-void
-Fib::print()
-{
-  cout << "-------------------FIB-----------------------------" << endl;
-  for (std::list<FibEntry>::iterator it = m_table.begin(); it != m_table.end();
-       ++it) {
-    cout << (*it);
   }
 }
 

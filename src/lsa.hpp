@@ -162,9 +162,6 @@ private:
 
 };
 
-std::ostream&
-operator<<(std::ostream& os, NameLsa& nLsa);
-
 class AdjLsa: public Lsa
 {
 public:
@@ -222,9 +219,6 @@ private:
   uint32_t m_noLink;
   AdjacencyList m_adl;
 };
-
-std::ostream&
-operator<<(std::ostream& os, AdjLsa& aLsa);
 
 class CoordinateLsa: public Lsa
 {
@@ -285,10 +279,6 @@ private:
   double m_corTheta;
 
 };
-
-std::ostream&
-operator<<(std::ostream& os, const CoordinateLsa& cLsa);
-
 
 }//namespace nlsr
 

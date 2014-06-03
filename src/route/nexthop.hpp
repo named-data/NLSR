@@ -71,15 +71,6 @@ private:
   double m_routeCost;
 };
 
-
-inline std::ostream&
-operator<<(std::ostream& os, const NextHop& nh)
-{
-  os << "Face: " << nh.getConnectingFaceUri() << "  Route Cost: " <<
-     nh.getRouteCost();
-  return os;
-}
-
 }//namespace nlsr
 
 #endif //NLSR_NEXTHOP_HPP

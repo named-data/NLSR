@@ -164,15 +164,4 @@ NamePrefixTable::writeLog()
   }
 }
 
-void
-NamePrefixTable::print()
-{
-  std::cout << "----------------NPT----------------------" << std::endl;
-  for (std::list<NamePrefixTableEntry>::iterator it = m_table.begin();
-       it != m_table.end();
-       ++it) {
-    cout << (*it) << endl;
-  }
-}
-
 } //namespace nlsr

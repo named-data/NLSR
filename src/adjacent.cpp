@@ -90,15 +90,4 @@ Adjacent::writeLog()
   _LOG_DEBUG("Interest Timed out: " << m_interestTimedOutNo);
 }
 
-std::ostream&
-operator<<(std::ostream& os, const Adjacent& adj)
-{
-  os << "Adjacent : " << adj.getName() << endl;
-  os << "Connecting FaceUri: " << adj.getConnectingFaceUri() << endl;
-  os << "Link Cost: " << adj.getLinkCost() << endl;
-  os << "Status: " << adj.getStatus() << endl;
-  os << "Interest Timed out: " << adj.getInterestTimedOutNo() << endl;
-  return os;
-}
-
 } //namespace nlsr

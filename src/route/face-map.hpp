@@ -23,6 +23,8 @@
 #ifndef NLSR_FACE_MAP_HPP
 #define NLSR_FACE_MAP_HPP
 
+#include <ndn-cxx/common.hpp>
+
 namespace nlsr {
 
 class FaceMapEntry {
@@ -69,14 +71,6 @@ private:
   uint32_t m_faceId;
 };
 
-inline std::ostream&
-operator<<(std::ostream& os, const FaceMapEntry& fme)
-{
-  os << "Face Map Entry (FaceUri: " << fme.getFaceUri() << " Face Id: ";
-  os << fme.getFaceId() << ")" << std::endl;
-  return os;
-}
-
 class FaceMap {
 
 public:
@@ -118,15 +112,8 @@ public:
     return 0;
   }
 
-  inline void
-  print()
-  {
-    std::cout << "------- Face Map-----------" << std::endl;
-    for(std::list<FaceMapEntry>::iterator it = m_table.begin();
-        it != m_table.end(); ++it) {
-          std::cout << (*it);
-    }
-  }
+  void
+  writeLog();
 
 private:
   std::list<FaceMapEntry> m_table;

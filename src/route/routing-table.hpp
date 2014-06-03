@@ -49,13 +49,7 @@ public:
   addNextHop(const ndn::Name& destRouter, NextHop& nh);
 
   void
-  printRoutingTable();
-
-  void
   addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh);
-
-  void
-  printDryRoutingTable();
 
   RoutingTableEntry*
   findRoutingTableEntry(const ndn::Name& destRouter);

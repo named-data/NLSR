@@ -52,9 +52,12 @@ protected:
 
   void
   makeAdjMatrix(Nlsr& pnlsr, Map pMap);
-
+/*
   void
   printAdjMatrix();
+*/
+  void
+  writeAdjMatrixLog();
 
   int
   getNumOfLinkfromAdjMatrix(int sRouter);
@@ -121,12 +124,6 @@ private:
 
   int
   isNotExplored(int* Q, int u, int start, int element);
-
-  void
-  printAllLsPath(int sourceRouter);
-
-  void
-  printLsPath(int destRouter);
 
   void
   addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, RoutingTable& rt,

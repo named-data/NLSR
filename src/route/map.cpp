@@ -28,8 +28,10 @@
 #include "lsa.hpp"
 #include "lsdb.hpp"
 #include "map.hpp"
-
+#include "logger.hpp"
 namespace nlsr {
+
+INIT_LOGGER("Map");
 
 using namespace std;
 
@@ -117,15 +119,14 @@ Map::reset()
   m_mappingIndex = 0;
 }
 
-ostream&
-operator<<(ostream& os, Map& map)
+void
+Map::writeLog()
 {
-  os << "---------------Map----------------------" << endl;
-  std::list<MapEntry> ml = map.getMapList();
-  for (std::list<MapEntry>::iterator it = ml.begin(); it != ml.end() ; it++) {
-    os << (*it);
+  _LOG_DEBUG("---------------Map----------------------");
+  for (std::list<MapEntry>::iterator it = m_table.begin(); it != m_table.end() ; it++) {
+    _LOG_DEBUG("MapEntry: ( Router: " << (*it).getRouter() << " Mapping No: "
+               << (*it).getMappingNumber() << " )");
   }
-  return os;
 }
 
 } //namespace nlsr

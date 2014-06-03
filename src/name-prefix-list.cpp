@@ -93,15 +93,4 @@ NamePrefixList::writeLog()
   }
 }
 
-void
-NamePrefixList::print()
-{
-  int i = 1;
-  for (std::list<ndn::Name>::iterator it = m_nameList.begin();
-       it != m_nameList.end(); it++) {
-    cout << "Name " << i << " : " << (*it) << endl;
-    i++;
-  }
-}
-
 }//namespace nlsr

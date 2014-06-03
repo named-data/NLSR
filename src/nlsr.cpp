@@ -104,11 +104,6 @@ Nlsr::initialize()
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());
   m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
   m_sequencingManager.initiateSeqNoFromFile();
-  /* debugging purpose start */
-  cout << m_confParam;
-  m_adjacencyList.print();
-  m_namePrefixList.print();
-  /* debugging purpose end */
   /* Logging start */
   m_confParam.writeLog();
   m_adjacencyList.writeLog();

@@ -20,67 +20,25 @@
  * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
  *
  **/
-#ifndef NLSR_MAP_HPP
-#define NLSR_MAP_HPP
-
 #include <iostream>
 #include <list>
-#include <boost/cstdint.hpp>
-
-#include <ndn-cxx/common.hpp>
-
-#include "map-entry.hpp"
+#include <utility>
+#include "logger.hpp"
+#include "face-map.hpp"
 
 namespace nlsr {
 
-class Nlsr;
+INIT_LOGGER("FaceMap");
 
-class Map
+void
+FaceMap::writeLog()
 {
-public:
-  Map()
-    : m_mappingIndex(0)
-  {
+  _LOG_DEBUG("------- Face Map-----------");
+  for(std::list<FaceMapEntry>::iterator it = m_table.begin();
+      it != m_table.end(); ++it) {
+    _LOG_DEBUG("Face Map Entry (FaceUri: " << (*it).getFaceUri() << " Face Id: "
+               << (*it).getFaceId() << ")");
   }
+}
 
-
-  void
-  addEntry(const ndn::Name& rtrName);
-
-  void
-  createFromAdjLsdb(Nlsr& pnlsr);
-
-  const ndn::Name
-  getRouterNameByMappingNo(int32_t mn);
-
-  int32_t
-  getMappingNoByRouterName(const ndn::Name& rName);
-
-  void
-  reset();
-
-  std::list<MapEntry>&
-  getMapList()
-  {
-    return m_table;
-  }
-
-  size_t
-  getMapSize() const
-  {
-    return m_table.size();
-  }
-
-  void
-  writeLog();
-
-private:
-  bool
-  addEntry(MapEntry& mpe);
-
-  int32_t m_mappingIndex;
-  std::list<MapEntry> m_table;
-};
-
-} // namespace nlsr
-#endif //NLSR_MAP_HPP
+} // namespace NLSR

@@ -62,20 +62,6 @@ private:
   NexthopList m_nexthopList;
 };
 
-inline std::ostream&
-operator<<(std::ostream& os, RoutingTableEntry& rte)
-{
-  os << "Destination: " << rte.getDestination() << std::endl;
-  os << "Nexthops: " << std::endl;
-  int32_t i = 1;
-  std::list<NextHop> nhl = rte.getNexthopList().getNextHops();
-  for (std::list<NextHop>::iterator it = nhl.begin();
-       it != nhl.end() ; it++, i++) {
-    os << "  Nexthop " << i << ": " << (*it) << std::endl;
-  }
-  return os;
-}
-
 } //namespace nlsr
 
 #endif //NLSR_ROUTING_TABLE_ENTRY_HPP

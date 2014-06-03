@@ -243,14 +243,4 @@ AdjacencyList::writeLog()
   }
 }
 
-// used for debugging purpose
-void
-AdjacencyList::print()
-{
-  for (std::list<Adjacent>::iterator it = m_adjList.begin();
-       it != m_adjList.end(); it++) {
-    cout << (*it) << endl;
-  }
-}
-
 } //namespace nlsr

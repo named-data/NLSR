@@ -97,9 +97,6 @@ private:
   NexthopList m_nexthopList;
 };
 
-std::ostream&
-operator<<(std::ostream& os, NamePrefixTableEntry& npte);
-
 }//namespace nlsr
 
 #endif //NLSR_NAME_PREFIX_TABLE_ENTRY_HPP

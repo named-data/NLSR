@@ -116,9 +116,6 @@ private:
   NexthopList m_nexthopList;
 };
 
-std::ostream&
-operator<<(std::ostream& os, FibEntry fe);
-
 } //namespace nlsr
 
 #endif //NLSR_FIB_ENTRY_HPP

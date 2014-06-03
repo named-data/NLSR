@@ -103,10 +103,10 @@ Lsdb::installNameLsa(NameLsa& nlsa)
   NameLsa* chkNameLsa = findNameLsa(nlsa.getKey());
   if (chkNameLsa == 0) {
     addNameLsa(nlsa);
-    _LOG_DEBUG("New Name LSA. Adding to LSDB");
+    _LOG_DEBUG("New Name LSA");
+    _LOG_DEBUG("Adding Name Lsa");
     nlsa.writeLog();
 
-    printNameLsdb();
     if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().addEntry(nlsa.getOrigRouter(),
                                            nlsa.getOrigRouter());
@@ -130,7 +130,7 @@ Lsdb::installNameLsa(NameLsa& nlsa)
   else {
     if (chkNameLsa->getLsSeqNo() < nlsa.getLsSeqNo()) {
       _LOG_DEBUG("Updated Name LSA. Updating LSDB");
-      _LOG_DEBUG("Old Name LSA ");
+      _LOG_DEBUG("Deleting Name Lsa");
       chkNameLsa->writeLog();
       chkNameLsa->setLsSeqNo(nlsa.getLsSeqNo());
       chkNameLsa->setExpirationTimePoint(nlsa.getExpirationTimePoint());
@@ -175,7 +175,7 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(nlsa.getKey(),
                                                                nlsa.getLsSeqNo(),
                                                                timeToExpire));
-      _LOG_DEBUG("Updated Name LSA");
+      _LOG_DEBUG("Adding Name Lsa");
       chkNameLsa->writeLog();
     }
   }
@@ -203,7 +203,7 @@ Lsdb::removeNameLsa(const ndn::Name& key)
                                                  m_nameLsdb.end(),
                                                  ndn::bind(nameLsaCompareByKey, _1, key));
   if (it != m_nameLsdb.end()) {
-    _LOG_DEBUG("Removing Name LSA");
+    _LOG_DEBUG("Deleting Name Lsa");
     (*it).writeLog();
     if ((*it).getOrigRouter() !=
         m_nlsr.getConfParameter().getRouterPrefix()) {
@@ -235,17 +235,16 @@ Lsdb::doesNameLsaExist(const ndn::Name& key)
 }
 
 void
-Lsdb::printNameLsdb()
+Lsdb::writeNameLsdbLog()
 {
-  cout << "---------------Name LSDB-------------------" << endl;
+  _LOG_DEBUG("---------------Name LSDB-------------------");
   for (std::list<NameLsa>::iterator it = m_nameLsdb.begin();
        it != m_nameLsdb.end() ; it++) {
-    cout << (*it) << endl;
+    (*it).writeLog();
   }
 }
 
 // Cor LSA and LSDB related Functions start here
-
 
 static bool
 corLsaCompareByKey(const CoordinateLsa& clsa, const ndn::Name& key)
@@ -310,10 +309,10 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
   CoordinateLsa* chkCorLsa = findCoordinateLsa(clsa.getKey());
   if (chkCorLsa == 0) {
     _LOG_DEBUG("New Coordinate LSA. Adding to LSDB");
+    _LOG_DEBUG("Adding Coordinate Lsa");
     clsa.writeLog();
     addCoordinateLsa(clsa);
-    //debugging purpose
-    printCorLsdb();
+
     if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().addEntry(clsa.getOrigRouter(),
                                            clsa.getOrigRouter());
@@ -332,7 +331,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
   else {
     if (chkCorLsa->getLsSeqNo() < clsa.getLsSeqNo()) {
       _LOG_DEBUG("Updated Coordinate LSA. Updating LSDB");
-      _LOG_DEBUG("Old Coordinate LSA");
+      _LOG_DEBUG("Deleting Coordinate Lsa");
       chkCorLsa->writeLog();
       chkCorLsa->setLsSeqNo(clsa.getLsSeqNo());
       chkCorLsa->setExpirationTimePoint(clsa.getExpirationTimePoint());
@@ -352,7 +351,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
       chkCorLsa->setExpiringEventId(scheduleCoordinateLsaExpiration(clsa.getKey(),
                                                                     clsa.getLsSeqNo(),
                                                                     timeToExpire));
-      _LOG_DEBUG("Updated Coordinate LSA");
+      _LOG_DEBUG("Adding Coordinate Lsa");
       chkCorLsa->writeLog();
     }
   }
@@ -381,7 +380,7 @@ Lsdb::removeCoordinateLsa(const ndn::Name& key)
                                                        ndn::bind(corLsaCompareByKey,
                                                                  _1, key));
   if (it != m_corLsdb.end()) {
-    _LOG_DEBUG("Removing Coordinate LSA");
+    _LOG_DEBUG("Deleting Coordinate Lsa");
     (*it).writeLog();
     if ((*it).getOrigRouter() !=
         m_nlsr.getConfParameter().getRouterPrefix()) {
@@ -407,17 +406,15 @@ Lsdb::doesCoordinateLsaExist(const ndn::Name& key)
   return true;
 }
 
-//debugging
 void
-Lsdb::printCorLsdb()
+Lsdb::writeCorLsdbLog()
 {
-  cout << "---------------Cor LSDB-------------------" << endl;
+  _LOG_DEBUG("---------------Cor LSDB-------------------");
   for (std::list<CoordinateLsa>::iterator it = m_corLsdb.begin();
        it != m_corLsdb.end() ; it++) {
-    cout << (*it) << endl;
+    (*it).writeLog();
   }
 }
-
 
 // Adj LSA and LSDB related function starts here
 
@@ -427,11 +424,9 @@ adjLsaCompareByKey(AdjLsa& alsa, const ndn::Name& key)
   return alsa.getKey() == key;
 }
 
-
 void
 Lsdb::scheduledAdjLsaBuild()
 {
-  std::cout << "scheduledAdjLsaBuild Called" << endl;
   _LOG_DEBUG("scheduledAdjLsaBuild Called");
   m_nlsr.setIsBuildAdjLsaSheduled(false);
   if (m_nlsr.getAdjacencyList().isAdjLsaBuildable(m_nlsr)) {
@@ -520,6 +515,7 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
   AdjLsa* chkAdjLsa = findAdjLsa(alsa.getKey());
   if (chkAdjLsa == 0) {
     _LOG_DEBUG("New Adj LSA. Adding to LSDB");
+    _LOG_DEBUG("Adding Adj Lsa");
     alsa.writeLog();
     addAdjLsa(alsa);
     alsa.addNptEntries(m_nlsr);
@@ -535,7 +531,7 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
   else {
     if (chkAdjLsa->getLsSeqNo() < alsa.getLsSeqNo()) {
       _LOG_DEBUG("Updated Adj LSA. Updating LSDB");
-      _LOG_DEBUG("Old Adj LSA");
+      _LOG_DEBUG("Deleting Adj Lsa");
       chkAdjLsa->writeLog();
       chkAdjLsa->setLsSeqNo(alsa.getLsSeqNo());
       chkAdjLsa->setExpirationTimePoint(alsa.getExpirationTimePoint());
@@ -553,7 +549,7 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
       chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(alsa.getKey(),
                                                              alsa.getLsSeqNo(),
                                                              timeToExpire));
-      _LOG_DEBUG("Updated Adj LSA");
+      _LOG_DEBUG("Adding Adj Lsa");
       chkAdjLsa->writeLog();
     }
   }
@@ -585,7 +581,7 @@ Lsdb::removeAdjLsa(const ndn::Name& key)
                                                 m_adjLsdb.end(),
                                                 ndn::bind(adjLsaCompareByKey, _1, key));
   if (it != m_adjLsdb.end()) {
-    _LOG_DEBUG("Removing Adj LSA");
+    _LOG_DEBUG("Deleting Adj Lsa");
     (*it).writeLog();
     (*it).removeNptEntries(m_nlsr);
     m_adjLsdb.erase(it);
@@ -627,22 +623,20 @@ Lsdb::setThisRouterPrefix(string trp)
 void
 Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
 {
-  std::cout << "Lsdb::exprireOrRefreshNameLsa Called " << std::endl;
-  std::cout << "LSA Key : " << lsaKey << " Seq No: " << seqNo << std::endl;
   _LOG_DEBUG("Lsdb::exprireOrRefreshNameLsa Called");
   _LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   NameLsa* chkNameLsa = findNameLsa(lsaKey);
   if (chkNameLsa != 0) {
-    std::cout << "LSA Exists with seq no: " << chkNameLsa->getLsSeqNo() << std::endl;
     _LOG_DEBUG("LSA Exists with seq no: " << chkNameLsa->getLsSeqNo());
     if (chkNameLsa->getLsSeqNo() == seqNo) {
       if (chkNameLsa->getOrigRouter() == m_thisRouterPrefix) {
+        _LOG_DEBUG("Own Name LSA, so refreshing it");
+        _LOG_DEBUG("Deleting Name Lsa");
         chkNameLsa->writeLog();
-        std::cout << "Own Name LSA, so refreshing name LSA" << std::endl;
-        _LOG_DEBUG("Own Name LSA, so refreshing name LSA");
         chkNameLsa->setLsSeqNo(chkNameLsa->getLsSeqNo() + 1);
         m_nlsr.getSequencingManager().setNameLsaSeq(chkNameLsa->getLsSeqNo());
         chkNameLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
+        _LOG_DEBUG("Adding Name Lsa");
         chkNameLsa->writeLog();
         // schedule refreshing event again
         chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(chkNameLsa->getKey(),
@@ -655,7 +649,6 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                           lsaPrefix);
       }
       else {
-        std::cout << "Other's Name LSA, so removing form LSDB" << std::endl;
         _LOG_DEBUG("Other's Name LSA, so removing form LSDB");
         removeNameLsa(lsaKey);
       }
@@ -666,21 +659,21 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
 void
 Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
 {
-  cout << "Lsdb::exprireOrRefreshAdjLsa Called " << endl;
-  cout << "LSA Key : " << lsaKey << " Seq No: " << seqNo << endl;
   _LOG_DEBUG("Lsdb::exprireOrRefreshAdjLsa Called");
   _LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   AdjLsa* chkAdjLsa = findAdjLsa(lsaKey);
   if (chkAdjLsa != 0) {
-    cout << "LSA Exists with seq no: " << chkAdjLsa->getLsSeqNo() << endl;
-    _LOG_DEBUG("LSA Exists with seq no: ");
+    _LOG_DEBUG("LSA Exists with seq no: " << chkAdjLsa->getLsSeqNo());
     if (chkAdjLsa->getLsSeqNo() == seqNo) {
       if (chkAdjLsa->getOrigRouter() == m_thisRouterPrefix) {
-        cout << "Own Adj LSA, so refreshing Adj LSA" << endl;
-        _LOG_DEBUG("Own Adj LSA, so refreshing Adj LSA");
+        _LOG_DEBUG("Own Adj LSA, so refreshing it");
+        _LOG_DEBUG("Deleting Adj Lsa");
+        chkAdjLsa->writeLog();
         chkAdjLsa->setLsSeqNo(chkAdjLsa->getLsSeqNo() + 1);
         m_nlsr.getSequencingManager().setAdjLsaSeq(chkAdjLsa->getLsSeqNo());
         chkAdjLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
+        _LOG_DEBUG("Adding Adj Lsa");
+        chkAdjLsa->writeLog();
         // schedule refreshing event again
         chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(chkAdjLsa->getKey(),
                                                                chkAdjLsa->getLsSeqNo(),
@@ -692,7 +685,6 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                           lsaPrefix);
       }
       else {
-        cout << "Other's Adj LSA, so removing form LSDB" << endl;
         _LOG_DEBUG("Other's Adj LSA, so removing form LSDB");
         removeAdjLsa(lsaKey);
       }
@@ -706,21 +698,21 @@ void
 Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                     uint64_t seqNo)
 {
-  cout << "Lsdb::exprireOrRefreshCorLsa Called " << endl;
-  cout << "LSA Key : " << lsaKey << " Seq No: " << seqNo << endl;
   _LOG_DEBUG("Lsdb::exprireOrRefreshCorLsa Called ");
   _LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   CoordinateLsa* chkCorLsa = findCoordinateLsa(lsaKey);
   if (chkCorLsa != 0) {
-    cout << " LSA Exists with seq no: " << chkCorLsa->getLsSeqNo() << endl;
     _LOG_DEBUG("LSA Exists with seq no: " << chkCorLsa->getLsSeqNo());
     if (chkCorLsa->getLsSeqNo() == seqNo) {
       if (chkCorLsa->getOrigRouter() == m_thisRouterPrefix) {
-        cout << "Own Cor LSA, so refreshing Cor LSA" << endl;
-        _LOG_DEBUG("Own Cor LSA, so refreshing Cor LSA");
+        _LOG_DEBUG("Own Cor LSA, so refreshing it");
+        _LOG_DEBUG("Deleting Coordinate Lsa");
+        chkCorLsa->writeLog();
         chkCorLsa->setLsSeqNo(chkCorLsa->getLsSeqNo() + 1);
         m_nlsr.getSequencingManager().setCorLsaSeq(chkCorLsa->getLsSeqNo());
         chkCorLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
+        _LOG_DEBUG("Adding Coordinate Lsa");
+        chkCorLsa->writeLog();
         // schedule refreshing event again
         chkCorLsa->setExpiringEventId(scheduleCoordinateLsaExpiration(
                                         chkCorLsa->getKey(),
@@ -733,7 +725,6 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                                           lsaPrefix);
       }
       else {
-        cout << "Other's Cor LSA, so removing form LSDB" << endl;
         _LOG_DEBUG("Other's Cor LSA, so removing form LSDB");
         removeCoordinateLsa(lsaKey);
       }
@@ -749,7 +740,6 @@ void
 Lsdb::expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime,
                       uint32_t timeoutCount)
 {
-  std::cout << "Expressing Interest :" << interestName << std::endl;
   _LOG_DEBUG("Expressing Interest for LSA(name): " << interestName);
   ndn::Interest interest(interestName);
   interest.setInterestLifetime(ndn::time::seconds(interestLifeTime));
@@ -765,7 +755,6 @@ void
 Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 {
   const ndn::Name& intName(interest.getName());
-  std::cout << "Interest recevied for LSA: " << intName << std::endl;
   _LOG_DEBUG("Interest recevied for LSA(name): " << intName);
   string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(interest.getName(),
@@ -777,10 +766,6 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
                                               interest.getName().size() - lsaPosition - 3);
     interestedLsType  = intName[-2].toUri();
     interestedLsSeqNo = intName[-1].toNumber();
-    std::cout << "Router Name: " << origRouter << std::endl;
-    std::cout << "Ls Type    : " << interestedLsType << std::endl;
-    std::cout << "Ls Seq     : " << interestedLsSeqNo << endl;
-    std::cout << "Ls Type: " << interestedLsType << std::endl;
     if (interestedLsType == "name") {
       processInterestForNameLsa(interest,
                                 origRouter.append(interestedLsType),
@@ -800,7 +785,7 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
       return;
     }
     else {
-      cout << "Unrecognized LSA Type :(" << endl;
+      _LOG_DEBUG("Unrecognized LSA Type :(");
     }
   }
 }
@@ -878,7 +863,6 @@ void
 Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 {
   const ndn::Name& dataName = data->getName();
-  std::cout << "Data received for name: " << dataName << std::endl;
   _LOG_DEBUG("Data received for LSA(name): " << dataName);
   string dataContent(reinterpret_cast<const char*>(data->getContent().value()));
   string chkString("LSA");
@@ -890,9 +874,6 @@ Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
                                                dataName.size() - lsaPosition - 4);
     interestedLsType  = dataName[-3].toUri();
     interestedLsSeqNo = dataName[-2].toNumber();
-    std::cout << "Ls Type    : " << interestedLsType << std::endl;
-    std::cout << "Ls Seq     : " << interestedLsSeqNo << std::endl;
-    std::cout << "Ls Type: " << interestedLsType << std::endl;
     if (interestedLsType == "name") {
       processContentNameLsa(origRouter.append(interestedLsType),
                             interestedLsSeqNo, dataContent);
@@ -909,7 +890,7 @@ Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
       return;
     }
     else {
-      cout << "Unrecognized LSA Type :(" << endl;
+      _LOG_DEBUG("Unrecognized LSA Type :(");
     }
   }
 }
@@ -917,7 +898,7 @@ Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 void
 Lsdb::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data, const std::string& msg)
 {
-  std::cerr << "Validation Error: " << msg << std::endl;
+  _LOG_DEBUG("Validation Error: " << msg);
 }
 
 void
@@ -930,7 +911,7 @@ Lsdb::processContentNameLsa(const ndn::Name& lsaKey,
       installNameLsa(nameLsa);
     }
     else {
-      std::cout << "LSA data decoding error :(" << std::endl;
+      _LOG_DEBUG("LSA data decoding error :(");
     }
   }
 }
@@ -945,7 +926,7 @@ Lsdb::processContentAdjacencyLsa(const ndn::Name& lsaKey,
       installAdjLsa(adjLsa);
     }
     else {
-      std::cout << "LSA data decoding error :(" << std::endl;
+      _LOG_DEBUG("LSA data decoding error :(");
     }
   }
 }
@@ -960,7 +941,7 @@ Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
       installCoordinateLsa(corLsa);
     }
     else {
-      std::cout << "LSA data decoding error :(" << std::endl;
+      _LOG_DEBUG("LSA data decoding error :(");
     }
   }
 }
@@ -989,12 +970,12 @@ Lsdb::getLsaExpirationTimePoint()
 }
 
 void
-Lsdb::printAdjLsdb()
+Lsdb::writeAdjLsdbLog()
 {
-  cout << "---------------Adj LSDB-------------------" << endl;
+  _LOG_DEBUG("---------------Adj LSDB-------------------");
   for (std::list<AdjLsa>::iterator it = m_adjLsdb.begin();
        it != m_adjLsdb.end() ; it++) {
-    cout << (*it) << endl;
+    (*it).writeLog();
   }
 }
 

@@ -62,9 +62,8 @@ public:
   bool
   isNameLsaNew(const ndn::Name& key, uint64_t seqNo);
 
-  //debugging
   void
-  printNameLsdb();
+  writeNameLsdbLog();
 
   //function related to Cor LSDB
   bool
@@ -82,9 +81,8 @@ public:
   bool
   isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo);
 
-  //debugging
   void
-  printCorLsdb();
+  writeCorLsdbLog();
 
   //function related to Adj LSDB
   void
@@ -108,9 +106,8 @@ public:
   getAdjLsdb();
 
   void
-  printAdjLsdb();
+  writeAdjLsdbLog();
 
-  //void scheduleRefreshLsdb(Nlsr& pnlsr, int interval);
   void
   setLsaRefreshTime(int lrt);
 

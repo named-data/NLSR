@@ -64,13 +64,4 @@ FibEntry::writeLog()
   m_nexthopList.writeLog();
 }
 
-ostream&
-operator<<(ostream& os, FibEntry fe)
-{
-  os << "Name Prefix: " << fe.getName() << endl;
-  os << "Time to Refresh: " << fe.getExpirationTimePoint() << endl;
-  os << fe.getNexthopList() << endl;
-  return os;
-}
-
 }//namespace nlsr

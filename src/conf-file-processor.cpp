@@ -405,7 +405,6 @@ ConfFileProcessor::processConfSectionFib(boost::property_tree::ptree
     }
     else {
       std::cerr << "Wrong value for max-faces-per-prefix. ";
-      std::cerr << "NLSR will user default value";
       std::cerr << MAX_FACES_PER_PREFIX_MIN << std::endl;
       return false;
     }

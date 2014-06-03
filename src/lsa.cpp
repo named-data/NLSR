@@ -124,27 +124,8 @@ NameLsa::writeLog()
   {
     _LOG_DEBUG("    Name " << i << ": " << (*it));
   }
+  _LOG_DEBUG("name_lsa_end");
 }
-
-std::ostream&
-operator<<(std::ostream& os, NameLsa& nLsa)
-{
-  os << "Name Lsa: " << endl;
-  os << "  Origination Router: " << nLsa.getOrigRouter() << endl;
-  os << "  Ls Type: " << nLsa.getLsType() << endl;
-  os << "  Ls Seq No: " << nLsa.getLsSeqNo() << endl;
-  os << "  Ls Lifetime: " << nLsa.getExpirationTimePoint() << endl;
-  os << "  Names: " << endl;
-  int i = 1;
-  std::list<ndn::Name> nl = nLsa.getNpl().getNameList();
-  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++)
-  {
-    os << "    Name " << i << ": " << (*it) << endl;
-  }
-  return os;
-}
-
-
 
 CoordinateLsa::CoordinateLsa(const ndn::Name& origR, const string lst,
                              uint32_t lsn,
@@ -225,20 +206,6 @@ CoordinateLsa::writeLog()
   _LOG_DEBUG("    Hyperbolic Radius: " << m_corRad);
   _LOG_DEBUG("    Hyperbolic Theta: " << m_corRad);
 }
-
-std::ostream&
-operator<<(std::ostream& os, const CoordinateLsa& cLsa)
-{
-  os << "Cor Lsa: " << endl;
-  os << "  Origination Router: " << cLsa.getOrigRouter() << endl;
-  os << "  Ls Type: " << cLsa.getLsType() << endl;
-  os << "  Ls Seq No: " << cLsa.getLsSeqNo() << endl;
-  os << "  Ls Lifetime: " << cLsa.getExpirationTimePoint() << endl;
-  os << "    Hyperbolic Radius: " << cLsa.getCorRadius() << endl;
-  os << "    Hyperbolic Theta: " << cLsa.getCorTheta() << endl;
-  return os;
-}
-
 
 AdjLsa::AdjLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
                const ndn::time::system_clock::TimePoint& lt,
@@ -365,28 +332,7 @@ AdjLsa::writeLog()
     _LOG_DEBUG("      Connecting FaceUri: " << (*it).getConnectingFaceUri());
     _LOG_DEBUG("      Link Cost: " << (*it).getLinkCost());
   }
-}
-
-std::ostream&
-operator<<(std::ostream& os, AdjLsa& aLsa)
-{
-  os << "Adj Lsa: " << endl;
-  os << "  Origination Router: " << aLsa.getOrigRouter() << endl;
-  os << "  Ls Type: " << aLsa.getLsType() << endl;
-  os << "  Ls Seq No: " << aLsa.getLsSeqNo() << endl;
-  os << "  Ls Lifetime: " << aLsa.getExpirationTimePoint() << endl;
-  os << "  No Link: " << aLsa.getNoLink() << endl;
-  os << "  Adjacents: " << endl;
-  int i = 1;
-  std::list<Adjacent> al = aLsa.getAdl().getAdjList();
-  for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++)
-  {
-    os << "    Adjacent " << i << ": " << endl;
-    os << "      Adjacent Name: " << (*it).getName() << endl;
-    os << "      Connecting FaceUri: " << (*it).getConnectingFaceUri() << endl;
-    os << "      Link Cost: " << (*it).getLinkCost() << endl;
-  }
-  return os;
+  _LOG_DEBUG("adj_lsa_end");
 }
 
 }//namespace nlsr

@@ -52,9 +52,6 @@ public:
   void
   writeLog();
 
-  void
-  print();
-
 private:
   void
   addEntry(const ndn::Name& name, RoutingTableEntry& rte);

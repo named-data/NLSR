@@ -62,9 +62,6 @@ public:
   void
   writeLog();
 
-  void
-  print();
-
 private:
   std::list<ndn::Name> m_nameList;
 

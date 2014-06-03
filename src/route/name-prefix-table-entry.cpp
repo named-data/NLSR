@@ -103,18 +103,4 @@ NamePrefixTableEntry::writeLog()
   m_nexthopList.writeLog();
 }
 
-//debugging purpose
-ostream&
-operator<<(ostream& os, NamePrefixTableEntry& npte)
-{
-  os << "Name: " << npte.getNamePrefix() << endl;
-  std::list<RoutingTableEntry> rteList = npte.getRteList();
-  for (std::list<RoutingTableEntry>::iterator it = rteList.begin();
-       it != rteList.end(); ++it) {
-    cout << (*it);
-  }
-  os << npte.getNexthopList();
-  return os;
-}
-
 }//namespace nlsr
