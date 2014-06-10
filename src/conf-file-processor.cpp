@@ -455,6 +455,7 @@ ConfFileProcessor::processConfSectionSecurity(boost::property_tree::ptree sectio
     }
 
   m_nlsr.loadValidator(it->second, m_confFileName);
+  it++;
 
   for (; it != section.end(); it++)
     {

@@ -94,7 +94,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
     if (status == 0) {
       ndn::Name interestName(neighbor);
       interestName.append(INFO_COMPONENT);
-      interestName.append(m_nlsr.getConfParameter().getRouterPrefix());
+      interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
       expressInterest(interestName,
                       m_nlsr.getConfParameter().getInterestResendTime());
     }
