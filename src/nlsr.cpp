@@ -129,7 +129,7 @@ Nlsr::intializeKey()
   m_defaultIdentity = m_confParam.getRouterPrefix();
   m_defaultIdentity.append("NLSR");
 
-  ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(m_defaultIdentity);
+  ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(m_defaultIdentity, true);
 
   ndn::shared_ptr<ndn::IdentityCertificate> certificate = m_keyChain.selfSign(keyName);
   m_keyChain.signByIdentity(*certificate, m_confParam.getRouterPrefix());
