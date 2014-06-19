@@ -70,6 +70,7 @@ private:
 private:
   Nlsr& m_nlsr;
   static const std::string INFO_COMPONENT;
+  static const std::string NLSR_COMPONENT;
 };
 
 } //namespace nlsr

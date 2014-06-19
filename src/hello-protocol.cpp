@@ -30,7 +30,8 @@ namespace nlsr {
 
 INIT_LOGGER("HelloProtocol");
 
-const std::string HelloProtocol::INFO_COMPONENT="info";
+const std::string HelloProtocol::INFO_COMPONENT = "INFO";
+const std::string HelloProtocol::NLSR_COMPONENT = "NLSR";
 
 void
 HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
@@ -53,7 +54,9 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
   std::list<Adjacent> adjList = m_nlsr.getAdjacencyList().getAdjList();
   for (std::list<Adjacent>::iterator it = adjList.begin(); it != adjList.end();
        ++it) {
+    /* interest name: /<neighbor>/NLSR/INFO/<router> */
     ndn::Name interestName = (*it).getName() ;
+    interestName.append(NLSR_COMPONENT);
     interestName.append(INFO_COMPONENT);
     interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
     expressInterest(interestName,
@@ -74,6 +77,7 @@ void
 HelloProtocol::processInterest(const ndn::Name& name,
                                const ndn::Interest& interest)
 {
+  /* interest name: /<neighbor>/NLSR/INFO/<router> */
   const ndn::Name interestName = interest.getName();
   _LOG_DEBUG("Interest Received for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
@@ -92,7 +96,9 @@ HelloProtocol::processInterest(const ndn::Name& name,
     m_nlsr.getNlsrFace().put(data);
     int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
     if (status == 0) {
+      /* interest name: /<neighbor>/NLSR/INFO/<router> */
       ndn::Name interestName(neighbor);
+      interestName.append(NLSR_COMPONENT);
       interestName.append(INFO_COMPONENT);
       interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
       expressInterest(interestName,
@@ -104,12 +110,13 @@ HelloProtocol::processInterest(const ndn::Name& name,
 void
 HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
 {
+  /* interest name: /<neighbor>/NLSR/INFO/<router> */
   const ndn::Name interestName(interest.getName());
   _LOG_DEBUG("Interest timed out for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     return;
   }
-  ndn::Name neighbor = interestName.getPrefix(-2);
+  ndn::Name neighbor = interestName.getPrefix(-3);
   _LOG_DEBUG("Neighbor: " << neighbor);
   m_nlsr.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
   int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
@@ -118,7 +125,9 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   _LOG_DEBUG("Status: " << status);
   _LOG_DEBUG("Info Interest Timed out: " << infoIntTimedOutCount);
   if ((infoIntTimedOutCount < m_nlsr.getConfParameter().getInterestRetryNumber())) {
+    /* interest name: /<neighbor>/NLSR/INFO/<router> */
     ndn::Name interestName(neighbor);
+    interestName.append(NLSR_COMPONENT);
     interestName.append(INFO_COMPONENT);
     interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
     expressInterest(interestName,
@@ -151,10 +160,11 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
 void
 HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 {
+  /* data name: /<neighbor>/NLSR/INFO/<router>/<version> */
   ndn::Name dataName = data->getName();
   _LOG_DEBUG("Data received for name: " << dataName);
   if (dataName.get(-3).toUri() == INFO_COMPONENT) {
-    ndn::Name neighbor = dataName.getPrefix(-3);
+    ndn::Name neighbor = dataName.getPrefix(-4);
     int oldStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
     m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, 1);
     m_nlsr.getAdjacencyList().setTimedOutInterestCount(neighbor, 0);
