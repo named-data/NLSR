@@ -45,7 +45,7 @@ public:
             const ndn::Name broadcastPrefix,
             const ndn::shared_ptr<ndn::CertificateCache>& cache,
             const int stepLimit = 10)
-    : ndn::ValidatorConfig(face, cache, stepLimit)
+    : ndn::ValidatorConfig(face, cache, ndn::ValidatorConfig::DEFAULT_GRACE_INTERVAL, stepLimit)
     , m_broadcastPrefix(broadcastPrefix)
   {
     m_broadcastPrefix.append("KEYS");
