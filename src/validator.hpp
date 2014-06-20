@@ -112,16 +112,12 @@ protected:
 
   }
 
-  void
-  onData(const ndn::Interest& interest,
-         const ndn::Data& data,
-         const ndn::shared_ptr<ndn::ValidationRequest>& nextStep)
+  virtual ndn::shared_ptr<const ndn::Data>
+  preCertificateValidation(const ndn::Data& data)
   {
-
     ndn::shared_ptr<ndn::Data> internalData = ndn::make_shared<ndn::Data>();
     internalData->wireDecode(data.getContent().blockFromValue());
-    validate(*internalData,
-             nextStep->m_onValidated, nextStep->m_onDataValidated, nextStep->m_nSteps);
+    return internalData;
   }
 
 private:

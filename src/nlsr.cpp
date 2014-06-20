@@ -151,10 +151,10 @@ Nlsr::registerKeyPrefix()
   ndn::Name keyPrefix = DEFAULT_BROADCAST_PREFIX;
   keyPrefix.append("KEYS");
   m_nlsrFace.setInterestFilter(keyPrefix,
-                                  ndn::bind(&Nlsr::onKeyInterest,
-                                            this, _1, _2),
-                                  ndn::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
-                                  ndn::bind(&Nlsr::registrationFailed, this, _1));
+                               ndn::bind(&Nlsr::onKeyInterest,
+                                         this, _1, _2),
+                               ndn::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
+                               ndn::bind(&Nlsr::registrationFailed, this, _1));
 
 }
 
