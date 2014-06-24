@@ -78,6 +78,8 @@ void
 Nlsr::registerPrefixes()
 {
   std::string strategy("ndn:/localhost/nfd/strategy/broadcast");
+  ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
+  broadcastKeyPrefix.append("KEYS");
   std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
   for (std::list<Adjacent>::iterator it = adjacents.begin();
        it != adjacents.end(); it++) {
@@ -87,11 +89,14 @@ Nlsr::registerPrefixes()
                          (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
     m_fib.registerPrefix(m_confParam.getLsaPrefix(),
                          (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
-     m_fib.setStrategy((*it).getName(), strategy);
+    m_fib.registerPrefix(broadcastKeyPrefix,
+                         (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
+    m_fib.setStrategy((*it).getName(), strategy);
   }
 
   m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy);
   m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy);
+  m_fib.setStrategy(broadcastKeyPrefix, strategy);
 }
 
 void
