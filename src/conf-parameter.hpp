@@ -89,11 +89,11 @@ public:
   {
     m_network = networkName;
     m_chronosyncPrefix = m_network;
-    m_chronosyncPrefix.append("nlsr");
+    m_chronosyncPrefix.append("NLSR");
     m_chronosyncPrefix.append("sync");
     
     m_lsaPrefix = m_network;
-    m_lsaPrefix.append("nlsr");
+    m_lsaPrefix.append("NLSR");
     m_lsaPrefix.append("LSA");
   }
 
