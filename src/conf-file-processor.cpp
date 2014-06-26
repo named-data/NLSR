@@ -50,7 +50,7 @@ ConfFileProcessor::processConfFile()
     string msg = "Failed to read configuration file: ";
     msg += m_confFileName;
     cerr << msg << endl;
-    ret = false;
+    return false;
   }
   ret = load(inputFile);
   inputFile.close();
