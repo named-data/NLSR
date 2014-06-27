@@ -103,7 +103,7 @@ NameLsa::initializeFromContent(const std::string& content)
     return false;
   }
   for (uint32_t i = 0; i < numName; i++) {
-    string name(*tok_iter++);
+    ndn::Name name(*tok_iter++);
     addName(name);
   }
   return true;
@@ -283,7 +283,7 @@ AdjLsa::initializeFromContent(const std::string& content)
   }
   for (uint32_t i = 0; i < numLink; i++) {
     try {
-      string adjName(*tok_iter++);
+      ndn::Name adjName(*tok_iter++);
       std::string connectingFaceUri(*tok_iter++);
       double linkCost = boost::lexical_cast<double>(*tok_iter++);
       Adjacent adjacent(adjName, connectingFaceUri, linkCost, 0, 0);
