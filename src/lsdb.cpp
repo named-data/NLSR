@@ -567,8 +567,11 @@ Lsdb::buildAndInstallOwnAdjLsa()
                 m_nlsr.getAdjacencyList());
   m_nlsr.getSequencingManager().increaseAdjLsaSeq();
   // publish routing update
+  //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
+  //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
   ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-  lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
+  lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
+  lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
   m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
                                                     lsaPrefix);
   return installAdjLsa(adjLsa);
@@ -643,8 +646,11 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                                  chkNameLsa->getLsSeqNo(),
                                                                  ndn::time::seconds(m_lsaRefreshTime)));
         // publish routing update
+        //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
+        //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
         ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
+        lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
+        lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
         m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
                                                           lsaPrefix);
       }
@@ -679,8 +685,11 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                                chkAdjLsa->getLsSeqNo(),
                                                                ndn::time::seconds(m_lsaRefreshTime)));
         // publish routing update
+        //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
+        //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
         ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
+        lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
+        lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
         m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
                                                           lsaPrefix);
       }
@@ -719,8 +728,11 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                         chkCorLsa->getLsSeqNo(),
                                         ndn::time::seconds(m_lsaRefreshTime)));
         // publish routing update
+        //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
+        //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
         ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
+        lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
+        lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
         m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
                                                           lsaPrefix);
       }
@@ -762,8 +774,9 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
   if (lsaPosition >= 0) {
     std::string interestedLsType;
     uint64_t interestedLsSeqNo;
-    ndn::Name origRouter = intName.getSubName(lsaPosition + 1,
-                                              interest.getName().size() - lsaPosition - 3);
+    ndn::Name origRouter = m_nlsr.getConfParameter().getNetwork();
+    origRouter.append(intName.getSubName(lsaPosition + 1,
+                                         interest.getName().size() - lsaPosition - 3));
     interestedLsType  = intName[-2].toUri();
     interestedLsSeqNo = intName[-1].toNumber();
     if (interestedLsType == "name") {
@@ -870,8 +883,9 @@ Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
   if (lsaPosition >= 0) {
     std::string interestedLsType;
     uint64_t interestedLsSeqNo;
-    ndn::Name origRouter = dataName.getSubName(lsaPosition + 1,
-                                               dataName.size() - lsaPosition - 4);
+    ndn::Name origRouter = m_nlsr.getConfParameter().getNetwork();
+    origRouter.append(dataName.getSubName(lsaPosition + 1,
+                                          dataName.size() - lsaPosition - 4));
     interestedLsType  = dataName[-3].toUri();
     interestedLsSeqNo = dataName[-2].toNumber();
     if (interestedLsType == "name") {

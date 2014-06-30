@@ -65,7 +65,8 @@ void
 Nlsr::setLsaInterestFilter()
 {
   ndn::Name name = m_confParam.getLsaPrefix();
-  name.append(m_confParam.getRouterPrefix());
+  name.append(m_confParam.getSiteName());
+  name.append(m_confParam.getRouterName());
   _LOG_DEBUG("Setting interest filter for name: " << name);
   getNlsrFace().setInterestFilter(name,
                                   ndn::bind(&Lsdb::processInterest,
