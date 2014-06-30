@@ -325,7 +325,6 @@ public:
 
   void
   createFace(const std::string& faceUri,
-             uint64_t faceCost,
              const CommandSucceedCallback& onSuccess,
              const CommandFailCallback& onFailure);
 

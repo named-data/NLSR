@@ -197,14 +197,12 @@ Nlsr::onKeyPrefixRegSuccess(const ndn::Name& name)
 
 void
 Nlsr::createFace(const std::string& faceUri,
-                 uint64_t faceCost,
                  const CommandSucceedCallback& onSuccess,
                  const CommandFailCallback& onFailure)
 {
   ndn::nfd::ControlParameters faceParameters;
   faceParameters
-    .setUri(faceUri)
-    .setCost(faceCost);
+    .setUri(faceUri);
   m_controller.start<ndn::nfd::FaceCreateCommand>(faceParameters,
                                                   onSuccess,
                                                   onFailure);
@@ -235,7 +233,6 @@ Nlsr::createFaces()
   for (std::list<Adjacent>::iterator it = adjacents.begin();
        it != adjacents.end(); it++) {
     createFace((*it).getConnectingFaceUri(),
-               (*it).getLinkCost(),
                ndn::bind(&Nlsr::onCreateFaceSuccess, this, _1),
                ndn::bind(&Nlsr::onCreateFaceFailure, this, _1, _2));
     m_nFacesToCreate++;
