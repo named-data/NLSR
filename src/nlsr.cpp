@@ -110,23 +110,28 @@ Nlsr::initialize()
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());
   m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
   m_sequencingManager.initiateSeqNoFromFile();
+  m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncPrefix().toUri());
+  intializeKey();
   /* Logging start */
   m_confParam.writeLog();
   m_adjacencyList.writeLog();
   m_namePrefixList.writeLog();
   /* Logging end */
+
+  createFaces();
+}
+
+void
+Nlsr::start()
+{
   registerPrefixes();
   setInfoInterestFilter();
   setLsaInterestFilter();
   m_nlsrLsdb.buildAndInstallOwnNameLsa();
   m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
-  m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncPrefix().toUri());
   m_syncLogicHandler.createSyncSocket(boost::ref(*this));
-  //m_interestManager.scheduleInfoInterest(10);
-  m_helloProtocol.scheduleInterest(10);
-
-  intializeKey();
   registerKeyPrefix();
+  m_helloProtocol.scheduleInterest(10);
 }
 
 void
@@ -189,6 +194,104 @@ void
 Nlsr::onKeyPrefixRegSuccess(const ndn::Name& name)
 {
 }
+
+void
+Nlsr::createFace(const std::string& faceUri,
+                 uint64_t faceCost,
+                 const CommandSucceedCallback& onSuccess,
+                 const CommandFailCallback& onFailure)
+{
+  ndn::nfd::ControlParameters faceParameters;
+  faceParameters
+    .setUri(faceUri)
+    .setCost(faceCost);
+  m_controller.start<ndn::nfd::FaceCreateCommand>(faceParameters,
+                                                  onSuccess,
+                                                  onFailure);
+}
+
+void
+Nlsr::onCreateFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult)
+{
+  m_nFacesCreated++;
+  if (m_nFacesToCreate == m_nFacesCreated)
+  {
+    start();
+  }
+}
+
+void
+Nlsr::onCreateFaceFailure(int32_t code, const std::string& error)
+{
+  _LOG_DEBUG(error << " (code: " << code << ")");
+  destroyFaces();
+  throw Error("Error: Face creation failed");
+}
+
+void
+Nlsr::createFaces()
+{
+  std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
+  for (std::list<Adjacent>::iterator it = adjacents.begin();
+       it != adjacents.end(); it++) {
+    createFace((*it).getConnectingFaceUri(),
+               (*it).getLinkCost(),
+               ndn::bind(&Nlsr::onCreateFaceSuccess, this, _1),
+               ndn::bind(&Nlsr::onCreateFaceFailure, this, _1, _2));
+    m_nFacesToCreate++;
+  }
+}
+
+
+void
+Nlsr::onDestroyFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult)
+{
+
+}
+
+void
+Nlsr::onDestroyFaceFailure(int32_t code, const std::string& error)
+{
+  std::cerr << error << " (code: " << code << ")";
+  throw Error("Error: Face destruction failed");
+}
+
+void
+Nlsr::destroyFaces()
+{
+  std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
+  for (std::list<Adjacent>::iterator it = adjacents.begin();
+       it != adjacents.end(); it++) {
+    destroyFace((*it).getConnectingFaceUri());
+  }
+}
+
+void
+Nlsr::destroyFace(const std::string& faceUri)
+{
+  ndn::nfd::ControlParameters faceParameters;
+  faceParameters
+    .setUri(faceUri);
+  m_controller.start<ndn::nfd::FaceCreateCommand>(faceParameters,
+                                                  ndn::bind(&Nlsr::destroyFaceInNfd,
+                                                            this, _1),
+                                                  ndn::bind(&Nlsr::onDestroyFaceFailure,
+                                                            this, _1, _2));
+}
+
+void
+Nlsr::destroyFaceInNfd(const ndn::nfd::ControlParameters& faceDestroyResult)
+{
+  ndn::nfd::ControlParameters faceParameters;
+  faceParameters
+    .setFaceId(faceDestroyResult.getFaceId());
+  m_controller.start<ndn::nfd::FaceDestroyCommand>(faceParameters,
+                                                   ndn::bind(&Nlsr::onDestroyFaceSuccess,
+                                                             this, _1),
+                                                   ndn::bind(&Nlsr::onDestroyFaceFailure,
+                                                             this, _1, _2));
+}
+
 
 void
 Nlsr::startEventLoop()

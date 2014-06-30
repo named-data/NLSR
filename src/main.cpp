@@ -72,6 +72,7 @@ main(int32_t argc, char** argv)
   catch (std::exception& e) {
     std::cerr << "ERROR: " << e.what() << std::endl;
     nlsr.getFib().clean();
+    nlsr.destroyFaces();
   }
   return EXIT_SUCCESS;
 }
