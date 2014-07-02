@@ -43,7 +43,7 @@ public:
   Adjacent(const ndn::Name& an);
 
   Adjacent(const ndn::Name& an, const std::string& cfu,  double lc,
-          uint32_t s, uint32_t iton);
+          uint32_t s, uint32_t iton, uint64_t faceId);
 
   const ndn::Name&
   getName() const
@@ -105,11 +105,32 @@ public:
     m_interestTimedOutNo = iton;
   }
 
+  void
+  setFaceId(uint64_t faceId)
+  {
+    m_faceId = faceId;
+  }
+
+  uint64_t
+  getFaceId()
+  {
+    return m_faceId;
+  }
+
   bool
   operator==(const Adjacent& adjacent) const;
 
-  bool
-  compare(const ndn::Name& adjacencyName);
+  inline bool
+  compare(const ndn::Name& adjacencyName)
+  {
+    return m_name == adjacencyName;
+  }
+
+  inline bool
+  compareFaceId(uint64_t faceId)
+  {
+    return m_faceId == faceId;
+  }
 
   void
   writeLog();
@@ -123,6 +144,7 @@ private:
   double m_linkCost;
   uint32_t m_status;
   uint32_t m_interestTimedOutNo;
+  uint64_t m_faceId;
 };
 
 } // namespace nlsr

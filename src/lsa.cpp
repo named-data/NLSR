@@ -286,7 +286,7 @@ AdjLsa::initializeFromContent(const std::string& content)
       ndn::Name adjName(*tok_iter++);
       std::string connectingFaceUri(*tok_iter++);
       double linkCost = boost::lexical_cast<double>(*tok_iter++);
-      Adjacent adjacent(adjName, connectingFaceUri, linkCost, 0, 0);
+      Adjacent adjacent(adjName, connectingFaceUri, linkCost, 0, 0, 0);
       addAdjacent(adjacent);
     }
     catch (std::exception& e) {

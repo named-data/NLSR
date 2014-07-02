@@ -54,13 +54,19 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
   std::list<Adjacent> adjList = m_nlsr.getAdjacencyList().getAdjList();
   for (std::list<Adjacent>::iterator it = adjList.begin(); it != adjList.end();
        ++it) {
-    /* interest name: /<neighbor>/NLSR/INFO/<router> */
-    ndn::Name interestName = (*it).getName() ;
-    interestName.append(NLSR_COMPONENT);
-    interestName.append(INFO_COMPONENT);
-    interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
-    expressInterest(interestName,
-                    m_nlsr.getConfParameter().getInterestResendTime());
+    if((*it).getFaceId() != 0) {
+      /* interest name: /<neighbor>/NLSR/INFO/<router> */
+      ndn::Name interestName = (*it).getName() ;
+      interestName.append(NLSR_COMPONENT);
+      interestName.append(INFO_COMPONENT);
+      interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
+      expressInterest(interestName,
+                      m_nlsr.getConfParameter().getInterestResendTime());
+    }
+    else {
+      registerPrefixes((*it).getName(), (*it).getConnectingFaceUri(),
+                       (*it).getLinkCost(), 31536000);
+    }
   }
   scheduleInterest(m_nlsr.getConfParameter().getInfoInterestInterval());
 }
@@ -94,15 +100,21 @@ HelloProtocol::processInterest(const ndn::Name& name,
     m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
     _LOG_DEBUG("Sending out data for name: " << data.getName());
     m_nlsr.getNlsrFace().put(data);
-    int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
-    if (status == 0) {
-      /* interest name: /<neighbor>/NLSR/INFO/<router> */
-      ndn::Name interestName(neighbor);
-      interestName.append(NLSR_COMPONENT);
-      interestName.append(INFO_COMPONENT);
-      interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
-      expressInterest(interestName,
-                      m_nlsr.getConfParameter().getInterestResendTime());
+    Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+    if (adjacent->getStatus() == 0) {
+      if(adjacent->getFaceId() != 0){
+        /* interest name: /<neighbor>/NLSR/INFO/<router> */
+        ndn::Name interestName(neighbor);
+        interestName.append(NLSR_COMPONENT);
+        interestName.append(INFO_COMPONENT);
+        interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
+        expressInterest(interestName,
+                        m_nlsr.getConfParameter().getInterestResendTime());
+      }
+      else {
+        registerPrefixes(adjacent->getName(), adjacent->getConnectingFaceUri(),
+                         adjacent->getLinkCost(), 31536000);
+      }
     }
   }
 }
@@ -192,6 +204,48 @@ HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>&
                                          const std::string& msg)
 {
   _LOG_DEBUG("Validation Error: " << msg);
+}
+
+void
+HelloProtocol::registerPrefixes(const ndn::Name adjName, const std::string& faceUri,
+                               double linkCost, uint64_t timeout)
+{
+  ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
+  broadcastKeyPrefix.append("KEYS");
+  m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout,
+                                 ndn::bind(&HelloProtocol::onRegistrationSuccess,
+                                           this, _1, ndn::cref(adjName)),
+                                 ndn::bind(&HelloProtocol::onRegistrationFailure,
+                                           this, _1, _2));
+  m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
+                                 faceUri, linkCost, timeout);
+  m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getLsaPrefix(),
+                                 faceUri, linkCost, timeout);
+  m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
+                                 faceUri, linkCost, timeout);
+}
+
+void
+HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
+                                     const ndn::Name neighbor)
+{
+  Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+  if (adjacent != 0) {
+    adjacent->setFaceId(commandSuccessResult.getFaceId());
+    /* interest name: /<neighbor>/NLSR/INFO/<router> */
+    ndn::Name interestName(neighbor);
+    interestName.append(NLSR_COMPONENT);
+    interestName.append(INFO_COMPONENT);
+    interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
+    expressInterest(interestName,
+                    m_nlsr.getConfParameter().getInterestResendTime());
+  }
+}
+
+void
+HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error)
+{
+  _LOG_DEBUG(error << " (code: " << code << ")");
 }
 
 } //namespace nlsr

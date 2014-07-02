@@ -76,7 +76,7 @@ Nlsr::setLsaInterestFilter()
 }
 
 void
-Nlsr::registerPrefixes()
+Nlsr::setStrategies()
 {
   std::string strategy("ndn:/localhost/nfd/strategy/broadcast");
   ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
@@ -84,14 +84,6 @@ Nlsr::registerPrefixes()
   std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
   for (std::list<Adjacent>::iterator it = adjacents.begin();
        it != adjacents.end(); it++) {
-    m_fib.registerPrefix((*it).getName(), (*it).getConnectingFaceUri(),
-                         (*it).getLinkCost(), 31536000); /* One Year in seconds */
-    m_fib.registerPrefix(m_confParam.getChronosyncPrefix(),
-                         (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
-    m_fib.registerPrefix(m_confParam.getLsaPrefix(),
-                         (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
-    m_fib.registerPrefix(broadcastKeyPrefix,
-                         (*it).getConnectingFaceUri(), (*it).getLinkCost(), 31536000);
     m_fib.setStrategy((*it).getName(), strategy);
   }
 
@@ -111,20 +103,13 @@ Nlsr::initialize()
   m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
   m_sequencingManager.initiateSeqNoFromFile();
   m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncPrefix().toUri());
-  intializeKey();
   /* Logging start */
   m_confParam.writeLog();
   m_adjacencyList.writeLog();
   m_namePrefixList.writeLog();
   /* Logging end */
-
-  createFaces();
-}
-
-void
-Nlsr::start()
-{
-  registerPrefixes();
+  intializeKey();
+  setStrategies();
   setInfoInterestFilter();
   setLsaInterestFilter();
   m_nlsrLsdb.buildAndInstallOwnNameLsa();
@@ -196,54 +181,8 @@ Nlsr::onKeyPrefixRegSuccess(const ndn::Name& name)
 }
 
 void
-Nlsr::createFace(const std::string& faceUri,
-                 const CommandSucceedCallback& onSuccess,
-                 const CommandFailCallback& onFailure)
-{
-  ndn::nfd::ControlParameters faceParameters;
-  faceParameters
-    .setUri(faceUri);
-  m_controller.start<ndn::nfd::FaceCreateCommand>(faceParameters,
-                                                  onSuccess,
-                                                  onFailure);
-}
-
-void
-Nlsr::onCreateFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult)
-{
-  m_nFacesCreated++;
-  if (m_nFacesToCreate == m_nFacesCreated)
-  {
-    start();
-  }
-}
-
-void
-Nlsr::onCreateFaceFailure(int32_t code, const std::string& error)
-{
-  _LOG_DEBUG(error << " (code: " << code << ")");
-  destroyFaces();
-  throw Error("Error: Face creation failed");
-}
-
-void
-Nlsr::createFaces()
-{
-  std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
-  for (std::list<Adjacent>::iterator it = adjacents.begin();
-       it != adjacents.end(); it++) {
-    createFace((*it).getConnectingFaceUri(),
-               ndn::bind(&Nlsr::onCreateFaceSuccess, this, _1),
-               ndn::bind(&Nlsr::onCreateFaceFailure, this, _1, _2));
-    m_nFacesToCreate++;
-  }
-}
-
-
-void
 Nlsr::onDestroyFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult)
 {
-
 }
 
 void
@@ -259,34 +198,27 @@ Nlsr::destroyFaces()
   std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
   for (std::list<Adjacent>::iterator it = adjacents.begin();
        it != adjacents.end(); it++) {
-    destroyFace((*it).getConnectingFaceUri());
+    m_fib.destroyFace((*it).getConnectingFaceUri(),
+                      ndn::bind(&Nlsr::onDestroyFaceSuccess, this, _1),
+                      ndn::bind(&Nlsr::onDestroyFaceFailure, this, _1, _2));
   }
 }
 
-void
-Nlsr::destroyFace(const std::string& faceUri)
-{
-  ndn::nfd::ControlParameters faceParameters;
-  faceParameters
-    .setUri(faceUri);
-  m_controller.start<ndn::nfd::FaceCreateCommand>(faceParameters,
-                                                  ndn::bind(&Nlsr::destroyFaceInNfd,
-                                                            this, _1),
-                                                  ndn::bind(&Nlsr::onDestroyFaceFailure,
-                                                            this, _1, _2));
-}
+
+
 
 void
-Nlsr::destroyFaceInNfd(const ndn::nfd::ControlParameters& faceDestroyResult)
+Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification)
 {
-  ndn::nfd::ControlParameters faceParameters;
-  faceParameters
-    .setFaceId(faceDestroyResult.getFaceId());
-  m_controller.start<ndn::nfd::FaceDestroyCommand>(faceParameters,
-                                                   ndn::bind(&Nlsr::onDestroyFaceSuccess,
-                                                             this, _1),
-                                                   ndn::bind(&Nlsr::onDestroyFaceFailure,
-                                                             this, _1, _2));
+  ndn::nfd::FaceEventKind kind = faceEventNotification.getKind();
+  if (kind == ndn::nfd::FACE_EVENT_DESTROYED) {
+    uint64_t faceId = faceEventNotification.getFaceId();
+    Adjacent *adjacent = m_adjacencyList.findAdjacent(faceId);
+    if (adjacent != 0) {
+      _LOG_DEBUG("Face to " << adjacent->getName() << "deleted");
+      adjacent->setFaceId(0);
+    }
+  }
 }
 
 

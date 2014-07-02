@@ -98,6 +98,12 @@ public:
     }
   }
 
+  Adjacent*
+  findAdjacent(const ndn::Name& adjName);
+
+  Adjacent*
+  findAdjacent(uint64_t faceId);
+
   void
   writeLog();
 

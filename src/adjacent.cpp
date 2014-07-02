@@ -43,6 +43,7 @@ Adjacent::Adjacent()
     , m_linkCost(DEFAULT_LINK_COST)
     , m_status(ADJACENT_STATUS_INACTIVE)
     , m_interestTimedOutNo(0)
+    , m_faceId(0)
 {
 }
 
@@ -52,18 +53,21 @@ Adjacent::Adjacent(const ndn::Name& an)
     , m_linkCost(DEFAULT_LINK_COST)
     , m_status(ADJACENT_STATUS_INACTIVE)
     , m_interestTimedOutNo(0)
+    , m_faceId(0)
   {
   }
 
 Adjacent::Adjacent(const ndn::Name& an, const std::string& cfu,  double lc,
-          uint32_t s, uint32_t iton)
-{
-  m_name = an;
-  m_connectingFaceUri = cfu;
-  m_linkCost = lc;
-  m_status = s;
-  m_interestTimedOutNo = iton;
-}
+          uint32_t s, uint32_t iton, uint64_t faceId)
+    : m_name(an)
+    , m_connectingFaceUri(cfu)
+    , m_linkCost(lc)
+    , m_status(s)
+    , m_interestTimedOutNo(iton)
+    , m_faceId(faceId)
+  {
+
+  }
 
 bool
 Adjacent::operator==(const Adjacent& adjacent) const
@@ -72,12 +76,6 @@ Adjacent::operator==(const Adjacent& adjacent) const
          (m_connectingFaceUri == adjacent.getConnectingFaceUri()) &&
          (std::abs(m_linkCost - adjacent.getLinkCost()) <
           std::numeric_limits<double>::epsilon()) ;
-}
-
-bool
-Adjacent::compare(const ndn::Name& adjacencyName)
-{
-  return m_name == adjacencyName;
 }
 
 void

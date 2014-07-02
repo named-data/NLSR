@@ -256,19 +256,62 @@ Fib::removeHop(NexthopList& nl, const std::string& doNotRemoveHopFaceUri,
 }
 
 void
-Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
-                    uint64_t faceCost, uint64_t timeout)
+Fib::createFace(const std::string& faceUri,
+                const CommandSucceedCallback& onSuccess,
+                const CommandFailCallback& onFailure)
 {
   ndn::nfd::ControlParameters faceParameters;
   faceParameters
-  .setUri(faceUri);
-
+    .setUri(faceUri);
   m_controller.start<ndn::nfd::FaceCreateCommand>(faceParameters,
-                                                  ndn::bind(&Fib::registerPrefixInNfd, this,_1,
-                                                            namePrefix, faceCost, timeout),
-                                                  ndn::bind(&Fib::onFailure, this, _1, _2,
-                                                             "Failed in name registration"));
-  
+                                                  onSuccess,
+                                                  onFailure);
+}
+
+void
+Fib::destroyFace(const std::string& faceUri,
+                 const CommandSucceedCallback& onSuccess,
+                 const CommandFailCallback& onFailure)
+{
+  createFace(faceUri,
+             ndn::bind(&Fib::destroyFaceInNfd, this, _1, onSuccess, onFailure),
+             onFailure);
+}
+
+void
+Fib::destroyFaceInNfd(const ndn::nfd::ControlParameters& faceDestroyResult,
+                        const CommandSucceedCallback& onSuccess,
+                        const CommandFailCallback& onFailure)
+{
+  ndn::nfd::ControlParameters faceParameters;
+  faceParameters
+    .setFaceId(faceDestroyResult.getFaceId());
+  m_controller.start<ndn::nfd::FaceDestroyCommand>(faceParameters,
+                                                   onSuccess,
+                                                   onFailure);
+}
+
+void
+Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
+                    uint64_t faceCost, uint64_t timeout)
+{
+  createFace(faceUri,
+             ndn::bind(&Fib::registerPrefixInNfd, this,_1, namePrefix, faceCost, timeout),
+             ndn::bind(&Fib::onFailure, this, _1, _2,"Failed in name registration"));
+}
+
+void
+Fib::registerPrefix(const ndn::Name& namePrefix,
+                    const std::string& faceUri,
+                    uint64_t faceCost, uint64_t timeout,
+                    const CommandSucceedCallback& onSuccess,
+                    const CommandFailCallback& onFailure)
+
+{
+ createFace(faceUri,
+            ndn::bind(&Fib::registerPrefixInNfd, this,_1,
+                      namePrefix, faceCost, timeout, onSuccess, onFailure),
+            onFailure);
 }
 
 void
@@ -288,6 +331,24 @@ Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
                                                              faceCreateResult.getUri()),
                                                    ndn::bind(&Fib::onFailure, this, _1, _2,
                                                              "Failed in name registration"));
+}
+
+void
+Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
+                         const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout,
+                         const CommandSucceedCallback& onSuccess,
+                         const CommandFailCallback& onFailure)
+{
+  ndn::nfd::ControlParameters controlParameters;
+  controlParameters
+    .setName(namePrefix)
+    .setFaceId(faceCreateResult.getFaceId())
+    .setCost(faceCost)
+    .setExpirationPeriod(ndn::time::milliseconds(timeout * 1000))
+    .setOrigin(128);
+  m_controller.start<ndn::nfd::RibRegisterCommand>(controlParameters,
+                                                   onSuccess,
+                                                   onFailure);
 }
 
 void

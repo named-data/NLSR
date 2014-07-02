@@ -233,6 +233,34 @@ AdjacencyList::find(const ndn::Name& adjName)
   return it;
 }
 
+Adjacent *
+AdjacencyList::findAdjacent(const ndn::Name& adjName)
+{
+  std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
+                                                  m_adjList.end(),
+                                                  ndn::bind(&Adjacent::compare,
+                                                            _1, ndn::cref(adjName)));
+  if (it != m_adjList.end()) {
+    return &(*it);
+  }
+
+  return 0;
+}
+
+Adjacent *
+AdjacencyList::findAdjacent(uint64_t faceId)
+{
+  std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
+                                                  m_adjList.end(),
+                                                  ndn::bind(&Adjacent::compareFaceId,
+                                                            _1, faceId));
+  if (it != m_adjList.end()) {
+    return &(*it);
+  }
+
+  return 0;
+}
+
 void
 AdjacencyList::writeLog()
 {

@@ -33,6 +33,9 @@
 
 namespace nlsr {
 
+typedef ndn::function<void(const ndn::nfd::ControlParameters&)> CommandSucceedCallback;
+typedef ndn::function<void(uint32_t/*code*/,const std::string&/*reason*/)> CommandFailCallback;
+
 class Nlsr;
 
 
@@ -90,8 +93,11 @@ public:
                  uint64_t faceCost, uint64_t timeout);
 
   void
-  registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
-                      const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout);
+  registerPrefix(const ndn::Name& namePrefix,
+                 const std::string& faceUri,
+                 uint64_t faceCost, uint64_t timeout,
+                 const CommandSucceedCallback& onSuccess,
+                 const CommandFailCallback& onFailure);
   
   void
   setStrategy(const ndn::Name& name, const std::string& strategy);
@@ -99,7 +105,32 @@ public:
   void
   writeLog();
 
+  void
+  destroyFace(const std::string& faceUri,
+              const CommandSucceedCallback& onSuccess,
+              const CommandFailCallback& onFailure);
+
 private:
+  void
+  createFace(const std::string& faceUri,
+             const CommandSucceedCallback& onSuccess,
+             const CommandFailCallback& onFailure);
+
+  void
+  registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
+                      const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout);
+
+  void
+  registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
+                      const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout,
+                      const CommandSucceedCallback& onSuccess,
+                      const CommandFailCallback& onFailure);
+
+  void
+  destroyFaceInNfd(const ndn::nfd::ControlParameters& faceDestroyResult,
+                   const CommandSucceedCallback& onSuccess,
+                   const CommandFailCallback& onFailure);
+
   void
   unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri);
 

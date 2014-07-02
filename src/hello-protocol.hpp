@@ -67,6 +67,16 @@ private:
   onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
                             const std::string& msg);
 
+  void
+  onRegistrationFailure(uint32_t code, const std::string& error);
+
+  void
+  onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
+                        const ndn::Name neighbor);
+
+  void
+  registerPrefixes(const ndn::Name adjName, const std::string& faceUri,
+                   double linkCost, uint64_t timeout);
 private:
   Nlsr& m_nlsr;
   static const std::string INFO_COMPONENT;

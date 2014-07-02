@@ -30,6 +30,7 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/certificate-cache-ttl.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/management/nfd-face-event-notification.hpp>
 
 #include "conf-parameter.hpp"
 #include "adjacency-list.hpp"
@@ -41,6 +42,7 @@
 #include "route/fib.hpp"
 #include "communication/sync-logic-handler.hpp"
 #include "hello-protocol.hpp"
+#include "face-monitor.hpp"
 
 #include "validator.hpp"
 
@@ -62,10 +64,6 @@ class Nlsr
   };
 
 public:
-  typedef ndn::function<void(const ndn::nfd::ControlParameters&)> CommandSucceedCallback;
-
-  typedef ndn::function<void(uint32_t/*code*/,const std::string&/*reason*/)> CommandFailCallback;
-
   Nlsr()
     : m_scheduler(m_nlsrFace.getIoService())
     , m_confParam()
@@ -88,9 +86,8 @@ public:
     , m_certificateCache(new ndn::CertificateCacheTtl(m_nlsrFace.getIoService()))
     , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
 
-    , m_controller(m_nlsrFace)
-    , m_nFacesToCreate(0)
-    , m_nFacesCreated(0)
+    , m_faceMonitor(m_nlsrFace.getIoService(),
+                    ndn::bind(&Nlsr::onFaceEventNotification, this, _1))
   {}
 
   void
@@ -272,9 +269,6 @@ public:
   initialize();
 
   void
-  start();
-
-  void
   intializeKey();
 
   void
@@ -333,7 +327,7 @@ public:
 
 private:
   void
-  registerPrefixes();
+  setStrategies();
 
   void
   registerKeyPrefix();
@@ -345,25 +339,13 @@ private:
   onKeyPrefixRegSuccess(const ndn::Name& name);
 
   void
-  onCreateFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult);
-
-  void
-  onCreateFaceFailure(int32_t code, const std::string& error);
-
-  void
-  createFaces();
-
-  void
   onDestroyFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult);
 
   void
   onDestroyFaceFailure(int32_t code, const std::string& error);
 
   void
-  destroyFace(const std::string& faceUri);
-
-  void
-  destroyFaceInNfd(const ndn::nfd::ControlParameters& faceDestroyResult);
+  onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification);
 
 private:
   typedef std::map<ndn::Name, ndn::shared_ptr<ndn::IdentityCertificate> > CertMap;
@@ -395,9 +377,7 @@ private:
   ndn::Name m_defaultIdentity;
   ndn::Name m_defaultCertName;
 
-  ndn::nfd::Controller m_controller;
-  int32_t m_nFacesToCreate;
-  int32_t m_nFacesCreated;
+  FaceMonitor m_faceMonitor;
 };
 
 } //namespace nlsr

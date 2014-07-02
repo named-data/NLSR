@@ -324,7 +324,7 @@ ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
                                                        Adjacent::DEFAULT_LINK_COST);
         ndn::Name neighborName(name);
         if (!neighborName.empty()) {
-          Adjacent adj(name, faceUri, linkCost, ADJACENT_STATUS_INACTIVE, 0);
+          Adjacent adj(name, faceUri, linkCost, ADJACENT_STATUS_INACTIVE, 0, 0);
           m_nlsr.getAdjacencyList().insert(adj);
         }
         else {
