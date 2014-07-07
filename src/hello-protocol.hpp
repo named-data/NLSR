@@ -72,10 +72,10 @@ private:
 
   void
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                        const ndn::Name neighbor);
+                        const ndn::Name& neighbor);
 
   void
-  registerPrefixes(const ndn::Name adjName, const std::string& faceUri,
+  registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                    double linkCost, uint64_t timeout);
 private:
   Nlsr& m_nlsr;

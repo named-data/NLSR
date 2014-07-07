@@ -207,14 +207,14 @@ HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>&
 }
 
 void
-HelloProtocol::registerPrefixes(const ndn::Name adjName, const std::string& faceUri,
+HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                                double linkCost, uint64_t timeout)
 {
   ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
   broadcastKeyPrefix.append("KEYS");
   m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout,
                                  ndn::bind(&HelloProtocol::onRegistrationSuccess,
-                                           this, _1, ndn::cref(adjName)),
+                                           this, _1, adjName),
                                  ndn::bind(&HelloProtocol::onRegistrationFailure,
                                            this, _1, _2));
   m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
@@ -227,7 +227,7 @@ HelloProtocol::registerPrefixes(const ndn::Name adjName, const std::string& face
 
 void
 HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                                     const ndn::Name neighbor)
+                                     const ndn::Name& neighbor)
 {
   Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
   if (adjacent != 0) {
