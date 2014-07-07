@@ -117,6 +117,8 @@ Nlsr::initialize()
   m_syncLogicHandler.createSyncSocket(boost::ref(*this));
   registerKeyPrefix();
   m_helloProtocol.scheduleInterest(10);
+
+  m_faceMonitor.startNotification();
 }
 
 void
