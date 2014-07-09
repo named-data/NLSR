@@ -1,7 +1,7 @@
 NLSR Authors
 ===========
 
-NLSR is an open source project includes contributions from the members of
+NLSR is an open source project includes contributions from the members of the
 [NDN project team](http://named-data.net/project/participants/).
 
 ## Project lead:
@@ -22,7 +22,7 @@ NLSR is an open source project includes contributions from the members of
     * A K M Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
     * Ashlesh Gawande
     * Minsheng Zhang
-    * Syed Obaid Amin      <http://obaidamin.weebly.com/>
+    * Syed Obaid Amin     <http://obaidamin.weebly.com/>
 
 * University of California, Los Angeles
 
@@ -33,5 +33,5 @@ NLSR is an open source project includes contributions from the members of
 ## Queries about NLSR
 
 Any general question related to NLSR should be directed to A K M Mahmudul Hoque
-(ahoque1@memphis.edu) and security related question should be directed to
-Yingdi Yu (yingdi@cs.ucla.edu).
+(ahoque1@memphis.edu) and security related question should be directed to Yingdi
+Yu (yingdi@cs.ucla.edu)
