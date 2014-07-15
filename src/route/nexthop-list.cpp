@@ -66,6 +66,7 @@ NexthopList::addNextHop(NextHop& nh)
                                                  ndn::bind(&nexthopCompare, _1, nh));
   if (it == m_nexthopList.end()) {
     m_nexthopList.push_back(nh);
+    return;
   }
   if ((*it).getRouteCost() > nh.getRouteCost()) {
     (*it).setRouteCost(nh.getRouteCost());
