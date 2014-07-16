@@ -81,15 +81,9 @@ Nlsr::setStrategies()
   std::string strategy("ndn:/localhost/nfd/strategy/broadcast");
   ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
   broadcastKeyPrefix.append("KEYS");
-  std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
-  for (std::list<Adjacent>::iterator it = adjacents.begin();
-       it != adjacents.end(); it++) {
-    m_fib.setStrategy((*it).getName(), strategy);
-  }
-
-  m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy);
-  m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy);
-  m_fib.setStrategy(broadcastKeyPrefix, strategy);
+  m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy, 0);
+  m_fib.setStrategy(broadcastKeyPrefix, strategy, 0);
+  m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy, 0);
 }
 
 void

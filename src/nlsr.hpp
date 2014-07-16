@@ -325,10 +325,10 @@ public:
   void
   destroyFaces();
 
-private:
   void
   setStrategies();
 
+private:
   void
   registerKeyPrefix();
 

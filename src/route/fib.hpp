@@ -70,6 +70,9 @@ public:
   }
 
 private:
+  bool
+  isPrefixUpdatable(const ndn::Name& name);
+
   void
   removeHop(NexthopList& nl, const std::string& doNotRemoveHopFaceUri,
             const ndn::Name& name);
@@ -100,7 +103,7 @@ public:
                  const CommandFailCallback& onFailure);
   
   void
-  setStrategy(const ndn::Name& name, const std::string& strategy);
+  setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t count);
 
   void
   writeLog();
@@ -145,12 +148,24 @@ private:
   void
   onFailure(uint32_t code, const std::string& error, const std::string& message);
 
+  void
+  onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
+                       const std::string& message);
+
+  void
+  onSetStrategyFailure(uint32_t code, const std::string& error,
+                       const ndn::nfd::ControlParameters& parameters,
+                       uint32_t count,
+                       const std::string& message);
+
 private:
   Nlsr& m_nlsr;
   std::list<FibEntry> m_table;
   int32_t m_refreshTime;
   ndn::nfd::Controller m_controller;
   FaceMap m_faceMap;
+
+  static const uint64_t GRACE_PERIOD;
 };
 
 }//namespace nlsr

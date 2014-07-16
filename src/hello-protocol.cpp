@@ -223,6 +223,7 @@ HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& fac
                                  faceUri, linkCost, timeout);
   m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
                                  faceUri, linkCost, timeout);
+  m_nlsr.setStrategies();
 }
 
 void
