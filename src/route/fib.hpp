@@ -93,12 +93,14 @@ private:
 public:
   void
   registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
-                 uint64_t faceCost, uint64_t timeout);
+                 uint64_t faceCost,
+                 const ndn::time::milliseconds& timeout);
 
   void
   registerPrefix(const ndn::Name& namePrefix,
                  const std::string& faceUri,
-                 uint64_t faceCost, uint64_t timeout,
+                 uint64_t faceCost,
+                 const ndn::time::milliseconds& timeout,
                  const CommandSucceedCallback& onSuccess,
                  const CommandFailCallback& onFailure);
   
@@ -121,11 +123,13 @@ private:
 
   void
   registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
-                      const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout);
+                      const ndn::Name& namePrefix, uint64_t faceCost,
+                      const ndn::time::milliseconds& timeout);
 
   void
   registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
-                      const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout,
+                      const ndn::Name& namePrefix, uint64_t faceCost,
+                      const ndn::time::milliseconds& timeout,
                       const CommandSucceedCallback& onSuccess,
                       const CommandFailCallback& onFailure);
 

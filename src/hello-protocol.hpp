@@ -76,7 +76,7 @@ private:
 
   void
   registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
-                   double linkCost, uint64_t timeout);
+                   double linkCost, const ndn::time::milliseconds& timeout);
 private:
   Nlsr& m_nlsr;
   static const std::string INFO_COMPONENT;

@@ -65,7 +65,7 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
     }
     else {
       registerPrefixes((*it).getName(), (*it).getConnectingFaceUri(),
-                       (*it).getLinkCost(), 31536000);
+                       (*it).getLinkCost(), ndn::time::milliseconds::max());
     }
   }
   scheduleInterest(m_nlsr.getConfParameter().getInfoInterestInterval());
@@ -113,7 +113,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
       }
       else {
         registerPrefixes(adjacent->getName(), adjacent->getConnectingFaceUri(),
-                         adjacent->getLinkCost(), 31536000);
+                         adjacent->getLinkCost(), ndn::time::milliseconds::max());
       }
     }
   }
@@ -208,7 +208,7 @@ HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>&
 
 void
 HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
-                               double linkCost, uint64_t timeout)
+                               double linkCost, const ndn::time::milliseconds& timeout)
 {
   ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
   broadcastKeyPrefix.append("KEYS");

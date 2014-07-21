@@ -82,7 +82,8 @@ Fib::refreshEntry(const ndn::Name& name, int32_t feSeqNum)
       // add entry to NDN-FIB
       if (isPrefixUpdatable(it->getName())) {
         registerPrefix(it->getName(), nhit->getConnectingFaceUri(),
-                       std::ceil(nhit->getRouteCost()), (m_refreshTime + GRACE_PERIOD));
+                       std::ceil(nhit->getRouteCost()),
+                       ndn::time::seconds(m_refreshTime + GRACE_PERIOD));
       }
     }
     // increase sequence number and schedule refresh again
@@ -137,7 +138,8 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
         //Add entry to NDN-FIB
         if (isPrefixUpdatable(name)) {
           registerPrefix(name, nhit->getConnectingFaceUri(),
-                         std::ceil(nhit->getRouteCost()), (m_refreshTime + GRACE_PERIOD));
+                         std::ceil(nhit->getRouteCost()),
+                         ndn::time::seconds(m_refreshTime + GRACE_PERIOD));
         }
       }
       newEntry.getNexthopList().sort();
@@ -160,7 +162,8 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
         // Add first Entry to NDN-FIB
         if (isPrefixUpdatable(name)) {
           registerPrefix(name, nhit->getConnectingFaceUri(),
-                         std::ceil(nhit->getRouteCost()), (m_refreshTime + GRACE_PERIOD));
+                         std::ceil(nhit->getRouteCost()),
+                         ndn::time::seconds(m_refreshTime + GRACE_PERIOD));
         }
         removeHop(it->getNexthopList(), nhit->getConnectingFaceUri(), name);
         it->getNexthopList().reset();
@@ -172,7 +175,8 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
           //Add Entry to NDN_FIB
           if (isPrefixUpdatable(name)) {
             registerPrefix(name, nhit->getConnectingFaceUri(),
-                           std::ceil(nhit->getRouteCost()), (m_refreshTime + GRACE_PERIOD));
+                           std::ceil(nhit->getRouteCost()),
+                           ndn::time::seconds(m_refreshTime + GRACE_PERIOD));
           }
         }
       }
@@ -288,7 +292,7 @@ Fib::destroyFaceInNfd(const ndn::nfd::ControlParameters& faceDestroyResult,
 
 void
 Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
-                    uint64_t faceCost, uint64_t timeout)
+                    uint64_t faceCost, const ndn::time::milliseconds& timeout)
 {
   createFace(faceUri,
              ndn::bind(&Fib::registerPrefixInNfd, this,_1, namePrefix, faceCost, timeout),
@@ -298,7 +302,8 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
 void
 Fib::registerPrefix(const ndn::Name& namePrefix,
                     const std::string& faceUri,
-                    uint64_t faceCost, uint64_t timeout,
+                    uint64_t faceCost,
+                    const ndn::time::milliseconds& timeout,
                     const CommandSucceedCallback& onSuccess,
                     const CommandFailCallback& onFailure)
 
@@ -311,14 +316,15 @@ Fib::registerPrefix(const ndn::Name& namePrefix,
 
 void
 Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult, 
-                         const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout)
+                         const ndn::Name& namePrefix, uint64_t faceCost,
+                         const ndn::time::milliseconds& timeout)
 {
   ndn::nfd::ControlParameters controlParameters;
   controlParameters
     .setName(namePrefix)
     .setFaceId(faceCreateResult.getFaceId())
     .setCost(faceCost)
-    .setExpirationPeriod(ndn::time::milliseconds(timeout * 1000))
+    .setExpirationPeriod(timeout)
     .setOrigin(128);
   m_controller.start<ndn::nfd::RibRegisterCommand>(controlParameters,
                                                    ndn::bind(&Fib::onRegistration, this, _1,
@@ -330,7 +336,8 @@ Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
 
 void
 Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
-                         const ndn::Name& namePrefix, uint64_t faceCost, uint64_t timeout,
+                         const ndn::Name& namePrefix, uint64_t faceCost,
+                         const ndn::time::milliseconds& timeout,
                          const CommandSucceedCallback& onSuccess,
                          const CommandFailCallback& onFailure)
 {
@@ -339,7 +346,7 @@ Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
     .setName(namePrefix)
     .setFaceId(faceCreateResult.getFaceId())
     .setCost(faceCost)
-    .setExpirationPeriod(ndn::time::milliseconds(timeout * 1000))
+    .setExpirationPeriod(timeout)
     .setOrigin(128);
   m_controller.start<ndn::nfd::RibRegisterCommand>(controlParameters,
                                                    onSuccess,
