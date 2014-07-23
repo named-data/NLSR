@@ -93,13 +93,14 @@ HelloProtocol::processInterest(const ndn::Name& name,
   neighbor.wireDecode(interestName.get(-1).blockFromValue());
   _LOG_DEBUG("Neighbor: " << neighbor);
   if (m_nlsr.getAdjacencyList().isNeighbor(neighbor)) {
-    ndn::Data data(ndn::Name(interest.getName()).appendVersion());
-    data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
-    data.setContent(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.c_str()),
+    ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
+    data->setName(ndn::Name(interest.getName()).appendVersion());
+    data->setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
+    data->setContent(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.c_str()),
                     INFO_COMPONENT.size());
-    m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
-    _LOG_DEBUG("Sending out data for name: " << data.getName());
-    m_nlsr.getNlsrFace().put(data);
+    m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
+    _LOG_DEBUG("Sending out data for name: " << interest.getName());
+    m_nlsr.getNlsrFace().put(*data);
     Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
     if (adjacent->getStatus() == 0) {
       if(adjacent->getFaceId() != 0){

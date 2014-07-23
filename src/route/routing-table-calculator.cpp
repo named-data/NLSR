@@ -242,7 +242,6 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr,
                                                                 RoutingTable& rt, Map& pMap, int sourceRouter)
 {
   _LOG_DEBUG("LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called");
-  std::cout << std::endl;
   int nextHopRouter = 0;
   for (int i = 0; i < numOfRouter ; i++) {
     if (i != sourceRouter) {

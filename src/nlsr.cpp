@@ -164,11 +164,12 @@ Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
   if (!static_cast<bool>(cert))
     return; // cert is not found
 
-  Data data(interestName);
-  data.setContent(cert->wireEncode());
-  m_keyChain.signWithSha256(data);
+  ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
+  data->setName(interestName);
+  data->setContent(cert->wireEncode());
+  m_keyChain.signWithSha256(*data);
 
-  m_nlsrFace.put(data);
+  m_nlsrFace.put(*data);
 }
 
 void
