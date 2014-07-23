@@ -181,7 +181,7 @@ Expected Output:
 Assuming that all three routers are configured correctly and converged, nfd-status
 in `/ndn/edu/colostate/%C1.Router/router2` will have the following entries for the
 name advertised by `/ndn/edu/memphis/%C1.Router/router1`. This output can be 
-seen by typing `nfd-status -f` in terminal
+seen by typing `nfd-status -b` in terminal
 
 FIB:
 
