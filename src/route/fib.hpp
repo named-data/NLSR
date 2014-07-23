@@ -124,7 +124,8 @@ private:
   void
   registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
                       const ndn::Name& namePrefix, uint64_t faceCost,
-                      const ndn::time::milliseconds& timeout);
+                      const ndn::time::milliseconds& timeout,
+                      const std::string& faceUri);
 
   void
   registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
@@ -146,8 +147,8 @@ private:
                  const std::string& message, const std::string& faceUri);
 
   void
-  onSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-            const std::string& message);
+  onUnregistration(const ndn::nfd::ControlParameters& commandSuccessResult,
+                   const std::string& message);
 
   void
   onFailure(uint32_t code, const std::string& error, const std::string& message);

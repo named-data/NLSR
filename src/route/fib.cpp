@@ -295,7 +295,8 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
                     uint64_t faceCost, const ndn::time::milliseconds& timeout)
 {
   createFace(faceUri,
-             ndn::bind(&Fib::registerPrefixInNfd, this,_1, namePrefix, faceCost, timeout),
+             ndn::bind(&Fib::registerPrefixInNfd, this,_1, namePrefix, faceCost, timeout,
+                       faceUri),
              ndn::bind(&Fib::onFailure, this, _1, _2,"Failed in name registration"));
 }
 
@@ -317,7 +318,8 @@ Fib::registerPrefix(const ndn::Name& namePrefix,
 void
 Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult, 
                          const ndn::Name& namePrefix, uint64_t faceCost,
-                         const ndn::time::milliseconds& timeout)
+                         const ndn::time::milliseconds& timeout,
+                         const std::string& faceUri)
 {
   ndn::nfd::ControlParameters controlParameters;
   controlParameters
@@ -329,7 +331,7 @@ Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
   m_controller.start<ndn::nfd::RibRegisterCommand>(controlParameters,
                                                    ndn::bind(&Fib::onRegistration, this, _1,
                                                              "Successful in name registration",
-                                                             faceCreateResult.getUri()),
+                                                             faceUri),
                                                    ndn::bind(&Fib::onFailure, this, _1, _2,
                                                              "Failed in name registration"));
 }
@@ -357,6 +359,7 @@ void
 Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
 {
   uint32_t faceId = m_faceMap.getFaceId(faceUri);
+  _LOG_DEBUG("Unregister prefix: " << namePrefix << " Face Uri: " << faceUri);
   if (faceId > 0) {
     ndn::nfd::ControlParameters controlParameters;
     controlParameters
@@ -364,7 +367,7 @@ Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
       .setFaceId(faceId)
       .setOrigin(128);
     m_controller.start<ndn::nfd::RibUnregisterCommand>(controlParameters,
-                                                     ndn::bind(&Fib::onSuccess, this, _1,
+                                                     ndn::bind(&Fib::onUnregistration, this, _1,
                                                                "Successful in unregistering name"),
                                                      ndn::bind(&Fib::onFailure, this, _1, _2,
                                                                "Failed in unregistering name"));
@@ -392,15 +395,19 @@ void
 Fib::onRegistration(const ndn::nfd::ControlParameters& commandSuccessResult,
                     const std::string& message, const std::string& faceUri)
 {
+  _LOG_DEBUG("Register successful Prefix: " << commandSuccessResult.getName() <<
+             " Face Uri: " << faceUri);
   m_faceMap.update(faceUri, commandSuccessResult.getFaceId());
   m_faceMap.writeLog();
 }
 
 
 void
-Fib::onSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-               const std::string& message)
+Fib::onUnregistration(const ndn::nfd::ControlParameters& commandSuccessResult,
+                      const std::string& message)
 {
+  _LOG_DEBUG("Unregister successful Prefix: " << commandSuccessResult.getName() <<
+             " Face Id: " << commandSuccessResult.getFaceId());
 }
 
 void
