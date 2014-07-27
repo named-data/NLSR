@@ -752,8 +752,10 @@ void
 Lsdb::expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime,
                       uint32_t timeoutCount)
 {
-  _LOG_DEBUG("Expressing Interest for LSA(name): " << interestName);
   ndn::Interest interest(interestName);
+  uint64_t interestedLsSeqNo = interestName[-1].toNumber();
+  _LOG_DEBUG("Expressing Interest for LSA(name): " << interestName <<
+              " Seq number: " << interestedLsSeqNo );
   interest.setInterestLifetime(ndn::time::seconds(interestLifeTime));
   interest.setMustBeFresh(true);
   m_nlsr.getNlsrFace().expressInterest(interest,
@@ -779,6 +781,7 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
                                          interest.getName().size() - lsaPosition - 3));
     interestedLsType  = intName[-2].toUri();
     interestedLsSeqNo = intName[-1].toNumber();
+    _LOG_DEBUG("LSA sequence number from interest: " << interestedLsSeqNo);
     if (interestedLsType == "name") {
       processInterestForNameLsa(interest,
                                 origRouter.append(interestedLsType),
@@ -811,7 +814,10 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
   data->setFreshnessPeriod(ndn::time::seconds(10));
   data->setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.size());
   m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
+  ndn::SignatureSha256WithRsa signature(data->getSignature());
+  ndn::Name signingCertName = signature.getKeyLocator().getName();
   _LOG_DEBUG("Sending data for LSA(name): " << interest.getName());
+  _LOG_DEBUG("Data signed with: " << signingCertName);
   m_nlsr.getNlsrFace().put(*data);
 }
 
@@ -860,6 +866,12 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
 void
 Lsdb::onContent(const ndn::Interest& interest, const ndn::Data& data)
 {
+  _LOG_DEBUG("Received data for LSA(name): " << data.getName());
+  if (data.getSignature().hasKeyLocator()) {
+    if (data.getSignature().getKeyLocator().getType() == ndn::KeyLocator::KeyLocator_Name) {
+      _LOG_DEBUG("Data signed with: " << data.getSignature().getKeyLocator().getName());
+    }
+  }
   m_nlsr.getValidator().validate(data,
                                  ndn::bind(&Lsdb::onContentValidated, this, _1),
                                  ndn::bind(&Lsdb::onContentValidationFailed, this, _1, _2));
@@ -870,7 +882,7 @@ void
 Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 {
   const ndn::Name& dataName = data->getName();
-  _LOG_DEBUG("Data received for LSA(name): " << dataName);
+  _LOG_DEBUG("Data validation successful for LSA(name): " << dataName);
   string dataContent(reinterpret_cast<const char*>(data->getContent().value()));
   string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(dataName, chkString);

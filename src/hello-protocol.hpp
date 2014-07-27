@@ -68,7 +68,8 @@ private:
                             const std::string& msg);
 
   void
-  onRegistrationFailure(uint32_t code, const std::string& error);
+  onRegistrationFailure(uint32_t code, const std::string& error,
+                        const ndn::Name& name);
 
   void
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,

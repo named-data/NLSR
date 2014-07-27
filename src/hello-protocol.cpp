@@ -164,6 +164,12 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
 void
 HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
 {
+  _LOG_DEBUG("Received data for INFO(name): " << data.getName());
+  if (data.getSignature().hasKeyLocator()) {
+    if (data.getSignature().getKeyLocator().getType() == ndn::KeyLocator::KeyLocator_Name) {
+      _LOG_DEBUG("Data signed with: " << data.getSignature().getKeyLocator().getName());
+    }
+  }
   m_nlsr.getValidator().validate(data,
                                  ndn::bind(&HelloProtocol::onContentValidated, this, _1),
                                  ndn::bind(&HelloProtocol::onContentValidationFailed,
@@ -175,7 +181,7 @@ HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 {
   /* data name: /<neighbor>/NLSR/INFO/<router>/<version> */
   ndn::Name dataName = data->getName();
-  _LOG_DEBUG("Data received for name: " << dataName);
+  _LOG_DEBUG("Data validation successful for INFO(name): " << dataName);
   if (dataName.get(-3).toUri() == INFO_COMPONENT) {
     ndn::Name neighbor = dataName.getPrefix(-4);
     int oldStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
@@ -217,7 +223,7 @@ HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& fac
                                  ndn::bind(&HelloProtocol::onRegistrationSuccess,
                                            this, _1, adjName),
                                  ndn::bind(&HelloProtocol::onRegistrationFailure,
-                                           this, _1, _2));
+                                           this, _1, _2, adjName));
   m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
                                  faceUri, linkCost, timeout);
   m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getLsaPrefix(),
@@ -245,9 +251,38 @@ HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandS
 }
 
 void
-HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error)
+HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
+                                     const ndn::Name& name)
 {
   _LOG_DEBUG(error << " (code: " << code << ")");
+  /*
+  * If NLSR can not create face for given faceUri then it will treat this
+  * failure as one INFO interest timed out. So that NLSR can move on with
+  * building Adj Lsa and calculate routing table. NLSR does not build Adj
+  * Lsa unless all the neighbors are ACTIVE or DEAD. For considering the
+  * missconfigured(link) neighbour dead this is required.
+  */
+  Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(name);
+  if (adjacent != 0) {
+    adjacent->setInterestTimedOutNo(adjacent->getInterestTimedOutNo() + 1);
+    int status = adjacent->getStatus();
+    uint32_t infoIntTimedOutCount = adjacent->getInterestTimedOutNo();
+
+    if (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber()) {
+      if ( status == 1) {
+        adjacent->setStatus(0);
+      }
+      m_nlsr.incrementAdjBuildCount();
+      if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
+        _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
+        m_nlsr.setIsBuildAdjLsaSheduled(true);
+        // event here
+        m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
+                                            ndn::bind(&Lsdb::scheduledAdjLsaBuild,
+                                                      &m_nlsr.getLsdb()));
+      }
+    }
+  }
 }
 
 } //namespace nlsr
