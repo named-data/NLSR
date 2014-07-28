@@ -665,13 +665,15 @@ SyncLogic::sendSyncData (const Name &name, DigestConstPtr digest, SyncStateMsg &
   char *wireData = new char[size];
   ssm.SerializeToArray(wireData, size);
 
-  Data syncData(name);
-  syncData.setContent(reinterpret_cast<const uint8_t*>(wireData), size);
-  syncData.setFreshnessPeriod(ndn::time::seconds(m_syncResponseFreshness));
+  //Data syncData(name);
+  ndn::shared_ptr<ndn::Data> syncData = ndn::make_shared<ndn::Data>();
+  syncData->setName(name);
+  syncData->setContent(reinterpret_cast<const uint8_t*>(wireData), size);
+  syncData->setFreshnessPeriod(ndn::time::seconds(m_syncResponseFreshness));
 
-  m_keyChain->sign(syncData);
+  m_keyChain->sign(*syncData);
 
-  m_face->put(syncData);
+  m_face->put(*syncData);
 
   delete []wireData;
 

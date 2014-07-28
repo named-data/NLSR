@@ -328,6 +328,9 @@ public:
   void
   setStrategies();
 
+  void
+  daemonize();
+
 private:
   void
   registerKeyPrefix();

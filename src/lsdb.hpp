@@ -165,6 +165,9 @@ public:
 
 private:
   void
+  putLsaData(const ndn::Interest& interest, const std::string& content);
+
+  void
   processInterestForNameLsa(const ndn::Interest& interest,
                             const ndn::Name& lsaKey,
                             uint32_t interestedlsSeqNo);

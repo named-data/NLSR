@@ -804,6 +804,18 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 }
 
 void
+Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
+{
+  ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
+  data->setName(ndn::Name(interest.getName()).appendVersion());
+  data->setFreshnessPeriod(ndn::time::seconds(10));
+  data->setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.size());
+  m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
+  _LOG_DEBUG("Sending data for LSA(name): " << interest.getName());
+  m_nlsr.getNlsrFace().put(*data);
+}
+
+void
 Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
                                 const ndn::Name& lsaKey,
                                 uint32_t interestedlsSeqNo)
@@ -811,14 +823,8 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
   NameLsa*  nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
   if (nameLsa != 0) {
     if (nameLsa->getLsSeqNo() >= interestedlsSeqNo) {
-      ndn::Data data(ndn::Name(interest.getName()).appendVersion());
-      _LOG_DEBUG("Sending data for LSA(name): " << interest.getName());
-      data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
       std::string content = nameLsa->getData();
-      data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()),
-                      content.size());
-      m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
-      m_nlsr.getNlsrFace().put(data);
+      putLsaData(interest,content);
     }
   }
 }
@@ -831,14 +837,8 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
   AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
   if (adjLsa != 0) {
     if (adjLsa->getLsSeqNo() >= interestedlsSeqNo) {
-      ndn::Data data(ndn::Name(interest.getName()).appendVersion());
-      _LOG_DEBUG("Sending data for LSA(name): " << interest.getName());
-      data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
       std::string content = adjLsa->getData();
-      data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()),
-                      content.size());
-      m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
-      m_nlsr.getNlsrFace().put(data);
+      putLsaData(interest,content);
     }
   }
 }
@@ -851,14 +851,8 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
   CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
   if (corLsa != 0) {
     if (corLsa->getLsSeqNo() >= interestedlsSeqNo) {
-      ndn::Data data(ndn::Name(interest.getName()).appendVersion());
-      _LOG_DEBUG("Sending data for LSA(name): " << interest.getName());
-      data.setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
       std::string content = corLsa->getData();
-      data.setContent(reinterpret_cast<const uint8_t*>(content.c_str()),
-                      content.size());
-      m_nlsr.getKeyChain().sign(data, m_nlsr.getDefaultCertName());
-      m_nlsr.getNlsrFace().put(data);
+      putLsaData(interest,content);
     }
   }
 }

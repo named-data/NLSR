@@ -42,7 +42,7 @@ main(int32_t argc, char** argv)
         nlsr.setConfFileName(optarg);
         break;
       case 'd':
-        nlsr.setIsDaemonProcess(optarg);
+        nlsr.setIsDaemonProcess(true);
         break;
       case 'p':
       {
@@ -66,6 +66,9 @@ main(int32_t argc, char** argv)
   INIT_LOGGERS(nlsr.getConfParameter().getLogDir());
   INIT_LOGGER("Main");
   nlsr.initialize();
+  if (nlsr.getIsSetDaemonProcess()) {
+    nlsr.daemonize();
+  }
   try {
     nlsr.startEventLoop();
   }

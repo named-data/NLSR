@@ -24,6 +24,7 @@
 #include <string>
 #include <sstream>
 #include <cstdio>
+#include <unistd.h>
 
 #include "nlsr.hpp"
 #include "adjacent.hpp"
@@ -84,6 +85,32 @@ Nlsr::setStrategies()
   m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy, 0);
   m_fib.setStrategy(broadcastKeyPrefix, strategy, 0);
   m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy, 0);
+}
+
+void
+Nlsr::daemonize()
+{
+  pid_t process_id = 0;
+  pid_t sid = 0;
+  process_id = fork();
+  if (process_id < 0){
+    std::cerr << "Daemonization failed!" << std::endl;
+    throw Error("Error: Daemonization process- fork failed!");
+  }
+  if (process_id > 0) {
+    _LOG_DEBUG("Process daemonized. Process id: " << process_id);
+    exit(0);
+  }
+
+  umask(0);
+  sid = setsid();
+  if(sid < 0) {
+    throw Error("Error: Daemonization process- setting id failed!");
+  }
+
+  if (chdir("/") < 0) {
+    throw Error("Error: Daemonization process-chdir failed!");
+  }
 }
 
 void
@@ -164,11 +191,12 @@ Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
   if (!static_cast<bool>(cert))
     return; // cert is not found
 
-  Data data(interestName);
-  data.setContent(cert->wireEncode());
-  m_keyChain.signWithSha256(data);
+  ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
+  data->setName(interestName);
+  data->setContent(cert->wireEncode());
+  m_keyChain.signWithSha256(*data);
 
-  m_nlsrFace.put(data);
+  m_nlsrFace.put(*data);
 }
 
 void
