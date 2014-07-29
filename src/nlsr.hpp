@@ -269,7 +269,7 @@ public:
   initialize();
 
   void
-  intializeKey();
+  initializeKey();
 
   void
   loadValidator(boost::property_tree::ptree section,

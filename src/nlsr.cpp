@@ -129,7 +129,7 @@ Nlsr::initialize()
   m_adjacencyList.writeLog();
   m_namePrefixList.writeLog();
   /* Logging end */
-  intializeKey();
+  initializeKey();
   setStrategies();
   setInfoInterestFilter();
   setLsaInterestFilter();
@@ -143,10 +143,12 @@ Nlsr::initialize()
 }
 
 void
-Nlsr::intializeKey()
+Nlsr::initializeKey()
 {
   m_defaultIdentity = m_confParam.getRouterPrefix();
   m_defaultIdentity.append("NLSR");
+
+  m_keyChain.deleteIdentity(m_defaultIdentity);
 
   ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(m_defaultIdentity, true);
 
