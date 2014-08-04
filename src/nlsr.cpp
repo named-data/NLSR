@@ -148,7 +148,13 @@ Nlsr::initializeKey()
   m_defaultIdentity = m_confParam.getRouterPrefix();
   m_defaultIdentity.append("NLSR");
 
-  m_keyChain.deleteIdentity(m_defaultIdentity);
+  try
+  {
+    m_keyChain.deleteIdentity(m_defaultIdentity);
+  }
+  catch (std::exception& e)
+  {
+  }
 
   ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(m_defaultIdentity, true);
 

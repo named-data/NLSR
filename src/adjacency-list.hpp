@@ -104,6 +104,9 @@ public:
   Adjacent*
   findAdjacent(uint64_t faceId);
 
+  uint64_t
+  getFaceId(const std::string& faceUri);
+
   void
   writeLog();
 

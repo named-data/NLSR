@@ -21,6 +21,7 @@
  *
  **/
 #include <string>
+#include <cmath>
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/face.hpp>
 
@@ -69,10 +70,11 @@ public:
     m_connectingFaceUri = cfu;
   }
 
-  double
+  uint64_t
   getLinkCost() const
   {
-    return m_linkCost;
+    uint64_t linkCost = static_cast<uint64_t>(ceil(m_linkCost));
+    return linkCost;
   }
 
   void
@@ -130,6 +132,12 @@ public:
   compareFaceId(uint64_t faceId)
   {
     return m_faceId == faceId;
+  }
+
+  inline bool
+  compareFaceUri(std::string& faceUri)
+  {
+    return m_connectingFaceUri == faceUri;
   }
 
   void

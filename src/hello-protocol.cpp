@@ -217,29 +217,32 @@ void
 HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                                double linkCost, const ndn::time::milliseconds& timeout)
 {
-  ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
-  broadcastKeyPrefix.append("KEYS");
-  m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout,
+  m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout, 0,
                                  ndn::bind(&HelloProtocol::onRegistrationSuccess,
-                                           this, _1, adjName),
+                                           this, _1, adjName,timeout),
                                  ndn::bind(&HelloProtocol::onRegistrationFailure,
                                            this, _1, _2, adjName));
-  m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
-                                 faceUri, linkCost, timeout);
-  m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getLsaPrefix(),
-                                 faceUri, linkCost, timeout);
-  m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
-                                 faceUri, linkCost, timeout);
-  m_nlsr.setStrategies();
 }
 
 void
 HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                                     const ndn::Name& neighbor)
+                                     const ndn::Name& neighbor,const ndn::time::milliseconds& timeout)
 {
   Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
   if (adjacent != 0) {
     adjacent->setFaceId(commandSuccessResult.getFaceId());
+    ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
+    broadcastKeyPrefix.append("KEYS");
+    std::string faceUri = adjacent->getConnectingFaceUri();
+    double linkCost = adjacent->getLinkCost();
+    m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
+                                 faceUri, linkCost, timeout, 0);
+    m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getLsaPrefix(),
+                                 faceUri, linkCost, timeout, 0);
+    m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
+                                 faceUri, linkCost, timeout, 0);
+    m_nlsr.setStrategies();
+
     /* interest name: /<neighbor>/NLSR/INFO/<router> */
     ndn::Name interestName(neighbor);
     interestName.append(NLSR_COMPONENT);

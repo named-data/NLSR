@@ -94,13 +94,14 @@ public:
   void
   registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
                  uint64_t faceCost,
-                 const ndn::time::milliseconds& timeout);
+                 const ndn::time::milliseconds& timeout, uint8_t times);
 
   void
   registerPrefix(const ndn::Name& namePrefix,
                  const std::string& faceUri,
                  uint64_t faceCost,
                  const ndn::time::milliseconds& timeout,
+                 uint8_t times,
                  const CommandSucceedCallback& onSuccess,
                  const CommandFailCallback& onFailure);
   
@@ -122,15 +123,18 @@ private:
              const CommandFailCallback& onFailure);
 
   void
-  registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
-                      const ndn::Name& namePrefix, uint64_t faceCost,
+  registerPrefixInNfd(const ndn::Name& namePrefix,
+                      uint64_t faceId,
+                      uint64_t faceCost,
                       const ndn::time::milliseconds& timeout,
-                      const std::string& faceUri);
+                      const std::string& faceUri,
+                      uint8_t times);
 
   void
   registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
                       const ndn::Name& namePrefix, uint64_t faceCost,
                       const ndn::time::milliseconds& timeout,
+                      uint8_t times,
                       const CommandSucceedCallback& onSuccess,
                       const CommandFailCallback& onFailure);
 
@@ -151,7 +155,15 @@ private:
                    const std::string& message);
 
   void
-  onFailure(uint32_t code, const std::string& error, const std::string& message);
+  onRegistrationFailure(uint32_t code, const std::string& error,
+                        const std::string& message,
+                        const ndn::Name& namePrefix, const std::string& faceUri,
+                        uint64_t faceCost, const ndn::time::milliseconds& timeout,
+                        uint8_t times);
+
+  void
+  onUnregistrationFailure(uint32_t code, const std::string& error,
+                        const std::string& message);
 
   void
   onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResult,

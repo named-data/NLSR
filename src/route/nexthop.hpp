@@ -24,6 +24,7 @@
 #define NLSR_NEXTHOP_HPP
 
 #include <iostream>
+#include <cmath>
 #include <boost/cstdint.hpp>
 
 namespace nlsr {
@@ -54,10 +55,11 @@ public:
     m_connectingFaceUri = cfu;
   }
 
-  double
+  uint64_t
   getRouteCost() const
   {
-    return m_routeCost;
+    uint64_t routeCost = static_cast<uint64_t>(ceil(m_routeCost));
+    return routeCost;
   }
 
   void
