@@ -80,7 +80,7 @@ private:
   clearDryRoutingTable();
 
   void
-  writeLog();
+  writeLog(int hyperbolicState);
 
   const int m_NO_NEXT_HOP;
 

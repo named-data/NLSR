@@ -99,6 +99,7 @@ void
 NexthopList::writeLog()
 {
   int i = 1;
+  sort();
   for (std::list<NextHop>::iterator it = m_nexthopList.begin();
        it != m_nexthopList.end() ; it++, i++) {
     _LOG_DEBUG("Nexthop " << i << ": " << (*it).getConnectingFaceUri()

@@ -181,7 +181,7 @@ public:
 
 private:
   void
-  allocateLinkFaces();
+  allocateNexthopRouters();
 
   void
   allocateDistanceToNeighbor();
@@ -190,7 +190,7 @@ private:
   allocateDistFromNbrToDest();
 
   void
-  freeLinkFaces();
+  freeNexthopRouters();
 
   void
   freeDistanceToNeighbor();
@@ -208,7 +208,7 @@ private:
 private:
   bool m_isDryRun;
 
-  std::vector<std::string> m_linkFaceUris;
+  uint32_t* m_nexthopRouters;
   double* m_distanceToNeighbor;
   double* m_distFromNbrToDest;
 

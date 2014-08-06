@@ -167,7 +167,6 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
   allocateAdjMatrix();
   initMatrix();
   makeAdjMatrix(pnlsr, pMap);
-  //printAdjMatrix();
   writeAdjMatrixLog();
   int sourceRouter = pMap.getMappingNoByRouterName(pnlsr.getConfParameter().getRouterPrefix());
   allocateParent();
@@ -332,8 +331,9 @@ void
 HypRoutingTableCalculator::calculatePath(Map& pMap,
                                          RoutingTable& rt, Nlsr& pnlsr)
 {
+  allocateAdjMatrix();
+  initMatrix();
   makeAdjMatrix(pnlsr, pMap);
-  //std::cout << pMap;
   ndn::Name routerName = pnlsr.getConfParameter().getRouterPrefix();
   int sourceRouter = pMap.getMappingNoByRouterName(routerName);
   int noLink = getNumOfLinkfromAdjMatrix(sourceRouter);
@@ -344,26 +344,23 @@ HypRoutingTableCalculator::calculatePath(Map& pMap,
   for (int i = 0 ; i < numOfRouter ; ++i) {
     int k = 0;
     if (i != sourceRouter) {
-      allocateLinkFaces();
+      allocateNexthopRouters();
       allocateDistanceToNeighbor();
       allocateDistFromNbrToDest();
       for (int j = 0; j < vNoLink; j++) {
-        ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(links[j]);
-        std::string nextHopFaceUri =
-          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFaceUri();
         double distToNbr = getHyperbolicDistance(pnlsr, pMap,
                                                  sourceRouter, links[j]);
         double distToDestFromNbr = getHyperbolicDistance(pnlsr,
                                                          pMap, links[j], i);
         if (distToDestFromNbr >= 0) {
-          m_linkFaceUris[k] = nextHopFaceUri;
+          m_nexthopRouters[k] = links[j];
           m_distanceToNeighbor[k] = distToNbr;
           m_distFromNbrToDest[k] = distToDestFromNbr;
           k++;
         }
       }
       addHypNextHopsToRoutingTable(pnlsr, pMap, rt, k, i);
-      freeLinkFaces();
+      freeNexthopRouters();
       freeDistanceToNeighbor();
       freeDistFromNbrToDest();
     }
@@ -377,12 +374,17 @@ void
 HypRoutingTableCalculator::addHypNextHopsToRoutingTable(Nlsr& pnlsr, Map& pMap,
                                                         RoutingTable& rt, int noFaces, int dest)
 {
+  ndn::Name destRouter = pMap.getRouterNameByMappingNo(dest);
   for (int i = 0 ; i < noFaces ; ++i) {
-    ndn::Name destRouter = pMap.getRouterNameByMappingNo(dest);
-    NextHop nh(m_linkFaceUris[i], m_distFromNbrToDest[i]);
-    rt.addNextHop(destRouter, nh);
+    ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(m_nexthopRouters[i]);
+    std::string nextHopFaceUri =
+         pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFaceUri();
+    NextHop nh(nextHopFaceUri, m_distFromNbrToDest[i]);
     if (m_isDryRun) {
       rt.addNextHopToDryTable(destRouter, nh);
+    }
+    else {
+      rt.addNextHop(destRouter, nh);
     }
   }
 }
@@ -396,14 +398,18 @@ HypRoutingTableCalculator::getHyperbolicDistance(Nlsr& pnlsr,
   srcRouterKey.append("coordinate");
   ndn::Name destRouterKey = pMap.getRouterNameByMappingNo(dest);
   destRouterKey.append("coordinate");
-  double srcRadius = (pnlsr.getLsdb().findCoordinateLsa(
-                        srcRouterKey))->getCorRadius();
-  double srcTheta = (pnlsr.getLsdb().findCoordinateLsa(
-                       srcRouterKey))->getCorTheta();
-  double destRadius = (pnlsr.getLsdb().findCoordinateLsa(
-                         destRouterKey))->getCorRadius();
-  double destTheta = (pnlsr.getLsdb().findCoordinateLsa(
-                        destRouterKey))->getCorTheta();
+  CoordinateLsa* srcLsa = pnlsr.getLsdb().findCoordinateLsa(srcRouterKey);
+  CoordinateLsa* destLsa = pnlsr.getLsdb().findCoordinateLsa(destRouterKey);
+
+  if ((srcLsa == 0) || (destLsa == 0)) {
+    return -1;
+  }
+
+  double srcRadius = srcLsa->getCorRadius();
+  double srcTheta = srcLsa->getCorTheta();
+  double destRadius = destLsa->getCorRadius();
+  double destTheta = destLsa->getCorTheta();
+
   double diffTheta = fabs(srcTheta - destTheta);
   if (diffTheta > MATH_PI) {
     diffTheta = 2 * MATH_PI - diffTheta;
@@ -424,9 +430,9 @@ HypRoutingTableCalculator::getHyperbolicDistance(Nlsr& pnlsr,
 }
 
 void
-HypRoutingTableCalculator::allocateLinkFaces()
+HypRoutingTableCalculator::allocateNexthopRouters()
 {
-  m_linkFaceUris.reserve(vNoLink);
+  m_nexthopRouters = new uint32_t[vNoLink];
 }
 
 void
@@ -442,9 +448,9 @@ HypRoutingTableCalculator::allocateDistFromNbrToDest()
 }
 
 void
-HypRoutingTableCalculator::freeLinkFaces()
+HypRoutingTableCalculator::freeNexthopRouters()
 {
-  m_linkFaceUris.clear();
+  delete [] m_nexthopRouters;
 }
 
 void

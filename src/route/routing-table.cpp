@@ -73,7 +73,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
         //need to update NPT here
         _LOG_DEBUG("Calling Update NPT With new Route");
         pnlsr.getNamePrefixTable().updateWithNewRoute();
-        writeLog();
+        writeLog(pnlsr.getConfParameter().getHyperbolicState());
         pnlsr.getNamePrefixTable().writeLog();
         pnlsr.getFib().writeLog();
       }
@@ -90,7 +90,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
       // need to update NPT here
       _LOG_DEBUG("Calling Update NPT With new Route");
       pnlsr.getNamePrefixTable().updateWithNewRoute();
-      writeLog();
+      writeLog(pnlsr.getConfParameter().getHyperbolicState());
       pnlsr.getNamePrefixTable().writeLog();
       pnlsr.getFib().writeLog();
       //debugging purpose end
@@ -184,7 +184,7 @@ RoutingTable::findRoutingTableEntry(const ndn::Name& destRouter)
 }
 
 void
-RoutingTable::writeLog()
+RoutingTable::writeLog(int hyperbolicState)
 {
   _LOG_DEBUG("---------------Routing Table------------------");
   for (std::list<RoutingTableEntry>::iterator it = m_rTable.begin() ;
@@ -192,6 +192,16 @@ RoutingTable::writeLog()
     _LOG_DEBUG("Destination: " << (*it).getDestination());
     _LOG_DEBUG("Nexthops: ");
     (*it).getNexthopList().writeLog();
+  }
+
+  if (hyperbolicState == HYPERBOLIC_STATE_DRY_RUN) {
+    _LOG_DEBUG("--------Hyperbolic Routing Table(Dry)---------");
+    for (std::list<RoutingTableEntry>::iterator it = m_dryTable.begin() ;
+        it != m_dryTable.end(); ++it) {
+      _LOG_DEBUG("Destination: " << (*it).getDestination());
+      _LOG_DEBUG("Nexthops: ");
+      (*it).getNexthopList().writeLog();
+    }
   }
 }
 
