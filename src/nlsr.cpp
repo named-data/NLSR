@@ -158,7 +158,18 @@ Nlsr::initializeKey()
 
   ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(m_defaultIdentity, true);
 
-  ndn::shared_ptr<ndn::IdentityCertificate> certificate = m_keyChain.selfSign(keyName);
+  ndn::shared_ptr<ndn::IdentityCertificate> certificate =
+    ndn::make_shared<ndn::IdentityCertificate>();
+  ndn::shared_ptr<ndn::PublicKey> pubKey = m_keyChain.getPublicKey(keyName);
+  Name certificateName = keyName.getPrefix(-1);
+  certificateName.append("KEY").append(keyName.get(-1)).append("ID-CERT").appendVersion();
+  certificate->setName(certificateName);
+  certificate->setNotBefore(time::system_clock::now() - time::days(1));
+  certificate->setNotAfter(time::system_clock::now() + time::days(7300)); // ~20 years
+  certificate->setPublicKeyInfo(*pubKey);
+  certificate->addSubjectDescription(CertificateSubjectDescription(ndn::oid::ATTRIBUTE_NAME,
+                                                                   keyName.toUri()));
+  certificate->encode();
   m_keyChain.signByIdentity(*certificate, m_confParam.getRouterPrefix());
 
   m_keyChain.addCertificateAsIdentityDefault(*certificate);
