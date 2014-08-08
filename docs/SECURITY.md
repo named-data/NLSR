@@ -67,7 +67,7 @@ router in memphis will do the following key creation and signing.
 
 NOTE: The first two steps may not apply to everyone as the root certificate and the site certificate are usually present at a testbed outside the scope of NLSR. These steps will help if you are testing an isolated testbed.
 
-   1. Create root key and self signed certificate with prefis `/ndn`
+   1. Create root key and self signed certificate with prefix `/ndn`
       $ndnsec-key-gen -n /ndn
       $ndnsec-sign-req /ndn > root.cert
       This root.cert will be configured by "cert-to-publish" commands in nlsr.conf
@@ -213,9 +213,9 @@ Here is the entire security configuraion of the router1 (As seen in nlsr.conf. N
       }
       cert-to-publish "root.cert" //optional, a file containing the root certificate. only the router
                                   //that is designated to publish root cert needs to specify this
-      cert-to-publish "site.cert" //optional, a file containing the root certificate. only the router
+      cert-to-publish "site.cert" //optional, a file containing the site certificate. only the router
                                   //that is designated to publish site cert need to specify this
-      cert-to-publish "operator.cert" //optional, a file containing the root certificate. only the
+      cert-to-publish "operator.cert" //optional, a file containing the operator certificate. only the
                                       //router that is designated to publish operator cert need to
                                       //specify this
       cert-to-publish "router.cert" //required, a file containing the router certificate.
@@ -226,7 +226,7 @@ that this router is responsible for hosting site keys and operator keys of color
 site.
 
    2. Generate key for site prefix `/ndn/edu/colorado`
-      $ndnsec-key-gen -n /ndn/edu/memphis > unsigned_site.cert
+      $ndnsec-key-gen -n /ndn/edu/colorado > unsigned_site.cert
 
       Send this cert to Memphis site ( as in example Memphis is the root) and get
       it signed by root. After you get back the site please put it in your convenient
