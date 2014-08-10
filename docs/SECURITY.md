@@ -68,27 +68,26 @@ router in memphis will do the following key creation and signing.
 NOTE: The first two steps may not apply to everyone as the root certificate and the site certificate are usually present at a testbed outside the scope of NLSR. These steps will help if you are testing an isolated testbed.
 
    1. Create root key and self signed certificate with prefis `/ndn`
-      $ndnsec-key-gen -n /ndn
-      $ndnsec-sign-req /ndn > root.cert
+      $ndnsec-key-gen -n /ndn > root.cert
       This root.cert will be configured by "cert-to-publish" commands in nlsr.conf
 
    2. Generate key for site prefix `/ndn/edu/memphis` and sign it by root key
-      $ndnsec-key-gen -n /ndn/edu/memphis > unsigned_site.cert
+      $ndnsec-key-gen -n /ndn/edu/memphis > selfsigned_site.cert
       $ndnsec-cert-gen -S 20140701000000 -E 20150701000000 -N "University of Memphis"
-      -s /ndn -p /ndn/edu/memphis -r unsigned_site.cert > site.cert
+      -s /ndn -p /ndn/edu/memphis -r selfsigned_site.cert > site.cert
 
    3. Generate key for operator and sign it by memphis site key. Lets assume that
       operator name in Memphis site is ndnuser, so the prefix is `/ndn/edu/memphis/%C1.O.N./ndnuser`
-      $ndnsec-key-gen -n /ndn/edu/memphis/%C1.Operator/ndnuser > unsigned_operator.cert
+      $ndnsec-key-gen -n /ndn/edu/memphis/%C1.Operator/ndnuser > selfsigned_operator.cert
       $ndnsec-cert-gen -S 20140701000000 -E 20150701000000 -N "University of Memphis Operator"
       -s /ndn/edu/memphis -p /ndn/edu/memphis/%C1.Operator/ndnuser
-      -r unsigned_operator.cert > operator.cert
+      -r selfsigned_operator.cert > operator.cert
 
    4. Generate key for router and sign it with operator's key
-      $ndnsec-key-gen /ndn/edu/memphis/%C1.Router/router1 > unsigned_router.cert
+      $ndnsec-key-gen /ndn/edu/memphis/%C1.Router/router1 > selfsigned_router.cert
       $ndnsec-cert-gen -S 20140701000000 -E 20150701000000 -N "University of Memphis Router"
      -s /ndn/edu/memphis/%C1.Operator/ndnuser -p /ndn/edu/memphis/%C1.Router/router1
-     -r unsigned_router.cert > router.cert
+     -r selfsigned_router.cert > router.cert
 
 
 Key creation and signing is done for `/ndn/memphis.edu/router1`. In nlsr.conf
@@ -211,7 +210,7 @@ Here is the entire security configuraion of the router1 (As seen in nlsr.conf. N
           file-name "root.cert"
         }
       }
-      cert-to-publish "root.cert" //optional, a file containing the root certificate. only the router
+      ;cert-to-publish "root.cert" //optional, a file containing the root certificate. only the router
                                   //that is designated to publish root cert needs to specify this
       cert-to-publish "site.cert" //optional, a file containing the root certificate. only the router
                                   //that is designated to publish site cert need to specify this
@@ -226,7 +225,7 @@ that this router is responsible for hosting site keys and operator keys of color
 site.
 
    2. Generate key for site prefix `/ndn/edu/colorado`
-      $ndnsec-key-gen -n /ndn/edu/memphis > unsigned_site.cert
+      $ndnsec-key-gen -n /ndn/edu/memphis > selfsigned_site.cert
 
       Send this cert to Memphis site ( as in example Memphis is the root) and get
       it signed by root. After you get back the site please put it in your convenient
@@ -237,13 +236,13 @@ site.
       $ndnsec-key-gen -n /ndn/edu/colorado/%C1.Operator/testop > unsigned_operator.cert
       $ndnsec-cert-gen -S 20140701000000 -E 20150701000000 -N "Colorado State University Operator"
       -s /ndn/edu/colorado -p /ndn/edu/colorado/%C1.Operator/testop
-      -r unsigned_operator.cert > operator.cert
+      -r selfsigned_operator.cert > operator.cert
 
    4. Generate key for router and sign it with operator's key
       $ndnsec-key-gen /ndn/edu/colorado/%C1.Router/router2 > unsigned_router.cert
       $ndnsec-cert-gen -S 20140701000000 -E 20150701000000 -N "Colorado State University Router"
       -s /ndn/edu/colorado/%C1.Operator/testop -p /ndn/edu/colorado/%C1.Router/router2
-      -r unsigned_router.cert > router.cert
+      -r selfsigned_router.cert > router.cert
 
 
 Key creation and signing is done for `/ndn/edu/colorado/router2`. In nlsr.conf

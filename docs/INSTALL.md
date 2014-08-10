@@ -39,7 +39,7 @@ Prerequisites
 
       On linux variants
 
-           sudo apt-get install libprotobuf-dev
+           sudo apt-get install libprotobuf-dev protobuf-compiler
 
 
 Build

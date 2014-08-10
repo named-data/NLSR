@@ -274,12 +274,11 @@ Nlsr::startEventLoop()
 void
 Nlsr::usage(const string& progname)
 {
-  cout << "Usage: " << progname << " [OPTIONS...]" << endl;
-  cout << "   NDN routing...." << endl;
-  cout << "       -d, --daemon        Run in daemon mode" << endl;
-  cout << "       -f, --config_file   Specify configuration file name" << endl;
-  cout << "       -p, --api_port      port where api client will connect" << endl;
-  cout << "       -h, --help          Display this help message" << endl;
+  std::cout << "Usage: " << progname << " [OPTIONS...]" << std::endl;
+  std::cout << "   NDN routing...." << std::endl;
+  std::cout << "       -d, --daemon        Run in daemon mode" << std::endl;
+  std::cout << "       -f, --config_file   Specify configuration file name" << std::endl;
+  std::cout << "       -h, --help          Display this help message" << std::endl;
 }
 
 
