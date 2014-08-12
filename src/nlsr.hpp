@@ -31,6 +31,7 @@
 #include <ndn-cxx/security/certificate-cache-ttl.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/management/nfd-face-event-notification.hpp>
+#include <ndn-cxx/management/nfd-face-monitor.hpp>
 
 #include "conf-parameter.hpp"
 #include "adjacency-list.hpp"
@@ -42,7 +43,6 @@
 #include "route/fib.hpp"
 #include "communication/sync-logic-handler.hpp"
 #include "hello-protocol.hpp"
-#include "face-monitor.hpp"
 
 #include "validator.hpp"
 
@@ -86,9 +86,11 @@ public:
     , m_certificateCache(new ndn::CertificateCacheTtl(m_nlsrFace.getIoService()))
     , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
 
-    , m_faceMonitor(m_nlsrFace.getIoService(),
-                    ndn::bind(&Nlsr::onFaceEventNotification, this, _1))
-  {}
+    , m_faceMonitor(m_nlsrFace)
+  {
+    m_faceMonitor.onNotification += ndn::bind(&Nlsr::onFaceEventNotification, this, _1);
+    m_faceMonitor.start();
+  }
 
   void
   registrationFailed(const ndn::Name& name);
@@ -380,7 +382,7 @@ private:
   ndn::Name m_defaultIdentity;
   ndn::Name m_defaultCertName;
 
-  FaceMonitor m_faceMonitor;
+  ndn::nfd::FaceMonitor m_faceMonitor;
 };
 
 } //namespace nlsr

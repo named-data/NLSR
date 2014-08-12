@@ -217,7 +217,8 @@ void
 HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                                double linkCost, const ndn::time::milliseconds& timeout)
 {
-  m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout, 0,
+  m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0,
                                  ndn::bind(&HelloProtocol::onRegistrationSuccess,
                                            this, _1, adjName,timeout),
                                  ndn::bind(&HelloProtocol::onRegistrationFailure,
@@ -236,11 +237,14 @@ HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandS
     std::string faceUri = adjacent->getConnectingFaceUri();
     double linkCost = adjacent->getLinkCost();
     m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
-                                 faceUri, linkCost, timeout, 0);
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
     m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getLsaPrefix(),
-                                 faceUri, linkCost, timeout, 0);
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
     m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
-                                 faceUri, linkCost, timeout, 0);
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
     m_nlsr.setStrategies();
 
     /* interest name: /<neighbor>/NLSR/INFO/<router> */

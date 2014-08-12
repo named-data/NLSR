@@ -59,7 +59,9 @@ Nlsr::setInfoInterestFilter()
                                   ndn::bind(&HelloProtocol::processInterest,
                                             &m_helloProtocol, _1, _2),
                                   ndn::bind(&Nlsr::onRegistrationSuccess, this, _1),
-                                  ndn::bind(&Nlsr::registrationFailed, this, _1));
+                                  ndn::bind(&Nlsr::registrationFailed, this, _1),
+                                  m_defaultIdentity,
+                                  ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
 void
@@ -73,7 +75,9 @@ Nlsr::setLsaInterestFilter()
                                   ndn::bind(&Lsdb::processInterest,
                                             &m_nlsrLsdb, _1, _2),
                                   ndn::bind(&Nlsr::onRegistrationSuccess, this, _1),
-                                  ndn::bind(&Nlsr::registrationFailed, this, _1));
+                                  ndn::bind(&Nlsr::registrationFailed, this, _1),
+                                  m_defaultIdentity,
+                                  ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
 void
@@ -131,6 +135,7 @@ Nlsr::initialize()
   /* Logging end */
   initializeKey();
   setStrategies();
+  _LOG_DEBUG("Default NLSR identity: " << m_defaultIdentity);
   setInfoInterestFilter();
   setLsaInterestFilter();
   m_nlsrLsdb.buildAndInstallOwnNameLsa();
@@ -138,8 +143,6 @@ Nlsr::initialize()
   m_syncLogicHandler.createSyncSocket(boost::ref(*this));
   registerKeyPrefix();
   m_helloProtocol.scheduleInterest(10);
-
-  m_faceMonitor.startNotification();
 }
 
 void
@@ -187,7 +190,9 @@ Nlsr::registerKeyPrefix()
                                ndn::bind(&Nlsr::onKeyInterest,
                                          this, _1, _2),
                                ndn::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
-                               ndn::bind(&Nlsr::registrationFailed, this, _1));
+                               ndn::bind(&Nlsr::registrationFailed, this, _1),
+                               m_defaultIdentity,
+                               ndn::nfd::ROUTE_FLAG_CAPTURE);
 
 }
 
@@ -254,11 +259,13 @@ void
 Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification)
 {
   ndn::nfd::FaceEventKind kind = faceEventNotification.getKind();
+  _LOG_DEBUG("Nlsr::onFaceEventNotification called");
   if (kind == ndn::nfd::FACE_EVENT_DESTROYED) {
     uint64_t faceId = faceEventNotification.getFaceId();
     Adjacent *adjacent = m_adjacencyList.findAdjacent(faceId);
     if (adjacent != 0) {
-      _LOG_DEBUG("Face to " << adjacent->getName() << "deleted");
+      _LOG_DEBUG("Face to " << adjacent->getName() << " with face id: "
+                 << faceId << " deleted");
       adjacent->setFaceId(0);
     }
   }

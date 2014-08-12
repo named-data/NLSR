@@ -94,17 +94,19 @@ public:
   void
   registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
                  uint64_t faceCost,
-                 const ndn::time::milliseconds& timeout, uint8_t times);
+                 const ndn::time::milliseconds& timeout,
+                 uint64_t flags, uint8_t times);
 
   void
   registerPrefix(const ndn::Name& namePrefix,
                  const std::string& faceUri,
                  uint64_t faceCost,
                  const ndn::time::milliseconds& timeout,
+                 uint64_t flags,
                  uint8_t times,
                  const CommandSucceedCallback& onSuccess,
                  const CommandFailCallback& onFailure);
-  
+
   void
   setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t count);
 
@@ -123,17 +125,13 @@ private:
              const CommandFailCallback& onFailure);
 
   void
-  registerPrefixInNfd(const ndn::Name& namePrefix,
-                      uint64_t faceId,
-                      uint64_t faceCost,
-                      const ndn::time::milliseconds& timeout,
+  registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
                       const std::string& faceUri,
                       uint8_t times);
 
   void
   registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
-                      const ndn::Name& namePrefix, uint64_t faceCost,
-                      const ndn::time::milliseconds& timeout,
+                      const ndn::nfd::ControlParameters& parameters,
                       uint8_t times,
                       const CommandSucceedCallback& onSuccess,
                       const CommandFailCallback& onFailure);
@@ -157,8 +155,8 @@ private:
   void
   onRegistrationFailure(uint32_t code, const std::string& error,
                         const std::string& message,
-                        const ndn::Name& namePrefix, const std::string& faceUri,
-                        uint64_t faceCost, const ndn::time::milliseconds& timeout,
+                        const ndn::nfd::ControlParameters& parameters,
+                        const std::string& faceUri,
                         uint8_t times);
 
   void
