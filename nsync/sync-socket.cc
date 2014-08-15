@@ -20,6 +20,7 @@
 
 #include "sync-socket.h"
 #include "sync-logging.h"
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace ndn;
@@ -45,7 +46,8 @@ SyncSocket::SyncSocket (const Name &syncPrefix,
                  face,
                  bind(&SyncSocket::passCallback, this, _1),
                  rmCallback)
-{}
+{
+}
 
 SyncSocket::~SyncSocket()
 {
