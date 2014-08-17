@@ -36,10 +36,11 @@ ConfParameter::writeLog()
   _LOG_DEBUG("Router Prefix: " << m_routerPrefix);
   _LOG_DEBUG("ChronoSync sync Prifex: " << m_chronosyncPrefix);
   _LOG_DEBUG("ChronoSync LSA prefix: " << m_lsaPrefix);
-  _LOG_DEBUG("Interest Retry number: " << m_interestRetryNumber);
-  _LOG_DEBUG("Interest Resend second: " << m_interestResendTime);
-  _LOG_DEBUG("Info Interest Interval: " << m_infoInterestInterval);
+  _LOG_DEBUG("Hello Interest retry number: " << m_interestRetryNumber);
+  _LOG_DEBUG("Hello Interest resend second: " << m_interestResendTime);
+  _LOG_DEBUG("Info Interest interval: " << m_infoInterestInterval);
   _LOG_DEBUG("LSA refresh time: " << m_lsaRefreshTime);
+  _LOG_DEBUG("LSA Interest lifetime: " << getLsaInterestLifetime());
   _LOG_DEBUG("Max Faces Per Prefix: " << m_maxFacesPerPrefix);
   _LOG_DEBUG("Hyperbolic ROuting: " << m_hyperbolicState);
   _LOG_DEBUG("Hyp R: " << m_corR);

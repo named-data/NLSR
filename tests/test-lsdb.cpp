@@ -35,6 +35,8 @@ BOOST_AUTO_TEST_SUITE(TestLsdb)
 
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 {
+  INIT_LOGGERS("/tmp");
+
   Nlsr nlsr1;
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
   NamePrefixList npl1;
@@ -49,17 +51,18 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 //For NameLsa lsType is name.
 //12 is seqNo, randomly generated.
 //1800 is the default life time.
-  NameLsa nlsa1("router1", std::string("name"), 12, testTimePoint, npl1);
+  NameLsa nlsa1(ndn::Name("/router1/1"), std::string("name"), 12, testTimePoint, npl1);
 
   Lsdb lsdb1(nlsr1);
 
   lsdb1.installNameLsa(nlsa1);
+  lsdb1.writeNameLsdbLog();
 
-  BOOST_CHECK(lsdb1.doesLsaExist("router1/1", std::string("name")));
+  BOOST_CHECK(lsdb1.doesLsaExist(ndn::Name("/router1/1/name"), std::string("name")));
 
   lsdb1.removeNameLsa(router1);
 
-  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist("router1/1", std::string("name")), false);
+  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(ndn::Name("/router1/1"), std::string("name")), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

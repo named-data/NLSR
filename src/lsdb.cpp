@@ -612,9 +612,9 @@ Lsdb::getAdjLsdb()
 }
 
 void
-Lsdb::setLsaRefreshTime(int lrt)
+Lsdb::setLsaRefreshTime(const seconds& lsaRefreshTime)
 {
-  m_lsaRefreshTime = ndn::time::seconds(lrt);
+  m_lsaRefreshTime = lsaRefreshTime;
 }
 
 void
@@ -749,20 +749,23 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
 
 
 void
-Lsdb::expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime,
-                      uint32_t timeoutCount)
+Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
+                      steady_clock::TimePoint deadline/* = steady_clock::TimePoint::min()*/)
 {
+  if (deadline == steady_clock::TimePoint::min()) {
+    deadline = steady_clock::now() + m_lsaRefreshTime;
+  }
+
   ndn::Interest interest(interestName);
   uint64_t interestedLsSeqNo = interestName[-1].toNumber();
-  _LOG_DEBUG("Expressing Interest for LSA(name): " << interestName <<
-              " Seq number: " << interestedLsSeqNo );
-  interest.setInterestLifetime(ndn::time::seconds(interestLifeTime));
-  interest.setMustBeFresh(true);
+  _LOG_DEBUG("Expressing Interest for LSA(name): " << interestName
+             << " Seq number: " << interestedLsSeqNo);
+  interest.setInterestLifetime(m_nlsr.getConfParameter().getLsaInterestLifetime());
   m_nlsr.getNlsrFace().expressInterest(interest,
                                        ndn::bind(&Lsdb::onContent,
-                                                 this, _1, _2),
+                                                 this, _2, deadline),
                                        ndn::bind(&Lsdb::processInterestTimedOut,
-                                                 this, _1, timeoutCount));
+                                                 this, _1, timeoutCount, deadline));
 }
 
 void
@@ -811,7 +814,7 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
 {
   ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
   data->setName(ndn::Name(interest.getName()).appendVersion());
-  data->setFreshnessPeriod(ndn::time::seconds(10));
+  data->setFreshnessPeriod(m_lsaRefreshTime);
   data->setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.size());
   m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
   ndn::SignatureSha256WithRsa signature(data->getSignature());
@@ -864,7 +867,8 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
 }
 
 void
-Lsdb::onContent(const ndn::Interest& interest, const ndn::Data& data)
+Lsdb::onContent(const ndn::Data& data,
+                const steady_clock::TimePoint& deadline)
 {
   _LOG_DEBUG("Received data for LSA(name): " << data.getName());
   if (data.getSignature().hasKeyLocator()) {
@@ -874,8 +878,25 @@ Lsdb::onContent(const ndn::Interest& interest, const ndn::Data& data)
   }
   m_nlsr.getValidator().validate(data,
                                  ndn::bind(&Lsdb::onContentValidated, this, _1),
-                                 ndn::bind(&Lsdb::onContentValidationFailed, this, _1, _2));
+                                 ndn::bind(&Lsdb::onContentValidationFailed, this, _1, _2,
+                                           deadline));
 
+}
+
+void
+Lsdb::retryContentValidation(const ndn::shared_ptr<const ndn::Data>& data,
+                             const steady_clock::TimePoint& deadline)
+{
+  _LOG_DEBUG("Retrying validation of LSA(name): " << data->getName());
+  if (data->getSignature().hasKeyLocator()) {
+    if (data->getSignature().getKeyLocator().getType() == ndn::KeyLocator::KeyLocator_Name) {
+      _LOG_DEBUG("Data signed with: " << data->getSignature().getKeyLocator().getName());
+    }
+  }
+  m_nlsr.getValidator().validate(*data,
+                                 ndn::bind(&Lsdb::onContentValidated, this, _1),
+                                 ndn::bind(&Lsdb::onContentValidationFailed, this, _1, _2,
+                                           deadline));
 }
 
 void
@@ -916,9 +937,23 @@ Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 }
 
 void
-Lsdb::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data, const std::string& msg)
+Lsdb::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
+                                const std::string& msg,
+                                const steady_clock::TimePoint& deadline)
 {
   _LOG_DEBUG("Validation Error: " << msg);
+
+  // Delay re-validation by LSA Interest Lifetime.  When error callback will have an error
+  // code, re-validation should be done only when some keys from certification chain failed
+  // to be fetched.  After that change, delaying will no longer be necessary.
+
+  // Stop retrying if delayed re-validation will be scheduled pass the deadline
+  if (steady_clock::now() + m_nlsr.getConfParameter().getLsaInterestLifetime() < deadline) {
+    _LOG_DEBUG("Scheduling revalidation");
+    m_nlsr.getScheduler().scheduleEvent(m_nlsr.getConfParameter().getLsaInterestLifetime(),
+                                        ndn::bind(&Lsdb::retryContentValidation,
+                                                  this, data, deadline));
+  }
 }
 
 void
@@ -967,16 +1002,14 @@ Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
 }
 
 void
-Lsdb::processInterestTimedOut(const ndn::Interest& interest, uint32_t timeoutCount)
+Lsdb::processInterestTimedOut(const ndn::Interest& interest, uint32_t retransmitNo,
+                              const ndn::time::steady_clock::TimePoint& deadline)
 {
-  const ndn::Name& interestName(interest.getName());
+  const ndn::Name& interestName = interest.getName();
   _LOG_DEBUG("Interest timed out for  LSA(name): " << interestName);
-  if ((timeoutCount + 1) <= m_nlsr.getConfParameter().getInterestRetryNumber()) {
-    _LOG_DEBUG("Interest timeoutCount: " << (timeoutCount + 1));
-    _LOG_DEBUG("Need to express interest again for LSA(name): " << interestName);
-    expressInterest(interestName,
-                    m_nlsr.getConfParameter().getInterestResendTime(),
-                    timeoutCount + 1);
+
+  if (ndn::time::steady_clock::now() < deadline) {
+    expressInterest(interestName, retransmitNo + 1, deadline);
   }
 }
 

@@ -35,10 +35,10 @@ BOOST_AUTO_TEST_CASE(NexthopSetAndGet)
 
   np1.setConnectingFaceUri("udp://test/uri");
 
-  np1.setRouteCost(10.5);
+  np1.setRouteCost(10.1);
 
   BOOST_CHECK_EQUAL(np1.getConnectingFaceUri(), "udp://test/uri");
-  BOOST_CHECK_CLOSE(np1.getRouteCost(), 10.5, 0.0001);
+  BOOST_CHECK_EQUAL(np1.getRouteCost(), 11);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

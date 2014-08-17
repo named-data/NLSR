@@ -31,6 +31,9 @@
 #include "lsa.hpp"
 
 namespace nlsr {
+
+using namespace ndn::time;
+
 class Nlsr;
 
 class Lsdb
@@ -109,7 +112,7 @@ public:
   writeAdjLsdbLog();
 
   void
-  setLsaRefreshTime(int lrt);
+  setLsaRefreshTime(const seconds& lsaRefreshTime);
 
   void
   setThisRouterPrefix(std::string trp);
@@ -136,29 +139,29 @@ private:
 
   ndn::EventId
   scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
-                            const ndn::time::seconds& expTime);
+                            const seconds& expTime);
 
   void
   exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
   ndn::EventId
   scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
-                           const ndn::time::seconds& expTime);
+                           const seconds& expTime);
 
   void
   exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
   ndn::EventId
   scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
-                                  const ndn::time::seconds& expTime);
+                                  const seconds& expTime);
 
   void
   exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                 uint64_t seqNo);
 public:
   void
-  expressInterest(const ndn::Name& interestName, uint32_t interestLifeTime,
-                  uint32_t timeoutCount);
+  expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
+                  steady_clock::TimePoint deadline = steady_clock::TimePoint::min());
 
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
@@ -183,13 +186,27 @@ private:
                                   uint32_t interestedlsSeqNo);
 
   void
-  onContent(const ndn::Interest& interest, const ndn::Data& data);
+  onContent(const ndn::Data& data, const steady_clock::TimePoint& deadline);
+
+  /**
+   * @brief Retry validation after it fails
+   *
+   * Data packet validation can fail either because the packet does not have
+   * valid signature (fatal) or because some of the certificate chain Data packets
+   * failed to be fetched (non-fatal).  Currently, the library does not provide
+   * clear indication (besides plain-text message in error callback) of what is
+   * the reason for failure and we will try to re-validate for as long as it the deadline.
+   */
+  void
+  retryContentValidation(const ndn::shared_ptr<const ndn::Data>& data,
+                         const steady_clock::TimePoint& deadline);
 
   void
   onContentValidated(const ndn::shared_ptr<const ndn::Data>& data);
 
   void
-  onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data, const std::string& msg);
+  onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data, const std::string& msg,
+                            const steady_clock::TimePoint& deadline);
 
   void
   processContentNameLsa(const ndn::Name& lsaKey,
@@ -204,9 +221,10 @@ private:
                               uint32_t lsSeqNo, std::string& dataContent);
 
   void
-  processInterestTimedOut(const ndn::Interest& interest, uint32_t timeoutCount);
+  processInterestTimedOut(const ndn::Interest& interest, uint32_t retransmitNo,
+                          const steady_clock::TimePoint& deadline);
 
-  ndn::time::system_clock::TimePoint
+  system_clock::TimePoint
   getLsaExpirationTimePoint();
 
 private:
@@ -218,7 +236,7 @@ private:
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;
 
-  ndn::time::seconds m_lsaRefreshTime;
+  seconds m_lsaRefreshTime;
   std::string m_thisRouterPrefix;
 
 };

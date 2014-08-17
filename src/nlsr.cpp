@@ -122,7 +122,7 @@ Nlsr::initialize()
 {
   _LOG_DEBUG("Initializing Nlsr");
   m_confParam.buildRouterPrefix();
-  m_nlsrLsdb.setLsaRefreshTime(m_confParam.getLsaRefreshTime());
+  m_nlsrLsdb.setLsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()));
   m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix().toUri());
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());
   m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());

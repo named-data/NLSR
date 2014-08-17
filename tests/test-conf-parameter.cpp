@@ -51,6 +51,8 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   cp1.setLsaRefreshTime(1500);
 
+  cp1.setLsaInterestLifetime(ndn::time::seconds(1));
+
   cp1.setRouterDeadInterval(10);
 
   cp1.setMaxFacesPerPrefix(50);
@@ -78,6 +80,8 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
   BOOST_CHECK_EQUAL(cp1.getInterestResendTime(), 1000);
 
   BOOST_CHECK_EQUAL(cp1.getLsaRefreshTime(), 1500);
+
+  BOOST_CHECK_EQUAL(cp1.getLsaInterestLifetime(), ndn::time::seconds(1));
 
   BOOST_CHECK_EQUAL(cp1.getRouterDeadInterval(), 10);
 

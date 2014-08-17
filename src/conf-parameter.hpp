@@ -27,6 +27,7 @@
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/common.hpp>
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/util/time.hpp>
 
 #include "logger.hpp"
 
@@ -36,6 +37,12 @@ enum {
   LSA_REFRESH_TIME_MIN = 240,
   LSA_REFRESH_TIME_DEFAULT = 1800,
   LSA_REFRESH_TIME_MAX = 7200
+};
+
+enum {
+  LSA_INTEREST_LIFETIME_MIN = 1,
+  LSA_INTEREST_LIFETIME_DEFAULT = 4,
+  LSA_INTEREST_LIFETIME_MAX = 60
 };
 
 enum {
@@ -73,6 +80,7 @@ class ConfParameter
 public:
   ConfParameter()
     : m_lsaRefreshTime(LSA_REFRESH_TIME_DEFAULT)
+    , m_lsaInterestLifetime(ndn::time::seconds(static_cast<int>(LSA_INTEREST_LIFETIME_DEFAULT)))
     , m_routerDeadInterval(2*LSA_REFRESH_TIME_DEFAULT)
     , m_logLevel("INFO")
     , m_interestRetryNumber(HELLO_RETRIES_DEFAULT)
@@ -82,7 +90,8 @@ public:
     , m_corR(0)
     , m_corTheta(0)
     , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
-  {}
+  {
+  }
 
   void
   setNetwork(const ndn::Name& networkName)
@@ -91,14 +100,14 @@ public:
     m_chronosyncPrefix = m_network;
     m_chronosyncPrefix.append("NLSR");
     m_chronosyncPrefix.append("sync");
-    
+
     m_lsaPrefix = m_network;
     m_lsaPrefix.append("NLSR");
     m_lsaPrefix.append("LSA");
   }
 
   const ndn::Name&
-  getNetwork()
+  getNetwork() const
   {
     return m_network;
   }
@@ -110,7 +119,7 @@ public:
   }
 
   const ndn::Name&
-  getRouterName()
+  getRouterName() const
   {
     return m_routerName;
   }
@@ -122,7 +131,7 @@ public:
   }
 
   const ndn::Name&
-  getSiteName()
+  getSiteName() const
   {
     return m_siteName;
   }
@@ -136,20 +145,20 @@ public:
   }
 
   const ndn::Name&
-  getRouterPrefix()
+  getRouterPrefix() const
   {
     return m_routerPrefix;
   }
 
 
   const ndn::Name&
-  getChronosyncPrefix()
+  getChronosyncPrefix() const
   {
     return m_chronosyncPrefix;
   }
 
   const ndn::Name&
-  getLsaPrefix()
+  getLsaPrefix() const
   {
     return m_lsaPrefix;
   }
@@ -162,9 +171,21 @@ public:
   }
 
   int32_t
-  getLsaRefreshTime()
+  getLsaRefreshTime() const
   {
     return m_lsaRefreshTime;
+  }
+
+  void
+  setLsaInterestLifetime(const ndn::time::seconds& lifetime)
+  {
+    m_lsaInterestLifetime = lifetime;
+  }
+
+  const ndn::time::seconds&
+  getLsaInterestLifetime() const
+  {
+    return m_lsaInterestLifetime;
   }
 
   void
@@ -174,19 +195,19 @@ public:
   }
 
   int64_t
-  getRouterDeadInterval()
+  getRouterDeadInterval() const
   {
     return m_routerDeadInterval;
   }
-  
-  void 
+
+  void
   setLogLevel(const std::string& logLevel)
   {
     m_logLevel = logLevel;
   }
-  
-  const std::string& 
-  getLogLevel()
+
+  const std::string&
+  getLogLevel() const
   {
     return m_logLevel;
   }
@@ -198,7 +219,7 @@ public:
   }
 
   uint32_t
-  getInterestRetryNumber()
+  getInterestRetryNumber() const
   {
     return m_interestRetryNumber;
   }
@@ -210,13 +231,13 @@ public:
   }
 
   int32_t
-  getInterestResendTime()
+  getInterestResendTime() const
   {
     return m_interestResendTime;
   }
 
   int32_t
-  getInfoInterestInterval()
+  getInfoInterestInterval() const
   {
     return m_infoInterestInterval;
   }
@@ -234,7 +255,7 @@ public:
   }
 
   int32_t
-  getHyperbolicState()
+  getHyperbolicState() const
   {
     return m_hyperbolicState;
   }
@@ -250,7 +271,7 @@ public:
   }
 
   double
-  getCorR()
+  getCorR() const
   {
     return m_corR;
   }
@@ -262,11 +283,11 @@ public:
   }
 
   double
-  getCorTheta()
+  getCorTheta() const
   {
     return m_corTheta;
   }
-  
+
   void
   setMaxFacesPerPrefix(int32_t mfpp)
   {
@@ -274,7 +295,7 @@ public:
   }
 
   int32_t
-  getMaxFacesPerPrefix()
+  getMaxFacesPerPrefix() const
   {
     return m_maxFacesPerPrefix;
   }
@@ -286,7 +307,7 @@ public:
   }
 
   const std::string&
-  getLogDir()
+  getLogDir() const
   {
     return m_logDir;
   }
@@ -298,7 +319,7 @@ public:
   }
 
   const std::string&
-  getSeqFileDir()
+  getSeqFileDir() const
   {
     return m_seqFileDir;
   }
@@ -318,21 +339,22 @@ private:
   ndn::Name m_lsaPrefix;
 
   int32_t  m_lsaRefreshTime;
+  ndn::time::seconds m_lsaInterestLifetime;
   int64_t  m_routerDeadInterval;
   std::string m_logLevel;
 
   uint32_t m_interestRetryNumber;
   int32_t  m_interestResendTime;
-  
-  
+
+
   int32_t  m_infoInterestInterval;
-  
+
   int32_t m_hyperbolicState;
   double m_corR;
   double m_corTheta;
 
   int32_t m_maxFacesPerPrefix;
-  
+
   std::string m_logDir;
   std::string m_seqFileDir;
 

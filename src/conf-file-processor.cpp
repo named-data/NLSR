@@ -172,6 +172,23 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   try {
+    int lifetime = section.get<int>("lsa-interest-lifetime");
+    if (lifetime >= LSA_INTEREST_LIFETIME_MIN && lifetime <= LSA_INTEREST_LIFETIME_MAX) {
+      m_nlsr.getConfParameter().setLsaInterestLifetime(ndn::time::seconds(lifetime));
+    }
+    else {
+      std::cerr << "Wrong value for lsa-interest-timeout. "
+                << "Allowed value:" << LSA_INTEREST_LIFETIME_MIN << "-"
+                << LSA_INTEREST_LIFETIME_MAX << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+    // return false;
+  }
+
+  try {
     std::string logLevel = section.get<string>("log-level");
     if ( boost::iequals(logLevel, "info") || boost::iequals(logLevel, "debug")) {
       m_nlsr.getConfParameter().setLogLevel(logLevel);

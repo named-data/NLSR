@@ -38,27 +38,30 @@ BOOST_AUTO_TEST_CASE(ConfFileProcessorSample)
   const std::string CONFIG =
      "general\n"
     "{\n"
-    "  network /ndn/\n"      
+    "  network /ndn/\n"
     "  site /memphis.edu/\n"
     "  router /cs/pollux/\n"
     "  lsa-refresh-time 1800\n"
+    "  lsa-interest-lifetime 3\n"
     "  log-level  INFO\n"
+    "  log-dir /tmp\n"
+    "  seq-dir /tmp\n"
     "}\n\n"
     "neighbors\n"
     "{\n"
     "  hello-retries 3\n"
-    "  hello-time-out 1\n"
+    "  hello-timeout 1\n"
     "  hello-interval  60\n\n"
     "  neighbor\n"
     "  {\n"
     "    name /ndn/memphis.edu/cs/castor\n"
-    "    face-id  15\n"
+    "    face-uri  udp4://localhost\n"
     "    link-cost 20\n"
     "  }\n\n"
     "  neighbor\n"
     "  {\n"
     "    name /ndn/memphis.edu/cs/mira\n"
-    "    face-id  17\n"
+    "    face-uri  udp4://localhost\n"
     "    link-cost 30\n"
     "  }\n"
     "}\n\n"
@@ -98,6 +101,9 @@ BOOST_AUTO_TEST_CASE(ConfFileProcessorSample)
     30);
 
   BOOST_CHECK_EQUAL(nlsr1.getNamePrefixList().getSize(), 2);
+
+  BOOST_CHECK_EQUAL(nlsr1.getConfParameter().getLsaInterestLifetime(),
+                    ndn::time::seconds(3));
 
   remove("unit-test-nlsr.conf");
 }
