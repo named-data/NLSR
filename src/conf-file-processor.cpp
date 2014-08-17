@@ -35,7 +35,6 @@
 #include "adjacent.hpp"
 #include "utility/name-helper.hpp"
 
-
 namespace nlsr {
 
 using namespace std;
@@ -60,7 +59,7 @@ ConfFileProcessor::processConfFile()
 bool
 ConfFileProcessor::load(istream& input)
 {
-  boost::property_tree::ptree pt;
+  ConfigSection pt;
   bool ret = true;
   try {
     boost::property_tree::read_info(input, pt);
@@ -71,11 +70,10 @@ ConfFileProcessor::load(istream& input)
     std::cerr << m_confFileName << std::endl;
     return false;
   }
-  for (boost::property_tree::ptree::const_iterator tn = pt.begin();
+
+  for (ConfigSection::const_iterator tn = pt.begin();
        tn != pt.end(); ++tn) {
-    std::string section = tn->first;
-    boost::property_tree::ptree SectionAttributeTree = tn ->second;
-    ret = processSection(section, SectionAttributeTree);
+    ret = processSection(tn->first, tn->second);
     if (ret == false) {
       break;
     }
@@ -84,49 +82,47 @@ ConfFileProcessor::load(istream& input)
 }
 
 bool
-ConfFileProcessor::processSection(const std::string& section,
-                                  boost::property_tree::ptree SectionAttributeTree)
+ConfFileProcessor::processSection(const std::string& sectionName, const ConfigSection& section)
 {
   bool ret = true;
-  if (section == "general")
+  if (sectionName == "general")
   {
-    ret = processConfSectionGeneral(SectionAttributeTree);
+    ret = processConfSectionGeneral(section);
   }
-  else if (section == "neighbors")
+  else if (sectionName == "neighbors")
   {
-    ret = processConfSectionNeighbors(SectionAttributeTree);
+    ret = processConfSectionNeighbors(section);
   }
-  else if (section == "hyperbolic")
+  else if (sectionName == "hyperbolic")
   {
-    ret = processConfSectionHyperbolic(SectionAttributeTree);
+    ret = processConfSectionHyperbolic(section);
   }
-  else if (section == "fib")
+  else if (sectionName == "fib")
   {
-    ret = processConfSectionFib(SectionAttributeTree);
+    ret = processConfSectionFib(section);
   }
-  else if (section == "advertising")
+  else if (sectionName == "advertising")
   {
-    ret = processConfSectionAdvertising(SectionAttributeTree);
+    ret = processConfSectionAdvertising(section);
   }
-  else if (section == "security")
+  else if (sectionName == "security")
   {
-    ret = processConfSectionSecurity(SectionAttributeTree);
+    ret = processConfSectionSecurity(section);
   }
   else
   {
-    std::cerr << "Wrong configuration Command: " << section << std::endl;
+    std::cerr << "Wrong configuration section: " << sectionName << std::endl;
   }
   return ret;
 }
 
 bool
-ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
-                                             SectionAttributeTree)
+ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
 {
   try {
-    std::string network = SectionAttributeTree.get<string>("network");
-    std::string site = SectionAttributeTree.get<string>("site");
-    std::string router = SectionAttributeTree.get<string>("router");
+    std::string network = section.get<string>("network");
+    std::string site = section.get<string>("site");
+    std::string router = section.get<string>("router");
     ndn::Name networkName(network);
     if (!networkName.empty()) {
       m_nlsr.getConfParameter().setNetwork(networkName);
@@ -158,7 +154,7 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
   }
 
   try {
-    int32_t lsaRefreshTime = SectionAttributeTree.get<int32_t>("lsa-refresh-time");
+    int32_t lsaRefreshTime = section.get<int32_t>("lsa-refresh-time");
     if (lsaRefreshTime >= LSA_REFRESH_TIME_MIN &&
         lsaRefreshTime <= LSA_REFRESH_TIME_MAX) {
       m_nlsr.getConfParameter().setLsaRefreshTime(lsaRefreshTime);
@@ -176,7 +172,7 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
   }
 
   try {
-    std::string logLevel = SectionAttributeTree.get<string>("log-level");
+    std::string logLevel = section.get<string>("log-level");
     if ( boost::iequals(logLevel, "info") || boost::iequals(logLevel, "debug")) {
       m_nlsr.getConfParameter().setLogLevel(logLevel);
     }
@@ -192,7 +188,7 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
   }
 
   try {
-    std::string logDir = SectionAttributeTree.get<string>("log-dir");
+    std::string logDir = section.get<string>("log-dir");
     if (boost::filesystem::exists(logDir)) {
       if (boost::filesystem::is_directory(logDir)) {
         std::string testFileName=logDir+"/test.log";
@@ -225,7 +221,7 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
     return false;
   }
   try {
-    std::string seqDir = SectionAttributeTree.get<string>("seq-dir");
+    std::string seqDir = section.get<string>("seq-dir");
     if (boost::filesystem::exists(seqDir)) {
       if (boost::filesystem::is_directory(seqDir)) {
         std::string testFileName=seqDir+"/test.seq";
@@ -262,11 +258,10 @@ ConfFileProcessor::processConfSectionGeneral(boost::property_tree::ptree
 }
 
 bool
-ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
-                                           SectionAttributeTree)
+ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
 {
   try {
-    int retrials = SectionAttributeTree.get<int>("hello-retries");
+    int retrials = section.get<int>("hello-retries");
     if (retrials >= HELLO_RETRIES_MIN && retrials <= HELLO_RETRIES_MAX) {
       m_nlsr.getConfParameter().setInterestRetryNumber(retrials);
     }
@@ -282,7 +277,7 @@ ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
     return false;
   }
   try {
-    int timeOut = SectionAttributeTree.get<int>("hello-timeout");
+    int timeOut = section.get<int>("hello-timeout");
     if (timeOut >= HELLO_TIMEOUT_MIN && timeOut <= HELLO_TIMEOUT_MAX) {
       m_nlsr.getConfParameter().setInterestResendTime(timeOut);
     }
@@ -297,7 +292,7 @@ ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
     std::cerr << ex.what() << std::endl;
   }
   try {
-    int interval = SectionAttributeTree.get<int>("hello-interval");
+    int interval = section.get<int>("hello-interval");
     if (interval >= HELLO_INTERVAL_MIN && interval <= HELLO_INTERVAL_MAX) {
       m_nlsr.getConfParameter().setInfoInterestInterval(interval);
     }
@@ -311,13 +306,13 @@ ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
   catch (const std::exception& ex) {
     std::cerr << ex.what() << std::endl;
   }
-  for (boost::property_tree::ptree::const_iterator tn =
-           SectionAttributeTree.begin(); tn != SectionAttributeTree.end(); ++tn) {
+  for (ConfigSection::const_iterator tn =
+           section.begin(); tn != section.end(); ++tn) {
 
     if (tn->first == "neighbor")
     {
       try {
-        boost::property_tree::ptree CommandAttriTree = tn->second;
+        ConfigSection CommandAttriTree = tn->second;
         std::string name = CommandAttriTree.get<std::string>("name");
         std::string faceUri = CommandAttriTree.get<std::string>("face-uri");
         double linkCost = CommandAttriTree.get<double>("link-cost",
@@ -342,12 +337,11 @@ ConfFileProcessor::processConfSectionNeighbors(boost::property_tree::ptree
 }
 
 bool
-ConfFileProcessor::processConfSectionHyperbolic(boost::property_tree::ptree
-                                                SectionAttributeTree)
+ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
 {
   std::string state;
   try {
-    state= SectionAttributeTree.get<string>("state","off");
+    state= section.get<string>("state","off");
     if (boost::iequals(state, "off")) {
       m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_OFF);
     }
@@ -374,8 +368,8 @@ ConfFileProcessor::processConfSectionHyperbolic(boost::property_tree::ptree
      * in the network may use hyperbolic routing calculation for FIB generation.
      * So each router need to advertise its hyperbolic coordinates in the network
      */
-    double radius = SectionAttributeTree.get<double>("radius");
-    double angle = SectionAttributeTree.get<double>("angle");
+    double radius = section.get<double>("radius");
+    double angle = section.get<double>("angle");
     if (!m_nlsr.getConfParameter().setCorR(radius)) {
       return false;
     }
@@ -392,12 +386,11 @@ ConfFileProcessor::processConfSectionHyperbolic(boost::property_tree::ptree
 }
 
 bool
-ConfFileProcessor::processConfSectionFib(boost::property_tree::ptree
-                                         SectionAttributeTree)
+ConfFileProcessor::processConfSectionFib(const ConfigSection& section)
 {
   try {
     int maxFacesPerPrefixNumber =
-      SectionAttributeTree.get<int>("max-faces-per-prefix");
+      section.get<int>("max-faces-per-prefix");
     if (maxFacesPerPrefixNumber >= MAX_FACES_PER_PREFIX_MIN &&
         maxFacesPerPrefixNumber <= MAX_FACES_PER_PREFIX_MAX)
     {
@@ -417,11 +410,10 @@ ConfFileProcessor::processConfSectionFib(boost::property_tree::ptree
 }
 
 bool
-ConfFileProcessor::processConfSectionAdvertising(boost::property_tree::ptree
-                                                 SectionAttributeTree)
+ConfFileProcessor::processConfSectionAdvertising(const ConfigSection& section)
 {
-  for (boost::property_tree::ptree::const_iterator tn =
-         SectionAttributeTree.begin(); tn != SectionAttributeTree.end(); ++tn) {
+  for (ConfigSection::const_iterator tn =
+         section.begin(); tn != section.end(); ++tn) {
    if (tn->first == "prefix") {
      try {
        std::string prefix = tn->second.data();
@@ -444,7 +436,7 @@ ConfFileProcessor::processConfSectionAdvertising(boost::property_tree::ptree
 }
 
 bool
-ConfFileProcessor::processConfSectionSecurity(boost::property_tree::ptree section)
+ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 {
   ConfigSection::const_iterator it = section.begin();
 
@@ -483,4 +475,4 @@ ConfFileProcessor::processConfSectionSecurity(boost::property_tree::ptree sectio
   return true;
 }
 
-}//namespace NLSR
+} // namespace nlsr

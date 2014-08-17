@@ -45,34 +45,33 @@ public:
   processConfFile();
 
 private:
+  typedef boost::property_tree::ptree ConfigSection;
+
   bool
   load(std::istream& input);
 
   bool
-  processSection(const std::string& section,
-                 boost::property_tree::ptree SectionAttributeTree);
+  processSection(const std::string& sectionName, const ConfigSection& section);
 
   bool
-  processConfSectionGeneral(boost::property_tree::ptree SectionAttributeTree);
+  processConfSectionGeneral(const ConfigSection& section);
 
   bool
-  processConfSectionNeighbors(boost::property_tree::ptree SectionAttributeTree);
+  processConfSectionNeighbors(const ConfigSection& section);
 
   bool
-  processConfSectionHyperbolic(boost::property_tree::ptree SectionAttributeTree);
+  processConfSectionHyperbolic(const ConfigSection& section);
 
   bool
-  processConfSectionFib(boost::property_tree::ptree SectionAttributeTree);
+  processConfSectionFib(const ConfigSection& section);
 
   bool
-  processConfSectionAdvertising(boost::property_tree::ptree SectionAttributeTree);
+  processConfSectionAdvertising(const ConfigSection& section);
 
   bool
-  processConfSectionSecurity(boost::property_tree::ptree SectionAttributeTree);
+  processConfSectionSecurity(const ConfigSection& section);
 
 private:
-  typedef boost::property_tree::ptree ConfigSection;
-
   std::string m_confFileName;
   Nlsr& m_nlsr;
 };

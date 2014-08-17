@@ -99,7 +99,7 @@ Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
 bool
 Lsdb::installNameLsa(NameLsa& nlsa)
 {
-  ndn::time::seconds timeToExpire = ndn::time::seconds(m_lsaRefreshTime);
+  ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   NameLsa* chkNameLsa = findNameLsa(nlsa.getKey());
   if (chkNameLsa == 0) {
     addNameLsa(nlsa);
@@ -305,7 +305,7 @@ Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
 bool
 Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
 {
-  ndn::time::seconds timeToExpire = ndn::time::seconds(m_lsaRefreshTime);
+  ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   CoordinateLsa* chkCorLsa = findCoordinateLsa(clsa.getKey());
   if (chkCorLsa == 0) {
     _LOG_DEBUG("New Coordinate LSA. Adding to LSDB");
@@ -511,7 +511,7 @@ Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
 bool
 Lsdb::installAdjLsa(AdjLsa& alsa)
 {
-  ndn::time::seconds timeToExpire = ndn::time::seconds(m_lsaRefreshTime);
+  ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   AdjLsa* chkAdjLsa = findAdjLsa(alsa.getKey());
   if (chkAdjLsa == 0) {
     _LOG_DEBUG("New Adj LSA. Adding to LSDB");
@@ -614,7 +614,7 @@ Lsdb::getAdjLsdb()
 void
 Lsdb::setLsaRefreshTime(int lrt)
 {
-  m_lsaRefreshTime = lrt;
+  m_lsaRefreshTime = ndn::time::seconds(lrt);
 }
 
 void
@@ -644,7 +644,7 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         // schedule refreshing event again
         chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(chkNameLsa->getKey(),
                                                                  chkNameLsa->getLsSeqNo(),
-                                                                 ndn::time::seconds(m_lsaRefreshTime)));
+                                                                 m_lsaRefreshTime));
         // publish routing update
         //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
@@ -683,7 +683,7 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         // schedule refreshing event again
         chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(chkAdjLsa->getKey(),
                                                                chkAdjLsa->getLsSeqNo(),
-                                                               ndn::time::seconds(m_lsaRefreshTime)));
+                                                               m_lsaRefreshTime));
         // publish routing update
         //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
@@ -726,7 +726,7 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
         chkCorLsa->setExpiringEventId(scheduleCoordinateLsaExpiration(
                                         chkCorLsa->getKey(),
                                         chkCorLsa->getLsSeqNo(),
-                                        ndn::time::seconds(m_lsaRefreshTime)));
+                                        m_lsaRefreshTime));
         // publish routing update
         //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
         //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
@@ -1015,4 +1015,4 @@ Lsdb::doesLsaExist(const ndn::Name& key, const std::string& lsType)
   return false;
 }
 
-}//namespace nlsr
+} // namespace nlsr

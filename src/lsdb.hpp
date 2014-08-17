@@ -218,7 +218,7 @@ private:
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;
 
-  int m_lsaRefreshTime;
+  ndn::time::seconds m_lsaRefreshTime;
   std::string m_thisRouterPrefix;
 
 };
