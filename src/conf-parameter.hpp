@@ -102,7 +102,7 @@ public:
     , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
     , m_routingCalcInterval(ROUTING_CALC_INTERVAL_DEFAULT)
     , m_lsaInterestLifetime(ndn::time::seconds(static_cast<int>(LSA_INTEREST_LIFETIME_DEFAULT)))
-    , m_routerDeadInterval(2*LSA_REFRESH_TIME_DEFAULT)
+    , m_routerDeadInterval(2 * LSA_REFRESH_TIME_DEFAULT)
     , m_logLevel("INFO")
     , m_interestRetryNumber(HELLO_RETRIES_DEFAULT)
     , m_interestResendTime(HELLO_TIMEOUT_DEFAULT)

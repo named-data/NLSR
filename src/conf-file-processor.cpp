@@ -271,6 +271,23 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   try {
+    int32_t routerDeadInterval = section.get<int32_t>("router-dead-interval");
+
+    if (routerDeadInterval > m_nlsr.getConfParameter().getLsaRefreshTime()) {
+      m_nlsr.getConfParameter().setRouterDeadInterval(routerDeadInterval);
+    }
+    else {
+      std::cerr << "Value of router-dead-interval must be larger than lsa-refresh-time"
+        << std::endl;
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    std::cerr << ex.what() << std::endl;
+    // non-critical error. default value is 2 * lsa-refresh-time
+  }
+
+  try {
     int lifetime = section.get<int>("lsa-interest-lifetime");
     if (lifetime >= LSA_INTEREST_LIFETIME_MIN && lifetime <= LSA_INTEREST_LIFETIME_MAX) {
       m_nlsr.getConfParameter().setLsaInterestLifetime(ndn::time::seconds(lifetime));
@@ -284,7 +301,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
   catch (const std::exception& ex) {
     std::cerr << ex.what() << std::endl;
-    // return false;
+    // non-critical error. default value is 4
   }
 
   try {

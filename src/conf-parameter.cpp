@@ -41,6 +41,7 @@ ConfParameter::writeLog()
   _LOG_DEBUG("Info Interest interval: " << m_infoInterestInterval);
   _LOG_DEBUG("LSA refresh time: " << m_lsaRefreshTime);
   _LOG_DEBUG("LSA Interest lifetime: " << getLsaInterestLifetime());
+  _LOG_DEBUG("Router dead interval: " << getRouterDeadInterval());
   _LOG_DEBUG("Max Faces Per Prefix: " << m_maxFacesPerPrefix);
   _LOG_DEBUG("Hyperbolic Routing: " << m_hyperbolicState);
   _LOG_DEBUG("Hyp R: " << m_corR);
