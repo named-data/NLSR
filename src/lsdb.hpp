@@ -239,6 +239,7 @@ private:
   seconds m_lsaRefreshTime;
   std::string m_thisRouterPrefix;
 
+  static const ndn::time::seconds GRACE_PERIOD;
 };
 
 }//namespace nlsr

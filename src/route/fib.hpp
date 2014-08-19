@@ -74,6 +74,12 @@ private:
   isPrefixUpdatable(const ndn::Name& name);
 
   void
+  addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& nextHopList);
+
+  void
+  removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, NexthopList& newHopList);
+
+  void
   removeHop(NexthopList& nl, const std::string& doNotRemoveHopFaceUri,
             const ndn::Name& name);
 
@@ -81,14 +87,11 @@ private:
   getNumberOfFacesForName(NexthopList& nextHopList, uint32_t maxFacesPerPrefix);
 
   ndn::EventId
-  scheduleEntryRefreshing(const ndn::Name& name, int32_t feSeqNum,
+  scheduleEntryExpiration(const ndn::Name& name, int32_t feSeqNum,
                           const ndn::time::seconds& expTime);
 
   void
   cancelScheduledExpiringEvent(ndn::EventId eid);
-
-  void
-  refreshEntry(const ndn::Name& name, int32_t feSeqNum);
 
 public:
   void

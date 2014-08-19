@@ -33,6 +33,8 @@ namespace nlsr {
 
 INIT_LOGGER("Lsdb");
 
+const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
+
 using namespace std;
 
 void
@@ -91,7 +93,7 @@ ndn::EventId
 Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
                                 const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(expTime,
+  return m_nlsr.getScheduler().scheduleEvent(expTime + GRACE_PERIOD,
                                              ndn::bind(&Lsdb::exprireOrRefreshNameLsa,
                                                        this, key, seqNo));
 }
@@ -297,7 +299,7 @@ ndn::EventId
 Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                       const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(expTime,
+  return m_nlsr.getScheduler().scheduleEvent(expTime + GRACE_PERIOD,
                                              ndn::bind(&Lsdb::exprireOrRefreshCoordinateLsa,
                                                        this, key, seqNo));
 }
@@ -503,7 +505,7 @@ ndn::EventId
 Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
                                const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(expTime,
+  return m_nlsr.getScheduler().scheduleEvent(expTime + GRACE_PERIOD,
                                              ndn::bind(&Lsdb::exprireOrRefreshAdjLsa,
                                                        this, key, seqNo));
 }

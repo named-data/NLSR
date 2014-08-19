@@ -72,6 +72,20 @@ public:
     return m_nexthopList;
   }
 
+  typedef std::list<NextHop>::iterator iterator;
+
+  iterator
+  begin()
+  {
+    return m_nexthopList.begin();
+  }
+
+  iterator
+  end()
+  {
+    return m_nexthopList.end();
+  }
+
   void
   writeLog();
 
