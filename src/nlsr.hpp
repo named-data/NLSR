@@ -224,19 +224,6 @@ public:
     m_isBuildAdjLsaSheduled = iabls;
   }
 
-
-  void
-  setApiPort(int32_t ap)
-  {
-    m_apiPort = ap;
-  }
-
-  int32_t
-  getApiPort()
-  {
-    return m_apiPort;
-  }
-
   bool
   getIsRoutingTableCalculating()
   {
@@ -372,7 +359,6 @@ private:
   Fib m_fib;
   NamePrefixTable m_namePrefixTable;
   SyncLogicHandler m_syncLogicHandler;
-  int32_t m_apiPort;
   HelloProtocol m_helloProtocol;
 
   ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;

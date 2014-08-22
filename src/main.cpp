@@ -35,7 +35,7 @@ main(int32_t argc, char** argv)
   std::string programName(argv[0]);
   nlsr.setConfFileName("nlsr.conf");
   int32_t opt;
-  while ((opt = getopt(argc, argv, "df:p:h")) != -1) {
+  while ((opt = getopt(argc, argv, "df:h")) != -1) {
     switch (opt)
     {
       case 'f':
@@ -44,14 +44,6 @@ main(int32_t argc, char** argv)
       case 'd':
         nlsr.setIsDaemonProcess(true);
         break;
-      case 'p':
-      {
-        std::stringstream sst(optarg);
-        int ap;
-        sst >> ap;
-        nlsr.setApiPort(ap);
-      }
-      break;
       case 'h':
       default:
         nlsr.usage(programName);
