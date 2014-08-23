@@ -112,7 +112,7 @@ Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& nextHopList)
     if (isPrefixUpdatable(name)) {
       // Add nexthop to NDN-FIB
       registerPrefix(name, hopIt->getConnectingFaceUri(),
-                     std::ceil(hopIt->getRouteCost()),
+                     hopIt->getRouteCostAsAdjustedInteger(),
                      ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
                      ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
     }

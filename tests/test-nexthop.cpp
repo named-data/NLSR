@@ -31,14 +31,21 @@ BOOST_AUTO_TEST_SUITE(TestNexthop)
 
 BOOST_AUTO_TEST_CASE(NexthopSetAndGet)
 {
-  NextHop np1;
+  NextHop hop1;
+  hop1.setConnectingFaceUri("udp://test/uri");
+  hop1.setRouteCost(12.34);
 
-  np1.setConnectingFaceUri("udp://test/uri");
+  BOOST_CHECK_EQUAL(hop1.getConnectingFaceUri(), "udp://test/uri");
+  BOOST_CHECK_EQUAL(hop1.getRouteCost(), 12.34);
+  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), 1234);
 
-  np1.setRouteCost(10.1);
+  NextHop hop2;
 
-  BOOST_CHECK_EQUAL(np1.getConnectingFaceUri(), "udp://test/uri");
-  BOOST_CHECK_EQUAL(np1.getRouteCost(), 11);
+  hop2.setRouteCost(12.34);
+  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), hop2.getRouteCostAsAdjustedInteger());
+
+  hop2.setRouteCost(12.35);
+  BOOST_CHECK(hop1.getRouteCostAsAdjustedInteger() < hop2.getRouteCostAsAdjustedInteger());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

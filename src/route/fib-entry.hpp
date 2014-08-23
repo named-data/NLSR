@@ -102,9 +102,6 @@ public:
     return m_seqNo;
   }
 
-  bool
-  isEqualNextHops(NexthopList& nhlOther);
-
   void
   writeLog();
 

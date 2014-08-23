@@ -41,7 +41,7 @@ static bool
 nexthopRemoveCompare(NextHop& nh1, NextHop& nh2)
 {
   return (nh1.getConnectingFaceUri() == nh2.getConnectingFaceUri() &&
-          nh1.getRouteCost() == nh2.getRouteCost()) ;
+          nh1.getRouteCostAsAdjustedInteger() == nh2.getRouteCostAsAdjustedInteger()) ;
 }
 
 static bool

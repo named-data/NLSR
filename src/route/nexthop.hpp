@@ -56,10 +56,15 @@ public:
   }
 
   uint64_t
+  getRouteCostAsAdjustedInteger() const
+  {
+    return static_cast<uint64_t>(m_routeCost*HYPERBOLIC_COST_ADJUSTMENT_FACTOR);
+  }
+
+  double
   getRouteCost() const
   {
-    uint64_t routeCost = static_cast<uint64_t>(ceil(m_routeCost));
-    return routeCost;
+    return m_routeCost;
   }
 
   void
@@ -71,6 +76,7 @@ public:
 private:
   std::string m_connectingFaceUri;
   double m_routeCost;
+  static const uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 100;
 };
 
 }//namespace nlsr
