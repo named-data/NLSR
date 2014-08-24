@@ -23,6 +23,7 @@ NLSR is an open source project includes contributions from the members of the
     * Ashlesh Gawande
     * Minsheng Zhang
     * Syed Obaid Amin     <http://obaidamin.weebly.com/>
+    * Vince Lehman        <http://vslehman.com>
 
 * University of California, Los Angeles
 
