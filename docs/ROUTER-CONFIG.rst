@@ -1,57 +1,72 @@
-Example network and sample configuration:
-=========================================
+Router Configuration
+====================
 
-Lets assume that three routers in the same network but at three different sites (
-memphis.edu, arizona.edu, and colostate.edu) are connected to each other to
+.. toctree::
+..
+
+Example network and sample configuration
+----------------------------------------
+
+Assume that three routers in the same network, but at three different sites
+(``memphis.edu``, ``arizona.edu``, and ``colostate.edu``), are connected to each other to
 construct the following topology:
 
-                        -------------------------------------
+::
+
+                        +-------------------------------------+
                         | /ndn/edu/memphis/%C1.Router/router1 |
-                        -------------------------------------
+                        +-------------------------------------+
                             / 11                      12\
                            /                             \
           route-cost = 25 /                               \ route-cost = 30
                          /                                 \
                      17 /                                   \ 13
-    ------------------------------------- 7              10 --------------------------------------
+    +-----------------------------------+ 7              10 +-------------------------------------+
     |/ndn/edu/arizona/%C1.Router/router3|-------------------|/ndn/edu/colostate/%C1.Router/router2|
-    -------------------------------------   route-cost = 28 --------------------------------------
+    +-----------------------------------+   route-cost = 28 +-------------------------------------+
 
                           Figure: Network Topology
 
-The number represents the connecting face id. For example, `/ndn/edu/memphis/%C1.Router/router1`
-is connected to `/ndn/edu/arizona/%C1.Router/router3` via face 11 and the route cost is 25.
-To reach `/ndn/edu/colostate/%C1.Router/router2` via face 12, the route cost is 30.
+The number represents the connecting face id. For example,
+``/ndn/edu/memphis/%C1.Router/router1`` is connected to
+``/ndn/edu/arizona/%C1.Router/router3`` via face 11 and the route cost is 25. To reach
+``/ndn/edu/colostate/%C1.Router/router2`` via face 12, the route cost is 30.
 
 We will walk through setting up the faces and creating the configuration file for
-`/ndn/edu/memphis/%C1.Router/router1`.
+``/ndn/edu/memphis/%C1.Router/router1``.
 
-Step 1. Ensure nfd is running :
-----------------
+Step 1. Ensure nfd is running
+-------------------------------
+
 Type the following in the terminal:
 
-    "nfd-status -f"
+::
 
+    nfd-status -f
 
-if you see `ERROR: error while connecting to the forwarder (No such file or directory)`
-message that means nfd is not running. Follow the instructions in [Getting started with NFD ](http://named-data.net/doc/NFD/current/getting-started.html) to run nfd.
+If you see ``ERROR: error while connecting to the forwarder (No such file or directory)``,
+``nfd`` is not running. Follow the instructions in `Getting started with NFD
+<http://named-data.net/doc/NFD/current/INSTALL.html>`_ to run nfd.
 
-Step 2. Determining FaceUri:
---------------------
-Lets assume that `/ndn/edu/arizona/%C1.Router/router3` has hostname `router3.arizona.edu`
-and `/ndn/edu/colostate/%C1.Router/router2` has ip address `79.123.10.145`, and that all
-routers in the network had agreed to sync data in name prefix `/ndn/nlsr/sync`.
-`/ndn/edu/memphis/%C1.Router/router1` will consider face uri `udp4://router3.arizona.edu` for
-router `/ndn/edu/arizona/%C1.Router/router3` and face uri `udp4://79.123.10.145` for router
-`/ndn/edu/colostate/%C1.Router/router2`.
+Step 2. Determining FaceUri
+---------------------------
 
-Step 3: Creating configuration file:
-------------------------------------
-Now, lets assume that /ndn/memphis.edu/router1 wants to advertise three name
-prefixes that can be reached through it ( `/ndn/memphis/sports/basketball/grizzlies`,
-`/ndn/memphis/entertainment/blues`, `/ndn/news/memphis/politics/lutherking`). Now,
-the configuration file with minimum configuration commands will have the following
-commands
+Assume that ``/ndn/edu/arizona/%C1.Router/router3`` has hostname ``router3.arizona.edu``,
+``/ndn/edu/colostate/%C1.Router/router2`` has ip address ``79.123.10.145``, and that all
+routers in the network have agreed to sync data with name prefix ``/ndn/nlsr/sync``.
+``/ndn/edu/memphis/%C1.Router/router1`` will consider face uri
+``udp4://router3.arizona.edu`` for router ``/ndn/edu/arizona/%C1.Router/router3`` and face
+uri ``udp4://79.123.10.145`` for router ``/ndn/edu/colostate/%C1.Router/router2``.
+
+Step 3: Creating configuration file
+-----------------------------------
+
+Now, assume that ``/ndn/memphis.edu/router1`` wants to advertise three name prefixes
+(``/ndn/memphis/sports/basketball/grizzlies``, ``/ndn/memphis/entertainment/blues``,
+``/ndn/news/memphis/politics/lutherking``). The configuration file with minimum
+configuration commands follows:
+
+::
 
     ; nlsr.conf starts here
     ; the general section contains all the general settings for router
@@ -112,8 +127,9 @@ commands
       }
     }
 
-    ; the hyperbolic section contains the configuration settings of enabling a router to calculate
-    ; routing table using [hyperbolic routing table calculation](http://arxiv.org/abs/0805.1266) method
+    ; the hyperbolic section contains the configuration settings of enabling
+    a router to calculate ; routing table using `hyperbolic routing table
+    calculation`_ method
 
     hyperbolic
     {
@@ -142,8 +158,8 @@ commands
 
     }
 
-    ; the advertising section contains the configuration settings of the name prefixes
-    ; hosted by this router
+    ; the advertising section contains the configuration settings of the
+    name prefixes ; hosted by this router
 
     advertising
     {
@@ -155,39 +171,44 @@ commands
         prefix /ndn/news/memphis/politics/lutherking
     }
 
-    ; security configuration is discussed
-    ;[NLSR's security configuration](https://github.com/named-data/NLSR/blob/master/docs/SECURITY.md)
-    ; which will be also part of this configuration file here
-    ;
-    ; nlsr.conf end here
+.. note::
 
-Step 4: Running NLSR in /ndn/memphis.edu/router1:
+    Security configuration is discussed in :doc:`SECURITY-CONFIG`, which will be also part
+    of this configuration file
+
+Step 4: Running NLSR on /ndn/memphis.edu/router1
 -------------------------------------------------
-Assuming the configuration file is saved as nlsr.conf. Type the following to run
-nlsr
+
+Assuming the configuration file is saved as ``nlsr.conf``, type the following to run nlsr:
+
+::
 
     $ nlsr -f nlsr.conf
 
-NLSR will look for nlsr.conf in the current directory. If nlsr.conf is not in
-the corrent directory, please provide the absolute path with the file name as the
-value. If nlsr.conf resides in /home/ndnuser/configuration directory, type "nlsr
--f /home/ndnuser/configuration/nlsr.conf" to run nlsr.
+NLSR will look for nlsr.conf in the current directory. If nlsr.conf is not in the current
+directory, please provide the absolute path with the file name as the value. If
+``nlsr.conf`` resides in ``/home/ndnuser/configuration`` directory, type ``nlsr -f
+/home/ndnuser/configuration/nlsr.conf`` to run nlsr.
 
-The same process needs to be followed for router /ndn/arizona.edu/router3 and
-/ndn/colostate.edu/router2 to run NLSR on these routers.
+The same process needs to be followed for ``/ndn/arizona.edu/router3`` and
+``/ndn/colostate.edu/router2`` to run NLSR on these routers.
 
-Expected Output:
+Expected Output
 ----------------
-Assuming that all three routers are configured correctly and converged, nfd-status
-in `/ndn/edu/colostate/%C1.Router/router2` will have the following entries for the
-name advertised by `/ndn/edu/memphis/%C1.Router/router1`. This output can be 
-seen by typing `nfd-status -b` in terminal
+
+Assuming that all three routers are configured correctly and have converged, ``nfd-status`` in
+``/ndn/edu/colostate/%C1.Router/router2`` will have the following entries for the name
+advertised by ``/ndn/edu/memphis/%C1.Router/router1``:
 
 FIB:
+
+::
 
     /ndn/memphis/sports/basketball/grizzlies nexthops={faceid=17 (cost=25), faceid=7 (cost=58)}
     /ndn/memphis/entertainment/blues nexthops={faceid=17 (cost=25), faceid=7 (cost=58)}
     /ndn/news/memphis/politics/lutherking nexthops={faceid=17 (cost=25), faceid=7 (cost=58)}
 
-Please refer to the network figure for face id. Numbers at the end of each link
-correspond to face ids.
+This output can be seen by typing ``nfd-status -b`` in the terminal.  Please refer to the
+network figure for face IDs.
+
+.. _hyperbolic routing table calculation: http://arxiv.org/abs/0805.1266

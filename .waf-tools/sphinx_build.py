@@ -1,18 +1,19 @@
 #!/usr/bin/env python
 # encoding: utf-8
-# Hans-Martin von Gaudecker, 2012
+
+# inspired by code by Hans-Martin von Gaudecker, 2012
 
 import os
 from waflib import Node, Task, TaskGen, Errors, Logs, Build, Utils
 
 class sphinx_build(Task.Task):
     color = 'BLUE'
-    run_str = '${SPHINX_BUILD} -q -b ${BUILDERNAME} -d ${DOCTREEDIR} ${SRCDIR} ${OUTDIR}'
+    run_str = '${SPHINX_BUILD} -D ${VERSION} -D ${RELEASE} -q -b ${BUILDERNAME} -d ${DOCTREEDIR} ${SRCDIR} ${OUTDIR}'
 
     def __str__(self):
         env = self.env
-        src_str = ' '.join([a.nice_path()for a in self.inputs])
-        tgt_str = ' '.join([a.nice_path()for a in self.outputs])
+        src_str = ' '.join([a.path_from(a.ctx.launch_node()) for a in self.inputs])
+        tgt_str = ' '.join([a.path_from(a.ctx.launch_node()) for a in self.outputs])
         if self.outputs: sep = ' -> '
         else: sep = ''
         return'%s [%s]: %s%s%s\n'%(self.__class__.__name__.replace('_task',''),
@@ -52,6 +53,8 @@ def apply_sphinx(self):
     task.env['SRCDIR'] = srcdir
     task.env['DOCTREEDIR'] = doctreedir
     task.env['OUTDIR'] = outdir.abspath()
+    task.env['VERSION'] = "version=%s" % self.VERSION
+    task.env['RELEASE'] = "release=%s" % self.VERSION
 
     import imp
     confData = imp.load_source('sphinx_conf', conf.abspath())

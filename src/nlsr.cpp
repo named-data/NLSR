@@ -283,9 +283,10 @@ Nlsr::usage(const string& progname)
 {
   std::cout << "Usage: " << progname << " [OPTIONS...]" << std::endl;
   std::cout << "   NDN routing...." << std::endl;
-  std::cout << "       -d, --daemon        Run in daemon mode" << std::endl;
-  std::cout << "       -f, --config_file   Specify configuration file name" << std::endl;
-  std::cout << "       -h, --help          Display this help message" << std::endl;
+  std::cout << "       -d          Run in daemon mode" << std::endl;
+  std::cout << "       -f <FILE>   Specify configuration file name" << std::endl;
+  std::cout << "       -V          Display version information" << std::endl;
+  std::cout << "       -h          Display this help message" << std::endl;
 }
 
 

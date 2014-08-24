@@ -25,6 +25,7 @@
 #include "nlsr.hpp"
 #include "conf-file-processor.hpp"
 #include "logger.hpp"
+#include "version.hpp"
 
 using namespace nlsr;
 
@@ -35,20 +36,24 @@ main(int32_t argc, char** argv)
   std::string programName(argv[0]);
   nlsr.setConfFileName("nlsr.conf");
   int32_t opt;
-  while ((opt = getopt(argc, argv, "df:h")) != -1) {
+  while ((opt = getopt(argc, argv, "df:hV")) != -1) {
     switch (opt)
-    {
+      {
       case 'f':
         nlsr.setConfFileName(optarg);
         break;
       case 'd':
         nlsr.setIsDaemonProcess(true);
         break;
+      case 'V':
+        std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
+        return EXIT_SUCCESS;
+        break;
       case 'h':
       default:
         nlsr.usage(programName);
         return EXIT_FAILURE;
-    }
+      }
   }
   ConfFileProcessor cfp(nlsr, nlsr.getConfFileName());
   if(!cfp.processConfFile()) {

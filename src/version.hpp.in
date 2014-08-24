@@ -1,0 +1,69 @@
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/**
+ * Copyright (c) 2014  University of Memphis,
+ *                     Regents of the University of California
+ *
+ * This file is part of NLSR (Named-data Link State Routing).
+ * See AUTHORS.md for complete list of NLSR authors and contributors.
+ *
+ * NLSR is free software: you can redistribute it and/or modify it under the terms
+ * of the GNU General Public License as published by the Free Software Foundation,
+ * either version 3 of the License, or (at your option) any later version.
+ *
+ * NLSR is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE.  See the GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
+ **/
+
+#ifndef NLSR_VERSION_HPP
+#define NLSR_VERSION_HPP
+
+namespace nlsr {
+
+/** NLSR version follows Semantic Versioning 2.0.0 specification
+ *  http://semver.org/
+ */
+
+// To change version number, modify VERSION variable in top-level wscript.
+
+/** \brief NLSR version represented as an integer
+ *
+ *  MAJOR*1000000 + MINOR*1000 + PATCH
+ */
+#define NLSR_VERSION @VERSION@
+
+/** \brief NLSR version represented as a string
+ *
+ *  MAJOR.MINOR.PATCH
+ */
+#define NLSR_VERSION_STRING "@VERSION_STRING@"
+
+/** \brief NLSR version string, including git commit information, if NLSR is build from
+ *         specific git commit
+ *
+ * NLSR_VERSION_BUILD_STRING is obtained using the following command (`NLSR-` prefix is
+ * afterwards removed):
+ *
+ *    `git describe --match 'NLSR-*'`
+ *
+ * When NLSR is built not from git, NLSR_VERSION_BUILD_STRING equals NLSR_VERSION_STRING
+ *
+ * MAJOR.MINOR.PATCH(-release-candidate-tag)(-(number-of-commits-since-tag)-COMMIT-HASH)
+ *
+ * Example, 0.1.0-rc1-1-g5c86570
+ */
+#define NLSR_VERSION_BUILD_STRING "@VERSION_BUILD@"
+
+/// MAJOR version
+#define NLSR_VERSION_MAJOR @VERSION_MAJOR@
+/// MINOR version
+#define NLSR_VERSION_MINOR @VERSION_MINOR@
+/// PATCH version
+#define NLSR_VERSION_PATCH @VERSION_PATCH@
+
+} // namespace nlsr
+
+#endif // NLSR_VERSION_HPP
