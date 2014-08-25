@@ -22,7 +22,7 @@ The trust model of NLSR is semi-hierarchical. An example certificate signing hie
               +           +        +          +        +           +        +
             NLSR        NSLR     NSLR       NSLR     NSLR        NSLR     NSLR
 
-Each entity’s name and corresponding certificate name follow the
+Each entity's name and corresponding certificate name follow the
 convention below:
 
 ========  ===================================================== =================================  ===============================================

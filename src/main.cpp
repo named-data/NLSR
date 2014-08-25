@@ -27,12 +27,12 @@
 #include "logger.hpp"
 #include "version.hpp"
 
-using namespace nlsr;
+namespace nlsr {
 
-int32_t
+int
 main(int32_t argc, char** argv)
 {
-  nlsr::Nlsr nlsr;
+  Nlsr nlsr;
   std::string programName(argv[0]);
   nlsr.setConfFileName("nlsr.conf");
   int32_t opt;
@@ -56,7 +56,7 @@ main(int32_t argc, char** argv)
       }
   }
   ConfFileProcessor cfp(nlsr, nlsr.getConfFileName());
-  if(!cfp.processConfFile()) {
+  if (!cfp.processConfFile()) {
     std::cerr << "Error in configuration file processing! Exiting from NLSR" << std::endl;
     return EXIT_FAILURE;
   }
@@ -75,4 +75,12 @@ main(int32_t argc, char** argv)
     nlsr.destroyFaces();
   }
   return EXIT_SUCCESS;
+}
+
+} // namespace nlsr
+
+int
+main(int32_t argc, char** argv)
+{
+  return nlsr::main(argc, argv);
 }

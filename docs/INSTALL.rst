@@ -7,19 +7,20 @@ NLSR Installation Instructions
 Prerequisites
 -------------
 
--  `NFD`_ and its requirements:
+-  `NFD <http://named-data.net/doc/NFD/current/>`_ and its requirements:
 
-Refer to `Getting started with NFD`_ for detailed installation and running instruction.
+Refer to `Getting started with NFD <http://named-data.net/doc/NFD/current/INSTALL.html>`_
+for detailed installation and running instruction.
 
 -  log4cxx library
 
-   On Linux:
+   On Ubuntu Linux:
 
    ::
 
           sudo apt-get install liblog4cxx10-dev
 
-   On Mac OSx:
+   On OS X with MacPorts:
 
    ::
 
@@ -27,13 +28,13 @@ Refer to `Getting started with NFD`_ for detailed installation and running instr
 
 -  protobuf
 
-   On Linux:
+   On Ubuntu Linux:
 
    ::
 
           sudo apt-get install libprotobuf-dev protobuf-compiler
 
-   On Mac OSx:
+   On OS X with MacPorts:
 
    ::
 
@@ -42,7 +43,7 @@ Refer to `Getting started with NFD`_ for detailed installation and running instr
 Build
 -----
 
-The following commands should be used to build NLSR:
+Execute the following commands to build NLSR:
 
 ::
 
@@ -50,17 +51,14 @@ The following commands should be used to build NLSR:
     ./waf
     sudo ./waf install
 
-Refer to ./waf –help for more options that can be used during the configure
-stage and how to properly configure NLSR.
+Refer to ``./waf –help`` for more options that can be used during the configure stage and
+how to properly configure NLSR.
 
-If your pkgconfig path is not set properly you can do following before
-running ``./waf configure``
+If your pkgconfig path is not set properly you can do following before running ``./waf
+configure``
 
 ::
 
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
     or
     export PKG_CONFIG_PATH=/path/to/pkgconfig/in/your/machine
-
-.. _NFD: http://named-data.net/doc/NFD/current/
-.. _Getting started with NFD: http://named-data.net/doc/NFD/current/INSTALL.html

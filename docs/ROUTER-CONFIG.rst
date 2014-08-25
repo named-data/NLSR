@@ -35,7 +35,7 @@ The number represents the connecting face id. For example,
 We will walk through setting up the faces and creating the configuration file for
 ``/ndn/edu/memphis/%C1.Router/router1``.
 
-Step 1. Ensure nfd is running
+Step 1. Ensuring nfd is running
 -------------------------------
 
 Type the following in the terminal:
@@ -52,9 +52,9 @@ Step 2. Determining FaceUri
 ---------------------------
 
 Assume that ``/ndn/edu/arizona/%C1.Router/router3`` has hostname ``router3.arizona.edu``,
-``/ndn/edu/colostate/%C1.Router/router2`` has ip address ``79.123.10.145``, and that all
+``/ndn/edu/colostate/%C1.Router/router2`` has IP address ``79.123.10.145``, and that all
 routers in the network have agreed to sync data with name prefix ``/ndn/nlsr/sync``.
-``/ndn/edu/memphis/%C1.Router/router1`` will consider face uri
+``/ndn/edu/memphis/%C1.Router/router1`` will consider FaceUri
 ``udp4://router3.arizona.edu`` for router ``/ndn/edu/arizona/%C1.Router/router3`` and face
 uri ``udp4://79.123.10.145`` for router ``/ndn/edu/colostate/%C1.Router/router2``.
 
@@ -63,7 +63,7 @@ Step 3: Creating configuration file
 
 Now, assume that ``/ndn/memphis.edu/router1`` wants to advertise three name prefixes
 (``/ndn/memphis/sports/basketball/grizzlies``, ``/ndn/memphis/entertainment/blues``,
-``/ndn/news/memphis/politics/lutherking``). The configuration file with minimum
+``/ndn/news/memphis/politics/lutherking``). The configuration file with the necessary
 configuration commands follows:
 
 ::
@@ -74,17 +74,17 @@ configuration commands follows:
     general
     {
         ; mandatory configuration command section network, site and router
-
         network /ndn/         ; name of the network the router belongs to in ndn URI format
         site /edu/memphis/    ; name of the site the router belongs to in ndn URI format
         router /%C1.Router/router1    ; name of the network the router belongs to in ndn URI format
 
         ; lsa-refresh-time is the time in seconds, after which router will refresh its LSAs
-
         lsa-refresh-time 1800      ; default value 1800. Valid values 240-7200
 
-        ; log-level is to set the levels of log for NLSR
+        ; InterestLifetime (in seconds) for LSA fetching
+        lsa-interest-lifetime 4    ; default value 4. Valid values 1-60
 
+        ; log-level is to set the levels of log for NLSR
         log-level  INFO       ; default value INFO, valid value DEBUG, INFO
         log-dir /var/log/nlsr/
         seq-dir /var/lib/nlsr/
@@ -196,19 +196,19 @@ The same process needs to be followed for ``/ndn/arizona.edu/router3`` and
 Expected Output
 ----------------
 
-Assuming that all three routers are configured correctly and have converged, ``nfd-status`` in
+Assuming that all three routers are configured correctly and routing has converged, ``nfd-status`` in
 ``/ndn/edu/colostate/%C1.Router/router2`` will have the following entries for the name
 advertised by ``/ndn/edu/memphis/%C1.Router/router1``:
 
-FIB:
+RIB:
 
 ::
 
-    /ndn/memphis/sports/basketball/grizzlies nexthops={faceid=17 (cost=25), faceid=7 (cost=58)}
-    /ndn/memphis/entertainment/blues nexthops={faceid=17 (cost=25), faceid=7 (cost=58)}
-    /ndn/news/memphis/politics/lutherking nexthops={faceid=17 (cost=25), faceid=7 (cost=58)}
+    /ndn/memphis/entertainment/blues route={faceid=17 (origin=128 cost=25 ChildInherit), faceid=7 (origin=128 cost=58 ChildInherit)}
+    /ndn/memphis/sports/basketball/grizzlies route={faceid=17 (origin=128 cost=25 ChildInherit), faceid=7 (origin=128 cost=58 ChildInherit)}
+    /ndn/news/memphis/politics/lutherking route={faceid=17 (origin=128 cost=25 ChildInherit, faceid=7 (origin=128 cost=58 ChildInherit)}
 
-This output can be seen by typing ``nfd-status -b`` in the terminal.  Please refer to the
+This output can be seen by typing ``nfd-status -r`` in the terminal.  Please refer to the
 network figure for face IDs.
 
 .. _hyperbolic routing table calculation: http://arxiv.org/abs/0805.1266

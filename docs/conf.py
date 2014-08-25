@@ -32,6 +32,19 @@ extensions = [
     'sphinx.ext.todo',
 ]
 
+def addExtensionIfExists(extension):
+    try:
+        __import__(extension)
+        extensions.append(extension)
+    except ImportError:
+        sys.stderr.write("Extension '%s' in not available. "
+                         "Some documentation may not build correctly.\n" % extension)
+        sys.stderr.write("To install, use \n"
+                         "  sudo pip install %s\n" % extension.replace('.', '-'))
+
+if os.getenv('GOOGLE_ANALYTICS', None):
+    addExtensionIfExists('sphinxcontrib.googleanalytics')
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -224,9 +237,14 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    # ('manpages/nlsr', 'nlsr', u'Named Data Link State Routing Protocol Daemon', None, 1),
+    ('manpages/nlsr', 'nlsr', u'Named Data Link State Routing Protocol Daemon', None, 1),
+    ('manpages/nlsr.conf', 'nlsr.conf', u'Named Data Link State Routing Protocol Daemon config file', None, 5),
 ]
 
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
+
+if os.getenv('GOOGLE_ANALYTICS', None):
+    googleanalytics_id = os.environ['GOOGLE_ANALYTICS']
+    googleanalytics_enabled = True
