@@ -189,13 +189,15 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   try {
+
     std::string logLevel = section.get<string>("log-level");
-    if ( boost::iequals(logLevel, "info") || boost::iequals(logLevel, "debug")) {
+
+    if (isValidLogLevel(logLevel)) {
       m_nlsr.getConfParameter().setLogLevel(logLevel);
     }
     else {
-      std::cerr << "Wrong value for log-level ";
-      std::cerr << "Allowed value: INFO, DEBUG" << std::endl;
+      std::cerr << "Invalid value for log-level ";
+      std::cerr << "Valid values: ALL, TRACE, DEBUG, INFO, WARN, ERROR, NONE" << std::endl;
       return false;
     }
   }

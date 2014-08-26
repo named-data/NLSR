@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_SUITE(TestLsdb)
 
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 {
-  INIT_LOGGERS("/tmp");
+  INIT_LOGGERS("/tmp", "DEBUG");
 
   Nlsr nlsr1;
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();

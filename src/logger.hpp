@@ -25,17 +25,31 @@
 
 #include <log4cxx/logger.h>
 
-
 #define INIT_LOGGER(name) \
   static log4cxx::LoggerPtr staticModuleLogger = log4cxx::Logger::getLogger(name)
 
+#define _LOG_TRACE(x) \
+  LOG4CXX_TRACE(staticModuleLogger, x)
+
 #define _LOG_DEBUG(x) \
-  LOG4CXX_DEBUG(staticModuleLogger,x)
+  LOG4CXX_DEBUG(staticModuleLogger, x)
 
 #define _LOG_INFO(x) \
   LOG4CXX_INFO(staticModuleLogger, x)
 
+#define _LOG_WARN(x) \
+  LOG4CXX_WARN(staticModuleLogger, x)
+
+#define _LOG_ERROR(x) \
+  LOG4CXX_ERROR(staticModuleLogger, x)
+
+#define _LOG_FATAL(x) \
+  LOG4CXX_FATAL(staticModuleLogger, x);
+
 void
-INIT_LOGGERS(const std::string& logDir);
+INIT_LOGGERS(const std::string& logDir, const std::string& logLevel);
+
+bool
+isValidLogLevel(const std::string& logLevel);
 
 #endif // NLSR_LOGGER_HPP

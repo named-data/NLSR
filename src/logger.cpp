@@ -27,24 +27,48 @@
 #include <log4cxx/helpers/exception.h>
 #include <log4cxx/rollingfileappender.h>
 
+#include <boost/algorithm/string.hpp>
+
 #include "logger.hpp"
 
 void
-INIT_LOGGERS(const std::string& logDir)
+INIT_LOGGERS(const std::string& logDir, const std::string& logLevel)
 {
   static bool configured = false;
-  if (configured) return;
+
+  if (configured) {
+    return;
+  }
 
   log4cxx::PatternLayoutPtr
-           layout(new log4cxx::PatternLayout("%date{yyyyMMddHHmmssSSS} %c %L: %m%n"));
+           layout(new log4cxx::PatternLayout("%date{yyyyMMddHHmmssSSS} %p: [%c] %m%n"));
+
   log4cxx::RollingFileAppender* rollingFileAppender =
            new log4cxx::RollingFileAppender(layout, logDir+"/nlsr.log", true);
+
   rollingFileAppender->setMaxFileSize("10MB");
   rollingFileAppender->setMaxBackupIndex(10);
+
   log4cxx::helpers::Pool p;
   rollingFileAppender->activateOptions(p);
+
   log4cxx::BasicConfigurator::configure(log4cxx::AppenderPtr(rollingFileAppender));
-  log4cxx::Logger::getRootLogger()->setLevel(log4cxx::Level::getDebug());
+
+  if (boost::iequals(logLevel, "none")) {
+    log4cxx::Logger::getRootLogger()->setLevel(log4cxx::Level::getOff());
+  }
+  else {
+    log4cxx::Logger::getRootLogger()->setLevel(log4cxx::Level::toLevel(logLevel));
+  }
 
   configured = true;
+}
+
+bool
+isValidLogLevel(const std::string& logLevel)
+{
+  return boost::iequals(logLevel, "all")   || boost::iequals(logLevel, "trace") ||
+         boost::iequals(logLevel, "debug") || boost::iequals(logLevel, "info")  ||
+         boost::iequals(logLevel, "warn")  || boost::iequals(logLevel, "error") ||
+         boost::iequals(logLevel, "none");
 }

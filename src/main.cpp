@@ -60,8 +60,10 @@ main(int32_t argc, char** argv)
     std::cerr << "Error in configuration file processing! Exiting from NLSR" << std::endl;
     return EXIT_FAILURE;
   }
-  INIT_LOGGERS(nlsr.getConfParameter().getLogDir());
+
+  INIT_LOGGERS(nlsr.getConfParameter().getLogDir(), nlsr.getConfParameter().getLogLevel());
   INIT_LOGGER("Main");
+
   nlsr.initialize();
   if (nlsr.getIsSetDaemonProcess()) {
     nlsr.daemonize();
