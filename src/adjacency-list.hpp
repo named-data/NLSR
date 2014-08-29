@@ -42,8 +42,8 @@ public:
   int32_t
   insert(Adjacent& adjacent);
 
-  int32_t
-  updateAdjacentStatus(const ndn::Name& adjName, int32_t s);
+  bool
+  updateAdjacentStatus(const ndn::Name& adjName, Adjacent::Status s);
 
   int32_t
   updateAdjacentLinkCost(const ndn::Name& adjName, double lc);
@@ -60,11 +60,11 @@ public:
   int32_t
   getTimedOutInterestCount(const ndn::Name& neighbor);
 
-  uint32_t
+  Adjacent::Status
   getStatusOfNeighbor(const ndn::Name& neighbor);
 
   void
-  setStatusOfNeighbor(const ndn::Name& neighbor, int32_t status);
+  setStatusOfNeighbor(const ndn::Name& neighbor, Adjacent::Status status);
 
   void
   setTimedOutInterestCount(const ndn::Name& neighbor, uint32_t count);

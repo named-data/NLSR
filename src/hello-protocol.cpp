@@ -102,7 +102,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
     _LOG_DEBUG("Sending out data for name: " << interest.getName());
     m_nlsr.getNlsrFace().put(*data);
     Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
-    if (adjacent->getStatus() == 0) {
+    if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
       if(adjacent->getFaceId() != 0){
         /* interest name: /<neighbor>/NLSR/INFO/<router> */
         ndn::Name interestName(neighbor);
@@ -132,7 +132,9 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   ndn::Name neighbor = interestName.getPrefix(-3);
   _LOG_DEBUG("Neighbor: " << neighbor);
   m_nlsr.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
-  int status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
+
+  Adjacent::Status status = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
+
   uint32_t infoIntTimedOutCount =
     m_nlsr.getAdjacencyList().getTimedOutInterestCount(neighbor);
   _LOG_DEBUG("Status: " << status);
@@ -146,9 +148,9 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
     expressInterest(interestName,
                     m_nlsr.getConfParameter().getInterestResendTime());
   }
-  else if ((status == 1) &&
+  else if ((status == Adjacent::STATUS_ACTIVE) &&
            (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber())) {
-    m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, 0);
+    m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, Adjacent::STATUS_INACTIVE);
     m_nlsr.incrementAdjBuildCount();
     if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
       _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
@@ -184,10 +186,12 @@ HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
   _LOG_DEBUG("Data validation successful for INFO(name): " << dataName);
   if (dataName.get(-3).toUri() == INFO_COMPONENT) {
     ndn::Name neighbor = dataName.getPrefix(-4);
-    int oldStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
-    m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, 1);
+
+    Adjacent::Status oldStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
+    m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, Adjacent::STATUS_ACTIVE);
     m_nlsr.getAdjacencyList().setTimedOutInterestCount(neighbor, 0);
-    int newStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
+    Adjacent::Status newStatus = m_nlsr.getAdjacencyList().getStatusOfNeighbor(neighbor);
+
     _LOG_DEBUG("Neighbor : " << neighbor);
     _LOG_DEBUG("Old Status: " << oldStatus << " New Status: " << newStatus);
     // change in Adjacency list
@@ -272,12 +276,12 @@ HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
   Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(name);
   if (adjacent != 0) {
     adjacent->setInterestTimedOutNo(adjacent->getInterestTimedOutNo() + 1);
-    int status = adjacent->getStatus();
+    Adjacent::Status status = adjacent->getStatus();
     uint32_t infoIntTimedOutCount = adjacent->getInterestTimedOutNo();
 
     if (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber()) {
-      if ( status == 1) {
-        adjacent->setStatus(0);
+      if (status == Adjacent::STATUS_ACTIVE) {
+        adjacent->setStatus(Adjacent::STATUS_INACTIVE);
       }
       m_nlsr.incrementAdjBuildCount();
       if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {

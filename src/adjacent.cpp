@@ -41,7 +41,7 @@ Adjacent::Adjacent()
     : m_name()
     , m_connectingFaceUri()
     , m_linkCost(DEFAULT_LINK_COST)
-    , m_status(ADJACENT_STATUS_INACTIVE)
+    , m_status(STATUS_INACTIVE)
     , m_interestTimedOutNo(0)
     , m_faceId(0)
 {
@@ -51,14 +51,14 @@ Adjacent::Adjacent(const ndn::Name& an)
     : m_name(an)
     , m_connectingFaceUri()
     , m_linkCost(DEFAULT_LINK_COST)
-    , m_status(ADJACENT_STATUS_INACTIVE)
+    , m_status(STATUS_INACTIVE)
     , m_interestTimedOutNo(0)
     , m_faceId(0)
   {
   }
 
 Adjacent::Adjacent(const ndn::Name& an, const std::string& cfu,  double lc,
-          uint32_t s, uint32_t iton, uint64_t faceId)
+                   Status s, uint32_t iton, uint64_t faceId)
     : m_name(an)
     , m_connectingFaceUri(cfu)
     , m_linkCost(lc)

@@ -61,15 +61,18 @@ AdjacencyList::addAdjacents(AdjacencyList& adl)
   }
 }
 
-int32_t
-AdjacencyList::updateAdjacentStatus(const ndn::Name& adjName, int32_t s)
+bool
+AdjacencyList::updateAdjacentStatus(const ndn::Name& adjName, Adjacent::Status s)
 {
   std::list<Adjacent>::iterator it = find(adjName);
+
   if (it == m_adjList.end()) {
-    return -1;
+    return false;
   }
-  (*it).setStatus(s);
-  return 0;
+  else {
+    it->setStatus(s);
+    return true;
+  }
 }
 
 Adjacent
@@ -163,22 +166,25 @@ AdjacencyList::getTimedOutInterestCount(const ndn::Name& neighbor)
   return (*it).getInterestTimedOutNo();
 }
 
-uint32_t
+Adjacent::Status
 AdjacencyList::getStatusOfNeighbor(const ndn::Name& neighbor)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
+
   if (it == m_adjList.end()) {
-    return -1;
+    return Adjacent::STATUS_UNKNOWN;
   }
-  return (*it).getStatus();
+  else {
+    return it->getStatus();
+  }
 }
 
 void
-AdjacencyList::setStatusOfNeighbor(const ndn::Name& neighbor, int32_t status)
+AdjacencyList::setStatusOfNeighbor(const ndn::Name& neighbor, Adjacent::Status status)
 {
   std::list<Adjacent>::iterator it = find(neighbor);
   if (it != m_adjList.end()) {
-    (*it).setStatus(status);
+    it->setStatus(status);
   }
 }
 
@@ -192,9 +198,9 @@ bool
 AdjacencyList::isAdjLsaBuildable(Nlsr& pnlsr)
 {
   uint32_t nbrCount = 0;
-  for (std::list<Adjacent>::iterator it = m_adjList.begin();
-       it != m_adjList.end() ; it++) {
-    if (((*it).getStatus() == 1)) {
+  for (std::list<Adjacent>::iterator it = m_adjList.begin(); it != m_adjList.end() ; it++) {
+
+    if (it->getStatus() == Adjacent::STATUS_ACTIVE) {
       nbrCount++;
     }
     else {
@@ -214,9 +220,9 @@ int32_t
 AdjacencyList::getNumOfActiveNeighbor()
 {
   int32_t actNbrCount = 0;
-  for (std::list<Adjacent>::iterator it = m_adjList.begin();
-       it != m_adjList.end(); it++) {
-    if (((*it).getStatus() == 1)) {
+  for (std::list<Adjacent>::iterator it = m_adjList.begin(); it != m_adjList.end(); it++) {
+
+    if (it->getStatus() == Adjacent::STATUS_ACTIVE) {
       actNbrCount++;
     }
   }

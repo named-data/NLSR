@@ -218,7 +218,7 @@ AdjLsa::AdjLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
   m_noLink = nl;
   std::list<Adjacent> al = adl.getAdjList();
   for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++) {
-    if ((*it).getStatus() == 1) {
+    if (it->getStatus() == Adjacent::STATUS_ACTIVE) {
       addAdjacent((*it));
     }
   }
@@ -286,7 +286,7 @@ AdjLsa::initializeFromContent(const std::string& content)
       ndn::Name adjName(*tok_iter++);
       std::string connectingFaceUri(*tok_iter++);
       double linkCost = boost::lexical_cast<double>(*tok_iter++);
-      Adjacent adjacent(adjName, connectingFaceUri, linkCost, 0, 0, 0);
+      Adjacent adjacent(adjName, connectingFaceUri, linkCost, Adjacent::STATUS_INACTIVE, 0, 0);
       addAdjacent(adjacent);
     }
     catch (std::exception& e) {

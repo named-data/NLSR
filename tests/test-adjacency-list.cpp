@@ -57,10 +57,10 @@ BOOST_AUTO_TEST_CASE(AdjacenctListBasic)
   BOOST_CHECK_EQUAL(adjacentList1.isNeighbor("adjacent"), false);
 
   string n1 = "testname";
-  BOOST_CHECK_EQUAL(adjacentList1.getStatusOfNeighbor(n1), (uint32_t)0);
+  BOOST_CHECK_EQUAL(adjacentList1.getStatusOfNeighbor(n1), Adjacent::STATUS_INACTIVE);
 
-  adjacentList1.setStatusOfNeighbor(n1, 1);
-  BOOST_CHECK_EQUAL(adjacentList1.getStatusOfNeighbor(n1), (uint32_t)1);
+  adjacentList1.setStatusOfNeighbor(n1, Adjacent::STATUS_ACTIVE);
+  BOOST_CHECK_EQUAL(adjacentList1.getStatusOfNeighbor(n1), Adjacent::STATUS_ACTIVE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

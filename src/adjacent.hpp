@@ -30,21 +30,23 @@
 
 namespace nlsr {
 
-enum {
-  ADJACENT_STATUS_INACTIVE = 0,
-  ADJACENT_STATUS_ACTIVE = 1
-};
-
 class Adjacent
 {
 
 public:
+  enum Status
+  {
+    STATUS_UNKNOWN = -1,
+    STATUS_INACTIVE = 0,
+    STATUS_ACTIVE = 1
+  };
+
   Adjacent();
 
   Adjacent(const ndn::Name& an);
 
   Adjacent(const ndn::Name& an, const std::string& cfu,  double lc,
-          uint32_t s, uint32_t iton, uint64_t faceId);
+           Status s, uint32_t iton, uint64_t faceId);
 
   const ndn::Name&
   getName() const
@@ -83,14 +85,14 @@ public:
     m_linkCost = lc;
   }
 
-  uint32_t
+  Status
   getStatus() const
   {
     return m_status;
   }
 
   void
-  setStatus(uint32_t s)
+  setStatus(Status s)
   {
     m_status = s;
   }
@@ -150,7 +152,7 @@ private:
   ndn::Name m_name;
   std::string m_connectingFaceUri;
   double m_linkCost;
-  uint32_t m_status;
+  Status m_status;
   uint32_t m_interestTimedOutNo;
   uint64_t m_faceId;
 };
