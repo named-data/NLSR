@@ -131,6 +131,15 @@ const std::string HyperbolicCalculatorFixture::ROUTER_A_FACE = "face-a";
 const std::string HyperbolicCalculatorFixture::ROUTER_B_FACE = "face-b";
 const std::string HyperbolicCalculatorFixture::ROUTER_C_FACE = "face-c";
 
+uint64_t
+applyHyperbolicFactorAndRound(double d)
+{
+  // Hyperbolic costs in the tests were calculated with 1*10^-9 precision.
+  // A factor larger than 1*10^9 will cause the tests to fail.
+  BOOST_REQUIRE(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR <= 1000000000);
+  return round(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR*d);
+}
+
 BOOST_FIXTURE_TEST_SUITE(TestHyperbolicRoutingCalculator, HyperbolicCalculatorFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
@@ -140,8 +149,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
 
-  // Router A should be able to get to B through B with cost 0 and to B through
-  // C with cost 2010
+  // Router A should be able to get to B through B with cost 0 and to B through C
   NexthopList& bHopList = entryB->getNexthopList();
   BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 2);
 
@@ -150,13 +158,12 @@ BOOST_AUTO_TEST_CASE(Basic)
     uint64_t cost = it->getRouteCostAsAdjustedInteger();
 
     BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == 0) ||
-                (faceUri == ROUTER_C_FACE && cost == 2010));
+                (faceUri == ROUTER_C_FACE && cost == applyHyperbolicFactorAndRound(20.103356956)));
   }
 
   RoutingTableEntry* entryC = routingTable.findRoutingTableEntry(ROUTER_C_NAME);
 
-  // Router A should be able to get to C through C with cost 0 and to C through
-  // B with cost 2010
+  // Router A should be able to get to C through C with cost 0 and to C through B
   NexthopList& cHopList = entryC->getNexthopList();
   BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 2);
 
@@ -164,7 +171,7 @@ BOOST_AUTO_TEST_CASE(Basic)
     std::string faceUri = it->getConnectingFaceUri();
     uint64_t cost = it->getRouteCostAsAdjustedInteger();
 
-    BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == 2010) ||
+    BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == applyHyperbolicFactorAndRound(20.103356956)) ||
                 (faceUri == ROUTER_C_FACE && cost == 0));
   }
 }

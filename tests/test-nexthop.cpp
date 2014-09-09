@@ -29,7 +29,19 @@ namespace test {
 
 BOOST_AUTO_TEST_SUITE(TestNexthop)
 
-BOOST_AUTO_TEST_CASE(NexthopSetAndGet)
+double
+getHyperbolicAdjustedDecimal(unsigned int i)
+{
+  return static_cast<double>(i)/(10*NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR);
+}
+
+uint64_t
+applyHyperbolicFactorAndRound(double d)
+{
+  return round(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR*d);
+}
+
+BOOST_AUTO_TEST_CASE(LinkStateSetAndGet)
 {
   NextHop hop1;
   hop1.setConnectingFaceUri("udp://test/uri");
@@ -37,15 +49,58 @@ BOOST_AUTO_TEST_CASE(NexthopSetAndGet)
 
   BOOST_CHECK_EQUAL(hop1.getConnectingFaceUri(), "udp://test/uri");
   BOOST_CHECK_EQUAL(hop1.getRouteCost(), 12.34);
-  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), 1234);
+  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), 12);
 
   NextHop hop2;
+
+  hop2.setRouteCost(12.34);
+  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), hop2.getRouteCostAsAdjustedInteger());
+}
+
+BOOST_AUTO_TEST_CASE(HyperbolicSetAndGet)
+{
+  NextHop hop1;
+  hop1.setHyperbolic(true);
+  hop1.setConnectingFaceUri("udp://test/uri");
+  hop1.setRouteCost(12.34);
+
+  BOOST_CHECK_EQUAL(hop1.getConnectingFaceUri(), "udp://test/uri");
+  BOOST_CHECK_EQUAL(hop1.getRouteCost(), 12.34);
+  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), applyHyperbolicFactorAndRound(12.34));
+
+  NextHop hop2;
+  hop2.setHyperbolic(true);
 
   hop2.setRouteCost(12.34);
   BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), hop2.getRouteCostAsAdjustedInteger());
 
   hop2.setRouteCost(12.35);
   BOOST_CHECK(hop1.getRouteCostAsAdjustedInteger() < hop2.getRouteCostAsAdjustedInteger());
+}
+
+BOOST_AUTO_TEST_CASE(HyperbolicRound)
+{
+  NextHop hop1;
+  hop1.setHyperbolic(true);
+  hop1.setConnectingFaceUri("udp://test/uri");
+  hop1.setRouteCost(1 + getHyperbolicAdjustedDecimal(6));
+
+  BOOST_CHECK_EQUAL(hop1.getConnectingFaceUri(), "udp://test/uri");
+  BOOST_CHECK_EQUAL(hop1.getRouteCost(), 1 + getHyperbolicAdjustedDecimal(6));
+  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(),
+                    applyHyperbolicFactorAndRound((1 + getHyperbolicAdjustedDecimal(6))));
+
+  NextHop hop2;
+  hop2.setHyperbolic(true);
+
+  hop2.setRouteCost(1 + getHyperbolicAdjustedDecimal(6));
+  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), hop2.getRouteCostAsAdjustedInteger());
+
+  hop2.setRouteCost(1 + getHyperbolicAdjustedDecimal(5));
+  BOOST_CHECK_EQUAL(hop1.getRouteCostAsAdjustedInteger(), hop2.getRouteCostAsAdjustedInteger());
+
+  hop2.setRouteCost(1 + getHyperbolicAdjustedDecimal(4));
+  BOOST_CHECK(hop1.getRouteCostAsAdjustedInteger() > hop2.getRouteCostAsAdjustedInteger());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

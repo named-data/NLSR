@@ -23,6 +23,8 @@
 #ifndef NLSR_NEXTHOP_HPP
 #define NLSR_NEXTHOP_HPP
 
+#include "test-access-control.hpp"
+
 #include <iostream>
 #include <cmath>
 #include <boost/cstdint.hpp>
@@ -34,10 +36,12 @@ public:
   NextHop()
     : m_connectingFaceUri()
     , m_routeCost(0)
+    , m_isHyperbolic(false)
   {
   }
 
   NextHop(const std::string& cfu, double rc)
+    : m_isHyperbolic(false)
   {
     m_connectingFaceUri = cfu;
     m_routeCost = rc;
@@ -58,7 +62,15 @@ public:
   uint64_t
   getRouteCostAsAdjustedInteger() const
   {
-    return static_cast<uint64_t>(round(m_routeCost*HYPERBOLIC_COST_ADJUSTMENT_FACTOR));
+    if (m_isHyperbolic) {
+      // Round the cost to better preserve decimal cost differences
+      // e.g. Without rounding: 12.3456 > 12.3454 -> 12345 = 12345
+      //      With rounding:    12.3456 > 12.3454 -> 12346 > 12345
+      return static_cast<uint64_t>(round(m_routeCost*HYPERBOLIC_COST_ADJUSTMENT_FACTOR));
+    }
+    else {
+      return static_cast<uint64_t>(m_routeCost);
+    }
   }
 
   double
@@ -73,10 +85,35 @@ public:
     m_routeCost = rc;
   }
 
+  void
+  setHyperbolic(bool b)
+  {
+    m_isHyperbolic = b;
+  }
+
+  bool
+  isHyperbolic() const
+  {
+    return m_isHyperbolic;
+  }
+
 private:
   std::string m_connectingFaceUri;
   double m_routeCost;
-  static const uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 100;
+  bool m_isHyperbolic;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  /** \brief Used to adjust floating point route costs to integers
+  *   Since NFD uses integer route costs in the FIB, hyperbolic paths with similar route costs
+  *   will be rounded to integers and installed with identical nexthop costs.
+  *
+  *   e.g. costs 12.34 and 12.35 will be equal in NFD's FIB
+  *
+  *   This multiplier is used to differentiate similar route costs in the FIB.
+  *
+  *   e.g  costs 12.34 and 12.35 will be installed into NFD's FIB as 12340 and 12350
+  */
+  static const uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 1000;
 };
 
 std::ostream&

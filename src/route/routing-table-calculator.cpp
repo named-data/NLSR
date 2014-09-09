@@ -461,6 +461,7 @@ void HyperbolicRoutingCalculator::addNextHop(ndn::Name dest, std::string faceUri
                                              double cost, RoutingTable& rt)
 {
   NextHop hop(faceUri, cost);
+  hop.setHyperbolic(true);
 
   _LOG_TRACE("Calculated " << hop << " for destination: " << dest);
 

@@ -43,7 +43,7 @@ BOOST_AUTO_TEST_CASE(NhlAddNextHop)
   BOOST_CHECK_EQUAL(nhl1.getSize(), (uint32_t)0);
 }
 
-BOOST_AUTO_TEST_CASE(RemoveNextHop)
+BOOST_AUTO_TEST_CASE(LinkStateRemoveNextHop)
 {
   NextHop hop1;
   hop1.setRouteCost(12.34);
@@ -52,6 +52,28 @@ BOOST_AUTO_TEST_CASE(RemoveNextHop)
   hopList.addNextHop(hop1);
 
   NextHop hop2;
+  hop2.setRouteCost(13.01);
+
+  BOOST_REQUIRE_EQUAL(hopList.getSize(), 1);
+
+  hopList.removeNextHop(hop2);
+  BOOST_CHECK_EQUAL(hopList.getSize(), 1);
+
+  hopList.removeNextHop(hop1);
+  BOOST_CHECK_EQUAL(hopList.getSize(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(HyperbolicRemoveNextHop)
+{
+  NextHop hop1;
+  hop1.setHyperbolic(true);
+  hop1.setRouteCost(12.34);
+
+  NexthopList hopList;
+  hopList.addNextHop(hop1);
+
+  NextHop hop2;
+  hop2.setHyperbolic(true);
   hop2.setRouteCost(12.35);
 
   BOOST_REQUIRE_EQUAL(hopList.getSize(), 1);
