@@ -143,6 +143,16 @@ Nlsr::initialize()
 
   registerKeyPrefix();
   m_helloProtocol.scheduleInterest(10);
+
+  // Need to set direct neighbors' costs to 0 for hyperbolic routing
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+
+    std::list<Adjacent>& neighbors = m_adjacencyList.getAdjList();
+
+    for (std::list<Adjacent>::iterator it = neighbors.begin(); it != neighbors.end(); ++it) {
+      it->setLinkCost(0);
+    }
+  }
 }
 
 void
