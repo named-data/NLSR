@@ -39,8 +39,9 @@ class Nlsr;
 class Lsdb
 {
 public:
-  Lsdb(Nlsr& nlsr)
+  Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
     : m_nlsr(nlsr)
+    , m_scheduler(scheduler)
     , m_lsaRefreshTime(0)
   {
   }
@@ -232,6 +233,8 @@ private:
   cancelScheduleLsaExpiringEvent(ndn::EventId eid);
 
   Nlsr& m_nlsr;
+  ndn::Scheduler& m_scheduler;
+
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;

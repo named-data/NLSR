@@ -35,8 +35,9 @@ class HelloProtocol
 {
 
 public:
-  HelloProtocol(Nlsr& nlsr)
+  HelloProtocol(Nlsr& nlsr, ndn::Scheduler& scheduler)
     : m_nlsr(nlsr)
+    , m_scheduler(scheduler)
   {
   }
 
@@ -80,6 +81,8 @@ private:
                    double linkCost, const ndn::time::milliseconds& timeout);
 private:
   Nlsr& m_nlsr;
+  ndn::Scheduler& m_scheduler;
+
   static const std::string INFO_COMPONENT;
   static const std::string NLSR_COMPONENT;
 };

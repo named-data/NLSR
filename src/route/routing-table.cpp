@@ -142,9 +142,9 @@ void
 RoutingTable::scheduleRoutingTableCalculation(Nlsr& pnlsr)
 {
   if (pnlsr.getIsRouteCalculationScheduled() != true) {
-    pnlsr.getScheduler().scheduleEvent(ndn::time::seconds(15),
-                                       ndn::bind(&RoutingTable::calculate, this,
-                                                 ndn::ref(pnlsr)));
+    m_scheduler.scheduleEvent(ndn::time::seconds(15),
+                              ndn::bind(&RoutingTable::calculate, this, ndn::ref(pnlsr)));
+
     pnlsr.setIsRouteCalculationScheduled(true);
   }
 }

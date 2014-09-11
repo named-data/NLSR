@@ -64,28 +64,27 @@ class Nlsr
   };
 
 public:
-  Nlsr()
-    : m_scheduler(m_nlsrFace.getIoService())
+  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler)
+    : m_nlsrFace(ioService)
+    , m_scheduler(scheduler)
     , m_confParam()
     , m_adjacencyList()
     , m_namePrefixList()
     , m_sequencingManager()
     , m_isDaemonProcess(false)
     , m_configFileName("nlsr.conf")
-    , m_nlsrLsdb(*this)
+    , m_nlsrLsdb(*this, scheduler)
     , m_adjBuildCount(0)
     , m_isBuildAdjLsaSheduled(false)
     , m_isRouteCalculationScheduled(false)
     , m_isRoutingTableCalculating(false)
-    , m_routingTable()
-    , m_fib(*this, m_nlsrFace)
+    , m_routingTable(scheduler)
+    , m_fib(*this, m_nlsrFace, scheduler)
     , m_namePrefixTable(*this)
-    , m_syncLogicHandler(m_nlsrFace.getIoService())
-    , m_helloProtocol(*this)
-
-    , m_certificateCache(new ndn::CertificateCacheTtl(m_nlsrFace.getIoService()))
+    , m_syncLogicHandler(ioService)
+    , m_helloProtocol(*this, scheduler)
+    , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
     , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
-
     , m_faceMonitor(m_nlsrFace)
   {
     m_faceMonitor.onNotification += ndn::bind(&Nlsr::onFaceEventNotification, this, _1);
@@ -150,12 +149,6 @@ public:
   getNamePrefixList()
   {
     return m_namePrefixList;
-  }
-
-  ndn::Scheduler&
-  getScheduler()
-  {
-    return m_scheduler;
   }
 
   ndn::Face&
@@ -343,7 +336,7 @@ private:
   typedef std::map<ndn::Name, ndn::shared_ptr<ndn::IdentityCertificate> > CertMap;
 
   ndn::Face m_nlsrFace;
-  ndn::Scheduler m_scheduler;
+  ndn::Scheduler& m_scheduler;
   ConfParameter m_confParam;
   AdjacencyList m_adjacencyList;
   NamePrefixList m_namePrefixList;

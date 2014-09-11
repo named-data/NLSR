@@ -42,8 +42,9 @@ class Nlsr;
 class Fib
 {
 public:
-  Fib(Nlsr& nlsr, ndn::Face& face)
+  Fib(Nlsr& nlsr, ndn::Face& face, ndn::Scheduler& scheduler)
     : m_nlsr(nlsr)
+    , m_scheduler(scheduler)
     , m_table()
     , m_refreshTime(0)
     , m_controller(face)
@@ -178,6 +179,8 @@ private:
 
 private:
   Nlsr& m_nlsr;
+  ndn::Scheduler& m_scheduler;
+
   std::list<FibEntry> m_table;
   int32_t m_refreshTime;
   ndn::nfd::Controller m_controller;

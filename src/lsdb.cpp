@@ -40,7 +40,7 @@ using namespace std;
 void
 Lsdb::cancelScheduleLsaExpiringEvent(ndn::EventId eid)
 {
-  m_nlsr.getScheduler().cancelEvent(eid);
+  m_scheduler.cancelEvent(eid);
 }
 
 static bool
@@ -93,9 +93,8 @@ ndn::EventId
 Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
                                 const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(expTime + GRACE_PERIOD,
-                                             ndn::bind(&Lsdb::exprireOrRefreshNameLsa,
-                                                       this, key, seqNo));
+  return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
+                                   ndn::bind(&Lsdb::exprireOrRefreshNameLsa, this, key, seqNo));
 }
 
 bool
@@ -299,9 +298,9 @@ ndn::EventId
 Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                       const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(expTime + GRACE_PERIOD,
-                                             ndn::bind(&Lsdb::exprireOrRefreshCoordinateLsa,
-                                                       this, key, seqNo));
+  return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
+                                   ndn::bind(&Lsdb::exprireOrRefreshCoordinateLsa,
+                                             this, key, seqNo));
 }
 
 bool
@@ -451,9 +450,8 @@ Lsdb::scheduledAdjLsaBuild()
     m_nlsr.setIsBuildAdjLsaSheduled(true);
     int schedulingTime = m_nlsr.getConfParameter().getInterestRetryNumber() *
                          m_nlsr.getConfParameter().getInterestResendTime();
-    m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(schedulingTime),
-                                        ndn::bind(&Lsdb::scheduledAdjLsaBuild,
-                                                  this));
+    m_scheduler.scheduleEvent(ndn::time::seconds(schedulingTime),
+                              ndn::bind(&Lsdb::scheduledAdjLsaBuild, this));
   }
 }
 
@@ -505,9 +503,8 @@ ndn::EventId
 Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
                                const ndn::time::seconds& expTime)
 {
-  return m_nlsr.getScheduler().scheduleEvent(expTime + GRACE_PERIOD,
-                                             ndn::bind(&Lsdb::exprireOrRefreshAdjLsa,
-                                                       this, key, seqNo));
+  return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
+                                   ndn::bind(&Lsdb::exprireOrRefreshAdjLsa, this, key, seqNo));
 }
 
 bool
@@ -952,9 +949,8 @@ Lsdb::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
   // Stop retrying if delayed re-validation will be scheduled pass the deadline
   if (steady_clock::now() + m_nlsr.getConfParameter().getLsaInterestLifetime() < deadline) {
     _LOG_DEBUG("Scheduling revalidation");
-    m_nlsr.getScheduler().scheduleEvent(m_nlsr.getConfParameter().getLsaInterestLifetime(),
-                                        ndn::bind(&Lsdb::retryContentValidation,
-                                                  this, data, deadline));
+    m_scheduler.scheduleEvent(m_nlsr.getConfParameter().getLsaInterestLifetime(),
+                              ndn::bind(&Lsdb::retryContentValidation, this, data, deadline));
   }
 }
 

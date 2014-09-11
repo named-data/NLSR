@@ -20,20 +20,22 @@
  * \author Ashlesh Gawande <agawande@memphis.edu>
  *
  **/
+
+#include "test-common.hpp"
+
 #include <fstream>
 #include "conf-file-processor.hpp"
 #include "nlsr.hpp"
 #include <boost/test/unit_test.hpp>
 
 namespace nlsr {
-
 namespace test {
 
-BOOST_AUTO_TEST_SUITE(TestConfFileProcessor)
+BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, BaseFixture)
 
 BOOST_AUTO_TEST_CASE(ConfFileProcessorSample)
 {
-  Nlsr nlsr1;
+  Nlsr nlsr1(g_ioService, g_scheduler);
 
   const std::string CONFIG =
      "general\n"

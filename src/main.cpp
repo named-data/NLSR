@@ -21,18 +21,26 @@
  * \author Yingdi Yu <yingdi@cs.ucla.edu>
  *
  **/
-#include <boost/cstdint.hpp>
-#include "nlsr.hpp"
 #include "conf-file-processor.hpp"
 #include "logger.hpp"
+#include "nlsr.hpp"
 #include "version.hpp"
+
+#include <boost/asio.hpp>
+#include <boost/cstdint.hpp>
+
+#include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {
 
 int
 main(int32_t argc, char** argv)
 {
-  Nlsr nlsr;
+  boost::asio::io_service ioService;
+  ndn::Scheduler scheduler(ioService);
+
+  Nlsr nlsr(ioService, scheduler);
+
   std::string programName(argv[0]);
   nlsr.setConfFileName("nlsr.conf");
   int32_t opt;

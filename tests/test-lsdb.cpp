@@ -20,6 +20,9 @@
  * \author Ashlesh Gawande <agawande@memphis.edu>
  *
  **/
+
+#include "test-common.hpp"
+
 #include "lsdb.hpp"
 #include "nlsr.hpp"
 #include "lsa.hpp"
@@ -31,13 +34,13 @@ namespace nlsr {
 
 namespace test {
 
-BOOST_AUTO_TEST_SUITE(TestLsdb)
+BOOST_FIXTURE_TEST_SUITE(TestLsdb, BaseFixture)
 
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 {
   INIT_LOGGERS("/tmp", "DEBUG");
 
-  Nlsr nlsr1;
+  Nlsr nlsr1(g_ioService, g_scheduler);
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
   NamePrefixList npl1;
 
@@ -53,7 +56,7 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 //1800 is the default life time.
   NameLsa nlsa1(ndn::Name("/router1/1"), std::string("name"), 12, testTimePoint, npl1);
 
-  Lsdb lsdb1(nlsr1);
+  Lsdb lsdb1(nlsr1, g_scheduler);
 
   lsdb1.installNameLsa(nlsa1);
   lsdb1.writeNameLsdbLog();

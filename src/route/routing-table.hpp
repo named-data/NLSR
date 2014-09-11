@@ -27,6 +27,7 @@
 #include <utility>
 #include <string>
 #include <boost/cstdint.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 #include "routing-table-entry.hpp"
 
@@ -38,8 +39,9 @@ class NextHop;
 class RoutingTable
 {
 public:
-  RoutingTable()
-    : m_NO_NEXT_HOP(-12345)
+  RoutingTable(ndn::Scheduler& scheduler)
+    : m_scheduler(scheduler)
+    , m_NO_NEXT_HOP(-12345)
   {
   }
   void
@@ -81,6 +83,9 @@ private:
 
   void
   writeLog(int hyperbolicState);
+
+private:
+  ndn::Scheduler& m_scheduler;
 
   const int m_NO_NEXT_HOP;
 

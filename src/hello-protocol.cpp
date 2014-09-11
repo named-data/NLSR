@@ -74,9 +74,8 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
 void
 HelloProtocol::scheduleInterest(uint32_t seconds)
 {
-  m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(seconds),
-                                      ndn::bind(&HelloProtocol::sendScheduledInterest,
-                                                this, seconds));
+  m_scheduler.scheduleEvent(ndn::time::seconds(seconds),
+                            ndn::bind(&HelloProtocol::sendScheduledInterest, this, seconds));
 }
 
 void
@@ -156,9 +155,8 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
       _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
       m_nlsr.setIsBuildAdjLsaSheduled(true);
       // event here
-      m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
-                                          ndn::bind(&Lsdb::scheduledAdjLsaBuild,
-                                                    &m_nlsr.getLsdb()));
+      m_scheduler.scheduleEvent(ndn::time::seconds(5),
+                                ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
     }
   }
 }
@@ -202,9 +200,8 @@ HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
         _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
         m_nlsr.setIsBuildAdjLsaSheduled(true);
         // event here
-        m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
-                                            ndn::bind(&Lsdb::scheduledAdjLsaBuild,
-                                                      ndn::ref(m_nlsr.getLsdb())));
+        m_scheduler.scheduleEvent(ndn::time::seconds(5),
+                                  ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
       }
     }
   }
@@ -288,9 +285,8 @@ HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
         _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
         m_nlsr.setIsBuildAdjLsaSheduled(true);
         // event here
-        m_nlsr.getScheduler().scheduleEvent(ndn::time::seconds(5),
-                                            ndn::bind(&Lsdb::scheduledAdjLsaBuild,
-                                                      &m_nlsr.getLsdb()));
+        m_scheduler.scheduleEvent(ndn::time::seconds(5),
+                                  ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
       }
     }
   }

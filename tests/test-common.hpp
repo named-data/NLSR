@@ -17,36 +17,32 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author Ashlesh Gawande <agawande@memphis.edu>
  *
  **/
 
-#include "test-common.hpp"
-#include "route/routing-table.hpp"
-#include "route/routing-table-entry.hpp"
-#include "route/nexthop.hpp"
-#include <boost/test/unit_test.hpp>
+#ifndef NLSR_TEST_COMMON_HPP
+#define NLSR_TEST_COMMON_HPP
+
+#include <boost/asio.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {
 namespace test {
 
-BOOST_FIXTURE_TEST_SUITE(TestRoutingTable, BaseFixture)
-
-BOOST_AUTO_TEST_CASE(RoutingTableAddNextHop)
+class BaseFixture
 {
-  RoutingTable rt1(g_scheduler);
+public:
+  BaseFixture()
+    : g_scheduler(g_ioService)
+  {
+  }
 
-  NextHop nh1;
+protected:
+  boost::asio::io_service g_ioService;
+  ndn::Scheduler g_scheduler;
+};
 
-  const std::string DEST_ROUTER = "destRouter";
+} // namespace test
+} // namespace nlsr
 
-  rt1.addNextHop("destRouter", nh1);
-
-  BOOST_CHECK_EQUAL(rt1.findRoutingTableEntry(DEST_ROUTER)->getDestination(),
-                    "destRouter");
-}
-
-BOOST_AUTO_TEST_SUITE_END()
-
-} //namespace test
-} //namespace nlsr
+#endif

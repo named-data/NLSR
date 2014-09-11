@@ -50,7 +50,7 @@ fibEntryNameCompare(const FibEntry& fibEntry, const ndn::Name& name)
 void
 Fib::cancelScheduledExpiringEvent(EventId eid)
 {
-  m_nlsr.getScheduler().cancelEvent(eid);
+  m_scheduler.cancelEvent(eid);
 }
 
 
@@ -60,8 +60,8 @@ Fib::scheduleEntryExpiration(const ndn::Name& name, int32_t feSeqNum,
 {
   _LOG_DEBUG("Fib::scheduleEntryExpiration Called");
   _LOG_INFO("Name: " << name << " Seq Num: " << feSeqNum);
-  return m_nlsr.getScheduler().scheduleEvent(expTime,
-                                             ndn::bind(&Fib::remove, this, name));
+
+  return m_scheduler.scheduleEvent(expTime, ndn::bind(&Fib::remove, this, name));
 }
 
 void
@@ -206,7 +206,7 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
     entry.setSeqNo(entry.getSeqNo() + 1);
 
     // Cancel previosuly scheduled event
-    m_nlsr.getScheduler().cancelEvent(entry.getExpiringEventId());
+    m_scheduler.cancelEvent(entry.getExpiringEventId());
 
     // Schedule entry to be refreshed
     entry.setExpiringEventId(scheduleEntryExpiration(name , entry.getSeqNo(),
