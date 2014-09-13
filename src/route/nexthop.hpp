@@ -79,6 +79,9 @@ private:
   static const uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 100;
 };
 
+std::ostream&
+operator<<(std::ostream& os, const NextHop& hop);
+
 }//namespace nlsr
 
 #endif //NLSR_NEXTHOP_HPP

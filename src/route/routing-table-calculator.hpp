@@ -27,6 +27,8 @@
 #include <iostream>
 #include <boost/cstdint.hpp>
 
+#include <ndn-cxx/name.hpp>
+
 namespace nlsr {
 
 class Map;
@@ -39,9 +41,9 @@ public:
   RoutingTableCalculator()
   {
   }
-  RoutingTableCalculator(int rn)
+  RoutingTableCalculator(size_t nRouters)
   {
-    numOfRouter = rn;
+    m_nRouters = nRouters;
   }
 protected:
   void
@@ -52,10 +54,7 @@ protected:
 
   void
   makeAdjMatrix(Nlsr& pnlsr, Map pMap);
-/*
-  void
-  printAdjMatrix();
-*/
+
   void
   writeAdjMatrixLog();
 
@@ -91,7 +90,7 @@ protected:
 
 protected:
   double** adjMatrix;
-  int numOfRouter;
+  size_t m_nRouters;
 
   int vNoLink;
   int* links;
@@ -101,19 +100,17 @@ protected:
 class LinkStateRoutingTableCalculator: public RoutingTableCalculator
 {
 public:
-  LinkStateRoutingTableCalculator(int rn)
-    : EMPTY_PARENT(-12345)
+  LinkStateRoutingTableCalculator(size_t nRouters)
+    : RoutingTableCalculator(nRouters)
+    , EMPTY_PARENT(-12345)
     , INF_DISTANCE(2147483647)
     , NO_MAPPING_NUM(-1)
     , NO_NEXT_HOP(-12345)
   {
-    numOfRouter = rn;
   }
-
 
   void
   calculatePath(Map& pMap, RoutingTable& rt, Nlsr& pnlsr);
-
 
 private:
   void
@@ -127,7 +124,7 @@ private:
 
   void
   addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, RoutingTable& rt,
-                                 Map& pMap, int sourceRouter);
+                                 Map& pMap, uint32_t sourceRouter);
 
   int
   getLsNextHop(int dest, int source);
@@ -144,13 +141,9 @@ private:
   void
   freeDistance();
 
-
-
-
 private:
   int* m_parent;
   double* m_distance;
-
 
   const int EMPTY_PARENT;
   const double INF_DISTANCE;
@@ -159,61 +152,38 @@ private:
 
 };
 
-class HypRoutingTableCalculator: public RoutingTableCalculator
+class AdjacencyList;
+class Lsdb;
+
+class HyperbolicRoutingCalculator
 {
 public:
-  HypRoutingTableCalculator(int rn)
-    :  MATH_PI(3.141592654)
+  HyperbolicRoutingCalculator(size_t nRouters, bool isDryRun, ndn::Name thisRouterName)
+    : m_nRouters(nRouters)
+    , m_isDryRun(isDryRun)
+    , m_thisRouterName(thisRouterName)
   {
-    numOfRouter = rn;
-    m_isDryRun = 0;
-  }
-
-  HypRoutingTableCalculator(int rn, int idr)
-    :  MATH_PI(3.141592654)
-  {
-    numOfRouter = rn;
-    m_isDryRun = idr;
   }
 
   void
-  calculatePath(Map& pMap, RoutingTable& rt, Nlsr& pnlsr);
+  calculatePaths(Map& map, RoutingTable& rt, Lsdb& lsdb, AdjacencyList& adjacencies);
 
 private:
-  void
-  allocateNexthopRouters();
-
-  void
-  allocateDistanceToNeighbor();
-
-  void
-  allocateDistFromNbrToDest();
-
-  void
-  freeNexthopRouters();
-
-  void
-  freeDistanceToNeighbor();
-
-  void
-  freeDistFromNbrToDest();
-
   double
-  getHyperbolicDistance(Nlsr& pnlsr, Map& pMap, int src, int dest);
+  getHyperbolicDistance(Map& map, Lsdb& lsdb, ndn::Name src, ndn::Name dest);
 
   void
-  addHypNextHopsToRoutingTable(Nlsr& pnlsr, Map& pMap,
-                               RoutingTable& rt, int noFaces, int dest);
+  addNextHop(ndn::Name destinationRouter, std::string faceUri, double cost, RoutingTable& rt);
 
 private:
-  bool m_isDryRun;
+  const size_t m_nRouters;
+  const bool m_isDryRun;
+  const ndn::Name m_thisRouterName;
 
-  uint32_t* m_nexthopRouters;
-  double* m_distanceToNeighbor;
-  double* m_distFromNbrToDest;
-
-  const double MATH_PI;
-
+  static const double MATH_PI;
+  static const double UNKNOWN_DISTANCE;
+  static const double UNKNOWN_RADIUS;
+  static const int32_t ROUTER_NOT_FOUND;
 };
 
 }//namespace nlsr

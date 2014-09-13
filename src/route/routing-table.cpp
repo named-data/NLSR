@@ -105,37 +105,51 @@ RoutingTable::calculate(Nlsr& pnlsr)
 
 
 void
-RoutingTable::calculateLsRoutingTable(Nlsr& pnlsr)
+RoutingTable::calculateLsRoutingTable(Nlsr& nlsr)
 {
   _LOG_DEBUG("RoutingTable::calculateLsRoutingTable Called");
-  Map vMap;
-  vMap.createFromAdjLsdb(pnlsr);
-  vMap.writeLog();
-  int numOfRouter = vMap.getMapSize();
-  LinkStateRoutingTableCalculator lsrtc(numOfRouter);
-  lsrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
+
+  Map map;
+  map.createFromAdjLsdb(nlsr);
+  map.writeLog();
+
+  size_t nRouters = map.getMapSize();
+
+  LinkStateRoutingTableCalculator calculator(nRouters);
+
+  calculator.calculatePath(map, ndn::ref(*this), nlsr);
 }
 
 void
-RoutingTable::calculateHypRoutingTable(Nlsr& pnlsr)
+RoutingTable::calculateHypRoutingTable(Nlsr& nlsr)
 {
-  Map vMap;
-  vMap.createFromAdjLsdb(pnlsr);
-  vMap.writeLog();
-  int numOfRouter = vMap.getMapSize();
-  HypRoutingTableCalculator hrtc(numOfRouter, 0);
-  hrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
+  Map map;
+  map.createFromAdjLsdb(nlsr);
+  map.writeLog();
+
+  size_t nRouters = map.getMapSize();
+
+  HyperbolicRoutingCalculator calculator(nRouters, false,
+                                         nlsr.getConfParameter().getRouterPrefix());
+
+  calculator.calculatePaths(map, ndn::ref(*this),
+                            nlsr.getLsdb(), nlsr.getAdjacencyList());
 }
 
 void
-RoutingTable::calculateHypDryRoutingTable(Nlsr& pnlsr)
+RoutingTable::calculateHypDryRoutingTable(Nlsr& nlsr)
 {
-  Map vMap;
-  vMap.createFromAdjLsdb(pnlsr);
-  vMap.writeLog();
-  int numOfRouter = vMap.getMapSize();
-  HypRoutingTableCalculator hrtc(numOfRouter, 1);
-  hrtc.calculatePath(vMap, ndn::ref(*this), pnlsr);
+  Map map;
+  map.createFromAdjLsdb(nlsr);
+  map.writeLog();
+
+  size_t nRouters = map.getMapSize();
+
+  HyperbolicRoutingCalculator calculator(nRouters, true,
+                                         nlsr.getConfParameter().getRouterPrefix());
+
+  calculator.calculatePaths(map, ndn::ref(*this),
+                            nlsr.getLsdb(), nlsr.getAdjacencyList());
 }
 
 void
@@ -159,6 +173,8 @@ routingTableEntryCompare(RoutingTableEntry& rte, ndn::Name& destRouter)
 void
 RoutingTable::addNextHop(const ndn::Name& destRouter, NextHop& nh)
 {
+  _LOG_DEBUG("Adding " << nh << " for destination: " << destRouter);
+
   RoutingTableEntry* rteChk = findRoutingTableEntry(destRouter);
   if (rteChk == 0) {
     RoutingTableEntry rte(destRouter);
@@ -209,6 +225,8 @@ RoutingTable::writeLog(int hyperbolicState)
 void
 RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
 {
+  _LOG_DEBUG("Adding " << nh << " to dry table for destination: " << destRouter);
+
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_dryTable.begin(),
                                                            m_dryTable.end(),
                                                            ndn::bind(&routingTableEntryCompare,

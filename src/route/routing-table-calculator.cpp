@@ -30,6 +30,8 @@
 #include "nlsr.hpp"
 #include "logger.hpp"
 
+#include <boost/math/constants/constants.hpp>
+
 namespace nlsr {
 
 INIT_LOGGER("RoutingTableCalculator");
@@ -38,17 +40,18 @@ using namespace std;
 void
 RoutingTableCalculator::allocateAdjMatrix()
 {
-  adjMatrix = new double*[numOfRouter];
-  for (int i = 0; i < numOfRouter; ++i) {
-    adjMatrix[i] = new double[numOfRouter];
+  adjMatrix = new double*[m_nRouters];
+
+  for (size_t i = 0; i < m_nRouters; ++i) {
+    adjMatrix[i] = new double[m_nRouters];
   }
 }
 
 void
 RoutingTableCalculator::initMatrix()
 {
-  for (int i = 0; i < numOfRouter; i++) {
-    for (int j = 0; j < numOfRouter; j++) {
+  for (size_t i = 0; i < m_nRouters; i++) {
+    for (size_t j = 0; j < m_nRouters; j++) {
       adjMatrix[i][j] = 0;
     }
   }
@@ -58,15 +61,19 @@ void
 RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
 {
   std::list<AdjLsa> adjLsdb = pnlsr.getLsdb().getAdjLsdb();
-  for (std::list<AdjLsa>::iterator it = adjLsdb.begin();
-       it != adjLsdb.end() ; it++) {
-    int row = pMap.getMappingNoByRouterName((*it).getOrigRouter());
+  for (std::list<AdjLsa>::iterator it = adjLsdb.begin(); it != adjLsdb.end() ; it++) {
+
+    int32_t row = pMap.getMappingNoByRouterName((*it).getOrigRouter());
+
     std::list<Adjacent> adl = (*it).getAdl().getAdjList();
-    for (std::list<Adjacent>::iterator itAdl = adl.begin();
-         itAdl != adl.end() ; itAdl++) {
-      int col = pMap.getMappingNoByRouterName((*itAdl).getName());
+    for (std::list<Adjacent>::iterator itAdl = adl.begin(); itAdl != adl.end() ; itAdl++) {
+
+      int32_t col = pMap.getMappingNoByRouterName((*itAdl).getName());
       double cost = (*itAdl).getLinkCost();
-      if ((row >= 0 && row < numOfRouter) && (col >= 0 && col < numOfRouter)) {
+
+      if ((row >= 0 && row < static_cast<int32_t>(m_nRouters)) &&
+          (col >= 0 && col < static_cast<int32_t>(m_nRouters)))
+      {
         adjMatrix[row][col] = cost;
       }
     }
@@ -76,9 +83,9 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
 void
 RoutingTableCalculator::writeAdjMatrixLog()
 {
-  for (int i = 0; i < numOfRouter; i++) {
+  for (size_t i = 0; i < m_nRouters; i++) {
     string line="";
-    for (int j = 0; j < numOfRouter; j++) {
+    for (size_t j = 0; j < m_nRouters; j++) {
       line += boost::lexical_cast<std::string>(adjMatrix[i][j]);
       line += " ";
     }
@@ -89,7 +96,7 @@ RoutingTableCalculator::writeAdjMatrixLog()
 void
 RoutingTableCalculator::adjustAdMatrix(int source, int link, double linkCost)
 {
-  for (int i = 0; i < numOfRouter; i++) {
+  for (int i = 0; i < static_cast<int>(m_nRouters); i++) {
     if (i == link) {
       adjMatrix[source][i] = linkCost;
     }
@@ -103,7 +110,8 @@ int
 RoutingTableCalculator::getNumOfLinkfromAdjMatrix(int sRouter)
 {
   int noLink = 0;
-  for (int i = 0; i < numOfRouter; i++) {
+
+  for (size_t i = 0; i < m_nRouters; i++) {
     if (adjMatrix[sRouter][i] > 0) {
       noLink++;
     }
@@ -116,7 +124,8 @@ RoutingTableCalculator::getLinksFromAdjMatrix(int* links,
                                               double* linkCosts, int source)
 {
   int j = 0;
-  for (int i = 0; i < numOfRouter; i++) {
+
+  for (size_t i = 0; i < m_nRouters; i++) {
     if (adjMatrix[source][i] > 0) {
       links[j] = i;
       linkCosts[j] = adjMatrix[source][i];
@@ -128,7 +137,7 @@ RoutingTableCalculator::getLinksFromAdjMatrix(int* links,
 void
 RoutingTableCalculator::freeAdjMatrix()
 {
-  for (int i = 0; i < numOfRouter; ++i) {
+  for (size_t i = 0; i < m_nRouters; ++i) {
     delete [] adjMatrix[i];
   }
   delete [] adjMatrix;
@@ -203,25 +212,25 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
 {
   int i;
   int v, u;
-  int* Q = new int[numOfRouter];
+  int* Q = new int[m_nRouters];
   int head = 0;
   /* Initiate the Parent */
-  for (i = 0 ; i < numOfRouter; i++) {
+  for (i = 0 ; i < static_cast<int>(m_nRouters); i++) {
     m_parent[i] = EMPTY_PARENT;
     m_distance[i] = INF_DISTANCE;
     Q[i] = i;
   }
   if (sourceRouter != NO_MAPPING_NUM) {
     m_distance[sourceRouter] = 0;
-    sortQueueByDistance(Q, m_distance, head, numOfRouter);
-    while (head < numOfRouter) {
+    sortQueueByDistance(Q, m_distance, head, m_nRouters);
+    while (head < static_cast<int>(m_nRouters)) {
       u = Q[head];
       if (m_distance[u] == INF_DISTANCE) {
         break;
       }
-      for (v = 0 ; v < numOfRouter; v++) {
+      for (v = 0 ; v < static_cast<int>(m_nRouters); v++) {
         if (adjMatrix[u][v] > 0) {
-          if (isNotExplored(Q, v, head + 1, numOfRouter)) {
+          if (isNotExplored(Q, v, head + 1, m_nRouters)) {
             if (m_distance[u] + adjMatrix[u][v] <  m_distance[v]) {
               m_distance[v] = m_distance[u] + adjMatrix[u][v] ;
               m_parent[v] = u;
@@ -230,22 +239,27 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
         }
       }
       head++;
-      sortQueueByDistance(Q, m_distance, head, numOfRouter);
+      sortQueueByDistance(Q, m_distance, head, m_nRouters);
     }
   }
   delete [] Q;
 }
 
 void
-LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr,
-                                                                RoutingTable& rt, Map& pMap, int sourceRouter)
+LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, RoutingTable& rt,
+                                                                Map& pMap, uint32_t sourceRouter)
 {
   _LOG_DEBUG("LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called");
+
   int nextHopRouter = 0;
-  for (int i = 0; i < numOfRouter ; i++) {
+
+  for (size_t i = 0; i < m_nRouters ; i++) {
     if (i != sourceRouter) {
+
       nextHopRouter = getLsNextHop(i, sourceRouter);
+
       if (nextHopRouter != NO_NEXT_HOP) {
+
         double routeCost = m_distance[i];
         ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
         std::string nextHopFace =
@@ -305,13 +319,13 @@ LinkStateRoutingTableCalculator::isNotExplored(int* Q,
 void
 LinkStateRoutingTableCalculator::allocateParent()
 {
-  m_parent = new int[numOfRouter];
+  m_parent = new int[m_nRouters];
 }
 
 void
 LinkStateRoutingTableCalculator::allocateDistance()
 {
-  m_distance = new double[numOfRouter];
+  m_distance = new double[m_nRouters];
 }
 
 void
@@ -325,144 +339,137 @@ void LinkStateRoutingTableCalculator::freeDistance()
   delete [] m_distance;
 }
 
+const double HyperbolicRoutingCalculator::MATH_PI = boost::math::constants::pi<double>();
 
+const double HyperbolicRoutingCalculator::UNKNOWN_DISTANCE = -1.0;
+const double HyperbolicRoutingCalculator::UNKNOWN_RADIUS   = -1.0;
+
+const int32_t HyperbolicRoutingCalculator::ROUTER_NOT_FOUND = -1.0;
 
 void
-HypRoutingTableCalculator::calculatePath(Map& pMap,
-                                         RoutingTable& rt, Nlsr& pnlsr)
+HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
+                                            Lsdb& lsdb, AdjacencyList& adjacencies)
 {
-  allocateAdjMatrix();
-  initMatrix();
-  makeAdjMatrix(pnlsr, pMap);
-  ndn::Name routerName = pnlsr.getConfParameter().getRouterPrefix();
-  int sourceRouter = pMap.getMappingNoByRouterName(routerName);
-  int noLink = getNumOfLinkfromAdjMatrix(sourceRouter);
-  setNoLink(noLink);
-  allocateLinks();
-  allocateLinkCosts();
-  getLinksFromAdjMatrix(links, linkCosts, sourceRouter);
-  for (int i = 0 ; i < numOfRouter ; ++i) {
-    int k = 0;
-    if (i != sourceRouter) {
-      allocateNexthopRouters();
-      allocateDistanceToNeighbor();
-      allocateDistFromNbrToDest();
-      for (int j = 0; j < vNoLink; j++) {
-        double distToNbr = getHyperbolicDistance(pnlsr, pMap,
-                                                 sourceRouter, links[j]);
-        double distToDestFromNbr = getHyperbolicDistance(pnlsr,
-                                                         pMap, links[j], i);
-        if (distToDestFromNbr >= 0) {
-          m_nexthopRouters[k] = links[j];
-          m_distanceToNeighbor[k] = distToNbr;
-          m_distFromNbrToDest[k] = distToDestFromNbr;
-          k++;
+  _LOG_TRACE("Calculating hyperbolic paths");
+
+  int thisRouter = map.getMappingNoByRouterName(m_thisRouterName);
+
+  // Iterate over directly connected neighbors
+  std::list<Adjacent> neighbors = adjacencies.getAdjList();
+  for (std::list<Adjacent>::iterator adj = neighbors.begin(); adj != neighbors.end(); ++adj) {
+
+    // Don't calculate nexthops using an inactive router
+    if (adj->getStatus() == Adjacent::STATUS_INACTIVE) {
+      _LOG_TRACE(adj->getName() << " is inactive; not using it as a nexthop");
+      continue;
+    }
+
+    ndn::Name srcRouterName = adj->getName();
+
+    // Don't calculate nexthops for this router to other routers
+    if (srcRouterName == m_thisRouterName) {
+      continue;
+    }
+
+    std::string srcFaceUri = adj->getConnectingFaceUri();
+
+    // Install nexthops for this router to the neighbor; direct neighbors have a 0 cost link
+    addNextHop(srcRouterName, srcFaceUri, 0, rt);
+
+    int src = map.getMappingNoByRouterName(srcRouterName);
+
+    if (src == ROUTER_NOT_FOUND) {
+      _LOG_WARN(adj->getName() << " does not exist in the router map!");
+      continue;
+    }
+
+    // Get hyperbolic distance from direct neighbor to every other router
+    for (int dest = 0; dest < static_cast<int>(m_nRouters); ++dest) {
+      // Don't calculate nexthops to this router or from a router to itself
+      if (dest != thisRouter && dest != src) {
+
+        ndn::Name destRouterName = map.getRouterNameByMappingNo(dest);
+
+        double distance = getHyperbolicDistance(map, lsdb, srcRouterName, destRouterName);
+
+        // Could not compute distance
+        if (distance == UNKNOWN_DISTANCE) {
+          _LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName << " to " <<
+                    destRouterName);
+          continue;
         }
-      }
-      addHypNextHopsToRoutingTable(pnlsr, pMap, rt, k, i);
-      freeNexthopRouters();
-      freeDistanceToNeighbor();
-      freeDistFromNbrToDest();
-    }
-  }
-  freeLinks();
-  freeLinksCosts();
-  freeAdjMatrix();
-}
 
-void
-HypRoutingTableCalculator::addHypNextHopsToRoutingTable(Nlsr& pnlsr, Map& pMap,
-                                                        RoutingTable& rt, int noFaces, int dest)
-{
-  ndn::Name destRouter = pMap.getRouterNameByMappingNo(dest);
-  for (int i = 0 ; i < noFaces ; ++i) {
-    ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(m_nexthopRouters[i]);
-    std::string nextHopFaceUri =
-         pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFaceUri();
-    NextHop nh(nextHopFaceUri, m_distFromNbrToDest[i]);
-    if (m_isDryRun) {
-      rt.addNextHopToDryTable(destRouter, nh);
-    }
-    else {
-      rt.addNextHop(destRouter, nh);
+        addNextHop(destRouterName, srcFaceUri, distance, rt);
+      }
     }
   }
 }
 
 double
-HypRoutingTableCalculator::getHyperbolicDistance(Nlsr& pnlsr,
-                                                 Map& pMap, int src, int dest)
+HyperbolicRoutingCalculator::getHyperbolicDistance(Map& map, Lsdb& lsdb,
+                                                   ndn::Name src, ndn::Name dest)
 {
-  double distance = 0.0;
-  ndn::Name srcRouterKey = pMap.getRouterNameByMappingNo(src);
-  srcRouterKey.append("coordinate");
-  ndn::Name destRouterKey = pMap.getRouterNameByMappingNo(dest);
-  destRouterKey.append("coordinate");
-  CoordinateLsa* srcLsa = pnlsr.getLsdb().findCoordinateLsa(srcRouterKey);
-  CoordinateLsa* destLsa = pnlsr.getLsdb().findCoordinateLsa(destRouterKey);
+  _LOG_TRACE("Calculating hyperbolic distance from " << src << " to " << dest);
 
-  if ((srcLsa == 0) || (destLsa == 0)) {
-    return -1;
+  double distance = UNKNOWN_DISTANCE;
+
+  ndn::Name srcLsaKey = src;
+  srcLsaKey.append("coordinate");
+
+  CoordinateLsa* srcLsa = lsdb.findCoordinateLsa(srcLsaKey);
+
+  ndn::Name destLsaKey = dest;
+  destLsaKey.append("coordinate");
+
+  CoordinateLsa* destLsa = lsdb.findCoordinateLsa(destLsaKey);
+
+  // Coordinate LSAs do not exist for these routers
+  if (srcLsa == NULL || destLsa == NULL) {
+    return UNKNOWN_DISTANCE;
   }
 
-  double srcRadius = srcLsa->getCorRadius();
   double srcTheta = srcLsa->getCorTheta();
-  double destRadius = destLsa->getCorRadius();
   double destTheta = destLsa->getCorTheta();
 
   double diffTheta = fabs(srcTheta - destTheta);
+
   if (diffTheta > MATH_PI) {
     diffTheta = 2 * MATH_PI - diffTheta;
   }
-  if (srcRadius != -1 && destRadius != -1) {
-    if (diffTheta == 0) {
-      distance = fabs(srcRadius - destRadius);
-    }
-    else {
-      distance = acosh((cosh(srcRadius) * cosh(destRadius)) -
-                       (sinh(srcRadius) * sinh(destRadius) * cos(diffTheta)));
-    }
+
+  double srcRadius = srcLsa->getCorRadius();
+  double destRadius = destLsa->getCorRadius();
+
+  if (srcRadius == UNKNOWN_RADIUS && destRadius == UNKNOWN_RADIUS) {
+    return UNKNOWN_DISTANCE;
+  }
+
+  if (diffTheta == 0) {
+    distance = fabs(srcRadius - destRadius);
   }
   else {
-    distance = -1;
+    distance = acosh((cosh(srcRadius) * cosh(destRadius)) -
+                     (sinh(srcRadius) * sinh(destRadius) * cos(diffTheta)));
   }
+
+  _LOG_TRACE("Distance from " << src << " to " << dest << " is " << distance);
+
   return distance;
 }
 
-void
-HypRoutingTableCalculator::allocateNexthopRouters()
+void HyperbolicRoutingCalculator::addNextHop(ndn::Name dest, std::string faceUri,
+                                             double cost, RoutingTable& rt)
 {
-  m_nexthopRouters = new uint32_t[vNoLink];
-}
+  NextHop hop(faceUri, cost);
 
-void
-HypRoutingTableCalculator::allocateDistanceToNeighbor()
-{
-  m_distanceToNeighbor = new double[vNoLink];
-}
+  _LOG_TRACE("Calculated " << hop << " for destination: " << dest);
 
-void
-HypRoutingTableCalculator::allocateDistFromNbrToDest()
-{
-  m_distFromNbrToDest = new double[vNoLink];
-}
-
-void
-HypRoutingTableCalculator::freeNexthopRouters()
-{
-  delete [] m_nexthopRouters;
-}
-
-void
-HypRoutingTableCalculator::freeDistanceToNeighbor()
-{
-  delete [] m_distanceToNeighbor;
-}
-
-void
-HypRoutingTableCalculator::freeDistFromNbrToDest()
-{
-  delete [] m_distFromNbrToDest;
+  if (m_isDryRun) {
+    rt.addNextHopToDryTable(dest, hop);
+  }
+  else {
+    rt.addNextHop(dest, hop);
+  }
 }
 
 }//namespace nlsr

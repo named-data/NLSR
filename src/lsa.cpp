@@ -204,7 +204,7 @@ CoordinateLsa::writeLog()
   _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
   _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
   _LOG_DEBUG("    Hyperbolic Radius: " << m_corRad);
-  _LOG_DEBUG("    Hyperbolic Theta: " << m_corRad);
+  _LOG_DEBUG("    Hyperbolic Theta: " << m_corTheta);
 }
 
 AdjLsa::AdjLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
