@@ -29,7 +29,6 @@
 #include "lsa.hpp"
 #include "name-prefix-list.hpp"
 #include <boost/test/unit_test.hpp>
-#include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 namespace test {
@@ -57,6 +56,8 @@ public:
 
     face->processEvents(ndn::time::milliseconds(1));
     face->m_sentInterests.clear();
+
+    INIT_LOGGERS("/tmp", "DEBUG");
   }
 
   void
@@ -103,10 +104,62 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(TestLsdb, LsdbFixture)
 
+BOOST_AUTO_TEST_CASE(LsdbSync)
+{
+  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router2/name");
+  uint64_t oldSeqNo = 82;
+
+  ndn::Name oldInterestName = interestName;
+  oldInterestName.appendNumber(oldSeqNo);
+
+  lsdb.expressInterest(oldInterestName, 0);
+  face->processEvents(ndn::time::milliseconds(1));
+
+  std::vector<ndn::Interest>& interests = face->m_sentInterests;
+
+  BOOST_REQUIRE(interests.size() > 0);
+  std::vector<ndn::Interest>::iterator it = interests.begin();
+
+  BOOST_CHECK_EQUAL(it->getName(), oldInterestName);
+  interests.clear();
+
+  steady_clock::TimePoint deadline = steady_clock::now() +
+                                     ndn::time::seconds(static_cast<int>(LSA_REFRESH_TIME_MAX));
+
+  // Simulate an LSA interest timeout
+  lsdb.processInterestTimedOut(oldInterestName, 0, deadline, interestName, oldSeqNo);
+  face->processEvents(ndn::time::milliseconds(1));
+
+  BOOST_REQUIRE(interests.size() > 0);
+  it = interests.begin();
+
+  BOOST_CHECK_EQUAL(it->getName(), oldInterestName);
+  interests.clear();
+
+  uint64_t newSeqNo = 83;
+
+  ndn::Name newInterestName = interestName;
+  newInterestName.appendNumber(newSeqNo);
+
+  lsdb.expressInterest(newInterestName, 0);
+  face->processEvents(ndn::time::milliseconds(1));
+
+  BOOST_REQUIRE(interests.size() > 0);
+  it = interests.begin();
+
+  BOOST_CHECK_EQUAL(it->getName(), newInterestName);
+  interests.clear();
+
+  // Simulate an LSA interest timeout where the sequence number is outdated
+  lsdb.processInterestTimedOut(oldInterestName, 0, deadline, interestName, oldSeqNo);
+  face->processEvents(ndn::time::milliseconds(1));
+
+  // Interest should not be expressed for outdated sequence number
+  BOOST_CHECK_EQUAL(interests.size(), 0);
+}
+
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 {
-  INIT_LOGGERS("/tmp", "DEBUG");
-
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
   NamePrefixList npl1;
 

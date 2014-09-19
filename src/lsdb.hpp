@@ -20,6 +20,7 @@
  * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
  *
  **/
+
 #ifndef NLSR_LSDB_HPP
 #define NLSR_LSDB_HPP
 
@@ -29,6 +30,7 @@
 #include <ndn-cxx/util/time.hpp>
 
 #include "lsa.hpp"
+#include "test-access-control.hpp"
 
 namespace nlsr {
 
@@ -162,7 +164,7 @@ private:
 public:
   void
   expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
-                  steady_clock::TimePoint deadline = steady_clock::TimePoint::min());
+                  steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
 
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
@@ -174,20 +176,21 @@ private:
   void
   processInterestForNameLsa(const ndn::Interest& interest,
                             const ndn::Name& lsaKey,
-                            uint32_t interestedlsSeqNo);
+                            uint64_t seqNo);
 
   void
   processInterestForAdjacencyLsa(const ndn::Interest& interest,
                                  const ndn::Name& lsaKey,
-                                 uint32_t interestedlsSeqNo);
+                                 uint64_t seqNo);
 
   void
   processInterestForCoordinateLsa(const ndn::Interest& interest,
                                   const ndn::Name& lsaKey,
-                                  uint32_t interestedlsSeqNo);
+                                  uint64_t seqNo);
 
   void
-  onContent(const ndn::Data& data, const steady_clock::TimePoint& deadline);
+  onContent(const ndn::Data& data, const steady_clock::TimePoint& deadline,
+            ndn::Name lsaName, uint64_t seqNo);
 
   /**
    * @brief Retry validation after it fails
@@ -200,38 +203,43 @@ private:
    */
   void
   retryContentValidation(const ndn::shared_ptr<const ndn::Data>& data,
-                         const steady_clock::TimePoint& deadline);
+                         const steady_clock::TimePoint& deadline, ndn::Name lsaName,
+                         uint64_t seqNo);
 
   void
   onContentValidated(const ndn::shared_ptr<const ndn::Data>& data);
 
   void
   onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data, const std::string& msg,
-                            const steady_clock::TimePoint& deadline);
+                            const steady_clock::TimePoint& deadline, ndn::Name lsaName,
+                            uint64_t seqNo);
 
   void
   processContentNameLsa(const ndn::Name& lsaKey,
-                        uint32_t lsSeqNo, std::string& dataContent);
+                        uint64_t lsSeqNo, std::string& dataContent);
 
   void
   processContentAdjacencyLsa(const ndn::Name& lsaKey,
-                             uint32_t lsSeqNo, std::string& dataContent);
+                             uint64_t lsSeqNo, std::string& dataContent);
 
   void
   processContentCoordinateLsa(const ndn::Name& lsaKey,
-                              uint32_t lsSeqNo, std::string& dataContent);
+                              uint64_t lsSeqNo, std::string& dataContent);
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   processInterestTimedOut(const ndn::Interest& interest, uint32_t retransmitNo,
-                          const steady_clock::TimePoint& deadline);
+                          const steady_clock::TimePoint& deadline, ndn::Name lsaName,
+                          uint64_t seqNo);
 
+private:
   system_clock::TimePoint
   getLsaExpirationTimePoint();
 
-private:
   void
   cancelScheduleLsaExpiringEvent(ndn::EventId eid);
 
+private:
   Nlsr& m_nlsr;
   ndn::Scheduler& m_scheduler;
 
@@ -244,7 +252,14 @@ private:
   seconds m_lsaRefreshTime;
   std::string m_thisRouterPrefix;
 
+  typedef std::map<ndn::Name, uint64_t> SequenceNumberMap;
+
+  // Maps the name of an LSA to its highest known sequence number from sync;
+  // Used to stop NLSR from trying to fetch outdated LSAs
+  SequenceNumberMap m_highestSeqNo;
+
   static const ndn::time::seconds GRACE_PERIOD;
+  static const steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
 };
 
 }//namespace nlsr

@@ -34,6 +34,7 @@ namespace nlsr {
 INIT_LOGGER("Lsdb");
 
 const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
+const steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE = steady_clock::TimePoint::min();
 
 using namespace std;
 
@@ -760,61 +761,68 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
 
 void
 Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
-                      steady_clock::TimePoint deadline/* = steady_clock::TimePoint::min()*/)
+                      steady_clock::TimePoint deadline)
 {
-  if (deadline == steady_clock::TimePoint::min()) {
-    deadline = steady_clock::now() + m_lsaRefreshTime;
+  if (deadline == DEFAULT_LSA_RETRIEVAL_DEADLINE) {
+    deadline = steady_clock::now() + ndn::time::seconds(static_cast<int>(LSA_REFRESH_TIME_MAX));
   }
 
+  ndn::Name lsaName = interestName.getSubName(0, interestName.size()-1);
+
   ndn::Interest interest(interestName);
-  uint64_t interestedLsSeqNo = interestName[-1].toNumber();
-  _LOG_DEBUG("Expressing Interest for LSA(name): " << interestName
-             << " Seq number: " << interestedLsSeqNo);
+  uint64_t seqNo = interestName[-1].toNumber();
+
+  if (m_highestSeqNo.find(lsaName) == m_highestSeqNo.end()) {
+    m_highestSeqNo[lsaName] = seqNo;
+  }
+  else if (seqNo > m_highestSeqNo[lsaName]) {
+    m_highestSeqNo[lsaName] = seqNo;
+  }
+  else if (seqNo < m_highestSeqNo[lsaName]) {
+    return;
+  }
+
   interest.setInterestLifetime(m_nlsr.getConfParameter().getLsaInterestLifetime());
+
+  _LOG_DEBUG("Expressing Interest for LSA: " << interestName << " Seq number: " << seqNo);
   m_nlsr.getNlsrFace().expressInterest(interest,
                                        ndn::bind(&Lsdb::onContent,
-                                                 this, _2, deadline),
+                                                 this, _2, deadline, lsaName, seqNo),
                                        ndn::bind(&Lsdb::processInterestTimedOut,
-                                                 this, _1, timeoutCount, deadline));
+                                                 this, _1, timeoutCount, deadline, lsaName, seqNo));
 }
 
 void
 Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 {
-  const ndn::Name& intName(interest.getName());
-  _LOG_DEBUG("Interest recevied for LSA(name): " << intName);
+  const ndn::Name& interestName(interest.getName());
+  _LOG_DEBUG("Interest received for LSA: " << interestName);
+
   string chkString("LSA");
-  int32_t lsaPosition = util::getNameComponentPosition(interest.getName(),
-                                                       chkString);
+  int32_t lsaPosition = util::getNameComponentPosition(interest.getName(), chkString);
+
   if (lsaPosition >= 0) {
-    std::string interestedLsType;
-    uint64_t interestedLsSeqNo;
-    ndn::Name origRouter = m_nlsr.getConfParameter().getNetwork();
-    origRouter.append(intName.getSubName(lsaPosition + 1,
-                                         interest.getName().size() - lsaPosition - 3));
-    interestedLsType  = intName[-2].toUri();
-    interestedLsSeqNo = intName[-1].toNumber();
-    _LOG_DEBUG("LSA sequence number from interest: " << interestedLsSeqNo);
+
+    ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
+    originRouter.append(interestName.getSubName(lsaPosition + 1,
+                                                interest.getName().size() - lsaPosition - 3));
+
+    uint64_t seqNo = interestName[-1].toNumber();
+    _LOG_DEBUG("LSA sequence number from interest: " << seqNo);
+
+    std::string interestedLsType = interestName[-2].toUri();
+
     if (interestedLsType == "name") {
-      processInterestForNameLsa(interest,
-                                origRouter.append(interestedLsType),
-                                interestedLsSeqNo);
-      return;
+      processInterestForNameLsa(interest, originRouter.append(interestedLsType), seqNo);
     }
     else if (interestedLsType == "adjacency") {
-      processInterestForAdjacencyLsa(interest,
-                                     origRouter.append(interestedLsType),
-                                     interestedLsSeqNo);
-      return;
+      processInterestForAdjacencyLsa(interest, originRouter.append(interestedLsType), seqNo);
     }
     else if (interestedLsType == "coordinate") {
-      processInterestForCoordinateLsa(interest,
-                                      origRouter.append(interestedLsType),
-                                      interestedLsSeqNo);
-      return;
+      processInterestForCoordinateLsa(interest, originRouter.append(interestedLsType), seqNo);
     }
     else {
-      _LOG_DEBUG("Unrecognized LSA Type :(");
+      _LOG_WARN("Received unrecognized LSA type: " << interestedLsType);
     }
   }
 }
@@ -837,11 +845,11 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
 void
 Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
                                 const ndn::Name& lsaKey,
-                                uint32_t interestedlsSeqNo)
+                                uint64_t seqNo)
 {
   NameLsa*  nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
   if (nameLsa != 0) {
-    if (nameLsa->getLsSeqNo() >= interestedlsSeqNo) {
+    if (nameLsa->getLsSeqNo() == seqNo) {
       std::string content = nameLsa->getData();
       putLsaData(interest,content);
     }
@@ -851,11 +859,11 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
 void
 Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
                                      const ndn::Name& lsaKey,
-                                     uint32_t interestedlsSeqNo)
+                                     uint64_t seqNo)
 {
   AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
   if (adjLsa != 0) {
-    if (adjLsa->getLsSeqNo() >= interestedlsSeqNo) {
+    if (adjLsa->getLsSeqNo() == seqNo) {
       std::string content = adjLsa->getData();
       putLsaData(interest,content);
     }
@@ -865,11 +873,11 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
 void
 Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
                                       const ndn::Name& lsaKey,
-                                      uint32_t interestedlsSeqNo)
+                                      uint64_t seqNo)
 {
   CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
   if (corLsa != 0) {
-    if (corLsa->getLsSeqNo() >= interestedlsSeqNo) {
+    if (corLsa->getLsSeqNo() == seqNo) {
       std::string content = corLsa->getData();
       putLsaData(interest,content);
     }
@@ -878,7 +886,8 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
 
 void
 Lsdb::onContent(const ndn::Data& data,
-                const steady_clock::TimePoint& deadline)
+                const steady_clock::TimePoint& deadline, ndn::Name lsaName,
+                uint64_t seqNo)
 {
   _LOG_DEBUG("Received data for LSA(name): " << data.getName());
   if (data.getSignature().hasKeyLocator()) {
@@ -889,13 +898,14 @@ Lsdb::onContent(const ndn::Data& data,
   m_nlsr.getValidator().validate(data,
                                  ndn::bind(&Lsdb::onContentValidated, this, _1),
                                  ndn::bind(&Lsdb::onContentValidationFailed, this, _1, _2,
-                                           deadline));
+                                           deadline, lsaName, seqNo));
 
 }
 
 void
 Lsdb::retryContentValidation(const ndn::shared_ptr<const ndn::Data>& data,
-                             const steady_clock::TimePoint& deadline)
+                             const steady_clock::TimePoint& deadline, ndn::Name lsaName,
+                             uint64_t seqNo)
 {
   _LOG_DEBUG("Retrying validation of LSA(name): " << data->getName());
   if (data->getSignature().hasKeyLocator()) {
@@ -906,42 +916,39 @@ Lsdb::retryContentValidation(const ndn::shared_ptr<const ndn::Data>& data,
   m_nlsr.getValidator().validate(*data,
                                  ndn::bind(&Lsdb::onContentValidated, this, _1),
                                  ndn::bind(&Lsdb::onContentValidationFailed, this, _1, _2,
-                                           deadline));
+                                           deadline, lsaName, seqNo));
 }
 
 void
 Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 {
   const ndn::Name& dataName = data->getName();
-  _LOG_DEBUG("Data validation successful for LSA(name): " << dataName);
-  string dataContent(reinterpret_cast<const char*>(data->getContent().value()));
+  _LOG_DEBUG("Data validation successful for LSA: " << dataName);
+
   string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(dataName, chkString);
+
   if (lsaPosition >= 0) {
-    std::string interestedLsType;
-    uint64_t interestedLsSeqNo;
-    ndn::Name origRouter = m_nlsr.getConfParameter().getNetwork();
-    origRouter.append(dataName.getSubName(lsaPosition + 1,
-                                          dataName.size() - lsaPosition - 4));
-    interestedLsType  = dataName[-3].toUri();
-    interestedLsSeqNo = dataName[-2].toNumber();
+
+    ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
+    originRouter.append(dataName.getSubName(lsaPosition + 1, dataName.size() - lsaPosition - 4));
+
+    uint64_t seqNo = dataName[-2].toNumber();
+    string dataContent(reinterpret_cast<const char*>(data->getContent().value()));
+
+    std::string interestedLsType  = dataName[-3].toUri();
+
     if (interestedLsType == "name") {
-      processContentNameLsa(origRouter.append(interestedLsType),
-                            interestedLsSeqNo, dataContent);
-      return;
+      processContentNameLsa(originRouter.append(interestedLsType), seqNo, dataContent);
     }
     else if (interestedLsType == "adjacency") {
-      processContentAdjacencyLsa(origRouter.append(interestedLsType),
-                                 interestedLsSeqNo, dataContent);
-      return;
+      processContentAdjacencyLsa(originRouter.append(interestedLsType), seqNo, dataContent);
     }
     else if (interestedLsType == "coordinate") {
-      processContentCoordinateLsa(origRouter.append(interestedLsType),
-                                  interestedLsSeqNo, dataContent);
-      return;
+      processContentCoordinateLsa(originRouter.append(interestedLsType), seqNo, dataContent);
     }
     else {
-      _LOG_DEBUG("Unrecognized LSA Type :(");
+      _LOG_WARN("Received unrecognized LSA Type: " << interestedLsType);
     }
   }
 }
@@ -949,7 +956,8 @@ Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 void
 Lsdb::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
                                 const std::string& msg,
-                                const steady_clock::TimePoint& deadline)
+                                const steady_clock::TimePoint& deadline, ndn::Name lsaName,
+                                uint64_t seqNo)
 {
   _LOG_DEBUG("Validation Error: " << msg);
 
@@ -959,15 +967,21 @@ Lsdb::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
 
   // Stop retrying if delayed re-validation will be scheduled pass the deadline
   if (steady_clock::now() + m_nlsr.getConfParameter().getLsaInterestLifetime() < deadline) {
-    _LOG_DEBUG("Scheduling revalidation");
-    m_scheduler.scheduleEvent(m_nlsr.getConfParameter().getLsaInterestLifetime(),
-                              ndn::bind(&Lsdb::retryContentValidation, this, data, deadline));
+
+    SequenceNumberMap::const_iterator it = m_highestSeqNo.find(lsaName);
+
+    if (it != m_highestSeqNo.end() && it->second == seqNo) {
+      _LOG_DEBUG("Scheduling revalidation attempt");
+      m_scheduler.scheduleEvent(m_nlsr.getConfParameter().getLsaInterestLifetime(),
+                                ndn::bind(&Lsdb::retryContentValidation, this, data,
+                                          deadline, lsaName, seqNo));
+    }
   }
 }
 
 void
 Lsdb::processContentNameLsa(const ndn::Name& lsaKey,
-                            uint32_t lsSeqNo, std::string& dataContent)
+                            uint64_t lsSeqNo, std::string& dataContent)
 {
   if (isNameLsaNew(lsaKey, lsSeqNo)) {
     NameLsa nameLsa;
@@ -982,7 +996,7 @@ Lsdb::processContentNameLsa(const ndn::Name& lsaKey,
 
 void
 Lsdb::processContentAdjacencyLsa(const ndn::Name& lsaKey,
-                                 uint32_t lsSeqNo, std::string& dataContent)
+                                 uint64_t lsSeqNo, std::string& dataContent)
 {
   if (isAdjLsaNew(lsaKey, lsSeqNo)) {
     AdjLsa adjLsa;
@@ -997,7 +1011,7 @@ Lsdb::processContentAdjacencyLsa(const ndn::Name& lsaKey,
 
 void
 Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
-                                  uint32_t lsSeqNo, std::string& dataContent)
+                                  uint64_t lsSeqNo, std::string& dataContent)
 {
   if (isCoordinateLsaNew(lsaKey, lsSeqNo)) {
     CoordinateLsa corLsa;
@@ -1012,13 +1026,19 @@ Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
 
 void
 Lsdb::processInterestTimedOut(const ndn::Interest& interest, uint32_t retransmitNo,
-                              const ndn::time::steady_clock::TimePoint& deadline)
+                              const ndn::time::steady_clock::TimePoint& deadline, ndn::Name lsaName,
+                              uint64_t seqNo)
 {
   const ndn::Name& interestName = interest.getName();
-  _LOG_DEBUG("Interest timed out for  LSA(name): " << interestName);
+  _LOG_DEBUG("Interest timed out for  LSA: " << interestName);
 
   if (ndn::time::steady_clock::now() < deadline) {
-    expressInterest(interestName, retransmitNo + 1, deadline);
+
+    SequenceNumberMap::const_iterator it = m_highestSeqNo.find(lsaName);
+
+    if (it != m_highestSeqNo.end() &&  it->second == seqNo) {
+      expressInterest(interestName, retransmitNo + 1, deadline);
+    }
   }
 }
 
