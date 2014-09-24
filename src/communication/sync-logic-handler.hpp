@@ -17,55 +17,49 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 #ifndef NLSR_SYNC_LOGIC_HANDLER_HPP
 #define NLSR_SYNC_LOGIC_HANDLER_HPP
 
+#include <ndn-cxx/face.hpp>
+#include <ndn-cxx/security/validator-null.hpp>
+#include <nsync/sync-socket.h>
+
 #include <iostream>
+#include <unistd.h>
 #include <boost/cstdint.hpp>
 
-#include <ndn-cxx/face.hpp>
-#include <nsync/sync-socket.h>
-#include <ndn-cxx/security/validator-null.hpp>
-
-#include "sequencing-manager.hpp"
-
-extern "C" {
-#include <unistd.h>
-}
-
 class InterestManager;
-class ConfParameter;
 
 namespace nlsr {
+
+class ConfParameter;
+class Lsdb;
+class SequencingManager;
+class SyncUpdate;
 
 class SyncLogicHandler
 {
 public:
-  SyncLogicHandler(boost::asio::io_service& ioService)
+  SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf)
     : m_validator(new ndn::ValidatorNull())
-    , m_syncFace(new ndn::Face(ioService))
+    , m_syncFace(face)
+    , m_lsdb(lsdb)
+    , m_confParam(conf)
   {
   }
 
+  void
+  createSyncSocket();
 
   void
-  createSyncSocket(Nlsr& pnlsr);
+  onNsyncUpdate(const std::vector<Sync::MissingDataInfo>& v, Sync::SyncSocket* socket);
 
   void
-  nsyncUpdateCallBack(const std::vector<Sync::MissingDataInfo>& v,
-                      Sync::SyncSocket* socket, Nlsr& pnlsr);
+  onNsyncRemoval(const std::string& prefix);
 
   void
-  nsyncRemoveCallBack(const std::string& prefix, Nlsr& pnlsr);
-
-  void
-  removeRouterFromSyncing(const ndn::Name& routerPrefix);
-
-  void
-  publishRoutingUpdate(SequencingManager& sm, const ndn::Name& updatePrefix);
+  publishRoutingUpdate(SequencingManager& manager, const ndn::Name& updatePrefix);
 
   void
   setSyncPrefix(const std::string& sp)
@@ -76,21 +70,32 @@ public:
 
 private:
   void
-  processUpdateFromSync(const ndn::Name& updateName, uint64_t seqNo,
-                        Nlsr& pnlsr);
+  processUpdateFromSync(const SyncUpdate& updateName);
+
+  bool
+  isLsaNew(const ndn::Name& originRouter, const std::string& lsaType, uint64_t seqNo);
 
   void
-  processRoutingUpdateFromSync(const ndn::Name& routerName, uint64_t seqNo,
-                               Nlsr& pnlsr);
+  expressInterestForLsa(const SyncUpdate& updateName, std::string lsaType, uint64_t seqNo);
 
   void
   publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo);
 
 private:
   ndn::shared_ptr<ndn::ValidatorNull> m_validator;
-  ndn::shared_ptr<ndn::Face> m_syncFace;
+  ndn::Face& m_syncFace;
   ndn::shared_ptr<Sync::SyncSocket> m_syncSocket;
   ndn::Name m_syncPrefix;
+
+  Lsdb& m_lsdb;
+  ConfParameter& m_confParam;
+
+  static const std::string NLSR_COMPONENT;
+  static const std::string LSA_COMPONENT;
+  static const std::string NAME_COMPONENT;
+  static const std::string ADJACENCY_COMPONENT;
+  static const std::string COORDINATE_COMPONENT;
+
 };
 
 } //namespace nlsr

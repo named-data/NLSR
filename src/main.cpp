@@ -38,8 +38,9 @@ main(int32_t argc, char** argv)
 {
   boost::asio::io_service ioService;
   ndn::Scheduler scheduler(ioService);
+  ndn::Face face(ioService);
 
-  Nlsr nlsr(ioService, scheduler);
+  Nlsr nlsr(ioService, scheduler, face);
 
   std::string programName(argv[0]);
   nlsr.setConfFileName("nlsr.conf");

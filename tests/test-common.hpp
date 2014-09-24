@@ -24,6 +24,7 @@
 #define NLSR_TEST_COMMON_HPP
 
 #include <boost/asio.hpp>
+#include <boost/test/unit_test.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {

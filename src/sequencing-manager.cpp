@@ -102,7 +102,7 @@ SequencingManager::getUserHomeDirectory()
 }
 
 void
-SequencingManager::writeLog()
+SequencingManager::writeLog() const
 {
   _LOG_DEBUG("----SequencingManager----");
   _LOG_DEBUG("Adj LSA seq no: " << m_adjLsaSeq);

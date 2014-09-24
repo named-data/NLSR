@@ -64,8 +64,8 @@ class Nlsr
   };
 
 public:
-  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler)
-    : m_nlsrFace(ioService)
+  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face)
+    : m_nlsrFace(face)
     , m_scheduler(scheduler)
     , m_confParam()
     , m_adjacencyList()
@@ -81,7 +81,7 @@ public:
     , m_routingTable(scheduler)
     , m_fib(*this, m_nlsrFace, scheduler)
     , m_namePrefixTable(*this)
-    , m_syncLogicHandler(ioService)
+    , m_syncLogicHandler(m_nlsrFace, m_nlsrLsdb, m_confParam)
     , m_helloProtocol(*this, scheduler)
     , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
     , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
@@ -335,7 +335,7 @@ private:
 private:
   typedef std::map<ndn::Name, ndn::shared_ptr<ndn::IdentityCertificate> > CertMap;
 
-  ndn::Face m_nlsrFace;
+  ndn::Face& m_nlsrFace;
   ndn::Scheduler& m_scheduler;
   ConfParameter m_confParam;
   AdjacencyList m_adjacencyList;

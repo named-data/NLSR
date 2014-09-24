@@ -20,11 +20,18 @@
  * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
  *
  **/
-#include "nlsr.hpp"
 #include "sync-logic-handler.hpp"
-#include "utility/name-helper.hpp"
-#include "lsa.hpp"
+
+#include "conf-parameter.hpp"
 #include "logger.hpp"
+#include "lsa.hpp"
+#include "lsdb.hpp"
+#include "sequencing-manager.hpp"
+#include "utility/name-helper.hpp"
+
+#include <boost/serialization/shared_ptr.hpp>
+
+using namespace boost::serialization;
 
 namespace nlsr {
 
@@ -33,88 +40,161 @@ INIT_LOGGER("SyncLogicHandler");
 using namespace ndn;
 using namespace std;
 
+class SyncUpdate
+{
+public:
+  class Error : public std::runtime_error
+  {
+  public:
+    explicit
+    Error(const std::string& what)
+      : std::runtime_error(what)
+    {
+    }
+  };
+
+public:
+  SyncUpdate(const ndn::Name& name, uint64_t seqNo)
+    : m_name(name)
+    , m_seqManager(seqNo)
+  {
+  }
+
+  const ndn::Name&
+  getName() const
+  {
+    return m_name;
+  }
+
+  const ndn::Name
+  getOriginRouter() const
+  {
+    int32_t nlsrPosition = util::getNameComponentPosition(m_name, NLSR_COMPONENT);
+    int32_t lsaPosition = util::getNameComponentPosition(m_name, LSA_COMPONENT);
+
+    if (nlsrPosition < 0 || lsaPosition < 0) {
+      throw Error("Cannot parse update name because expected components are missing");
+    }
+
+    ndn::Name networkName = m_name.getSubName(0, nlsrPosition);
+    ndn::Name routerName = m_name.getSubName(lsaPosition + 1);
+
+    ndn::Name originRouter = networkName;
+    originRouter.append(routerName);
+
+    return originRouter;
+  }
+
+  uint64_t
+  getNameLsaSeqNo() const
+  {
+    return m_seqManager.getNameLsaSeq();
+  }
+
+  uint64_t
+  getAdjLsaSeqNo() const
+  {
+    return m_seqManager.getAdjLsaSeq();
+  }
+
+  uint64_t
+  getCorLsaSeqNo() const
+  {
+    return m_seqManager.getCorLsaSeq();
+  }
+
+  const SequencingManager&
+  getSequencingManager() const
+  {
+    return m_seqManager;
+  }
+
+private:
+  const ndn::Name m_name;
+  SequencingManager m_seqManager;
+
+  static const std::string NLSR_COMPONENT;
+  static const std::string LSA_COMPONENT;
+};
+
+const std::string SyncUpdate::NLSR_COMPONENT = "NLSR";
+const std::string SyncUpdate::LSA_COMPONENT = "LSA";
+
+const std::string SyncLogicHandler::NAME_COMPONENT = "name";
+const std::string SyncLogicHandler::ADJACENCY_COMPONENT = "adjacency";
+const std::string SyncLogicHandler::COORDINATE_COMPONENT = "coordinate";
+
 void
-SyncLogicHandler::createSyncSocket(Nlsr& pnlsr)
+SyncLogicHandler::createSyncSocket()
 {
   _LOG_DEBUG("Creating Sync socket. Sync Prefix: " << m_syncPrefix);
-  m_syncSocket = ndn::make_shared<Sync::SyncSocket>(m_syncPrefix, m_validator,
-                                                    m_syncFace,
-                                                    ndn::bind(&SyncLogicHandler::nsyncUpdateCallBack,
-                                                              this, _1, _2, ndn::ref(pnlsr)),
-                                                    ndn::bind(&SyncLogicHandler::nsyncRemoveCallBack,
-                                                              this, _1, ndn::ref(pnlsr)));
+
+  // The face's lifetime is managed in main.cpp; SyncSocket should not manage the memory
+  // of the object
+  ndn::shared_ptr<ndn::Face> facePtr(&m_syncFace, null_deleter());
+
+  m_syncSocket = ndn::make_shared<Sync::SyncSocket>(m_syncPrefix, m_validator, facePtr,
+                                                    ndn::bind(&SyncLogicHandler::onNsyncUpdate,
+                                                              this, _1, _2),
+                                                    ndn::bind(&SyncLogicHandler::onNsyncRemoval,
+                                                              this, _1));
 }
 
 void
-SyncLogicHandler::nsyncUpdateCallBack(const vector<Sync::MissingDataInfo>& v,
-                                      Sync::SyncSocket* socket, Nlsr& pnlsr)
+SyncLogicHandler::onNsyncUpdate(const vector<Sync::MissingDataInfo>& v, Sync::SyncSocket* socket)
 {
-  _LOG_DEBUG("nsyncUpdateCallBack called ....");
-  int32_t n = v.size();
-  for (int32_t i = 0; i < n; i++){
-    _LOG_DEBUG("Update Name: " << v[i].prefix << " Seq: " << v[i].high.getSeq());
-    processUpdateFromSync(v[i].prefix, v[i].high.getSeq(), pnlsr);
+  _LOG_DEBUG("Received Nsync update event");
+
+  for (size_t i = 0; i < v.size(); i++){
+    _LOG_DEBUG("Update Name: " << v[i].prefix << " Seq no: " << v[i].high.getSeq());
+
+    SyncUpdate update(v[i].prefix, v[i].high.getSeq());
+
+    processUpdateFromSync(update);
   }
 }
 
 void
-SyncLogicHandler::nsyncRemoveCallBack(const string& prefix, Nlsr& pnlsr)
+SyncLogicHandler::onNsyncRemoval(const string& prefix)
 {
-  _LOG_DEBUG("nsyncRemoveCallBack called ....");
+  _LOG_DEBUG("Received Nsync removal event");
 }
 
 void
-SyncLogicHandler::removeRouterFromSyncing(const ndn::Name& routerPrefix)
+SyncLogicHandler::processUpdateFromSync(const SyncUpdate& update)
 {
-}
+  ndn::Name originRouter;
 
-void
-SyncLogicHandler::processUpdateFromSync(const ndn::Name& updateName,
-                                        uint64_t seqNo,  Nlsr& pnlsr)
-{
-  string chkString("LSA");
-  int32_t lasPosition = util::getNameComponentPosition(updateName, chkString);
-  if (lasPosition >= 0) {
-    ndn::Name routerName = updateName.getSubName(lasPosition + 1);
-    processRoutingUpdateFromSync(routerName, seqNo, pnlsr);
+  try {
+    originRouter = update.getOriginRouter();
+  }
+  catch (std::exception& e) {
+    _LOG_WARN("Received malformed sync update");
     return;
   }
-}
 
-void
-SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
-                                               uint64_t seqNo,  Nlsr& pnlsr)
-{
-  ndn::Name rName = routerName;
-  if (routerName != pnlsr.getConfParameter().getRouterPrefix()) {
-    SequencingManager sm(seqNo);
-    sm.writeLog();
-    _LOG_DEBUG(routerName);
+  // A router should not try to fetch its own LSA
+  if (originRouter != m_confParam.getRouterPrefix()) {
+
+    update.getSequencingManager().writeLog();
+
     try {
-      if (pnlsr.getLsdb().isNameLsaNew(rName.append("name"), sm.getNameLsaSeq())) {
-        _LOG_DEBUG("Updated Name LSA. Need to fetch it");
-        ndn::Name interestName(pnlsr.getConfParameter().getLsaPrefix());
-        interestName.append(routerName);
-        interestName.append("name");
-        interestName.appendNumber(sm.getNameLsaSeq());
-        pnlsr.getLsdb().expressInterest(interestName, 0);
+      if (isLsaNew(originRouter, NAME_COMPONENT, update.getNameLsaSeqNo())) {
+        _LOG_DEBUG("Received sync update with higher Name LSA sequence number than entry in LSDB");
+
+        expressInterestForLsa(update, NAME_COMPONENT, update.getNameLsaSeqNo());
       }
-      if (pnlsr.getLsdb().isAdjLsaNew(rName.append("adjacency"), sm.getAdjLsaSeq())) {
-        _LOG_DEBUG("Updated Adj LSA. Need to fetch it");
-        ndn::Name interestName(pnlsr.getConfParameter().getLsaPrefix());
-        interestName.append(routerName);
-        interestName.append("adjacency");
-        interestName.appendNumber(sm.getAdjLsaSeq());
-        pnlsr.getLsdb().expressInterest(interestName, 0);
+
+      if (isLsaNew(originRouter, ADJACENCY_COMPONENT, update.getAdjLsaSeqNo())) {
+        _LOG_DEBUG("Received sync update with higher Adj LSA sequence number than entry in LSDB");
+
+        expressInterestForLsa(update, ADJACENCY_COMPONENT, update.getAdjLsaSeqNo());
       }
-      if (pnlsr.getLsdb().isCoordinateLsaNew(rName.append("coordinate"),
-                                             sm.getCorLsaSeq())) {
-        _LOG_DEBUG("Updated Cor LSA. Need to fetch it");
-        ndn::Name interestName(pnlsr.getConfParameter().getLsaPrefix());
-        interestName.append(routerName);
-        interestName.append("coordinate");
-        interestName.appendNumber(sm.getCorLsaSeq());
-        pnlsr.getLsdb().expressInterest(interestName, 0);
+
+      if (isLsaNew(originRouter, COORDINATE_COMPONENT, update.getCorLsaSeqNo())) {
+        _LOG_DEBUG("Received sync update with higher Cor LSA sequence number than entry in LSDB");
+
+        expressInterestForLsa(update, COORDINATE_COMPONENT, update.getCorLsaSeqNo());
       }
     }
     catch (std::exception& e) {
@@ -124,24 +204,56 @@ SyncLogicHandler::processRoutingUpdateFromSync(const ndn::Name& routerName,
   }
 }
 
-void
-SyncLogicHandler::publishRoutingUpdate(SequencingManager& sm,
-                                       const ndn::Name& updatePrefix)
+bool
+SyncLogicHandler::isLsaNew(const ndn::Name& originRouter, const std::string& lsaType,
+                           uint64_t seqNo)
 {
-  sm.writeSeqNoToFile();
-  publishSyncUpdate(updatePrefix, sm.getCombinedSeqNo());
+  ndn::Name lsaKey = originRouter;
+  lsaKey.append(lsaType);
+
+  if (lsaType == NAME_COMPONENT)
+  {
+    return m_lsdb.isNameLsaNew(lsaKey, seqNo);
+  }
+  else if (lsaType == ADJACENCY_COMPONENT)
+  {
+    return m_lsdb.isAdjLsaNew(lsaKey, seqNo);
+  }
+  else if (lsaType == COORDINATE_COMPONENT)
+  {
+    return m_lsdb.isCoordinateLsaNew(lsaKey, seqNo);
+  }
+
+  return false;
 }
 
 void
-SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix,
-                                    uint64_t seqNo)
+SyncLogicHandler::expressInterestForLsa(const SyncUpdate& update, std::string lsaType,
+                                        uint64_t seqNo)
 {
-  _LOG_DEBUG("Publishing Sync Update. Prefix: " << updatePrefix << "Seq no: " << seqNo);
+  ndn::Name interest(update.getName());
+  interest.append(lsaType);
+  interest.appendNumber(seqNo);
+
+  m_lsdb.expressInterest(interest, 0);
+}
+
+void
+SyncLogicHandler::publishRoutingUpdate(SequencingManager& manager, const ndn::Name& updatePrefix)
+{
+  manager.writeSeqNoToFile();
+  publishSyncUpdate(updatePrefix, manager.getCombinedSeqNo());
+}
+
+void
+SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo)
+{
+  _LOG_DEBUG("Publishing Sync Update. Prefix: " << updatePrefix << " Seq No: " << seqNo);
+
   ndn::Name updateName(updatePrefix);
   string data("NoData");
-  m_syncSocket->publishData(updateName.toUri(), 0, data.c_str(), data.size(),
-                            1000,
-                            seqNo);
+
+  m_syncSocket->publishData(updateName.toUri(), 0, data.c_str(), data.size(), 1000, seqNo);
 }
 
 }//namespace nlsr

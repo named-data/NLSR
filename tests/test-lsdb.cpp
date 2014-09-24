@@ -22,6 +22,7 @@
  **/
 
 #include "test-common.hpp"
+#include "dummy-face.hpp"
 
 #include "lsdb.hpp"
 #include "nlsr.hpp"
@@ -31,16 +32,49 @@
 #include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
-
 namespace test {
 
-BOOST_FIXTURE_TEST_SUITE(TestLsdb, BaseFixture)
+using ndn::DummyFace;
+using ndn::shared_ptr;
+
+class LsdbFixture : public BaseFixture
+{
+public:
+  LsdbFixture()
+    : face(ndn::makeDummyFace())
+    , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
+    , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter())
+    , REGISTER_COMMAND_PREFIX("/localhost/nfd/rib")
+    , REGISTER_VERB("register")
+  {
+  }
+
+  void extractParameters(ndn::Interest& interest, ndn::Name::Component& verb,
+                         ndn::nfd::ControlParameters& extractedParameters)
+  {
+    const ndn::Name& name = interest.getName();
+    verb = name[REGISTER_COMMAND_PREFIX.size()];
+    const ndn::Name::Component& parameterComponent = name[REGISTER_COMMAND_PREFIX.size() + 1];
+
+    ndn::Block rawParameters = parameterComponent.blockFromValue();
+    extractedParameters.wireDecode(rawParameters);
+  }
+
+public:
+  shared_ptr<DummyFace> face;
+  Nlsr nlsr;
+  SyncLogicHandler sync;
+
+  ndn::Name REGISTER_COMMAND_PREFIX;
+  ndn::Name::Component REGISTER_VERB;
+};
+
+BOOST_FIXTURE_TEST_SUITE(TestLsdb, LsdbFixture)
 
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 {
   INIT_LOGGERS("/tmp", "DEBUG");
 
-  Nlsr nlsr1(g_ioService, g_scheduler);
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
   NamePrefixList npl1;
 
@@ -51,12 +85,12 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   npl1.insert(s1);
   npl1.insert(s2);
 
-//For NameLsa lsType is name.
-//12 is seqNo, randomly generated.
-//1800 is the default life time.
+  //For NameLsa lsType is name.
+  //12 is seqNo, randomly generated.
+  //1800 is the default life time.
   NameLsa nlsa1(ndn::Name("/router1/1"), std::string("name"), 12, testTimePoint, npl1);
 
-  Lsdb lsdb1(nlsr1, g_scheduler);
+  Lsdb lsdb1(nlsr, g_scheduler);
 
   lsdb1.installNameLsa(nlsa1);
   lsdb1.writeNameLsdbLog();
@@ -66,6 +100,42 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   lsdb1.removeNameLsa(router1);
 
   BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(ndn::Name("/router1/1"), std::string("name")), false);
+}
+
+BOOST_AUTO_TEST_CASE(RegisterSyncPrefixOnFirstAdjLsaBuild)
+{
+  ConfParameter& conf = nlsr.getConfParameter();
+  conf.setNetwork("/ndn");
+  conf.setSiteName("/site");
+  conf.setRouterName("/%C1.router/this-router");
+
+  nlsr.initialize();
+
+  Lsdb& lsdb = nlsr.getLsdb();
+  face->processEvents(ndn::time::milliseconds(1));
+  face->m_sentInterests.clear();
+
+  // Should register Sync prefix
+  lsdb.buildAndInstallOwnAdjLsa();
+  face->processEvents(ndn::time::milliseconds(1));
+
+  std::vector<ndn::Interest>& interests = face->m_sentInterests;
+
+  BOOST_REQUIRE(interests.size() > 0);
+
+  ndn::nfd::ControlParameters extractedParameters;
+  ndn::Name::Component verb;
+  extractParameters(interests[0], verb, extractedParameters);
+
+  BOOST_CHECK_EQUAL(verb, REGISTER_VERB);
+  BOOST_CHECK_EQUAL(extractedParameters.getName(), conf.getChronosyncPrefix());
+
+  // Should not register Sync prefix
+  face->m_sentInterests.clear();
+  lsdb.buildAndInstallOwnAdjLsa();
+  face->processEvents(ndn::time::milliseconds(1));
+
+  BOOST_CHECK_EQUAL(interests.size(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

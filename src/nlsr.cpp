@@ -140,7 +140,7 @@ Nlsr::initialize()
   setLsaInterestFilter();
   m_nlsrLsdb.buildAndInstallOwnNameLsa();
   m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
-  m_syncLogicHandler.createSyncSocket(boost::ref(*this));
+
   registerKeyPrefix();
   m_helloProtocol.scheduleInterest(10);
 }

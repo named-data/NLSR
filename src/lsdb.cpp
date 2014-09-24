@@ -564,16 +564,24 @@ Lsdb::buildAndInstallOwnAdjLsa()
                 getLsaExpirationTimePoint(),
                 m_nlsr.getAdjacencyList().getNumOfActiveNeighbor(),
                 m_nlsr.getAdjacencyList());
+
   m_nlsr.getSequencingManager().increaseAdjLsaSeq();
-  // publish routing update
-  //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-  //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
+
+  bool isInstalled = installAdjLsa(adjLsa);
+
+  // Delay Sync prefix registration until the first Adjacency LSA is built
+  if (isInstalled && !m_hasSyncPrefixBeenRegistered) {
+    m_nlsr.getSyncLogicHandler().createSyncSocket();
+    m_hasSyncPrefixBeenRegistered = true;
+  }
+
   ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
   lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
   lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
-  m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
-                                                    lsaPrefix);
-  return installAdjLsa(adjLsa);
+
+  m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(), lsaPrefix);
+
+  return isInstalled;
 }
 
 bool

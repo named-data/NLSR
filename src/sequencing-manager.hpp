@@ -134,7 +134,7 @@ public:
   getUserHomeDirectory();
 
   void
-  writeLog();
+  writeLog() const;
 
 private:
   void

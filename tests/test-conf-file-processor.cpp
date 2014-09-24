@@ -22,6 +22,7 @@
  **/
 
 #include "test-common.hpp"
+#include "dummy-face.hpp"
 
 #include <fstream>
 #include "conf-file-processor.hpp"
@@ -31,11 +32,16 @@
 namespace nlsr {
 namespace test {
 
+using ndn::DummyFace;
+using ndn::shared_ptr;
+
 BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, BaseFixture)
 
 BOOST_AUTO_TEST_CASE(ConfFileProcessorSample)
 {
-  Nlsr nlsr1(g_ioService, g_scheduler);
+  shared_ptr<DummyFace> face = ndn::makeDummyFace();
+
+  Nlsr nlsr1(g_ioService, g_scheduler, ndn::ref(*face));
 
   const std::string CONFIG =
      "general\n"

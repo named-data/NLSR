@@ -42,10 +42,10 @@ public:
   Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
     : m_nlsr(nlsr)
     , m_scheduler(scheduler)
+    , m_hasSyncPrefixBeenRegistered(false)
     , m_lsaRefreshTime(0)
   {
   }
-
 
   bool
   doesLsaExist(const ndn::Name& key, const std::string& lsType);
@@ -238,6 +238,8 @@ private:
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;
+
+  bool m_hasSyncPrefixBeenRegistered;
 
   seconds m_lsaRefreshTime;
   std::string m_thisRouterPrefix;
