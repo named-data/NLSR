@@ -73,6 +73,7 @@ public:
   }
 
   typedef std::list<NextHop>::iterator iterator;
+  typedef std::list<NextHop>::const_iterator const_iterator;
 
   iterator
   begin()
@@ -82,6 +83,18 @@ public:
 
   iterator
   end()
+  {
+    return m_nexthopList.end();
+  }
+
+  const_iterator
+  cbegin() const
+  {
+    return m_nexthopList.begin();
+  }
+
+  const_iterator
+  cend() const
   {
     return m_nexthopList.end();
   }

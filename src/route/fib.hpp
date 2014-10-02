@@ -30,27 +30,30 @@
 #include <ndn-cxx/util/time.hpp>
 #include "face-map.hpp"
 #include "fib-entry.hpp"
+#include "test-access-control.hpp"
 
 namespace nlsr {
 
 typedef ndn::function<void(const ndn::nfd::ControlParameters&)> CommandSucceedCallback;
 typedef ndn::function<void(uint32_t/*code*/,const std::string&/*reason*/)> CommandFailCallback;
 
-class Nlsr;
-
+class AdjacencyList;
+class ConfParameter;
 
 class Fib
 {
 public:
-  Fib(Nlsr& nlsr, ndn::Face& face, ndn::Scheduler& scheduler)
-    : m_nlsr(nlsr)
-    , m_scheduler(scheduler)
+  Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList, ConfParameter& conf)
+    : m_scheduler(scheduler)
     , m_table()
     , m_refreshTime(0)
     , m_controller(face)
     , m_faceMap()
+    , m_adjacencyList(adjacencyList)
+    , m_confParameter(conf)
   {
   }
+
   ~Fib()
   {
   }
@@ -59,7 +62,7 @@ public:
   remove(const ndn::Name& name);
 
   void
-  update(const ndn::Name& name, NexthopList& nextHopList);
+  update(const ndn::Name& name, NexthopList& allHops);
 
   void
   clean();
@@ -75,17 +78,17 @@ private:
   isPrefixUpdatable(const ndn::Name& name);
 
   void
-  addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& nextHopList);
+  addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd);
 
   void
-  removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, NexthopList& newHopList);
+  removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, const NexthopList& installedHops);
 
   void
   removeHop(NexthopList& nl, const std::string& doNotRemoveHopFaceUri,
             const ndn::Name& name);
 
-  int
-  getNumberOfFacesForName(NexthopList& nextHopList, uint32_t maxFacesPerPrefix);
+  unsigned int
+  getNumberOfFacesForName(NexthopList& nextHopList);
 
   ndn::EventId
   scheduleEntryExpiration(const ndn::Name& name, int32_t feSeqNum,
@@ -178,13 +181,18 @@ private:
                        const std::string& message);
 
 private:
-  Nlsr& m_nlsr;
   ndn::Scheduler& m_scheduler;
 
   std::list<FibEntry> m_table;
   int32_t m_refreshTime;
   ndn::nfd::Controller m_controller;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   FaceMap m_faceMap;
+
+private:
+  AdjacencyList& m_adjacencyList;
+  ConfParameter& m_confParameter;
 
   static const uint64_t GRACE_PERIOD;
 };

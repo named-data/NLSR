@@ -20,31 +20,37 @@
  *
  **/
 
-#ifndef NLSR_TEST_COMMON_HPP
-#define NLSR_TEST_COMMON_HPP
+#ifndef NLSR_TEST_CONTROL_COMMANDS_HPP
+#define NLSR_TEST_CONTROL_COMMANDS_HPP
 
-#include <boost/asio.hpp>
-#include <boost/test/unit_test.hpp>
-
-#include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/interest.hpp>
+#include <ndn-cxx/management/nfd-control-parameters.hpp>
 
 namespace nlsr {
 namespace test {
 
-class BaseFixture
+inline void
+extractParameters(const ndn::Interest& interest,
+                  ndn::Name::Component& verb,
+                  ndn::nfd::ControlParameters& extractedParameters,
+                  const ndn::Name& commandPrefix)
 {
-public:
-  BaseFixture()
-    : g_scheduler(g_ioService)
-  {
-  }
+  const ndn::Name& name = interest.getName();
+  verb = name[commandPrefix.size()];
+  const ndn::Name::Component& parameterComponent = name[commandPrefix.size() + 1];
 
-protected:
-  boost::asio::io_service g_ioService;
-  ndn::Scheduler g_scheduler;
-};
+  ndn::Block rawParameters = parameterComponent.blockFromValue();
+  extractedParameters.wireDecode(rawParameters);
+}
+
+inline void
+extractRibCommandParameters(const ndn::Interest& interest, ndn::Name::Component& verb,
+                            ndn::nfd::ControlParameters& extractedParameters)
+{
+  extractParameters(interest, verb, extractedParameters, ndn::Name("/localhost/nfd/rib"));
+}
 
 } // namespace test
 } // namespace nlsr
 
-#endif // NLSR_TEST_COMMON_HPP
+#endif // NLSR_TEST_CONTROL_COMMANDS_HPP

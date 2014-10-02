@@ -15,36 +15,25 @@
  * PURPOSE.  See the GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License along with
- * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>
  *
  **/
 
-#ifndef NLSR_TEST_COMMON_HPP
-#define NLSR_TEST_COMMON_HPP
+#ifndef NLSR_TEST_ACCESS_CONTROL_HPP
+#define NLSR_TEST_ACCESS_CONTROL_HPP
 
-#include <boost/asio.hpp>
-#include <boost/test/unit_test.hpp>
+#include "config.hpp"
 
-#include <ndn-cxx/util/scheduler.hpp>
+#ifdef WITH_TESTS
+#define VIRTUAL_WITH_TESTS virtual
+#define PUBLIC_WITH_TESTS_ELSE_PROTECTED public
+#define PUBLIC_WITH_TESTS_ELSE_PRIVATE public
+#define PROTECTED_WITH_TESTS_ELSE_PRIVATE protected
+#else
+#define VIRTUAL_WITH_TESTS
+#define PUBLIC_WITH_TESTS_ELSE_PROTECTED protected
+#define PUBLIC_WITH_TESTS_ELSE_PRIVATE private
+#define PROTECTED_WITH_TESTS_ELSE_PRIVATE private
+#endif
 
-namespace nlsr {
-namespace test {
-
-class BaseFixture
-{
-public:
-  BaseFixture()
-    : g_scheduler(g_ioService)
-  {
-  }
-
-protected:
-  boost::asio::io_service g_ioService;
-  ndn::Scheduler g_scheduler;
-};
-
-} // namespace test
-} // namespace nlsr
-
-#endif // NLSR_TEST_COMMON_HPP
+#endif //NLSR_TEST_ACCESS_CONTROL_HPP

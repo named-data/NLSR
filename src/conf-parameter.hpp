@@ -289,12 +289,12 @@ public:
   }
 
   void
-  setMaxFacesPerPrefix(int32_t mfpp)
+  setMaxFacesPerPrefix(uint32_t mfpp)
   {
     m_maxFacesPerPrefix = mfpp;
   }
 
-  int32_t
+  uint32_t
   getMaxFacesPerPrefix() const
   {
     return m_maxFacesPerPrefix;
@@ -353,7 +353,7 @@ private:
   double m_corR;
   double m_corTheta;
 
-  int32_t m_maxFacesPerPrefix;
+  uint32_t m_maxFacesPerPrefix;
 
   std::string m_logDir;
   std::string m_seqFileDir;

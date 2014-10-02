@@ -24,13 +24,12 @@
 #include <cmath>
 #include <ndn-cxx/common.hpp>
 
-#include "nlsr.hpp"
+#include "adjacency-list.hpp"
+#include "conf-parameter.hpp"
 #include "nexthop-list.hpp"
 #include "face-map.hpp"
 #include "fib.hpp"
 #include "logger.hpp"
-
-
 
 namespace nlsr {
 
@@ -44,7 +43,7 @@ using namespace ndn;
 static bool
 fibEntryNameCompare(const FibEntry& fibEntry, const ndn::Name& name)
 {
-  return fibEntry.getName() == name ;
+  return fibEntry.getName() == name;
 }
 
 void
@@ -93,84 +92,102 @@ compareFaceUri(const NextHop& hop, const std::string& faceUri)
 }
 
 void
-Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& nextHopList)
+Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
 {
   const ndn::Name& name = entry.getName();
 
-  nextHopList.sort();
-
-  int numFaces = 0;
-  int maxFaces = getNumberOfFacesForName(nextHopList,
-                                         m_nlsr.getConfParameter().getMaxFacesPerPrefix());
-
-  for (NexthopList::iterator hopIt = nextHopList.begin();
-       hopIt != nextHopList.end() && numFaces < maxFaces; ++hopIt, ++numFaces)
+  for (NexthopList::iterator it = hopsToAdd.begin(); it != hopsToAdd.end(); ++it)
   {
     // Add nexthop to FIB entry
-    entry.getNexthopList().addNextHop(*hopIt);
+    entry.getNexthopList().addNextHop(*it);
 
     if (isPrefixUpdatable(name)) {
       // Add nexthop to NDN-FIB
-      registerPrefix(name, hopIt->getConnectingFaceUri(),
-                     hopIt->getRouteCostAsAdjustedInteger(),
+      registerPrefix(name, it->getConnectingFaceUri(),
+                     it->getRouteCostAsAdjustedInteger(),
                      ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
                      ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+    }
+  }
+
+  entry.getNexthopList().sort();
+}
+
+void
+Fib::removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, const NexthopList& installedHops)
+{
+  _LOG_DEBUG("Fib::removeOldNextHopsFromFibEntryAndNfd Called");
+
+  const ndn::Name& name = entry.getName();
+  NexthopList& entryHopList = entry.getNexthopList();
+
+  for (NexthopList::iterator it = entryHopList.begin(); it != entryHopList.end();) {
+
+    const std::string& faceUri = it->getConnectingFaceUri();
+
+    // See if the nexthop is installed in NFD's FIB
+    NexthopList::const_iterator foundIt = std::find_if(installedHops.cbegin(),
+                                                       installedHops.cend(),
+                                                       bind(&compareFaceUri, _1, faceUri));
+
+    // The next hop is not installed
+    if (foundIt == installedHops.cend()) {
+
+      if (isPrefixUpdatable(name)) {
+        // Remove the nexthop from NDN's FIB
+        unregisterPrefix(name, it->getConnectingFaceUri());
+      }
+
+      // Remove the next hop from the FIB entry
+      _LOG_DEBUG("Removing " << it->getConnectingFaceUri() << " from " << name);
+      // Since the iterator will be invalidated on removal, dereference the original
+      // and increment the copy
+      entryHopList.removeNextHop(*(it++));
+    }
+    else {
+      ++it;
     }
   }
 }
 
 void
-Fib::removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, NexthopList& newHopList)
+Fib::update(const ndn::Name& name, NexthopList& allHops)
 {
-  _LOG_DEBUG("Fib::removeOldNextHopsFromFibEntryAndNfd Called");
-  const ndn::Name& name = entry.getName();
-  NexthopList& entryHopList = entry.getNexthopList();
-  NexthopList itHopList = entryHopList;
+  _LOG_DEBUG("Fib::update called");
 
-  for (NexthopList::iterator it = itHopList.begin(); it != itHopList.end(); ++it) {
+  // Sort all of the next hops so lower cost hops are prioritized
+  allHops.sort();
 
-    // See if the nexthop is in the new nexthop list
-    const std::string& faceUri = it->getConnectingFaceUri();
-    NexthopList::iterator foundIt = std::find_if(newHopList.begin(),
-                                                 newHopList.end(),
-                                                 bind(&compareFaceUri, _1, faceUri));
+  // Get the max possible faces which is the minumum of the configuration setting and
+  // the length of the list of all next hops.
+  unsigned int maxFaces = getNumberOfFacesForName(allHops);
 
-      // The next hop is not in the new nexthop list
-      if (foundIt == newHopList.end()) {
-        // Remove the next hop from the FIB entry
-        _LOG_DEBUG("Removing " << it->getConnectingFaceUri() << " from " << name);
-        entryHopList.removeNextHop(*it);
+  NexthopList hopsToAdd;
+  unsigned int nFaces = 0;
 
-        if (isPrefixUpdatable(name)) {
-          // Remove the nexthop from NDN-FIB
-          unregisterPrefix(name, it->getConnectingFaceUri());
-        }
-      }
-    }
-}
-
-void
-Fib::update(const ndn::Name& name, NexthopList& nextHopList)
-{
-  _LOG_DEBUG("Fib::updateFib Called");
+  // Create a list of next hops to be installed with length == maxFaces
+  for (NexthopList::iterator it = allHops.begin(); it != allHops.end() && nFaces < maxFaces;
+       ++it, ++nFaces)
+  {
+    hopsToAdd.addNextHop(*it);
+  }
 
   std::list<FibEntry>::iterator entryIt = std::find_if(m_table.begin(),
                                                        m_table.end(),
                                                        bind(&fibEntryNameCompare, _1, name));
+
   // New FIB entry
   if (entryIt == m_table.end()) {
     _LOG_DEBUG("New FIB Entry");
 
     // Don't create an entry for a name with no nexthops
-    if (nextHopList.getSize() == 0) {
+    if (hopsToAdd.getSize() == 0) {
       return;
     }
 
     FibEntry entry(name);
 
-    addNextHopsToFibEntryAndNfd(entry, nextHopList);
-
-    entry.getNexthopList().sort();
+    addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
 
     // Set entry's expiration time point and sequence number
     entry.setExpirationTimePoint(ndn::time::system_clock::now() +
@@ -189,15 +206,14 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
     FibEntry& entry = *entryIt;
 
     // Remove empty FIB entry
-    if (nextHopList.getSize() == 0) {
+    if (hopsToAdd.getSize() == 0) {
       remove(name);
       return;
     }
 
-    addNextHopsToFibEntryAndNfd(entry, nextHopList);
-    removeOldNextHopsFromFibEntryAndNfd(entry, nextHopList);
+    addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
 
-    entry.getNexthopList().sort();
+    removeOldNextHopsFromFibEntryAndNfd(entry, hopsToAdd);
 
     // Set entry's expiration time point
     entry.setExpirationTimePoint(ndn::time::system_clock::now() +
@@ -205,7 +221,7 @@ Fib::update(const ndn::Name& name, NexthopList& nextHopList)
     // Increment sequence number
     entry.setSeqNo(entry.getSeqNo() + 1);
 
-    // Cancel previosuly scheduled event
+    // Cancel previously scheduled event
     m_scheduler.cancelEvent(entry.getExpiringEventId());
 
     // Schedule entry to be refreshed
@@ -234,23 +250,24 @@ Fib::clean()
   }
 }
 
-int
-Fib::getNumberOfFacesForName(NexthopList& nextHopList,
-                             uint32_t maxFacesPerPrefix)
+unsigned int
+Fib::getNumberOfFacesForName(NexthopList& nextHopList)
 {
-  int endFace = 0;
-  if ((maxFacesPerPrefix == 0) || (nextHopList.getSize() <= maxFacesPerPrefix)) {
-    return nextHopList.getSize();
+  uint32_t nNextHops = static_cast<uint32_t>(nextHopList.getNextHops().size());
+  uint32_t nMaxFaces = m_confParameter.getMaxFacesPerPrefix();
+
+  // Allow all faces
+  if (nMaxFaces == 0) {
+    return nNextHops;
   }
   else {
-    return maxFacesPerPrefix;
+    return std::min(nNextHops, nMaxFaces);
   }
-  return endFace;
 }
 
 bool
 Fib::isPrefixUpdatable(const ndn::Name& name) {
-  if (!m_nlsr.getAdjacencyList().isNeighbor(name)) {
+  if (!m_adjacencyList.isNeighbor(name)) {
     return true;
   }
 
@@ -313,7 +330,7 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
                     uint64_t faceCost, const ndn::time::milliseconds& timeout,
                     uint64_t flags, uint8_t times)
 {
-  uint64_t faceId = m_nlsr.getAdjacencyList().getFaceId(faceUri);
+  uint64_t faceId = m_adjacencyList.getFaceId(faceUri);
   if (faceId != 0) {
     ndn::nfd::ControlParameters faceParameters;
     faceParameters
