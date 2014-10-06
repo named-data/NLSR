@@ -58,7 +58,7 @@ public:
   uint64_t
   getRouteCostAsAdjustedInteger() const
   {
-    return static_cast<uint64_t>(m_routeCost*HYPERBOLIC_COST_ADJUSTMENT_FACTOR);
+    return static_cast<uint64_t>(round(m_routeCost*HYPERBOLIC_COST_ADJUSTMENT_FACTOR));
   }
 
   double
