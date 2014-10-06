@@ -44,13 +44,24 @@ public:
     : face(ndn::makeDummyFace())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter())
+    , lsdb(nlsr.getLsdb())
+    , conf(nlsr.getConfParameter())
     , REGISTER_COMMAND_PREFIX("/localhost/nfd/rib")
     , REGISTER_VERB("register")
   {
+    conf.setNetwork("/ndn");
+    conf.setSiteName("/site");
+    conf.setRouterName("/%C1.router/this-router");
+
+    nlsr.initialize();
+
+    face->processEvents(ndn::time::milliseconds(1));
+    face->m_sentInterests.clear();
   }
 
-  void extractParameters(ndn::Interest& interest, ndn::Name::Component& verb,
-                         ndn::nfd::ControlParameters& extractedParameters)
+  void
+  extractParameters(ndn::Interest& interest, ndn::Name::Component& verb,
+                    ndn::nfd::ControlParameters& extractedParameters)
   {
     const ndn::Name& name = interest.getName();
     verb = name[REGISTER_COMMAND_PREFIX.size()];
@@ -60,10 +71,31 @@ public:
     extractedParameters.wireDecode(rawParameters);
   }
 
+  void
+  areNamePrefixListsEqual(NamePrefixList& lhs, NamePrefixList& rhs)
+  {
+    typedef std::list<ndn::Name> NameList;
+
+    NameList& lhsList = lhs.getNameList();
+    NameList& rhsList = rhs.getNameList();
+
+    BOOST_REQUIRE_EQUAL(lhsList.size(), rhsList.size());
+
+    NameList::iterator i = lhsList.begin();
+    NameList::iterator j = rhsList.begin();
+
+    for (; i != lhsList.end(); ++i, ++j) {
+      BOOST_CHECK_EQUAL(*i, *j);
+    }
+  }
+
 public:
   shared_ptr<DummyFace> face;
   Nlsr nlsr;
   SyncLogicHandler sync;
+
+  Lsdb& lsdb;
+  ConfParameter& conf;
 
   ndn::Name REGISTER_COMMAND_PREFIX;
   ndn::Name::Component REGISTER_VERB;
@@ -104,17 +136,6 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 
 BOOST_AUTO_TEST_CASE(RegisterSyncPrefixOnFirstAdjLsaBuild)
 {
-  ConfParameter& conf = nlsr.getConfParameter();
-  conf.setNetwork("/ndn");
-  conf.setSiteName("/site");
-  conf.setRouterName("/%C1.router/this-router");
-
-  nlsr.initialize();
-
-  Lsdb& lsdb = nlsr.getLsdb();
-  face->processEvents(ndn::time::milliseconds(1));
-  face->m_sentInterests.clear();
-
   // Should register Sync prefix
   lsdb.buildAndInstallOwnAdjLsa();
   face->processEvents(ndn::time::milliseconds(1));
@@ -136,6 +157,71 @@ BOOST_AUTO_TEST_CASE(RegisterSyncPrefixOnFirstAdjLsaBuild)
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_CHECK_EQUAL(interests.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(InstallNameLsa)
+{
+  // Install lsa with name1 and name2
+  ndn::Name name1("/ndn/name1");
+  ndn::Name name2("/ndn/name2");
+
+  NamePrefixList prefixes;
+  prefixes.insert(name1);
+  prefixes.insert(name2);
+
+  std::string otherRouter("/ndn/site/%C1.router/other-router");
+  ndn::time::system_clock::TimePoint MAX_TIME = ndn::time::system_clock::TimePoint::max();
+
+  NameLsa lsa(otherRouter, "name", 1, MAX_TIME, prefixes);
+  lsdb.installNameLsa(lsa);
+
+  BOOST_REQUIRE_EQUAL(lsdb.doesLsaExist(otherRouter + "/name", "name"), true);
+  NamePrefixList& nameList = lsdb.findNameLsa(otherRouter + "/name")->getNpl();
+
+  areNamePrefixListsEqual(nameList, prefixes);
+
+  // Add a prefix: name3
+  ndn::Name name3("/ndn/name3");
+  prefixes.insert(name3);
+
+  NameLsa addLsa(otherRouter, "name", 2, MAX_TIME, prefixes);
+  lsdb.installNameLsa(addLsa);
+
+  // Lsa should include name1, name2, and name3
+  areNamePrefixListsEqual(nameList, prefixes);
+
+  // Remove a prefix: name2
+  prefixes.remove(name2);
+
+  NameLsa removeLsa(otherRouter, "name", 3, MAX_TIME, prefixes);
+  lsdb.installNameLsa(removeLsa);
+
+  // Lsa should include name1 and name3
+  areNamePrefixListsEqual(nameList, prefixes);
+
+  // Add and remove a prefix: add name2, remove name3
+  prefixes.insert(name2);
+  prefixes.remove(name3);
+
+  NameLsa addAndRemoveLsa(otherRouter, "name", 4, MAX_TIME, prefixes);
+  lsdb.installNameLsa(addAndRemoveLsa);
+
+  // Lsa should include name1 and name2
+  areNamePrefixListsEqual(nameList, prefixes);
+
+  // Install a completely new list of prefixes
+  ndn::Name name4("/ndn/name4");
+  ndn::Name name5("/ndn/name5");
+
+  NamePrefixList newPrefixes;
+  newPrefixes.insert(name4);
+  newPrefixes.insert(name5);
+
+  NameLsa newLsa(otherRouter, "name", 5, MAX_TIME, newPrefixes);
+  lsdb.installNameLsa(newLsa);
+
+  // Lsa should include name4 and name5
+  areNamePrefixListsEqual(nameList, newPrefixes);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

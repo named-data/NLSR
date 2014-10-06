@@ -152,6 +152,9 @@ Lsdb::installNameLsa(NameLsa& nlsa)
           }
         }
       }
+
+      chkNameLsa->getNpl().sort();
+
       std::list<ndn::Name> nameToRemove;
       std::set_difference(chkNameLsa->getNpl().getNameList().begin(),
                           chkNameLsa->getNpl().getNameList().end(),
