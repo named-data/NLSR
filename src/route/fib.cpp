@@ -294,12 +294,7 @@ Fib::createFace(const std::string& faceUri,
                 const CommandSucceedCallback& onSuccess,
                 const CommandFailCallback& onFailure)
 {
-  ndn::nfd::ControlParameters faceParameters;
-  faceParameters
-    .setUri(faceUri);
-  m_controller.start<ndn::nfd::FaceCreateCommand>(faceParameters,
-                                                  onSuccess,
-                                                  onFailure);
+  m_faceController.createFace(faceUri, onSuccess, onFailure);
 }
 
 void

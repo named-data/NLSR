@@ -31,6 +31,7 @@
 #include "face-map.hpp"
 #include "fib-entry.hpp"
 #include "test-access-control.hpp"
+#include "utility/face-controller.hpp"
 
 namespace nlsr {
 
@@ -48,6 +49,7 @@ public:
     , m_table()
     , m_refreshTime(0)
     , m_controller(face)
+    , m_faceController(face.getIoService(), m_controller)
     , m_faceMap()
     , m_adjacencyList(adjacencyList)
     , m_confParameter(conf)
@@ -186,6 +188,7 @@ private:
   std::list<FibEntry> m_table;
   int32_t m_refreshTime;
   ndn::nfd::Controller m_controller;
+  util::FaceController m_faceController;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   FaceMap m_faceMap;

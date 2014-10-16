@@ -50,6 +50,13 @@ extractRibCommandParameters(const ndn::Interest& interest, ndn::Name::Component&
   extractParameters(interest, verb, extractedParameters, ndn::Name("/localhost/nfd/rib"));
 }
 
+inline void
+extractFaceCommandParameters(const ndn::Interest& interest, ndn::Name::Component& verb,
+                             ndn::nfd::ControlParameters& extractedParameters)
+{
+  extractParameters(interest, verb, extractedParameters, ndn::Name("/localhost/nfd/faces"));
+}
+
 } // namespace test
 } // namespace nlsr
 
