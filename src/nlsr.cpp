@@ -142,7 +142,13 @@ Nlsr::initialize()
   m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
 
   registerKeyPrefix();
-  m_helloProtocol.scheduleInterest(10);
+
+  // Set event intervals
+  setFirstHelloInterval(m_confParam.getFirstHelloInterval());
+  m_helloProtocol.setAdjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval());
+  m_routingTable.setRoutingCalcInterval(m_confParam.getRoutingCalcInterval());
+
+  m_helloProtocol.scheduleInterest(m_firstHelloInterval);
 
   // Need to set direct neighbors' costs to 0 for hyperbolic routing
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {

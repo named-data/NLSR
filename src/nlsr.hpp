@@ -43,6 +43,7 @@
 #include "route/fib.hpp"
 #include "communication/sync-logic-handler.hpp"
 #include "hello-protocol.hpp"
+#include "test-access-control.hpp"
 
 #include "validator.hpp"
 
@@ -86,6 +87,7 @@ public:
     , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
     , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
     , m_faceMonitor(m_nlsrFace)
+    , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
   {
     m_faceMonitor.onNotification += ndn::bind(&Nlsr::onFaceEventNotification, this, _1);
     m_faceMonitor.start();
@@ -313,6 +315,12 @@ public:
   void
   daemonize();
 
+  uint32_t
+  getFirstHelloInterval() const
+  {
+    return m_firstHelloInterval;
+  }
+
 private:
   void
   registerKeyPrefix();
@@ -331,6 +339,12 @@ private:
 
   void
   onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification);
+
+  void
+  setFirstHelloInterval(uint32_t interval)
+  {
+    m_firstHelloInterval = interval;
+  }
 
 private:
   typedef std::map<ndn::Name, ndn::shared_ptr<ndn::IdentityCertificate> > CertMap;
@@ -352,8 +366,11 @@ private:
   Fib m_fib;
   NamePrefixTable m_namePrefixTable;
   SyncLogicHandler m_syncLogicHandler;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   HelloProtocol m_helloProtocol;
 
+private:
   ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
   CertMap m_certToPublish;
   Validator m_validator;
@@ -362,6 +379,8 @@ private:
   ndn::Name m_defaultCertName;
 
   ndn::nfd::FaceMonitor m_faceMonitor;
+
+  uint32_t m_firstHelloInterval;
 };
 
 } //namespace nlsr

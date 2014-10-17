@@ -34,7 +34,7 @@ ConfParameter::writeLog()
   _LOG_DEBUG("Site Name: " << m_siteName);
   _LOG_DEBUG("Network: " << m_network);
   _LOG_DEBUG("Router Prefix: " << m_routerPrefix);
-  _LOG_DEBUG("ChronoSync sync Prifex: " << m_chronosyncPrefix);
+  _LOG_DEBUG("ChronoSync sync Prefix: " << m_chronosyncPrefix);
   _LOG_DEBUG("ChronoSync LSA prefix: " << m_lsaPrefix);
   _LOG_DEBUG("Hello Interest retry number: " << m_interestRetryNumber);
   _LOG_DEBUG("Hello Interest resend second: " << m_interestResendTime);
@@ -42,11 +42,16 @@ ConfParameter::writeLog()
   _LOG_DEBUG("LSA refresh time: " << m_lsaRefreshTime);
   _LOG_DEBUG("LSA Interest lifetime: " << getLsaInterestLifetime());
   _LOG_DEBUG("Max Faces Per Prefix: " << m_maxFacesPerPrefix);
-  _LOG_DEBUG("Hyperbolic ROuting: " << m_hyperbolicState);
+  _LOG_DEBUG("Hyperbolic Routing: " << m_hyperbolicState);
   _LOG_DEBUG("Hyp R: " << m_corR);
   _LOG_DEBUG("Hyp theta: " << m_corTheta);
   _LOG_DEBUG("Log Directory: " << m_logDir);
   _LOG_DEBUG("Seq Directory: " << m_seqFileDir);
+
+  // Event Intervals
+  _LOG_DEBUG("Adjacency LSA build interval:  " << m_adjLsaBuildInterval);
+  _LOG_DEBUG("First Hello Interest interval: " << m_firstHelloInterval);
+  _LOG_DEBUG("Routing calculation interval:  " << m_routingCalcInterval);
 }
 
 } // namespace nlsr

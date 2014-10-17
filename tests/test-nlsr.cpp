@@ -85,6 +85,27 @@ BOOST_AUTO_TEST_CASE(HyperbolicOff_LinkStateCost)
   }
 }
 
+BOOST_AUTO_TEST_CASE(SetEventIntervals)
+{
+  shared_ptr<DummyFace> face = ndn::makeDummyFace();
+  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
+
+  // Simulate loading configuration file
+  ConfParameter& conf = nlsr.getConfParameter();
+  conf.setAdjLsaBuildInterval(3);
+  conf.setFirstHelloInterval(6);
+  conf.setRoutingCalcInterval(9);
+
+  nlsr.initialize();
+
+  const HelloProtocol& hello = nlsr.m_helloProtocol;
+  const RoutingTable& rt = nlsr.getRoutingTable();
+
+  BOOST_CHECK_EQUAL(hello.getAdjLsaBuildInterval(), ndn::time::seconds(3));
+  BOOST_CHECK_EQUAL(nlsr.getFirstHelloInterval(), 6);
+  BOOST_CHECK_EQUAL(rt.getRoutingCalcInterval(), ndn::time::seconds(9));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } //namespace test

@@ -47,7 +47,7 @@ def build(bld):
             target='../unit-tests-nlsr',
             features='cxx cxxprogram',
             source=bld.path.ant_glob(['nlsr/**/*.cpp']),
-            use='nslr-objects unit-tests-main',
+            use='nlsr-objects unit-tests-main',
             includes='.',
             install_prefix=None,
           )

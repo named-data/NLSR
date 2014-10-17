@@ -155,7 +155,7 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
       _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
       m_nlsr.setIsBuildAdjLsaSheduled(true);
       // event here
-      m_scheduler.scheduleEvent(ndn::time::seconds(5),
+      m_scheduler.scheduleEvent(m_adjLsaBuildInterval,
                                 ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
     }
   }
@@ -200,7 +200,7 @@ HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
         _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
         m_nlsr.setIsBuildAdjLsaSheduled(true);
         // event here
-        m_scheduler.scheduleEvent(ndn::time::seconds(5),
+        m_scheduler.scheduleEvent(m_adjLsaBuildInterval,
                                   ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
       }
     }
@@ -285,7 +285,7 @@ HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
         _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
         m_nlsr.setIsBuildAdjLsaSheduled(true);
         // event here
-        m_scheduler.scheduleEvent(ndn::time::seconds(5),
+        m_scheduler.scheduleEvent(m_adjLsaBuildInterval,
                                   ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
       }
     }

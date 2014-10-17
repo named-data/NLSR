@@ -39,6 +39,105 @@ namespace nlsr {
 
 using namespace std;
 
+template <class T>
+class ConfigurationVariable
+{
+public:
+  typedef ndn::function<void(T)> ConfParameterCallback;
+  typedef boost::property_tree::ptree ConfigSection;
+
+  ConfigurationVariable(const std::string& key, const ConfParameterCallback& setter)
+    : m_key(key)
+    , m_setterCallback(setter)
+    , m_minValue(0)
+    , m_maxValue(0)
+    , m_shouldCheckRange(false)
+    , m_isRequired(true)
+  {
+  }
+
+  bool
+  parseFromConfigSection(const ConfigSection& section)
+  {
+    try {
+      T value = section.get<T>(m_key);
+
+      if (!isValidValue(value)) {
+        return false;
+      }
+
+      m_setterCallback(value);
+      return true;
+    }
+    catch (const std::exception& ex) {
+
+      if (m_isRequired) {
+        std::cerr << ex.what() << std::endl;
+        std::cerr << "Missing required configuration variable" << std::endl;
+        return false;
+      }
+      else {
+        m_setterCallback(m_defaultValue);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  void
+  setMinAndMaxValue(T min, T max)
+  {
+    m_minValue = min;
+    m_maxValue = max;
+    m_shouldCheckRange = true;
+  }
+
+  void
+  setOptional(T defaultValue)
+  {
+    m_isRequired = false;
+    m_defaultValue = defaultValue;
+  }
+
+private:
+  void
+  printOutOfRangeError(T value)
+  {
+    std::cerr << "Invalid value for " << m_key << ": "
+              << value << ". "
+              << "Valid values: "
+              << m_minValue << " - "
+              << m_maxValue << std::endl;
+  }
+
+  bool
+  isValidValue(T value)
+  {
+    if (!m_shouldCheckRange) {
+      return true;
+    }
+    else if (value < m_minValue || value > m_maxValue)
+    {
+      printOutOfRangeError(value);
+      return false;
+    }
+
+    return true;
+  }
+
+private:
+  const std::string m_key;
+  const ConfParameterCallback m_setterCallback;
+  T m_defaultValue;
+
+  T m_minValue;
+  T m_maxValue;
+
+  bool m_shouldCheckRange;
+  bool m_isRequired;
+};
+
 bool
 ConfFileProcessor::processConfFile()
 {
@@ -325,6 +424,30 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   catch (const std::exception& ex) {
     std::cerr << ex.what() << std::endl;
   }
+
+  // Event intervals
+  // adj-lsa-build-interval
+  ConfigurationVariable<uint32_t> adjLsaBuildInterval("adj-lsa-build-interval",
+                                                      bind(&ConfParameter::setAdjLsaBuildInterval,
+                                                      &m_nlsr.getConfParameter(), _1));
+  adjLsaBuildInterval.setMinAndMaxValue(ADJ_LSA_BUILD_INTERVAL_MIN, ADJ_LSA_BUILD_INTERVAL_MAX);
+  adjLsaBuildInterval.setOptional(ADJ_LSA_BUILD_INTERVAL_DEFAULT);
+
+  if (!adjLsaBuildInterval.parseFromConfigSection(section)) {
+    return false;
+  }
+
+  // first-hello-interval
+  ConfigurationVariable<uint32_t> firstHelloInterval("first-hello-interval",
+                                                     bind(&ConfParameter::setFirstHelloInterval,
+                                                     &m_nlsr.getConfParameter(), _1));
+  firstHelloInterval.setMinAndMaxValue(FIRST_HELLO_INTERVAL_MIN, FIRST_HELLO_INTERVAL_MAX);
+  firstHelloInterval.setOptional(FIRST_HELLO_INTERVAL_DEFAULT);
+
+  if (!firstHelloInterval.parseFromConfigSection(section)) {
+    return false;
+  }
+
   for (ConfigSection::const_iterator tn =
            section.begin(); tn != section.end(); ++tn) {
 
@@ -425,6 +548,18 @@ ConfFileProcessor::processConfSectionFib(const ConfigSection& section)
     cerr << ex.what() << endl;
     return false;
   }
+
+  // routing-calc-interval
+  ConfigurationVariable<uint32_t> routingCalcInterval("routing-calc-interval",
+                                                      bind(&ConfParameter::setRoutingCalcInterval,
+                                                      &m_nlsr.getConfParameter(), _1));
+  routingCalcInterval.setMinAndMaxValue(ROUTING_CALC_INTERVAL_MIN, ROUTING_CALC_INTERVAL_MAX);
+  routingCalcInterval.setOptional(ROUTING_CALC_INTERVAL_DEFAULT);
+
+  if (!routingCalcInterval.parseFromConfigSection(section)) {
+    return false;
+  }
+
   return true;
 }
 

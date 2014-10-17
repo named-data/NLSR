@@ -29,6 +29,7 @@
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 
+#include "conf-parameter.hpp"
 #include "routing-table-entry.hpp"
 
 namespace nlsr {
@@ -42,8 +43,10 @@ public:
   RoutingTable(ndn::Scheduler& scheduler)
     : m_scheduler(scheduler)
     , m_NO_NEXT_HOP(-12345)
+    , m_routingCalcInterval(static_cast<uint32_t>(ROUTING_CALC_INTERVAL_DEFAULT))
   {
   }
+
   void
   calculate(Nlsr& pnlsr);
 
@@ -63,6 +66,18 @@ public:
   getNoNextHop()
   {
     return m_NO_NEXT_HOP;
+  }
+
+  void
+  setRoutingCalcInterval(uint32_t interval)
+  {
+    m_routingCalcInterval = ndn::time::seconds(interval);
+  }
+
+  const ndn::time::seconds&
+  getRoutingCalcInterval() const
+  {
+    return m_routingCalcInterval;
   }
 
 private:
@@ -91,6 +106,8 @@ private:
 
   std::list<RoutingTableEntry> m_rTable;
   std::list<RoutingTableEntry> m_dryTable;
+
+  ndn::time::seconds m_routingCalcInterval;
 };
 
 }//namespace nlsr

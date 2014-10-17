@@ -46,6 +46,24 @@ enum {
 };
 
 enum {
+  ADJ_LSA_BUILD_INTERVAL_MIN = 0,
+  ADJ_LSA_BUILD_INTERVAL_DEFAULT = 5,
+  ADJ_LSA_BUILD_INTERVAL_MAX = 5
+};
+
+enum {
+  FIRST_HELLO_INTERVAL_MIN = 0,
+  FIRST_HELLO_INTERVAL_DEFAULT = 10,
+  FIRST_HELLO_INTERVAL_MAX = 10
+};
+
+enum {
+  ROUTING_CALC_INTERVAL_MIN = 0,
+  ROUTING_CALC_INTERVAL_DEFAULT = 15,
+  ROUTING_CALC_INTERVAL_MAX = 15
+};
+
+enum {
   HELLO_RETRIES_MIN = 1,
   HELLO_RETRIES_DEFAULT = 3,
   HELLO_RETRIES_MAX = 15
@@ -80,6 +98,9 @@ class ConfParameter
 public:
   ConfParameter()
     : m_lsaRefreshTime(LSA_REFRESH_TIME_DEFAULT)
+    , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
+    , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
+    , m_routingCalcInterval(ROUTING_CALC_INTERVAL_DEFAULT)
     , m_lsaInterestLifetime(ndn::time::seconds(static_cast<int>(LSA_INTEREST_LIFETIME_DEFAULT)))
     , m_routerDeadInterval(2*LSA_REFRESH_TIME_DEFAULT)
     , m_logLevel("INFO")
@@ -186,6 +207,42 @@ public:
   getLsaInterestLifetime() const
   {
     return m_lsaInterestLifetime;
+  }
+
+  void
+  setAdjLsaBuildInterval(uint32_t interval)
+  {
+    m_adjLsaBuildInterval = interval;
+  }
+
+  uint32_t
+  getAdjLsaBuildInterval() const
+  {
+    return m_adjLsaBuildInterval;
+  }
+
+  void
+  setFirstHelloInterval(uint32_t interval)
+  {
+    m_firstHelloInterval = interval;
+  }
+
+  uint32_t
+  getFirstHelloInterval() const
+  {
+    return m_firstHelloInterval;
+  }
+
+  void
+  setRoutingCalcInterval(uint32_t interval)
+  {
+    m_routingCalcInterval = interval;
+  }
+
+  uint32_t
+  getRoutingCalcInterval() const
+  {
+    return m_routingCalcInterval;
   }
 
   void
@@ -339,6 +396,11 @@ private:
   ndn::Name m_lsaPrefix;
 
   int32_t  m_lsaRefreshTime;
+
+  uint32_t m_adjLsaBuildInterval;
+  uint32_t m_firstHelloInterval;
+  uint32_t m_routingCalcInterval;
+
   ndn::time::seconds m_lsaInterestLifetime;
   int64_t  m_routerDeadInterval;
   std::string m_logLevel;

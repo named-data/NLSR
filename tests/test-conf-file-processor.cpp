@@ -35,85 +35,220 @@ namespace test {
 using ndn::DummyFace;
 using ndn::shared_ptr;
 
-BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, BaseFixture)
+const std::string SECTION_GENERAL =
+  "general\n"
+  "{\n"
+  "  network /ndn/\n"
+  "  site /memphis.edu/\n"
+  "  router /cs/pollux/\n"
+  "  lsa-refresh-time 1800\n"
+  "  lsa-interest-lifetime 3\n"
+  "  log-level  INFO\n"
+  "  log-dir /tmp\n"
+  "  seq-dir /tmp\n"
+  "}\n\n";
 
-BOOST_AUTO_TEST_CASE(ConfFileProcessorSample)
+const std::string SECTION_NEIGHBORS =
+  "neighbors\n"
+  "{\n"
+  "  hello-retries 3\n"
+  "  hello-timeout 1\n"
+  "  hello-interval  60\n\n"
+  "  adj-lsa-build-interval 3\n"
+  "  first-hello-interval  6\n"
+  "  neighbor\n"
+  "  {\n"
+  "    name /ndn/memphis.edu/cs/castor\n"
+  "    face-uri  udp4://localhost\n"
+  "    link-cost 20\n"
+  "  }\n\n"
+  "  neighbor\n"
+  "  {\n"
+  "    name /ndn/memphis.edu/cs/mira\n"
+  "    face-uri  udp4://localhost\n"
+  "    link-cost 30\n"
+  "  }\n"
+  "}\n\n";
+
+const std::string SECTION_HYPERBOLIC_ON =
+  "hyperbolic\n"
+  "{\n"
+  "  state on\n"
+  "  radius   123.456\n"
+  "  angle    1.45\n"
+  "}\n\n";
+
+const std::string SECTION_HYPERBOLIC_OFF =
+  "hyperbolic\n"
+  "{\n"
+  "  state off\n"
+  "  radius   123.456\n"
+  "  angle    1.45\n"
+  "}\n\n";
+
+const std::string SECTION_FIB =
+  "fib\n"
+  "{\n"
+  "   max-faces-per-prefix 3\n"
+  "   routing-calc-interval 9\n"
+  "}\n\n";
+
+const std::string SECTION_ADVERTISING =
+  "advertising\n"
+  "{\n"
+  "  prefix /ndn/edu/memphis/cs/netlab\n"
+  "  prefix /ndn/edu/memphis/sports/basketball\n"
+  "}\n";
+
+const std::string CONFIG_LINK_STATE = SECTION_GENERAL + SECTION_NEIGHBORS +
+                                      SECTION_HYPERBOLIC_OFF + SECTION_FIB + SECTION_ADVERTISING;
+
+const std::string CONFIG_HYPERBOLIC = SECTION_GENERAL + SECTION_NEIGHBORS +
+                                      SECTION_HYPERBOLIC_ON + SECTION_FIB + SECTION_ADVERTISING;
+
+class ConfFileProcessorFixture : public BaseFixture
 {
-  shared_ptr<DummyFace> face = ndn::makeDummyFace();
+public:
+  ConfFileProcessorFixture()
+    : face(ndn::makeDummyFace())
+    , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
+    , CONFIG_FILE("unit-test-nlsr.conf")
+  {
+  }
 
-  Nlsr nlsr1(g_ioService, g_scheduler, ndn::ref(*face));
+  ~ConfFileProcessorFixture()
+  {
+    remove("unit-test-nlsr.conf");
+  }
 
-  const std::string CONFIG =
-     "general\n"
-    "{\n"
-    "  network /ndn/\n"
-    "  site /memphis.edu/\n"
-    "  router /cs/pollux/\n"
-    "  lsa-refresh-time 1800\n"
-    "  lsa-interest-lifetime 3\n"
-    "  log-level  INFO\n"
-    "  log-dir /tmp\n"
-    "  seq-dir /tmp\n"
-    "}\n\n"
-    "neighbors\n"
-    "{\n"
-    "  hello-retries 3\n"
-    "  hello-timeout 1\n"
-    "  hello-interval  60\n\n"
-    "  neighbor\n"
-    "  {\n"
-    "    name /ndn/memphis.edu/cs/castor\n"
-    "    face-uri  udp4://localhost\n"
-    "    link-cost 20\n"
-    "  }\n\n"
-    "  neighbor\n"
-    "  {\n"
-    "    name /ndn/memphis.edu/cs/mira\n"
-    "    face-uri  udp4://localhost\n"
-    "    link-cost 30\n"
-    "  }\n"
-    "}\n\n"
-    "hyperbolic\n"
-    "{\n"
-    "state off\n"
-    "radius   123.456\n"
-    "angle    1.45\n"
-    "}\n\n"
-    "fib\n"
-    "{\n"
-    "   max-faces-per-prefix 3\n"
-    "}\n\n"
-    "advertising\n"
-    "{\n"
-    "prefix /ndn/edu/memphis/cs/netlab\n"
-    "prefix /ndn/edu/memphis/sports/basketball\n"
-    "}\n";
+  bool processConfigurationString(std::string confString)
+  {
+    std::ofstream config;
+    config.open("unit-test-nlsr.conf");
+    config << confString;
+    config.close();
 
-  std::ofstream config;
-  config.open("unit-test-nlsr.conf");
-  config << CONFIG;
-  config.close();
+    ConfFileProcessor processor(nlsr, CONFIG_FILE);
+    return processor.processConfFile();
+  }
 
-  const std::string CONFIG_FILE = "unit-test-nlsr.conf";
+public:
+  shared_ptr<ndn::DummyFace> face;
+  Nlsr nlsr;
 
-  ConfFileProcessor cfp1(nlsr1, CONFIG_FILE);
+private:
+  const std::string CONFIG_FILE;
+};
 
-  cfp1.processConfFile();
+BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, ConfFileProcessorFixture)
 
-  BOOST_CHECK(nlsr1.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/mira"));
-  BOOST_CHECK_EQUAL(
-    nlsr1.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/mira").getName(),
-    "/ndn/memphis.edu/cs/mira");
-  BOOST_CHECK_EQUAL(
-    nlsr1.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/mira").getLinkCost(),
-    30);
+BOOST_AUTO_TEST_CASE(LinkState)
+{
+  processConfigurationString(CONFIG_LINK_STATE);
 
-  BOOST_CHECK_EQUAL(nlsr1.getNamePrefixList().getSize(), 2);
+  ConfParameter& conf = nlsr.getConfParameter();
+  conf.buildRouterPrefix();
 
-  BOOST_CHECK_EQUAL(nlsr1.getConfParameter().getLsaInterestLifetime(),
-                    ndn::time::seconds(3));
+  // General
+  BOOST_CHECK_EQUAL(conf.getNetwork(), "/ndn/");
+  BOOST_CHECK_EQUAL(conf.getSiteName(), "/memphis.edu/");
+  BOOST_CHECK_EQUAL(conf.getRouterName(), "/cs/pollux/");
+  BOOST_CHECK_EQUAL(conf.getRouterPrefix(), "/ndn/memphis.edu/cs/pollux/");
+  BOOST_CHECK_EQUAL(conf.getChronosyncPrefix(), "/ndn/NLSR/sync");
+  BOOST_CHECK_EQUAL(conf.getLsaPrefix(), "/ndn/NLSR/LSA");
+  BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), 1800);
+  BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(), ndn::time::seconds(3));
+  BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), 3600);
+  BOOST_CHECK_EQUAL(conf.getLogLevel(), "INFO");
+  BOOST_CHECK_EQUAL(conf.getLogDir(), "/tmp");
+  BOOST_CHECK_EQUAL(conf.getSeqFileDir(), "/tmp");
 
-  remove("unit-test-nlsr.conf");
+  // Neighbors
+  BOOST_CHECK_EQUAL(conf.getInterestRetryNumber(), 3);
+  BOOST_CHECK_EQUAL(conf.getInterestResendTime(), 1);
+  BOOST_CHECK_EQUAL(conf.getInfoInterestInterval(), 60);
+
+  BOOST_CHECK_EQUAL(conf.getAdjLsaBuildInterval(), 3);
+  BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(), 6);
+
+  BOOST_CHECK(nlsr.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/mira"));
+  BOOST_CHECK(nlsr.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/castor"));
+  BOOST_CHECK(!nlsr.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/fail"));
+
+  Adjacent mira = nlsr.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/mira");
+  BOOST_CHECK_EQUAL(mira.getName(), "/ndn/memphis.edu/cs/mira");
+  BOOST_CHECK_EQUAL(mira.getLinkCost(), 30);
+
+  Adjacent castor = nlsr.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/castor");
+  BOOST_CHECK_EQUAL(castor.getName(), "/ndn/memphis.edu/cs/castor");
+  BOOST_CHECK_EQUAL(castor.getLinkCost(), 20);
+
+  // Hyperbolic
+  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 0);
+
+  // FIB
+  BOOST_CHECK_EQUAL(conf.getMaxFacesPerPrefix(), 3);
+  BOOST_CHECK_EQUAL(conf.getRoutingCalcInterval(), 9);
+
+  // Advertising
+  BOOST_CHECK_EQUAL(nlsr.getNamePrefixList().getSize(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(Hyperbolic)
+{
+  processConfigurationString(CONFIG_HYPERBOLIC);
+
+  ConfParameter& conf = nlsr.getConfParameter();
+  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
+  BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
+  BOOST_CHECK_EQUAL(conf.getCorTheta(), 1.45);
+}
+
+BOOST_AUTO_TEST_CASE(DefaultValues)
+{
+  // Missing adj-lsa-build-interval
+  const std::string SECTION_NEIGHBORS_DEFAULT_VALUES =
+  "neighbors\n"
+  "{\n"
+  "  hello-retries 3\n"
+  "  hello-timeout 1\n"
+  "  hello-interval  60\n\n"
+  "  first-hello-interval  6\n"
+  "  neighbor\n"
+  "  {\n"
+  "    name /ndn/memphis.edu/cs/castor\n"
+  "    face-uri  udp4://localhost\n"
+  "    link-cost 20\n"
+  "  }\n\n"
+  "  neighbor\n"
+  "  {\n"
+  "    name /ndn/memphis.edu/cs/mira\n"
+  "    face-uri  udp4://localhost\n"
+  "    link-cost 30\n"
+  "  }\n"
+  "}\n\n";
+
+  processConfigurationString(SECTION_NEIGHBORS_DEFAULT_VALUES);
+
+  ConfParameter& conf = nlsr.getConfParameter();
+
+  BOOST_CHECK_EQUAL(conf.getAdjLsaBuildInterval(),
+                    static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT));
+
+  BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(), 6);
+}
+
+BOOST_AUTO_TEST_CASE(OutOfRangeValue)
+{
+  const std::string SECTION_FIB_OUT_OF_RANGE =
+  "fib\n"
+  "{\n"
+  "   max-faces-per-prefix 3\n"
+  "   routing-calc-interval 999\n" // Larger than max value
+  "}\n\n";
+
+  // Processing should fail due to out of range value
+  BOOST_CHECK_EQUAL(processConfigurationString(SECTION_FIB_OUT_OF_RANGE), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
