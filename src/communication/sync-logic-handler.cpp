@@ -29,10 +29,6 @@
 #include "sequencing-manager.hpp"
 #include "utility/name-helper.hpp"
 
-#include <boost/serialization/shared_ptr.hpp>
-
-using namespace boost::serialization;
-
 namespace nlsr {
 
 INIT_LOGGER("SyncLogicHandler");
@@ -124,6 +120,17 @@ const std::string SyncLogicHandler::NAME_COMPONENT = "name";
 const std::string SyncLogicHandler::ADJACENCY_COMPONENT = "adjacency";
 const std::string SyncLogicHandler::COORDINATE_COMPONENT = "coordinate";
 
+
+template<class T>
+class NullDeleter
+{
+public:
+  void
+  operator()(T*)
+  {
+  }
+};
+
 void
 SyncLogicHandler::createSyncSocket()
 {
@@ -131,7 +138,7 @@ SyncLogicHandler::createSyncSocket()
 
   // The face's lifetime is managed in main.cpp; SyncSocket should not manage the memory
   // of the object
-  ndn::shared_ptr<ndn::Face> facePtr(&m_syncFace, null_deleter());
+  ndn::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
   m_syncSocket = ndn::make_shared<Sync::SyncSocket>(m_syncPrefix, m_validator, facePtr,
                                                     ndn::bind(&SyncLogicHandler::onNsyncUpdate,
