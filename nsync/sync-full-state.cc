@@ -17,21 +17,14 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #include "sync-full-state.h"
 
-#include <boost/make_shared.hpp>
-#include <boost/lambda/lambda.hpp>
-#include <boost/lambda/bind.hpp>
-#include <boost/foreach.hpp>
 #include <boost/assert.hpp>
 
 #include "sync-full-leaf.h"
-
-using namespace boost;
-namespace ll = boost::lambda;
 
 namespace Sync {
 
@@ -59,7 +52,7 @@ FullState::getDigest ()
       m_digest = make_shared<Digest> ();
       if (m_leaves.get<ordered> ().size () > 0)
         {
-          BOOST_FOREACH (LeafConstPtr leaf, m_leaves.get<ordered> ())
+          for (LeafConstPtr leaf : m_leaves.get<ordered> ())
             {
               FullLeafConstPtr fullLeaf = dynamic_pointer_cast<const FullLeaf> (leaf);
               BOOST_ASSERT (fullLeaf != 0);
@@ -78,7 +71,7 @@ FullState::getDigest ()
 }
 
 // from State
-boost::tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
+tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
 FullState::update (NameInfoConstPtr info, const SeqNo &seq)
 {
   m_lastUpdated = ndn::time::system_clock::now();
@@ -89,7 +82,7 @@ FullState::update (NameInfoConstPtr info, const SeqNo &seq)
   LeafContainer::iterator item = m_leaves.find (info);
   if (item == m_leaves.end ())
     {
-      m_leaves.insert (make_shared<FullLeaf> (info, cref (seq)));
+      m_leaves.insert (make_shared<FullLeaf> (info, seq));
       return make_tuple (true, false, SeqNo ());
     }
   else
@@ -100,8 +93,7 @@ FullState::update (NameInfoConstPtr info, const SeqNo &seq)
         }
 
       SeqNo old = (*item)->getSeq ();
-      m_leaves.modify (item,
-                       ll::bind (&Leaf::setSeq, *ll::_1, seq));
+      m_leaves.modify (item, [&seq](LeafPtr data){ data->setSeq(seq); });
       return make_tuple (false, true, old);
     }
 }

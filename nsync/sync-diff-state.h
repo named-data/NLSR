@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_DIFF_STATE_H
@@ -29,8 +29,8 @@
 namespace Sync {
 
 class DiffState;
-typedef boost::shared_ptr<DiffState> DiffStatePtr;
-typedef boost::shared_ptr<DiffState> DiffStateConstPtr;
+typedef shared_ptr<DiffState> DiffStatePtr;
+typedef shared_ptr<DiffState> DiffStateConstPtr;
 
 /**
  * @ingroup ccnx
@@ -67,7 +67,7 @@ public:
    */
   DigestConstPtr
   getDigest () const { return m_digest; }
-  
+
   /**
    * @brief Accumulate differences from `this' state to the most current state
    * @returns Accumulated differences from `this' state to the most current state
@@ -84,14 +84,14 @@ public:
    */
   DiffState&
   operator += (const DiffState &state);
-  
+
   // from State
-  virtual boost::tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
+  virtual tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
   update (NameInfoConstPtr info, const SeqNo &seq);
 
   virtual bool
   remove (NameInfoConstPtr info);
-  
+
 private:
   DiffStatePtr m_next;
   DigestConstPtr m_digest;

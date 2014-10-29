@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #include "sync-logging.h"
@@ -43,7 +43,7 @@ INIT_LOGGERS ()
   static bool configured = false;
 
   if (configured) return;
-  
+
   if (access ("log4cxx.properties", R_OK)==0)
     PropertyConfigurator::configureAndWatch ("log4cxx.properties");
   else

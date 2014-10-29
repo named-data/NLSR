@@ -22,8 +22,10 @@
  **/
 #include <algorithm>
 #include <ndn-cxx/common.hpp>
+
 #include "adjacency-list.hpp"
 #include "adjacent.hpp"
+#include "common.hpp"
 #include "nlsr.hpp"
 #include "logger.hpp"
 

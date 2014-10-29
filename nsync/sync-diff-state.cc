@@ -17,17 +17,14 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #include "sync-diff-state.h"
 #include "sync-diff-leaf.h"
 
-#include <boost/make_shared.hpp>
 #include <boost/foreach.hpp>
 #include <boost/assert.hpp>
-
-using namespace boost;
 
 namespace Sync {
 
@@ -43,7 +40,7 @@ DiffStatePtr
 DiffState::diff () const
 {
   DiffStatePtr ret = make_shared<DiffState> ();
-  
+
   DiffStatePtr state = m_next;
   while (state != 0)
     {
@@ -71,17 +68,17 @@ DiffState::operator += (const DiffState &state)
           BOOST_ASSERT (false);
         }
     }
-  
+
   return *this;
 }
-  
+
 // from State
-boost::tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
+tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
 DiffState::update (NameInfoConstPtr info, const SeqNo &seq)
 {
   m_leaves.erase (info);
 
-  DiffLeafPtr leaf = make_shared<DiffLeaf> (info, cref (seq));
+  DiffLeafPtr leaf = make_shared<DiffLeaf> (info, seq);
   m_leaves.insert (leaf);
 
   return make_tuple (true, false, SeqNo ());

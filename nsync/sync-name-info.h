@@ -17,14 +17,14 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_NAME_INFO_H
 #define SYNC_NAME_INFO_H
 
-#include <boost/shared_ptr.hpp>
-#include <boost/weak_ptr.hpp>
+#include "sync-common.h"
+
 #include <map>
 #include <string>
 #include "sync-digest.h"
@@ -38,8 +38,8 @@ namespace Sync {
 class NameInfo
 {
 private:
-  typedef boost::weak_ptr<const NameInfo> const_weak_ptr;
-  
+  typedef weak_ptr<const NameInfo> const_weak_ptr;
+
 public:
   virtual ~NameInfo () { };
 
@@ -75,7 +75,7 @@ public:
    */
   virtual std::string
   toString () const = 0;
-  
+
 protected:
   // actual stuff
   size_t m_id; ///< @brief Identifies NameInfo throughout the library (for hash container, doesn't need to be strictly unique)
@@ -87,8 +87,8 @@ protected:
   static NameMap m_names;
 };
 
-typedef boost::shared_ptr<NameInfo> NameInfoPtr;
-typedef boost::shared_ptr<const NameInfo> NameInfoConstPtr;
+typedef shared_ptr<NameInfo> NameInfoPtr;
+typedef shared_ptr<const NameInfo> NameInfoConstPtr;
 
 inline std::ostream &
 operator << (std::ostream &os, const NameInfo &info)

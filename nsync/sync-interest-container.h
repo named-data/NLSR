@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_INTEREST_CONTAINER_H
@@ -51,14 +51,14 @@ struct Interest
   , m_unknown (unknown)
   {
   }
-  
+
   DigestConstPtr   m_digest;
   std::string      m_name;
   ndn::time::system_clock::TimePoint m_time;
   bool             m_unknown;
 };
 
-/// @cond include_hidden 
+/// @cond include_hidden
 struct named { };
 struct hashed;
 struct timed;
@@ -76,7 +76,7 @@ struct InterestContainer : public mi::multi_index_container<
       BOOST_MULTI_INDEX_MEMBER(Interest, std::string, m_name)
     >
     ,
-    
+
     mi::hashed_non_unique<
       mi::tag<hashed>,
       BOOST_MULTI_INDEX_MEMBER(Interest, DigestConstPtr, m_digest),
@@ -84,7 +84,7 @@ struct InterestContainer : public mi::multi_index_container<
       DigestPtrEqual
       >
     ,
-    
+
     mi::ordered_non_unique<
       mi::tag<timed>,
       BOOST_MULTI_INDEX_MEMBER(Interest, ndn::time::system_clock::TimePoint, m_time)

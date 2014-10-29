@@ -26,6 +26,7 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/certificate-cache-ttl.hpp>
 #include "boost-test.hpp"
+#include "common.hpp"
 
 namespace nlsr {
 

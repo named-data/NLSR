@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  *         Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
@@ -45,7 +45,7 @@ public:
     , m_seq (0)
   {
   }
-  
+
   /**
    * @brief Copy constructor
    * @param seq sequence number object to copy from
@@ -145,7 +145,7 @@ public:
   {
     return m_valid;
   }
-  
+
   /**
    * @brief Get session id
    */
@@ -164,10 +164,10 @@ public:
    void
    setSeq(uint64_t seq)
    { m_seq = seq; }
-  
+
 private:
   bool m_valid;
-  
+
   /**
    * @brief Session ID (e.g., after crash, application will choose new session ID.
    *

@@ -21,6 +21,8 @@
  *
  **/
 #include <iostream>
+
+#include "common.hpp"
 #include "nexthop-list.hpp"
 #include "nexthop.hpp"
 #include "logger.hpp"

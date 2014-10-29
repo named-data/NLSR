@@ -17,30 +17,30 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
-#include <iostream>
-#include <list>
-#include <utility>
 
-#include "common.hpp"
-#include "logger.hpp"
-#include "face-map.hpp"
+#ifndef NLSR_COMMON_HPP
+#define NLSR_COMMON_HPP
+
+#include <ndn-cxx/common.hpp>
 
 namespace nlsr {
 
-INIT_LOGGER("FaceMap");
+using ndn::bind;
+using ndn::make_shared;
+using ndn::shared_ptr;
+using ndn::function;
 
-void
-FaceMap::writeLog()
-{
-  _LOG_DEBUG("------- Face Map-----------");
-  for(std::list<FaceMapEntry>::iterator it = m_table.begin();
-      it != m_table.end(); ++it) {
-    _LOG_DEBUG("Face Map Entry (FaceUri: " << (*it).getFaceUri() << " Face Id: "
-               << (*it).getFaceId() << ")");
-  }
+using ndn::_1;
+using ndn::_2;
+using ndn::_3;
+using ndn::_4;
+using ndn::_5;
+using ndn::_6;
+using ndn::_7;
+using ndn::_8;
+using ndn::_9;
+
 }
 
-} // namespace NLSR
+#endif // NLSR_COMMON_HPP

@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_DIFF_LEAF_H
@@ -40,7 +40,7 @@ enum Operation
 
 /**
  * @ingroup sync
- * @brief Annotated SYNC leaf 
+ * @brief Annotated SYNC leaf
  */
 class DiffLeaf : public Leaf
 {
@@ -73,8 +73,8 @@ private:
   Operation m_op;
 };
 
-typedef boost::shared_ptr<DiffLeaf> DiffLeafPtr;
-typedef boost::shared_ptr<const DiffLeaf> DiffLeafConstPtr;
+typedef shared_ptr<DiffLeaf> DiffLeafPtr;
+typedef shared_ptr<const DiffLeaf> DiffLeafConstPtr;
 
 std::ostream &
 operator << (std::ostream &os, Operation op);

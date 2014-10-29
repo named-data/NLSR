@@ -17,12 +17,12 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #include "sync-diff-leaf.h"
 #include <boost/throw_exception.hpp>
-typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info; 
+typedef boost::error_info<struct tag_errmsg, std::string> errmsg_info;
 
 using namespace Sync::Error;
 

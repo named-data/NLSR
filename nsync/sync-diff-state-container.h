@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_DIFF_STATE_CONTAINER_H
@@ -40,7 +40,7 @@ namespace mi = boost::multi_index;
 
 namespace Sync {
 
-/// @cond include_hidden 
+/// @cond include_hidden
 struct sequenced { };
 struct timed { };
 /// @endcond
@@ -59,7 +59,7 @@ struct DiffStateContainer : public mi::multi_index_container<
       DigestPtrHash,
       DigestPtrEqual
       >
-    ,        
+    ,
     // sequenced index to access older/newer element (like in list)
     mi::sequenced<mi::tag<sequenced> >
     >

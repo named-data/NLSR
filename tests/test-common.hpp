@@ -23,6 +23,8 @@
 #ifndef NLSR_TEST_COMMON_HPP
 #define NLSR_TEST_COMMON_HPP
 
+#include "common.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 

@@ -20,6 +20,8 @@
  **/
 
 #include "face-controller.hpp"
+
+#include "common.hpp"
 #include "logger.hpp"
 
 namespace nlsr {

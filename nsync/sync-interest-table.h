@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_INTEREST_TABLE_H
@@ -36,7 +36,7 @@ namespace Sync {
 /**
  * \ingroup sync
  * @brief A table to keep unanswered Sync Interest
- * all access operation to the table should grab the 
+ * all access operation to the table should grab the
  * mutex first
  */
 class SyncInterestTable
@@ -63,7 +63,7 @@ public:
    */
   bool
   remove (const std::string &name);
-  
+
   /**
    * @brief pop a non-expired Interest from PIT
    */

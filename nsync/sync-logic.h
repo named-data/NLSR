@@ -63,9 +63,9 @@ struct MissingDataInfo {
 class SyncLogic
 {
 public:
-  typedef boost::function< void (const std::vector<MissingDataInfo> & ) > LogicUpdateCallback;
-  typedef boost::function< void (const std::string &/*prefix*/ ) > LogicRemoveCallback;
-  typedef boost::function< void (const std::string &)> LogicPerBranchCallback;
+  typedef function< void (const std::vector<MissingDataInfo> & ) > LogicUpdateCallback;
+  typedef function< void (const std::string &/*prefix*/ ) > LogicRemoveCallback;
+  typedef function< void (const std::string &)> LogicPerBranchCallback;
 
   /**
    * @brief Constructor
@@ -156,7 +156,7 @@ private:
   void
   satisfyPendingSyncInterests (DiffStateConstPtr diff);
 
-  boost::tuple<DigestConstPtr, std::string>
+  tuple<DigestConstPtr, std::string>
   convertNameToDigestAndType (const ndn::Name &name);
 
   void

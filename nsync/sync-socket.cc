@@ -23,7 +23,14 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace std;
-using namespace ndn;
+
+using ndn::Data;
+using ndn::Face;
+using ndn::KeyChain;
+using ndn::Name;
+using ndn::OnDataValidated;
+using ndn::OnDataValidationFailed;
+using ndn::Validator;
 
 INIT_LOGGER ("SyncSocket");
 

@@ -24,6 +24,7 @@
 #define NLSR_FACE_MAP_HPP
 
 #include <ndn-cxx/common.hpp>
+#include <algorithm>
 
 namespace nlsr {
 

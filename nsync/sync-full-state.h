@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_FULL_STATE_H
@@ -29,8 +29,8 @@
 namespace Sync {
 
 class FullState;
-typedef boost::shared_ptr<FullState> FullStatePtr;
-typedef boost::shared_ptr<FullState> FullStateConstPtr;
+typedef shared_ptr<FullState> FullStatePtr;
+typedef shared_ptr<FullState> FullStateConstPtr;
 
 
 /**
@@ -61,14 +61,14 @@ public:
    */
   DigestConstPtr
   getDigest ();
-  
+
   // from State
-  virtual boost::tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
+  virtual tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
   update (NameInfoConstPtr info, const SeqNo &seq);
 
   virtual bool
   remove (NameInfoConstPtr info);
-  
+
 private:
   ndn::time::system_clock::TimePoint m_lastUpdated; ///< @brief Time when state was updated last time
   DigestPtr m_digest;

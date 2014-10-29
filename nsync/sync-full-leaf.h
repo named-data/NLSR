@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_FULL_LEAF_H
@@ -29,7 +29,7 @@ namespace Sync {
 
 /**
  * @ingroup sync
- * @brief SYNC leaf for the full state (with support of Digest calculation) 
+ * @brief SYNC leaf for the full state (with support of Digest calculation)
  */
 class FullLeaf : public Leaf
 {
@@ -49,12 +49,12 @@ public:
    * (including updates of child classes)
    */
   const Digest &
-  getDigest () const { return m_digest; }  
+  getDigest () const { return m_digest; }
 
   // from Leaf
   virtual void
   setSeq (const SeqNo &seq);
-  
+
 private:
   void
   updateDigest ();
@@ -63,8 +63,8 @@ private:
   Digest m_digest;
 };
 
-typedef boost::shared_ptr<FullLeaf> FullLeafPtr;
-typedef boost::shared_ptr<const FullLeaf> FullLeafConstPtr;
+typedef shared_ptr<FullLeaf> FullLeafPtr;
+typedef shared_ptr<const FullLeaf> FullLeafConstPtr;
 
 } // Sync
 

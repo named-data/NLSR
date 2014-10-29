@@ -33,6 +33,7 @@
 #include <ndn-cxx/management/nfd-face-event-notification.hpp>
 #include <ndn-cxx/management/nfd-face-monitor.hpp>
 
+#include "common.hpp"
 #include "conf-parameter.hpp"
 #include "adjacency-list.hpp"
 #include "name-prefix-list.hpp"

@@ -25,6 +25,7 @@
 #include <ndn-cxx/common.hpp>
 
 #include "adjacency-list.hpp"
+#include "common.hpp"
 #include "conf-parameter.hpp"
 #include "nexthop-list.hpp"
 #include "face-map.hpp"
@@ -345,6 +346,11 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
   }
 }
 
+typedef void(Fib::*RegisterPrefixCallback)(const ndn::nfd::ControlParameters&,
+                                           const ndn::nfd::ControlParameters&, uint8_t,
+                                           const CommandSucceedCallback&,
+                                           const CommandFailCallback&);
+
 void
 Fib::registerPrefix(const ndn::Name& namePrefix,
                     const std::string& faceUri,
@@ -364,9 +370,8 @@ Fib::registerPrefix(const ndn::Name& namePrefix,
     .setExpirationPeriod(timeout)
     .setOrigin(128);
   createFace(faceUri,
-             ndn::bind(&Fib::registerPrefixInNfd, this,_1,
-                       parameters,
-                       times, onSuccess, onFailure),
+             ndn::bind(static_cast<RegisterPrefixCallback>(&Fib::registerPrefixInNfd),
+                       this, _1, parameters, times, onSuccess, onFailure),
              onFailure);
 }
 

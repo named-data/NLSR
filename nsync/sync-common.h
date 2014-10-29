@@ -17,30 +17,43 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
-#include <iostream>
-#include <list>
-#include <utility>
 
-#include "common.hpp"
-#include "logger.hpp"
-#include "face-map.hpp"
+#ifndef NSYNC_SYNC_COMMON_HPP
+#define NSYNC_SYNC_COMMON_HPP
 
-namespace nlsr {
+#include <boost/exception/all.hpp>
 
-INIT_LOGGER("FaceMap");
+#include <ndn-cxx/common.hpp>
 
-void
-FaceMap::writeLog()
-{
-  _LOG_DEBUG("------- Face Map-----------");
-  for(std::list<FaceMapEntry>::iterator it = m_table.begin();
-      it != m_table.end(); ++it) {
-    _LOG_DEBUG("Face Map Entry (FaceUri: " << (*it).getFaceUri() << " Face Id: "
-               << (*it).getFaceId() << ")");
-  }
-}
+#include <tuple>
 
-} // namespace NLSR
+namespace Sync {
+
+using ndn::bind;
+using ndn::function;
+
+using ndn::make_shared;
+using ndn::shared_ptr;
+using ndn::weak_ptr;
+
+using ndn::dynamic_pointer_cast;
+using ndn::static_pointer_cast;
+
+using ndn::_1;
+using ndn::_2;
+using ndn::_3;
+using ndn::_4;
+using ndn::_5;
+using ndn::_6;
+using ndn::_7;
+using ndn::_8;
+using ndn::_9;
+
+using std::tuple;
+using std::make_tuple;
+using std::tie;
+
+} // namespace Sync
+
+#endif // NSYNC_SYNC_COMMON_HPP

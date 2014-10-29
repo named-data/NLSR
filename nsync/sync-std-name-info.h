@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_STD_NAME_INFO_H
@@ -42,7 +42,7 @@ public:
    * @brief Destructor which will clean up m_names structure
    */
   virtual ~StdNameInfo ();
-  
+
   // from NameInfo
   virtual bool
   operator == (const NameInfo &info) const;
@@ -54,7 +54,7 @@ public:
   toString () const;
 
 private:
-  // implementing a singleton pattern. 
+  // implementing a singleton pattern.
   /**
    * @brief Disabled default constructor. NameInfo object should be created through FindOrCreate static call.
    */
@@ -65,7 +65,7 @@ private:
   StdNameInfo () {}
   StdNameInfo& operator = (const StdNameInfo &info) { (void)info; return *this; }
   StdNameInfo (const std::string &name);
-  
+
   std::string m_name;
 };
 

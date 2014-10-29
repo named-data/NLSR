@@ -17,18 +17,18 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_EVENT_H
 #define SYNC_EVENT_H
 
-#include <boost/function.hpp>
+#include "sync-common.h"
 
 namespace Sync
 {
 
-typedef boost::function< void ( ) > Event;
+typedef function< void ( ) > Event;
 
 } // Sync
 

@@ -23,8 +23,8 @@
 #ifndef SYNC_DIGEST_H
 #define SYNC_DIGEST_H
 
-#include <boost/exception/all.hpp>
-#include <boost/cstdint.hpp>
+#include "sync-common.h"
+
 #include <vector>
 #include "openssl.h"
 
@@ -142,8 +142,8 @@ namespace Error {
 struct DigestCalculationError : virtual boost::exception, virtual std::exception { };
 }
 
-typedef boost::shared_ptr<Digest> DigestPtr;
-typedef boost::shared_ptr<const Digest> DigestConstPtr;
+typedef shared_ptr<Digest> DigestPtr;
+typedef shared_ptr<const Digest> DigestConstPtr;
 
 Digest &
 Digest::operator << (const std::string &str)

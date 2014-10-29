@@ -21,6 +21,8 @@
 #ifndef _SYNC_SOCKET_H
 #define _SYNC_SOCKET_H
 
+#include "sync-common.h"
+
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/validator.hpp>
 #include <ndn-cxx/security/key-chain.hpp>

@@ -22,6 +22,8 @@
  **/
 #include <list>
 #include <utility>
+
+#include "common.hpp"
 #include "name-prefix-table-entry.hpp"
 #include "routing-table-entry.hpp"
 #include "nexthop.hpp"

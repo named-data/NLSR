@@ -32,7 +32,15 @@
 #include <vector>
 
 using namespace std;
-using namespace ndn;
+
+using ndn::Data;
+using ndn::EventId;
+using ndn::KeyChain;
+using ndn::Face;
+using ndn::Name;
+using ndn::OnDataValidated;
+using ndn::OnDataValidationFailed;
+using ndn::Validator;
 
 INIT_LOGGER ("SyncLogic");
 
@@ -138,7 +146,7 @@ SyncLogic::~SyncLogic ()
  * Normal name:    .../<hash>
  * Recovery name:  .../recovery/<hash>
  */
-boost::tuple<DigestConstPtr, std::string>
+tuple<DigestConstPtr, std::string>
 SyncLogic::convertNameToDigestAndType (const Name &name)
 {
   BOOST_ASSERT (m_syncPrefix.isPrefixOf(name));
@@ -157,11 +165,11 @@ SyncLogic::convertNameToDigestAndType (const Name &name)
 
   _LOG_DEBUG_ID (hash << ", " << interestType);
 
-  DigestPtr digest = boost::make_shared<Digest> ();
+  DigestPtr digest = make_shared<Digest> ();
   istringstream is (hash);
   is >> *digest;
 
-  return make_tuple (digest, interestType);
+  return make_tuple(digest, interestType);
 }
 
 void
@@ -332,7 +340,7 @@ void
 SyncLogic::processSyncData (const Name &name, DigestConstPtr digest,
                             const char *wireData, size_t len)
 {
-  DiffStatePtr diffLog = boost::make_shared<DiffState> ();
+  DiffStatePtr diffLog = make_shared<DiffState> ();
   bool ownInterestSatisfied = false;
 
   try
@@ -354,7 +362,7 @@ SyncLogic::processSyncData (const Name &name, DigestConstPtr digest,
       vector<MissingDataInfo> v;
       BOOST_FOREACH (LeafConstPtr leaf, diff.getLeaves().get<ordered>())
         {
-          DiffLeafConstPtr diffLeaf = boost::dynamic_pointer_cast<const DiffLeaf> (leaf);
+          DiffLeafConstPtr diffLeaf = dynamic_pointer_cast<const DiffLeaf> (leaf);
           BOOST_ASSERT (diffLeaf != 0);
 
           NameInfoConstPtr info = diffLeaf->getInfo();
@@ -366,7 +374,7 @@ SyncLogic::processSyncData (const Name &name, DigestConstPtr digest,
               bool updated = false;
               SeqNo oldSeq;
               {
-                boost::tie (inserted, updated, oldSeq) = m_state->update (info, seq);
+                tie (inserted, updated, oldSeq) = m_state->update (info, seq);
               }
 
               if (inserted || updated)
@@ -484,7 +492,7 @@ SyncLogic::processSyncRecoveryInterest (const Name &name, DigestConstPtr digest)
 void
 SyncLogic::satisfyPendingSyncInterests (DiffStateConstPtr diffLog)
 {
-  DiffStatePtr fullStateLog = boost::make_shared<DiffState> ();
+  DiffStatePtr fullStateLog = make_shared<DiffState> ();
   {
     BOOST_FOREACH (LeafConstPtr leaf, m_state->getLeaves ()/*.get<timed> ()*/)
       {
@@ -549,7 +557,7 @@ SyncLogic::addLocalNames (const Name &prefix, uint64_t session, uint64_t seq)
 
     _LOG_DEBUG_ID ("addLocalNames (): new state " << *m_state->getDigest ());
 
-    diff = boost::make_shared<DiffState>();
+    diff = make_shared<DiffState>();
     diff->update(info, seqN);
     insertToDiffLog (diff);
   }
@@ -578,7 +586,7 @@ SyncLogic::remove(const Name &prefix)
       }
     m_state->update (forwarderInfo, seqNo);
 
-    diff = boost::make_shared<DiffState>();
+    diff = make_shared<DiffState>();
     diff->remove(info);
     diff->update(forwarderInfo, seqNo);
 
@@ -714,7 +722,7 @@ SyncLogic::getNumberOfBranches () const
 void
 SyncLogic::printState () const
 {
-  BOOST_FOREACH (const boost::shared_ptr<Sync::Leaf> leaf, m_state->getLeaves ())
+  BOOST_FOREACH (const shared_ptr<Sync::Leaf> leaf, m_state->getLeaves ())
     {
       std::cout << *leaf << std::endl;
     }
@@ -725,7 +733,7 @@ SyncLogic::getBranchPrefixes() const
 {
   std::map<std::string, bool> m;
 
-  BOOST_FOREACH (const boost::shared_ptr<Sync::Leaf> leaf, m_state->getLeaves ())
+  BOOST_FOREACH (const shared_ptr<Sync::Leaf> leaf, m_state->getLeaves ())
     {
       std::string prefix = leaf->getInfo()->toString();
       // do not return forwarder prefix

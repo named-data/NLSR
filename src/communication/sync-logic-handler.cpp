@@ -22,6 +22,7 @@
  **/
 #include "sync-logic-handler.hpp"
 
+#include "common.hpp"
 #include "conf-parameter.hpp"
 #include "logger.hpp"
 #include "lsa.hpp"

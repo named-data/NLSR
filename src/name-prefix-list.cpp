@@ -25,6 +25,7 @@
 
 #include <ndn-cxx/common.hpp>
 
+#include "common.hpp"
 #include "name-prefix-list.hpp"
 #include "logger.hpp"
 

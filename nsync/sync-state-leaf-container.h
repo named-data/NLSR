@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_STATE_LEAF_CONTAINER
@@ -66,7 +66,7 @@ struct NameInfoCompare : public std::unary_function<NameInfo, std::size_t>
   }
 };
 
-/// @cond include_hidden 
+/// @cond include_hidden
 struct hashed { };
 struct ordered { };
 /// @endcond
@@ -85,7 +85,7 @@ struct LeafContainer : public mi::multi_index_container<
       NameInfoHash,
       NameInfoEqual
       >,
-        
+
     mi::ordered_unique<
       mi::tag<ordered>,
       mi::const_mem_fun<Leaf, NameInfoConstPtr, &Leaf::getInfo>,

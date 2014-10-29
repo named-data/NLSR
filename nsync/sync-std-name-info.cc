@@ -17,13 +17,10 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #include "sync-std-name-info.h"
-
-// using namespace std;
-using namespace boost;
 
 namespace Sync {
 
@@ -32,9 +29,9 @@ NameInfoConstPtr
 StdNameInfo::FindOrCreate (const std::string &key)
 {
   // std::cout << "FindOrCreate: " << m_names.size () << "\n";
-  
+
   NameInfoConstPtr ret;
-  
+
   NameMap::iterator item = m_names.find (key);
   if (item != m_names.end ())
     {
@@ -47,7 +44,7 @@ StdNameInfo::FindOrCreate (const std::string &key)
       weak_ptr<const NameInfo> value (ret);
       std::pair<NameMap::iterator,bool> inserted =
         m_names.insert (make_pair (key, value));
-      
+
       BOOST_ASSERT (inserted.second); // previous call has to insert value
       item = inserted.first;
     }

@@ -17,7 +17,7 @@
  *
  * Author: Zhenkai Zhu <zhenkai@cs.ucla.edu>
  *         Chaoyi Bian <bcy@pku.edu.cn>
- *	   Alexander Afanasyev <alexander.afanasyev@ucla.edu>
+ *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
 #ifndef SYNC_STATE_H
@@ -25,7 +25,6 @@
 
 #include "sync-state-leaf-container.h"
 #include <boost/exception/all.hpp>
-#include "boost/tuple/tuple.hpp"
 #include "sync-state.pb.h"
 
 /**
@@ -38,16 +37,16 @@ namespace Sync {
 /**
  * \ingroup sync
  * @brief this prefix will be used for the dummy node which increases its sequence number whenever
- * a remove operation happens; this is to prevent the reversion of root digest when we prune 
+ * a remove operation happens; this is to prevent the reversion of root digest when we prune
  * a branch, i.e. help the root digest to be forward only
- * No corresponding data msg would be published and no attempt would be made to retrieve the 
+ * No corresponding data msg would be published and no attempt would be made to retrieve the
  * data msg
  */
 const std::string forwarderPrefix = "/d0n0t18ak/t0ps8cr8t";
 
 class State;
-typedef boost::shared_ptr<State> StatePtr;
-typedef boost::shared_ptr<State> StateConstPtr;
+typedef shared_ptr<State> StatePtr;
+typedef shared_ptr<State> StateConstPtr;
 
 /**
  * \ingroup sync
@@ -57,14 +56,14 @@ class State
 {
 public:
   virtual ~State () { };
-  
+
   /**
    * @brief Add or update leaf to the state tree
    *
    * @param info name of the leaf
    * @param seq  sequence number of the leaf
    */
-  virtual boost::tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
+  virtual tuple<bool/*inserted*/, bool/*updated*/, SeqNo/*oldSeqNo*/>
   update (NameInfoConstPtr info, const SeqNo &seq) = 0;
 
   /**
@@ -78,9 +77,9 @@ public:
    * @brief Get state leaves
    */
   const LeafContainer &
-  getLeaves () const 
+  getLeaves () const
   { return m_leaves; }
-  
+
 protected:
   LeafContainer m_leaves;
 };

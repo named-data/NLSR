@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -x
+set -e
 
 cd /tmp
 BUILD="no"
@@ -30,7 +31,7 @@ sudo rm -f /usr/local/lib/libndn-cxx*
 sudo rm -f /usr/local/lib/pkgconfig/libndn-cxx*
 
 if [ "$BUILD" = "yes" ]; then
-    ./waf distclean --color=yes
+    sudo ./waf distclean --color=yes
 fi
 
 ./waf configure --color=yes --without-osx-keychain
