@@ -6,6 +6,10 @@ NLSR is an open source project includes contributions from the members of the
 
 ## Project lead:
 
+* Vince Lehman <http://vslehman.com>
+
+## Past project leads:
+
 * A K M Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
 
 ## Technical advisors:
@@ -20,10 +24,10 @@ NLSR is an open source project includes contributions from the members of the
 * The University of Memphis
 
     * A K M Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
-    * Ashlesh Gawande
-    * Minsheng Zhang
-    * Syed Obaid Amin     <http://obaidamin.weebly.com/>
-    * Vince Lehman        <http://vslehman.com>
+    * Ashlesh Gawande      <agawande@memphis.edu>
+    * Minsheng Zhang       <mzhang4@memphis.edu>
+    * Syed Obaid Amin      <http://obaidamin.weebly.com/>
+    * Vince Lehman         <http://vslehman.com>
 
 * University of California, Los Angeles
 
@@ -33,6 +37,6 @@ NLSR is an open source project includes contributions from the members of the
 
 ## Queries about NLSR
 
-Any general question related to NLSR should be directed to A K M Mahmudul Hoque
-(ahoque1@memphis.edu) and security related question should be directed to Yingdi
-Yu (yingdi@cs.ucla.edu)
+Any general question related to NLSR should be directed to Vince Lehman
+(vslehman@memphis.edu) and security related question should be directed to
+Yingdi Yu (yingdi@cs.ucla.edu)
