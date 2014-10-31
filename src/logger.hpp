@@ -20,6 +20,7 @@
  * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
  *
  **/
+
 #ifndef NLSR_LOGGER_HPP
 #define NLSR_LOGGER_HPP
 
@@ -48,6 +49,9 @@
 
 void
 INIT_LOGGERS(const std::string& logDir, const std::string& logLevel);
+
+void
+INIT_LOG4CXX(const std::string& log4cxxConfPath);
 
 bool
 isValidLogLevel(const std::string& logLevel);

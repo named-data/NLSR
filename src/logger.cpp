@@ -22,14 +22,28 @@
  **/
 #include <log4cxx/logger.h>
 #include <log4cxx/basicconfigurator.h>
+#include <log4cxx/xml/domconfigurator.h>
+#include <log4cxx/propertyconfigurator.h>
 #include <log4cxx/patternlayout.h>
 #include <log4cxx/level.h>
 #include <log4cxx/helpers/exception.h>
 #include <log4cxx/rollingfileappender.h>
 
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem.hpp>
 
 #include "logger.hpp"
+
+void
+INIT_LOG4CXX(const std::string& log4cxxConfPath)
+{
+  if (boost::filesystem::path(log4cxxConfPath).extension().string() == ".xml") {
+    log4cxx::xml::DOMConfigurator::configure(log4cxxConfPath);
+  }
+  else {
+    log4cxx::PropertyConfigurator::configure(log4cxxConfPath);
+  }
+}
 
 void
 INIT_LOGGERS(const std::string& logDir, const std::string& logLevel)

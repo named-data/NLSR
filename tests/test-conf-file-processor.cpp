@@ -23,11 +23,15 @@
 
 #include "test-common.hpp"
 #include "dummy-face.hpp"
+#include "logger.hpp"
 
 #include <fstream>
 #include "conf-file-processor.hpp"
 #include "nlsr.hpp"
+
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace nlsr {
 namespace test {
@@ -47,6 +51,23 @@ const std::string SECTION_GENERAL =
   "  log-level  INFO\n"
   "  log-dir /tmp\n"
   "  seq-dir /tmp\n"
+  "}\n\n";
+
+const std::string LOG4CXX_PLACEHOLDER = "$LOG4CXX$";
+
+const std::string SECTION_GENERAL_WITH_LOG4CXX =
+  "general\n"
+  "{\n"
+  "  network /ndn/\n"
+  "  site /memphis.edu/\n"
+  "  router /cs/pollux/\n"
+  "  lsa-refresh-time 1800\n"
+  "  lsa-interest-lifetime 3\n"
+  "  router-dead-interval 86400\n"
+  "  log-level  INFO\n"
+  "  log-dir /tmp\n"
+  "  seq-dir /tmp\n"
+  "  log4cxx-conf " + LOG4CXX_PLACEHOLDER + "\n"
   "}\n\n";
 
 const std::string SECTION_NEIGHBORS =
@@ -104,6 +125,8 @@ const std::string SECTION_ADVERTISING =
 const std::string CONFIG_LINK_STATE = SECTION_GENERAL + SECTION_NEIGHBORS +
                                       SECTION_HYPERBOLIC_OFF + SECTION_FIB + SECTION_ADVERTISING;
 
+const std::string CONFIG_LOG4CXX = SECTION_GENERAL_WITH_LOG4CXX;
+
 const std::string CONFIG_HYPERBOLIC = SECTION_GENERAL + SECTION_NEIGHBORS +
                                       SECTION_HYPERBOLIC_ON + SECTION_FIB + SECTION_ADVERTISING;
 
@@ -114,12 +137,18 @@ public:
     : face(ndn::makeDummyFace())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , CONFIG_FILE("unit-test-nlsr.conf")
+    , m_logConfigFileName(boost::filesystem::unique_path().native())
+    , m_logFileName(boost::filesystem::unique_path().native())
   {
   }
 
   ~ConfFileProcessorFixture()
   {
     remove("unit-test-nlsr.conf");
+    remove("/tmp/unit-test-log4cxx.xml");
+
+    boost::filesystem::remove(boost::filesystem::path(getLogConfigFileName()));
+    boost::filesystem::remove(boost::filesystem::path(getLogFileName()));
   }
 
   bool processConfigurationString(std::string confString)
@@ -133,12 +162,47 @@ public:
     return processor.processConfFile();
   }
 
+  void
+  verifyOutputLog4cxx(const std::string expected[], size_t nExpected)
+  {
+    std::ifstream is(getLogFileName().c_str());
+    std::string buffer((std::istreambuf_iterator<char>(is)),
+                       (std::istreambuf_iterator<char>()));
+
+    std::vector<std::string> components;
+    boost::split(components, buffer, boost::is_any_of(" ,\n"));
+
+    // expected + number of timestamps (one per log statement) + trailing newline of last statement
+    BOOST_REQUIRE_EQUAL(components.size(), nExpected);
+
+    for (size_t i = 0; i < nExpected; ++i) {
+      if (expected[i] == "")
+        continue;
+
+      BOOST_CHECK_EQUAL(components[i], expected[i]);
+    }
+  }
+
+  const std::string&
+  getLogConfigFileName()
+  {
+    return m_logConfigFileName;
+  }
+
+  const std::string&
+  getLogFileName()
+  {
+    return m_logFileName;
+  }
+
 public:
   shared_ptr<ndn::DummyFace> face;
   Nlsr nlsr;
 
 private:
   const std::string CONFIG_FILE;
+  std::string m_logConfigFileName;
+  std::string m_logFileName;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, ConfFileProcessorFixture)
@@ -146,7 +210,6 @@ BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, ConfFileProcessorFixture)
 BOOST_AUTO_TEST_CASE(LinkState)
 {
   processConfigurationString(CONFIG_LINK_STATE);
-
   ConfParameter& conf = nlsr.getConfParameter();
   conf.buildRouterPrefix();
 
@@ -193,6 +256,81 @@ BOOST_AUTO_TEST_CASE(LinkState)
 
   // Advertising
   BOOST_CHECK_EQUAL(nlsr.getNamePrefixList().getSize(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(Log4cxxFileExists)
+{
+  std::string configPath = boost::filesystem::unique_path().native();
+
+  std::ofstream log4cxxConfFile;
+  log4cxxConfFile.open(configPath);
+  log4cxxConfFile.close();
+
+  std::string config = CONFIG_LOG4CXX;
+  boost::replace_all(config, LOG4CXX_PLACEHOLDER, configPath);
+
+  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+
+  ConfParameter& conf = nlsr.getConfParameter();
+  BOOST_CHECK_EQUAL(conf.getLog4CxxConfPath(), configPath);
+  BOOST_CHECK_EQUAL(conf.isLog4CxxConfAvailable(), true);
+
+  boost::filesystem::remove(boost::filesystem::path(configPath));
+}
+
+BOOST_AUTO_TEST_CASE(Log4cxxFileDoesNotExist)
+{
+  std::string configPath = boost::filesystem::unique_path().native();
+
+  std::string config = CONFIG_LOG4CXX;
+  boost::replace_all(config, LOG4CXX_PLACEHOLDER, configPath);
+
+  BOOST_CHECK_EQUAL(processConfigurationString(config), false);
+}
+
+BOOST_AUTO_TEST_CASE(Log4cxxNoValue)
+{
+  std::string config = CONFIG_LOG4CXX;
+  boost::replace_all(config, LOG4CXX_PLACEHOLDER, "");
+
+  BOOST_CHECK_EQUAL(processConfigurationString(config), false);
+}
+
+BOOST_AUTO_TEST_CASE(Log4cxxTestCase)
+{
+  {
+    std::ofstream of(getLogConfigFileName().c_str());
+    of << "log4j.rootLogger=TRACE, FILE\n"
+       << "log4j.appender.FILE=org.apache.log4j.FileAppender\n"
+       << "log4j.appender.FILE.layout=org.apache.log4j.PatternLayout\n"
+       << "log4j.appender.FILE.File=" << getLogFileName() << "\n"
+       << "log4j.appender.FILE.ImmediateFlush=true\n"
+       << "log4j.appender.FILE.layout.ConversionPattern=%d{HH:mm:ss} %p %c{1} - %m%n\n";
+  }
+
+  INIT_LOG4CXX(getLogConfigFileName());
+
+  INIT_LOGGER("DefaultConfig");
+
+  _LOG_TRACE("trace-message-JHGFDSR^1");
+  _LOG_DEBUG("debug-message-IGg2474fdksd-fo-" << 15 << 16 << 17);
+  _LOG_INFO("info-message-Jjxjshj13");
+  _LOG_WARN("warning-message-XXXhdhd11" << 1 <<"x");
+  _LOG_ERROR("error-message-!#$&^%$#@");
+  _LOG_FATAL("fatal-message-JJSjaamcng");
+
+  const std::string EXPECTED[] =
+    {
+      "", "TRACE", "DefaultConfig", "-", "trace-message-JHGFDSR^1",
+      "", "DEBUG", "DefaultConfig", "-", "debug-message-IGg2474fdksd-fo-151617",
+      "", "INFO",  "DefaultConfig", "-", "info-message-Jjxjshj13",
+      "", "WARN",  "DefaultConfig", "-", "warning-message-XXXhdhd111x",
+      "", "ERROR", "DefaultConfig", "-", "error-message-!#$&^%$#@",
+      "", "FATAL", "DefaultConfig", "-", "fatal-message-JJSjaamcng",
+      "",
+    };
+
+  verifyOutputLog4cxx(EXPECTED, sizeof(EXPECTED) / sizeof(std::string));
 }
 
 BOOST_AUTO_TEST_CASE(Hyperbolic)

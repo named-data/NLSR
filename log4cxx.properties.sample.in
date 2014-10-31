@@ -1,0 +1,11 @@
+log4j.rootLogger=DEBUG, Rolling
+
+log4j.appender.Rolling=org.apache.log4j.rolling.RollingFileAppender
+log4j.appender.Rolling.File=/tmp/testnlsrproperties.log
+log4j.appender.Rolling.MaxSize=1MB
+log4j.appender.Rolling.MaxBackupIndex=10
+
+log4j.appender.Rolling.layout=PatternLayout
+log4j.appender.Rolling.layout.ContextPrinting=enabled
+log4j.appender.Rolling.layout.DateFormat=ISO8601
+log4j.appender.Rolling.layout.ConversionPattern=%date{yyyyMMddHHmmssSSS} %p: [%c] %m%n

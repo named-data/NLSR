@@ -348,7 +348,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
       }
     }
     else {
-      std::cerr << "Log directory provided does not exists" << std::endl;
+      std::cerr << "Provided log directory <" << logDir << "> does not exist" << std::endl;
       return false;
     }
   }
@@ -357,6 +357,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     std::cerr << ex.what() << std::endl;
     return false;
   }
+
   try {
     std::string seqDir = section.get<string>("seq-dir");
     if (boost::filesystem::exists(seqDir)) {
@@ -381,7 +382,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
       }
     }
     else {
-      std::cerr << "Seq directory provided does not exists" << std::endl;
+      std::cerr << "Provided sequence directory <" << seqDir << "> does not exist" << std::endl;
       return false;
     }
   }
@@ -389,6 +390,28 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     std::cerr << "You must configure sequence directory" << std::endl;
     std::cerr << ex.what() << std::endl;
     return false;
+  }
+
+  try {
+    std::string log4cxxPath = section.get<string>("log4cxx-conf");
+
+    if (log4cxxPath == "") {
+      std::cerr << "No value provided for log4cxx-conf" << std::endl;
+      return false;
+    }
+
+    if (boost::filesystem::exists(log4cxxPath)) {
+      m_nlsr.getConfParameter().setLog4CxxConfPath(log4cxxPath);
+    }
+    else {
+      std::cerr << "Provided path for log4cxx-conf <" << log4cxxPath
+                << "> does not exist" << std::endl;
+
+      return false;
+    }
+  }
+  catch (const std::exception& ex) {
+    // Variable is optional so default configuration will be used; continue processing file
   }
 
   return true;

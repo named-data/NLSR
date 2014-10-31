@@ -66,13 +66,20 @@ main(int32_t argc, char** argv)
         return EXIT_FAILURE;
       }
   }
+
   ConfFileProcessor cfp(nlsr, nlsr.getConfFileName());
   if (!cfp.processConfFile()) {
     std::cerr << "Error in configuration file processing! Exiting from NLSR" << std::endl;
     return EXIT_FAILURE;
   }
 
-  INIT_LOGGERS(nlsr.getConfParameter().getLogDir(), nlsr.getConfParameter().getLogLevel());
+  if (nlsr.getConfParameter().isLog4CxxConfAvailable()) {
+    INIT_LOG4CXX(nlsr.getConfParameter().getLog4CxxConfPath());
+  }
+  else {
+    INIT_LOGGERS(nlsr.getConfParameter().getLogDir(), nlsr.getConfParameter().getLogLevel());
+  }
+
   INIT_LOGGER("Main");
 
   nlsr.initialize();

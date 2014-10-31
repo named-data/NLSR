@@ -111,6 +111,7 @@ public:
     , m_corR(0)
     , m_corTheta(0)
     , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
+    , m_isLog4cxxConfAvailable(false)
   {
   }
 
@@ -381,6 +382,25 @@ public:
     return m_seqFileDir;
   }
 
+  bool
+  isLog4CxxConfAvailable() const
+  {
+    return m_isLog4cxxConfAvailable;
+  }
+
+  void
+  setLog4CxxConfPath(const std::string& path)
+  {
+    m_log4CxxConfPath = path;
+    m_isLog4cxxConfAvailable = true;
+  }
+
+  const std::string&
+  getLog4CxxConfPath() const
+  {
+    return m_log4CxxConfPath;
+  }
+
   void
   writeLog();
 
@@ -420,6 +440,8 @@ private:
   std::string m_logDir;
   std::string m_seqFileDir;
 
+  bool m_isLog4cxxConfAvailable;
+  std::string m_log4CxxConfPath;
 };
 
 } // namespace nlsr
