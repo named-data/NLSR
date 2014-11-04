@@ -44,11 +44,12 @@ class ConfParameter;
 class Fib
 {
 public:
-  Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList, ConfParameter& conf)
+  Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList, ConfParameter& conf,
+      ndn::KeyChain& keyChain)
     : m_scheduler(scheduler)
     , m_table()
     , m_refreshTime(0)
-    , m_controller(face)
+    , m_controller(face, keyChain)
     , m_faceController(face.getIoService(), m_controller)
     , m_faceMap()
     , m_adjacencyList(adjacencyList)

@@ -81,7 +81,7 @@ public:
     , m_isRouteCalculationScheduled(false)
     , m_isRoutingTableCalculating(false)
     , m_routingTable(scheduler)
-    , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam)
+    , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, m_keyChain)
     , m_namePrefixTable(*this)
     , m_syncLogicHandler(m_nlsrFace, m_nlsrLsdb, m_confParam)
     , m_helloProtocol(*this, scheduler)

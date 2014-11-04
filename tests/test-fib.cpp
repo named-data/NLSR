@@ -54,8 +54,8 @@ public:
 
     conf.setMaxFacesPerPrefix(2);
 
-    fib = ndn::make_shared<Fib>(ndn::ref(*face), ndn::ref(g_scheduler),ndn::ref(adjacencies),
-                                ndn::ref(conf));
+    fib = ndn::make_shared<Fib>(ndn::ref(*face), ndn::ref(g_scheduler), ndn::ref(adjacencies),
+                                ndn::ref(conf), keyChain);
 
     fib->m_faceMap.update(router1FaceUri, router1FaceId);
     fib->m_faceMap.update(router2FaceUri, router2FaceId);
@@ -64,6 +64,7 @@ public:
 
 public:
   shared_ptr<ndn::DummyFace> face;
+  ndn::KeyChain keyChain;
   shared_ptr<Fib> fib;
 
   AdjacencyList adjacencies;
