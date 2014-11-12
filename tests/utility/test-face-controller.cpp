@@ -25,6 +25,7 @@
 
 #include "utility/face-controller.hpp"
 
+#include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/management/nfd-controller.hpp>
 
 namespace nlsr {
@@ -40,7 +41,7 @@ public:
   FaceControllerFixture()
     : face(ndn::makeDummyFace())
     , interests(face->m_sentInterests)
-    , controller(ndn::ref(*face))
+    , controller(*face, keyChain)
     , faceManager(g_ioService, controller)
   {
   }
@@ -66,6 +67,7 @@ public:
 
 public:
   shared_ptr<ndn::DummyFace> face;
+  ndn::KeyChain keyChain;
   std::vector<Interest>& interests;
   ndn::nfd::Controller controller;
   util::FaceController faceManager;
