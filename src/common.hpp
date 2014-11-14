@@ -26,20 +26,10 @@
 
 namespace nlsr {
 
-using ndn::bind;
-using ndn::make_shared;
-using ndn::shared_ptr;
-using ndn::function;
-
-using ndn::_1;
-using ndn::_2;
-using ndn::_3;
-using ndn::_4;
-using ndn::_5;
-using ndn::_6;
-using ndn::_7;
-using ndn::_8;
-using ndn::_9;
+using std::bind;
+using std::make_shared;
+using std::shared_ptr;
+using std::function;
 
 }
 

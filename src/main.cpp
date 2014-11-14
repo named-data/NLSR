@@ -21,15 +21,17 @@
  * \author Yingdi Yu <yingdi@cs.ucla.edu>
  *
  **/
+
+#include <ndn-cxx/util/scheduler.hpp>
+
 #include "conf-file-processor.hpp"
 #include "logger.hpp"
 #include "nlsr.hpp"
 #include "version.hpp"
 
+// boost needs to be included after ndn-cxx, otherwise there will be conflict with _1, _2, ...
 #include <boost/asio.hpp>
 #include <boost/cstdint.hpp>
-
-#include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {
 

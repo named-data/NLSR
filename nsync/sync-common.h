@@ -30,25 +30,15 @@
 
 namespace Sync {
 
-using ndn::bind;
-using ndn::function;
+using std::bind;
+using std::function;
 
-using ndn::make_shared;
-using ndn::shared_ptr;
-using ndn::weak_ptr;
+using std::make_shared;
+using std::shared_ptr;
+using std::weak_ptr;
 
-using ndn::dynamic_pointer_cast;
-using ndn::static_pointer_cast;
-
-using ndn::_1;
-using ndn::_2;
-using ndn::_3;
-using ndn::_4;
-using ndn::_5;
-using ndn::_6;
-using ndn::_7;
-using ndn::_8;
-using ndn::_9;
+using std::dynamic_pointer_cast;
+using std::static_pointer_cast;
 
 using std::tuple;
 using std::make_tuple;

@@ -23,12 +23,14 @@
  **/
 #include <iostream>
 #include <fstream>
+
+#include <ndn-cxx/name.hpp>
+
+// boost needs to be included after ndn-cxx, otherwise there will be conflict with _1, _2, ...
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/filesystem.hpp>
-
-#include <ndn-cxx/name.hpp>
 
 #include "conf-parameter.hpp"
 #include "conf-file-processor.hpp"
