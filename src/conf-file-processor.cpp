@@ -25,6 +25,7 @@
 #include <fstream>
 
 #include <ndn-cxx/name.hpp>
+#include <ndn-cxx/util/face-uri.hpp>
 
 // boost needs to be included after ndn-cxx, otherwise there will be conflict with _1, _2, ...
 #include <boost/algorithm/string.hpp>
@@ -499,6 +500,14 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
         ConfigSection CommandAttriTree = tn->second;
         std::string name = CommandAttriTree.get<std::string>("name");
         std::string faceUri = CommandAttriTree.get<std::string>("face-uri");
+
+        ndn::util::FaceUri uri;
+
+        if (!uri.parse(faceUri)) {
+          std::cerr << "Malformed face-uri <" << faceUri << "> for " << name << std::endl;
+          return false;
+        }
+
         double linkCost = CommandAttriTree.get<double>("link-cost",
                                                        Adjacent::DEFAULT_LINK_COST);
         ndn::Name neighborName(name);

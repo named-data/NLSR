@@ -333,6 +333,27 @@ BOOST_AUTO_TEST_CASE(Log4cxxTestCase)
   verifyOutputLog4cxx(EXPECTED, sizeof(EXPECTED) / sizeof(std::string));
 }
 
+BOOST_AUTO_TEST_CASE(MalformedUri)
+{
+  const std::string MALFORMED_URI =
+    "neighbors\n"
+    "{\n"
+    "  hello-retries 3\n"
+    "  hello-timeout 1\n"
+    "  hello-interval  60\n\n"
+    "  adj-lsa-build-interval 3\n"
+    "  first-hello-interval  6\n"
+    "  neighbor\n"
+    "  {\n"
+    "    name /ndn/memphis.edu/cs/castor\n"
+    "    face-uri  udp4:malformed-uri\n"
+    "    link-cost 20\n"
+    "  }\n"
+    "}\n\n";
+
+  BOOST_CHECK_EQUAL(processConfigurationString(MALFORMED_URI), false);
+}
+
 BOOST_AUTO_TEST_CASE(Hyperbolic)
 {
   processConfigurationString(CONFIG_HYPERBOLIC);
