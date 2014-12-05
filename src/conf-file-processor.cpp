@@ -281,13 +281,13 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     }
     else {
       std::cerr << "Value of router-dead-interval must be larger than lsa-refresh-time"
-        << std::endl;
+                << std::endl;
       return false;
     }
   }
   catch (const std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
-    // non-critical error. default value is 2 * lsa-refresh-time
+    // Variable is optional so default value (2 * lsa-refresh-time) will be used;
+    // Continue processing file
   }
 
   try {
