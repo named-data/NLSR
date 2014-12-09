@@ -83,13 +83,15 @@ enum {
 
 enum {
   MAX_FACES_PER_PREFIX_MIN = 0,
+  MAX_FACES_PER_PREFIX_DEFAULT = 0,
   MAX_FACES_PER_PREFIX_MAX = 60
 };
 
 enum {
   HYPERBOLIC_STATE_OFF = 0,
   HYPERBOLIC_STATE_ON = 1,
-  HYPERBOLIC_STATE_DRY_RUN = 2
+  HYPERBOLIC_STATE_DRY_RUN = 2,
+  HYPERBOLIC_STATE_DEFAULT = 0
 };
 
 class ConfParameter
@@ -189,7 +191,6 @@ public:
   setLsaRefreshTime(int32_t lrt)
   {
     m_lsaRefreshTime = lrt;
-    m_routerDeadInterval = 2 * m_lsaRefreshTime;
   }
 
   int32_t
@@ -247,12 +248,12 @@ public:
   }
 
   void
-  setRouterDeadInterval(int64_t rdt)
+  setRouterDeadInterval(int32_t rdt)
   {
     m_routerDeadInterval = rdt;
   }
 
-  int64_t
+  int32_t
   getRouterDeadInterval() const
   {
     return m_routerDeadInterval;
@@ -422,12 +423,11 @@ private:
   uint32_t m_routingCalcInterval;
 
   ndn::time::seconds m_lsaInterestLifetime;
-  int64_t  m_routerDeadInterval;
+  int32_t  m_routerDeadInterval;
   std::string m_logLevel;
 
   uint32_t m_interestRetryNumber;
   int32_t  m_interestResendTime;
-
 
   int32_t  m_infoInterestInterval;
 

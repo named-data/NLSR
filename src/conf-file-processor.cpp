@@ -255,60 +255,46 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     return false;
   }
 
-  try {
-    int32_t lsaRefreshTime = section.get<int32_t>("lsa-refresh-time");
-    if (lsaRefreshTime >= LSA_REFRESH_TIME_MIN &&
-        lsaRefreshTime <= LSA_REFRESH_TIME_MAX) {
-      m_nlsr.getConfParameter().setLsaRefreshTime(lsaRefreshTime);
-    }
-    else {
-      std::cerr << "Wrong value for lsa-refresh-time ";
-      std::cerr << "Allowed value: " << LSA_REFRESH_TIME_MIN << "-";;
-      std::cerr << LSA_REFRESH_TIME_MAX << std::endl;
-      return false;
-    }
+  // lsa-refresh-time
+  int32_t lsaRefreshTime = section.get<int32_t>("lsa-refresh-time", LSA_REFRESH_TIME_DEFAULT);
+
+  if (lsaRefreshTime >= LSA_REFRESH_TIME_MIN && lsaRefreshTime <= LSA_REFRESH_TIME_MAX) {
+    m_nlsr.getConfParameter().setLsaRefreshTime(lsaRefreshTime);
   }
-  catch (const std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
+  else {
+    std::cerr << "Wrong value for lsa-refresh-time ";
+    std::cerr << "Allowed value: " << LSA_REFRESH_TIME_MIN << "-";;
+    std::cerr << LSA_REFRESH_TIME_MAX << std::endl;
+
+    return false;
+  }
+
+  // router-dead-interval
+  int32_t routerDeadInterval = section.get<int32_t>("router-dead-interval", (2*lsaRefreshTime));
+
+  if (routerDeadInterval > m_nlsr.getConfParameter().getLsaRefreshTime()) {
+    m_nlsr.getConfParameter().setRouterDeadInterval(routerDeadInterval);
+  }
+  else {
+    std::cerr << "Value of router-dead-interval must be larger than lsa-refresh-time" << std::endl;
+    return false;
+  }
+
+  // lsa-interest-lifetime
+  int lifetime = section.get<int>("lsa-interest-lifetime", LSA_INTEREST_LIFETIME_DEFAULT);
+
+  if (lifetime >= LSA_INTEREST_LIFETIME_MIN && lifetime <= LSA_INTEREST_LIFETIME_MAX) {
+    m_nlsr.getConfParameter().setLsaInterestLifetime(ndn::time::seconds(lifetime));
+  }
+  else {
+    std::cerr << "Wrong value for lsa-interest-timeout. "
+              << "Allowed value:" << LSA_INTEREST_LIFETIME_MIN << "-"
+              << LSA_INTEREST_LIFETIME_MAX << std::endl;
+
     return false;
   }
 
   try {
-    int32_t routerDeadInterval = section.get<int32_t>("router-dead-interval");
-
-    if (routerDeadInterval > m_nlsr.getConfParameter().getLsaRefreshTime()) {
-      m_nlsr.getConfParameter().setRouterDeadInterval(routerDeadInterval);
-    }
-    else {
-      std::cerr << "Value of router-dead-interval must be larger than lsa-refresh-time"
-                << std::endl;
-      return false;
-    }
-  }
-  catch (const std::exception& ex) {
-    // Variable is optional so default value (2 * lsa-refresh-time) will be used;
-    // Continue processing file
-  }
-
-  try {
-    int lifetime = section.get<int>("lsa-interest-lifetime");
-    if (lifetime >= LSA_INTEREST_LIFETIME_MIN && lifetime <= LSA_INTEREST_LIFETIME_MAX) {
-      m_nlsr.getConfParameter().setLsaInterestLifetime(ndn::time::seconds(lifetime));
-    }
-    else {
-      std::cerr << "Wrong value for lsa-interest-timeout. "
-                << "Allowed value:" << LSA_INTEREST_LIFETIME_MIN << "-"
-                << LSA_INTEREST_LIFETIME_MAX << std::endl;
-      return false;
-    }
-  }
-  catch (const std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
-    // non-critical error. default value is 4
-  }
-
-  try {
-
     std::string logLevel = section.get<string>("log-level");
 
     if (isValidLogLevel(logLevel)) {
@@ -421,51 +407,46 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
 bool
 ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
 {
-  try {
-    int retrials = section.get<int>("hello-retries");
-    if (retrials >= HELLO_RETRIES_MIN && retrials <= HELLO_RETRIES_MAX) {
-      m_nlsr.getConfParameter().setInterestRetryNumber(retrials);
-    }
-    else {
-      std::cerr << "Wrong value for hello-retries. ";
-      std::cerr << "Allowed value:" << HELLO_RETRIES_MIN << "-";
-      std::cerr << HELLO_RETRIES_MAX << std::endl;
-      return false;
-    }
+  // hello-retries
+  int retrials = section.get<int>("hello-retries", HELLO_RETRIES_DEFAULT);
+
+  if (retrials >= HELLO_RETRIES_MIN && retrials <= HELLO_RETRIES_MAX) {
+    m_nlsr.getConfParameter().setInterestRetryNumber(retrials);
   }
-  catch (const std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
+  else {
+    std::cerr << "Wrong value for hello-retries." << std::endl;
+    std::cerr << "Allowed value:" << HELLO_RETRIES_MIN << "-";
+    std::cerr << HELLO_RETRIES_MAX << std::endl;
+
     return false;
   }
-  try {
-    int timeOut = section.get<int>("hello-timeout");
-    if (timeOut >= HELLO_TIMEOUT_MIN && timeOut <= HELLO_TIMEOUT_MAX) {
-      m_nlsr.getConfParameter().setInterestResendTime(timeOut);
-    }
-    else {
-      std::cerr << "Wrong value for hello-timeout. ";
-      std::cerr << "Allowed value:" << HELLO_TIMEOUT_MIN << "-";
-      std::cerr << HELLO_TIMEOUT_MAX << std::endl;
-      return false;
-    }
+
+  // hello-timeout
+  int timeOut = section.get<int>("hello-timeout", HELLO_TIMEOUT_DEFAULT);
+
+  if (timeOut >= HELLO_TIMEOUT_MIN && timeOut <= HELLO_TIMEOUT_MAX) {
+    m_nlsr.getConfParameter().setInterestResendTime(timeOut);
   }
-  catch (const std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
+  else {
+    std::cerr << "Wrong value for hello-timeout. ";
+    std::cerr << "Allowed value:" << HELLO_TIMEOUT_MIN << "-";
+    std::cerr << HELLO_TIMEOUT_MAX << std::endl;
+
+    return false;
   }
-  try {
-    int interval = section.get<int>("hello-interval");
-    if (interval >= HELLO_INTERVAL_MIN && interval <= HELLO_INTERVAL_MAX) {
-      m_nlsr.getConfParameter().setInfoInterestInterval(interval);
-    }
-    else {
-      std::cerr << "Wrong value for hello-interval. ";
-      std::cerr << "Allowed value:" << HELLO_INTERVAL_MIN << "-";
-      std::cerr << HELLO_INTERVAL_MAX << std::endl;
-      return false;
-    }
+
+  // hello-interval
+  int interval = section.get<int>("hello-interval", HELLO_INTERVAL_DEFAULT);
+
+  if (interval >= HELLO_INTERVAL_MIN && interval <= HELLO_INTERVAL_MAX) {
+    m_nlsr.getConfParameter().setInfoInterestInterval(interval);
   }
-  catch (const std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
+  else {
+    std::cerr << "Wrong value for hello-interval. ";
+    std::cerr << "Allowed value:" << HELLO_INTERVAL_MIN << "-";
+    std::cerr << HELLO_INTERVAL_MAX << std::endl;
+
+    return false;
   }
 
   // Event intervals
@@ -532,26 +513,22 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
 bool
 ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
 {
-  std::string state;
-  try {
-    state= section.get<string>("state","off");
-    if (boost::iequals(state, "off")) {
-      m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_OFF);
-    }
-    else if (boost::iequals(state, "on")) {
-        m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_ON);
-    }
-    else if (state == "dry-run") {
-      m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
-    }
-    else {
-      std::cerr << "Wrong format for hyperbolic state." << std::endl;
-      std::cerr << "Allowed value: off, on, dry-run" << std::endl;
-      return false;
-    }
+  // state
+  std::string state = section.get<string>("state", "off");
+
+  if (boost::iequals(state, "off")) {
+    m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_OFF);
   }
-  catch (const std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
+  else if (boost::iequals(state, "on")) {
+    m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_ON);
+  }
+  else if (state == "dry-run") {
+    m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
+  }
+  else {
+    std::cerr << "Wrong format for hyperbolic state." << std::endl;
+    std::cerr << "Allowed value: off, on, dry-run" << std::endl;
+
     return false;
   }
 
@@ -581,22 +558,18 @@ ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
 bool
 ConfFileProcessor::processConfSectionFib(const ConfigSection& section)
 {
-  try {
-    int maxFacesPerPrefixNumber =
-      section.get<int>("max-faces-per-prefix");
-    if (maxFacesPerPrefixNumber >= MAX_FACES_PER_PREFIX_MIN &&
-        maxFacesPerPrefixNumber <= MAX_FACES_PER_PREFIX_MAX)
-    {
-      m_nlsr.getConfParameter().setMaxFacesPerPrefix(maxFacesPerPrefixNumber);
-    }
-    else {
-      std::cerr << "Wrong value for max-faces-per-prefix. ";
-      std::cerr << MAX_FACES_PER_PREFIX_MIN << std::endl;
-      return false;
-    }
+  // max-faces-per-prefix
+  int maxFacesPerPrefix = section.get<int>("max-faces-per-prefix", MAX_FACES_PER_PREFIX_DEFAULT);
+
+  if (maxFacesPerPrefix >= MAX_FACES_PER_PREFIX_MIN &&
+      maxFacesPerPrefix <= MAX_FACES_PER_PREFIX_MAX)
+  {
+    m_nlsr.getConfParameter().setMaxFacesPerPrefix(maxFacesPerPrefix);
   }
-  catch (const std::exception& ex) {
-    cerr << ex.what() << endl;
+  else {
+    std::cerr << "Wrong value for max-faces-per-prefix. ";
+    std::cerr << MAX_FACES_PER_PREFIX_MIN << std::endl;
+
     return false;
   }
 

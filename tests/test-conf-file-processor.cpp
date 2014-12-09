@@ -195,6 +195,12 @@ public:
     return m_logFileName;
   }
 
+  void
+  commentOut(const std::string& key, std::string& config)
+  {
+    boost::replace_all(config, key, ";" + key);
+  }
+
 public:
   shared_ptr<ndn::DummyFace> face;
   Nlsr nlsr;
@@ -364,38 +370,75 @@ BOOST_AUTO_TEST_CASE(Hyperbolic)
   BOOST_CHECK_EQUAL(conf.getCorTheta(), 1.45);
 }
 
-BOOST_AUTO_TEST_CASE(DefaultValues)
+BOOST_AUTO_TEST_CASE(DefaultValuesGeneral)
 {
-  // Missing adj-lsa-build-interval
-  const std::string SECTION_NEIGHBORS_DEFAULT_VALUES =
-  "neighbors\n"
-  "{\n"
-  "  hello-retries 3\n"
-  "  hello-timeout 1\n"
-  "  hello-interval  60\n\n"
-  "  first-hello-interval  6\n"
-  "  neighbor\n"
-  "  {\n"
-  "    name /ndn/memphis.edu/cs/castor\n"
-  "    face-uri  udp4://localhost\n"
-  "    link-cost 20\n"
-  "  }\n\n"
-  "  neighbor\n"
-  "  {\n"
-  "    name /ndn/memphis.edu/cs/mira\n"
-  "    face-uri  udp4://localhost\n"
-  "    link-cost 30\n"
-  "  }\n"
-  "}\n\n";
+  std::string config = SECTION_GENERAL;
 
-  processConfigurationString(SECTION_NEIGHBORS_DEFAULT_VALUES);
+  commentOut("lsa-refresh-time", config);
+  commentOut("lsa-interest-lifetime", config);
+  commentOut("router-dead-interval", config);
+
+  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
 
   ConfParameter& conf = nlsr.getConfParameter();
 
+  BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), static_cast<int32_t>(LSA_REFRESH_TIME_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(),
+                    static_cast<ndn::time::seconds>(LSA_INTEREST_LIFETIME_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), (2*conf.getLsaRefreshTime()));
+}
+
+BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)
+{
+  std::string config = SECTION_NEIGHBORS;
+
+  commentOut("hello-retries", config);
+  commentOut("hello-timeout", config);
+  commentOut("hello-interval", config);
+  commentOut("first-hello-interval", config);
+  commentOut("adj-lsa-build-interval", config);
+
+  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+
+  ConfParameter& conf = nlsr.getConfParameter();
+
+  BOOST_CHECK_EQUAL(conf.getInterestRetryNumber(), static_cast<uint32_t>(HELLO_RETRIES_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getInterestResendTime(), static_cast<int32_t>(HELLO_TIMEOUT_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getInfoInterestInterval(), static_cast<int32_t>(HELLO_INTERVAL_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(),
+                    static_cast<uint32_t>(FIRST_HELLO_INTERVAL_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getAdjLsaBuildInterval(),
                     static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT));
+}
 
-  BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(), 6);
+BOOST_AUTO_TEST_CASE(DefaultValuesFib)
+{
+  std::string config = SECTION_FIB;
+
+  commentOut("max-faces-per-prefix", config);
+  commentOut("routing-calc-interval", config);
+
+  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+
+  ConfParameter& conf = nlsr.getConfParameter();
+
+  BOOST_CHECK_EQUAL(conf.getMaxFacesPerPrefix(),
+                    static_cast<uint32_t>(MAX_FACES_PER_PREFIX_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getRoutingCalcInterval(),
+                    static_cast<uint32_t>(ROUTING_CALC_INTERVAL_DEFAULT));
+}
+
+BOOST_AUTO_TEST_CASE(DefaultValuesHyperbolic)
+{
+  std::string config = SECTION_HYPERBOLIC_ON;
+
+  commentOut("state", config);
+
+  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+
+  ConfParameter& conf = nlsr.getConfParameter();
+
+  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), static_cast<int32_t>(HYPERBOLIC_STATE_DEFAULT));
 }
 
 BOOST_AUTO_TEST_CASE(OutOfRangeValue)
