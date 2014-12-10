@@ -579,11 +579,7 @@ Lsdb::buildAndInstallOwnAdjLsa()
     m_hasSyncPrefixBeenRegistered = true;
   }
 
-  ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-  lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
-  lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
-
-  m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(), lsaPrefix);
+  m_sync.publishRoutingUpdate();
 
   return isInstalled;
 }
@@ -656,14 +652,7 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(chkNameLsa->getKey(),
                                                                  chkNameLsa->getLsSeqNo(),
                                                                  m_lsaRefreshTime));
-        // publish routing update
-        //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
-        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
-        lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
-        m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
-                                                          lsaPrefix);
+        m_sync.publishRoutingUpdate();
       }
       else {
         _LOG_DEBUG("Other's Name LSA, so removing form LSDB");
@@ -695,14 +684,7 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(chkAdjLsa->getKey(),
                                                                chkAdjLsa->getLsSeqNo(),
                                                                m_lsaRefreshTime));
-        // publish routing update
-        //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
-        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
-        lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
-        m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
-                                                          lsaPrefix);
+        m_sync.publishRoutingUpdate();
       }
       else {
         _LOG_DEBUG("Other's Adj LSA, so removing form LSDB");
@@ -738,14 +720,7 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                         chkCorLsa->getKey(),
                                         chkCorLsa->getLsSeqNo(),
                                         m_lsaRefreshTime));
-        // publish routing update
-        //ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        //lsaPrefix.append(m_nlsr.getConfParameter().getRouterPrefix());
-        ndn::Name lsaPrefix = m_nlsr.getConfParameter().getLsaPrefix();
-        lsaPrefix.append(m_nlsr.getConfParameter().getSiteName());
-        lsaPrefix.append(m_nlsr.getConfParameter().getRouterName());
-        m_nlsr.getSyncLogicHandler().publishRoutingUpdate(m_nlsr.getSequencingManager(),
-                                                          lsaPrefix);
+        m_sync.publishRoutingUpdate();
       }
       else {
         _LOG_DEBUG("Other's Cor LSA, so removing form LSDB");

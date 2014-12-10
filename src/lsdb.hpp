@@ -37,13 +37,15 @@ namespace nlsr {
 using namespace ndn::time;
 
 class Nlsr;
+class SyncLogicHandler;
 
 class Lsdb
 {
 public:
-  Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
+  Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync)
     : m_nlsr(nlsr)
     , m_scheduler(scheduler)
+    , m_sync(sync)
     , m_hasSyncPrefixBeenRegistered(false)
     , m_lsaRefreshTime(0)
   {
@@ -242,6 +244,7 @@ private:
 private:
   Nlsr& m_nlsr;
   ndn::Scheduler& m_scheduler;
+  SyncLogicHandler& m_sync;
 
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;

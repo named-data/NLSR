@@ -132,6 +132,20 @@ public:
   }
 };
 
+SyncLogicHandler::SyncLogicHandler(ndn::Face& face,
+                                   Lsdb& lsdb, ConfParameter& conf,
+                                   SequencingManager& seqManager)
+  : m_validator(new ndn::ValidatorNull())
+  , m_syncFace(face)
+  , m_lsdb(lsdb)
+  , m_confParam(conf)
+  , m_sequencingManager(seqManager)
+{
+  m_updatePrefix = m_confParam.getLsaPrefix();
+  m_updatePrefix.append(m_confParam.getSiteName());
+  m_updatePrefix.append(m_confParam.getRouterName());
+}
+
 void
 SyncLogicHandler::createSyncSocket()
 {
@@ -247,10 +261,11 @@ SyncLogicHandler::expressInterestForLsa(const SyncUpdate& update, std::string ls
 }
 
 void
-SyncLogicHandler::publishRoutingUpdate(SequencingManager& manager, const ndn::Name& updatePrefix)
+SyncLogicHandler::publishRoutingUpdate()
 {
-  manager.writeSeqNoToFile();
-  publishSyncUpdate(updatePrefix, manager.getCombinedSeqNo());
+  m_sequencingManager.writeSeqNoToFile();
+
+  publishSyncUpdate(m_updatePrefix, m_sequencingManager.getCombinedSeqNo());
 }
 
 void

@@ -55,7 +55,7 @@ SequencingManager::combineSequenceNo()
 }
 
 void
-SequencingManager::writeSeqNoToFile()
+SequencingManager::writeSeqNoToFile() const
 {
   std::ofstream outputFile(m_seqFileNameWithPath.c_str(), ios::binary);
   outputFile << m_combinedSeqNo;

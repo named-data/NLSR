@@ -41,13 +41,7 @@ class SyncUpdate;
 class SyncLogicHandler
 {
 public:
-  SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf)
-    : m_validator(new ndn::ValidatorNull())
-    , m_syncFace(face)
-    , m_lsdb(lsdb)
-    , m_confParam(conf)
-  {
-  }
+  SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf, SequencingManager& seqManager);
 
   void
   createSyncSocket();
@@ -59,7 +53,7 @@ public:
   onNsyncRemoval(const std::string& prefix);
 
   void
-  publishRoutingUpdate(SequencingManager& manager, const ndn::Name& updatePrefix);
+  publishRoutingUpdate();
 
   void
   setSyncPrefix(const std::string& sp)
@@ -89,6 +83,9 @@ private:
 
   Lsdb& m_lsdb;
   ConfParameter& m_confParam;
+  const SequencingManager& m_sequencingManager;
+
+  ndn::Name m_updatePrefix;
 
   static const std::string NLSR_COMPONENT;
   static const std::string LSA_COMPONENT;

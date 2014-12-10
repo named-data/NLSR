@@ -122,7 +122,7 @@ public:
   }
 
   void
-  writeSeqNoToFile();
+  writeSeqNoToFile() const;
 
   void
   initiateSeqNoFromFile();

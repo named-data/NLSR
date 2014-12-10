@@ -37,7 +37,7 @@ public:
   SyncLogicFixture()
     : face(ndn::makeDummyFace())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
-    , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter())
+    , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter(), nlsr.getSequencingManager())
     , CONFIG_NETWORK("/ndn")
     , CONFIG_SITE("/site")
     , CONFIG_ROUTER_NAME("/%C1.Router/this-router")
