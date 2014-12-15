@@ -382,7 +382,7 @@ BOOST_AUTO_TEST_CASE(DefaultValuesGeneral)
 
   ConfParameter& conf = nlsr.getConfParameter();
 
-  BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), static_cast<int32_t>(LSA_REFRESH_TIME_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), static_cast<uint32_t>(LSA_REFRESH_TIME_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(),
                     static_cast<ndn::time::seconds>(LSA_INTEREST_LIFETIME_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), (2*conf.getLsaRefreshTime()));
@@ -403,8 +403,8 @@ BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)
   ConfParameter& conf = nlsr.getConfParameter();
 
   BOOST_CHECK_EQUAL(conf.getInterestRetryNumber(), static_cast<uint32_t>(HELLO_RETRIES_DEFAULT));
-  BOOST_CHECK_EQUAL(conf.getInterestResendTime(), static_cast<int32_t>(HELLO_TIMEOUT_DEFAULT));
-  BOOST_CHECK_EQUAL(conf.getInfoInterestInterval(), static_cast<int32_t>(HELLO_INTERVAL_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getInterestResendTime(), static_cast<uint32_t>(HELLO_TIMEOUT_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getInfoInterestInterval(), static_cast<uint32_t>(HELLO_INTERVAL_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(),
                     static_cast<uint32_t>(FIRST_HELLO_INTERVAL_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getAdjLsaBuildInterval(),
@@ -452,6 +452,23 @@ BOOST_AUTO_TEST_CASE(OutOfRangeValue)
 
   // Processing should fail due to out of range value
   BOOST_CHECK_EQUAL(processConfigurationString(SECTION_FIB_OUT_OF_RANGE), false);
+}
+
+BOOST_AUTO_TEST_CASE(NegativeValue)
+{
+  const std::string SECTION_GENERAL_NEGATIVE_VALUE =
+  "general\n"
+  "{\n"
+  "  network /ndn/\n"
+  "  site /memphis.edu/\n"
+  "  router /cs/pollux/\n"
+  "  lsa-refresh-time -1800\n"
+  "  lsa-interest-lifetime -3\n"
+  "  router-dead-interval -86400\n"
+  "}\n\n";
+
+  // Processing should fail due to negative value
+  BOOST_CHECK_EQUAL(processConfigurationString(SECTION_GENERAL_NEGATIVE_VALUE), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

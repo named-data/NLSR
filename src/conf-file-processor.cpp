@@ -256,7 +256,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   // lsa-refresh-time
-  int32_t lsaRefreshTime = section.get<int32_t>("lsa-refresh-time", LSA_REFRESH_TIME_DEFAULT);
+  uint32_t lsaRefreshTime = section.get<uint32_t>("lsa-refresh-time", LSA_REFRESH_TIME_DEFAULT);
 
   if (lsaRefreshTime >= LSA_REFRESH_TIME_MIN && lsaRefreshTime <= LSA_REFRESH_TIME_MAX) {
     m_nlsr.getConfParameter().setLsaRefreshTime(lsaRefreshTime);
@@ -270,7 +270,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   // router-dead-interval
-  int32_t routerDeadInterval = section.get<int32_t>("router-dead-interval", (2*lsaRefreshTime));
+  uint32_t routerDeadInterval = section.get<uint32_t>("router-dead-interval", (2*lsaRefreshTime));
 
   if (routerDeadInterval > m_nlsr.getConfParameter().getLsaRefreshTime()) {
     m_nlsr.getConfParameter().setRouterDeadInterval(routerDeadInterval);
@@ -422,7 +422,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   }
 
   // hello-timeout
-  int timeOut = section.get<int>("hello-timeout", HELLO_TIMEOUT_DEFAULT);
+  uint32_t timeOut = section.get<uint32_t>("hello-timeout", HELLO_TIMEOUT_DEFAULT);
 
   if (timeOut >= HELLO_TIMEOUT_MIN && timeOut <= HELLO_TIMEOUT_MAX) {
     m_nlsr.getConfParameter().setInterestResendTime(timeOut);
@@ -436,7 +436,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   }
 
   // hello-interval
-  int interval = section.get<int>("hello-interval", HELLO_INTERVAL_DEFAULT);
+  uint32_t interval = section.get<uint32_t>("hello-interval", HELLO_INTERVAL_DEFAULT);
 
   if (interval >= HELLO_INTERVAL_MIN && interval <= HELLO_INTERVAL_MAX) {
     m_nlsr.getConfParameter().setInfoInterestInterval(interval);

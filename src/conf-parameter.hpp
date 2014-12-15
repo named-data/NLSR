@@ -188,12 +188,12 @@ public:
   }
 
   void
-  setLsaRefreshTime(int32_t lrt)
+  setLsaRefreshTime(uint32_t lrt)
   {
     m_lsaRefreshTime = lrt;
   }
 
-  int32_t
+  uint32_t
   getLsaRefreshTime() const
   {
     return m_lsaRefreshTime;
@@ -248,12 +248,12 @@ public:
   }
 
   void
-  setRouterDeadInterval(int32_t rdt)
+  setRouterDeadInterval(uint32_t rdt)
   {
     m_routerDeadInterval = rdt;
   }
 
-  int32_t
+  uint32_t
   getRouterDeadInterval() const
   {
     return m_routerDeadInterval;
@@ -284,25 +284,25 @@ public:
   }
 
   void
-  setInterestResendTime(int32_t irt)
+  setInterestResendTime(uint32_t irt)
   {
     m_interestResendTime = irt;
   }
 
-  int32_t
+  uint32_t
   getInterestResendTime() const
   {
     return m_interestResendTime;
   }
 
-  int32_t
+  uint32_t
   getInfoInterestInterval() const
   {
     return m_infoInterestInterval;
   }
 
   void
-  setInfoInterestInterval(int32_t iii)
+  setInfoInterestInterval(uint32_t iii)
   {
     m_infoInterestInterval = iii;
   }
@@ -416,20 +416,20 @@ private:
   ndn::Name m_chronosyncPrefix;
   ndn::Name m_lsaPrefix;
 
-  int32_t  m_lsaRefreshTime;
+  uint32_t  m_lsaRefreshTime;
 
   uint32_t m_adjLsaBuildInterval;
   uint32_t m_firstHelloInterval;
   uint32_t m_routingCalcInterval;
 
   ndn::time::seconds m_lsaInterestLifetime;
-  int32_t  m_routerDeadInterval;
+  uint32_t  m_routerDeadInterval;
   std::string m_logLevel;
 
   uint32_t m_interestRetryNumber;
-  int32_t  m_interestResendTime;
+  uint32_t m_interestResendTime;
 
-  int32_t  m_infoInterestInterval;
+  uint32_t m_infoInterestInterval;
 
   int32_t m_hyperbolicState;
   double m_corR;
