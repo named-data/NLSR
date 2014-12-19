@@ -42,11 +42,15 @@ INIT_LOGGER("Lsa");
 
 using namespace std;
 
+const std::string NameLsa::TYPE_STRING = "name";
+const std::string AdjLsa::TYPE_STRING = "adjacency";
+const std::string CoordinateLsa::TYPE_STRING = "coordinate";
+
 const ndn::Name
 NameLsa::getKey() const
 {
   ndn::Name key = m_origRouter;
-  key.append("name");
+  key.append(NameLsa::TYPE_STRING);
   return key;
 }
 
@@ -68,7 +72,7 @@ string
 NameLsa::getData()
 {
   string nameLsaData;
-  nameLsaData = m_origRouter.toUri() + "|" + "name" + "|"
+  nameLsaData = m_origRouter.toUri() + "|" + NameLsa::TYPE_STRING + "|"
                 + boost::lexical_cast<std::string>(m_lsSeqNo) + "|"
                 + ndn::time::toIsoString(m_expirationTimePoint);
   nameLsaData += "|";
@@ -144,7 +148,7 @@ const ndn::Name
 CoordinateLsa::getKey() const
 {
   ndn::Name key = m_origRouter;
-  key.append("coordinate");
+  key.append(CoordinateLsa::TYPE_STRING);
   return key;
 }
 
@@ -162,7 +166,7 @@ CoordinateLsa::getData()
 {
   string corLsaData;
   corLsaData = m_origRouter.toUri() + "|";
-  corLsaData += "coordinate";
+  corLsaData += CoordinateLsa::TYPE_STRING;
   corLsaData += "|";
   corLsaData += (boost::lexical_cast<std::string>(m_lsSeqNo) + "|");
   corLsaData += (ndn::time::toIsoString(m_expirationTimePoint) + "|");
@@ -228,7 +232,7 @@ const ndn::Name
 AdjLsa::getKey() const
 {
   ndn::Name key = m_origRouter;
-  key.append("adjacency");
+  key.append(AdjLsa::TYPE_STRING);
   return key;
 }
 
@@ -243,7 +247,7 @@ string
 AdjLsa::getData()
 {
   string adjLsaData;
-  adjLsaData = m_origRouter.toUri() + "|" + "adjacency" + "|"
+  adjLsaData = m_origRouter.toUri() + "|" + AdjLsa::TYPE_STRING + "|"
                + boost::lexical_cast<std::string>(m_lsSeqNo) + "|"
                + ndn::time::toIsoString(m_expirationTimePoint);
   adjLsaData += "|";

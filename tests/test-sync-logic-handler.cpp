@@ -87,13 +87,13 @@ BOOST_AUTO_TEST_CASE(UpdateForOther)
   BOOST_REQUIRE_EQUAL(interests.size(), 3);
 
   std::vector<ndn::Interest>::iterator it = interests.begin();
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "name/");
+  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + NameLsa::TYPE_STRING + "/");
 
   ++it;
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "adjacency/");
+  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + AdjLsa::TYPE_STRING + "/");
 
   ++it;
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "coordinate/");
+  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + CoordinateLsa::TYPE_STRING + "/");
 }
 
 BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
@@ -124,17 +124,17 @@ BOOST_AUTO_TEST_CASE(SequenceNumber)
 
   // Install Name LSA
   NamePrefixList nameList;
-  NameLsa lsa(originRouter, "name", 999, ndn::time::system_clock::TimePoint::max(), nameList);
+  NameLsa lsa(originRouter, NameLsa::TYPE_STRING, 999, ndn::time::system_clock::TimePoint::max(), nameList);
   lsdb.installNameLsa(lsa);
 
   // Install Adj LSA
   AdjacencyList adjList;
-  AdjLsa adjLsa(originRouter, "adjacency", 1000, ndn::time::system_clock::TimePoint::max(),
+  AdjLsa adjLsa(originRouter, AdjLsa::TYPE_STRING, 1000, ndn::time::system_clock::TimePoint::max(),
                 3 , adjList);
   lsdb.installAdjLsa(adjLsa);
 
   // Install Cor LSA
-  CoordinateLsa corLsa(originRouter, "coordinate", 1000, ndn::time::system_clock::TimePoint::max(),
+  CoordinateLsa corLsa(originRouter, CoordinateLsa::TYPE_STRING, 1000, ndn::time::system_clock::TimePoint::max(),
                        0,0);
   lsdb.installCoordinateLsa(corLsa);
 

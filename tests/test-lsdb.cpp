@@ -173,18 +173,18 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   //For NameLsa lsType is name.
   //12 is seqNo, randomly generated.
   //1800 is the default life time.
-  NameLsa nlsa1(ndn::Name("/router1/1"), std::string("name"), 12, testTimePoint, npl1);
+  NameLsa nlsa1(ndn::Name("/router1/1"), NameLsa::TYPE_STRING, 12, testTimePoint, npl1);
 
   Lsdb lsdb1(nlsr, g_scheduler, nlsr.getSyncLogicHandler());
 
   lsdb1.installNameLsa(nlsa1);
   lsdb1.writeNameLsdbLog();
 
-  BOOST_CHECK(lsdb1.doesLsaExist(ndn::Name("/router1/1/name"), std::string("name")));
+  BOOST_CHECK(lsdb1.doesLsaExist(ndn::Name("/router1/1/name"), NameLsa::TYPE_STRING));
 
   lsdb1.removeNameLsa(router1);
 
-  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(ndn::Name("/router1/1"), std::string("name")), false);
+  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(ndn::Name("/router1/1"), NameLsa::TYPE_STRING), false);
 }
 
 BOOST_AUTO_TEST_CASE(RegisterSyncPrefixOnFirstAdjLsaBuild)
@@ -225,10 +225,10 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   std::string otherRouter("/ndn/site/%C1.router/other-router");
   ndn::time::system_clock::TimePoint MAX_TIME = ndn::time::system_clock::TimePoint::max();
 
-  NameLsa lsa(otherRouter, "name", 1, MAX_TIME, prefixes);
+  NameLsa lsa(otherRouter, NameLsa::TYPE_STRING, 1, MAX_TIME, prefixes);
   lsdb.installNameLsa(lsa);
 
-  BOOST_REQUIRE_EQUAL(lsdb.doesLsaExist(otherRouter + "/name", "name"), true);
+  BOOST_REQUIRE_EQUAL(lsdb.doesLsaExist(otherRouter + "/name", NameLsa::TYPE_STRING), true);
   NamePrefixList& nameList = lsdb.findNameLsa(otherRouter + "/name")->getNpl();
 
   areNamePrefixListsEqual(nameList, prefixes);
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   ndn::Name name3("/ndn/name3");
   prefixes.insert(name3);
 
-  NameLsa addLsa(otherRouter, "name", 2, MAX_TIME, prefixes);
+  NameLsa addLsa(otherRouter, NameLsa::TYPE_STRING, 2, MAX_TIME, prefixes);
   lsdb.installNameLsa(addLsa);
 
   // Lsa should include name1, name2, and name3
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   // Remove a prefix: name2
   prefixes.remove(name2);
 
-  NameLsa removeLsa(otherRouter, "name", 3, MAX_TIME, prefixes);
+  NameLsa removeLsa(otherRouter, NameLsa::TYPE_STRING, 3, MAX_TIME, prefixes);
   lsdb.installNameLsa(removeLsa);
 
   // Lsa should include name1 and name3
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   prefixes.insert(name2);
   prefixes.remove(name3);
 
-  NameLsa addAndRemoveLsa(otherRouter, "name", 4, MAX_TIME, prefixes);
+  NameLsa addAndRemoveLsa(otherRouter, NameLsa::TYPE_STRING, 4, MAX_TIME, prefixes);
   lsdb.installNameLsa(addAndRemoveLsa);
 
   // Lsa should include name1 and name2
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   newPrefixes.insert(name4);
   newPrefixes.insert(name5);
 
-  NameLsa newLsa(otherRouter, "name", 5, MAX_TIME, newPrefixes);
+  NameLsa newLsa(otherRouter, NameLsa::TYPE_STRING, 5, MAX_TIME, newPrefixes);
   lsdb.installNameLsa(newLsa);
 
   // Lsa should include name4 and name5

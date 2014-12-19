@@ -120,7 +120,7 @@ public:
     : Lsa()
     , m_npl()
   {
-    setLsType("name");
+    setLsType(NameLsa::TYPE_STRING);
   }
 
   NameLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
@@ -159,7 +159,8 @@ public:
 
 private:
   NamePrefixList m_npl;
-
+public:
+  static const std::string TYPE_STRING;
 };
 
 class AdjLsa: public Lsa
@@ -169,7 +170,7 @@ public:
     : Lsa()
     , m_adl()
   {
-    setLsType("adjacency");
+    setLsType(AdjLsa::TYPE_STRING);
   }
 
   AdjLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
@@ -218,6 +219,9 @@ public:
 private:
   uint32_t m_noLink;
   AdjacencyList m_adl;
+
+public:
+  static const std::string TYPE_STRING;
 };
 
 class CoordinateLsa: public Lsa
@@ -228,7 +232,7 @@ public:
     , m_corRad(0)
     , m_corTheta(0)
   {
-    setLsType("coordinate");
+    setLsType(CoordinateLsa::TYPE_STRING);
   }
 
   CoordinateLsa(const ndn::Name& origR, const std::string lst, uint32_t lsn,
@@ -278,6 +282,8 @@ private:
   double m_corRad;
   double m_corTheta;
 
+public:
+  static const std::string TYPE_STRING;
 };
 
 }//namespace nlsr

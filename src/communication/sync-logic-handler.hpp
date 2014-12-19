@@ -97,9 +97,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 private:
   static const std::string NLSR_COMPONENT;
   static const std::string LSA_COMPONENT;
-  static const std::string NAME_COMPONENT;
-  static const std::string ADJACENCY_COMPONENT;
-  static const std::string COORDINATE_COMPONENT;
 
 };
 

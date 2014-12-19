@@ -117,11 +117,6 @@ private:
 const std::string SyncUpdate::NLSR_COMPONENT = "NLSR";
 const std::string SyncUpdate::LSA_COMPONENT = "LSA";
 
-const std::string SyncLogicHandler::NAME_COMPONENT = "name";
-const std::string SyncLogicHandler::ADJACENCY_COMPONENT = "adjacency";
-const std::string SyncLogicHandler::COORDINATE_COMPONENT = "coordinate";
-
-
 template<class T>
 class NullDeleter
 {
@@ -198,22 +193,22 @@ SyncLogicHandler::processUpdateFromSync(const SyncUpdate& update)
     update.getSequencingManager().writeLog();
 
     try {
-      if (isLsaNew(originRouter, NAME_COMPONENT, update.getNameLsaSeqNo())) {
+      if (isLsaNew(originRouter, NameLsa::TYPE_STRING, update.getNameLsaSeqNo())) {
         _LOG_DEBUG("Received sync update with higher Name LSA sequence number than entry in LSDB");
 
-        expressInterestForLsa(update, NAME_COMPONENT, update.getNameLsaSeqNo());
+        expressInterestForLsa(update, NameLsa::TYPE_STRING, update.getNameLsaSeqNo());
       }
 
-      if (isLsaNew(originRouter, ADJACENCY_COMPONENT, update.getAdjLsaSeqNo())) {
+      if (isLsaNew(originRouter, AdjLsa::TYPE_STRING, update.getAdjLsaSeqNo())) {
         _LOG_DEBUG("Received sync update with higher Adj LSA sequence number than entry in LSDB");
 
-        expressInterestForLsa(update, ADJACENCY_COMPONENT, update.getAdjLsaSeqNo());
+        expressInterestForLsa(update, AdjLsa::TYPE_STRING, update.getAdjLsaSeqNo());
       }
 
-      if (isLsaNew(originRouter, COORDINATE_COMPONENT, update.getCorLsaSeqNo())) {
+      if (isLsaNew(originRouter, CoordinateLsa::TYPE_STRING, update.getCorLsaSeqNo())) {
         _LOG_DEBUG("Received sync update with higher Cor LSA sequence number than entry in LSDB");
 
-        expressInterestForLsa(update, COORDINATE_COMPONENT, update.getCorLsaSeqNo());
+        expressInterestForLsa(update, CoordinateLsa::TYPE_STRING, update.getCorLsaSeqNo());
       }
     }
     catch (std::exception& e) {
@@ -230,15 +225,15 @@ SyncLogicHandler::isLsaNew(const ndn::Name& originRouter, const std::string& lsa
   ndn::Name lsaKey = originRouter;
   lsaKey.append(lsaType);
 
-  if (lsaType == NAME_COMPONENT)
+  if (lsaType == NameLsa::TYPE_STRING)
   {
     return m_lsdb.isNameLsaNew(lsaKey, seqNo);
   }
-  else if (lsaType == ADJACENCY_COMPONENT)
+  else if (lsaType == AdjLsa::TYPE_STRING)
   {
     return m_lsdb.isAdjLsaNew(lsaKey, seqNo);
   }
-  else if (lsaType == COORDINATE_COMPONENT)
+  else if (lsaType == CoordinateLsa::TYPE_STRING)
   {
     return m_lsdb.isCoordinateLsaNew(lsaKey, seqNo);
   }

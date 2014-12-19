@@ -55,7 +55,7 @@ bool
 Lsdb::buildAndInstallOwnNameLsa()
 {
   NameLsa nameLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                  "name",
+                  NameLsa::TYPE_STRING,
                   m_nlsr.getSequencingManager().getNameLsaSeq() + 1,
                   getLsaExpirationTimePoint(),
                   m_nlsr.getNamePrefixList());
@@ -261,7 +261,7 @@ bool
 Lsdb::buildAndInstallOwnCoordinateLsa()
 {
   CoordinateLsa corLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                       "coordinate",
+                       CoordinateLsa::TYPE_STRING,
                        m_nlsr.getSequencingManager().getCorLsaSeq() + 1,
                        getLsaExpirationTimePoint(),
                        m_nlsr.getConfParameter().getCorR(),
@@ -443,7 +443,7 @@ Lsdb::scheduledAdjLsaBuild()
       }
       else {
         ndn::Name key = m_nlsr.getConfParameter().getRouterPrefix();
-        key.append("adjacency");
+        key.append(AdjLsa::TYPE_STRING);
         removeAdjLsa(key);
         m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
       }
@@ -563,7 +563,7 @@ bool
 Lsdb::buildAndInstallOwnAdjLsa()
 {
   AdjLsa adjLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                "adjacency",
+                AdjLsa::TYPE_STRING,
                 m_nlsr.getSequencingManager().getAdjLsaSeq() + 1,
                 getLsaExpirationTimePoint(),
                 m_nlsr.getAdjacencyList().getNumOfActiveNeighbor(),
@@ -787,13 +787,13 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 
     std::string interestedLsType = interestName[-2].toUri();
 
-    if (interestedLsType == "name") {
+    if (interestedLsType == NameLsa::TYPE_STRING) {
       processInterestForNameLsa(interest, originRouter.append(interestedLsType), seqNo);
     }
-    else if (interestedLsType == "adjacency") {
+    else if (interestedLsType == AdjLsa::TYPE_STRING) {
       processInterestForAdjacencyLsa(interest, originRouter.append(interestedLsType), seqNo);
     }
-    else if (interestedLsType == "coordinate") {
+    else if (interestedLsType == CoordinateLsa::TYPE_STRING) {
       processInterestForCoordinateLsa(interest, originRouter.append(interestedLsType), seqNo);
     }
     else {
@@ -913,13 +913,13 @@ Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 
     std::string interestedLsType  = dataName[-3].toUri();
 
-    if (interestedLsType == "name") {
+    if (interestedLsType == NameLsa::TYPE_STRING) {
       processContentNameLsa(originRouter.append(interestedLsType), seqNo, dataContent);
     }
-    else if (interestedLsType == "adjacency") {
+    else if (interestedLsType == AdjLsa::TYPE_STRING) {
       processContentAdjacencyLsa(originRouter.append(interestedLsType), seqNo, dataContent);
     }
-    else if (interestedLsType == "coordinate") {
+    else if (interestedLsType == CoordinateLsa::TYPE_STRING) {
       processContentCoordinateLsa(originRouter.append(interestedLsType), seqNo, dataContent);
     }
     else {
@@ -1040,13 +1040,13 @@ Lsdb::writeAdjLsdbLog()
 bool
 Lsdb::doesLsaExist(const ndn::Name& key, const std::string& lsType)
 {
-  if (lsType == "name") {
+  if (lsType == NameLsa::TYPE_STRING) {
     return doesNameLsaExist(key);
   }
-  else if (lsType == "adjacency") {
+  else if (lsType == AdjLsa::TYPE_STRING) {
     return doesAdjLsaExist(key);
   }
-  else if (lsType == "coordinate") {
+  else if (lsType == CoordinateLsa::TYPE_STRING) {
     return doesCoordinateLsaExist(key);
   }
   return false;

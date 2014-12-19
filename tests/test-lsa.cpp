@@ -41,10 +41,10 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
   npl1.insert(s2);
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
 //lsType is 1 for NameLsa, 3rd arg is seqNo. which will be a random number I just put in 12.
-  NameLsa nlsa1("router1", std::string("name"), 12, testTimePoint, npl1);
-  NameLsa nlsa2("router2", std::string("name"), 12, testTimePoint, npl1);
+  NameLsa nlsa1("router1", NameLsa::TYPE_STRING, 12, testTimePoint, npl1);
+  NameLsa nlsa2("router2", NameLsa::TYPE_STRING, 12, testTimePoint, npl1);
 
-  BOOST_CHECK_EQUAL(nlsa1.getLsType(), "name");
+  BOOST_CHECK_EQUAL(nlsa1.getLsType(), NameLsa::TYPE_STRING);
 
   BOOST_CHECK(nlsa1.getExpirationTimePoint() == nlsa2.getExpirationTimePoint());
 
@@ -61,10 +61,10 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
 //For AdjLsa, lsType is 2.
 //1 is the number of adjacent in adjacent list.
-  AdjLsa alsa1("router1", std::string("adjacency"), 12, testTimePoint, 1, adjList);
-  AdjLsa alsa2("router1", std::string("adjacency"), 12, testTimePoint, 1, adjList);
+  AdjLsa alsa1("router1", AdjLsa::TYPE_STRING, 12, testTimePoint, 1, adjList);
+  AdjLsa alsa2("router1", AdjLsa::TYPE_STRING, 12, testTimePoint, 1, adjList);
 
-  BOOST_CHECK_EQUAL(alsa1.getLsType(), "adjacency");
+  BOOST_CHECK_EQUAL(alsa1.getLsType(), AdjLsa::TYPE_STRING);
   BOOST_CHECK_EQUAL(alsa1.getLsSeqNo(), (uint32_t)12);
   BOOST_CHECK_EQUAL(alsa1.getExpirationTimePoint(), testTimePoint);
   BOOST_CHECK_EQUAL(alsa1.getNoLink(), (uint32_t)1);
@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaConstructorAndGetters)
 {
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
 //For CoordinateLsa, lsType is 3.
-  CoordinateLsa clsa1("router1", std::string("coordinate"), 12, testTimePoint, 2.5, 30.0);
-  CoordinateLsa clsa2("router1", std::string("coordinate"), 12, testTimePoint, 2.5, 30.0);
+  CoordinateLsa clsa1("router1", CoordinateLsa::TYPE_STRING, 12, testTimePoint, 2.5, 30.0);
+  CoordinateLsa clsa2("router1", CoordinateLsa::TYPE_STRING, 12, testTimePoint, 2.5, 30.0);
 
   BOOST_CHECK_CLOSE(clsa1.getCorRadius(), 2.5, 0.0001);
   BOOST_CHECK_CLOSE(clsa1.getCorTheta(), 30.0, 0.0001);

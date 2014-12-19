@@ -85,12 +85,12 @@ NamePrefixTable::removeEntry(const ndn::Name& name, RoutingTableEntry& rte)
     ndn::Name destRouter = rte.getDestination();
     (*it).removeRoutingTableEntry(rte);
     if (((*it).getRteListSize() == 0) &&
-        (!m_nlsr.getLsdb().doesLsaExist(destRouter.append("/name"),
-                                        std::string("name"))) &&
-        (!m_nlsr.getLsdb().doesLsaExist(destRouter.append("/adjacency"),
-                                        std::string("adjacency"))) &&
-        (!m_nlsr.getLsdb().doesLsaExist(destRouter.append("/coordinate"),
-                                        std::string("coordinate")))) {
+        (!m_nlsr.getLsdb().doesLsaExist(destRouter.append("/" + NameLsa::TYPE_STRING),
+                                        (NameLsa::TYPE_STRING))) &&
+        (!m_nlsr.getLsdb().doesLsaExist(destRouter.append("/" + AdjLsa::TYPE_STRING),
+                                        (AdjLsa::TYPE_STRING))) &&
+        (!m_nlsr.getLsdb().doesLsaExist(destRouter.append("/" + CoordinateLsa::TYPE_STRING),
+                                        (CoordinateLsa::TYPE_STRING)))) {
       m_table.erase(it);
       m_nlsr.getFib().remove(name);
     }
