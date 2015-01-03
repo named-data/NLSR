@@ -51,12 +51,11 @@ If you see ``ERROR: error while connecting to the forwarder (No such file or dir
 Step 2. Determining FaceUri
 ---------------------------
 
-Assume that ``/ndn/edu/arizona/%C1.Router/router3`` has hostname ``router3.arizona.edu``,
-``/ndn/edu/colostate/%C1.Router/router2`` has IP address ``79.123.10.145``, and that all
-routers in the network have agreed to sync data with name prefix ``/ndn/nlsr/sync``.
+Assume that ``/ndn/edu/arizona/%C1.Router/router3`` has hostname ``router3.arizona.edu`` and
+``/ndn/edu/colostate/%C1.Router/router2`` has IP address ``79.123.10.145``.
 ``/ndn/edu/memphis/%C1.Router/router1`` will consider FaceUri
-``udp4://router3.arizona.edu`` for router ``/ndn/edu/arizona/%C1.Router/router3`` and face
-uri ``udp4://79.123.10.145`` for router ``/ndn/edu/colostate/%C1.Router/router2``.
+``udp4://router3.arizona.edu`` for router ``/ndn/edu/arizona/%C1.Router/router3`` and
+FaceUri ``udp4://79.123.10.145`` for router ``/ndn/edu/colostate/%C1.Router/router2``.
 
 Step 3: Creating configuration file
 -----------------------------------
@@ -137,7 +136,7 @@ configuration commands follows:
         ; the switch is used to set hyperbolic routing calculation in NLSR
 
         state off             ; default value 'off', set value 'on' to enable hyperbolic routing table
-                              ; calculation which turns link state routing 'off'. set value to 'dry-run"
+                              ; calculation which turns link state routing 'off'. set value to 'dry-run'
                               ; to test hyperbolic routing and compare with link state routing.
 
 

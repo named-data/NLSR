@@ -19,7 +19,7 @@ The main design goal of NLSR is to provide a routing protocol to populate NDN's 
 calculates the routing table using link-state or hyperbolic routing and produces multiple
 faces for each reachable name prefix in a single authoritative domain. NLSR will continue
 to evolve over time to include neighbor discovery and to become a full fledged
-inter-domain routing protocol for NDN.  The project design is presented in full detail in
+inter-domain routing protocol for NDN.  The protocol design is presented in full detail in
 the `NLSR Paper`_.
 
 NLSR Documentation
@@ -58,4 +58,4 @@ Additional information
 
 
 .. _NLSR Wiki: http://redmine.named-data.net/projects/nlsr
-.. _NLSR Paper: http://conferences.sigcomm.org/sigcomm/2013/papers/icn/p15.pdf
+.. _NLSR Paper: http://www.cs.memphis.edu/~lanwang/paper/nlsr-final.pdf

@@ -1,6 +1,9 @@
 NLSR - Named Data Link State Routing Protocol
 =============================================
 
+For complete documentation and more extensive information,
+please visit the [NLSR homepage](http://named-data.net/doc/NLSR/current/).
+
 ## Overview
 
 NLSR is a routing protocol in NDN that populates NDN's Routing Information Base. NLSR
@@ -28,9 +31,9 @@ Source releases
 The source code and source-code installation instructions are always available at
 the following links:
 
-- [Installation](https://github.com/named-data/NLSR/blob/master/docs/INSTALL.md)
-- [Getting Started with NLSR](https://github.com/named-data/NLSR/blob/master/docs/GETTING-STARTED.md)
-- [Github NLSR repository](https://github.com/named-data/NLSR)
+- [Installation](http://named-data.net/doc/NLSR/current/INSTALL.html)
+- [Getting Started with NLSR](http://named-data.net/doc/NLSR/current/GETTING-STARTED.html)
+- [GitHub NLSR repository](https://github.com/named-data/NLSR)
 
 Additional information
 ----------------------
