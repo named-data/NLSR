@@ -377,6 +377,7 @@ BOOST_AUTO_TEST_CASE(DefaultValuesGeneral)
   commentOut("lsa-refresh-time", config);
   commentOut("lsa-interest-lifetime", config);
   commentOut("router-dead-interval", config);
+  commentOut("log-level", config);
 
   BOOST_CHECK_EQUAL(processConfigurationString(config), true);
 
@@ -386,6 +387,7 @@ BOOST_AUTO_TEST_CASE(DefaultValuesGeneral)
   BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(),
                     static_cast<ndn::time::seconds>(LSA_INTEREST_LIFETIME_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), (2*conf.getLsaRefreshTime()));
+  BOOST_CHECK_EQUAL(conf.getLogLevel(), "INFO");
 }
 
 BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)

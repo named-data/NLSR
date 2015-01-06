@@ -294,20 +294,15 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     return false;
   }
 
-  try {
-    std::string logLevel = section.get<string>("log-level");
+  // log-level
+  std::string logLevel = section.get<string>("log-level", "INFO");
 
-    if (isValidLogLevel(logLevel)) {
-      m_nlsr.getConfParameter().setLogLevel(logLevel);
-    }
-    else {
-      std::cerr << "Invalid value for log-level ";
-      std::cerr << "Valid values: ALL, TRACE, DEBUG, INFO, WARN, ERROR, NONE" << std::endl;
-      return false;
-    }
+  if (isValidLogLevel(logLevel)) {
+    m_nlsr.getConfParameter().setLogLevel(logLevel);
   }
-  catch (const std::exception& ex) {
-    std::cerr << ex.what() << std::endl;
+  else {
+    std::cerr << "Invalid value for log-level ";
+    std::cerr << "Valid values: ALL, TRACE, DEBUG, INFO, WARN, ERROR, NONE" << std::endl;
     return false;
   }
 
