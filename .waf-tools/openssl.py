@@ -30,10 +30,11 @@ def check_openssl(self,*k,**kw):
         libcrypto = self.check_cxx(lib=['ssl', 'crypto'],
                        msg='Checking for OpenSSL library',
                        define_name='HAVE_%s' % var,
+                       global_define=True,
                        uselib_store=var,
                        mandatory=mandatory,
-                       cxxflags="-I%s/include" % root,
-                       linkflags="-L%s/lib" % root)
+                       includes="%s/include" % root,
+                       libpath="%s/lib" % root)
     else:
         libcrypto = self.check_cxx(lib=['ssl', 'crypto'],
                        msg='Checking for OpenSSL library',

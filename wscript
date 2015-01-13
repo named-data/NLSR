@@ -48,10 +48,12 @@ def configure(conf):
                'doxygen', 'sphinx_build'])
 
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
-                   uselib_store='NDN_CPP', mandatory=True)
+                   uselib_store='NDN_CXX', mandatory=True)
 
     conf.check_cfg(package='liblog4cxx', args=['--cflags', '--libs'],
                    uselib_store='LOG4CXX', mandatory=True)
+
+    conf.check_openssl(mandatory=True)
 
     boost_libs = 'system chrono program_options iostreams thread regex filesystem'
     if conf.options.with_tests:
@@ -98,7 +100,7 @@ def build(bld):
         name='nsync-objects',
         features='cxx',
         source=bld.path.ant_glob(['nsync/**/*.cc', 'nsync/**/*.proto']),
-        use='BOOST NDN_CPP OPENSSL',
+        use='BOOST NDN_CXX OPENSSL',
         includes='nsync',
         export_includes='nsync',
         )
@@ -109,7 +111,7 @@ def build(bld):
         features='cxx',
         source=bld.path.ant_glob(['src/**/*.cpp'],
                                  excl=['src/main.cpp']),
-        use='nsync-objects NDN_CPP BOOST LOG4CXX',
+        use='nsync-objects NDN_CXX BOOST LOG4CXX',
         includes='. src',
         export_includes='. src',
         )
