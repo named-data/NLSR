@@ -1,8 +1,9 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
 """
-Copyright (c) 2014  University of Memphis,
-                    Regents of the University of California
+Copyright (c) 2014-2015,  The University of Memphis,
+                          Regents of the University of California,
+                          Arizona Board of Regents.
 
 This file is part of NLSR (Named-data Link State Routing).
 See AUTHORS.md for complete list of NLSR authors and contributors.
