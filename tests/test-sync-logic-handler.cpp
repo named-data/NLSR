@@ -37,7 +37,7 @@ public:
   SyncLogicFixture()
     : face(ndn::makeDummyFace())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
-    , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter(), nlsr.getSequencingManager())
+    , sync(nlsr.getSyncLogicHandler())
     , CONFIG_NETWORK("/ndn")
     , CONFIG_SITE("/site")
     , CONFIG_ROUTER_NAME("/%C1.Router/this-router")
@@ -67,7 +67,7 @@ public:
 public:
   shared_ptr<DummyFace> face;
   Nlsr nlsr;
-  SyncLogicHandler sync;
+  SyncLogicHandler& sync;
 
   const std::string CONFIG_NETWORK;
   const std::string CONFIG_SITE;
@@ -164,6 +164,17 @@ BOOST_AUTO_TEST_CASE(SequenceNumber)
 
   std::vector<ndn::Interest>::iterator it = interests.begin();
   BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "name/");
+}
+
+BOOST_AUTO_TEST_CASE(UpdatePrefix)
+{
+  ndn::Name expectedPrefix = nlsr.getConfParameter().getLsaPrefix();
+  expectedPrefix.append(CONFIG_SITE);
+  expectedPrefix.append(CONFIG_ROUTER_NAME);
+
+  nlsr.initialize();
+
+  BOOST_CHECK_EQUAL(sync.m_updatePrefix, expectedPrefix);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

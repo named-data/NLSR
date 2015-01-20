@@ -29,6 +29,8 @@
 #include <unistd.h>
 #include <boost/cstdint.hpp>
 
+#include "test-access-control.hpp"
+
 class InterestManager;
 
 namespace nlsr {
@@ -62,6 +64,9 @@ public:
     m_syncPrefix.set(sp);
   }
 
+  void
+  buildUpdatePrefix();
+
 private:
   void
   processUpdateFromSync(const SyncUpdate& updateName);
@@ -81,12 +86,15 @@ private:
   ndn::shared_ptr<Sync::SyncSocket> m_syncSocket;
   ndn::Name m_syncPrefix;
 
+private:
   Lsdb& m_lsdb;
   ConfParameter& m_confParam;
   const SequencingManager& m_sequencingManager;
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Name m_updatePrefix;
 
+private:
   static const std::string NLSR_COMPONENT;
   static const std::string LSA_COMPONENT;
   static const std::string NAME_COMPONENT;

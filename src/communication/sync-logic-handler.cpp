@@ -141,9 +141,6 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face,
   , m_confParam(conf)
   , m_sequencingManager(seqManager)
 {
-  m_updatePrefix = m_confParam.getLsaPrefix();
-  m_updatePrefix.append(m_confParam.getSiteName());
-  m_updatePrefix.append(m_confParam.getRouterName());
 }
 
 void
@@ -266,6 +263,14 @@ SyncLogicHandler::publishRoutingUpdate()
   m_sequencingManager.writeSeqNoToFile();
 
   publishSyncUpdate(m_updatePrefix, m_sequencingManager.getCombinedSeqNo());
+}
+
+void
+SyncLogicHandler::buildUpdatePrefix()
+{
+  m_updatePrefix = m_confParam.getLsaPrefix();
+  m_updatePrefix.append(m_confParam.getSiteName());
+  m_updatePrefix.append(m_confParam.getRouterName());
 }
 
 void

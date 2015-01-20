@@ -128,7 +128,10 @@ Nlsr::initialize()
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());
   m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
   m_sequencingManager.initiateSeqNoFromFile();
+
   m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncPrefix().toUri());
+  m_syncLogicHandler.buildUpdatePrefix();
+
   /* Logging start */
   m_confParam.writeLog();
   m_adjacencyList.writeLog();
