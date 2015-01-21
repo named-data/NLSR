@@ -89,7 +89,7 @@ public:
     , m_faceMonitor(m_nlsrFace)
     , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
   {
-    m_faceMonitor.onNotification += ndn::bind(&Nlsr::onFaceEventNotification, this, _1);
+    m_faceMonitor.onNotification.connect(bind(&Nlsr::onFaceEventNotification, this, _1));
     m_faceMonitor.start();
   }
 
