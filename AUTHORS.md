@@ -34,6 +34,7 @@ NLSR is an open source project includes contributions from the members of the
     * Yingdi Yu           <http://irl.cs.ucla.edu/~yingdi/web/index.html>
     * Alexander Afanasyev <http://lasr.cs.ucla.edu/afanasyev/index.html>
     * Spyridon Mastorakis <http://cs.ucla.edu/~mastorakis/>
+    * Jiewen Tan          <alanwake@ucla.edu>
 
 
 ## Queries about NLSR
