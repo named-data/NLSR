@@ -47,6 +47,13 @@ Nlsr::registrationFailed(const ndn::Name& name)
 void
 Nlsr::onRegistrationSuccess(const ndn::Name& name)
 {
+  if (name.equals(m_confParam.getRouterPrefix())) {
+    m_lsdbDatasetHandler = std::unique_ptr<LsdbDatasetInterestHandler>(
+      new LsdbDatasetInterestHandler(m_nlsrLsdb,
+                                     m_nlsrFace,
+                                     m_confParam.getRouterPrefix(),
+                                     m_keyChain));
+  }
 }
 
 void

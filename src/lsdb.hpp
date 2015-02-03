@@ -73,6 +73,9 @@ public:
   void
   writeNameLsdbLog();
 
+  const std::list<NameLsa>&
+  getNameLsdb();
+
   //function related to Cor LSDB
   bool
   buildAndInstallOwnCoordinateLsa();
@@ -92,6 +95,9 @@ public:
   void
   writeCorLsdbLog();
 
+  const std::list<CoordinateLsa>&
+  getCoordinateLsdb();
+
   //function related to Adj LSDB
 
   void
@@ -105,13 +111,14 @@ public:
 
   bool
   isAdjLsaNew(const ndn::Name& key, uint64_t seqNo);
+
   bool
   installAdjLsa(AdjLsa& alsa);
 
   AdjLsa*
   findAdjLsa(const ndn::Name& key);
 
-  std::list<AdjLsa>&
+  const std::list<AdjLsa>&
   getAdjLsdb();
 
   void
@@ -256,6 +263,9 @@ private:
 
   void
   cancelScheduleLsaExpiringEvent(ndn::EventId eid);
+
+public:
+  static const ndn::Name::Component NAME_COMPONENT;
 
 private:
   Nlsr& m_nlsr;

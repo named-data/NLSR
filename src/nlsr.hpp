@@ -44,6 +44,7 @@
 #include "communication/sync-logic-handler.hpp"
 #include "hello-protocol.hpp"
 #include "test-access-control.hpp"
+#include "publisher/lsdb-dataset-interest-handler.hpp"
 
 #include "validator.hpp"
 
@@ -367,6 +368,7 @@ private:
   NamePrefixTable m_namePrefixTable;
   SyncLogicHandler m_syncLogicHandler;
   HelloProtocol m_helloProtocol;
+  std::unique_ptr<LsdbDatasetInterestHandler> m_lsdbDatasetHandler;
 
 private:
   ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;

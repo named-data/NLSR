@@ -170,5 +170,21 @@ operator<<(std::ostream& os, const LsaInfo& lsaInfo)
   return os;
 }
 
+std::shared_ptr<LsaInfo>
+makeLsaInfo(const Lsa& lsa)
+{
+  std::shared_ptr<LsaInfo> lsaInfo = std::make_shared<LsaInfo>();
+
+  lsaInfo->setOriginRouter(lsa.getOrigRouter());
+  lsaInfo->setSequenceNumber(lsa.getLsSeqNo());
+
+  ndn::time::system_clock::duration duration
+    = lsa.getExpirationTimePoint() - ndn::time::system_clock::now();
+
+  lsaInfo->setExpirationPeriod(ndn::time::duration_cast<ndn::time::milliseconds>(duration));
+
+  return lsaInfo;
+}
+
 } // namespace tlv
 } // namespace nlsr

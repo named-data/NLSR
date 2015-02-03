@@ -28,6 +28,8 @@
 #include <ndn-cxx/encoding/tlv.hpp>
 #include <ndn-cxx/name.hpp>
 
+#include "lsa.hpp"
+
 namespace nlsr {
 namespace tlv  {
 
@@ -133,6 +135,9 @@ private:
 
 std::ostream&
 operator<<(std::ostream& os, const LsaInfo& lsaInfo);
+
+std::shared_ptr<LsaInfo>
+makeLsaInfo(const Lsa& lsa);
 
 } // namespace tlv
 } // namespace nlsr

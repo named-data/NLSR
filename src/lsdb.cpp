@@ -32,6 +32,7 @@ namespace nlsr {
 
 INIT_LOGGER("Lsdb");
 
+const ndn::Name::Component Lsdb::NAME_COMPONENT = ndn::Name::Component("lsdb");
 const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
 const steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE = steady_clock::TimePoint::min();
 
@@ -248,6 +249,12 @@ Lsdb::writeNameLsdbLog()
   }
 }
 
+const std::list<NameLsa>&
+Lsdb::getNameLsdb()
+{
+  return m_nameLsdb;
+}
+
 // Cor LSA and LSDB related Functions start here
 
 static bool
@@ -418,6 +425,12 @@ Lsdb::writeCorLsdbLog()
        it != m_corLsdb.end() ; it++) {
     (*it).writeLog();
   }
+}
+
+const std::list<CoordinateLsa>&
+Lsdb::getCoordinateLsdb()
+{
+  return m_corLsdb;
 }
 
 // Adj LSA and LSDB related function starts here
@@ -625,7 +638,7 @@ Lsdb::doesAdjLsaExist(const ndn::Name& key)
   return true;
 }
 
-std::list<AdjLsa>&
+const std::list<AdjLsa>&
 Lsdb::getAdjLsdb()
 {
   return m_adjLsdb;

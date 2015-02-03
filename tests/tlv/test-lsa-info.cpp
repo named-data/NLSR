@@ -123,6 +123,19 @@ BOOST_AUTO_TEST_CASE(LsaInfoOutputStream)
                               "ExpirationPeriod: 10000 milliseconds)");
 }
 
+BOOST_AUTO_TEST_CASE(LsaInfoMake)
+{
+  Lsa lsa;
+  lsa.setOrigRouter("/test/lsa/info/tlv");
+  lsa.setLsSeqNo(128);
+  lsa.setExpirationTimePoint(ndn::time::system_clock::now());
+
+  std::shared_ptr<LsaInfo> lsaInfo = makeLsaInfo(lsa);
+  BOOST_CHECK_EQUAL(lsaInfo->getOriginRouter(), lsa.getOrigRouter());
+  BOOST_CHECK_EQUAL(lsaInfo->getSequenceNumber(), lsa.getLsSeqNo());
+  BOOST_CHECK_LE(lsaInfo->getExpirationPeriod(), ndn::time::milliseconds(0));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test
