@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,10 +17,6 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- * \author Yingdi Yu <yingdi@cs.ucla.edu>
- *
  **/
 
 #include <ndn-cxx/util/scheduler.hpp>
@@ -90,7 +87,9 @@ main(int32_t argc, char** argv)
     nlsr.startEventLoop();
   }
   catch (std::exception& e) {
+    _LOG_FATAL("ERROR: " << e.what());
     std::cerr << "ERROR: " << e.what() << std::endl;
+
     nlsr.getFib().clean();
     nlsr.destroyFaces();
   }
