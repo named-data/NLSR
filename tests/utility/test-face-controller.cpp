@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,7 +17,6 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
  **/
 
 #include "tests/test-common.hpp"
@@ -42,21 +42,8 @@ public:
     : face(ndn::makeDummyFace())
     , interests(face->m_sentInterests)
     , controller(*face, keyChain)
-    , faceManager(g_ioService, controller)
+    , faceController(g_ioService, controller)
   {
-  }
-
-  void
-  expectCanonizeSuccess(const std::string& request, const std::string expectedUri)
-  {
-    faceManager.createFace(request, 0, bind(&FaceControllerFixture::onFailure, this, _1, _2));
-    expectedUris.push_back(expectedUri);
-  }
-
-  void
-  expectCanonizeFailure(const std::string& request)
-  {
-    faceManager.createFace(request, 0, bind(&FaceControllerFixture::onFailure, this, _1, _2));
   }
 
   void
@@ -70,68 +57,36 @@ public:
   ndn::KeyChain keyChain;
   std::vector<Interest>& interests;
   ndn::nfd::Controller controller;
-  util::FaceController faceManager;
-
-  std::list<std::string> expectedUris;
+  util::FaceController faceController;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestFaceController, FaceControllerFixture)
 
-BOOST_AUTO_TEST_CASE(FaceCreateCanonize)
+BOOST_AUTO_TEST_CASE(FaceCreateCanonizeSuccess)
 {
-  expectCanonizeSuccess("udp4://192.0.2.1:6363", "udp4://192.0.2.1:6363");
-  expectCanonizeSuccess("tcp4://192.0.2.1:6363", "tcp4://192.0.2.1:6363");
+  const std::string uri("udp4://192.0.2.1:6363");
+  faceController.createFace(uri, nullptr, nullptr);
 
-  expectCanonizeSuccess("udp://192.0.2.1", "udp4://192.0.2.1:6363");
-  expectCanonizeSuccess("udp://203.0.113.1:6363", "udp4://203.0.113.1:6363");
-  expectCanonizeSuccess("udp4://google-public-dns-a.google.com", "udp4://8.8.8.8:6363");
-
-  expectCanonizeSuccess("tcp://192.0.2.1", "tcp4://192.0.2.1:6363");
-  expectCanonizeSuccess("tcp://203.0.113.1:6363", "tcp4://203.0.113.1:6363");
-  expectCanonizeSuccess("tcp4://google-public-dns-a.google.com", "tcp4://8.8.8.8:6363");
-
-  expectCanonizeSuccess("udp6://[2001:4860:4860::8888]:6363", "udp6://[2001:4860:4860::8888]:6363");
-  expectCanonizeSuccess("tcp6://[2001:4860:4860::8888]:6363", "tcp6://[2001:4860:4860::8888]:6363");
-
-  expectCanonizeSuccess("udp://[2001:4860:4860::8888]", "udp6://[2001:4860:4860::8888]:6363");
-  expectCanonizeSuccess("udp://[2001:4860:4860::8888]:6363", "udp6://[2001:4860:4860::8888]:6363");
-  expectCanonizeSuccess("udp6://google-public-dns-a.google.com",
-                        "udp6://[2001:4860:4860::8888]:6363");
-
-  expectCanonizeSuccess("tcp://[2001:4860:4860::8888]", "tcp6://[2001:4860:4860::8888]:6363");
-  expectCanonizeSuccess("tcp://[2001:4860:4860::8888]:6363", "tcp6://[2001:4860:4860::8888]:6363");
-  expectCanonizeSuccess("tcp6://google-public-dns-a.google.com",
-                        "tcp6://[2001:4860:4860::8888]:6363");
-
-  g_ioService.run();
   face->processEvents(ndn::time::milliseconds(1));
 
-  BOOST_CHECK_EQUAL(interests.size(), expectedUris.size());
+  BOOST_REQUIRE_EQUAL(interests.size(), 1);
+  Interest interest = interests.front();
 
-  for (std::vector<ndn::Interest>::iterator it = interests.begin(); it != interests.end(); ++it) {
+  ndn::nfd::ControlParameters extractedParameters;
+  ndn::Name::Component verb;
 
-    ndn::nfd::ControlParameters extractedParameters;
-    ndn::Name::Component verb;
+  extractFaceCommandParameters(interest, verb, extractedParameters);
 
-    extractFaceCommandParameters(*it, verb, extractedParameters);
-
-    BOOST_CHECK_EQUAL(verb, ndn::Name::Component("create"));
-
-    std::list<std::string>::iterator uri = std::find(expectedUris.begin(),
-                                                     expectedUris.end(),
-                                                     extractedParameters.getUri());
-
-    BOOST_REQUIRE(uri != expectedUris.end());
-    expectedUris.erase(uri);
-  }
+  BOOST_CHECK_EQUAL(verb, ndn::Name::Component("create"));
+  BOOST_CHECK_EQUAL(uri, extractedParameters.getUri());
 }
 
-BOOST_AUTO_TEST_CASE(FaceCreateFailure)
+BOOST_AUTO_TEST_CASE(FaceCreateCanonizeFailure)
 {
-  expectCanonizeFailure("udp4://not-a-valid.uri");
-  expectCanonizeFailure("udp4://256.0.0.1:6363");
+  faceController.createFace("invalid://256.0.0.1:6363",
+                            nullptr,
+                            bind(&FaceControllerFixture::onFailure, this, _1, _2));
 
-  g_ioService.run();
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_CHECK_EQUAL(interests.size(), 0);
