@@ -43,7 +43,7 @@ public:
 
   SequencingManager(uint64_t seqNo)
   {
-    splittSequenceNo(seqNo);
+    splitSequenceNo(seqNo);
   }
 
   SequencingManager(uint64_t nlsn, uint64_t alsn, uint64_t clsn)
@@ -137,7 +137,7 @@ public:
 
 private:
   void
-  splittSequenceNo(uint64_t seqNo);
+  splitSequenceNo(uint64_t seqNo);
 
   void
   combineSequenceNo();

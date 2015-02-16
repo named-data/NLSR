@@ -36,12 +36,12 @@ INIT_LOGGER("SequencingManager");
 using namespace std;
 
 void
-SequencingManager::splittSequenceNo(uint64_t seqNo)
+SequencingManager::splitSequenceNo(uint64_t seqNo)
 {
   m_combinedSeqNo = seqNo;
   m_adjLsaSeq = (m_combinedSeqNo & 0xFFFFF);
   m_corLsaSeq = ((m_combinedSeqNo >> 20) & 0xFFFFF);
-  m_nameLsaSeq = ((m_combinedSeqNo >> 40) & 0xFFFFF);
+  m_nameLsaSeq = ((m_combinedSeqNo >> 40) & 0xFFFFFF);
 }
 
 void
@@ -68,7 +68,7 @@ SequencingManager::initiateSeqNoFromFile()
   std::ifstream inputFile(m_seqFileNameWithPath.c_str(), ios::binary);
   if (inputFile.good()) {
     inputFile >> m_combinedSeqNo;
-    splittSequenceNo(m_combinedSeqNo);
+    splitSequenceNo(m_combinedSeqNo);
     m_adjLsaSeq += 10;
     m_corLsaSeq += 10;
     m_nameLsaSeq += 10;
@@ -76,7 +76,7 @@ SequencingManager::initiateSeqNoFromFile()
     inputFile.close();
   }
   else {
-    splittSequenceNo(0);
+    splitSequenceNo(0);
   }
 }
 
