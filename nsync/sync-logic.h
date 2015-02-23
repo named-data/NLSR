@@ -189,9 +189,9 @@ private:
   LogicRemoveCallback m_onRemove;
   LogicPerBranchCallback m_onUpdateBranch;
   bool m_perBranch;
-  ndn::ptr_lib::shared_ptr<ndn::Validator> m_validator;
-  ndn::ptr_lib::shared_ptr<ndn::KeyChain> m_keyChain;
-  ndn::ptr_lib::shared_ptr<ndn::Face> m_face;
+  std::shared_ptr<ndn::Validator> m_validator;
+  std::shared_ptr<ndn::KeyChain> m_keyChain;
+  std::shared_ptr<ndn::Face> m_face;
   const ndn::RegisteredPrefixId* m_syncRegisteredPrefixId;
 
   ndn::Scheduler m_scheduler;
