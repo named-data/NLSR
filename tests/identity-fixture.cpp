@@ -63,7 +63,7 @@ public:
       m_hasOldDefaultIdentity = false;
     }
 
-    m_newIdentity.set("/nlsr-test-identity");
+    m_newIdentity = "/nlsr-test-identity";
     m_newIdentity.appendVersion();
 
     // create the new identity and self-signed certificate
