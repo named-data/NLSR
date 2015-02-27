@@ -61,8 +61,7 @@ public:
   void
   setSyncPrefix(const std::string& sp)
   {
-    m_syncPrefix.clear();
-    m_syncPrefix.set(sp);
+    m_syncPrefix = sp;
   }
 
   void
