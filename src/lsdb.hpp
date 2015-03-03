@@ -27,6 +27,7 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/time.hpp>
 
+#include "conf-parameter.hpp"
 #include "lsa.hpp"
 #include "test-access-control.hpp"
 
@@ -46,6 +47,7 @@ public:
     , m_sync(sync)
     , m_hasSyncPrefixBeenRegistered(false)
     , m_lsaRefreshTime(0)
+    , m_adjLsaBuildInterval(static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT))
   {
   }
 
@@ -91,8 +93,9 @@ public:
   writeCorLsdbLog();
 
   //function related to Adj LSDB
+
   void
-  scheduledAdjLsaBuild();
+  scheduleAdjLsaBuild();
 
   bool
   buildAndInstallOwnAdjLsa();
@@ -110,6 +113,18 @@ public:
 
   std::list<AdjLsa>&
   getAdjLsdb();
+
+  void
+  setAdjLsaBuildInterval(uint32_t interval)
+  {
+    m_adjLsaBuildInterval = ndn::time::seconds(interval);
+  }
+
+  const ndn::time::seconds&
+  getAdjLsaBuildInterval() const
+  {
+    return m_adjLsaBuildInterval;
+  }
 
   void
   writeAdjLsdbLog();
@@ -133,6 +148,9 @@ private:
 
   bool
   doesCoordinateLsaExist(const ndn::Name& key);
+
+  void
+  buildAdjLsa();
 
   bool
   addAdjLsa(AdjLsa& alsa);
@@ -261,6 +279,8 @@ private:
 
   static const ndn::time::seconds GRACE_PERIOD;
   static const steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
+
+  ndn::time::seconds m_adjLsaBuildInterval;
 };
 
 }//namespace nlsr

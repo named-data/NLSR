@@ -53,10 +53,13 @@ RoutingTable::calculate(Nlsr& pnlsr)
           pnlsr.getConfParameter().getRouterPrefix().toUri() + "/" + "adjacency",
           std::string("adjacency"))) {
       if (pnlsr.getIsBuildAdjLsaSheduled() != 1) {
-        _LOG_DEBUG("CLearing old routing table .....");
+        _LOG_TRACE("Clearing old routing table");
         clearRoutingTable();
         // for dry run options
         clearDryRoutingTable();
+
+        _LOG_DEBUG("Calculating routing table");
+
         // calculate Link State routing
         if ((pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_OFF)
             || (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN)) {
@@ -156,6 +159,8 @@ void
 RoutingTable::scheduleRoutingTableCalculation(Nlsr& pnlsr)
 {
   if (pnlsr.getIsRouteCalculationScheduled() != true) {
+    _LOG_DEBUG("Scheduling routing table calculation in " << m_routingCalcInterval);
+
     m_scheduler.scheduleEvent(m_routingCalcInterval,
                               ndn::bind(&RoutingTable::calculate, this, ndn::ref(pnlsr)));
 

@@ -37,7 +37,6 @@ public:
   HelloProtocol(Nlsr& nlsr, ndn::Scheduler& scheduler)
     : m_nlsr(nlsr)
     , m_scheduler(scheduler)
-    , m_adjLsaBuildInterval(static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT))
   {
   }
 
@@ -52,18 +51,6 @@ public:
 
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
-
-  void
-  setAdjLsaBuildInterval(uint32_t interval)
-  {
-    m_adjLsaBuildInterval = ndn::time::seconds(interval);
-  }
-
-  const ndn::time::seconds&
-  getAdjLsaBuildInterval() const
-  {
-    return m_adjLsaBuildInterval;
-  }
 
 private:
   void
@@ -96,8 +83,6 @@ private:
 
   static const std::string INFO_COMPONENT;
   static const std::string NLSR_COMPONENT;
-
-  ndn::time::seconds m_adjLsaBuildInterval;
 };
 
 } //namespace nlsr

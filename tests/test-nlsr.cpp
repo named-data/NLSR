@@ -98,10 +98,10 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
 
   nlsr.initialize();
 
-  const HelloProtocol& hello = nlsr.m_helloProtocol;
+  const Lsdb& lsdb = nlsr.getLsdb();
   const RoutingTable& rt = nlsr.getRoutingTable();
 
-  BOOST_CHECK_EQUAL(hello.getAdjLsaBuildInterval(), ndn::time::seconds(3));
+  BOOST_CHECK_EQUAL(lsdb.getAdjLsaBuildInterval(), ndn::time::seconds(3));
   BOOST_CHECK_EQUAL(nlsr.getFirstHelloInterval(), 6);
   BOOST_CHECK_EQUAL(rt.getRoutingCalcInterval(), ndn::time::seconds(9));
 }

@@ -74,6 +74,8 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
 void
 HelloProtocol::scheduleInterest(uint32_t seconds)
 {
+  _LOG_DEBUG("Scheduling HELLO Interests in " << ndn::time::seconds(seconds));
+
   m_scheduler.scheduleEvent(ndn::time::seconds(seconds),
                             ndn::bind(&HelloProtocol::sendScheduledInterest, this, seconds));
 }
@@ -150,14 +152,8 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   else if ((status == Adjacent::STATUS_ACTIVE) &&
            (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber())) {
     m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, Adjacent::STATUS_INACTIVE);
-    m_nlsr.incrementAdjBuildCount();
-    if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
-      _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
-      m_nlsr.setIsBuildAdjLsaSheduled(true);
-      // event here
-      m_scheduler.scheduleEvent(m_adjLsaBuildInterval,
-                                ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
-    }
+
+    m_nlsr.getLsdb().scheduleAdjLsaBuild();
   }
 }
 
@@ -194,15 +190,7 @@ HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
     _LOG_DEBUG("Old Status: " << oldStatus << " New Status: " << newStatus);
     // change in Adjacency list
     if ((oldStatus - newStatus) != 0) {
-      m_nlsr.incrementAdjBuildCount();
-      // Need to schedule event for Adjacency LSA building
-      if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
-        _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
-        m_nlsr.setIsBuildAdjLsaSheduled(true);
-        // event here
-        m_scheduler.scheduleEvent(m_adjLsaBuildInterval,
-                                  ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
-      }
+      m_nlsr.getLsdb().scheduleAdjLsaBuild();
     }
   }
 }
@@ -280,14 +268,8 @@ HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
       if (status == Adjacent::STATUS_ACTIVE) {
         adjacent->setStatus(Adjacent::STATUS_INACTIVE);
       }
-      m_nlsr.incrementAdjBuildCount();
-      if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
-        _LOG_DEBUG("Scheduling scheduledAdjLsaBuild");
-        m_nlsr.setIsBuildAdjLsaSheduled(true);
-        // event here
-        m_scheduler.scheduleEvent(m_adjLsaBuildInterval,
-                                  ndn::bind(&Lsdb::scheduledAdjLsaBuild, &m_nlsr.getLsdb()));
-      }
+
+      m_nlsr.getLsdb().scheduleAdjLsaBuild();
     }
   }
 }

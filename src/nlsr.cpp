@@ -140,15 +140,16 @@ Nlsr::initialize()
   _LOG_DEBUG("Default NLSR identity: " << m_defaultIdentity);
   setInfoInterestFilter();
   setLsaInterestFilter();
+
+  // Set event intervals
+  setFirstHelloInterval(m_confParam.getFirstHelloInterval());
+  m_nlsrLsdb.setAdjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval());
+  m_routingTable.setRoutingCalcInterval(m_confParam.getRoutingCalcInterval());
+
   m_nlsrLsdb.buildAndInstallOwnNameLsa();
   m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
 
   registerKeyPrefix();
-
-  // Set event intervals
-  setFirstHelloInterval(m_confParam.getFirstHelloInterval());
-  m_helloProtocol.setAdjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval());
-  m_routingTable.setRoutingCalcInterval(m_confParam.getRoutingCalcInterval());
 
   m_helloProtocol.scheduleInterest(m_firstHelloInterval);
 

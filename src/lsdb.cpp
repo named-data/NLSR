@@ -429,9 +429,23 @@ adjLsaCompareByKey(AdjLsa& alsa, const ndn::Name& key)
 }
 
 void
-Lsdb::scheduledAdjLsaBuild()
+Lsdb::scheduleAdjLsaBuild()
 {
-  _LOG_DEBUG("scheduledAdjLsaBuild Called");
+  m_nlsr.incrementAdjBuildCount();
+
+  if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
+    _LOG_DEBUG("Scheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
+
+    m_scheduler.scheduleEvent(m_adjLsaBuildInterval, ndn::bind(&Lsdb::buildAdjLsa, this));
+    m_nlsr.setIsBuildAdjLsaSheduled(true);
+  }
+}
+
+void
+Lsdb::buildAdjLsa()
+{
+  _LOG_TRACE("buildAdjLsa called");
+
   m_nlsr.setIsBuildAdjLsaSheduled(false);
   if (m_nlsr.getAdjacencyList().isAdjLsaBuildable(m_nlsr)) {
     int adjBuildCount = m_nlsr.getAdjBuildCount();
@@ -454,7 +468,7 @@ Lsdb::scheduledAdjLsaBuild()
     int schedulingTime = m_nlsr.getConfParameter().getInterestRetryNumber() *
                          m_nlsr.getConfParameter().getInterestResendTime();
     m_scheduler.scheduleEvent(ndn::time::seconds(schedulingTime),
-                              ndn::bind(&Lsdb::scheduledAdjLsaBuild, this));
+                              ndn::bind(&Lsdb::buildAdjLsa, this));
   }
 }
 

@@ -366,8 +366,6 @@ private:
   Fib m_fib;
   NamePrefixTable m_namePrefixTable;
   SyncLogicHandler m_syncLogicHandler;
-
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   HelloProtocol m_helloProtocol;
 
 private:
