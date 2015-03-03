@@ -35,6 +35,7 @@
 #include "conf-file-processor.hpp"
 #include "adjacent.hpp"
 #include "utility/name-helper.hpp"
+#include "update/prefix-update-processor.hpp"
 
 namespace nlsr {
 
@@ -618,6 +619,15 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
     }
 
   m_nlsr.loadValidator(it->second, m_confFileName);
+  it++;
+
+  if (it == section.end() || it->first != "prefix-update-validator")
+    {
+      std::cerr << "Error: Expect prefix-update-validator section" << std::endl;
+      return false;
+    }
+
+  m_nlsr.getPrefixUpdateProcessor().loadValidator(it->second, m_confFileName);
   it++;
 
   for (; it != section.end(); it++)

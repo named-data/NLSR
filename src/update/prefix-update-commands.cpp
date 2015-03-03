@@ -19,59 +19,24 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef NLSR_NAME_PREFIX_LIST_HPP
-#define NLSR_NAME_PREFIX_LIST_HPP
-
-#include <list>
-#include <string>
-#include <boost/cstdint.hpp>
-#include <ndn-cxx/name.hpp>
-
+#include "prefix-update-commands.hpp"
 
 namespace nlsr {
-class NamePrefixList
+namespace update {
+
+WithdrawPrefixCommand::WithdrawPrefixCommand()
+  : ControlCommand("nlsr", "withdraw")
 {
+  m_requestValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
+  m_responseValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
+}
 
-public:
-  NamePrefixList();
+AdvertisePrefixCommand::AdvertisePrefixCommand()
+  : ControlCommand("nlsr", "advertise")
+{
+  m_requestValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
+  m_responseValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
+}
 
-  ~NamePrefixList();
-
-  /** \brief inserts name into NamePrefixList
-   *  \return true if the name is inserted, otherwise false
-   */
-  bool
-  insert(const ndn::Name& name);
-
-  /** \brief removes name from NamePrefixList
-   *  \return true if the name is removed, otherwise false
-   */
-  bool
-  remove(const ndn::Name& name);
-
-  void
-  sort();
-
-  size_t
-  getSize()
-  {
-    return m_nameList.size();
-  }
-
-  std::list<ndn::Name>&
-  getNameList()
-  {
-    return m_nameList;
-  }
-
-  void
-  writeLog();
-
-private:
-  std::list<ndn::Name> m_nameList;
-
-};
-
-}//namespace nlsr
-
-#endif //NLSR_NAME_PREFIX_LIST_HPP
+} // namespace update
+} // namespace nlsr

@@ -19,59 +19,27 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef NLSR_NAME_PREFIX_LIST_HPP
-#define NLSR_NAME_PREFIX_LIST_HPP
+#ifndef UPDATE_PREFIX_UPDATE_COMMANDS_HPP
+#define UPDATE_PREFIX_UPDATE_COMMANDS_HPP
 
-#include <list>
-#include <string>
-#include <boost/cstdint.hpp>
-#include <ndn-cxx/name.hpp>
-
+#include <ndn-cxx/management/nfd-control-command.hpp>
 
 namespace nlsr {
-class NamePrefixList
+namespace update {
+
+class WithdrawPrefixCommand : public ndn::nfd::ControlCommand
 {
-
 public:
-  NamePrefixList();
-
-  ~NamePrefixList();
-
-  /** \brief inserts name into NamePrefixList
-   *  \return true if the name is inserted, otherwise false
-   */
-  bool
-  insert(const ndn::Name& name);
-
-  /** \brief removes name from NamePrefixList
-   *  \return true if the name is removed, otherwise false
-   */
-  bool
-  remove(const ndn::Name& name);
-
-  void
-  sort();
-
-  size_t
-  getSize()
-  {
-    return m_nameList.size();
-  }
-
-  std::list<ndn::Name>&
-  getNameList()
-  {
-    return m_nameList;
-  }
-
-  void
-  writeLog();
-
-private:
-  std::list<ndn::Name> m_nameList;
-
+  WithdrawPrefixCommand();
 };
 
-}//namespace nlsr
+class AdvertisePrefixCommand : public ndn::nfd::ControlCommand
+{
+public:
+  AdvertisePrefixCommand();
+};
 
-#endif //NLSR_NAME_PREFIX_LIST_HPP
+} // namespace update
+} // namespace nlsr
+
+#endif // UPDATE_PREFIX_UPDATE_COMMANDS_HPP

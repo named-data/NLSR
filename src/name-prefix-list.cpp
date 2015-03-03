@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,10 +17,8 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #include <iostream>
 #include <algorithm>
 
@@ -49,7 +48,7 @@ nameCompare(const ndn::Name& name1, const ndn::Name& name2)
   return name1 == name2;
 }
 
-int32_t
+bool
 NamePrefixList::insert(const ndn::Name& name)
 {
   std::list<ndn::Name>::iterator it = std::find_if(m_nameList.begin(),
@@ -57,13 +56,13 @@ NamePrefixList::insert(const ndn::Name& name)
                                                    ndn::bind(&nameCompare, _1 ,
                                                              ndn::cref(name)));
   if (it != m_nameList.end()) {
-    return -1;
+    return false;
   }
   m_nameList.push_back(name);
-  return 0;
+  return true;
 }
 
-int32_t
+bool
 NamePrefixList::remove(const ndn::Name& name)
 {
   std::list<ndn::Name>::iterator it = std::find_if(m_nameList.begin(),
@@ -72,8 +71,10 @@ NamePrefixList::remove(const ndn::Name& name)
                                                    ndn::cref(name)));
   if (it != m_nameList.end()) {
     m_nameList.erase(it);
+    return true;
   }
-  return -1;
+
+  return false;
 }
 
 void

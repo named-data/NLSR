@@ -45,7 +45,8 @@
 #include "hello-protocol.hpp"
 #include "test-access-control.hpp"
 #include "publisher/lsdb-dataset-interest-handler.hpp"
-
+#include "utility/name-helper.hpp"
+#include "update/prefix-update-processor.hpp"
 #include "validator.hpp"
 
 
@@ -87,6 +88,13 @@ public:
     , m_helloProtocol(*this, scheduler)
     , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
     , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
+    , m_prefixUpdateProcessor(m_nlsrFace,
+                              m_namePrefixList,
+                              m_nlsrLsdb,
+                              m_syncLogicHandler,
+                              DEFAULT_BROADCAST_PREFIX,
+                              m_keyChain,
+                              m_certificateCache)
     , m_faceMonitor(m_nlsrFace)
     , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
   {
@@ -99,6 +107,9 @@ public:
 
   void
   onRegistrationSuccess(const ndn::Name& name);
+
+  void
+  onLocalhostRegistrationSuccess(const ndn::Name& name);
 
   void
   setInfoInterestFilter();
@@ -302,6 +313,12 @@ public:
     return m_defaultCertName;
   }
 
+  update::PrefixUpdateProcessor&
+  getPrefixUpdateProcessor()
+  {
+    return m_prefixUpdateProcessor;
+  }
+
   void
   createFace(const std::string& faceUri,
              const CommandSucceedCallback& onSuccess,
@@ -322,9 +339,21 @@ public:
     return m_firstHelloInterval;
   }
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  void
+  addCertificateToCache(ndn::shared_ptr<ndn::IdentityCertificate> certificate)
+  {
+    if (certificate != nullptr) {
+      m_certificateCache->insertCertificate(certificate);
+    }
+  }
+
 private:
   void
   registerKeyPrefix();
+
+  void
+  registerLocalhostPrefix();
 
   void
   onKeyInterest(const ndn::Name& name, const ndn::Interest& interest);
@@ -346,6 +375,9 @@ private:
   {
     m_firstHelloInterval = interval;
   }
+
+public:
+  static const ndn::Name LOCALHOST_PREFIX;
 
 private:
   typedef std::map<ndn::Name, ndn::shared_ptr<ndn::IdentityCertificate> > CertMap;
@@ -377,6 +409,7 @@ private:
   ndn::KeyChain m_keyChain;
   ndn::Name m_defaultIdentity;
   ndn::Name m_defaultCertName;
+  update::PrefixUpdateProcessor m_prefixUpdateProcessor;
 
   ndn::nfd::FaceMonitor m_faceMonitor;
 

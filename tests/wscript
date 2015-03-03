@@ -28,7 +28,7 @@ def build(bld):
             target='unit-tests-main',
             name='unit-tests-main',
             features='cxx',
-            source=bld.path.ant_glob(['*.cpp', 'utility/*.cpp', 'tlv/*.cpp', 'publisher/*.cpp']),
+            source=bld.path.ant_glob(['**/*.cpp'], excl=['nsync/**/*']),
             use='nlsr-objects',
           )
 

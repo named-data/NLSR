@@ -34,6 +34,8 @@ namespace nlsr {
 
 INIT_LOGGER("nlsr");
 
+const ndn::Name Nlsr::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
+
 using namespace ndn;
 using namespace std;
 
@@ -54,6 +56,14 @@ Nlsr::onRegistrationSuccess(const ndn::Name& name)
                                      m_confParam.getRouterPrefix(),
                                      m_keyChain));
   }
+}
+
+void
+Nlsr::onLocalhostRegistrationSuccess(const ndn::Name& name)
+{
+  _LOG_DEBUG("Successfully registered prefix: " << name);
+
+  m_prefixUpdateProcessor.startListening();
 }
 
 void
@@ -156,6 +166,7 @@ Nlsr::initialize()
   m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
 
   registerKeyPrefix();
+  registerLocalhostPrefix();
 
   m_helloProtocol.scheduleInterest(m_firstHelloInterval);
 
@@ -219,6 +230,16 @@ Nlsr::registerKeyPrefix()
                                m_defaultIdentity,
                                ndn::nfd::ROUTE_FLAG_CAPTURE);
 
+}
+
+void
+Nlsr::registerLocalhostPrefix()
+{
+  _LOG_TRACE("Registering prefix: " << LOCALHOST_PREFIX);
+
+  m_nlsrFace.registerPrefix(LOCALHOST_PREFIX,
+                            std::bind(&Nlsr::onLocalhostRegistrationSuccess, this, _1),
+                            std::bind(&Nlsr::registrationFailed, this, _1));
 }
 
 void
