@@ -277,15 +277,25 @@ Nlsr::destroyFaces()
 void
 Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification)
 {
+  _LOG_TRACE("Nlsr::onFaceEventNotification called");
   ndn::nfd::FaceEventKind kind = faceEventNotification.getKind();
-  _LOG_DEBUG("Nlsr::onFaceEventNotification called");
+
   if (kind == ndn::nfd::FACE_EVENT_DESTROYED) {
     uint64_t faceId = faceEventNotification.getFaceId();
-    Adjacent *adjacent = m_adjacencyList.findAdjacent(faceId);
-    if (adjacent != 0) {
-      _LOG_DEBUG("Face to " << adjacent->getName() << " with face id: "
-                 << faceId << " deleted");
+
+    Adjacent* adjacent = m_adjacencyList.findAdjacent(faceId);
+
+    if (adjacent != nullptr) {
+      _LOG_DEBUG("Face to " << adjacent->getName() << " with face id: " << faceId << " destroyed");
+
       adjacent->setFaceId(0);
+      adjacent->setStatus(Adjacent::STATUS_INACTIVE);
+
+      // A new adjacency LSA cannot be built until the neighbor is marked INACTIVE and
+      // has met the HELLO retry threshold
+      adjacent->setInterestTimedOutNo(m_confParam.getInterestRetryNumber());
+
+      m_nlsrLsdb.scheduleAdjLsaBuild();
     }
   }
 }

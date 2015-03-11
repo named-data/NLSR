@@ -29,6 +29,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/util/time-unit-test-clock.hpp>
 
 namespace nlsr {
 namespace test {
@@ -44,6 +45,41 @@ public:
 protected:
   boost::asio::io_service g_ioService;
   ndn::Scheduler g_scheduler;
+};
+
+class UnitTestTimeFixture : public BaseFixture
+{
+protected:
+  UnitTestTimeFixture()
+    : steadyClock(make_shared<ndn::time::UnitTestSteadyClock>())
+    , systemClock(make_shared<ndn::time::UnitTestSystemClock>())
+  {
+    ndn::time::setCustomClocks(steadyClock, systemClock);
+  }
+
+  ~UnitTestTimeFixture()
+  {
+    ndn::time::setCustomClocks(nullptr, nullptr);
+  }
+
+  void
+  advanceClocks(const ndn::time::nanoseconds& tick, size_t nTicks = 1)
+  {
+    for (size_t i = 0; i < nTicks; ++i) {
+      steadyClock->advance(tick);
+      systemClock->advance(tick);
+
+      if (g_ioService.stopped()) {
+        g_ioService.reset();
+      }
+
+      g_ioService.poll();
+    }
+  }
+
+protected:
+  shared_ptr<ndn::time::UnitTestSteadyClock> steadyClock;
+  shared_ptr<ndn::time::UnitTestSystemClock> systemClock;
 };
 
 } // namespace test
