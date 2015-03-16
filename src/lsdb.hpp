@@ -45,7 +45,6 @@ public:
     : m_nlsr(nlsr)
     , m_scheduler(scheduler)
     , m_sync(sync)
-    , m_hasSyncPrefixBeenRegistered(false)
     , m_lsaRefreshTime(0)
     , m_adjLsaBuildInterval(static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT))
   {
@@ -277,8 +276,6 @@ private:
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;
-
-  bool m_hasSyncPrefixBeenRegistered;
 
   seconds m_lsaRefreshTime;
   std::string m_thisRouterPrefix;

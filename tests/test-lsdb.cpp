@@ -185,31 +185,6 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(ndn::Name("/router1/1"), NameLsa::TYPE_STRING), false);
 }
 
-BOOST_AUTO_TEST_CASE(RegisterSyncPrefixOnFirstAdjLsaBuild)
-{
-  // Should register Sync prefix
-  lsdb.buildAndInstallOwnAdjLsa();
-  face->processEvents(ndn::time::milliseconds(1));
-
-  std::vector<ndn::Interest>& interests = face->m_sentInterests;
-
-  BOOST_REQUIRE(interests.size() > 0);
-
-  ndn::nfd::ControlParameters extractedParameters;
-  ndn::Name::Component verb;
-  extractParameters(interests[0], verb, extractedParameters);
-
-  BOOST_CHECK_EQUAL(verb, REGISTER_VERB);
-  BOOST_CHECK_EQUAL(extractedParameters.getName(), conf.getChronosyncPrefix());
-
-  // Should not register Sync prefix
-  face->m_sentInterests.clear();
-  lsdb.buildAndInstallOwnAdjLsa();
-  face->processEvents(ndn::time::milliseconds(1));
-
-  BOOST_CHECK_EQUAL(interests.size(), 0);
-}
-
 BOOST_AUTO_TEST_CASE(InstallNameLsa)
 {
   // Install lsa with name1 and name2

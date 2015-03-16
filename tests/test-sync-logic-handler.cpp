@@ -177,6 +177,19 @@ BOOST_AUTO_TEST_CASE(UpdatePrefix)
   BOOST_CHECK_EQUAL(sync.m_updatePrefix, expectedPrefix);
 }
 
+BOOST_AUTO_TEST_CASE(CreateSyncSocketOnInitialization) // Bug #2649
+{
+  nlsr.initialize();
+
+  // Make sure an adjacency LSA has not been built yet
+  ndn::Name key = ndn::Name(nlsr.getConfParameter().getRouterPrefix()).append(AdjLsa::TYPE_STRING);
+  AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
+  BOOST_REQUIRE(lsa == nullptr);
+
+  // Publish a routing update before an Adjacency LSA is built
+  BOOST_CHECK_NO_THROW(sync.publishRoutingUpdate());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test

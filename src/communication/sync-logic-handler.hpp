@@ -44,10 +44,17 @@ class SyncUpdate;
 class SyncLogicHandler
 {
 public:
-  SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf, SequencingManager& seqManager);
+  class Error : public std::runtime_error
+  {
+  public:
+    explicit
+    Error(const std::string& what)
+      : std::runtime_error(what)
+    {
+    }
+  };
 
-  void
-  createSyncSocket();
+  SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf, SequencingManager& seqManager);
 
   void
   onNsyncUpdate(const std::vector<Sync::MissingDataInfo>& v, Sync::SyncSocket* socket);
@@ -59,15 +66,12 @@ public:
   publishRoutingUpdate();
 
   void
-  setSyncPrefix(const std::string& sp)
-  {
-    m_syncPrefix = sp;
-  }
+  createSyncSocket(const ndn::Name& syncPrefix);
 
+private:
   void
   buildUpdatePrefix();
 
-private:
   void
   processUpdateFromSync(const SyncUpdate& updateName);
 

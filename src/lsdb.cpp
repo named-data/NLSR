@@ -597,17 +597,9 @@ Lsdb::buildAndInstallOwnAdjLsa()
 
   m_nlsr.getSequencingManager().increaseAdjLsaSeq();
 
-  bool isInstalled = installAdjLsa(adjLsa);
-
-  // Delay Sync prefix registration until the first Adjacency LSA is built
-  if (isInstalled && !m_hasSyncPrefixBeenRegistered) {
-    m_nlsr.getSyncLogicHandler().createSyncSocket();
-    m_hasSyncPrefixBeenRegistered = true;
-  }
-
   m_sync.publishRoutingUpdate();
 
-  return isInstalled;
+  return installAdjLsa(adjLsa);
 }
 
 bool

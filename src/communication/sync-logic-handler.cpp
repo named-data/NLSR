@@ -138,8 +138,18 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face,
 }
 
 void
-SyncLogicHandler::createSyncSocket()
+SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
 {
+  if (m_syncSocket != nullptr) {
+    _LOG_WARN("Trying to create Sync socket, but Sync socket already exists");
+    return;
+  }
+
+  m_syncPrefix = syncPrefix;
+
+  // Build LSA sync update prefix
+  buildUpdatePrefix();
+
   _LOG_DEBUG("Creating Sync socket. Sync Prefix: " << m_syncPrefix);
 
   // The face's lifetime is managed in main.cpp; SyncSocket should not manage the memory
@@ -254,6 +264,12 @@ SyncLogicHandler::expressInterestForLsa(const SyncUpdate& update, std::string ls
 void
 SyncLogicHandler::publishRoutingUpdate()
 {
+  if (m_syncSocket == nullptr) {
+    _LOG_FATAL("Cannot publish routing update; SyncSocket does not exist");
+
+    throw SyncLogicHandler::Error("Cannot publish routing update; SyncSocket does not exist");
+  }
+
   m_sequencingManager.writeSeqNoToFile();
 
   publishSyncUpdate(m_updatePrefix, m_sequencingManager.getCombinedSeqNo());

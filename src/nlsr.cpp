@@ -134,8 +134,7 @@ Nlsr::initialize()
   m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
   m_sequencingManager.initiateSeqNoFromFile();
 
-  m_syncLogicHandler.setSyncPrefix(m_confParam.getChronosyncPrefix().toUri());
-  m_syncLogicHandler.buildUpdatePrefix();
+  m_syncLogicHandler.createSyncSocket(m_confParam.getChronosyncPrefix());
 
   /* Logging start */
   m_confParam.writeLog();
