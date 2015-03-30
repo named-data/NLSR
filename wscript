@@ -28,6 +28,7 @@ GIT_TAG_PREFIX = "NLSR-"
 
 from waflib import Build, Logs, Utils, Task, TaskGen, Configure, Context
 from waflib.Tools import c_preproc
+import os
 
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
@@ -47,6 +48,9 @@ def configure(conf):
                'boost', 'openssl',
                'default-compiler-flags',
                'doxygen', 'sphinx_build'])
+
+    if 'PKG_CONFIG_PATH' not in os.environ:
+        os.environ['PKG_CONFIG_PATH'] = Utils.subst_vars('${LIBDIR}/pkgconfig', conf.env)
 
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
                    uselib_store='NDN_CXX', mandatory=True)
