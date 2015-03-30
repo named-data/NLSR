@@ -1,0 +1,15 @@
+sudo: true
+language: cpp
+os:
+  - linux
+compiler:
+  - gcc
+notifications:
+  email:
+    on_success: always
+    on_failure: always
+env:
+  global:
+    - NODE_LABELS="Linux Ubuntu Ubuntu-12.04 Ubuntu-12.04-64bit Boost1.48"
+script:
+  - ./.jenkins

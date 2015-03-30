@@ -1,8 +1,27 @@
 #!/usr/bin/env bash
-set -x
 set -e
 
-sudo apt-get -y install liblog4cxx10-dev protobuf-compiler libprotobuf-dev pkg-config || true
+JDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$JDIR"/util.sh
 
-# Disabled because OSX 10.8 requires special handling of dependencies
-# brew install log4cxx protobuf pkg-config || true
+if has OSX $NODE_LABELS && ! has OSX-10.8-c++11-64bit $NODE_LABELS; then
+    # OSX 10.8 requires special handling of dependencies
+    set -x
+    brew update
+    brew upgrade
+    brew install boost pkg-config sqlite cryptopp log4cxx protobuf
+    brew cleanup
+fi
+
+if has Ubuntu $NODE_LABELS; then
+    BOOST_PKG=libboost-all-dev
+    if has Ubuntu-12.04 $NODE_LABELS; then
+        BOOST_PKG=libboost1.48-all-dev
+    fi
+
+    set -x
+    sudo apt-get update -qq -y
+    sudo apt-get -qq -y install build-essential pkg-config $BOOST_PKG \
+                                libcrypto++-dev libsqlite3-dev \
+                                liblog4cxx10-dev protobuf-compiler libprotobuf-dev
+fi
