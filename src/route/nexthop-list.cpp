@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,10 +17,8 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #include <iostream>
 
 #include "common.hpp"
@@ -49,7 +48,15 @@ nexthopRemoveCompare(NextHop& nh1, NextHop& nh2)
 static bool
 nextHopSortingComparator(const NextHop& nh1, const NextHop& nh2)
 {
-  return nh1.getRouteCost() < nh2.getRouteCost();
+  if (nh1.getRouteCostAsAdjustedInteger() < nh2.getRouteCostAsAdjustedInteger()) {
+    return true;
+  }
+  else if (nh1.getRouteCostAsAdjustedInteger() == nh2.getRouteCostAsAdjustedInteger()) {
+    return nh1.getConnectingFaceUri() < nh2.getConnectingFaceUri();
+  }
+  else {
+    return false;
+  }
 }
 
 /**

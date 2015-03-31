@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,10 +17,8 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author Ashlesh Gawande <agawande@memphis.edu>
- *
  **/
+
 #include "route/nexthop-list.hpp"
 #include "route/nexthop.hpp"
 #include <boost/test/unit_test.hpp>
@@ -83,6 +82,36 @@ BOOST_AUTO_TEST_CASE(HyperbolicRemoveNextHop)
 
   hopList.removeNextHop(hop1);
   BOOST_CHECK_EQUAL(hopList.getSize(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(TieBreaker)
+{
+  NextHop hopA;
+  hopA.setRouteCost(25);
+  hopA.setConnectingFaceUri("AAA");
+
+  NextHop hopZ;
+  hopZ.setRouteCost(25);
+  hopZ.setConnectingFaceUri("ZZZ");
+
+  NexthopList list;
+  list.addNextHop(hopA);
+  list.addNextHop(hopZ);
+
+  list.sort();
+
+  NexthopList::iterator it = list.begin();
+  BOOST_CHECK_EQUAL(it->getConnectingFaceUri(), hopA.getConnectingFaceUri());
+
+  list.reset();
+
+  list.addNextHop(hopZ);
+  list.addNextHop(hopA);
+
+  list.sort();
+
+  it = list.begin();
+  BOOST_CHECK_EQUAL(it->getConnectingFaceUri(), hopA.getConnectingFaceUri());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
