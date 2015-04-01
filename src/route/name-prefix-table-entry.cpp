@@ -38,7 +38,7 @@ NamePrefixTableEntry::generateNhlfromRteList()
        it != m_rteList.end(); ++it)
   {
     // Add every next hop from each routing table entry to this entry's NHL.
-    for (std::list<NextHop>::iterator nhit =
+    for (std::set<NextHop, NextHopComparator>::iterator nhit =
            (*it).getNexthopList().getNextHops().begin();
          nhit != (*it).getNexthopList().getNextHops().end(); ++nhit)
     {
@@ -80,7 +80,7 @@ NamePrefixTableEntry::addRoutingTableEntry(RoutingTableEntry& rte)
   else
   {
     (*it).getNexthopList().reset(); // reseting existing routing table's next hop
-    for (std::list<NextHop>::iterator nhit =
+    for (std::set<NextHop, NextHopComparator>::iterator nhit =
            rte.getNexthopList().getNextHops().begin();
          nhit != rte.getNexthopList().getNextHops().end(); ++nhit) {
       (*it).getNexthopList().addNextHop((*nhit));

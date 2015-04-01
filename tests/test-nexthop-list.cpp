@@ -86,32 +86,77 @@ BOOST_AUTO_TEST_CASE(HyperbolicRemoveNextHop)
 
 BOOST_AUTO_TEST_CASE(TieBreaker)
 {
+  // equal-cost hops are sorted lexicographically
   NextHop hopA;
   hopA.setRouteCost(25);
-  hopA.setConnectingFaceUri("AAA");
+  hopA.setConnectingFaceUri("AAAZZ");
 
   NextHop hopZ;
   hopZ.setRouteCost(25);
-  hopZ.setConnectingFaceUri("ZZZ");
+  hopZ.setConnectingFaceUri("ZZA");
 
   NexthopList list;
   list.addNextHop(hopA);
   list.addNextHop(hopZ);
 
-  list.sort();
-
   NexthopList::iterator it = list.begin();
   BOOST_CHECK_EQUAL(it->getConnectingFaceUri(), hopA.getConnectingFaceUri());
 
   list.reset();
-
   list.addNextHop(hopZ);
   list.addNextHop(hopA);
 
-  list.sort();
-
   it = list.begin();
   BOOST_CHECK_EQUAL(it->getConnectingFaceUri(), hopA.getConnectingFaceUri());
+
+
+  // equal-cost and lexicographically equal hops are sorted by the length of their face uris
+  NextHop longUriHop;
+  longUriHop.setRouteCost(25);
+  longUriHop.setConnectingFaceUri("AAAAAA");
+
+  NextHop shortUriHop;
+  shortUriHop.setRouteCost(25);
+  shortUriHop.setConnectingFaceUri("AAA");
+
+  list.reset();
+  list.addNextHop(longUriHop);
+  list.addNextHop(shortUriHop);
+
+  it = list.begin();
+  BOOST_CHECK_EQUAL(it->getConnectingFaceUri(), shortUriHop.getConnectingFaceUri());
+}
+
+BOOST_AUTO_TEST_CASE(SortOnAddAndRemove)
+{
+  NexthopList list;
+
+  NextHop hopA("A", 10);
+  NextHop hopB("B", 5);
+  NextHop hopC("C", 25);
+
+  list.addNextHop(hopA);
+  list.addNextHop(hopB);
+  list.addNextHop(hopC);
+
+  BOOST_REQUIRE_EQUAL(list.getSize(), 3);
+
+  double lastCost = 0;
+  for (const auto& hop : list) {
+    BOOST_CHECK(hop.getRouteCost() > lastCost);
+    lastCost = hop.getRouteCost();
+  }
+
+  // removing a hop keep the list sorted
+  list.removeNextHop(hopA);
+
+  BOOST_REQUIRE_EQUAL(list.getSize(), 2);
+
+  lastCost = 0;
+  for (const auto& hop : list) {
+    BOOST_CHECK(hop.getRouteCost() > lastCost);
+    lastCost = hop.getRouteCost();
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

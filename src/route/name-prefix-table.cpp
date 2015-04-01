@@ -53,7 +53,6 @@ NamePrefixTable::addEntry(const ndn::Name& name, RoutingTableEntry& rte)
     NamePrefixTableEntry entry(name);
     entry.addRoutingTableEntry(rte); // Add this RTE to this new NPT entry.
     entry.generateNhlfromRteList(); // Generate a list of next-hops from the RTE.
-    entry.getNexthopList().sort(); // Sort it.
 
     m_table.push_back(entry); // Add the new, completed entry into the main table.
 
@@ -68,8 +67,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, RoutingTableEntry& rte)
     // Update the existing entry with the new RTE.
     it->addRoutingTableEntry(rte);
 
-    it->generateNhlfromRteList(); // Rebuild the list of next-hops
-    it->getNexthopList().sort(); // Sort it.
+    it->generateNhlfromRteList();
 
     // As above, inform the FIB of this fact.
     // We may possibly have a new best next-hop for this name prefix
@@ -122,7 +120,6 @@ NamePrefixTable::removeEntry(const ndn::Name& name, RoutingTableEntry& rte)
     else {
       _LOG_TRACE(*it << " has other routing table entries; updating FIB with next hops");
       it->generateNhlfromRteList();
-      it->getNexthopList().sort();
 
       m_nlsr.getFib().update(name, it->getNexthopList());
     }

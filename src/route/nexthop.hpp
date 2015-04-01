@@ -16,9 +16,6 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 #ifndef NLSR_NEXTHOP_HPP
 #define NLSR_NEXTHOP_HPP
@@ -80,7 +77,7 @@ public:
   }
 
   void
-  setRouteCost(double rc)
+  setRouteCost(const double rc)
   {
     m_routeCost = rc;
   }

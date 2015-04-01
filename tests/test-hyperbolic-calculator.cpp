@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   NexthopList& bHopList = entryB->getNexthopList();
   BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 2);
 
-  for (std::list<NextHop>::iterator it = bHopList.begin(); it != bHopList.end(); ++it) {
+  for (std::set<NextHop, NextHopComparator>::iterator it = bHopList.begin(); it != bHopList.end(); ++it) {
     std::string faceUri = it->getConnectingFaceUri();
     uint64_t cost = it->getRouteCostAsAdjustedInteger();
 
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   NexthopList& cHopList = entryC->getNexthopList();
   BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 2);
 
-  for (std::list<NextHop>::iterator it = cHopList.begin(); it != cHopList.end(); ++it) {
+  for (std::set<NextHop, NextHopComparator>::iterator it = cHopList.begin(); it != cHopList.end(); ++it) {
     std::string faceUri = it->getConnectingFaceUri();
     uint64_t cost = it->getRouteCostAsAdjustedInteger();
 

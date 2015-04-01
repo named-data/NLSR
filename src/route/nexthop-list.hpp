@@ -16,14 +16,11 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 #ifndef NLSR_NEXTHOP_LIST_HPP
 #define NLSR_NEXTHOP_LIST_HPP
 
-#include <list>
+#include <set>
 #include <iostream>
 #include <boost/cstdint.hpp>
 
@@ -33,6 +30,21 @@
 #include "adjacent.hpp"
 
 namespace nlsr {
+
+struct NextHopComparator {
+  bool
+  operator() (const NextHop& nh1, const NextHop& nh2) const {
+    if (nh1.getRouteCostAsAdjustedInteger() < nh2.getRouteCostAsAdjustedInteger()) {
+      return true;
+    }
+    else if (nh1.getRouteCostAsAdjustedInteger() == nh2.getRouteCostAsAdjustedInteger()) {
+      return nh1.getConnectingFaceUri() < nh2.getConnectingFaceUri();
+    }
+    else {
+      return false;
+    }
+  }
+};
 
 class NexthopList
 {
@@ -45,7 +57,6 @@ public:
   {
   }
 
-
   /*! \brief Adds a next hop to the list.
     \param nh The next hop.
 
@@ -54,18 +65,16 @@ public:
     cost with new next hop's route cost
   */
   void
-  addNextHop(NextHop& nh);
+  addNextHop(const NextHop& nh);
 
-  /*! \brief Removes a next hop.
-    \param nh The next hop.
+  /*! \brief Remove a next hop from the Next Hop list
+      \param nh The NextHop we want to remove.
 
-    Remove a next hop only if both next hop face and route cost are same.
+    The next hop gets removed only if both next hop face and route cost are same.
   */
-  void
-  removeNextHop(NextHop& nh);
 
   void
-  sort();
+  removeNextHop(const NextHop& nh);
 
   size_t
   getSize()
@@ -79,14 +88,14 @@ public:
     m_nexthopList.clear();
   }
 
-  std::list<NextHop>&
+  std::set<NextHop, NextHopComparator>&
   getNextHops()
   {
     return m_nexthopList;
   }
 
-  typedef std::list<NextHop>::iterator iterator;
-  typedef std::list<NextHop>::const_iterator const_iterator;
+  typedef std::set<NextHop, NextHopComparator>::iterator iterator;
+  typedef std::set<NextHop, NextHopComparator>::const_iterator const_iterator;
 
   iterator
   begin()
@@ -116,7 +125,7 @@ public:
   writeLog();
 
 private:
-  std::list<NextHop> m_nexthopList;
+  std::set<NextHop, NextHopComparator> m_nexthopList;
 };
 
 } // namespace nlsr

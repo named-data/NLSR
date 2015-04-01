@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCost)
   NexthopList& bHopList = entryB->getNexthopList();
   BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 1);
 
-  NextHop& nextHopForB = bHopList.getNextHops().front();
+  const NextHop& nextHopForB = *(bHopList.getNextHops().begin());
 
   BOOST_CHECK(nextHopForB.getConnectingFaceUri() == ROUTER_B_FACE &&
               nextHopForB.getRouteCostAsAdjustedInteger() == LINK_AB_COST);
@@ -256,7 +256,7 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCost)
   NexthopList& cHopList = entryC->getNexthopList();
   BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 1);
 
-  NextHop& nextHopForC = cHopList.getNextHops().front();
+  const NextHop& nextHopForC = *(cHopList.getNextHops().begin());
 
   BOOST_CHECK(nextHopForC.getConnectingFaceUri() == ROUTER_C_FACE &&
               nextHopForC.getRouteCostAsAdjustedInteger() == LINK_AC_COST);

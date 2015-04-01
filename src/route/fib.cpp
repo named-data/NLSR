@@ -16,9 +16,6 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 #include <list>
 #include <cmath>
@@ -72,7 +69,7 @@ Fib::remove(const ndn::Name& name)
                                                   m_table.end(),
                                                   bind(&fibEntryNameCompare, _1, name));
   if (it != m_table.end()) {
-    for (std::list<NextHop>::iterator nhit =
+    for (std::set<NextHop, NextHopComparator>::iterator nhit =
            (*it).getNexthopList().getNextHops().begin();
          nhit != (*it).getNexthopList().getNextHops().end(); nhit++) {
       //remove entry from NDN-FIB
@@ -110,8 +107,6 @@ Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
                      ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
     }
   }
-
-  entry.getNexthopList().sort();
 }
 
 void
@@ -155,9 +150,6 @@ void
 Fib::update(const ndn::Name& name, NexthopList& allHops)
 {
   _LOG_DEBUG("Fib::update called");
-
-  // Sort all of the next hops so lower cost hops are prioritized
-  allHops.sort();
 
   // Get the max possible faces which is the minumum of the configuration setting and
   // the length of the list of all next hops.
@@ -239,7 +231,7 @@ Fib::clean()
        ++it) {
     _LOG_DEBUG("Cancelling Scheduled event. Name: " << it->getName());
     cancelScheduledExpiringEvent((*it).getExpiringEventId());
-    for (std::list<NextHop>::iterator nhit =
+    for (std::set<NextHop, NextHopComparator>::iterator nhit =
          (*it).getNexthopList().getNextHops().begin();
          nhit != (*it).getNexthopList().getNextHops().end(); nhit++) {
       //Remove entry from NDN-FIB
@@ -279,7 +271,7 @@ void
 Fib::removeHop(NexthopList& nl, const std::string& doNotRemoveHopFaceUri,
                const ndn::Name& name)
 {
-  for (std::list<NextHop>::iterator it = nl.getNextHops().begin();
+  for (std::set<NextHop, NextHopComparator>::iterator it = nl.getNextHops().begin();
        it != nl.getNextHops().end();   ++it) {
     if (it->getConnectingFaceUri() != doNotRemoveHopFaceUri) {
       //Remove FIB Entry from NDN-FIB
