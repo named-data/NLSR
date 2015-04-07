@@ -172,10 +172,12 @@ private:
   void
   exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::EventId
   scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
                            const seconds& expTime);
 
+private:
   void
   exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 

@@ -296,13 +296,28 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
       _LOG_DEBUG("Face to " << adjacent->getName() << " with face id: " << faceId << " destroyed");
 
       adjacent->setFaceId(0);
-      adjacent->setStatus(Adjacent::STATUS_INACTIVE);
 
-      // A new adjacency LSA cannot be built until the neighbor is marked INACTIVE and
-      // has met the HELLO retry threshold
-      adjacent->setInterestTimedOutNo(m_confParam.getInterestRetryNumber());
+      // Only trigger an Adjacency LSA build if this node is changing from ACTIVE to INACTIVE
+      // since this rebuild will effectively cancel the previous Adjacency LSA refresh event
+      // and schedule a new one further in the future.
+      //
+      // Continuously scheduling the refresh in the future will block the router from refreshing
+      // its Adjacency LSA. Since other routers' Name prefixes' expiration times are updated
+      // when this router refreshes its Adjacency LSA, the other routers' prefixes will expire
+      // and be removed from the RIB.
+      //
+      // This check is required to fix Bug #2733 for now. This check would be unnecessary
+      // to fix Bug #2733 when Issue #2732 is completed, but the check also helps with
+      // optimization so it can remain even when Issue #2732 is implemented.
+      if (adjacent->getStatus() == Adjacent::STATUS_ACTIVE) {
+        adjacent->setStatus(Adjacent::STATUS_INACTIVE);
 
-      m_nlsrLsdb.scheduleAdjLsaBuild();
+        // A new adjacency LSA cannot be built until the neighbor is marked INACTIVE and
+        // has met the HELLO retry threshold
+        adjacent->setInterestTimedOutNo(m_confParam.getInterestRetryNumber());
+
+        m_nlsrLsdb.scheduleAdjLsaBuild();
+      }
     }
   }
 }
