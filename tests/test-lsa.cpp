@@ -57,28 +57,43 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
 
 BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
 {
-  Adjacent adj1("adjacent");
-  Adjacent adj2("adjacent2");
-
-  AdjacencyList adjList;
-  adjList.insert(adj1);
+  ndn::Name routerName("/ndn/site/router");
+  ndn::Name adjacencyName("/ndn/site/adjacency");
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
-//For AdjLsa, lsType is 2.
-//1 is the number of adjacent in adjacent list.
-  AdjLsa alsa1("router1", AdjLsa::TYPE_STRING, 12, testTimePoint, 1, adjList);
-  AdjLsa alsa2("router1", AdjLsa::TYPE_STRING, 12, testTimePoint, 1, adjList);
+  uint32_t seqNo = 12;
 
+  // An AdjLsa initialized with ACTIVE adjacencies should copy the adjacencies
+  AdjacencyList activeAdjacencies;
+  Adjacent activeAdjacency(adjacencyName);
+  activeAdjacency.setStatus(Adjacent::STATUS_ACTIVE);
+  activeAdjacencies.insert(activeAdjacency);
+
+  AdjLsa alsa1(routerName, AdjLsa::TYPE_STRING, seqNo, testTimePoint,
+               activeAdjacencies.getSize(), activeAdjacencies);
+  BOOST_CHECK_EQUAL(alsa1.getAdl().getSize(), 1);
   BOOST_CHECK_EQUAL(alsa1.getLsType(), AdjLsa::TYPE_STRING);
-  BOOST_CHECK_EQUAL(alsa1.getLsSeqNo(), (uint32_t)12);
+  BOOST_CHECK_EQUAL(alsa1.getLsSeqNo(), seqNo);
   BOOST_CHECK_EQUAL(alsa1.getExpirationTimePoint(), testTimePoint);
-  BOOST_CHECK_EQUAL(alsa1.getNoLink(), (uint32_t)1);
+  BOOST_CHECK_EQUAL(alsa1.getNoLink(), 1);
+  BOOST_CHECK(alsa1.getAdl().isNeighbor(activeAdjacency.getName()));
 
-  BOOST_CHECK(alsa1.isEqualContent(alsa2));
+  // An AdjLsa initialized with INACTIVE adjacencies should not copy the adjacencies
+  AdjacencyList inactiveAdjacencies;
+  Adjacent inactiveAdjacency(adjacencyName);
+  inactiveAdjacency.setStatus(Adjacent::STATUS_INACTIVE);
+  inactiveAdjacencies.insert(inactiveAdjacency);
 
-  alsa1.addAdjacent(adj2);
+  AdjLsa alsa2(routerName, AdjLsa::TYPE_STRING, seqNo, testTimePoint,
+               inactiveAdjacencies.getSize(), inactiveAdjacencies);
+  BOOST_CHECK_EQUAL(alsa2.getAdl().getSize(), 0);
 
-  const std::string ADJACENT_1 = "adjacent2";
-  BOOST_CHECK(alsa1.getAdl().isNeighbor(ADJACENT_1));
+  // Thus, the two LSAs should not have equal content
+  BOOST_CHECK_EQUAL(alsa1.isEqualContent(alsa2), false);
+
+  // Create a duplicate of alsa1 which should have equal content
+  AdjLsa alsa3(routerName, AdjLsa::TYPE_STRING, seqNo, testTimePoint,
+               activeAdjacencies.getSize(), activeAdjacencies);
+  BOOST_CHECK(alsa1.isEqualContent(alsa3));
 }
 
 BOOST_AUTO_TEST_CASE(CoordinateLsaConstructorAndGetters)
