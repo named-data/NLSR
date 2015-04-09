@@ -19,14 +19,19 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "test-common.hpp"
+
+#include "adjacent.hpp"
 #include "lsa.hpp"
 #include "name-prefix-list.hpp"
-#include "adjacent.hpp"
-#include <boost/test/unit_test.hpp>
+
 #include <ndn-cxx/util/time.hpp>
+
+#include <sstream>
 
 namespace nlsr {
 namespace test {
+
 BOOST_AUTO_TEST_SUITE(TestLsa)
 
 BOOST_AUTO_TEST_CASE(NameLsaBasic)
@@ -91,7 +96,51 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaConstructorAndGetters)
   BOOST_CHECK_EQUAL(clsa1.getData(), clsa2.getData());
 }
 
+BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
+{
+  Adjacent adj1("adjacent1");
+  Adjacent adj2("adjacent2");
+
+  adj1.setStatus(Adjacent::STATUS_ACTIVE);
+  adj2.setStatus(Adjacent::STATUS_ACTIVE);
+
+  AdjacencyList adjList;
+  adjList.insert(adj1);
+  adjList.insert(adj2);
+
+  ndn::time::system_clock::TimePoint testTimePoint = ndn::time::system_clock::now();
+
+  std::ostringstream ss;
+  ss << testTimePoint;
+
+  const std::string TEST_TIME_POINT_STRING = ss.str();
+
+  AdjLsa lsa("router1", AdjLsa::TYPE_STRING, 12, testTimePoint, 1, adjList);
+
+  std::string EXPECTED_OUTPUT =
+    "Adj Lsa:\n"
+    "  Origination Router: /router1\n"
+    "  Ls Type: adjacency\n"
+    "  Ls Seq No: 12\n"
+    "  Ls Lifetime: " + TEST_TIME_POINT_STRING + "\n"
+    "  Adjacents: \n"
+    "    Adjacent 1:\n"
+    "      Adjacent Name: /adjacent1\n"
+    "      Connecting FaceUri: \n"
+    "      Link Cost: 10\n"
+    "    Adjacent 2:\n"
+    "      Adjacent Name: /adjacent2\n"
+    "      Connecting FaceUri: \n"
+    "      Link Cost: 10\n"
+    "adj_lsa_end";
+
+  std::ostringstream os;
+  os << lsa;
+
+  BOOST_CHECK_EQUAL(os.str(), EXPECTED_OUTPUT);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-} //namespace test
-} //namespace nlsr
+} // namespace test
+} // namespace nlsr

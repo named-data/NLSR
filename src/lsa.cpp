@@ -320,22 +320,30 @@ AdjLsa::removeNptEntries(Nlsr& pnlsr)
 void
 AdjLsa::writeLog()
 {
-  _LOG_DEBUG("Adj Lsa: ");
-  _LOG_DEBUG("  Origination Router: " << m_origRouter);
-  _LOG_DEBUG("  Ls Type: " << m_lsType);
-  _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
-  _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
-  _LOG_DEBUG("  Adjacents: ");
-  int i = 1;
-  std::list<Adjacent> al = m_adl.getAdjList();
-  for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++)
-  {
-    _LOG_DEBUG("    Adjacent " << i << ": ");;
-    _LOG_DEBUG("      Adjacent Name: " << (*it).getName());
-    _LOG_DEBUG("      Connecting FaceUri: " << (*it).getConnectingFaceUri());
-    _LOG_DEBUG("      Link Cost: " << (*it).getLinkCost());
-  }
-  _LOG_DEBUG("adj_lsa_end");
+  _LOG_DEBUG(*this);
 }
 
-}//namespace nlsr
+std::ostream&
+operator<<(std::ostream& os, const AdjLsa& adjLsa)
+{
+  os << "Adj Lsa:\n"
+     << "  Origination Router: " << adjLsa.getOrigRouter() << "\n"
+     << "  Ls Type: " << adjLsa.getLsType() << "\n"
+     << "  Ls Seq No: " << adjLsa.getLsSeqNo() << "\n"
+     << "  Ls Lifetime: " << adjLsa.getExpirationTimePoint() << "\n"
+     << "  Adjacents: \n";
+
+  int adjacencyIndex = 1;
+
+  for (const Adjacent& adjacency : adjLsa) {
+  os << "    Adjacent " << adjacencyIndex++ << ":\n"
+     << "      Adjacent Name: " << adjacency.getName() << "\n"
+     << "      Connecting FaceUri: " << adjacency.getConnectingFaceUri() << "\n"
+     << "      Link Cost: " << adjacency.getLinkCost() << "\n";
+  }
+  os << "adj_lsa_end";
+
+  return os;
+}
+
+} // namespace nlsr

@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,10 +17,8 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #ifndef NLSR_ADJACENCY_LIST_HPP
 #define NLSR_ADJACENCY_LIST_HPP
 
@@ -34,8 +33,10 @@ class Nlsr;
 
 class AdjacencyList
 {
-
 public:
+  typedef std::list<Adjacent>::const_iterator const_iterator;
+  typedef std::list<Adjacent>::iterator iterator;
+
   AdjacencyList();
   ~AdjacencyList();
 
@@ -110,8 +111,21 @@ public:
   void
   writeLog();
 
+public:
+  const_iterator
+  begin() const
+  {
+    return m_adjList.begin();
+  }
+
+  const_iterator
+  end() const
+  {
+    return m_adjList.end();
+  }
+
 private:
-  std::list<Adjacent>::iterator
+  iterator
   find(const ndn::Name& adjName);
 
 private:

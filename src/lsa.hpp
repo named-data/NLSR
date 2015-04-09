@@ -165,6 +165,8 @@ public:
 class AdjLsa: public Lsa
 {
 public:
+  typedef AdjacencyList::const_iterator const_iterator;
+
   AdjLsa()
     : Lsa()
     , m_adl()
@@ -214,6 +216,19 @@ public:
 
   void
   writeLog();
+
+public:
+  const_iterator
+  begin() const
+  {
+    return m_adl.begin();
+  }
+
+  const_iterator
+  end() const
+  {
+    return m_adl.end();
+  }
 
 private:
   uint32_t m_noLink;
@@ -284,6 +299,9 @@ private:
 public:
   static const std::string TYPE_STRING;
 };
+
+std::ostream&
+operator<<(std::ostream& os, const AdjLsa& adjLsa);
 
 }//namespace nlsr
 
