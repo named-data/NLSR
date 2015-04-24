@@ -39,7 +39,6 @@ class LsdbStatusPublisher : public SegmentPublisher<ndn::Face>
 public:
   LsdbStatusPublisher(Lsdb& lsdb,
                       ndn::Face& face,
-                      const ndn::Name& prefix,
                       ndn::KeyChain& keyChain,
                       AdjacencyLsaPublisher& adjacencyLsaPublisher,
                       CoordinateLsaPublisher& coordinateLsaPublisher,

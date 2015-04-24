@@ -39,6 +39,45 @@ const ndn::Name Nlsr::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
 using namespace ndn;
 using namespace std;
 
+Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face)
+  : m_nlsrFace(face)
+  , m_scheduler(scheduler)
+  , m_confParam()
+  , m_adjacencyList()
+  , m_namePrefixList()
+  , m_sequencingManager()
+  , m_isDaemonProcess(false)
+  , m_configFileName("nlsr.conf")
+  , m_nlsrLsdb(*this, scheduler, m_syncLogicHandler)
+  , m_adjBuildCount(0)
+  , m_isBuildAdjLsaSheduled(false)
+  , m_isRouteCalculationScheduled(false)
+  , m_isRoutingTableCalculating(false)
+  , m_routingTable(scheduler)
+  , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, m_keyChain)
+  , m_namePrefixTable(*this)
+  , m_syncLogicHandler(m_nlsrFace, m_nlsrLsdb, m_confParam, m_sequencingManager)
+  , m_helloProtocol(*this, scheduler)
+  , m_lsdbDatasetHandler(m_nlsrLsdb,
+                         m_nlsrFace,
+                         m_confParam.getRouterPrefix(),
+                         m_keyChain)
+  , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
+  , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
+  , m_prefixUpdateProcessor(m_nlsrFace,
+                            m_namePrefixList,
+                            m_nlsrLsdb,
+                            m_syncLogicHandler,
+                            DEFAULT_BROADCAST_PREFIX,
+                            m_keyChain,
+                            m_certificateCache)
+  , m_faceMonitor(m_nlsrFace)
+  , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
+{
+  m_faceMonitor.onNotification.connect(bind(&Nlsr::onFaceEventNotification, this, _1));
+  m_faceMonitor.start();
+}
+
 void
 Nlsr::registrationFailed(const ndn::Name& name)
 {
@@ -49,12 +88,10 @@ Nlsr::registrationFailed(const ndn::Name& name)
 void
 Nlsr::onRegistrationSuccess(const ndn::Name& name)
 {
+  _LOG_DEBUG("Successfully registered prefix: " << name);
+
   if (name.equals(m_confParam.getRouterPrefix())) {
-    m_lsdbDatasetHandler = std::unique_ptr<LsdbDatasetInterestHandler>(
-      new LsdbDatasetInterestHandler(m_nlsrLsdb,
-                                     m_nlsrFace,
-                                     m_confParam.getRouterPrefix(),
-                                     m_keyChain));
+    m_lsdbDatasetHandler.startListeningOnRouterPrefix();
   }
 }
 
@@ -64,6 +101,7 @@ Nlsr::onLocalhostRegistrationSuccess(const ndn::Name& name)
   _LOG_DEBUG("Successfully registered prefix: " << name);
 
   m_prefixUpdateProcessor.startListening();
+  m_lsdbDatasetHandler.startListeningOnLocalhost();
 }
 
 void

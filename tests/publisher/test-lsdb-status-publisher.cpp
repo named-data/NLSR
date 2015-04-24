@@ -75,16 +75,19 @@ BOOST_AUTO_TEST_CASE(Basic)
   lsdb.installNameLsa(routerBNameLsa);
 
   ndn::Name thisRouter("/This/Router");
-  AdjacencyLsaPublisher adjacencyLsaPublisher(lsdb, *face, thisRouter, keyChain);
-  CoordinateLsaPublisher coordinateLsaPublisher(lsdb, *face, thisRouter, keyChain);
-  NameLsaPublisher nameLsaPublisher(lsdb, *face, thisRouter, keyChain);
+  AdjacencyLsaPublisher adjacencyLsaPublisher(lsdb, *face, keyChain);
+  CoordinateLsaPublisher coordinateLsaPublisher(lsdb, *face, keyChain);
+  NameLsaPublisher nameLsaPublisher(lsdb, *face, keyChain);
 
-  LsdbStatusPublisher publisher(lsdb, *face, thisRouter, keyChain,
+  LsdbStatusPublisher publisher(lsdb, *face, keyChain,
                                 adjacencyLsaPublisher,
                                 coordinateLsaPublisher,
                                 nameLsaPublisher);
 
-  publisher.publish();
+  ndn::Name publishingPrefix = ndn::Name(thisRouter);
+  publishingPrefix.append(Lsdb::NAME_COMPONENT).append(LsdbStatusPublisher::DATASET_COMPONENT);
+
+  publisher.publish(publishingPrefix);
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_REQUIRE_EQUAL(face->sentDatas.size(), 1);

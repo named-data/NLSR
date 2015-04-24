@@ -67,40 +67,7 @@ class Nlsr
   };
 
 public:
-  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face)
-    : m_nlsrFace(face)
-    , m_scheduler(scheduler)
-    , m_confParam()
-    , m_adjacencyList()
-    , m_namePrefixList()
-    , m_sequencingManager()
-    , m_isDaemonProcess(false)
-    , m_configFileName("nlsr.conf")
-    , m_nlsrLsdb(*this, scheduler, m_syncLogicHandler)
-    , m_adjBuildCount(0)
-    , m_isBuildAdjLsaSheduled(false)
-    , m_isRouteCalculationScheduled(false)
-    , m_isRoutingTableCalculating(false)
-    , m_routingTable(scheduler)
-    , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, m_keyChain)
-    , m_namePrefixTable(*this)
-    , m_syncLogicHandler(m_nlsrFace, m_nlsrLsdb, m_confParam, m_sequencingManager)
-    , m_helloProtocol(*this, scheduler)
-    , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
-    , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
-    , m_prefixUpdateProcessor(m_nlsrFace,
-                              m_namePrefixList,
-                              m_nlsrLsdb,
-                              m_syncLogicHandler,
-                              DEFAULT_BROADCAST_PREFIX,
-                              m_keyChain,
-                              m_certificateCache)
-    , m_faceMonitor(m_nlsrFace)
-    , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
-  {
-    m_faceMonitor.onNotification.connect(bind(&Nlsr::onFaceEventNotification, this, _1));
-    m_faceMonitor.start();
-  }
+  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face);
 
   void
   registrationFailed(const ndn::Name& name);
@@ -400,7 +367,7 @@ private:
   NamePrefixTable m_namePrefixTable;
   SyncLogicHandler m_syncLogicHandler;
   HelloProtocol m_helloProtocol;
-  std::unique_ptr<LsdbDatasetInterestHandler> m_lsdbDatasetHandler;
+  LsdbDatasetInterestHandler m_lsdbDatasetHandler;
 
 private:
   ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;

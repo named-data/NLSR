@@ -32,12 +32,11 @@ const ndn::Name::Component LsdbStatusPublisher::DATASET_COMPONENT = ndn::Name::C
 
 LsdbStatusPublisher::LsdbStatusPublisher(Lsdb& lsdb,
                                          ndn::Face& face,
-                                         const ndn::Name& prefix,
                                          ndn::KeyChain& keyChain,
                                          AdjacencyLsaPublisher& adjacencyLsaPublisher,
                                          CoordinateLsaPublisher& coordinateLsaPublisher,
                                          NameLsaPublisher& nameLsaPublisher)
-  : SegmentPublisher<ndn::Face>(face, ndn::Name(prefix).append(DATASET_COMPONENT), keyChain)
+  : SegmentPublisher<ndn::Face>(face, keyChain)
   , m_adjacencyLsaPublisher(adjacencyLsaPublisher)
   , m_coordinateLsaPublisher(coordinateLsaPublisher)
   , m_nameLsaPublisher(nameLsaPublisher)

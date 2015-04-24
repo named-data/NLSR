@@ -36,11 +36,8 @@ template <class TlvType>
 class LsaPublisher : public SegmentPublisher<ndn::Face>
 {
 public:
-  LsaPublisher(ndn::Face& face,
-                const ndn::Name& prefix,
-                ndn::KeyChain& keyChain,
-                const ndn::Name::Component& datasetComponent)
-  : SegmentPublisher<ndn::Face>(face, ndn::Name(prefix).append(datasetComponent), keyChain)
+  LsaPublisher(ndn::Face& face, ndn::KeyChain& keyChain)
+  : SegmentPublisher<ndn::Face>(face, keyChain)
   {
   }
 
@@ -75,7 +72,6 @@ class AdjacencyLsaPublisher : public LsaPublisher<tlv::AdjacencyLsa>
 public:
   AdjacencyLsaPublisher(Lsdb& lsdb,
                         ndn::Face& face,
-                        const ndn::Name& prefix,
                         ndn::KeyChain& keyChain);
 
   std::list<tlv::AdjacencyLsa>
@@ -97,7 +93,6 @@ class CoordinateLsaPublisher : public LsaPublisher<tlv::CoordinateLsa>
 public:
   CoordinateLsaPublisher(Lsdb& lsdb,
                         ndn::Face& face,
-                        const ndn::Name& prefix,
                         ndn::KeyChain& keyChain);
 
   std::list<tlv::CoordinateLsa>
@@ -119,7 +114,6 @@ class NameLsaPublisher : public LsaPublisher<tlv::NameLsa>
 public:
   NameLsaPublisher(Lsdb& lsdb,
                    ndn::Face& face,
-                   const ndn::Name& prefix,
                    ndn::KeyChain& keyChain);
 
   std::list<tlv::NameLsa>

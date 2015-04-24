@@ -52,13 +52,39 @@ public:
                              ndn::KeyChain& keyChain);
 
   void
-  onInterest(const ndn::Interest& interest);
+  startListeningOnLocalhost();
+
+  void
+  startListeningOnRouterPrefix();
+
+  const ndn::Name&
+  getLocalhostCommandPrefix()
+  {
+    return LOCALHOST_COMMAND_PREFIX;
+  }
+
+  const ndn::Name&
+  getRouterNameCommandPrefix()
+  {
+    return ROUTER_NAME_COMMAND_PREFIX;
+  }
+
+private:
+  void
+  onInterest(const ndn::Interest& interest, const ndn::Name& commandPrefix);
+
+  bool
+  isValidCommandPrefix(const ndn::Interest& interest, const ndn::Name& commandPrefix);
+
+  void
+  processCommand(const ndn::Interest& interest, const ndn::Name::Component& command);
 
   void
   sendErrorResponse(const ndn::Name& name, uint32_t code, const std::string& error);
 
 private:
-  const ndn::Name COMMAND_PREFIX;
+  const ndn::Name LOCALHOST_COMMAND_PREFIX;
+  const ndn::Name ROUTER_NAME_COMMAND_PREFIX;
 
   ndn::Face& m_face;
   ndn::KeyChain& m_keyChain;
@@ -67,6 +93,10 @@ private:
   CoordinateLsaPublisher m_coordinateLsaPublisher;
   NameLsaPublisher m_nameLsaPublisher;
   LsdbStatusPublisher m_lsdbStatusPublisher;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  static const uint32_t ERROR_CODE_MALFORMED_COMMAND;
+  static const uint32_t ERROR_CODE_UNSUPPORTED_COMMAND;
 };
 
 } // namespace nlsr

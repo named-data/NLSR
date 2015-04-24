@@ -39,11 +39,9 @@ class SegmentPublisher : ndn::noncopyable
 {
 public:
   SegmentPublisher(FaceBase& face,
-                   const ndn::Name& prefix,
                    ndn::KeyChain& keyChain,
                    const ndn::time::milliseconds& freshnessPeriod = getDefaultFreshness())
     : m_face(face)
-    , m_prefix(prefix)
     , m_keyChain(keyChain)
     , m_freshnessPeriod(freshnessPeriod)
   {
@@ -67,8 +65,10 @@ public:
     return ndn::time::milliseconds(1000);
   }
 
+  /** \brief Publish data under provided prefix
+   */
   void
-  publish()
+  publish(const ndn::Name& prefix)
   {
     ndn::EncodingBuffer buffer;
     generate(buffer);
@@ -77,7 +77,7 @@ public:
     const uint8_t* segmentBegin = rawBuffer;
     const uint8_t* end = rawBuffer + buffer.size();
 
-    ndn::Name segmentPrefix(m_prefix);
+    ndn::Name segmentPrefix(prefix);
     segmentPrefix.appendVersion();
 
     uint64_t segmentNo = 0;
@@ -120,7 +120,6 @@ private:
 
 private:
   FaceBase& m_face;
-  const ndn::Name m_prefix;
   ndn::KeyChain& m_keyChain;
   const ndn::time::milliseconds m_freshnessPeriod;
 };

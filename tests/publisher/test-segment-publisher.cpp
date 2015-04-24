@@ -41,10 +41,9 @@ class TestSegmentPublisher : public SegmentPublisher<ndn::util::DummyClientFace>
 {
 public:
   TestSegmentPublisher(ndn::util::DummyClientFace& face,
-                       const ndn::Name& prefix,
                        ndn::KeyChain& keyChain,
                        const ndn::time::milliseconds freshnessPeriod)
-    : SegmentPublisher(face, prefix, keyChain, freshnessPeriod)
+    : SegmentPublisher(face, keyChain, freshnessPeriod)
     , m_totalPayloadLength(0)
   {
 
@@ -92,8 +91,8 @@ public:
   SegmentPublisherFixture()
     : m_face(ndn::util::makeDummyClientFace())
     , m_expectedFreshnessPeriod(ndn::time::milliseconds(111))
-    , m_publisher(*m_face, "/localhost/nfd/SegmentPublisherFixture",
-                  m_keyChain, m_expectedFreshnessPeriod)
+    , m_publisher(*m_face, m_keyChain, m_expectedFreshnessPeriod)
+    , m_publishingPrefix("/localhost/nfd/SegmentPublisherFixture")
   {
   }
 
@@ -140,6 +139,7 @@ protected:
   TestSegmentPublisher<N> m_publisher;
   ndn::EncodingBuffer m_buffer;
   ndn::KeyChain m_keyChain;
+  const ndn::Name m_publishingPrefix;
 };
 
 using boost::mpl::int_;
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_SUITE(PublisherTestSegmentPublisher)
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(Generate, T, DatasetSizes, SegmentPublisherFixture<T::value>)
 {
-  this->m_publisher.publish();
+  this->m_publisher.publish(this->m_publishingPrefix);
   this->m_face->processEvents();
 
   size_t nSegments = this->m_publisher.getTotalPayloadLength() /

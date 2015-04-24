@@ -34,9 +34,11 @@ BOOST_FIXTURE_TEST_SUITE(PublisherTestLsaPublisher, PublisherFixture)
 
 BOOST_AUTO_TEST_CASE(AdjacencyLsaPublisherBasic)
 {
+  ndn::Name thisRouter("/RouterA");
+
   // Adjacency LSA for RouterA
   AdjLsa routerALsa;
-  routerALsa.setOrigRouter("/RouterA");
+  routerALsa.setOrigRouter(thisRouter);
   addAdjacency(routerALsa, "/RouterA/adjacency1", "udp://face-1", 10);
   lsdb.installAdjLsa(routerALsa);
 
@@ -49,9 +51,12 @@ BOOST_AUTO_TEST_CASE(AdjacencyLsaPublisherBasic)
   addAdjacency(routerBLsa, "/RouterB/adjacency3", "udp://face-3", 30);
   lsdb.installAdjLsa(routerBLsa);
 
-  AdjacencyLsaPublisher publisher(lsdb, *face, "/RouterA", keyChain);
+  AdjacencyLsaPublisher publisher(lsdb, *face, keyChain);
 
-  publisher.publish();
+  ndn::Name publishingPrefix = ndn::Name(thisRouter);
+  publishingPrefix.append(Lsdb::NAME_COMPONENT).append(AdjacencyLsaPublisher::DATASET_COMPONENT);
+
+  publisher.publish(publishingPrefix);
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_REQUIRE_EQUAL(face->sentDatas.size(), 1);
@@ -69,7 +74,9 @@ BOOST_AUTO_TEST_CASE(AdjacencyLsaPublisherBasic)
 
 BOOST_AUTO_TEST_CASE(CoordinateLsaBasic)
 {
-  CoordinateLsa routerALsa = createCoordinateLsa("/RouterA", 10.0, 20.0);
+  ndn::Name thisRouter("/RouterA");
+
+  CoordinateLsa routerALsa = createCoordinateLsa(thisRouter.toUri(), 10.0, 20.0);
   lsdb.installCoordinateLsa(routerALsa);
 
   CoordinateLsa routerBLsa = createCoordinateLsa("/RouterB", 123.45, 543.21);
@@ -78,9 +85,12 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaBasic)
   CoordinateLsa routerCLsa = createCoordinateLsa("/RouterC", 0.01, 0.02);
   lsdb.installCoordinateLsa(routerCLsa);
 
-  CoordinateLsaPublisher publisher(lsdb, *face, "/RouterA", keyChain);
+  CoordinateLsaPublisher publisher(lsdb, *face, keyChain);
 
-  publisher.publish();
+  ndn::Name publishingPrefix = ndn::Name(thisRouter);
+  publishingPrefix.append(Lsdb::NAME_COMPONENT).append(CoordinateLsaPublisher::DATASET_COMPONENT);
+
+  publisher.publish(publishingPrefix);
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_REQUIRE_EQUAL(face->sentDatas.size(), 1);
@@ -102,10 +112,12 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaBasic)
 
 BOOST_AUTO_TEST_CASE(NameLsaBasic)
 {
+  ndn::Name thisRouter("/RouterA");
+
   // Name LSA for RouterA
   NameLsa routerALsa;
-  routerALsa.setOrigRouter("/RouterA");
-  routerALsa.addName("/RouterA/name1");
+  routerALsa.setOrigRouter(thisRouter.toUri());
+  routerALsa.addName(ndn::Name(thisRouter).append("name1"));
   lsdb.installNameLsa(routerALsa);
 
   // Name LSA for RouterB
@@ -116,9 +128,12 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
   routerBLsa.addName("/RouterB/name3");
   lsdb.installNameLsa(routerBLsa);
 
-  NameLsaPublisher publisher(lsdb, *face, "/RouterA", keyChain);
+  NameLsaPublisher publisher(lsdb, *face, keyChain);
 
-  publisher.publish();
+  ndn::Name publishingPrefix = ndn::Name(thisRouter);
+  publishingPrefix.append(Lsdb::NAME_COMPONENT).append(NameLsaPublisher::DATASET_COMPONENT);
+
+  publisher.publish(publishingPrefix);
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_REQUIRE_EQUAL(face->sentDatas.size(), 1);

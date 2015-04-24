@@ -22,6 +22,7 @@
 #include "lsdb-dataset-interest-handler.hpp"
 
 #include "logger.hpp"
+#include "nlsr.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/management/nfd-control-response.hpp>
@@ -31,58 +32,93 @@ namespace nlsr {
 
 INIT_LOGGER("LsdbDatasetInterestHandler");
 
+const uint32_t LsdbDatasetInterestHandler::ERROR_CODE_MALFORMED_COMMAND = 400;
+const uint32_t LsdbDatasetInterestHandler::ERROR_CODE_UNSUPPORTED_COMMAND = 501;
+
 LsdbDatasetInterestHandler::LsdbDatasetInterestHandler(Lsdb& lsdb,
                                                        ndn::Face& face,
                                                        const ndn::Name& routerName,
                                                        ndn::KeyChain& keyChain)
-  : COMMAND_PREFIX(ndn::Name(routerName).append(Lsdb::NAME_COMPONENT))
+  : LOCALHOST_COMMAND_PREFIX(ndn::Name(Nlsr::LOCALHOST_PREFIX).append(Lsdb::NAME_COMPONENT))
+  , ROUTER_NAME_COMMAND_PREFIX(ndn::Name(routerName).append(Lsdb::NAME_COMPONENT))
   , m_face(face)
   , m_keyChain(keyChain)
-  , m_adjacencyLsaPublisher(lsdb, face, COMMAND_PREFIX, keyChain)
-  , m_coordinateLsaPublisher(lsdb, face, COMMAND_PREFIX, keyChain)
-  , m_nameLsaPublisher(lsdb, face, COMMAND_PREFIX, keyChain)
-  , m_lsdbStatusPublisher(lsdb, face, COMMAND_PREFIX, keyChain,
+  , m_adjacencyLsaPublisher(lsdb, face, keyChain)
+  , m_coordinateLsaPublisher(lsdb, face, keyChain)
+  , m_nameLsaPublisher(lsdb, face, keyChain)
+  , m_lsdbStatusPublisher(lsdb, face, keyChain,
                           m_adjacencyLsaPublisher,
                           m_coordinateLsaPublisher,
                           m_nameLsaPublisher)
 
 {
-  _LOG_DEBUG("Setting interest filter for: " << COMMAND_PREFIX);
-  m_face.setInterestFilter(COMMAND_PREFIX,
-                           std::bind(&LsdbDatasetInterestHandler::onInterest, this, _2));
 }
 
 void
-LsdbDatasetInterestHandler::onInterest(const ndn::Interest& interest)
+LsdbDatasetInterestHandler::startListeningOnLocalhost()
 {
-  // Does interest match command prefix with one additional component?
-  if (interest.getName().size() != COMMAND_PREFIX.size() + 1 ||
-      !COMMAND_PREFIX.isPrefixOf(interest.getName()))
+  _LOG_DEBUG("Setting interest filter for: " << LOCALHOST_COMMAND_PREFIX);
+  m_face.setInterestFilter(LOCALHOST_COMMAND_PREFIX,
+                           std::bind(&LsdbDatasetInterestHandler::onInterest, this, _2,
+                                     std::cref(LOCALHOST_COMMAND_PREFIX)));
+}
+
+void
+LsdbDatasetInterestHandler::startListeningOnRouterPrefix()
+{
+  _LOG_DEBUG("Setting interest filter for: " << ROUTER_NAME_COMMAND_PREFIX);
+  m_face.setInterestFilter(ROUTER_NAME_COMMAND_PREFIX,
+                           std::bind(&LsdbDatasetInterestHandler::onInterest, this, _2,
+                                     std::cref(ROUTER_NAME_COMMAND_PREFIX)));
+}
+
+void
+LsdbDatasetInterestHandler::onInterest(const ndn::Interest& interest,
+                                       const ndn::Name& commandPrefix)
+{
+  if (!isValidCommandPrefix(interest, commandPrefix))
   {
     _LOG_DEBUG("Received malformed interest: " << interest.getName());
 
-    sendErrorResponse(interest.getName(), 400, "Malformed command");
+    sendErrorResponse(interest.getName(), ERROR_CODE_MALFORMED_COMMAND, "Malformed command");
     return;
   }
 
-  ndn::Name::Component command = interest.getName().get(COMMAND_PREFIX.size());
+  ndn::Name::Component command = interest.getName().get(commandPrefix.size());
+  processCommand(interest, command);
+}
+
+bool
+LsdbDatasetInterestHandler::isValidCommandPrefix(const ndn::Interest& interest,
+                                                 const ndn::Name& commandPrefix)
+{
+  size_t commandSize = interest.getName().size();
+
+  // Does the Interest match the command prefix with one additional component?
+  return (commandSize == commandPrefix.size() + 1 && commandPrefix.isPrefixOf(interest.getName()));
+}
+
+void
+LsdbDatasetInterestHandler::processCommand(const ndn::Interest& interest,
+                                           const ndn::Name::Component& command)
+{
   _LOG_TRACE("Received interest with command: " << command);
 
   if (command.equals(AdjacencyLsaPublisher::DATASET_COMPONENT)) {
-    m_adjacencyLsaPublisher.publish();
+    m_adjacencyLsaPublisher.publish(interest.getName());
   }
   else if (command.equals(CoordinateLsaPublisher::DATASET_COMPONENT)) {
-    m_coordinateLsaPublisher.publish();
+    m_coordinateLsaPublisher.publish(interest.getName());
   }
   else if (command.equals(NameLsaPublisher::DATASET_COMPONENT)) {
-    m_nameLsaPublisher.publish();
+    m_nameLsaPublisher.publish(interest.getName());
   }
   else if (command.equals(LsdbStatusPublisher::DATASET_COMPONENT)) {
-    m_lsdbStatusPublisher.publish();
+    m_lsdbStatusPublisher.publish(interest.getName());
   }
   else {
     _LOG_DEBUG("Unsupported command: " << command);
-    sendErrorResponse(interest.getName(), 501, "Unsupported command");
+    sendErrorResponse(interest.getName(), ERROR_CODE_UNSUPPORTED_COMMAND, "Unsupported command");
   }
 }
 
