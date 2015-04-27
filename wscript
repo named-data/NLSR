@@ -128,10 +128,25 @@ def build(bld):
         use='nlsr-objects',
         )
 
+    nlsrc = bld(
+        target='bin/nlsrc',
+        features='cxx cxxprogram',
+        source='tools/nlsrc.cpp',
+        use='nlsr-objects BOOST',
+        )
+
     if bld.env['WITH_TESTS']:
         bld.recurse('tests')
         bld.recurse('tests-integrated')
 
+    if bld.env['SPHINX_BUILD']:
+        bld(features="sphinx",
+            builder="man",
+            outdir="docs/manpages",
+            config="docs/conf.py",
+            source=bld.path.ant_glob('docs/manpages/**/*.rst'),
+            install_path="${MANDIR}/",
+            VERSION=VERSION)
 
 def docs(bld):
     from waflib import Options

@@ -59,7 +59,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'NLSR - Named Data Link State Routing Protocol'
-copyright = u'2014, Named Data Networking Project'
+copyright = u'2014-2015, Named Data Networking Project'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -239,6 +239,7 @@ latex_documents = [
 man_pages = [
     ('manpages/nlsr', 'nlsr', u'Named Data Link State Routing Protocol Daemon', None, 1),
     ('manpages/nlsr.conf', 'nlsr.conf', u'Named Data Link State Routing Protocol Daemon config file', None, 5),
+    ('manpages/nlsrc', 'nlsrc', u'Command-line utility to interact with and collect statistics from NLSR', None, 1),
 ]
 
 
