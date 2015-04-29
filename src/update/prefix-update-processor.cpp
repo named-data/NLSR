@@ -43,13 +43,14 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::Face& face,
                                              SyncLogicHandler& sync,
                                              const ndn::Name broadcastPrefix,
                                              ndn::KeyChain& keyChain,
-                                             ndn::shared_ptr<ndn::CertificateCacheTtl> certificateCache)
+                                             ndn::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
+                                             security::CertificateStore& certStore)
   : m_face(face)
   , m_namePrefixList(namePrefixList)
   , m_lsdb(lsdb)
   , m_sync(sync)
   , m_keyChain(keyChain)
-  , m_validator(m_face, broadcastPrefix, certificateCache)
+  , m_validator(m_face, broadcastPrefix, certificateCache, certStore)
   , COMMAND_PREFIX(ndn::Name(Nlsr::LOCALHOST_PREFIX).append(MODULE_COMPONENT))
 {
 }

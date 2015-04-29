@@ -63,14 +63,15 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
                          m_confParam.getRouterPrefix(),
                          m_keyChain)
   , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
-  , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache)
+  , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache, m_certStore)
   , m_prefixUpdateProcessor(m_nlsrFace,
                             m_namePrefixList,
                             m_nlsrLsdb,
                             m_syncLogicHandler,
                             DEFAULT_BROADCAST_PREFIX,
                             m_keyChain,
-                            m_certificateCache)
+                            m_certificateCache,
+                            m_certStore)
   , m_faceMonitor(m_nlsrFace)
   , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
 {

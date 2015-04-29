@@ -32,22 +32,23 @@
 #include <ndn-cxx/management/nfd-face-event-notification.hpp>
 #include <ndn-cxx/management/nfd-face-monitor.hpp>
 
+#include "adjacency-list.hpp"
 #include "common.hpp"
 #include "conf-parameter.hpp"
-#include "adjacency-list.hpp"
-#include "name-prefix-list.hpp"
-#include "lsdb.hpp"
-#include "sequencing-manager.hpp"
-#include "route/routing-table.hpp"
-#include "route/name-prefix-table.hpp"
-#include "route/fib.hpp"
-#include "communication/sync-logic-handler.hpp"
 #include "hello-protocol.hpp"
+#include "lsdb.hpp"
+#include "name-prefix-list.hpp"
+#include "sequencing-manager.hpp"
 #include "test-access-control.hpp"
-#include "publisher/lsdb-dataset-interest-handler.hpp"
-#include "utility/name-helper.hpp"
-#include "update/prefix-update-processor.hpp"
 #include "validator.hpp"
+#include "communication/sync-logic-handler.hpp"
+#include "publisher/lsdb-dataset-interest-handler.hpp"
+#include "route/fib.hpp"
+#include "route/name-prefix-table.hpp"
+#include "route/routing-table.hpp"
+#include "security/certificate-store.hpp"
+#include "update/prefix-update-processor.hpp"
+#include "utility/name-helper.hpp"
 
 
 namespace nlsr {
@@ -250,20 +251,18 @@ public:
   void
   loadCertToPublish(ndn::shared_ptr<ndn::IdentityCertificate> certificate)
   {
-    if (static_cast<bool>(certificate))
-      m_certToPublish[certificate->getName().getPrefix(-1)] = certificate; // key is cert name
-                                                                           // without version
+    m_certStore.insert(certificate);
   }
 
   ndn::shared_ptr<const ndn::IdentityCertificate>
   getCertificate(const ndn::Name& certificateNameWithoutVersion)
   {
-    CertMap::iterator it = m_certToPublish.find(certificateNameWithoutVersion);
+    shared_ptr<const ndn::IdentityCertificate> cert =
+      m_certStore.find(certificateNameWithoutVersion);
 
-    if (it != m_certToPublish.end())
-      {
-        return it->second;
-      }
+    if (cert != nullptr) {
+      return cert;
+    }
 
     return m_certificateCache->getCertificate(certificateNameWithoutVersion);
   }
@@ -315,6 +314,12 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     }
   }
 
+  security::CertificateStore&
+  getCertificateStore()
+  {
+    return m_certStore;
+  }
+
 private:
   void
   registerKeyPrefix();
@@ -347,8 +352,6 @@ public:
   static const ndn::Name LOCALHOST_PREFIX;
 
 private:
-  typedef std::map<ndn::Name, ndn::shared_ptr<ndn::IdentityCertificate> > CertMap;
-
   ndn::Face& m_nlsrFace;
   ndn::Scheduler& m_scheduler;
   ConfParameter m_confParam;
@@ -371,7 +374,7 @@ private:
 
 private:
   ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
-  CertMap m_certToPublish;
+  security::CertificateStore m_certStore;
   Validator m_validator;
   ndn::KeyChain m_keyChain;
   ndn::Name m_defaultIdentity;

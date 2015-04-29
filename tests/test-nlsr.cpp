@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,8 +17,6 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- *
  **/
 
 #include "test-common.hpp"
@@ -277,6 +276,38 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
 
   BOOST_CHECK_EQUAL(verb, ndn::Name::Component("register"));
   BOOST_CHECK_EQUAL(parameters.getName(), nameToAdvertise);
+}
+
+BOOST_FIXTURE_TEST_CASE(GetCertificate, UnitTestTimeFixture)
+{
+  shared_ptr<ndn::util::DummyClientFace> face = ndn::util::makeDummyClientFace(g_ioService);
+  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
+
+  // Create certificate
+  ndn::Name identity("/TestNLSR/identity");
+  identity.appendVersion();
+
+  ndn::KeyChain keyChain;
+  keyChain.createIdentity(identity);
+  ndn::Name certName = keyChain.getDefaultCertificateNameForIdentity(identity);
+  shared_ptr<ndn::IdentityCertificate> certificate = keyChain.getCertificate(certName);
+
+  const ndn::Name certKey = certificate->getName().getPrefix(-1);
+
+  BOOST_CHECK(nlsr.getCertificate(certKey) == nullptr);
+
+  // Certificate should be retrievable from the CertificateStore
+  nlsr.loadCertToPublish(certificate);
+
+  BOOST_CHECK(nlsr.getCertificate(certKey) != nullptr);
+
+  nlsr.getCertificateStore().clear();
+
+  // Certificate should be retrievable from the cache
+  nlsr.addCertificateToCache(certificate);
+  this->advanceClocks(ndn::time::milliseconds(10));
+
+  BOOST_CHECK(nlsr.getCertificate(certKey) != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

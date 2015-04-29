@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  The University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,12 +17,13 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * @author Yingdi Yu <yingdi@cs.ucla.edu>
  **/
 
 #ifndef NLSR_VALIDATOR_HPP
 #define NLSR_VALIDATOR_HPP
+
+#include "common.hpp"
+#include "security/certificate-store.hpp"
 
 #include <ndn-cxx/security/validator-config.hpp>
 
@@ -44,9 +46,11 @@ public:
   Validator(ndn::Face& face,
             const ndn::Name broadcastPrefix,
             const ndn::shared_ptr<ndn::CertificateCache>& cache,
+            security::CertificateStore& certStore,
             const int stepLimit = 10)
     : ndn::ValidatorConfig(face, cache, ndn::ValidatorConfig::DEFAULT_GRACE_INTERVAL, stepLimit)
     , m_broadcastPrefix(broadcastPrefix)
+    , m_certStore(certStore)
   {
     m_broadcastPrefix.append("KEYS");
   }
@@ -69,47 +73,46 @@ public:
   }
 
 protected:
-  typedef std::vector<ndn::shared_ptr<ndn::ValidationRequest> > NextSteps;
+  typedef std::vector<ndn::shared_ptr<ndn::ValidationRequest>> NextSteps;
 
   virtual void
-  checkPolicy(const ndn::Data& data,
-              int nSteps,
-              const ndn::OnDataValidated& onValidated,
-              const ndn::OnDataValidationFailed& onValidationFailed,
-              NextSteps& nextSteps)
+  afterCheckPolicy(const NextSteps& nextSteps,
+                   const OnFailure& onFailure)
   {
-    ndn::ValidatorConfig::checkPolicy(data, nSteps,
-                                      onValidated, onValidationFailed,
-                                      nextSteps);
+    if (m_face == nullptr) {
+      onFailure("Require more information to validate the packet!");
+      return;
+    }
 
-    for (NextSteps::iterator it = nextSteps.begin(); it != nextSteps.end(); it++)
-      {
-        ndn::Name broadcastName = m_broadcastPrefix;
-        broadcastName.append((*it)->m_interest.getName());
+    for (const shared_ptr<ndn::ValidationRequest>& request : nextSteps) {
 
-        (*it)->m_interest.setName(broadcastName);
+      ndn::Interest& interest = request->m_interest;
+
+      // Look for certificate in permanent storage
+      shared_ptr<const ndn::IdentityCertificate> cert = m_certStore.find(interest.getName());
+
+      if (cert != nullptr) {
+        // If the certificate is found, no reason to express interest
+        shared_ptr<ndn::Data> data = make_shared<ndn::Data>(interest.getName());
+        data->setContent(cert->wireEncode());
+
+        Validator::onData(interest, *data, request);
       }
-  }
-
-  virtual void
-  checkPolicy(const ndn::Interest& interest,
-              int nSteps,
-              const ndn::OnInterestValidated& onValidated,
-              const ndn::OnInterestValidationFailed& onValidationFailed,
-              NextSteps& nextSteps)
-  {
-    ndn::ValidatorConfig::checkPolicy(interest, nSteps,
-                                      onValidated, onValidationFailed,
-                                      nextSteps);
-
-    for (NextSteps::iterator it = nextSteps.begin(); it != nextSteps.end(); it++)
-      {
+      else {
+        // Prepend broadcast prefix to interest name
         ndn::Name broadcastName = m_broadcastPrefix;
-        broadcastName.append((*it)->m_interest.getName());
+        broadcastName.append(interest.getName());
+        interest.setName(broadcastName);
 
-        (*it)->m_interest.setName(broadcastName);
+        // Attempt to fetch the certificate
+        m_face->expressInterest(interest,
+                                bind(&Validator::onData, this, _1, _2, request),
+                                bind(&Validator::onTimeout,
+                                     this, _1, request->m_nRetries,
+                                     onFailure,
+                                     request));
       }
-
+    }
   }
 
   virtual ndn::shared_ptr<const ndn::Data>
@@ -122,8 +125,8 @@ protected:
 
 private:
   ndn::Name m_broadcastPrefix;
+  security::CertificateStore& m_certStore;
 };
-
 
 } // namespace nlsr
 

@@ -41,6 +41,10 @@ namespace nlsr {
 class Lsdb;
 class SyncLogicHandler;
 
+namespace security {
+  class CertificateStore;
+}
+
 namespace update {
 
 typedef boost::property_tree::ptree ConfigSection;
@@ -65,7 +69,8 @@ public:
                         SyncLogicHandler& sync,
                         const ndn::Name broadcastPrefix,
                         ndn::KeyChain& keyChain,
-                        ndn::shared_ptr<ndn::CertificateCacheTtl> certificateCache);
+                        ndn::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
+                        security::CertificateStore& certStore);
 
   void
   loadValidator(ConfigSection section, const std::string& filename);

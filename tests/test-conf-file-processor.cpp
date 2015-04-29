@@ -471,6 +471,53 @@ BOOST_AUTO_TEST_CASE(NegativeValue)
   BOOST_CHECK_EQUAL(processConfigurationString(SECTION_GENERAL_NEGATIVE_VALUE), false);
 }
 
+BOOST_AUTO_TEST_CASE(LoadCertToPublish)
+{
+  ndn::Name identity("/TestNLSR/identity");
+  identity.appendVersion();
+
+  ndn::KeyChain keyChain;
+  keyChain.createIdentity(identity);
+  ndn::Name certName = keyChain.getDefaultCertificateNameForIdentity(identity);
+  shared_ptr<ndn::IdentityCertificate> certificate = keyChain.getCertificate(certName);
+
+  const boost::filesystem::path CERT_PATH =
+      (boost::filesystem::current_path() / std::string("cert-to-publish.cert"));
+  ndn::io::save(*certificate, CERT_PATH.string());
+
+  const std::string SECTION_SECURITY =
+  "security\n"
+  "{\n"
+  "  validator\n"
+  "  {\n"
+  "    trust-anchor\n"
+  "    {\n"
+  "      type any\n"
+  "    }\n"
+  "  }\n"
+  "  prefix-update-validator\n"
+  "  {\n"
+  "    trust-anchor\n"
+  "    {\n"
+  "      type any\n"
+  "    }\n"
+  "  }\n"
+  "  cert-to-publish \"cert-to-publish.cert\"\n"
+  "}\n\n";
+
+  BOOST_CHECK(processConfigurationString(SECTION_SECURITY));
+
+  // Certificate should now be in the CertificateStore
+  const security::CertificateStore& certStore = nlsr.getCertificateStore();
+  const ndn::Name certKey = certificate->getName().getPrefix(-1);
+
+  BOOST_CHECK(certStore.find(certKey) != nullptr);
+
+  // Cleanup
+  keyChain.deleteIdentity(identity);
+  boost::filesystem::remove(CERT_PATH);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } //namespace test
