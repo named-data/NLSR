@@ -40,6 +40,20 @@ for detailed installation and running instruction.
 
           sudo port install protobuf-cpp
 
+-  openssl
+
+   On Ubuntu Linux:
+
+   ::
+
+          sudo apt-get install libssl-dev
+
+   On OS X with MacPorts:
+
+   ::
+
+          sudo port install openssl
+
 Build
 -----
 
@@ -54,11 +68,11 @@ Execute the following commands to build NLSR:
 Refer to ``./waf –help`` for more options that can be used during the configure stage and
 how to properly configure NLSR.
 
-If your pkgconfig path is not set properly you can do following before running ``./waf
+If your pkgconfig path is not set properly you can do the following before running ``./waf
 configure``
 
 ::
 
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
     or
-    export PKG_CONFIG_PATH=/path/to/pkgconfig/in/your/machine
+    export PKG_CONFIG_PATH=/path/to/pkgconfig/on/your/machine
