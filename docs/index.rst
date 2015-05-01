@@ -30,14 +30,14 @@ NLSR Documentation
    :maxdepth: 3
 
    RELEASE-NOTES
-   INSTALL
    GETTING-STARTED
+   INSTALL
    ROUTER-CONFIG
    SECURITY-CONFIG
    manpages
 
--  :doc:`INSTALL`
 -  :doc:`GETTING-STARTED`
+-  :doc:`INSTALL`
 -  :doc:`ROUTER-CONFIG`
 -  :doc:`SECURITY-CONFIG`
 -  :doc:`RELEASE-NOTES`
