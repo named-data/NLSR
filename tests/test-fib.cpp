@@ -34,7 +34,7 @@ namespace test {
 
 using std::shared_ptr;
 
-class FibFixture : public BaseFixture
+class FibFixture : public UnitTestTimeFixture
 {
 public:
   FibFixture()
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(NextHopsAdd)
   hops.addNextHop(hop1);
   hops.addNextHop(hop2);
 
-  fib->update("/ndn/name", hops);
-  face->processEvents(ndn::time::milliseconds(1));
+  fib->processUpdate("/ndn/name", hops);
+  face->processEvents(ndn::time::milliseconds(-1));
 
   // Should register faces 1 and 2 for /ndn/name
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
@@ -141,14 +141,14 @@ BOOST_AUTO_TEST_CASE(NextHopsNoChange)
   oldHops.addNextHop(hop1);
   oldHops.addNextHop(hop2);
 
-  fib->update("/ndn/name", oldHops);
-  face->processEvents(ndn::time::milliseconds(1));
+  fib->processUpdate("/ndn/name", oldHops);
+  face->processEvents(ndn::time::milliseconds(-1));
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
   interests.clear();
 
-  fib->update("/ndn/name", oldHops);
-  face->processEvents(ndn::time::milliseconds(1));
+  fib->processUpdate("/ndn/name", oldHops);
+  face->processEvents(ndn::time::milliseconds(-1));
 
   // Should register face 1 and 2 for /ndn/name
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
@@ -180,16 +180,16 @@ BOOST_AUTO_TEST_CASE(NextHopsRemoveAll)
   oldHops.addNextHop(hop1);
   oldHops.addNextHop(hop2);
 
-  fib->update("/ndn/name", oldHops);
-  face->processEvents(ndn::time::milliseconds(1));
+  fib->processUpdate("/ndn/name", oldHops);
+  face->processEvents(ndn::time::milliseconds(-1));
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
   interests.clear();
 
   NexthopList empty;
 
-  fib->update("/ndn/name", empty);
-  face->processEvents(ndn::time::milliseconds(1));
+  fib->processUpdate("/ndn/name", empty);
+  face->processEvents(ndn::time::milliseconds(-1));
 
   // Should unregister faces 1 and 2 for /ndn/name
   BOOST_CHECK_EQUAL(interests.size(), 2);
@@ -223,8 +223,8 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixes)
   hops.addNextHop(hop2);
   hops.addNextHop(hop3);
 
-  fib->update("/ndn/name", hops);
-  face->processEvents(ndn::time::milliseconds(1));
+  fib->processUpdate("/ndn/name", hops);
+  face->processEvents(ndn::time::milliseconds(-1));
 
   // Should only register faces 1 and 2 for /ndn/name
   BOOST_CHECK_EQUAL(interests.size(), 2);
@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   hops.addNextHop(hop1);
   hops.addNextHop(hop2);
 
-  fib->update("/ndn/name", hops);
-  face->processEvents(ndn::time::milliseconds(1));
+  fib->processUpdate("/ndn/name", hops);
+  face->processEvents(ndn::time::milliseconds(-1));
 
   // FIB
   // Name        NextHops
@@ -269,8 +269,8 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   NextHop hop3(router3FaceUri, 5);
   hops.addNextHop(hop3);
 
-  fib->update("/ndn/name", hops);
-  face->processEvents(ndn::time::milliseconds(1));
+  fib->processUpdate("/ndn/name", hops);
+  face->processEvents(ndn::time::milliseconds(-1));
 
   // To maintain a max 2 face requirement, face 3 should be registered and face 2 should be
   // unregistered. Face 1 will also be re-registered.
@@ -304,6 +304,20 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   BOOST_CHECK(extractedParameters.getName() == "/ndn/name" &&
               extractedParameters.getFaceId() == router2FaceId &&
               verb == ndn::Name::Component("unregister"));
+}
+
+BOOST_FIXTURE_TEST_CASE(ScheduleFibEntryRefresh, FibFixture)
+{
+  ndn::Name name1("/name/1");
+  FibEntry fe(name1);
+  fib->m_table.emplace(name1, fe);
+  int origSeqNo = fe.getSeqNo();
+
+  fib->scheduleEntryRefresh(fe,
+                            [&, this] (FibEntry& entry) {
+                              BOOST_CHECK_EQUAL(origSeqNo+1, entry.getSeqNo());
+                            });
+  this->advanceClocks(ndn::time::milliseconds(10), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

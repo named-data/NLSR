@@ -33,13 +33,10 @@ BOOST_AUTO_TEST_SUITE(TestFibEntry)
 
 BOOST_AUTO_TEST_CASE(FibEntryConstructorAndGetters)
 {
-  ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
   FibEntry fe1("next1");
-  fe1.setExpirationTimePoint(testTimePoint);
 
   BOOST_CHECK_EQUAL(fe1.getName(), "next1");
-  BOOST_CHECK_EQUAL(fe1.getExpirationTimePoint(), testTimePoint);
-  BOOST_CHECK_EQUAL(fe1.getSeqNo(), 0);           //Default Seq No.
+  BOOST_CHECK_EQUAL(fe1.getSeqNo(), 1);  // Initial Seq No.
 }
 
 BOOST_AUTO_TEST_SUITE_END()

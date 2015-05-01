@@ -41,6 +41,7 @@ ConfParameter::writeLog()
   _LOG_DEBUG("Hello Interest resend second: " << m_interestResendTime);
   _LOG_DEBUG("Info Interest interval: " << m_infoInterestInterval);
   _LOG_DEBUG("LSA refresh time: " << m_lsaRefreshTime);
+  _LOG_DEBUG("FIB Entry refresh time: " << m_lsaRefreshTime * 2);
   _LOG_DEBUG("LSA Interest lifetime: " << getLsaInterestLifetime());
   _LOG_DEBUG("Router dead interval: " << getRouterDeadInterval());
   _LOG_DEBUG("Max Faces Per Prefix: " << m_maxFacesPerPrefix);

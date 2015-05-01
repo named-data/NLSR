@@ -16,21 +16,13 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #ifndef NLSR_FIB_ENTRY_HPP
 #define NLSR_FIB_ENTRY_HPP
 
-#include <list>
-#include <iostream>
-#include <boost/cstdint.hpp>
-
 #include <ndn-cxx/util/scheduler.hpp>
-#include <ndn-cxx/util/time.hpp>
 
-#include "nexthop.hpp"
 #include "nexthop-list.hpp"
 
 namespace nlsr {
@@ -40,15 +32,13 @@ class FibEntry
 public:
   FibEntry()
     : m_name()
-    , m_expirationTimePoint()
-    , m_seqNo(0)
+    , m_seqNo(1)
     , m_nexthopList()
   {
   }
 
   FibEntry(const ndn::Name& name)
-    : m_expirationTimePoint()
-    , m_seqNo(0)
+    : m_seqNo(1)
     , m_nexthopList()
   {
     m_name = name;
@@ -66,28 +56,16 @@ public:
     return m_nexthopList;
   }
 
-  const ndn::time::system_clock::TimePoint&
-  getExpirationTimePoint() const
-  {
-    return m_expirationTimePoint;
-  }
-
   void
-  setExpirationTimePoint(const ndn::time::system_clock::TimePoint& ttr)
+  setRefreshEventId(ndn::EventId id)
   {
-    m_expirationTimePoint = ttr;
-  }
-
-  void
-  setExpiringEventId(ndn::EventId feid)
-  {
-    m_expiringEventId = feid;
+    m_refreshEventId = id;
   }
 
   ndn::EventId
-  getExpiringEventId() const
+  getRefreshEventId() const
   {
-    return m_expiringEventId;
+    return m_refreshEventId;
   }
 
   void
@@ -97,7 +75,7 @@ public:
   }
 
   int32_t
-  getSeqNo()
+  getSeqNo() const
   {
     return m_seqNo;
   }
@@ -105,14 +83,33 @@ public:
   void
   writeLog();
 
+  typedef NexthopList::const_iterator const_iterator;
+
+  const_iterator
+  begin() const;
+
+  const_iterator
+  end() const;
+
 private:
   ndn::Name m_name;
-  ndn::time::system_clock::TimePoint m_expirationTimePoint;
-  ndn::EventId m_expiringEventId;
+  ndn::EventId m_refreshEventId;
   int32_t m_seqNo;
   NexthopList m_nexthopList;
 };
 
+inline FibEntry::const_iterator
+FibEntry::begin() const
+{
+  return m_nexthopList.cbegin();
+}
+
+inline FibEntry::const_iterator
+FibEntry::end() const
+{
+  return m_nexthopList.cend();
+}
+
 } // namespace nlsr
 
-#endif //NLSR_FIB_ENTRY_HPP
+#endif // NLSR_FIB_ENTRY_HPP

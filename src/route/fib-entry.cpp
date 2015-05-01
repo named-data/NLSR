@@ -16,13 +16,9 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
-#include <list>
+
 #include "fib-entry.hpp"
-#include "nexthop.hpp"
 #include "logger.hpp"
 
 namespace nlsr {
@@ -35,7 +31,6 @@ void
 FibEntry::writeLog()
 {
   _LOG_DEBUG("Name Prefix: " << m_name);
-  _LOG_DEBUG("Time to Refresh: " << m_expirationTimePoint);
   _LOG_DEBUG("Seq No: " << m_seqNo);
   m_nexthopList.writeLog();
 }

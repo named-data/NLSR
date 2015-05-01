@@ -19,27 +19,27 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  **/
-#ifndef NLSR_FIB_HPP
-#define NLSR_FIB_HPP
 
-#include <map>
+#ifndef NLSR_ROUTE_FIB_HPP
+#define NLSR_ROUTE_FIB_HPP
 
-#include <boost/cstdint.hpp>
-
-#include <ndn-cxx/mgmt/nfd/controller.hpp>
-#include <ndn-cxx/util/time.hpp>
 #include "face-map.hpp"
 #include "fib-entry.hpp"
 #include "test-access-control.hpp"
 #include "utility/face-controller.hpp"
 
+#include <ndn-cxx/management/nfd-controller.hpp>
+#include <ndn-cxx/util/time.hpp>
+
 namespace nlsr {
 
 typedef ndn::nfd::Controller::CommandSucceedCallback CommandSucceedCallback;
 typedef ndn::nfd::Controller::CommandFailCallback CommandFailCallback;
+typedef std::function<void(FibEntry&)> afterRefreshCallback;
 
 class AdjacencyList;
 class ConfParameter;
+class FibEntry;
 
 class Fib
 {
@@ -47,25 +47,22 @@ public:
   Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList, ConfParameter& conf,
       ndn::KeyChain& keyChain)
     : m_scheduler(scheduler)
-    , m_table()
     , m_refreshTime(0)
     , m_controller(face, keyChain)
     , m_faceController(face.getIoService(), m_controller)
-    , m_faceMap()
     , m_adjacencyList(adjacencyList)
     , m_confParameter(conf)
   {
   }
 
-  ~Fib()
-  {
-  }
+  void
+  update(const ndn::Name& name, NexthopList& allHops);
+
+  FibEntry*
+  processUpdate(const ndn::Name& name, NexthopList& allHops);
 
   void
   remove(const ndn::Name& name);
-
-  void
-  update(const ndn::Name& name, NexthopList& allHops);
 
   void
   clean();
@@ -76,36 +73,13 @@ public:
     m_refreshTime = fert;
   }
 
-private:
-  bool
-  isPrefixUpdatable(const ndn::Name& name);
-
   void
-  addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd);
-
-  void
-  removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, const NexthopList& installedHops);
-
-  void
-  removeHop(NexthopList& nl, const std::string& doNotRemoveHopFaceUri,
-            const ndn::Name& name);
-
-  unsigned int
-  getNumberOfFacesForName(NexthopList& nextHopList);
-
-  ndn::EventId
-  scheduleEntryExpiration(const ndn::Name& name, int32_t feSeqNum,
-                          const ndn::time::seconds& expTime);
-
-  void
-  cancelScheduledExpiringEvent(ndn::EventId eid);
-
-public:
-  void
-  registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
+  registerPrefix(const ndn::Name& namePrefix,
+                 const std::string& faceUri,
                  uint64_t faceCost,
                  const ndn::time::milliseconds& timeout,
-                 uint64_t flags, uint8_t times);
+                 uint64_t flags,
+                 uint8_t times);
 
   void
   registerPrefix(const ndn::Name& namePrefix,
@@ -129,6 +103,18 @@ public:
               const CommandFailCallback& onFailure);
 
 private:
+  bool
+  isPrefixUpdatable(const ndn::Name& name);
+
+  void
+  addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd);
+
+  void
+  removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, const NexthopList& installedHops);
+
+  unsigned int
+  getNumberOfFacesForName(NexthopList& nextHopList);
+
   void
   createFace(const std::string& faceUri,
              const CommandSucceedCallback& onSuccess,
@@ -155,12 +141,8 @@ private:
   unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri);
 
   void
-  onRegistration(const ndn::nfd::ControlParameters& commandSuccessResult,
-                 const std::string& message, const std::string& faceUri);
-
-  void
-  onUnregistration(const ndn::nfd::ControlParameters& commandSuccessResult,
-                   const std::string& message);
+  onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
+                        const std::string& message, const std::string& faceUri);
 
   void
   onRegistrationFailure(const ndn::nfd::ControlResponse& response,
@@ -170,8 +152,12 @@ private:
                         uint8_t times);
 
   void
-  onUnregistrationFailure(const ndn::nfd::ControlResponse& response,
+  onUnregistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                           const std::string& message);
+
+  void
+  onUnregistrationFailure(const ndn::nfd::ControlResponse& response,
+                               const std::string& message);
 
   void
   onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
@@ -183,15 +169,29 @@ private:
                        uint32_t count,
                        const std::string& message);
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  void
+  scheduleEntryRefresh(FibEntry& entry, const afterRefreshCallback& refreshCb);
+
+private:
+  void
+  scheduleLoop(FibEntry& entry);
+
+  void
+  cancelEntryRefresh(const FibEntry& entry);
+
+  void
+  refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb);
+
 private:
   ndn::Scheduler& m_scheduler;
-  std::map<ndn::Name, FibEntry> m_table;
   int32_t m_refreshTime;
   ndn::nfd::Controller m_controller;
   util::FaceController m_faceController;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   FaceMap m_faceMap;
+  std::map<ndn::Name, FibEntry> m_table;
 
 private:
   AdjacencyList& m_adjacencyList;
@@ -201,4 +201,5 @@ private:
 };
 
 } // namespace nlsr
-#endif //NLSR_FIB_HPP
+
+#endif // NLSR_ROUTE_FIB_HPP

@@ -18,11 +18,11 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  **/
+
 #ifndef NLSR_FACE_MAP_HPP
 #define NLSR_FACE_MAP_HPP
 
-#include <ndn-cxx/common.hpp>
-#include <algorithm>
+#include "common.hpp"
 
 #include <map>
 
@@ -118,4 +118,4 @@ private:
 
 } // namespace nlsr
 
-#endif //NLSR_FACE_MAP_HPP
+#endif // NLSR_FACE_MAP_HPP
