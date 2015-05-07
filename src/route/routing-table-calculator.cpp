@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,10 +17,8 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #include <iostream>
 #include <cmath>
 #include "lsdb.hpp"
@@ -75,6 +74,37 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
           (col >= 0 && col < static_cast<int32_t>(m_nRouters)))
       {
         adjMatrix[row][col] = cost;
+      }
+    }
+  }
+
+  // Links that do not have the same cost for both directions should have their
+  // costs corrected:
+  //
+  //   If the cost of one side of the link is 0, both sides of the link should have their cost
+  //   corrected to 0.
+  //
+  //   Otherwise, both sides of the link should use the larger of the two costs.
+  //
+  for (size_t row = 0; row < m_nRouters; ++row) {
+    for (size_t col = 0; col < m_nRouters; ++col) {
+      double toCost = adjMatrix[row][col];
+      double fromCost = adjMatrix[col][row];
+
+      if (fromCost != toCost) {
+        double correctedCost = 0.0;
+
+        if (toCost != 0 && fromCost != 0) {
+          // If both sides of the link are up, use the larger cost
+          correctedCost = std::max(toCost, fromCost);
+        }
+
+        _LOG_WARN("Cost between [" << row << "][" << col << "] and [" << col << "][" << row <<
+                  "] are not the same (" << toCost << " != " << fromCost << "). " <<
+                  "Correcting to cost: " << correctedCost);
+
+        adjMatrix[row][col] = correctedCost;
+        adjMatrix[col][row] = correctedCost;
       }
     }
   }

@@ -113,6 +113,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 {
   shared_ptr<ndn::util::DummyClientFace> face = ndn::util::makeDummyClientFace(g_ioService);
   Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
+  Lsdb& lsdb = nlsr.getLsdb();
 
   // Simulate loading configuration file
   ConfParameter& conf = nlsr.getConfParameter();
@@ -133,20 +134,46 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   neighbors.insert(failNeighbor);
 
   // Create an additional neighbor so an adjacency LSA can be built after the face is destroyed
-  Adjacent otherNeighbor("/ndn/neighborB", "uri://faceB", 25, Adjacent::STATUS_ACTIVE, 0, 256);
+  Adjacent otherNeighbor("/ndn/neighborB", "uri://faceB", 10, Adjacent::STATUS_ACTIVE, 0, 256);
   neighbors.insert(otherNeighbor);
 
   nlsr.initialize();
 
   // Simulate successful HELLO responses
-  nlsr.getLsdb().scheduleAdjLsaBuild();
+  lsdb.scheduleAdjLsaBuild();
+
+  // Set up adjacency LSAs
+  // This router
+  Adjacent thisRouter(conf.getRouterPrefix(), "uri://faceB", 10, Adjacent::STATUS_ACTIVE, 0, 256);
+
+  AdjLsa ownAdjLsa(conf.getRouterPrefix(), AdjLsa::TYPE_STRING, 10, ndn::time::system_clock::now(),
+                   1, neighbors);
+  lsdb.installAdjLsa(ownAdjLsa);
+
+  // Router that will fail
+  AdjacencyList failAdjacencies;
+  failAdjacencies.insert(thisRouter);
+
+  AdjLsa failAdjLsa("/ndn/neighborA", AdjLsa::TYPE_STRING, 10,
+                     ndn::time::system_clock::now() + ndn::time::seconds(3600), 1, failAdjacencies);
+
+  lsdb.installAdjLsa(failAdjLsa);
+
+  // Other router
+  AdjacencyList otherAdjacencies;
+  otherAdjacencies.insert(thisRouter);
+
+  AdjLsa otherAdjLsa("/ndn/neighborB", AdjLsa::TYPE_STRING, 10,
+                     ndn::time::system_clock::now() + ndn::time::seconds(3600), 1, otherAdjacencies);
+
+  lsdb.installAdjLsa(otherAdjLsa);
 
   // Run the scheduler to build an adjacency LSA
   this->advanceClocks(ndn::time::milliseconds(1));
 
   // Make sure an adjacency LSA was built
   ndn::Name key = ndn::Name(nlsr.getConfParameter().getRouterPrefix()).append(AdjLsa::TYPE_STRING);
-  AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
+  AdjLsa* lsa = lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
   uint32_t lastAdjLsaSeqNo = nlsr.getSequencingManager().getAdjLsaSeq();
@@ -231,6 +258,23 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
 
   // Simulate successful HELLO responses from neighbor B
   lsdb.scheduleAdjLsaBuild();
+
+  // Set up adjacency LSAs
+  // This router
+  Adjacent thisRouter(conf.getRouterPrefix(), "uri://faceB", 25, Adjacent::STATUS_ACTIVE, 0, 256);
+
+  AdjLsa ownAdjLsa(conf.getRouterPrefix(), AdjLsa::TYPE_STRING, 10, ndn::time::system_clock::now(),
+                   1, neighbors);
+  lsdb.installAdjLsa(ownAdjLsa);
+
+  // Other ACTIVE router
+  AdjacencyList otherAdjacencies;
+  otherAdjacencies.insert(thisRouter);
+
+  AdjLsa otherAdjLsa("/ndn/neighborB", AdjLsa::TYPE_STRING, 10,
+                     ndn::time::system_clock::now() + ndn::time::seconds(3600), 1, otherAdjacencies);
+
+  lsdb.installAdjLsa(otherAdjLsa);
 
   // Run the scheduler to build an adjacency LSA
   this->advanceClocks(ndn::time::milliseconds(1));
