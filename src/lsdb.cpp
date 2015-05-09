@@ -557,31 +557,36 @@ Lsdb::scheduleAdjLsaBuild()
 void
 Lsdb::buildAdjLsa()
 {
-  _LOG_TRACE("buildAdjLsa called");
+  _LOG_TRACE("Lsdb::buildAdjLsa called");
 
   m_nlsr.setIsBuildAdjLsaSheduled(false);
-  if (m_nlsr.getAdjacencyList().isAdjLsaBuildable(m_nlsr)) {
+
+  if (m_nlsr.getAdjacencyList().isAdjLsaBuildable(m_nlsr.getConfParameter().getInterestRetryNumber())) {
+
     int adjBuildCount = m_nlsr.getAdjBuildCount();
+
+    // Is the adjacency LSA build still necessary, or has another build
+    // fulfilled this request?
     if (adjBuildCount > 0) {
       if (m_nlsr.getAdjacencyList().getNumOfActiveNeighbor() > 0) {
-        _LOG_DEBUG("Building and installing Adj LSA");
+        _LOG_DEBUG("Building and installing own Adj LSA");
         buildAndInstallOwnAdjLsa();
       }
       else {
+        _LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors")
         ndn::Name key = m_nlsr.getConfParameter().getRouterPrefix();
         key.append(AdjLsa::TYPE_STRING);
+
         removeAdjLsa(key);
+
         m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
       }
+
+      // Since more adjacency LSA builds may have been scheduled while this build
+      // was in progress, decrease the build count by the number of scheduled
+      // builds at the beginning of this build.
       m_nlsr.setAdjBuildCount(m_nlsr.getAdjBuildCount() - adjBuildCount);
     }
-  }
-  else {
-    m_nlsr.setIsBuildAdjLsaSheduled(true);
-    int schedulingTime = m_nlsr.getConfParameter().getInterestRetryNumber() *
-                         m_nlsr.getConfParameter().getInterestResendTime();
-    m_scheduler.scheduleEvent(ndn::time::seconds(schedulingTime),
-                              ndn::bind(&Lsdb::buildAdjLsa, this));
   }
 }
 

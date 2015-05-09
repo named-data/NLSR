@@ -29,7 +29,6 @@
 #include "adjacent.hpp"
 
 namespace nlsr {
-class Nlsr;
 
 class AdjacencyList
 {
@@ -74,7 +73,7 @@ public:
   addAdjacents(AdjacencyList& adl);
 
   bool
-  isAdjLsaBuildable(Nlsr& pnlsr);
+  isAdjLsaBuildable(const uint32_t interestRetryNo) const;
 
   int32_t
   getNumOfActiveNeighbor();

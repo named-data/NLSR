@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,23 +17,23 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author Ashlesh Gawande <agawande@memphis.edu>
- *
  **/
+
 #include "adjacency-list.hpp"
+
 #include "adjacent.hpp"
+#include "conf-parameter.hpp"
+
 #include <boost/test/unit_test.hpp>
 
 namespace nlsr {
-
 namespace test {
 
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(TestAdjacenctList)
+BOOST_AUTO_TEST_SUITE(TestAdjacencyList)
 
-BOOST_AUTO_TEST_CASE(AdjacenctListBasic)
+BOOST_AUTO_TEST_CASE(Basic)
 {
   const string ADJ_NAME_1 = "testname";
   const string ADJ_NAME_2 = "testname2";
@@ -63,7 +64,65 @@ BOOST_AUTO_TEST_CASE(AdjacenctListBasic)
   BOOST_CHECK_EQUAL(adjacentList1.getStatusOfNeighbor(n1), Adjacent::STATUS_ACTIVE);
 }
 
+BOOST_AUTO_TEST_CASE(AdjLsaIsBuildableWithOneNodeActive)
+{
+  Adjacent adjacencyA("/router/A");
+  Adjacent adjacencyB("/router/B");
+
+  adjacencyA.setStatus(Adjacent::STATUS_ACTIVE);
+  adjacencyB.setStatus(Adjacent::STATUS_INACTIVE);
+
+  AdjacencyList adjacencies;
+  adjacencies.insert(adjacencyA);
+  adjacencies.insert(adjacencyB);
+
+  ConfParameter conf;
+  BOOST_CHECK(adjacencies.isAdjLsaBuildable(conf.getInterestRetryNumber()));
+}
+
+BOOST_AUTO_TEST_CASE(AdjLsaIsBuildableWithAllNodesTimedOut)
+{
+  Adjacent adjacencyA("/router/A");
+  Adjacent adjacencyB("/router/B");
+
+  adjacencyA.setStatus(Adjacent::STATUS_INACTIVE);
+  adjacencyB.setStatus(Adjacent::STATUS_INACTIVE);
+
+  adjacencyA.setInterestTimedOutNo(HELLO_RETRIES_DEFAULT);
+  adjacencyB.setInterestTimedOutNo(HELLO_RETRIES_DEFAULT);
+
+  AdjacencyList adjacencies;
+  adjacencies.insert(adjacencyA);
+  adjacencies.insert(adjacencyB);
+
+  ConfParameter conf;
+  conf.setInterestRetryNumber(HELLO_RETRIES_DEFAULT);
+
+  BOOST_CHECK(adjacencies.isAdjLsaBuildable(conf.getInterestRetryNumber()));
+}
+
+BOOST_AUTO_TEST_CASE(AdjLsaIsNotBuildable)
+{
+  Adjacent adjacencyA("/router/A");
+  Adjacent adjacencyB("/router/B");
+
+  adjacencyA.setStatus(Adjacent::STATUS_INACTIVE);
+  adjacencyB.setStatus(Adjacent::STATUS_INACTIVE);
+
+  adjacencyA.setInterestTimedOutNo(HELLO_RETRIES_DEFAULT);
+  adjacencyB.setInterestTimedOutNo(0);
+
+  AdjacencyList adjacencies;
+  adjacencies.insert(adjacencyA);
+  adjacencies.insert(adjacencyB);
+
+  ConfParameter conf;
+  conf.setInterestRetryNumber(HELLO_RETRIES_DEFAULT);
+
+  BOOST_CHECK(!adjacencies.isAdjLsaBuildable(conf.getInterestRetryNumber()));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
-} //namespace tests
-} //namespace nlsr
+} // namespace tests
+} // namespace nlsr

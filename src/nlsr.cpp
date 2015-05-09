@@ -57,10 +57,10 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, m_keyChain)
   , m_namePrefixTable(*this)
   , m_syncLogicHandler(m_nlsrFace, m_nlsrLsdb, m_confParam, m_sequencingManager)
-  , m_helloProtocol(*this, scheduler)
   , m_lsdbDatasetHandler(m_nlsrLsdb,
                          m_nlsrFace,
                          m_keyChain)
+  , m_helloProtocol(*this, scheduler)
   , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
   , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache, m_certStore)
   , m_prefixUpdateProcessor(m_nlsrFace,

@@ -32,6 +32,8 @@
 
 namespace nlsr {
 
+class Nlsr;
+
 class Lsa
 {
 public:

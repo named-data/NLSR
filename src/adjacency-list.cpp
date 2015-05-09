@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,18 +17,15 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
-#include <algorithm>
-#include <ndn-cxx/common.hpp>
 
 #include "adjacency-list.hpp"
+
 #include "adjacent.hpp"
 #include "common.hpp"
-#include "nlsr.hpp"
 #include "logger.hpp"
+
+#include <algorithm>
 
 namespace nlsr {
 
@@ -197,25 +195,26 @@ AdjacencyList::getAdjList()
 }
 
 bool
-AdjacencyList::isAdjLsaBuildable(Nlsr& pnlsr)
+AdjacencyList::isAdjLsaBuildable(const uint32_t interestRetryNo) const
 {
-  uint32_t nbrCount = 0;
-  for (std::list<Adjacent>::iterator it = m_adjList.begin(); it != m_adjList.end() ; it++) {
+  uint32_t nTimedOutNeighbors = 0;
 
-    if (it->getStatus() == Adjacent::STATUS_ACTIVE) {
-      nbrCount++;
+  for (const Adjacent& adjacency : m_adjList) {
+
+    if (adjacency.getStatus() == Adjacent::STATUS_ACTIVE) {
+      return true;
     }
-    else {
-      if ((*it).getInterestTimedOutNo() >=
-          pnlsr.getConfParameter().getInterestRetryNumber()) {
-        nbrCount++;
-      }
+    else if (adjacency.getInterestTimedOutNo() >= interestRetryNo) {
+      nTimedOutNeighbors++;
     }
   }
-  if (nbrCount == m_adjList.size()) {
+
+  if (nTimedOutNeighbors == m_adjList.size()) {
     return true;
   }
-  return false;
+  else {
+    return false;
+  }
 }
 
 int32_t

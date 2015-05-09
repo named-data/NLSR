@@ -372,8 +372,10 @@ private:
   Fib m_fib;
   NamePrefixTable m_namePrefixTable;
   SyncLogicHandler m_syncLogicHandler;
-  HelloProtocol m_helloProtocol;
   LsdbDatasetInterestHandler m_lsdbDatasetHandler;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  HelloProtocol m_helloProtocol;
 
 private:
   ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;

@@ -22,7 +22,8 @@
 #ifndef NLSR_HELLO_PROTOCOL_HPP
 #define NLSR_HELLO_PROTOCOL_HPP
 
-#include <boost/cstdint.hpp>
+#include "test-access-control.hpp"
+
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/management/nfd-control-parameters.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
@@ -59,9 +60,11 @@ private:
   void
   onContent(const ndn::Interest& interest, const ndn::Data& data);
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   onContentValidated(const ndn::shared_ptr<const ndn::Data>& data);
 
+private:
   void
   onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
                             const std::string& msg);
