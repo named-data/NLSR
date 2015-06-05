@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,18 +17,15 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #ifndef NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
 #define NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
 
+#include "routing-table-entry.hpp"
+
 #include <list>
 #include <utility>
-#include <boost/cstdint.hpp>
-
-#include "routing-table-entry.hpp"
 
 namespace nlsr {
 
@@ -50,8 +48,8 @@ public:
     return m_namePrefix;
   }
 
-  std::list<RoutingTableEntry>&
-  getRteList()
+  const std::list<RoutingTableEntry>&
+  getRteList() const
   {
     return m_rteList;
   }
@@ -97,6 +95,9 @@ private:
   NexthopList m_nexthopList;
 };
 
-}//namespace nlsr
+std::ostream&
+operator<<(std::ostream& os, const NamePrefixTableEntry& entry);
 
-#endif //NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
+} // namespace nlsr
+
+#endif // NLSR_NAME_PREFIX_TABLE_ENTRY_HPP

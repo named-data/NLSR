@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014  University of Memphis,
- *                     Regents of the University of California
+ * Copyright (c) 2014-2015,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,18 +17,15 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #ifndef NLSR_NAME_PREFIX_TABLE_HPP
 #define NLSR_NAME_PREFIX_TABLE_HPP
 
-#include <list>
-#include <boost/cstdint.hpp>
-
 #include "name-prefix-table-entry.hpp"
 #include "routing-table-entry.hpp"
+
+#include <list>
 
 namespace nlsr {
 class Nlsr;
@@ -35,6 +33,10 @@ class Nlsr;
 class NamePrefixTable
 {
 public:
+
+  typedef std::list<NamePrefixTableEntry> NptEntryList;
+  typedef NptEntryList::const_iterator const_iterator;
+
   NamePrefixTable(Nlsr& nlsr)
     : m_nlsr(nlsr)
   {
@@ -52,6 +54,12 @@ public:
   void
   writeLog();
 
+  const_iterator
+  begin() const;
+
+  const_iterator
+  end() const;
+
 private:
   void
   addEntry(const ndn::Name& name, RoutingTableEntry& rte);
@@ -64,6 +72,21 @@ private:
   std::list<NamePrefixTableEntry> m_table;
 };
 
-}//namespace nlsr
+inline NamePrefixTable::const_iterator
+NamePrefixTable::begin() const
+{
+  return m_table.begin();
+}
 
-#endif //NLSR_NAME_PREFIX_TABLE_HPP
+inline NamePrefixTable::const_iterator
+NamePrefixTable::end() const
+{
+  return m_table.end();
+}
+
+std::ostream&
+operator<<(std::ostream& os, const NamePrefixTable& table);
+
+} // namespace nlsr
+
+#endif // NLSR_NAME_PREFIX_TABLE_HPP
