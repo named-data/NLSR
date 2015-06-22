@@ -51,6 +51,7 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::Face& face,
   , m_sync(sync)
   , m_keyChain(keyChain)
   , m_validator(m_face, broadcastPrefix, certificateCache, certStore)
+  , m_isEnabled(false)
   , COMMAND_PREFIX(ndn::Name(Nlsr::LOCALHOST_PREFIX).append(MODULE_COMPONENT))
 {
 }
@@ -67,6 +68,11 @@ void
 PrefixUpdateProcessor::onInterest(const ndn::Interest& request)
 {
   _LOG_TRACE("Received Interest: " << request);
+
+  if (!m_isEnabled) {
+    sendNack(request);
+    return;
+  }
 
   m_validator.validate(request,
                        bind(&PrefixUpdateProcessor::onCommandValidated, this, _1),
@@ -186,6 +192,19 @@ PrefixUpdateProcessor::validateParameters(const ndn::nfd::ControlCommand& comman
 }
 
 void
+PrefixUpdateProcessor::sendNack(const ndn::Interest& request)
+{
+  ndn::MetaInfo metaInfo;
+  metaInfo.setType(ndn::tlv::ContentType_Nack);
+
+  shared_ptr<ndn::Data> responseData = std::make_shared<ndn::Data>(request.getName());
+  responseData->setMetaInfo(metaInfo);
+
+  m_keyChain.sign(*responseData);
+  m_face.put(*responseData);
+}
+
+void
 PrefixUpdateProcessor::sendResponse(const std::shared_ptr<const ndn::Interest>& request,
                                     uint32_t code,
                                     const std::string& text)
@@ -197,7 +216,7 @@ PrefixUpdateProcessor::sendResponse(const std::shared_ptr<const ndn::Interest>& 
   ndn::nfd::ControlResponse response(code, text);
   const ndn::Block& encodedControl = response.wireEncode();
 
-  std::shared_ptr<ndn::Data> responseData = ndn::make_shared<ndn::Data>(request->getName());
+  std::shared_ptr<ndn::Data> responseData = std::make_shared<ndn::Data>(request->getName());
   responseData->setContent(encodedControl);
 
   m_keyChain.sign(*responseData);

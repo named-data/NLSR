@@ -518,6 +518,23 @@ BOOST_AUTO_TEST_CASE(LoadCertToPublish)
   boost::filesystem::remove(CERT_PATH);
 }
 
+BOOST_AUTO_TEST_CASE(PrefixUpdateValidatorOptional) // Bug #2814
+{
+  const std::string SECTION_SECURITY =
+  "security\n"
+  "{\n"
+  "  validator\n"
+  "  {\n"
+  "    trust-anchor\n"
+  "    {\n"
+  "      type any\n"
+  "    }\n"
+  "  }\n"
+  "}\n\n";
+
+  BOOST_CHECK(processConfigurationString(SECTION_SECURITY));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } //namespace test

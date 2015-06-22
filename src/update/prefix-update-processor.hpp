@@ -78,9 +78,18 @@ public:
   void
   startListening();
 
+  void
+  enable()
+  {
+    m_isEnabled = true;
+  }
+
 private:
   void
   onInterest(const ndn::Interest& request);
+
+  void
+  sendNack(const ndn::Interest& request);
 
   void
   sendResponse(const std::shared_ptr<const ndn::Interest>& request,
@@ -128,6 +137,7 @@ private:
   SyncLogicHandler& m_sync;
   ndn::KeyChain& m_keyChain;
   Validator m_validator;
+  bool m_isEnabled;
 
   const ndn::Name COMMAND_PREFIX; // /localhost/nlsr/prefix-update
 

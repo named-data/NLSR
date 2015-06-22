@@ -163,6 +163,11 @@ Nlsrc::sendNamePrefixUpdate(const ndn::Name& name,
 void
 Nlsrc::onControlResponse(const std::string& info, const ndn::Data& data)
 {
+  if (data.getMetaInfo().getType() == ndn::tlv::ContentType_Nack) {
+    std::cerr << "ERROR: Run-time advertise/withdraw disabled" << std::endl;
+    return;
+  }
+
   ndn::nfd::ControlResponse response;
 
   try {

@@ -612,46 +612,40 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 {
   ConfigSection::const_iterator it = section.begin();
 
-  if (it == section.end() || it->first != "validator")
-    {
-      std::cerr << "Error: Expect validator section!" << std::endl;
-      return false;
-    }
+  if (it == section.end() || it->first != "validator") {
+    std::cerr << "Error: Expect validator section!" << std::endl;
+    return false;
+  }
 
   m_nlsr.loadValidator(it->second, m_confFileName);
+
   it++;
+  if (it != section.end() && it->first == "prefix-update-validator") {
+    m_nlsr.getPrefixUpdateProcessor().enable();
+    m_nlsr.getPrefixUpdateProcessor().loadValidator(it->second, m_confFileName);
 
-  if (it == section.end() || it->first != "prefix-update-validator")
-    {
-      std::cerr << "Error: Expect prefix-update-validator section" << std::endl;
-      return false;
-    }
-
-  m_nlsr.getPrefixUpdateProcessor().loadValidator(it->second, m_confFileName);
-  it++;
-
-  for (; it != section.end(); it++)
-    {
+    it++;
+    for (; it != section.end(); it++) {
       using namespace boost::filesystem;
-      if (it->first != "cert-to-publish")
-        {
-          std::cerr << "Error: Expect cert-to-publish!" << std::endl;
-          return false;
-        }
+
+      if (it->first != "cert-to-publish") {
+        std::cerr << "Error: Expect cert-to-publish!" << std::endl;
+        return false;
+      }
 
       std::string file = it->second.data();
       path certfilePath = absolute(file, path(m_confFileName).parent_path());
-      ndn::shared_ptr<ndn::IdentityCertificate> idCert =
+      shared_ptr<ndn::IdentityCertificate> idCert =
         ndn::io::load<ndn::IdentityCertificate>(certfilePath.string());
 
-      if (!static_cast<bool>(idCert))
-        {
-          std::cerr << "Error: Cannot load cert-to-publish: " << file << "!" << std::endl;
-          return false;
-        }
+      if (idCert == nullptr) {
+        std::cerr << "Error: Cannot load cert-to-publish: " << file << "!" << std::endl;
+        return false;
+      }
 
       m_nlsr.loadCertToPublish(idCert);
     }
+  }
 
   return true;
 }

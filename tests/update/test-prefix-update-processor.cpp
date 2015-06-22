@@ -27,6 +27,7 @@
 
 #include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/management/nfd-control-parameters.hpp>
+#include <ndn-cxx/management/nfd-control-response.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
@@ -167,6 +168,20 @@ public:
     return (it != face->sentDatas.end());
   }
 
+  void
+  checkResponseCode(const Name& commandPrefix, uint64_t expectedCode)
+  {
+    std::vector<Data>::iterator it = std::find_if(face->sentDatas.begin(),
+                                                  face->sentDatas.end(),
+                                                  [commandPrefix] (const Data& data) {
+                                                    return commandPrefix.isPrefixOf(data.getName());
+                                                  });
+    BOOST_REQUIRE(it != face->sentDatas.end());
+
+    ndn::nfd::ControlResponse response(it->getContent().blockFromValue());
+    BOOST_CHECK_EQUAL(response.getCode(), expectedCode);
+  }
+
   ~PrefixUpdateFixture()
   {
     keyChain.deleteIdentity(siteIdentity);
@@ -198,6 +213,8 @@ BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
+  updateProcessor.enable();
+
   // Advertise
   ndn::nfd::ControlParameters parameters;
   parameters.setName("/prefix/to/advertise/");
@@ -232,6 +249,38 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(namePrefixList.getSize(), 0);
 
   BOOST_CHECK(wasRoutingUpdatePublished());
+}
+
+BOOST_AUTO_TEST_CASE(DisabledAndEnabled)
+{
+  ndn::nfd::ControlParameters parameters;
+  parameters.setName("/prefix/to/advertise/");
+
+  ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
+  advertiseCommand.append(parameters.wireEncode());
+
+  shared_ptr<Interest> advertiseInterest = make_shared<Interest>(advertiseCommand);
+  keyChain.signByIdentity(*advertiseInterest, opIdentity);
+
+  // Command should be rejected
+  face->receive(*advertiseInterest);
+  face->processEvents(ndn::time::milliseconds(1));
+
+  BOOST_REQUIRE(!face->sentDatas.empty());
+
+  const ndn::MetaInfo& metaInfo = face->sentDatas.front().getMetaInfo();
+  BOOST_CHECK_EQUAL(metaInfo.getType(), ndn::tlv::ContentType_Nack);
+
+  face->sentDatas.clear();
+
+  // Enable PrefixUpdateProcessor so commands will be processed
+  updateProcessor.enable();
+
+  // Command should be accepted
+  face->receive(*advertiseInterest);
+  face->processEvents(ndn::time::milliseconds(1));
+
+  checkResponseCode(advertiseCommand, 200);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
