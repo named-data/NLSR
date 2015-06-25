@@ -176,7 +176,8 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   AdjLsa* lsa = lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
-  uint32_t lastAdjLsaSeqNo = nlsr.getSequencingManager().getAdjLsaSeq();
+  uint32_t lastAdjLsaSeqNo = lsa->getLsSeqNo();
+  nlsr.getSequencingManager().setAdjLsaSeq(lastAdjLsaSeqNo);
 
   // Make sure the routing table was calculated
   RoutingTableEntry* rtEntry = nlsr.getRoutingTable().findRoutingTableEntry(failNeighbor.getName());
@@ -203,7 +204,11 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   BOOST_CHECK_EQUAL(updatedNeighbor.getInterestTimedOutNo(),
                     nlsr.getConfParameter().getInterestRetryNumber());
   BOOST_CHECK_EQUAL(updatedNeighbor.getStatus(), Adjacent::STATUS_INACTIVE);
-  BOOST_CHECK_EQUAL(nlsr.getSequencingManager().getAdjLsaSeq(), lastAdjLsaSeqNo + 1);
+
+  lsa = lsdb.findAdjLsa(key);
+  BOOST_REQUIRE(lsa != nullptr);
+
+  BOOST_CHECK_EQUAL(lsa->getLsSeqNo(), lastAdjLsaSeqNo + 1);
 
   // Make sure the routing table was recalculated
   rtEntry = nlsr.getRoutingTable().findRoutingTableEntry(failNeighbor.getName());
