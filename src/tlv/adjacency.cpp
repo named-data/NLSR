@@ -45,21 +45,19 @@ Adjacency::Adjacency(const ndn::Block& block)
 
 template<bool T>
 size_t
-Adjacency::wireEncode(ndn::EncodingImpl<T>& block) const
+Adjacency::wireEncode(ndn::EncodingImpl<T>& encoder) const
 {
   size_t totalLength = 0;
 
-  totalLength += ndn::prependNonNegativeIntegerBlock(block,
-                                                     ndn::tlv::nlsr::Cost,
-                                                     m_cost);
+  totalLength += prependNonNegativeIntegerBlock(encoder, ndn::tlv::nlsr::Cost, m_cost);
 
-  totalLength += block.prependByteArrayBlock(
+  totalLength += encoder.prependByteArrayBlock(
     ndn::tlv::nlsr::Uri, reinterpret_cast<const uint8_t*>(m_uri.c_str()), m_uri.size());
 
-  totalLength += m_name.wireEncode(block);
+  totalLength += m_name.wireEncode(encoder);
 
-  totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::Adjacency);
+  totalLength += encoder.prependVarNumber(totalLength);
+  totalLength += encoder.prependVarNumber(ndn::tlv::nlsr::Adjacency);
 
   return totalLength;
 }

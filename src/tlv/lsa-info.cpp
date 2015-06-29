@@ -49,25 +49,25 @@ LsaInfo::LsaInfo(const ndn::Block& block)
 
 template<bool T>
 size_t
-LsaInfo::wireEncode(ndn::EncodingImpl<T>& block) const
+LsaInfo::wireEncode(ndn::EncodingImpl<T>& encoder) const
 {
   size_t totalLength = 0;
 
   // Absence of an ExpirationPeriod signifies non-expiration
   if (!m_hasInfiniteExpirationPeriod) {
-    totalLength += ndn::prependNonNegativeIntegerBlock(block,
-                                                       ndn::tlv::nlsr::ExpirationPeriod,
-                                                       m_expirationPeriod.count());
+    totalLength += prependNonNegativeIntegerBlock(encoder,
+                                                  ndn::tlv::nlsr::ExpirationPeriod,
+                                                  m_expirationPeriod.count());
   }
 
-  totalLength += ndn::prependNonNegativeIntegerBlock(block,
-                                                     ndn::tlv::nlsr::SequenceNumber,
-                                                     m_sequenceNumber);
+  totalLength += prependNonNegativeIntegerBlock(encoder,
+                                                ndn::tlv::nlsr::SequenceNumber,
+                                                m_sequenceNumber);
 
-  totalLength += ndn::prependNestedBlock(block, ndn::tlv::nlsr::OriginRouter, m_originRouter);
+  totalLength += prependNestedBlock(encoder, ndn::tlv::nlsr::OriginRouter, m_originRouter);
 
-  totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::LsaInfo);
+  totalLength += encoder.prependVarNumber(totalLength);
+  totalLength += encoder.prependVarNumber(ndn::tlv::nlsr::LsaInfo);
 
   return totalLength;
 }

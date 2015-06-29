@@ -74,7 +74,7 @@ protected:
     size_t totalLength = 0;
     for (int64_t i = 0; i < N; i++)
       {
-        totalLength += ndn::prependNonNegativeIntegerBlock(outBuffer, ndn::tlv::Content, i);
+        totalLength += prependNonNegativeIntegerBlock(outBuffer, ndn::tlv::Content, i);
       }
     m_totalPayloadLength += totalLength;
     return totalLength;
