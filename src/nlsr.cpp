@@ -111,11 +111,11 @@ Nlsr::setInfoInterestFilter()
   ndn::Name name(m_confParam.getRouterPrefix());
   _LOG_DEBUG("Setting interest filter for name: " << name);
   getNlsrFace().setInterestFilter(name,
-                                  ndn::bind(&HelloProtocol::processInterest,
+                                  std::bind(&HelloProtocol::processInterest,
                                             &m_helloProtocol, _1, _2),
-                                  ndn::bind(&Nlsr::onRegistrationSuccess, this, _1),
-                                  ndn::bind(&Nlsr::registrationFailed, this, _1),
-                                  m_defaultIdentity,
+                                  std::bind(&Nlsr::onRegistrationSuccess, this, _1),
+                                  std::bind(&Nlsr::registrationFailed, this, _1),
+                                  m_signingInfo,
                                   ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
@@ -127,11 +127,11 @@ Nlsr::setLsaInterestFilter()
   name.append(m_confParam.getRouterName());
   _LOG_DEBUG("Setting interest filter for name: " << name);
   getNlsrFace().setInterestFilter(name,
-                                  ndn::bind(&Lsdb::processInterest,
+                                  std::bind(&Lsdb::processInterest,
                                             &m_nlsrLsdb, _1, _2),
-                                  ndn::bind(&Nlsr::onRegistrationSuccess, this, _1),
-                                  ndn::bind(&Nlsr::registrationFailed, this, _1),
-                                  m_defaultIdentity,
+                                  std::bind(&Nlsr::onRegistrationSuccess, this, _1),
+                                  std::bind(&Nlsr::registrationFailed, this, _1),
+                                  m_signingInfo,
                                   ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
@@ -192,7 +192,7 @@ Nlsr::initialize()
   /* Logging end */
   initializeKey();
   setStrategies();
-  _LOG_DEBUG("Default NLSR identity: " << m_defaultIdentity);
+  _LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
   setInfoInterestFilter();
   setLsaInterestFilter();
 
@@ -223,18 +223,17 @@ Nlsr::initialize()
 void
 Nlsr::initializeKey()
 {
-  m_defaultIdentity = m_confParam.getRouterPrefix();
-  m_defaultIdentity.append("NLSR");
+  ndn::Name defaultIdentity = m_confParam.getRouterPrefix();
+  defaultIdentity.append("NLSR");
 
-  try
-  {
-    m_keyChain.deleteIdentity(m_defaultIdentity);
+  try {
+    m_keyChain.deleteIdentity(defaultIdentity);
   }
-  catch (std::exception& e)
-  {
+  catch (std::exception& e) {
   }
+  m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID, defaultIdentity);
 
-  ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(m_defaultIdentity, true);
+  ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(defaultIdentity, true);
 
   ndn::shared_ptr<ndn::IdentityCertificate> certificate =
     ndn::make_shared<ndn::IdentityCertificate>();
@@ -262,11 +261,11 @@ Nlsr::registerKeyPrefix()
   ndn::Name keyPrefix = DEFAULT_BROADCAST_PREFIX;
   keyPrefix.append("KEYS");
   m_nlsrFace.setInterestFilter(keyPrefix,
-                               ndn::bind(&Nlsr::onKeyInterest,
+                               std::bind(&Nlsr::onKeyInterest,
                                          this, _1, _2),
-                               ndn::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
-                               ndn::bind(&Nlsr::registrationFailed, this, _1),
-                               m_defaultIdentity,
+                               std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
+                               std::bind(&Nlsr::registrationFailed, this, _1),
+                               m_signingInfo,
                                ndn::nfd::ROUTE_FLAG_CAPTURE);
 
 }
@@ -332,8 +331,8 @@ Nlsr::destroyFaces()
   for (std::list<Adjacent>::iterator it = adjacents.begin();
        it != adjacents.end(); it++) {
     m_fib.destroyFace((*it).getConnectingFaceUri(),
-                      ndn::bind(&Nlsr::onDestroyFaceSuccess, this, _1),
-                      ndn::bind(&Nlsr::onDestroyFaceFailure, this, _1, _2));
+                      std::bind(&Nlsr::onDestroyFaceSuccess, this, _1),
+                      std::bind(&Nlsr::onDestroyFaceFailure, this, _1, _2));
   }
 }
 

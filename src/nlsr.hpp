@@ -377,7 +377,7 @@ private:
   security::CertificateStore m_certStore;
   Validator m_validator;
   ndn::KeyChain m_keyChain;
-  ndn::Name m_defaultIdentity;
+  ndn::security::SigningInfo m_signingInfo;
   ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
 
