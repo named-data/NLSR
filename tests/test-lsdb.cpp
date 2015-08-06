@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2015,  The University of Memphis,
+ * Copyright (c) 2014-2016,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -28,6 +28,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
+#include <ndn-cxx/util/segment-fetcher.hpp>
 
 namespace nlsr {
 namespace test {
@@ -38,7 +39,7 @@ class LsdbFixture : public BaseFixture
 {
 public:
   LsdbFixture()
-    : face(make_shared<ndn::util::DummyClientFace>())
+    : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter(), nlsr.getSequencingManager())
     , lsdb(nlsr.getLsdb())
@@ -122,10 +123,11 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   interests.clear();
 
   steady_clock::TimePoint deadline = steady_clock::now() +
-                                     ndn::time::seconds(static_cast<int>(LSA_REFRESH_TIME_MAX));
+                                     ndn::time::seconds(LSA_REFRESH_TIME_MAX);
 
   // Simulate an LSA interest timeout
-  lsdb.processInterestTimedOut(oldInterestName, 0, deadline, interestName, oldSeqNo);
+  lsdb.onFetchLsaError(ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
+                       oldInterestName, 0, deadline, interestName, oldSeqNo);
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_REQUIRE(interests.size() > 0);
@@ -149,11 +151,79 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   interests.clear();
 
   // Simulate an LSA interest timeout where the sequence number is outdated
-  lsdb.processInterestTimedOut(oldInterestName, 0, deadline, interestName, oldSeqNo);
+  lsdb.onFetchLsaError(ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
+                       oldInterestName, 0, deadline, interestName, oldSeqNo);
   face->processEvents(ndn::time::milliseconds(1));
 
   // Interest should not be expressed for outdated sequence number
   BOOST_CHECK_EQUAL(interests.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(SegmentLsaData)
+{
+  ndn::Name router("/ndn/cs/%C1.Router/router1");
+  uint64_t seqNo = 12;
+  NamePrefixList prefixList;
+
+  NameLsa lsa(router, seqNo, ndn::time::system_clock::now(), prefixList);
+
+  ndn::Name prefix("/ndn/edu/memphis/netlab/research/nlsr/test/prefix/");
+
+  int nPrefixes = 0;
+  while (lsa.getData().size() < ndn::MAX_NDN_PACKET_SIZE) {
+    lsa.addName(ndn::Name(prefix).appendNumber(++nPrefixes));
+  }
+
+  std::string expectedDataContent = lsa.getData();
+  lsdb.installNameLsa(lsa);
+
+  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/name/");
+  interestName.appendNumber(seqNo);
+
+  ndn::Interest interest(interestName);
+
+  lsdb.processInterest(ndn::Name(), interest);
+  face->processEvents(ndn::time::milliseconds(1));
+
+  std::vector<ndn::Data> data = face->sentData;
+  std::string recvDataContent;
+  for (unsigned int i = 0; i < data.size(); ++i)
+  {
+    const ndn::Block& nameBlock = data[i].getContent();
+
+    std::string nameBlockContent(reinterpret_cast<char const*>(nameBlock.value()),
+                                 nameBlock.value_size());
+    recvDataContent += nameBlockContent;
+  }
+
+  BOOST_CHECK_EQUAL(expectedDataContent, recvDataContent);
+}
+
+BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
+{
+  ndn::Name router("/ndn/cs/%C1.Router/router1");
+  uint64_t seqNo = 12;
+  NamePrefixList prefixList;
+
+  NameLsa lsa(router, seqNo, ndn::time::system_clock::now(), prefixList);
+
+  ndn::Name prefix("/prefix/");
+
+  for (int nPrefixes = 0; nPrefixes < 3; ++nPrefixes) {
+    lsa.addName(ndn::Name(prefix).appendNumber(nPrefixes));
+  }
+
+  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/name/");
+  interestName.appendNumber(seqNo);
+
+  const ndn::ConstBufferPtr bufferPtr = make_shared<ndn::Buffer>(lsa.getData().c_str(),
+                                                                 lsa.getData().size());
+  lsdb.afterFetchLsa(bufferPtr, interestName);
+
+  NameLsa* foundLsa = lsdb.findNameLsa(lsa.getKey());
+  BOOST_REQUIRE(foundLsa != nullptr);
+
+  BOOST_CHECK_EQUAL(foundLsa->getData(), lsa.getData());
 }
 
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)

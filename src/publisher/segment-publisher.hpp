@@ -68,7 +68,8 @@ public:
   /** \brief Publish data under provided prefix
    */
   void
-  publish(const ndn::Name& prefix)
+  publish(const ndn::Name& prefix,
+          const ndn::security::SigningInfo& signingInfo = ndn::security::KeyChain::DEFAULT_SIGNING_INFO)
   {
     ndn::EncodingBuffer buffer;
     generate(buffer);
@@ -99,7 +100,7 @@ public:
         data->setFinalBlockId(segmentName[-1]);
       }
 
-      publishSegment(data);
+      publishSegment(data, signingInfo);
       ++segmentNo;
     } while (segmentBegin < end);
   }
@@ -112,9 +113,9 @@ protected:
 
 private:
   void
-  publishSegment(ndn::shared_ptr<ndn::Data>& data)
+  publishSegment(ndn::shared_ptr<ndn::Data>& data, const ndn::security::SigningInfo& signingInfo)
   {
-    m_keyChain.sign(*data);
+    m_keyChain.sign(*data, signingInfo);
     m_face.put(*data);
   }
 

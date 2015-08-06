@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2015,  The University of Memphis,
+ * Copyright (c) 2014-2016,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,6 +24,7 @@
 
 #include <utility>
 #include <boost/cstdint.hpp>
+
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/time.hpp>
 
@@ -41,19 +42,12 @@ class SyncLogicHandler;
 class Lsdb
 {
 public:
-  Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync)
-    : m_nlsr(nlsr)
-    , m_scheduler(scheduler)
-    , m_sync(sync)
-    , m_lsaRefreshTime(0)
-    , m_adjLsaBuildInterval(static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT))
-  {
-  }
+  Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync);
 
   bool
   doesLsaExist(const ndn::Name& key, const std::string& lsType);
-  // function related to Name LSDB
 
+  // functions related to Name LSDB
   bool
   buildAndInstallOwnNameLsa();
 
@@ -75,7 +69,7 @@ public:
   const std::list<NameLsa>&
   getNameLsdb();
 
-  //function related to Cor LSDB
+  // functions related to Cor LSDB
   bool
   buildAndInstallOwnCoordinateLsa();
 
@@ -97,8 +91,7 @@ public:
   const std::list<CoordinateLsa>&
   getCoordinateLsdb();
 
-  //function related to Adj LSDB
-
+  // functions related to Adj LSDB
   void
   scheduleAdjLsaBuild();
 
@@ -140,6 +133,13 @@ public:
 
   void
   setThisRouterPrefix(std::string trp);
+
+  void
+  expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
+                  steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
+
+  void
+  processInterest(const ndn::Name& name, const ndn::Interest& interest);
 
 private:
   bool
@@ -187,15 +187,7 @@ private:
   void
   exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                 uint64_t seqNo);
-public:
-  void
-  expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
-                  steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
 
-  void
-  processInterest(const ndn::Name& name, const ndn::Interest& interest);
-
-private:
   void
   putLsaData(const ndn::Interest& interest, const std::string& content);
 
@@ -215,30 +207,7 @@ private:
                                   uint64_t seqNo);
 
   void
-  onContent(const ndn::Data& data, const steady_clock::TimePoint& deadline,
-            ndn::Name lsaName, uint64_t seqNo);
-
-  /**
-   * @brief Retry validation after it fails
-   *
-   * Data packet validation can fail either because the packet does not have
-   * valid signature (fatal) or because some of the certificate chain Data packets
-   * failed to be fetched (non-fatal).  Currently, the library does not provide
-   * clear indication (besides plain-text message in error callback) of what is
-   * the reason for failure and we will try to re-validate for as long as it the deadline.
-   */
-  void
-  retryContentValidation(const ndn::shared_ptr<const ndn::Data>& data,
-                         const steady_clock::TimePoint& deadline, ndn::Name lsaName,
-                         uint64_t seqNo);
-
-  void
   onContentValidated(const ndn::shared_ptr<const ndn::Data>& data);
-
-  void
-  onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data, const std::string& msg,
-                            const steady_clock::TimePoint& deadline, ndn::Name lsaName,
-                            uint64_t seqNo);
 
   void
   processContentNameLsa(const ndn::Name& lsaKey,
@@ -253,10 +222,37 @@ private:
                               uint64_t lsSeqNo, std::string& dataContent);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  /**
+   * @brief Error callback when SegmentFetcher fails to return an LSA
+   *
+   * In all error cases, a reattempt to fetch the LSA will be made.
+   *
+   * Segment validation can fail either because the packet does not have a
+   * valid signature (fatal) or because some of the certificates in the trust chain
+   * could not be fetched (non-fatal).
+   *
+   * Currently, the library does not provide clear indication (besides a plain-text message
+   * in the error callback) of the reason for the failure nor the segment that failed
+   * to be validated, thus we will continue to try to fetch the LSA until the deadline
+   * is reached.
+   */
   void
-  processInterestTimedOut(const ndn::Interest& interest, uint32_t retransmitNo,
-                          const steady_clock::TimePoint& deadline, ndn::Name lsaName,
-                          uint64_t seqNo);
+  onFetchLsaError(uint32_t errorCode,
+                  const std::string& msg,
+                  ndn::Name& interestName,
+                  uint32_t retransmitNo,
+                  const ndn::time::steady_clock::TimePoint& deadline,
+                  ndn::Name lsaName,
+                  uint64_t seqNo);
+
+  /**
+   * @brief Success callback when SegmentFetcher returns a valid LSA
+   *
+   * \param The base Interest used to fetch the LSA in the format:
+   *        /<network>/NLSR/LSA/<site>/%C1.Router/<router>/<lsa-type>/<seqNo>
+   */
+  void
+  afterFetchLsa(const ndn::ConstBufferPtr& data, ndn::Name& interestName);
 
 private:
   system_clock::TimePoint
