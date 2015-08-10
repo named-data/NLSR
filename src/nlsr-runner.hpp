@@ -19,48 +19,48 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "nlsr-runner.hpp"
-#include "version.hpp"
+#ifndef NLSR_NLSR_RUNNER_HPP
+#define NLSR_NLSR_RUNNER_HPP
 
-int
-main(int32_t argc, char** argv)
+#include "nlsr.hpp"
+
+#include <ndn-cxx/face.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
+
+// boost needs to be included after ndn-cxx, otherwise there will be conflict with _1, _2, ...
+#include <boost/asio.hpp>
+
+namespace nlsr {
+
+class NlsrRunner
 {
-  using namespace nlsr;
-
-  std::string programName(argv[0]);
-
-  std::string configFileName = "nlsr.conf";
-  bool isDaemonProcess = false;
-
-  int32_t opt;
-  while ((opt = getopt(argc, argv, "df:hV")) != -1) {
-    switch (opt) {
-      case 'f':
-        configFileName = optarg;
-        break;
-      case 'd':
-        isDaemonProcess = true;
-        break;
-      case 'V':
-        std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
-        return EXIT_SUCCESS;
-        break;
-      case 'h':
-      default:
-        NlsrRunner::printUsage(programName);
-        return EXIT_FAILURE;
+public:
+  class Error : public std::runtime_error
+  {
+  public:
+    explicit
+    Error(const std::string& what)
+      : std::runtime_error(what)
+    {
     }
-  }
+  };
 
-  NlsrRunner runner(configFileName, isDaemonProcess);
+  NlsrRunner(std::string& configFileName, bool isDaemonProcess);
 
-  try {
-    runner.run();
-  }
-  catch (const std::exception& e) {
-    std::cerr << e.what() << std::endl;
-    return EXIT_FAILURE;
-  }
+  void
+  run();
 
-  return EXIT_SUCCESS;
-}
+  static void
+  printUsage(const std::string& programName);
+
+private:
+  boost::asio::io_service m_ioService;
+  ndn::Scheduler m_scheduler;
+  ndn::Face m_face;
+
+  Nlsr m_nlsr;
+};
+
+} // namespace nlsr
+
+#endif // NLSR_NLSR_RUNNER_HPP

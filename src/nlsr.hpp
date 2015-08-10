@@ -88,9 +88,6 @@ public:
   void
   startEventLoop();
 
-  void
-  usage(const std::string& progname);
-
   std::string
   getConfFileName() const
   {
