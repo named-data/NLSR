@@ -221,7 +221,7 @@ Nlsrc::fetchFromLsdb(const ndn::Name::Component& datasetType,
 
   ndn::util::SegmentFetcher::fetch(m_face,
                                    interest,
-                                   ndn::util::DontVerifySegment(),
+                                   m_validator,
                                    std::bind(&Nlsrc::onFetchSuccess<T>,
                                              this, _1, recordLsa),
                                    std::bind(&Nlsrc::onTimeout, this, _1, _2));

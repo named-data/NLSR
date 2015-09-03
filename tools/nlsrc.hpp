@@ -26,6 +26,7 @@
 #include <boost/noncopyable.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/validator-null.hpp>
 
 #include <deque>
 #include <map>
@@ -146,6 +147,7 @@ private:
 private:
   ndn::KeyChain m_keyChain;
   ndn::Face& m_face;
+  ndn::ValidatorNull m_validator;
 
   std::deque<std::function<void()>> m_fetchSteps;
 
