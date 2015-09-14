@@ -138,9 +138,11 @@ Nlsr::setLsaInterestFilter()
 void
 Nlsr::setStrategies()
 {
-  std::string strategy("ndn:/localhost/nfd/strategy/broadcast");
+  const std::string strategy("ndn:/localhost/nfd/strategy/multicast");
+
   ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
   broadcastKeyPrefix.append("KEYS");
+
   m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy, 0);
   m_fib.setStrategy(broadcastKeyPrefix, strategy, 0);
   m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy, 0);
