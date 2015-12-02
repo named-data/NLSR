@@ -28,7 +28,7 @@
 #include <log4cxx/logger.h>
 
 #define INIT_LOGGER(name) \
-  static log4cxx::LoggerPtr staticModuleLogger = log4cxx::Logger::getLogger (name);
+  static log4cxx::LoggerPtr staticModuleLogger = log4cxx::Logger::getLogger (name)
 
 #define _LOG_DEBUG(x) \
   LOG4CXX_DEBUG(staticModuleLogger, x);

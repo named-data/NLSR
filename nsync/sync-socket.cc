@@ -20,7 +20,9 @@
 
 #include "sync-socket.h"
 #include "sync-logging.h"
+
 #include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
 
 using namespace std;
 

@@ -156,9 +156,9 @@ public:
     return m_hasNameLsas;
   }
 
-  template<bool T>
+  template<ndn::encoding::Tag TAG>
   size_t
-  wireEncode(ndn::EncodingImpl<T>& block) const;
+  wireEncode(ndn::EncodingImpl<TAG>& block) const;
 
   const ndn::Block&
   wireEncode() const;

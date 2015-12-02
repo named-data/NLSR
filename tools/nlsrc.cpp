@@ -351,7 +351,7 @@ Nlsrc::getRouter(const nlsr::tlv::LsaInfo& info)
   const ndn::Name& originRouterName = info.getOriginRouter();
 
   const auto& pair =
-    m_routers.insert(std::make_pair(originRouterName, std::move(Router())));
+    m_routers.insert(std::make_pair(originRouterName, Router()));
 
   return pair.first->second;
 }

@@ -43,9 +43,9 @@ AdjacencyLsa::AdjacencyLsa(const ndn::Block& block)
   wireDecode(block);
 }
 
-template<bool T>
+template<ndn::encoding::Tag TAG>
 size_t
-AdjacencyLsa::wireEncode(ndn::EncodingImpl<T>& block) const
+AdjacencyLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
@@ -63,10 +63,10 @@ AdjacencyLsa::wireEncode(ndn::EncodingImpl<T>& block) const
 }
 
 template size_t
-AdjacencyLsa::wireEncode<true>(ndn::EncodingImpl<true>& block) const;
+AdjacencyLsa::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& encoder) const;
 
 template size_t
-AdjacencyLsa::wireEncode<false>(ndn::EncodingImpl<false>& block) const;
+AdjacencyLsa::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& encoder) const;
 
 const ndn::Block&
 AdjacencyLsa::wireEncode() const

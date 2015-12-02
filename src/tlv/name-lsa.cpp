@@ -43,9 +43,9 @@ NameLsa::NameLsa(const ndn::Block& block)
   wireDecode(block);
 }
 
-template<bool T>
+template<ndn::encoding::Tag TAG>
 size_t
-NameLsa::wireEncode(ndn::EncodingImpl<T>& block) const
+NameLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
@@ -63,10 +63,10 @@ NameLsa::wireEncode(ndn::EncodingImpl<T>& block) const
 }
 
 template size_t
-NameLsa::wireEncode<true>(ndn::EncodingImpl<true>& block) const;
+NameLsa::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
 
 template size_t
-NameLsa::wireEncode<false>(ndn::EncodingImpl<false>& block) const;
+NameLsa::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& block) const;
 
 const ndn::Block&
 NameLsa::wireEncode() const

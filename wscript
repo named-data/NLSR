@@ -105,7 +105,7 @@ def build(bld):
         name='nsync-objects',
         features='cxx',
         source=bld.path.ant_glob(['nsync/**/*.cc', 'nsync/**/*.proto']),
-        use='BOOST NDN_CXX OPENSSL',
+        use='BOOST NDN_CXX OPENSSL LOG4CXX',
         includes='nsync',
         export_includes='nsync',
         )

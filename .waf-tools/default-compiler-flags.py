@@ -1,53 +1,58 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
-from waflib import Logs, Configure
+from waflib import Logs, Configure, Utils
 
 def options(opt):
     opt.add_option('--debug', '--with-debug', action='store_true', default=False, dest='debug',
                    help='''Compile in debugging mode without optimizations (-O0 or -Og)''')
 
 def configure(conf):
-    areCustomCxxflagsPresent = (len(conf.env.CXXFLAGS) > 0)
-    defaultFlags = ['-std=c++0x', '-std=c++11',
-                    '-stdlib=libc++', # clang on OSX < 10.9 by default uses a non
-                                      # C++11-compatible STL library
-                    '-Wall', '-Wno-long-long']
+    cxx = conf.env['CXX_NAME'] # CXX_NAME represents generic name of the compiler
+    if cxx == 'gcc':
+        flags = GccFlags()
+    elif cxx == 'clang':
+        flags = ClangFlags()
+    else:
+        flags = CompilerFlags()
+        Logs.warn('The code has not yet been tested with %s compiler' % cxx)
 
+    areCustomCxxflagsPresent = (len(conf.env.CXXFLAGS) > 0)
+
+    # General flags are always applied (e.g., selecting C++11 mode)
+    generalFlags = flags.getGeneralFlags(conf)
+    conf.add_supported_cxxflags(generalFlags['CXXFLAGS'])
+    conf.add_supported_linkflags(generalFlags['LINKFLAGS'])
+    conf.env.DEFINES += generalFlags['DEFINES']
+
+    # Debug or optimized CXXFLAGS and LINKFLAGS are applied only if the
+    # corresponding environment variables are not set.
+    # DEFINES are always applied.
     if conf.options.debug:
-        conf.define('_DEBUG', 1)
-        defaultFlags += ['-O0',
-                         '-Og', # gcc >= 4.8
-                         '-g3',
-                         '-fcolor-diagnostics', # clang
-                         '-fdiagnostics-color', # gcc >= 4.9
-                         '-Werror',
-                         '-Wno-error=deprecated-register',
-                         '-Wno-error=maybe-uninitialized', # Bug #1615
-                         '-Wno-error=unneeded-internal-declaration', # Bug #1588
-                         '-Wno-nested-anon-types',
-                        ]
+        extraFlags = flags.getDebugFlags(conf)
         if areCustomCxxflagsPresent:
-            missingFlags = [x for x in defaultFlags if x not in conf.env.CXXFLAGS]
+            missingFlags = [x for x in extraFlags['CXXFLAGS'] if x not in conf.env.CXXFLAGS]
             if len(missingFlags) > 0:
                 Logs.warn("Selected debug mode, but CXXFLAGS is set to a custom value '%s'"
                           % " ".join(conf.env.CXXFLAGS))
                 Logs.warn("Default flags '%s' are not activated" % " ".join(missingFlags))
-        else:
-            conf.add_supported_cxxflags(defaultFlags)
     else:
-        defaultFlags += ['-O2', '-g']
-        if not areCustomCxxflagsPresent:
-            conf.add_supported_cxxflags(defaultFlags)
+        extraFlags = flags.getOptimizedFlags(conf)
 
-    # clang on OSX < 10.9 by default uses a non C++11-compatible STL library
-    conf.add_supported_linkflags(['-stdlib=libc++'])
+    if not areCustomCxxflagsPresent:
+        conf.add_supported_cxxflags(extraFlags['CXXFLAGS'])
+        conf.add_supported_linkflags(extraFlags['LINKFLAGS'])
+
+    conf.env.DEFINES += extraFlags['DEFINES']
 
 @Configure.conf
 def add_supported_cxxflags(self, cxxflags):
     """
     Check which cxxflags are supported by compiler and add them to env.CXXFLAGS variable
     """
-    self.start_msg('Checking allowed compile-stage flags for c++ compiler')
+    if len(cxxflags) == 0:
+        return
+
+    self.start_msg('Checking supported CXXFLAGS')
 
     supportedFlags = []
     for flag in cxxflags:
@@ -62,7 +67,10 @@ def add_supported_linkflags(self, linkflags):
     """
     Check which linkflags are supported by compiler and add them to env.LINKFLAGS variable
     """
-    self.start_msg('Checking allowed link-stage flags for c++ compiler')
+    if len(linkflags) == 0:
+        return
+
+    self.start_msg('Checking supported LINKFLAGS')
 
     supportedFlags = []
     for flag in linkflags:
@@ -71,3 +79,113 @@ def add_supported_linkflags(self, linkflags):
 
     self.end_msg(' '.join(supportedFlags))
     self.env.LINKFLAGS = supportedFlags + self.env.LINKFLAGS
+
+
+class CompilerFlags(object):
+    def getGeneralFlags(self, conf):
+        """Get dict of CXXFLAGS, LINKFLAGS, and DEFINES that are always needed"""
+        return {'CXXFLAGS': [], 'LINKFLAGS': [], 'DEFINES': []}
+
+    def getDebugFlags(self, conf):
+        """Get dict of CXXFLAGS, LINKFLAGS, and DEFINES that are needed only in debug mode"""
+        return {'CXXFLAGS': [], 'LINKFLAGS': [], 'DEFINES': ['_DEBUG']}
+
+    def getOptimizedFlags(self, conf):
+        """Get dict of CXXFLAGS, LINKFLAGS, and DEFINES that are needed only in optimized mode"""
+        return {'CXXFLAGS': [], 'LINKFLAGS': [], 'DEFINES': ['NDEBUG']}
+
+class GccBasicFlags(CompilerFlags):
+    """
+    This class defines basic flags that work for both gcc and clang compilers
+    """
+    def getDebugFlags(self, conf):
+        flags = super(GccBasicFlags, self).getDebugFlags(conf)
+        flags['CXXFLAGS'] += ['-O0',
+                              '-g3',
+                              '-pedantic',
+                              '-Wall',
+                              '-Wextra',
+                              '-Werror',
+                              '-Wno-unused-parameter',
+                              '-Wno-error=maybe-uninitialized', # Bug #1615
+                              ]
+        return flags
+
+    def getOptimizedFlags(self, conf):
+        flags = super(GccBasicFlags, self).getOptimizedFlags(conf)
+        flags['CXXFLAGS'] += ['-O2',
+                              '-g',
+                              '-pedantic',
+                              '-Wall',
+                              '-Wextra',
+                              '-Wno-unused-parameter',
+                              ]
+        return flags
+
+class GccFlags(GccBasicFlags):
+    def getGeneralFlags(self, conf):
+        flags = super(GccFlags, self).getGeneralFlags(conf)
+        version = tuple(int(i) for i in conf.env['CC_VERSION'])
+        if version < (4, 6, 0):
+            conf.fatal('The version of gcc you are using (%s) is too old.\n' %
+                       '.'.join(conf.env['CC_VERSION']) +
+                       'The minimum supported gcc version is 4.6.0.')
+        elif version < (4, 7, 0):
+            flags['CXXFLAGS'] += ['-std=c++0x']
+        else:
+            flags['CXXFLAGS'] += ['-std=c++11']
+        if version < (4, 8, 0):
+            flags['DEFINES'] += ['_GLIBCXX_USE_NANOSLEEP'] # Bug #2499
+        return flags
+
+    def getDebugFlags(self, conf):
+        flags = super(GccFlags, self).getDebugFlags(conf)
+        version = tuple(int(i) for i in conf.env['CC_VERSION'])
+        if version < (5, 1, 0):
+            flags['CXXFLAGS'] += ['-Wno-missing-field-initializers']
+        flags['CXXFLAGS'] += ['-Og', # gcc >= 4.8
+                              '-fdiagnostics-color', # gcc >= 4.9
+                              ]
+        return flags
+
+    def getOptimizedFlags(self, conf):
+        flags = super(GccFlags, self).getOptimizedFlags(conf)
+        version = tuple(int(i) for i in conf.env['CC_VERSION'])
+        if version < (5, 1, 0):
+            flags['CXXFLAGS'] += ['-Wno-missing-field-initializers']
+        flags['CXXFLAGS'] += ['-fdiagnostics-color'] # gcc >= 4.9
+        return flags
+
+class ClangFlags(GccBasicFlags):
+    def getGeneralFlags(self, conf):
+        flags = super(ClangFlags, self).getGeneralFlags(conf)
+        flags['CXXFLAGS'] += ['-std=c++11']
+        if Utils.unversioned_sys_platform() == 'darwin':
+            flags['CXXFLAGS'] += ['-stdlib=libc++']
+            flags['LINKFLAGS'] += ['-stdlib=libc++']
+        return flags
+
+    def getDebugFlags(self, conf):
+        flags = super(ClangFlags, self).getDebugFlags(conf)
+        flags['CXXFLAGS'] += ['-fcolor-diagnostics',
+                              '-Wno-unused-local-typedef', # Bugs #2657 and #3209
+                              '-Wno-error=unneeded-internal-declaration', # Bug #1588
+                              '-Wno-error=deprecated-register',
+                              '-Wno-error=keyword-macro', # Bug #3235
+                              '-Wno-nested-anon-types',
+                              '-Wno-sign-compare',
+                              '-Wno-keyword-macro',
+                              '-Wno-error=ignored-qualifiers',
+                              '-Wno-error=infinite-recursion',
+                              ]
+        return flags
+
+    def getOptimizedFlags(self, conf):
+        flags = super(ClangFlags, self).getOptimizedFlags(conf)
+        flags['CXXFLAGS'] += ['-fcolor-diagnostics',
+                              '-Wno-unused-local-typedef', # Bugs #2657 and #3209
+                              '-Wno-nested-anon-types',
+                              '-Wno-sign-compare',
+                              '-Wno-keyword-macro',
+                              ]
+        return flags

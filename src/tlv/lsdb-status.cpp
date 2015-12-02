@@ -45,9 +45,9 @@ LsdbStatus::LsdbStatus(const ndn::Block& block)
   wireDecode(block);
 }
 
-template<bool T>
+template<ndn::encoding::Tag TAG>
 size_t
-LsdbStatus::wireEncode(ndn::EncodingImpl<T>& block) const
+LsdbStatus::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
@@ -73,10 +73,10 @@ LsdbStatus::wireEncode(ndn::EncodingImpl<T>& block) const
 }
 
 template size_t
-LsdbStatus::wireEncode<true>(ndn::EncodingImpl<true>& block) const;
+LsdbStatus::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
 
 template size_t
-LsdbStatus::wireEncode<false>(ndn::EncodingImpl<false>& block) const;
+LsdbStatus::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& block) const;
 
 const ndn::Block&
 LsdbStatus::wireEncode() const

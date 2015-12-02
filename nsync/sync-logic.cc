@@ -29,6 +29,7 @@
 
 #include <boost/foreach.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/thread.hpp>
 #include <vector>
 
 using namespace std;

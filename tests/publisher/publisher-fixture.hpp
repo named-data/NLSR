@@ -86,7 +86,7 @@ public:
     CoordinateLsa lsa(origin, CoordinateLsa::TYPE_STRING, 1, ndn::time::system_clock::now(),
                       radius, angle);
 
-    return std::move(lsa);
+    return lsa;
   }
 
   void

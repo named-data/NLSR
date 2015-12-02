@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   BOOST_CHECK_EQUAL(cp1.getRouterPrefix(), "/ATT/memphis/router1");
 
-  BOOST_CHECK_EQUAL(cp1.getInterestRetryNumber(), (uint32_t)2);
+  BOOST_CHECK_EQUAL(cp1.getInterestRetryNumber(), 2);
 
   BOOST_CHECK_EQUAL(cp1.getInterestResendTime(), 1000);
 

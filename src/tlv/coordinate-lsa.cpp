@@ -44,9 +44,9 @@ CoordinateLsa::CoordinateLsa(const ndn::Block& block)
   wireDecode(block);
 }
 
-template<bool T>
+template<ndn::encoding::Tag TAG>
 size_t
-CoordinateLsa::wireEncode(ndn::EncodingImpl<T>& block) const
+CoordinateLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
   size_t doubleLength = 10;
@@ -70,10 +70,10 @@ CoordinateLsa::wireEncode(ndn::EncodingImpl<T>& block) const
 }
 
 template size_t
-CoordinateLsa::wireEncode<true>(ndn::EncodingImpl<true>& block) const;
+CoordinateLsa::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
 
 template size_t
-CoordinateLsa::wireEncode<false>(ndn::EncodingImpl<false>& block) const;
+CoordinateLsa::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& block) const;
 
 const ndn::Block&
 CoordinateLsa::wireEncode() const
