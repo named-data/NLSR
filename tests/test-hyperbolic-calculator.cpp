@@ -20,7 +20,6 @@
  **/
 
 #include "test-common.hpp"
-#include "dummy-face.hpp"
 
 #include "route/routing-table-calculator.hpp"
 
@@ -33,10 +32,11 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <ndn-cxx/util/dummy-client-face.hpp>
+
 namespace nlsr {
 namespace test {
 
-using ndn::DummyFace;
 using ndn::shared_ptr;
 using ndn::time::system_clock;
 static const system_clock::TimePoint MAX_TIME = system_clock::TimePoint::max();
@@ -45,7 +45,7 @@ class HyperbolicCalculatorFixture : public BaseFixture
 {
 public:
   HyperbolicCalculatorFixture()
-    : face(ndn::makeDummyFace())
+    : face(make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , routingTable(nlsr.getRoutingTable())
     , adjacencies(nlsr.getAdjacencyList())
@@ -105,7 +105,7 @@ public:
   }
 
 public:
-  shared_ptr<DummyFace> face;
+  shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   Map map;
 

@@ -20,7 +20,6 @@
  **/
 
 #include "test-common.hpp"
-#include "dummy-face.hpp"
 
 #include "lsdb.hpp"
 #include "nlsr.hpp"
@@ -28,17 +27,18 @@
 #include "name-prefix-list.hpp"
 #include <boost/test/unit_test.hpp>
 
+#include <ndn-cxx/util/dummy-client-face.hpp>
+
 namespace nlsr {
 namespace test {
 
-using ndn::DummyFace;
 using ndn::shared_ptr;
 
 class LsdbFixture : public BaseFixture
 {
 public:
   LsdbFixture()
-    : face(ndn::makeDummyFace())
+    : face(make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter(), nlsr.getSequencingManager())
     , lsdb(nlsr.getLsdb())
@@ -53,7 +53,7 @@ public:
     nlsr.initialize();
 
     face->processEvents(ndn::time::milliseconds(1));
-    face->m_sentInterests.clear();
+    face->sentInterests.clear();
 
     INIT_LOGGERS("/tmp", "DEBUG");
   }
@@ -89,7 +89,7 @@ public:
   }
 
 public:
-  shared_ptr<DummyFace> face;
+  shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   SyncLogicHandler sync;
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   lsdb.expressInterest(oldInterestName, 0);
   face->processEvents(ndn::time::milliseconds(1));
 
-  std::vector<ndn::Interest>& interests = face->m_sentInterests;
+  std::vector<ndn::Interest>& interests = face->sentInterests;
 
   BOOST_REQUIRE(interests.size() > 0);
   std::vector<ndn::Interest>::iterator it = interests.begin();

@@ -43,7 +43,7 @@ class PrefixUpdateFixture : public nlsr::test::BaseFixture
 {
 public:
   PrefixUpdateFixture()
-    : face(ndn::util::makeDummyClientFace(g_ioService))
+    : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
     , siteIdentity(ndn::Name("/ndn/edu/test-site").appendVersion())
     , opIdentity(ndn::Name(siteIdentity).append(ndn::Name("%C1.Operator")).appendVersion())
     , nlsr(g_ioService, g_scheduler, *face)

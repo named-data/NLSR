@@ -21,7 +21,6 @@
 
 #include "test-common.hpp"
 #include "control-commands.hpp"
-#include "dummy-face.hpp"
 
 #include "nlsr.hpp"
 
@@ -31,14 +30,13 @@
 namespace nlsr {
 namespace test {
 
-using ndn::DummyFace;
 using ndn::shared_ptr;
 
 BOOST_FIXTURE_TEST_SUITE(TestNlsr, BaseFixture)
 
 BOOST_AUTO_TEST_CASE(HyperbolicOn_ZeroCostNeighbors)
 {
-  shared_ptr<DummyFace> face = ndn::makeDummyFace();
+  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>();
   Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
 
   // Simulate loading configuration file
@@ -65,7 +63,7 @@ BOOST_AUTO_TEST_CASE(HyperbolicOn_ZeroCostNeighbors)
 
 BOOST_AUTO_TEST_CASE(HyperbolicOff_LinkStateCost)
 {
-  shared_ptr<DummyFace> face = ndn::makeDummyFace();
+  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>();
   Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
 
   // Simulate loading configuration file
@@ -90,7 +88,7 @@ BOOST_AUTO_TEST_CASE(HyperbolicOff_LinkStateCost)
 
 BOOST_AUTO_TEST_CASE(SetEventIntervals)
 {
-  shared_ptr<DummyFace> face = ndn::makeDummyFace();
+  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>();
   Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
 
   // Simulate loading configuration file
@@ -111,7 +109,7 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
 
 BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 {
-  shared_ptr<ndn::util::DummyClientFace> face = ndn::util::makeDummyClientFace(g_ioService);
+  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>(g_ioService);
   Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
   Lsdb& lsdb = nlsr.getLsdb();
 
@@ -224,7 +222,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 // refresh will not cause RIB entries for other nodes' name prefixes to be refreshed.
 BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
 {
-  shared_ptr<ndn::util::DummyClientFace> face = ndn::util::makeDummyClientFace(g_ioService);
+  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>(g_ioService);
   Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
   Lsdb& lsdb = nlsr.getLsdb();
 
@@ -329,7 +327,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
 
 BOOST_FIXTURE_TEST_CASE(GetCertificate, UnitTestTimeFixture)
 {
-  shared_ptr<ndn::util::DummyClientFace> face = ndn::util::makeDummyClientFace(g_ioService);
+  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>(g_ioService);
   Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
 
   // Create certificate

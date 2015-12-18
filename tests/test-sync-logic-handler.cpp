@@ -20,22 +20,22 @@
  **/
 
 #include "test-common.hpp"
-#include "dummy-face.hpp"
 
 #include "nlsr.hpp"
 #include "communication/sync-logic-handler.hpp"
 
+#include <ndn-cxx/util/dummy-client-face.hpp>
+
 namespace nlsr {
 namespace test {
 
-using ndn::DummyFace;
 using ndn::shared_ptr;
 
 class SyncLogicFixture : public BaseFixture
 {
 public:
   SyncLogicFixture()
-    : face(ndn::makeDummyFace())
+    : face(make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , sync(nlsr.getSyncLogicHandler())
     , CONFIG_NETWORK("/ndn")
@@ -57,7 +57,7 @@ public:
     updates.push_back(info);
 
     face->processEvents(ndn::time::milliseconds(1));
-    face->m_sentInterests.clear();
+    face->sentInterests.clear();
 
     sync.onNsyncUpdate(updates, NULL);
 
@@ -65,7 +65,7 @@ public:
   }
 
 public:
-  shared_ptr<DummyFace> face;
+  shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   SyncLogicHandler& sync;
 
@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOther)
 
   receiveUpdate(updateName, 1);
 
-  std::vector<ndn::Interest>& interests = face->m_sentInterests;
+  std::vector<ndn::Interest>& interests = face->sentInterests;
   BOOST_REQUIRE_EQUAL(interests.size(), 3);
 
   std::vector<ndn::Interest>::iterator it = interests.begin();
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
 
   receiveUpdate(updateName, 1);
 
-  std::vector<ndn::Interest>& interests = face->m_sentInterests;
+  std::vector<ndn::Interest>& interests = face->sentInterests;
   BOOST_CHECK_EQUAL(interests.size(), 0);
 }
 
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
   std::string updateName = CONFIG_SITE + nlsr.getConfParameter().getLsaPrefix().toUri() +
                            CONFIG_ROUTER_NAME;
 
-  std::vector<ndn::Interest>& interests = face->m_sentInterests;
+  std::vector<ndn::Interest>& interests = face->sentInterests;
   BOOST_CHECK_EQUAL(interests.size(), 0);
 }
 
@@ -145,21 +145,21 @@ BOOST_AUTO_TEST_CASE(SequenceNumber)
   uint64_t lowerSeqNo = static_cast<uint64_t>(998) << 40;
   receiveUpdate(updateName, lowerSeqNo);
 
-  std::vector<ndn::Interest>& interests = face->m_sentInterests;
+  std::vector<ndn::Interest>& interests = face->sentInterests;
   BOOST_REQUIRE_EQUAL(interests.size(), 0);
 
   // Same NameLSA sequence number
   uint64_t sameSeqNo = static_cast<uint64_t>(999) << 40;
   receiveUpdate(updateName, sameSeqNo);
 
-  interests = face->m_sentInterests;
+  interests = face->sentInterests;
   BOOST_REQUIRE_EQUAL(interests.size(), 0);
 
   // Higher NameLSA sequence number
   uint64_t higherSeqNo = static_cast<uint64_t>(1000) << 40;
   receiveUpdate(updateName, higherSeqNo);
 
-  interests = face->m_sentInterests;
+  interests = face->sentInterests;
   BOOST_REQUIRE_EQUAL(interests.size(), 1);
 
   std::vector<ndn::Interest>::iterator it = interests.begin();

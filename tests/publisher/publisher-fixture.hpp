@@ -33,7 +33,7 @@ class PublisherFixture : public BaseFixture
 {
 public:
   PublisherFixture()
-    : face(ndn::util::makeDummyClientFace())
+    : face(make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , lsdb(nlsr, g_scheduler, nlsr.getSyncLogicHandler())
   {

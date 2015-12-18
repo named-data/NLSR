@@ -31,7 +31,7 @@ class NamePrefixTableFixture : public UnitTestTimeFixture
 {
 public:
   NamePrefixTableFixture()
-    : face(ndn::util::makeDummyClientFace(g_ioService))
+    : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , lsdb(nlsr.getLsdb())
     , npt(nlsr.getNamePrefixTable())

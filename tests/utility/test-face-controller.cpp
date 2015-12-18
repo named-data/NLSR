@@ -21,12 +21,12 @@
 
 #include "tests/test-common.hpp"
 #include "tests/control-commands.hpp"
-#include "tests/dummy-face.hpp"
 
 #include "utility/face-controller.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/management/nfd-controller.hpp>
+#include <ndn-cxx/util/dummy-client-face.hpp>
 
 namespace nlsr {
 namespace test {
@@ -39,8 +39,8 @@ class FaceControllerFixture : public BaseFixture
 {
 public:
   FaceControllerFixture()
-    : face(ndn::makeDummyFace())
-    , interests(face->m_sentInterests)
+    : face(make_shared<ndn::util::DummyClientFace>())
+    , interests(face->sentInterests)
     , controller(*face, keyChain)
     , faceController(g_ioService, controller)
   {
@@ -53,7 +53,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::DummyFace> face;
+  shared_ptr<ndn::util::DummyClientFace> face;
   ndn::KeyChain keyChain;
   std::vector<Interest>& interests;
   ndn::nfd::Controller controller;

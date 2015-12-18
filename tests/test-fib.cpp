@@ -21,25 +21,25 @@
 
 #include "test-common.hpp"
 #include "control-commands.hpp"
-#include "dummy-face.hpp"
 
 #include "route/fib.hpp"
 
 #include "adjacency-list.hpp"
 #include "conf-parameter.hpp"
 
+#include <ndn-cxx/util/dummy-client-face.hpp>
+
 namespace nlsr {
 namespace test {
 
-using ndn::DummyFace;
 using ndn::shared_ptr;
 
 class FibFixture : public BaseFixture
 {
 public:
   FibFixture()
-    : face(ndn::makeDummyFace())
-    , interests(face->m_sentInterests)
+    : face(make_shared<ndn::util::DummyClientFace>())
+    , interests(face->sentInterests)
   {
     INIT_LOGGERS("/tmp", "DEBUG");
 
@@ -63,7 +63,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::DummyFace> face;
+  shared_ptr<ndn::util::DummyClientFace> face;
   ndn::KeyChain keyChain;
   shared_ptr<Fib> fib;
 

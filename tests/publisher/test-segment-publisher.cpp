@@ -89,7 +89,7 @@ class SegmentPublisherFixture
 {
 public:
   SegmentPublisherFixture()
-    : m_face(ndn::util::makeDummyClientFace())
+    : m_face(std::make_shared<ndn::util::DummyClientFace>())
     , m_expectedFreshnessPeriod(ndn::time::milliseconds(111))
     , m_publisher(*m_face, m_keyChain, m_expectedFreshnessPeriod)
     , m_publishingPrefix("/localhost/nfd/SegmentPublisherFixture")

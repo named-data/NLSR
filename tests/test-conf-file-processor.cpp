@@ -20,7 +20,6 @@
  **/
 
 #include "test-common.hpp"
-#include "dummy-face.hpp"
 #include "logger.hpp"
 
 #include <fstream>
@@ -31,10 +30,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <ndn-cxx/util/dummy-client-face.hpp>
+
 namespace nlsr {
 namespace test {
 
-using ndn::DummyFace;
 using ndn::shared_ptr;
 
 const std::string SECTION_GENERAL =
@@ -132,7 +132,7 @@ class ConfFileProcessorFixture : public BaseFixture
 {
 public:
   ConfFileProcessorFixture()
-    : face(ndn::makeDummyFace())
+    : face(make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
     , CONFIG_FILE("unit-test-nlsr.conf")
     , m_logConfigFileName(boost::filesystem::unique_path().native())
@@ -200,7 +200,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::DummyFace> face;
+  shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
 
 private:
