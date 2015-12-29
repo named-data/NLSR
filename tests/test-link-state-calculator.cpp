@@ -72,7 +72,7 @@ public:
     adjacencyListA.insert(b);
     adjacencyListA.insert(c);
 
-    AdjLsa adjA(a.getName(), AdjLsa::TYPE_STRING, 1, MAX_TIME, 2, adjacencyListA);
+    AdjLsa adjA(a.getName(), 1, MAX_TIME, 2, adjacencyListA);
     lsdb.installAdjLsa(adjA);
 
     // Router B
@@ -83,7 +83,7 @@ public:
     adjacencyListB.insert(a);
     adjacencyListB.insert(c);
 
-    AdjLsa adjB(b.getName(), AdjLsa::TYPE_STRING, 1, MAX_TIME, 2, adjacencyListB);
+    AdjLsa adjB(b.getName(), 1, MAX_TIME, 2, adjacencyListB);
     lsdb.installAdjLsa(adjB);
 
     // Router C
@@ -94,7 +94,7 @@ public:
     adjacencyListC.insert(a);
     adjacencyListC.insert(b);
 
-    AdjLsa adjC(c.getName(), AdjLsa::TYPE_STRING, 1, MAX_TIME, 2, adjacencyListC);
+    AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
     lsdb.installAdjLsa(adjC);
 
     map.createFromAdjLsdb(nlsr);

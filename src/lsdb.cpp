@@ -55,7 +55,6 @@ bool
 Lsdb::buildAndInstallOwnNameLsa()
 {
   NameLsa nameLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                  NameLsa::TYPE_STRING,
                   m_nlsr.getSequencingManager().getNameLsaSeq() + 1,
                   getLsaExpirationTimePoint(),
                   m_nlsr.getNamePrefixList());
@@ -267,7 +266,6 @@ bool
 Lsdb::buildAndInstallOwnCoordinateLsa()
 {
   CoordinateLsa corLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                       CoordinateLsa::TYPE_STRING,
                        m_nlsr.getSequencingManager().getCorLsaSeq() + 1,
                        getLsaExpirationTimePoint(),
                        m_nlsr.getConfParameter().getCorR(),
@@ -589,7 +587,6 @@ bool
 Lsdb::buildAndInstallOwnAdjLsa()
 {
   AdjLsa adjLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                AdjLsa::TYPE_STRING,
                 m_nlsr.getSequencingManager().getAdjLsaSeq() + 1,
                 getLsaExpirationTimePoint(),
                 m_nlsr.getAdjacencyList().getNumOfActiveNeighbor(),

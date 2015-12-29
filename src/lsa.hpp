@@ -35,19 +35,13 @@ namespace nlsr {
 class Lsa
 {
 public:
-  Lsa()
+  Lsa(const std::string& lsaType)
     : m_origRouter()
+    , m_lsType(lsaType)
     , m_lsSeqNo()
     , m_expirationTimePoint()
     , m_expiringEventId()
   {
-  }
-
-
-  void
-  setLsType(const std::string& lst)
-  {
-    m_lsType = lst;
   }
 
   const std::string&
@@ -106,7 +100,7 @@ public:
 
 protected:
   ndn::Name m_origRouter;
-  std::string m_lsType;
+  const std::string m_lsType;
   uint32_t m_lsSeqNo;
   ndn::time::system_clock::TimePoint m_expirationTimePoint;
   ndn::EventId m_expiringEventId;
@@ -116,13 +110,12 @@ class NameLsa: public Lsa
 {
 public:
   NameLsa()
-    : Lsa()
+    : Lsa(NameLsa::TYPE_STRING)
     , m_npl()
   {
-    setLsType(NameLsa::TYPE_STRING);
   }
 
-  NameLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
+  NameLsa(const ndn::Name& origR, uint32_t lsn,
           const ndn::time::system_clock::TimePoint& lt,
           NamePrefixList& npl);
 
@@ -168,13 +161,12 @@ public:
   typedef AdjacencyList::const_iterator const_iterator;
 
   AdjLsa()
-    : Lsa()
+    : Lsa(AdjLsa::TYPE_STRING)
     , m_adl()
   {
-    setLsType(AdjLsa::TYPE_STRING);
   }
 
-  AdjLsa(const ndn::Name& origR, const std::string& lst, uint32_t lsn,
+  AdjLsa(const ndn::Name& origR, uint32_t lsn,
          const ndn::time::system_clock::TimePoint& lt,
          uint32_t nl , AdjacencyList& adl);
 
@@ -242,14 +234,13 @@ class CoordinateLsa: public Lsa
 {
 public:
   CoordinateLsa()
-    : Lsa()
+    : Lsa(CoordinateLsa::TYPE_STRING)
     , m_corRad(0)
     , m_corTheta(0)
   {
-    setLsType(CoordinateLsa::TYPE_STRING);
   }
 
-  CoordinateLsa(const ndn::Name& origR, const std::string lst, uint32_t lsn,
+  CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
                 const ndn::time::system_clock::TimePoint& lt,
                 double r, double theta);
 

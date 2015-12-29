@@ -124,17 +124,17 @@ BOOST_AUTO_TEST_CASE(SequenceNumber)
 
   // Install Name LSA
   NamePrefixList nameList;
-  NameLsa lsa(originRouter, NameLsa::TYPE_STRING, 999, ndn::time::system_clock::TimePoint::max(), nameList);
+  NameLsa lsa(originRouter, 999, ndn::time::system_clock::TimePoint::max(), nameList);
   lsdb.installNameLsa(lsa);
 
   // Install Adj LSA
   AdjacencyList adjList;
-  AdjLsa adjLsa(originRouter, AdjLsa::TYPE_STRING, 1000, ndn::time::system_clock::TimePoint::max(),
+  AdjLsa adjLsa(originRouter, 1000, ndn::time::system_clock::TimePoint::max(),
                 3 , adjList);
   lsdb.installAdjLsa(adjLsa);
 
   // Install Cor LSA
-  CoordinateLsa corLsa(originRouter, CoordinateLsa::TYPE_STRING, 1000, ndn::time::system_clock::TimePoint::max(),
+  CoordinateLsa corLsa(originRouter, 1000, ndn::time::system_clock::TimePoint::max(),
                        0,0);
   lsdb.installCoordinateLsa(corLsa);
 

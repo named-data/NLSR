@@ -67,10 +67,10 @@ public:
     adjacencies.insert(b);
     adjacencies.insert(c);
 
-    AdjLsa adjA(a.getName(), AdjLsa::TYPE_STRING, 1, MAX_TIME, 2, adjacencies);
+    AdjLsa adjA(a.getName(), 1, MAX_TIME, 2, adjacencies);
     lsdb.installAdjLsa(adjA);
 
-    CoordinateLsa coordA(adjA.getOrigRouter(), CoordinateLsa::TYPE_STRING, 1, MAX_TIME, 16.23, 2.97);
+    CoordinateLsa coordA(adjA.getOrigRouter(), 1, MAX_TIME, 16.23, 2.97);
     lsdb.installCoordinateLsa(coordA);
 
     // Router B
@@ -81,10 +81,10 @@ public:
     adjacencyListB.insert(a);
     adjacencyListB.insert(c);
 
-    AdjLsa adjB(b.getName(), AdjLsa::TYPE_STRING, 1, MAX_TIME, 2, adjacencyListB);
+    AdjLsa adjB(b.getName(), 1, MAX_TIME, 2, adjacencyListB);
     lsdb.installAdjLsa(adjB);
 
-    CoordinateLsa coordB(adjB.getOrigRouter(), CoordinateLsa::TYPE_STRING, 1, MAX_TIME, 16.59, 3.0);
+    CoordinateLsa coordB(adjB.getOrigRouter(), 1, MAX_TIME, 16.59, 3.0);
     lsdb.installCoordinateLsa(coordB);
 
     // Router C
@@ -95,10 +95,10 @@ public:
     adjacencyListC.insert(a);
     adjacencyListC.insert(b);
 
-    AdjLsa adjC(c.getName(), AdjLsa::TYPE_STRING, 1, MAX_TIME, 2, adjacencyListC);
+    AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
     lsdb.installAdjLsa(adjC);
 
-    CoordinateLsa coordC(adjC.getOrigRouter(), CoordinateLsa::TYPE_STRING, 1, MAX_TIME, 14.11, 2.99);
+    CoordinateLsa coordC(adjC.getOrigRouter(), 1, MAX_TIME, 14.11, 2.99);
     lsdb.installCoordinateLsa(coordC);
 
     map.createFromAdjLsdb(nlsr);

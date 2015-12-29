@@ -53,12 +53,12 @@ NameLsa::getKey() const
   return key;
 }
 
-NameLsa::NameLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
+NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
                  const ndn::time::system_clock::TimePoint& lt,
                  NamePrefixList& npl)
+  : Lsa(NameLsa::TYPE_STRING)
 {
   m_origRouter = origR;
-  m_lsType = lst;
   m_lsSeqNo = lsn;
   m_expirationTimePoint = lt;
   std::list<ndn::Name>& nl = npl.getNameList();
@@ -97,12 +97,16 @@ NameLsa::initializeFromContent(const std::string& content)
     return false;
   }
   try {
-    m_lsType = *tok_iter++;
+    if (*tok_iter++ != NameLsa::TYPE_STRING) {
+      return false;
+    }
+
     m_lsSeqNo = boost::lexical_cast<uint32_t>(*tok_iter++);
     m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
     numName = boost::lexical_cast<uint32_t>(*tok_iter++);
   }
   catch (std::exception& e) {
+    _LOG_ERROR(e.what());
     return false;
   }
   for (uint32_t i = 0; i < numName; i++) {
@@ -130,13 +134,12 @@ NameLsa::writeLog()
   _LOG_DEBUG("name_lsa_end");
 }
 
-CoordinateLsa::CoordinateLsa(const ndn::Name& origR, const string lst,
-                             uint32_t lsn,
+CoordinateLsa::CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
                              const ndn::time::system_clock::TimePoint& lt,
                              double r, double theta)
+  : Lsa(CoordinateLsa::TYPE_STRING)
 {
   m_origRouter = origR;
-  m_lsType = lst;
   m_lsSeqNo = lsn;
   m_expirationTimePoint = lt;
   m_corRad = r;
@@ -186,13 +189,17 @@ CoordinateLsa::initializeFromContent(const std::string& content)
     return false;
   }
   try {
-    m_lsType   = *tok_iter++;
+    if (*tok_iter++ != CoordinateLsa::TYPE_STRING) {
+      return false;
+    }
+
     m_lsSeqNo  = boost::lexical_cast<uint32_t>(*tok_iter++);
     m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
     m_corRad   = boost::lexical_cast<double>(*tok_iter++);
     m_corTheta = boost::lexical_cast<double>(*tok_iter++);
   }
   catch (std::exception& e) {
+    _LOG_ERROR(e.what());
     return false;
   }
   return true;
@@ -210,12 +217,12 @@ CoordinateLsa::writeLog()
   _LOG_DEBUG("    Hyperbolic Theta: " << m_corTheta);
 }
 
-AdjLsa::AdjLsa(const ndn::Name& origR, const string& lst, uint32_t lsn,
+AdjLsa::AdjLsa(const ndn::Name& origR, uint32_t lsn,
                const ndn::time::system_clock::TimePoint& lt,
                uint32_t nl , AdjacencyList& adl)
+  : Lsa(AdjLsa::TYPE_STRING)
 {
   m_origRouter = origR;
-  m_lsType = lst;
   m_lsSeqNo = lsn;
   m_expirationTimePoint = lt;
   m_noLink = nl;
@@ -276,12 +283,16 @@ AdjLsa::initializeFromContent(const std::string& content)
     return false;
   }
   try {
-    m_lsType   = *tok_iter++;
+    if (*tok_iter++ != AdjLsa::TYPE_STRING) {
+      return false;
+    }
+
     m_lsSeqNo  = boost::lexical_cast<uint32_t>(*tok_iter++);
     m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
     numLink    = boost::lexical_cast<uint32_t>(*tok_iter++);
   }
   catch (std::exception& e) {
+    _LOG_ERROR(e.what());
     return false;
   }
   for (uint32_t i = 0; i < numLink; i++) {
@@ -293,6 +304,7 @@ AdjLsa::initializeFromContent(const std::string& content)
       addAdjacent(adjacent);
     }
     catch (std::exception& e) {
+      _LOG_ERROR(e.what());
       return false;
     }
   }

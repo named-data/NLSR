@@ -44,9 +44,10 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
   npl1.insert(s1);
   npl1.insert(s2);
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
-//lsType is 1 for NameLsa, 3rd arg is seqNo. which will be a random number I just put in 12.
-  NameLsa nlsa1("router1", NameLsa::TYPE_STRING, 12, testTimePoint, npl1);
-  NameLsa nlsa2("router2", NameLsa::TYPE_STRING, 12, testTimePoint, npl1);
+
+  //3rd arg is seqNo. which will be a random number I just put in 12.
+  NameLsa nlsa1("router1", 12, testTimePoint, npl1);
+  NameLsa nlsa2("router2", 12, testTimePoint, npl1);
 
   BOOST_CHECK_EQUAL(nlsa1.getLsType(), NameLsa::TYPE_STRING);
 
@@ -68,7 +69,7 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
   activeAdjacency.setStatus(Adjacent::STATUS_ACTIVE);
   activeAdjacencies.insert(activeAdjacency);
 
-  AdjLsa alsa1(routerName, AdjLsa::TYPE_STRING, seqNo, testTimePoint,
+  AdjLsa alsa1(routerName, seqNo, testTimePoint,
                activeAdjacencies.getSize(), activeAdjacencies);
   BOOST_CHECK_EQUAL(alsa1.getAdl().getSize(), 1);
   BOOST_CHECK_EQUAL(alsa1.getLsType(), AdjLsa::TYPE_STRING);
@@ -83,7 +84,7 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
   inactiveAdjacency.setStatus(Adjacent::STATUS_INACTIVE);
   inactiveAdjacencies.insert(inactiveAdjacency);
 
-  AdjLsa alsa2(routerName, AdjLsa::TYPE_STRING, seqNo, testTimePoint,
+  AdjLsa alsa2(routerName, seqNo, testTimePoint,
                inactiveAdjacencies.getSize(), inactiveAdjacencies);
   BOOST_CHECK_EQUAL(alsa2.getAdl().getSize(), 0);
 
@@ -91,7 +92,7 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
   BOOST_CHECK_EQUAL(alsa1.isEqualContent(alsa2), false);
 
   // Create a duplicate of alsa1 which should have equal content
-  AdjLsa alsa3(routerName, AdjLsa::TYPE_STRING, seqNo, testTimePoint,
+  AdjLsa alsa3(routerName, seqNo, testTimePoint,
                activeAdjacencies.getSize(), activeAdjacencies);
   BOOST_CHECK(alsa1.isEqualContent(alsa3));
 }
@@ -99,9 +100,8 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
 BOOST_AUTO_TEST_CASE(CoordinateLsaConstructorAndGetters)
 {
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
-//For CoordinateLsa, lsType is 3.
-  CoordinateLsa clsa1("router1", CoordinateLsa::TYPE_STRING, 12, testTimePoint, 2.5, 30.0);
-  CoordinateLsa clsa2("router1", CoordinateLsa::TYPE_STRING, 12, testTimePoint, 2.5, 30.0);
+  CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, 30.0);
+  CoordinateLsa clsa2("router1", 12, testTimePoint, 2.5, 30.0);
 
   BOOST_CHECK_CLOSE(clsa1.getCorRadius(), 2.5, 0.0001);
   BOOST_CHECK_CLOSE(clsa1.getCorTheta(), 30.0, 0.0001);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
 
   const std::string TEST_TIME_POINT_STRING = ss.str();
 
-  AdjLsa lsa("router1", AdjLsa::TYPE_STRING, 12, testTimePoint, 1, adjList);
+  AdjLsa lsa("router1", 12, testTimePoint, adjList.getSize(), adjList);
 
   std::string EXPECTED_OUTPUT =
     "Adj Lsa:\n"
@@ -153,6 +153,59 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
   os << lsa;
 
   BOOST_CHECK_EQUAL(os.str(), EXPECTED_OUTPUT);
+}
+
+BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
+{
+  //Adj LSA
+  Adjacent adj1("adjacent1");
+  Adjacent adj2("adjacent2");
+
+  adj1.setStatus(Adjacent::STATUS_ACTIVE);
+  adj2.setStatus(Adjacent::STATUS_ACTIVE);
+
+  //If we don't do this the test will fail
+  //Adjacent has default cost of 10 but no default
+  //connecting face URI, so initializeFromContent fails
+  adj1.setConnectingFaceUri("10.0.0.1");
+  adj2.setConnectingFaceUri("10.0.0.2");
+
+  AdjacencyList adjList;
+  adjList.insert(adj1);
+  adjList.insert(adj2);
+
+  ndn::time::system_clock::TimePoint testTimePoint = ndn::time::system_clock::now();
+
+  AdjLsa adjlsa1("router1", 1, testTimePoint, adjList.getSize(), adjList);
+  AdjLsa adjlsa2;
+
+  BOOST_CHECK(adjlsa2.initializeFromContent(adjlsa1.getData()));
+
+  BOOST_CHECK(adjlsa1.isEqualContent(adjlsa2));
+
+  //Name LSA
+  NamePrefixList npl1;
+
+  std::string s1 = "name1";
+  std::string s2 = "name2";
+
+  npl1.insert(s1);
+  npl1.insert(s2);
+
+  NameLsa nlsa1("router1", 1, testTimePoint, npl1);
+  NameLsa nlsa2;
+
+  BOOST_CHECK(nlsa2.initializeFromContent(nlsa1.getData()));
+
+  BOOST_CHECK_EQUAL(nlsa1.getData(), nlsa2.getData());
+
+  //Coordinate LSA
+  CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, 30.0);
+  CoordinateLsa clsa2;
+
+  BOOST_CHECK(clsa2.initializeFromContent(clsa1.getData()));
+
+  BOOST_CHECK_EQUAL(clsa1.getData(), clsa2.getData());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

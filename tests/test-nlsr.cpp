@@ -144,15 +144,14 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   // This router
   Adjacent thisRouter(conf.getRouterPrefix(), "uri://faceB", 10, Adjacent::STATUS_ACTIVE, 0, 256);
 
-  AdjLsa ownAdjLsa(conf.getRouterPrefix(), AdjLsa::TYPE_STRING, 10, ndn::time::system_clock::now(),
-                   1, neighbors);
+  AdjLsa ownAdjLsa(conf.getRouterPrefix(), 10, ndn::time::system_clock::now(), 1, neighbors);
   lsdb.installAdjLsa(ownAdjLsa);
 
   // Router that will fail
   AdjacencyList failAdjacencies;
   failAdjacencies.insert(thisRouter);
 
-  AdjLsa failAdjLsa("/ndn/neighborA", AdjLsa::TYPE_STRING, 10,
+  AdjLsa failAdjLsa("/ndn/neighborA", 10,
                      ndn::time::system_clock::now() + ndn::time::seconds(3600), 1, failAdjacencies);
 
   lsdb.installAdjLsa(failAdjLsa);
@@ -161,7 +160,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   AdjacencyList otherAdjacencies;
   otherAdjacencies.insert(thisRouter);
 
-  AdjLsa otherAdjLsa("/ndn/neighborB", AdjLsa::TYPE_STRING, 10,
+  AdjLsa otherAdjLsa("/ndn/neighborB", 10,
                      ndn::time::system_clock::now() + ndn::time::seconds(3600), 1, otherAdjacencies);
 
   lsdb.installAdjLsa(otherAdjLsa);
@@ -254,7 +253,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
   ndn::Name nameToAdvertise("/ndn/neighborB/name");
   nameList.insert(nameToAdvertise);
 
-  NameLsa nameLsa("/ndn/neighborB", "name", 25, ndn::time::system_clock::now(), nameList);
+  NameLsa nameLsa("/ndn/neighborB", 25, ndn::time::system_clock::now(), nameList);
   lsdb.installNameLsa(nameLsa);
 
   nlsr.initialize();
@@ -266,15 +265,14 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
   // This router
   Adjacent thisRouter(conf.getRouterPrefix(), "uri://faceB", 25, Adjacent::STATUS_ACTIVE, 0, 256);
 
-  AdjLsa ownAdjLsa(conf.getRouterPrefix(), AdjLsa::TYPE_STRING, 10, ndn::time::system_clock::now(),
-                   1, neighbors);
+  AdjLsa ownAdjLsa(conf.getRouterPrefix(), 10, ndn::time::system_clock::now(), 1, neighbors);
   lsdb.installAdjLsa(ownAdjLsa);
 
   // Other ACTIVE router
   AdjacencyList otherAdjacencies;
   otherAdjacencies.insert(thisRouter);
 
-  AdjLsa otherAdjLsa("/ndn/neighborB", AdjLsa::TYPE_STRING, 10,
+  AdjLsa otherAdjLsa("/ndn/neighborB", 10,
                      ndn::time::system_clock::now() + ndn::time::seconds(3600), 1, otherAdjacencies);
 
   lsdb.installAdjLsa(otherAdjLsa);

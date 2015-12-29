@@ -83,7 +83,7 @@ public:
   CoordinateLsa
   createCoordinateLsa(const std::string& origin, double radius, double angle)
   {
-    CoordinateLsa lsa(origin, CoordinateLsa::TYPE_STRING, 1, ndn::time::system_clock::now(),
+    CoordinateLsa lsa(origin, 1, ndn::time::system_clock::now(),
                       radius, angle);
 
     return lsa;

@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(LsaInfoOutputStream)
 
 BOOST_AUTO_TEST_CASE(LsaInfoMake)
 {
-  Lsa lsa;
+  Lsa lsa("lsa-type");
   lsa.setOrigRouter("/test/lsa/info/tlv");
   lsa.setLsSeqNo(128);
   lsa.setExpirationTimePoint(ndn::time::system_clock::now());

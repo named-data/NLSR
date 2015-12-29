@@ -69,9 +69,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
 
   // This router's Adjacency LSA
   nlsr.getAdjacencyList().insert(bupt);
-  AdjLsa thisRouterAdjLsa(thisRouter.getName(),
-                          AdjLsa::TYPE_STRING,
-                          1,
+  AdjLsa thisRouterAdjLsa(thisRouter.getName(), 1,
                           ndn::time::system_clock::now() + ndn::time::seconds::max(),
                           2,
                           nlsr.getAdjacencyList());
@@ -81,9 +79,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   // BUPT Adjacency LSA
   AdjacencyList buptAdjacencies;
   buptAdjacencies.insert(thisRouter);
-  AdjLsa buptAdjLsa(buptRouterName,
-                    AdjLsa::TYPE_STRING,
-                    1,
+  AdjLsa buptAdjLsa(buptRouterName, 1,
                     ndn::time::system_clock::now() + ndn::time::seconds(5),
                     0 , buptAdjacencies);
 
@@ -95,10 +91,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   NamePrefixList buptNames;
   buptNames.insert(buptAdvertisedName);
 
-  NameLsa buptNameLsa(buptRouterName,
-                      NameLsa::TYPE_STRING,
-                      1,
-                      ndn::time::system_clock::now(),
+  NameLsa buptNameLsa(buptRouterName, 1, ndn::time::system_clock::now(),
                       buptNames);
 
   lsdb.installNameLsa(buptNameLsa);
@@ -111,8 +104,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   BOOST_REQUIRE(it == npt.end());
 
   // Install new name LSA
-  NameLsa buptNewNameLsa(buptRouterName, NameLsa::TYPE_STRING,
-                         12,
+  NameLsa buptNewNameLsa(buptRouterName, 12,
                          ndn::time::system_clock::now() + ndn::time::seconds(3600),
                          buptNames);
 
@@ -121,8 +113,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   this->advanceClocks(ndn::time::seconds(1));
 
   // Install new adjacency LSA
-  AdjLsa buptNewAdjLsa(buptRouterName, AdjLsa::TYPE_STRING,
-                       12,
+  AdjLsa buptNewAdjLsa(buptRouterName, 12,
                        ndn::time::system_clock::now() + ndn::time::seconds(3600),
                        0, buptAdjacencies);
   lsdb.installAdjLsa(buptNewAdjLsa);
