@@ -1,7 +1,7 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
 """
-Copyright (c) 2014-2015,  The University of Memphis,
+Copyright (c) 2014-2016,  The University of Memphis,
                           Regents of the University of California,
                           Arizona Board of Regents.
 
@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License along with
 NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 APPNAME = "nlsr"
 BUGREPORT = "http://redmine.named-data.net/projects/nlsr"
 URL = "http://named-data.net/doc/NLSR/"
