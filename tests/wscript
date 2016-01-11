@@ -39,7 +39,7 @@ def build(bld):
             source=bld.path.ant_glob(['nsync/**/*.cc']),
             use='nsync-objects unit-tests-main',
             includes='.',
-            install_prefix=None,
+            install_path=None,
           )
 
         # nlsr tests
@@ -49,5 +49,5 @@ def build(bld):
             source=bld.path.ant_glob(['nlsr/**/*.cpp']),
             use='nlsr-objects unit-tests-main',
             includes='.',
-            install_prefix=None,
+            install_path=None,
           )

@@ -10,6 +10,7 @@ if has OSX $NODE_LABELS && ! has OSX-10.8-c++11-64bit $NODE_LABELS; then
     brew update
     brew upgrade
     brew install boost pkg-config sqlite cryptopp log4cxx protobuf openssl
+    brew link --force openssl
     brew cleanup
 fi
 
