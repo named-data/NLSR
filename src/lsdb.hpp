@@ -27,6 +27,14 @@
 #include "sequencing-manager.hpp"
 #include "test-access-control.hpp"
 #include "communication/sync-logic-handler.hpp"
+#include "statistics.hpp"
+
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/signal.hpp>
+#include <ndn-cxx/util/time.hpp>
+
+#include <utility>
+#include <boost/cstdint.hpp>
 
 #include <utility>
 #include <boost/cstdint.hpp>
@@ -373,6 +381,8 @@ private:
 
 public:
   static const ndn::Name::Component NAME_COMPONENT;
+
+  ndn::util::signal::Signal<Lsdb, Statistics::PacketType> lsaIncrementSignal;
 
 private:
   Nlsr& m_nlsr;

@@ -22,8 +22,10 @@
 #ifndef NLSR_HELLO_PROTOCOL_HPP
 #define NLSR_HELLO_PROTOCOL_HPP
 
+#include "statistics.hpp"
 #include "test-access-control.hpp"
 
+#include <ndn-cxx/util/signal.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
@@ -92,6 +94,8 @@ public:
    */
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
+
+  ndn::util::signal::Signal<HelloProtocol, Statistics::PacketType> hpIncrementSignal;
 
 private:
   void

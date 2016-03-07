@@ -19,9 +19,9 @@
  *
  **/
 
+#include "hello-protocol.hpp"
 #include "nlsr.hpp"
 #include "lsdb.hpp"
-#include "hello-protocol.hpp"
 #include "utility/name-helper.hpp"
 #include "logger.hpp"
 
@@ -47,6 +47,9 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
                                                  this, _1),
                                        std::bind(&HelloProtocol::processInterestTimedOut,
                                                  this, _1));
+
+  // increment SENT_HELLO_INTEREST
+  hpIncrementSignal(Statistics::PacketType::SENT_HELLO_INTEREST);
 }
 
 void
@@ -85,12 +88,17 @@ HelloProtocol::processInterest(const ndn::Name& name,
 {
   // interest name: /<neighbor>/NLSR/INFO/<router>
   const ndn::Name interestName = interest.getName();
+
+  // increment RCV_HELLO_INTEREST
+  hpIncrementSignal(Statistics::PacketType::RCV_HELLO_INTEREST);
+
   _LOG_DEBUG("Interest Received for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
     _LOG_DEBUG("INFO_COMPONENT not found or interestName: " << interestName
                << " does not match expression");
     return;
   }
+
   ndn::Name neighbor;
   neighbor.wireDecode(interestName.get(-1).blockFromValue());
   _LOG_DEBUG("Neighbor: " << neighbor);
@@ -103,6 +111,8 @@ HelloProtocol::processInterest(const ndn::Name& name,
     m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
     _LOG_DEBUG("Sending out data for name: " << interest.getName());
     m_nlsr.getNlsrFace().put(*data);
+    // increment SENT_HELLO_DATA
+    hpIncrementSignal(Statistics::PacketType::SENT_HELLO_DATA);
 
     auto adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
     // If this neighbor was previously inactive, send our own hello interest, too
@@ -209,6 +219,8 @@ HelloProtocol::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
       }
     }
   }
+  // increment RCV_HELLO_DATA
+  hpIncrementSignal(Statistics::PacketType::RCV_HELLO_DATA);
 }
 
   // Simply logs a debug message that the content could not be

@@ -29,8 +29,6 @@
 #include <ndn-cxx/security/signing-helpers.hpp>
 #include <ndn-cxx/util/segment-fetcher.hpp>
 
-#include <string>
-
 namespace nlsr {
 
 INIT_LOGGER("Lsdb");
@@ -961,6 +959,9 @@ void
 Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                       steady_clock::TimePoint deadline)
 {
+  // increment SENT_LSA_INTEREST
+  lsaIncrementSignal(Statistics::PacketType::SENT_LSA_INTEREST);
+
   if (deadline == DEFAULT_LSA_RETRIEVAL_DEADLINE) {
     deadline = steady_clock::now() + ndn::time::seconds(static_cast<int>(LSA_REFRESH_TIME_MAX));
   }
@@ -991,11 +992,28 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                                    std::bind(&Lsdb::afterFetchLsa, this, _1, interestName),
                                    std::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
                                              timeoutCount, deadline, lsaName, seqNo));
+  // increment a specific SENT_LSA_INTEREST
+  std::string typeLSA = interestName[-2].toUri();
+  if (typeLSA == AdjLsa::TYPE_STRING) {
+    lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_INTEREST);
+  }
+  else if (typeLSA == CoordinateLsa::TYPE_STRING) {
+    lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_INTEREST);
+  }
+  else if (typeLSA == NameLsa::TYPE_STRING) {
+    lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_INTEREST);
+  }
+  else {
+    _LOG_ERROR("typeLSA " + typeLSA + " not recognized; failed Statistics::PacketType conversion");
+  }
 }
 
 void
 Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 {
+  // increment RCV_LSA_INTEREST
+  lsaIncrementSignal(Statistics::PacketType::RCV_LSA_INTEREST);
+
   const ndn::Name& interestName(interest.getName());
   _LOG_DEBUG("Interest received for LSA: " << interestName);
 
@@ -1014,7 +1032,6 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 
     std::string interestedLsType = interestName[-2].toUri();
 
-    // Passes the Interest off to the appropriate subprocessor
     if (interestedLsType == NameLsa::TYPE_STRING) {
       processInterestForNameLsa(interest, originRouter.append(interestedLsType), seqNo);
     }
@@ -1027,6 +1044,7 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
     else {
       _LOG_WARN("Received unrecognized LSA type: " << interestedLsType);
     }
+    lsaIncrementSignal(Statistics::PacketType::SENT_LSA_DATA);
   }
 }
 
@@ -1056,13 +1074,16 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
                                 const ndn::Name& lsaKey,
                                 uint64_t seqNo)
 {
-
+  // increment RCV_NAME_LSA_INTEREST
+  lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_INTEREST);
   _LOG_DEBUG("nameLsa interest " << interest << " received");
   NameLsa*  nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
   if (nameLsa != 0) {
     if (nameLsa->getLsSeqNo() == seqNo) {
       std::string content = nameLsa->getData();
       putLsaData(interest,content);
+      // increment SENT_NAME_LSA_DATA
+      lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_DATA);
     }
     else {
       _LOG_TRACE("SeqNo for nameLsa does not match");
@@ -1087,12 +1108,16 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
     _LOG_ERROR("Received interest for an adjacency LSA when hyperbolic routing is enabled");
   }
 
+  // increment RCV_ADJ_LSA_INTEREST
+  lsaIncrementSignal(Statistics::PacketType::RCV_ADJ_LSA_INTEREST);
   _LOG_DEBUG("AdjLsa interest " << interest << " received");
   AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
   if (adjLsa != 0) {
     if (adjLsa->getLsSeqNo() == seqNo) {
       std::string content = adjLsa->getData();
       putLsaData(interest,content);
+      // increment SENT_ADJ_LSA_DATA
+      lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_DATA);
     }
     else {
       _LOG_TRACE("SeqNo for AdjLsa does not match");
@@ -1117,12 +1142,16 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
     _LOG_ERROR("Received Interest for a coordinate LSA when link-state routing is enabled");
   }
 
+  // increment RCV_COORD_LSA_INTEREST
+  lsaIncrementSignal(Statistics::PacketType::RCV_COORD_LSA_INTEREST);
   _LOG_DEBUG("CoordinateLsa interest " << interest << " received");
   CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
   if (corLsa != 0) {
     if (corLsa->getLsSeqNo() == seqNo) {
       std::string content = corLsa->getData();
       putLsaData(interest,content);
+      // increment SENT_COORD_LSA_DATA
+      lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_DATA);
     }
     else {
       _LOG_TRACE("SeqNo for CoordinateLsa does not match");
@@ -1166,6 +1195,9 @@ Lsdb::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
     else {
       _LOG_WARN("Received unrecognized LSA Type: " << interestedLsType);
     }
+
+    // increment RCV_LSA_DATA
+    lsaIncrementSignal(Statistics::PacketType::RCV_LSA_DATA);
   }
 }
 
@@ -1173,6 +1205,8 @@ void
 Lsdb::processContentNameLsa(const ndn::Name& lsaKey,
                             uint64_t lsSeqNo, std::string& dataContent)
 {
+  // increment RCV_NAME_LSA_DATA
+  lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_DATA);
   if (isNameLsaNew(lsaKey, lsSeqNo)) {
     NameLsa nameLsa;
     if (nameLsa.initializeFromContent(dataContent)) {
@@ -1188,6 +1222,8 @@ void
 Lsdb::processContentAdjacencyLsa(const ndn::Name& lsaKey,
                                  uint64_t lsSeqNo, std::string& dataContent)
 {
+  // increment RCV_ADJ_LSA_DATA
+  lsaIncrementSignal(Statistics::PacketType::RCV_ADJ_LSA_DATA);
   if (isAdjLsaNew(lsaKey, lsSeqNo)) {
     AdjLsa adjLsa;
     if (adjLsa.initializeFromContent(dataContent)) {
@@ -1203,6 +1239,8 @@ void
 Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
                                   uint64_t lsSeqNo, std::string& dataContent)
 {
+  // increment RCV_COORD_LSA_DATA
+  lsaIncrementSignal(Statistics::PacketType::RCV_COORD_LSA_DATA);
   if (isCoordinateLsaNew(lsaKey, lsSeqNo)) {
     CoordinateLsa corLsa;
     if (corLsa.initializeFromContent(dataContent)) {

@@ -38,6 +38,7 @@
 #include "update/prefix-update-processor.hpp"
 #include "update/nfd-rib-command-processor.hpp"
 #include "utility/name-helper.hpp"
+#include "stats-collector.hpp"
 
 #include <stdexcept>
 
@@ -376,6 +377,11 @@ public:
   canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
                        std::function<void(std::list<Adjacent>::iterator)> then);
 
+  StatsCollector&
+  getStatsCollector()
+  {
+    return m_statsCollector;
+  }
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
@@ -470,6 +476,7 @@ private:
   ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
   update::NfdRibCommandProcessor m_nfdRibCommandProcessor;
+  StatsCollector m_statsCollector;
 
   ndn::nfd::FaceMonitor m_faceMonitor;
 

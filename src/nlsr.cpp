@@ -81,6 +81,7 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_nfdRibCommandProcessor(m_localhostDispatcher,
                              m_namePrefixList,
                              m_nlsrLsdb)
+  , m_statsCollector(m_nlsrLsdb, m_helloProtocol)
   , m_faceMonitor(m_nlsrFace)
   , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
 {
