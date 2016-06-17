@@ -48,7 +48,6 @@ public:
 
   LsdbDatasetInterestHandler(Lsdb& lsdb,
                              ndn::Face& face,
-                             const ndn::Name& routerName,
                              ndn::KeyChain& keyChain);
 
   void
@@ -63,10 +62,16 @@ public:
     return LOCALHOST_COMMAND_PREFIX;
   }
 
-  const ndn::Name&
+  ndn::Name&
   getRouterNameCommandPrefix()
   {
-    return ROUTER_NAME_COMMAND_PREFIX;
+    return m_routerNameCommandPrefix;
+  }
+
+  void
+  setRouterNameCommandPrefix(const ndn::Name& routerName) {
+    m_routerNameCommandPrefix = routerName;
+    m_routerNameCommandPrefix.append(Lsdb::NAME_COMPONENT);
   }
 
 private:
@@ -84,7 +89,7 @@ private:
 
 private:
   const ndn::Name LOCALHOST_COMMAND_PREFIX;
-  const ndn::Name ROUTER_NAME_COMMAND_PREFIX;
+  ndn::Name m_routerNameCommandPrefix;
 
   ndn::Face& m_face;
   ndn::KeyChain& m_keyChain;

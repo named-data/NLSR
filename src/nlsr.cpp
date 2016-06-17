@@ -60,7 +60,6 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_helloProtocol(*this, scheduler)
   , m_lsdbDatasetHandler(m_nlsrLsdb,
                          m_nlsrFace,
-                         m_confParam.getRouterPrefix(),
                          m_keyChain)
   , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
   , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache, m_certStore)
@@ -179,6 +178,7 @@ Nlsr::initialize()
 {
   _LOG_DEBUG("Initializing Nlsr");
   m_confParam.buildRouterPrefix();
+  m_lsdbDatasetHandler.setRouterNameCommandPrefix(m_confParam.getRouterPrefix());
   m_nlsrLsdb.setLsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()));
   m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix().toUri());
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());

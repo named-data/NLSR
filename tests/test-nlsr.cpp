@@ -357,6 +357,23 @@ BOOST_FIXTURE_TEST_CASE(GetCertificate, UnitTestTimeFixture)
   BOOST_CHECK(nlsr.getCertificate(certKey) != nullptr);
 }
 
+BOOST_FIXTURE_TEST_CASE(SetRouterCommandPrefix, UnitTestTimeFixture)
+{
+  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>(g_ioService);
+  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
+
+  // Simulate loading configuration file
+  ConfParameter& conf = nlsr.getConfParameter();
+  conf.setNetwork("/ndn");
+  conf.setSiteName("/site");
+  conf.setRouterName("/%C1.router/this-router");
+
+  nlsr.initialize();
+
+  BOOST_CHECK_EQUAL(nlsr.getLsdbDatasetHandler().getRouterNameCommandPrefix(),
+                    ndn::Name("/ndn/site/%C1.router/this-router/lsdb"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } //namespace test

@@ -81,7 +81,9 @@ BOOST_AUTO_TEST_CASE(Basic)
   lsdb.installNameLsa(nameLsa);
 
   ndn::Name thisRouter("/This/Router");
-  LsdbDatasetInterestHandler publisher(lsdb, *face, thisRouter, keyChain);
+  LsdbDatasetInterestHandler publisher(lsdb, *face, keyChain);
+  publisher.setRouterNameCommandPrefix(thisRouter);
+
   publisher.startListeningOnLocalhost();
 
   face->processEvents(ndn::time::milliseconds(10));
@@ -136,7 +138,8 @@ BOOST_AUTO_TEST_CASE(Basic)
 BOOST_AUTO_TEST_CASE(InvalidCommand)
 {
   ndn::Name thisRouter("/This/Router");
-  LsdbDatasetInterestHandler publisher(lsdb, *face, thisRouter, keyChain);
+  LsdbDatasetInterestHandler publisher(lsdb, *face, keyChain);
+  publisher.setRouterNameCommandPrefix(thisRouter);
 
   // Localhost prefix
   publisher.startListeningOnLocalhost();

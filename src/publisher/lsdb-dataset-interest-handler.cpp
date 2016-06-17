@@ -37,10 +37,8 @@ const uint32_t LsdbDatasetInterestHandler::ERROR_CODE_UNSUPPORTED_COMMAND = 501;
 
 LsdbDatasetInterestHandler::LsdbDatasetInterestHandler(Lsdb& lsdb,
                                                        ndn::Face& face,
-                                                       const ndn::Name& routerName,
                                                        ndn::KeyChain& keyChain)
   : LOCALHOST_COMMAND_PREFIX(ndn::Name(Nlsr::LOCALHOST_PREFIX).append(Lsdb::NAME_COMPONENT))
-  , ROUTER_NAME_COMMAND_PREFIX(ndn::Name(routerName).append(Lsdb::NAME_COMPONENT))
   , m_face(face)
   , m_keyChain(keyChain)
   , m_adjacencyLsaPublisher(lsdb, face, keyChain)
@@ -66,10 +64,10 @@ LsdbDatasetInterestHandler::startListeningOnLocalhost()
 void
 LsdbDatasetInterestHandler::startListeningOnRouterPrefix()
 {
-  _LOG_DEBUG("Setting interest filter for: " << ROUTER_NAME_COMMAND_PREFIX);
-  m_face.setInterestFilter(ROUTER_NAME_COMMAND_PREFIX,
+  _LOG_DEBUG("Setting interest filter for: " << m_routerNameCommandPrefix);
+  m_face.setInterestFilter(m_routerNameCommandPrefix,
                            std::bind(&LsdbDatasetInterestHandler::onInterest, this, _2,
-                                     std::cref(ROUTER_NAME_COMMAND_PREFIX)));
+                                     std::cref(m_routerNameCommandPrefix)));
 }
 
 void

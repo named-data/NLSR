@@ -226,6 +226,12 @@ public:
     return m_syncLogicHandler;
   }
 
+  LsdbDatasetInterestHandler&
+  getLsdbDatasetHandler()
+  {
+    return m_lsdbDatasetHandler;
+  }
+
   void
   initialize();
 
