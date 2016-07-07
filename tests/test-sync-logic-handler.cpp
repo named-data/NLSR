@@ -85,6 +85,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
   receiveUpdate(updateName, syncSeqNo, sync);
 
   std::vector<ndn::Interest>& interests = face->sentInterests;
+
   std::vector<ndn::Interest>::iterator it = interests.begin();
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
@@ -158,12 +159,21 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
 
   BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + NameLsa::TYPE_STRING + "/");
 
-  ++it;
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + AdjLsa::TYPE_STRING + "/");
+  if (nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+      ++it;
+      BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + CoordinateLsa::TYPE_STRING + "/");
+  }
+  else if (nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+      ++it;
+      BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + AdjLsa::TYPE_STRING + "/");
+  }
+  else {
+      ++it;
+      BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + CoordinateLsa::TYPE_STRING + "/");
 
-  ++it;
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + CoordinateLsa::TYPE_STRING + "/");
-
+      ++it;
+      BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + AdjLsa::TYPE_STRING + "/");
+  }
 }
 
 BOOST_AUTO_TEST_CASE(NoUpdateForSelf)

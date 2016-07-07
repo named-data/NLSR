@@ -380,7 +380,12 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
         // has met the HELLO retry threshold
         adjacent->setInterestTimedOutNo(m_confParam.getInterestRetryNumber());
 
-        m_nlsrLsdb.scheduleAdjLsaBuild();
+        if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+          getRoutingTable().scheduleRoutingTableCalculation(*this);
+        }
+        else {
+          m_nlsrLsdb.scheduleAdjLsaBuild();
+        }
       }
     }
   }

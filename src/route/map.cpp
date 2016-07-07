@@ -113,6 +113,14 @@ Map::createFromAdjLsdb(Nlsr& pnlsr)
 }
 
 void
+Map::createFromCoordinateLsdb(Nlsr& nlsr)
+{
+  for (CoordinateLsa lsa : nlsr.getLsdb().getCoordinateLsdb()) {
+    addEntry(lsa.getOrigRouter());
+  }
+}
+
+void
 Map::reset()
 {
   m_table.clear();

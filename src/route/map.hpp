@@ -50,6 +50,9 @@ public:
   void
   createFromAdjLsdb(Nlsr& pnlsr);
 
+  void
+  createFromCoordinateLsdb(Nlsr& nlsr);
+
   const ndn::Name
   getRouterNameByMappingNo(int32_t mn);
 
