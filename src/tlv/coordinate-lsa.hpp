@@ -31,17 +31,17 @@
 #include <ndn-cxx/name.hpp>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
-/**
- * @brief Data abstraction for CoordinateLsa
- *
- * CoordinateLsa := COORDINATE-LSA-TYPE TLV-LENGTH
- *                    LsaInfo
- *                    HyperbolicRadius
- *                    HyperbolicAngle
- *
- * @sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+/*!
+   \brief Data abstraction for CoordinateLsa
+
+   CoordinateLsa := COORDINATE-LSA-TYPE TLV-LENGTH
+                      LsaInfo
+                      HyperbolicRadius
+                      HyperbolicAngle
+
+   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class CoordinateLsa
 {

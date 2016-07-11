@@ -33,16 +33,16 @@
 #include <list>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
-/**
- * @brief Data abstraction for NameLsa
- *
- * NameLsa := NAME-LSA-TYPE TLV-LENGTH
- *              LsaInfo
- *              Name+
- *
- * @sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+/*!
+   \brief Data abstraction for NameLsa
+
+   NameLsa := NAME-LSA-TYPE TLV-LENGTH
+                LsaInfo
+                Name+
+
+   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class NameLsa
 {

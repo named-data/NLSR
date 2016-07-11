@@ -31,8 +31,8 @@
 
 namespace nlsr {
 
-/** \brief provides a publisher of Status Dataset or other segmented octet stream
- *  \sa http://redmine.named-data.net/projects/nfd/wiki/StatusDataset
+/*! \brief provides a publisher of Status Dataset or other segmented octet stream
+    \sa http://redmine.named-data.net/projects/nfd/wiki/StatusDataset
  */
 template <class FaceBase>
 class SegmentPublisher : ndn::noncopyable
@@ -65,7 +65,7 @@ public:
     return ndn::time::milliseconds(1000);
   }
 
-  /** \brief Publish data under provided prefix
+  /*! \brief Publish data under provided prefix
    */
   void
   publish(const ndn::Name& prefix,
@@ -106,7 +106,7 @@ public:
   }
 
 protected:
-  /** \brief In a derived class, write the octets into outBuffer.
+  /*! \brief In a derived class, write the octets into outBuffer.
    */
   virtual size_t
   generate(ndn::EncodingBuffer& outBuffer) = 0;

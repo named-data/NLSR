@@ -30,9 +30,9 @@
 
 namespace nlsr {
 
-/**
- * @brief Abstraction to publish lsdb status dataset
- * \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+/*!
+   \brief Publishes lsdb status dataset
+   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class LsdbStatusPublisher : public SegmentPublisher<ndn::Face>
 {

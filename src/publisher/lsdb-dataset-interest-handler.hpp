@@ -29,9 +29,9 @@
 
 namespace nlsr {
 
-/**
- * @brief Abstraction to publish all lsa dataset
- * \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+/*!
+   \brief Class to publish all lsa dataset
+   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class LsdbDatasetInterestHandler
 {

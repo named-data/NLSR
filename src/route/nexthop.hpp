@@ -103,15 +103,15 @@ private:
   bool m_isHyperbolic;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  /** \brief Used to adjust floating point route costs to integers
-  *   Since NFD uses integer route costs in the FIB, hyperbolic paths with similar route costs
-  *   will be rounded to integers and installed with identical nexthop costs.
-  *
-  *   e.g. costs 12.34 and 12.35 will be equal in NFD's FIB
-  *
-  *   This multiplier is used to differentiate similar route costs in the FIB.
-  *
-  *   e.g  costs 12.34 and 12.35 will be installed into NFD's FIB as 12340 and 12350
+  /*! \brief Used to adjust floating point route costs to integers
+      Since NFD uses integer route costs in the FIB, hyperbolic paths with similar route costs
+      will be rounded to integers and installed with identical nexthop costs.
+
+      e.g. costs 12.34 and 12.35 will be equal in NFD's FIB
+
+      This multiplier is used to differentiate similar route costs in the FIB.
+
+      e.g  costs 12.34 and 12.35 will be installed into NFD's FIB as 12340 and 12350
   */
   static const uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 1000;
 };

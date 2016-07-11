@@ -42,15 +42,54 @@ public:
   {
   }
 
+  /*! \brief Schedules a hello Interest event.
+
+    \param seconds The number of seconds to wait before calling the event.
+   */
   void
   scheduleInterest(uint32_t seconds);
 
+  /*! \brief Sends a hello Interest packet.
+
+    \param interestNamePrefix The name of the router that has published the
+    update we want.  Here that should be: \<router name\>/NLSR/INFO
+
+    \param seconds The lifetime of the Interest we construct, in seconds
+
+    This function attempts to contact neighboring routers to
+    determine their status (which currently is one of: ACTIVE,
+    INACTIVE, or UNKNOWN)
+   */
   void
   expressInterest(const ndn::Name& interestNamePrefix, uint32_t seconds);
 
+  /*! \brief Sends a hello Interest packet that was previously scheduled.
+
+    \param seconds (ignored)
+
+    This function is called as part of a schedule to regularly
+    determine the adjacency status of neighbors. This function checks
+    if the specified neighbor has a Face, and if not creates one. If
+    the neighbor had a Face, it calls \c expressInterest, else it will
+    attempt to create a Face, which will itself attempt to contact the
+    neighbor. Then the function schedules for this function to be invoked again.
+   */
   void
   sendScheduledInterest(uint32_t seconds);
 
+  /*! \brief Processes a hello Interest from a neighbor.
+
+    \param name (ignored)
+
+    \param interest The Interest object that we have received and need to
+    process.
+
+    Processes a hello Interest that this router receives from one of
+    its neighbors. If the neighbor that sent the Interest does not
+    have a Face, NLSR will attempt to register one. Also, if the
+    neighbor that sent the Interest was previously marked as INACTIVE,
+    NLSR will attempt to contact it with its own hello Interest.
+   */
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
 

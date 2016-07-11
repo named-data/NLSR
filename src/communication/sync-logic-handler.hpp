@@ -56,6 +56,11 @@ public:
 
   SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf, SequencingManager& seqManager);
 
+  /*! \brief Simple wrapper function to handle updates from Sync.
+
+    \param v The information that Sync has acquired.
+    \param socket The socket that Sync is using to synchronize updates.
+   */
   void
   onNsyncUpdate(const std::vector<Sync::MissingDataInfo>& v, Sync::SyncSocket* socket);
 

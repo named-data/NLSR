@@ -134,6 +134,11 @@ Lsdb::cancelScheduleLsaExpiringEvent(ndn::EventId eid)
   m_scheduler.cancelEvent(eid);
 }
 
+  /*! \brief Compares if a name LSA is the same as the one specified by key
+
+    \param nlsa1 A name LSA object
+    \param key A key of an originating router to compare to nlsa1
+   */
 static bool
 nameLsaCompareByKey(const NameLsa& nlsa1, const ndn::Name& key)
 {
@@ -167,7 +172,9 @@ bool
 Lsdb::isNameLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
   NameLsa* nameLsaCheck = findNameLsa(key);
+  // Is the name in the LSDB
   if (nameLsaCheck != 0) {
+    // And the supplied seq no is the highest so far
     if (nameLsaCheck->getLsSeqNo() < seqNo) {
       return true;
     }
@@ -191,6 +198,7 @@ Lsdb::installNameLsa(NameLsa& nlsa)
 {
   ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   NameLsa* chkNameLsa = findNameLsa(nlsa.getKey());
+  // Determines if the name LSA is new or not.
   if (chkNameLsa == 0) {
     addNameLsa(nlsa);
     _LOG_DEBUG("New Name LSA");
@@ -198,6 +206,8 @@ Lsdb::installNameLsa(NameLsa& nlsa)
     nlsa.writeLog();
 
     if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+      // If this name LSA is from another router, add the advertised
+      // prefixes to the NPT.
       m_nlsr.getNamePrefixTable().addEntry(nlsa.getOrigRouter(),
                                            nlsa.getOrigRouter());
       std::list<ndn::Name> nameList = nlsa.getNpl().getNameList();
@@ -217,6 +227,7 @@ Lsdb::installNameLsa(NameLsa& nlsa)
                                                       nlsa.getLsSeqNo(),
                                                       timeToExpire));
   }
+  // Else this is a known name LSA, so we are updating it.
   else {
     if (chkNameLsa->getLsSeqNo() < nlsa.getLsSeqNo()) {
       _LOG_DEBUG("Updated Name LSA. Updating LSDB");
@@ -226,6 +237,8 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       chkNameLsa->setExpirationTimePoint(nlsa.getExpirationTimePoint());
       chkNameLsa->getNpl().sort();
       nlsa.getNpl().sort();
+      // Obtain the set difference of the current and the incoming
+      // name prefix sets, and add those.
       std::list<ndn::Name> nameToAdd;
       std::set_difference(nlsa.getNpl().getNameList().begin(),
                           nlsa.getNpl().getNameList().end(),
@@ -244,6 +257,7 @@ Lsdb::installNameLsa(NameLsa& nlsa)
 
       chkNameLsa->getNpl().sort();
 
+      // Also remove any names that are no longer being advertised.
       std::list<ndn::Name> nameToRemove;
       std::set_difference(chkNameLsa->getNpl().getNameList().begin(),
                           chkNameLsa->getNpl().getNameList().end(),
@@ -298,6 +312,8 @@ Lsdb::removeNameLsa(const ndn::Name& key)
   if (it != m_nameLsdb.end()) {
     _LOG_DEBUG("Deleting Name Lsa");
     (*it).writeLog();
+    // If the requested name LSA is not ours, we also need to remove
+    // its entries from the NPT.
     if ((*it).getOrigRouter() !=
         m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().removeEntry((*it).getOrigRouter(),
@@ -345,6 +361,10 @@ Lsdb::getNameLsdb()
 
 // Cor LSA and LSDB related Functions start here
 
+/*! \brief Compares whether an LSA object is the same as a key.
+  \param clsa The cor. LSA to check the identity of.
+  \param key The key of the publishing router to check against.
+*/
 static bool
 corLsaCompareByKey(const CoordinateLsa& clsa, const ndn::Name& key)
 {
@@ -387,7 +407,9 @@ bool
 Lsdb::isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
   CoordinateLsa* clsa = findCoordinateLsa(key);
+  // Is the coordinate LSA in the LSDB already
   if (clsa != 0) {
+    // And the seq no is newer (higher) than the current one
     if (clsa->getLsSeqNo() < seqNo) {
       return true;
     }
@@ -398,6 +420,10 @@ Lsdb::isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo)
   return true;
 }
 
+  // Schedules a refresh/expire event in the scheduler.
+  // \param key The name of the router that published the LSA.
+  // \param seqNo the seq. no. associated with the LSA to check.
+  // \param expTime How long to wait before triggering the event.
 ndn::EventId
 Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                       const ndn::time::seconds& expTime)
@@ -412,6 +438,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
 {
   ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   CoordinateLsa* chkCorLsa = findCoordinateLsa(clsa.getKey());
+  // Checking whether the LSA is new or not.
   if (chkCorLsa == 0) {
     _LOG_DEBUG("New Coordinate LSA. Adding to LSDB");
     _LOG_DEBUG("Adding Coordinate Lsa");
@@ -426,6 +453,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
     if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
       m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
     }
+    // Set the expiration time for the new LSA.
     if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       ndn::time::system_clock::Duration duration = clsa.getExpirationTimePoint() -
                                                    ndn::time::system_clock::now();
@@ -434,6 +462,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
     scheduleCoordinateLsaExpiration(clsa.getKey(),
                                     clsa.getLsSeqNo(), timeToExpire);
   }
+  // We are just updating this LSA.
   else {
     if (chkCorLsa->getLsSeqNo() < clsa.getLsSeqNo()) {
       _LOG_DEBUG("Updated Coordinate LSA. Updating LSDB");
@@ -441,6 +470,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
       chkCorLsa->writeLog();
       chkCorLsa->setLsSeqNo(clsa.getLsSeqNo());
       chkCorLsa->setExpirationTimePoint(clsa.getExpirationTimePoint());
+      // If the new LSA contains new routing information, update the LSDB with it.
       if (!chkCorLsa->isEqualContent(clsa)) {
         chkCorLsa->setCorRadius(clsa.getCorRadius());
         chkCorLsa->setCorTheta(clsa.getCorTheta());
@@ -448,6 +478,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
           m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
         }
       }
+      // If this is an LSA from another router, refresh its expiration time.
       if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
         ndn::time::system_clock::Duration duration = clsa.getExpirationTimePoint() -
                                                      ndn::time::system_clock::now();
@@ -530,6 +561,10 @@ Lsdb::getCoordinateLsdb()
 
 // Adj LSA and LSDB related function starts here
 
+  /*! \brief Returns whether an adj. LSA object is from some router.
+    \param alsa The adj. LSA object.
+    \param key The router name that you want to compare the LSA with.
+   */
 static bool
 adjLsaCompareByKey(AdjLsa& alsa, const ndn::Name& key)
 {
@@ -564,32 +599,44 @@ Lsdb::buildAdjLsa()
   if (m_nlsr.getAdjacencyList().isAdjLsaBuildable(m_nlsr.getConfParameter().getInterestRetryNumber())) {
 
     int adjBuildCount = m_nlsr.getAdjBuildCount();
-
-    // Is the adjacency LSA build still necessary, or has another build
-    // fulfilled this request?
+    // Only do the adjLsa build if there's one scheduled
     if (adjBuildCount > 0) {
+      // It only makes sense to do the adjLsa build if we have neighbors
       if (m_nlsr.getAdjacencyList().getNumOfActiveNeighbor() > 0) {
         _LOG_DEBUG("Building and installing own Adj LSA");
         buildAndInstallOwnAdjLsa();
       }
+      // We have no active neighbors, meaning no one can route through
+      // us.  So delete our entry in the LSDB. This prevents this
+      // router from refreshing the LSA, eventually causing other
+      // routers to delete it, too.
       else {
         _LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors")
+        // Get this router's key
         ndn::Name key = m_nlsr.getConfParameter().getRouterPrefix();
         key.append(AdjLsa::TYPE_STRING);
 
         removeAdjLsa(key);
-
+        // Recompute routing table after removal
         m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
       }
-
-      // Since more adjacency LSA builds may have been scheduled while this build
-      // was in progress, decrease the build count by the number of scheduled
-      // builds at the beginning of this build.
+      // In the case that during building the adj LSA, the FIB has to
+      // wait on an Interest response, the number of scheduled adj LSA
+      // builds could change, so we shouldn't just set it to 0.
       m_nlsr.setAdjBuildCount(m_nlsr.getAdjBuildCount() - adjBuildCount);
     }
   }
+  // We are still waiting to know the adjacency status of some
+  // neighbor, so schedule a build for later (when all that has
+  // hopefully finished)
+  else {
+    m_nlsr.setIsBuildAdjLsaSheduled(true);
+    int schedulingTime = m_nlsr.getConfParameter().getInterestRetryNumber() *
+                         m_nlsr.getConfParameter().getInterestResendTime();
+    m_scheduler.scheduleEvent(ndn::time::seconds(schedulingTime),
+                              ndn::bind(&Lsdb::buildAdjLsa, this));
+  }
 }
-
 
 bool
 Lsdb::addAdjLsa(AdjLsa& alsa)
@@ -617,12 +664,13 @@ Lsdb::findAdjLsa(const ndn::Name& key)
   return 0;
 }
 
-
 bool
 Lsdb::isAdjLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
   AdjLsa*  adjLsaCheck = findAdjLsa(key);
+  // If it is in the LSDB
   if (adjLsaCheck != 0) {
+    // And the supplied seq no is newer (higher) than the current one.
     if (adjLsaCheck->getLsSeqNo() < seqNo) {
       return true;
     }
@@ -632,7 +680,6 @@ Lsdb::isAdjLsaNew(const ndn::Name& key, uint64_t seqNo)
   }
   return true;
 }
-
 
 ndn::EventId
 Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
@@ -647,11 +694,13 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
 {
   ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   AdjLsa* chkAdjLsa = findAdjLsa(alsa.getKey());
+  // If this adj. LSA is not in the LSDB already
   if (chkAdjLsa == 0) {
     _LOG_DEBUG("New Adj LSA. Adding to LSDB");
     _LOG_DEBUG("Adding Adj Lsa");
     alsa.writeLog();
     addAdjLsa(alsa);
+    // Add any new name prefixes to the NPT
     alsa.addNptEntries(m_nlsr);
     m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
     if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
@@ -669,6 +718,10 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
       chkAdjLsa->writeLog();
       chkAdjLsa->setLsSeqNo(alsa.getLsSeqNo());
       chkAdjLsa->setExpirationTimePoint(alsa.getExpirationTimePoint());
+      // If the new adj LSA has new content, update the contents of
+      // the LSDB entry. Additionally, since we've changed the
+      // contents of the LSDB, we have to schedule a routing
+      // calculation.
       if (!chkAdjLsa->isEqualContent(alsa)) {
         chkAdjLsa->getAdl().reset();
         chkAdjLsa->getAdl().addAdjacents(alsa.getAdl());
@@ -754,14 +807,23 @@ Lsdb::setThisRouterPrefix(std::string trp)
   m_thisRouterPrefix = trp;
 }
 
+  // This function determines whether a name LSA should be refreshed
+  // or expired. The conditions for getting refreshed are: it is still
+  // in the LSDB, it hasn't been updated by something else already (as
+  // evidenced by its seq. no.), and this is the originating router for
+  // the LSA. Is it let expire in all other cases.
+  // lsaKey is the key of the LSA's publishing router.
+  // seqNo is the seq. no. of the candidate LSA.
 void
 Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
 {
   _LOG_DEBUG("Lsdb::exprireOrRefreshNameLsa Called");
   _LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   NameLsa* chkNameLsa = findNameLsa(lsaKey);
+  // If this name LSA exists in the LSDB
   if (chkNameLsa != 0) {
     _LOG_DEBUG("LSA Exists with seq no: " << chkNameLsa->getLsSeqNo());
+    // If its seq no is the one we are expecting.
     if (chkNameLsa->getLsSeqNo() == seqNo) {
       if (chkNameLsa->getOrigRouter() == m_thisRouterPrefix) {
         _LOG_DEBUG("Own Name LSA, so refreshing it");
@@ -778,6 +840,7 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                                  m_lsaRefreshTime));
         m_sync.publishRoutingUpdate();
       }
+      // Since we cannot refresh other router's LSAs, our only choice is to expire.
       else {
         _LOG_DEBUG("Other's Name LSA, so removing form LSDB");
         removeNameLsa(lsaKey);
@@ -786,15 +849,25 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
   }
 }
 
+  // This function determines whether an adj. LSA should be refreshed
+  // or expired. The conditions for getting refreshed are: it is still
+  // in the LSDB, it hasn't been updated by something else already (as
+  // evidenced by its seq. no.), and this is the originating router for
+  // the LSA. Is it let expire in all other cases.
+  // lsaKey is the key of the LSA's publishing router.
+  // seqNo is the seq. no. of the candidate LSA.
 void
 Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
 {
   _LOG_DEBUG("Lsdb::exprireOrRefreshAdjLsa Called");
   _LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   AdjLsa* chkAdjLsa = findAdjLsa(lsaKey);
+  // If this is a valid LSA
   if (chkAdjLsa != 0) {
     _LOG_DEBUG("LSA Exists with seq no: " << chkAdjLsa->getLsSeqNo());
+    // And if it hasn't been updated for some other reason
     if (chkAdjLsa->getLsSeqNo() == seqNo) {
+      // If it is our own LSA
       if (chkAdjLsa->getOrigRouter() == m_thisRouterPrefix) {
         _LOG_DEBUG("Own Adj LSA, so refreshing it");
         _LOG_DEBUG("Deleting Adj Lsa");
@@ -810,16 +883,25 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                                m_lsaRefreshTime));
         m_sync.publishRoutingUpdate();
       }
+      // An LSA from another router is expiring
       else {
         _LOG_DEBUG("Other's Adj LSA, so removing form LSDB");
         removeAdjLsa(lsaKey);
       }
-      // schedule Routing table calculaiton
+      // We have changed the contents of the LSDB, so we have to
+      // schedule a routing calculation
       m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
     }
   }
 }
 
+  // This function determines whether an adj. LSA should be refreshed
+  // or expired. The conditions for getting refreshed are: it is still
+  // in the LSDB, it hasn't been updated by something else already (as
+  // evidenced by its seq. no.), and this is the originating router for
+  // the LSA. It is let expire in all other cases.
+  // lsaKey is the key of the LSA's publishing router.
+  // seqNo is the seq. no. of the candidate LSA.
 void
 Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                     uint64_t seqNo)
@@ -827,8 +909,10 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
   _LOG_DEBUG("Lsdb::exprireOrRefreshCorLsa Called ");
   _LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   CoordinateLsa* chkCorLsa = findCoordinateLsa(lsaKey);
+  // Whether the LSA is in the LSDB or not.
   if (chkCorLsa != 0) {
     _LOG_DEBUG("LSA Exists with seq no: " << chkCorLsa->getLsSeqNo());
+    // Whether the LSA has been updated without our knowledge.
     if (chkCorLsa->getLsSeqNo() == seqNo) {
       if (chkCorLsa->getOrigRouter() == m_thisRouterPrefix) {
         _LOG_DEBUG("Own Cor LSA, so refreshing it");
@@ -852,6 +936,7 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
           m_sync.publishRoutingUpdate();
         }
       }
+      // We can't refresh other router's LSAs, so we remove it.
       else {
         _LOG_DEBUG("Other's Cor LSA, so removing form LSDB");
         removeCoordinateLsa(lsaKey);
@@ -870,16 +955,20 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
   if (deadline == DEFAULT_LSA_RETRIEVAL_DEADLINE) {
     deadline = steady_clock::now() + ndn::time::seconds(static_cast<int>(LSA_REFRESH_TIME_MAX));
   }
-
+  // The first component of the interest is the name.
   ndn::Name lsaName = interestName.getSubName(0, interestName.size()-1);
+  // The seq no is the last
   uint64_t seqNo = interestName[-1].toNumber();
 
+  // If the LSA is not found in the list currently.
   if (m_highestSeqNo.find(lsaName) == m_highestSeqNo.end()) {
     m_highestSeqNo[lsaName] = seqNo;
   }
+  // If the new seq no is higher, that means the LSA is valid
   else if (seqNo > m_highestSeqNo[lsaName]) {
     m_highestSeqNo[lsaName] = seqNo;
   }
+  // Otherwise, its an old/invalid LSA
   else if (seqNo < m_highestSeqNo[lsaName]) {
     return;
   }
@@ -906,6 +995,7 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 
   if (lsaPosition >= 0) {
 
+    // Forms the name of the router that the Interest packet came from.
     ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
     originRouter.append(interestName.getSubName(lsaPosition + 1,
                                                 interest.getName().size() - lsaPosition - 3));
@@ -915,6 +1005,7 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 
     std::string interestedLsType = interestName[-2].toUri();
 
+    // Passes the Interest off to the appropriate subprocessor
     if (interestedLsType == NameLsa::TYPE_STRING) {
       processInterestForNameLsa(interest, originRouter.append(interestedLsType), seqNo);
     }
@@ -930,6 +1021,9 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
   }
 }
 
+  // \brief Sends LSA data.
+  // \param interest The Interest that warranted the data.
+  // \param content The data that the Interest was seeking.
 void
 Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
 {
@@ -941,6 +1035,11 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
                     ndn::security::signingByCertificate(m_nlsr.getDefaultCertName()));
 }
 
+  // \brief Finds and sends a requested name LSA.
+  // \param interest The interest that seeks the name LSA.
+  // \param lsaKey The LSA that the Interest is seeking.
+  // \param seqNo A sequence number to ensure that we are sending the
+  // version that was requested.
 void
 Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
                                 const ndn::Name& lsaKey,
@@ -955,6 +1054,11 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
   }
 }
 
+  // \brief Finds and sends a requested adj. LSA.
+  // \param interest The interest that seeks the adj. LSA.
+  // \param lsaKey The LSA that the Interest is seeking.
+  // \param seqNo A sequence number to ensure that we are sending the
+  // version that was requested.
 void
 Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
                                      const ndn::Name& lsaKey,
@@ -973,6 +1077,11 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
   }
 }
 
+  // \brief Finds and sends a requested cor. LSA.
+  // \param interest The interest that seeks the cor. LSA.
+  // \param lsaKey The LSA that the Interest is seeking.
+  // \param seqNo A sequence number to ensure that we are sending the
+  // version that was requested.
 void
 Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
                                       const ndn::Name& lsaKey,
@@ -1002,6 +1111,7 @@ Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 
   if (lsaPosition >= 0) {
 
+    // Extracts the prefix of the originating router from the data.
     ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
     originRouter.append(dataName.getSubName(lsaPosition + 1, dataName.size() - lsaPosition - 3));
 

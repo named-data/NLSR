@@ -19,6 +19,13 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+/*! \file lsdb-dataset-interest-handler.cpp
+
+  This file details a class that is used by NLSRC and other command-line
+  tools to examine the state of NLSR. This system is not designed to
+  be used by routers to publish data to each other.
+ */
+
 #include "lsdb-dataset-interest-handler.hpp"
 
 #include "logger.hpp"
@@ -92,7 +99,6 @@ LsdbDatasetInterestHandler::isValidCommandPrefix(const ndn::Interest& interest,
 {
   size_t commandSize = interest.getName().size();
 
-  // Does the Interest match the command prefix with one additional component?
   return (commandSize == commandPrefix.size() + 1 && commandPrefix.isPrefixOf(interest.getName()));
 }
 

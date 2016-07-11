@@ -43,7 +43,12 @@ public:
   {
   }
 
+  /*! \brief Add a map entry to this map.
+    \param rtrName The name of the router.
 
+    Adds a router to this map. Each entry is also given an arbitrary,
+    ascending mappingNo (mapping number).
+  */
   void
   addEntry(const ndn::Name& rtrName);
 

@@ -45,9 +45,22 @@ public:
   {
   }
 
+
+  /*! \brief Adds a next hop to the list.
+    \param nh The next hop.
+
+    Add next hop to the Next Hop list If next hop is new it is added
+    If next hop already exists in next hop list then updates the route
+    cost with new next hop's route cost
+  */
   void
   addNextHop(NextHop& nh);
 
+  /*! \brief Removes a next hop.
+    \param nh The next hop.
+
+    Remove a next hop only if both next hop face and route cost are same.
+  */
   void
   removeNextHop(NextHop& nh);
 

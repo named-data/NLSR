@@ -42,21 +42,22 @@ npteCompare(NamePrefixTableEntry& npte, const ndn::Name& name)
 void
 NamePrefixTable::addEntry(const ndn::Name& name, RoutingTableEntry& rte)
 {
+  // Check if the advertised name prefix is in the table already.
   NptEntryList::iterator it = std::find_if(m_table.begin(),
                                            m_table.end(),
                                            bind(&npteCompare, _1, name));
+  // If not, create a new entry and add it.
   if (it == m_table.end()) {
     _LOG_TRACE("Adding origin: " << rte.getDestination() << " to new name prefix: " << name);
 
     NamePrefixTableEntry entry(name);
+    entry.addRoutingTableEntry(rte); // Add this RTE to this new NPT entry.
+    entry.generateNhlfromRteList(); // Generate a list of next-hops from the RTE.
+    entry.getNexthopList().sort(); // Sort it.
 
-    entry.addRoutingTableEntry(rte);
+    m_table.push_back(entry); // Add the new, completed entry into the main table.
 
-    entry.generateNhlfromRteList();
-    entry.getNexthopList().sort();
-
-    m_table.push_back(entry);
-
+    // If the RTE we added has any next hops, we inform the FIB of this.
     if (rte.getNexthopList().getSize() > 0) {
       _LOG_TRACE("Updating FIB with next hops for " << entry);
       m_nlsr.getFib().update(name, entry.getNexthopList());
@@ -64,22 +65,26 @@ NamePrefixTable::addEntry(const ndn::Name& name, RoutingTableEntry& rte)
   }
   else {
     _LOG_TRACE("Adding origin: " << rte.getDestination() << " to existing prefix: " << *it);
-
+    // Update the existing entry with the new RTE.
     it->addRoutingTableEntry(rte);
 
-    it->generateNhlfromRteList();
-    it->getNexthopList().sort();
+    it->generateNhlfromRteList(); // Rebuild the list of next-hops
+    it->getNexthopList().sort(); // Sort it.
 
+    // As above, inform the FIB of this fact.
+    // We may possibly have a new best next-hop for this name prefix
+    // So this is a necessary step.
     if (it->getNexthopList().getSize() > 0) {
       _LOG_TRACE("Updating FIB with next hops for " << *it);
       m_nlsr.getFib().update(name, it->getNexthopList());
     }
     else {
-      // The routing table may recalculate and add a routing table entry with no next hops to
-      // replace an existing routing table entry. In this case, the name prefix is no longer
-      // reachable through a next hop and should be removed from the FIB. But, the prefix
-      // should remain in the Name Prefix Table as a future routing table calculation may
-      // add next hops.
+      // The routing table may recalculate and add a routing table
+      // entry with no next hops to replace an existing routing table
+      // entry. In this case, the name prefix is no longer reachable
+      // through a next hop and should be removed from the FIB. But,
+      // the prefix should remain in the Name Prefix Table as a future
+      // routing table calculation may add next hops.
       _LOG_TRACE(*it << " has no next hops; removing from FIB");
       m_nlsr.getFib().remove(name);
     }
@@ -162,7 +167,9 @@ NamePrefixTable::updateWithNewRoute()
   _LOG_DEBUG("Updating table with newly calculated routes");
 
   // Update each name prefix entry in the Name Prefix Table with newly calculated next hops
+  // For each entry in the NPT
   for (const NamePrefixTableEntry& prefixEntry : m_table) {
+    // For each routing table entry
     for (const RoutingTableEntry& routingEntry : prefixEntry.getRteList()) {
       _LOG_TRACE("Updating next hops to origin: " << routingEntry.getDestination()
                                                   << " for prefix: " << prefixEntry);
@@ -170,6 +177,7 @@ NamePrefixTable::updateWithNewRoute()
       RoutingTableEntry* rteCheck =
         m_nlsr.getRoutingTable().findRoutingTableEntry(routingEntry.getDestination());
 
+      // If there is a routing table entry for this prefix, update the NPT with it.
       if (rteCheck != nullptr) {
         addEntry(prefixEntry.getNamePrefix(), *rteCheck);
       }

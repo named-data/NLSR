@@ -31,17 +31,17 @@
 #include "lsa.hpp"
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
-/**
- * @brief Data abstraction for LsaInfo
- *
- * LsaInfo := LSA-TYPE TLV-LENGTH
- *              OriginRouter
- *              SequenceNumber
- *              ExpirationPeriod?
- *
- * @sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+/*!
+   \brief Data abstraction for LsaInfo
+
+   LsaInfo := LSA-TYPE TLV-LENGTH
+                OriginRouter
+                SequenceNumber
+                ExpirationPeriod?
+
+   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class LsaInfo
 {

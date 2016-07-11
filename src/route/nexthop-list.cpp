@@ -59,7 +59,7 @@ nextHopSortingComparator(const NextHop& nh1, const NextHop& nh2)
   }
 }
 
-/**
+/*!
 Add next hop to the Next Hop list
 If next hop is new it is added
 If next hop already exists in next
@@ -82,7 +82,7 @@ NexthopList::addNextHop(NextHop& nh)
   }
 }
 
-/**
+/*!
 Remove a next hop only if both next hop face and route cost are same
 
 */

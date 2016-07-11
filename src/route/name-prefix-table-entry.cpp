@@ -33,9 +33,11 @@ void
 NamePrefixTableEntry::generateNhlfromRteList()
 {
   m_nexthopList.reset();
+  // For every routing table entry associated with this name prefix
   for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
        it != m_rteList.end(); ++it)
   {
+    // Add every next hop from each routing table entry to this entry's NHL.
     for (std::list<NextHop>::iterator nhit =
            (*it).getNexthopList().getNextHops().begin();
          nhit != (*it).getNexthopList().getNextHops().end(); ++nhit)

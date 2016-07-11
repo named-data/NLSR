@@ -42,6 +42,20 @@ public:
   {
   }
 
+  /*! \brief Adds an entry to the NPT.
+    \param name The name prefix that is being advertised.
+    \param destRouter The destination router that is advertising the prefix.
+
+    Adds a destination router to the name prefix. If there isn't
+    currently an entry present for the prefix, one is made and
+    added. If there is no routing table entry available for the
+    destination router, a placeholder routing table entry without next
+    hops will be made. Since this function can be called when a
+    routing table entry has been updated to have no hops (i.e. is
+    unreachable), this function will check for the number of next hops
+    an entry has. If it is found to have no next hops, the NPT will
+    inform the FIB to remove that prefix.
+  */
   void
   addEntry(const ndn::Name& name, const ndn::Name& destRouter);
 
@@ -61,6 +75,11 @@ public:
   end() const;
 
 private:
+  /*! \brief Adds an entry to the NPT table.
+    \param name The name prefix to add to the table.
+    \param rte The routing table entry with the next hop information to
+    reach the prefix.
+  */
   void
   addEntry(const ndn::Name& name, RoutingTableEntry& rte);
 

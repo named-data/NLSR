@@ -248,7 +248,6 @@ AdjLsa::isEqualContent(AdjLsa& alsa)
   return m_adl == alsa.getAdl();
 }
 
-
 string
 AdjLsa::getData()
 {
@@ -311,11 +310,13 @@ AdjLsa::initializeFromContent(const std::string& content)
   return true;
 }
 
-
 void
 AdjLsa::addNptEntries(Nlsr& pnlsr)
 {
+  // Only add NPT entries if this is an adj LSA from another router.
   if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix()) {
+    // Pass the originating router as both the name to register and
+    // where it came from.
     pnlsr.getNamePrefixTable().addEntry(getOrigRouter(), getOrigRouter());
   }
 }

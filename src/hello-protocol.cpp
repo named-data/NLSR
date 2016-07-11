@@ -55,6 +55,7 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
   std::list<Adjacent> adjList = m_nlsr.getAdjacencyList().getAdjList();
   for (std::list<Adjacent>::iterator it = adjList.begin(); it != adjList.end();
        ++it) {
+    // If this adjacency has a Face, just proceed as usual.
     if((*it).getFaceId() != 0) {
       /* interest name: /<neighbor>/NLSR/INFO/<router> */
       ndn::Name interestName = (*it).getName() ;
@@ -64,6 +65,9 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
       expressInterest(interestName,
                       m_nlsr.getConfParameter().getInterestResendTime());
     }
+    // If it does not have a Face, we need to give it one.  A
+    // successful registration prompts a callback that sends the hello
+    // Interest to the new Face.
     else {
       registerPrefixes((*it).getName(), (*it).getConnectingFaceUri(),
                        (*it).getLinkCost(), ndn::time::milliseconds::max());
@@ -104,7 +108,9 @@ HelloProtocol::processInterest(const ndn::Name& name,
     _LOG_DEBUG("Sending out data for name: " << interest.getName());
     m_nlsr.getNlsrFace().put(*data);
     Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+    // If this neighbor was previously inactive, send our own hello interest, too
     if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
+      // We can only do that if the neighbor currently has a face.
       if(adjacent->getFaceId() != 0){
         /* interest name: /<neighbor>/NLSR/INFO/<router> */
         ndn::Name interestName(neighbor);
@@ -114,6 +120,8 @@ HelloProtocol::processInterest(const ndn::Name& name,
         expressInterest(interestName,
                         m_nlsr.getConfParameter().getInterestResendTime());
       }
+      // If the originator of the Interest currently lacks a Face, we
+      // need to give it one.
       else {
         registerPrefixes(adjacent->getName(), adjacent->getConnectingFaceUri(),
                          adjacent->getLinkCost(), ndn::time::milliseconds::max());
@@ -158,6 +166,9 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   }
 }
 
+  // This is the first function that incoming Hello data will
+  // see. This checks if the data appears to be signed, and passes it
+  // on to validate the content of the data.
 void
 HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
 {
@@ -173,6 +184,11 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
                                            this, _1, _2));
 }
 
+  // A validator is called on the incoming data, and if the data
+  // passes the validator's description/definitions, this function is
+  // called. Set the neighbor's status to active and refresh its
+  // LSA. If there was a change in status, we schedule an adjacency
+  // LSA build.
 void
 HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
 {
@@ -196,6 +212,8 @@ HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
   }
 }
 
+  // Simply logs a debug message that the content could not be
+  // validated (and is implicitly being discarded as a result).
 void
 HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
                                          const std::string& msg)
@@ -203,6 +221,9 @@ HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>&
   _LOG_DEBUG("Validation Error: " << msg);
 }
 
+
+  // Asks the FIB to register the supplied adjacency (in other words,
+  // create a Face for it).
 void
 HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                                double linkCost, const ndn::time::milliseconds& timeout)
@@ -215,6 +236,9 @@ HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& fac
                                            this, _1, adjName));
 }
 
+  // After we create a new Face, we need to set it up for use. This
+  // function sets the controlling strategy, registers prefixes in
+  // sync, broadcast, and LSA.
 void
 HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                                      const ndn::Name& neighbor,const ndn::time::milliseconds& timeout)
@@ -237,6 +261,7 @@ HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandS
                                  ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
     m_nlsr.setStrategies();
 
+    // Sends a Hello Interest to determine status before the next scheduled.
     /* interest name: /<neighbor>/NLSR/INFO/<router> */
     ndn::Name interestName(neighbor);
     interestName.append(NLSR_COMPONENT);

@@ -37,14 +37,16 @@ public:
 
   ~NamePrefixList();
 
-  /** \brief inserts name into NamePrefixList
-   *  \return true if the name is inserted, otherwise false
+  /*! \brief inserts name into NamePrefixList
+      \retval true If the name was successfully inserted.
+      \retval false If the name could not be inserted.
    */
   bool
   insert(const ndn::Name& name);
 
-  /** \brief removes name from NamePrefixList
-   *  \return true if the name is removed, otherwise false
+  /*! \brief removes name from NamePrefixList
+      \retval true If the name is removed
+      \retval false If the name failed to be removed.
    */
   bool
   remove(const ndn::Name& name);

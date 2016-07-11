@@ -1,4 +1,4 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+ /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
  * Copyright (c) 2014-2016,  The University of Memphis,
  *                           Regents of the University of California,
@@ -39,9 +39,28 @@ public:
   AdjacencyList();
   ~AdjacencyList();
 
+  /*! \brief Inserts an adjacency into the list.
+
+    \param adjacent The adjacency that we want to add to this list.
+
+    \retval 0 Indicates success.
+    \retval 1 Indicates failure.
+
+    This function attempts to insert the supplied adjacency into this
+    object, which is an adjacency list.
+   */
   int32_t
   insert(Adjacent& adjacent);
 
+  /*! \brief Sets the status of an adjacency.
+
+    \param adjName The adjacency in this list you want to change the status of.
+
+    \param s The status to change to.
+
+    \return A boolean indicating whether an adjacency was
+    updated. This is false if s is not in the list.
+   */
   bool
   updateAdjacentStatus(const ndn::Name& adjName, Adjacent::Status s);
 
@@ -69,9 +88,31 @@ public:
   void
   setTimedOutInterestCount(const ndn::Name& neighbor, uint32_t count);
 
+  /*! \brief Copies the adjacencies in a list to this one.
+
+    \param adl The adjacency list, the entries of which we want to
+    copy into this object.
+
+    Copies the entries contained in one list into this object.
+   */
   void
   addAdjacents(AdjacencyList& adl);
 
+  /*! \brief Determines whether this list can be used to build an adj. LSA.
+    \param interestRetryNo The maximum number of hello-interest
+      retries to contact a neighbor.
+
+    \return Returns a boolean indicating whether this list can be used
+    to build an adj. LSA.
+
+    Determines whether this adjacency list object could be used to
+    build an adjacency LSA. An LSA is buildable when the status of all
+    neighbors is known. A neighbor's status is known when their status
+    is ACTIVE, or INACTIVE and some number of hello interests
+    (specified by nlsr::ConfParameter::getInterestRetryNumber()) have
+    failed. To be explicit, a neighbor's status is unknown if we are
+    still sending hello interests.
+   */
   bool
   isAdjLsaBuildable(const uint32_t interestRetryNo) const;
 

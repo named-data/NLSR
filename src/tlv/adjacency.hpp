@@ -29,17 +29,17 @@
 #include <ndn-cxx/name.hpp>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
-/**
- * @brief Data abstraction for Adjacency
- *
- * Adjacency := ADJACENCY-TYPE TLV-LENGTH
- *                Name
- *                Uri
- *                Cost
- *
- * @sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+/*!
+   \brief Data abstraction for Adjacency
+
+   Adjacency := ADJACENCY-TYPE TLV-LENGTH
+                  Name
+                  Uri
+                  Cost
+
+   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class Adjacency
 {

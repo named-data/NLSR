@@ -78,6 +78,7 @@ CoordinateLsaPublisher::CoordinateLsaPublisher(Lsdb& lsdb,
 {
 }
 
+  // Returns the list of coordinate LSAs represented by this object.
 std::list<tlv::CoordinateLsa>
 CoordinateLsaPublisher::getTlvLsas()
 {
@@ -113,6 +114,8 @@ NameLsaPublisher::NameLsaPublisher(Lsdb& lsdb,
 {
 }
 
+  // Returns the list of name LSAs represented by this object.
+  // Note: each name LSA has a list of prefixes as well.
 std::list<tlv::NameLsa>
 NameLsaPublisher::getTlvLsas()
 {

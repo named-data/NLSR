@@ -63,10 +63,11 @@ protected:
   getTlvLsas() = 0;
 };
 
-/**
- * @brief Abstraction to publish adjacency lsa dataset
- * \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
- */
+  /*! \brief Class to publish adjacency lsa dataset
+
+    \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+
+  */
 class AdjacencyLsaPublisher : public LsaPublisher<tlv::AdjacencyLsa>
 {
 public:
@@ -74,6 +75,7 @@ public:
                         ndn::Face& face,
                         ndn::KeyChain& keyChain);
 
+  /*! \brief Returns the adj. LSAs represented by this object. */
   std::list<tlv::AdjacencyLsa>
   getTlvLsas();
 
@@ -84,10 +86,9 @@ private:
   const std::list<AdjLsa>& m_adjacencyLsas;
 };
 
-/**
- * @brief Abstraction to publish coordinate lsa dataset
- * \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
- */
+  /*! \brief Class to publish coordinate lsa dataset
+    \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+  */
 class CoordinateLsaPublisher : public LsaPublisher<tlv::CoordinateLsa>
 {
 public:
@@ -95,6 +96,7 @@ public:
                         ndn::Face& face,
                         ndn::KeyChain& keyChain);
 
+  /*! \brief Returns the cor. LSAs represented by this object. */
   std::list<tlv::CoordinateLsa>
   getTlvLsas();
 
@@ -105,17 +107,16 @@ private:
   const std::list<CoordinateLsa>& m_coordinateLsas;
 };
 
-/**
- * @brief Abstraction to publish name lsa dataset
- * \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
- */
+  /*! \brief Class to publish name lsa dataset
+    \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+  */
 class NameLsaPublisher : public LsaPublisher<tlv::NameLsa>
 {
 public:
   NameLsaPublisher(Lsdb& lsdb,
                    ndn::Face& face,
                    ndn::KeyChain& keyChain);
-
+  /*! \brief Returns the name LSAs represented by this object. */
   std::list<tlv::NameLsa>
   getTlvLsas();
 

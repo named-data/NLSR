@@ -84,7 +84,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
         if (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
           calculateHypDryRoutingTable(pnlsr);
         }
-        //need to update NPT here
+        // Inform the NPT that updates have been made
         _LOG_DEBUG("Calling Update NPT With new Route");
         pnlsr.getNamePrefixTable().updateWithNewRoute();
         writeLog(pnlsr.getConfParameter().getHyperbolicState());
@@ -116,7 +116,6 @@ RoutingTable::calculate(Nlsr& pnlsr)
     scheduleRoutingTableCalculation(pnlsr);
   }
 }
-
 
 void
 RoutingTable::calculateLsRoutingTable(Nlsr& nlsr)
@@ -185,7 +184,6 @@ routingTableEntryCompare(RoutingTableEntry& rte, ndn::Name& destRouter)
   return rte.getDestination() == destRouter;
 }
 
-// function related to manipulation of routing table
 void
 RoutingTable::addNextHop(const ndn::Name& destRouter, NextHop& nh)
 {
@@ -237,7 +235,6 @@ RoutingTable::writeLog(int hyperbolicState)
   }
 }
 
-//function related to manipulation of dry routing table
 void
 RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
 {
@@ -274,4 +271,3 @@ RoutingTable::clearDryRoutingTable()
 }
 
 } // namespace nlsr
-

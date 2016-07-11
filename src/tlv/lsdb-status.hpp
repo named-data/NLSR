@@ -35,17 +35,17 @@
 #include <list>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
-/**
- * @brief Data abstraction for LsdbStatus
- *
- * LsdbStatus := LSDB-STATUS-TYPE TLV-LENGTH
- *                 AdjacencyLsa*
- *                 CoordinateLsa*
- *                 NameLsa*
- *
- * @sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+/*!
+   \brief Data abstraction for LsdbStatus
+
+   LsdbStatus := LSDB-STATUS-TYPE TLV-LENGTH
+                   AdjacencyLsa*
+                   CoordinateLsa*
+                   NameLsa*
+
+   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class LsdbStatus
 {

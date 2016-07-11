@@ -43,7 +43,7 @@ class SyncLogicHandler;
 
 namespace security {
   class CertificateStore;
-}
+} // namespace security
 
 namespace update {
 
@@ -96,13 +96,13 @@ private:
                uint32_t code,
                const std::string& text);
 
-  /** \brief adds desired name prefix to the advertised name prefix list
+  /*! \brief adds desired name prefix to the advertised name prefix list
    */
   void
   advertise(const std::shared_ptr<const ndn::Interest>& request,
             const ndn::nfd::ControlParameters& parameters);
 
-  /** \brief removes desired name prefix from the advertised name prefix list
+  /*! \brief removes desired name prefix from the advertised name prefix list
    */
   void
   withdraw(const std::shared_ptr<const ndn::Interest>& request,

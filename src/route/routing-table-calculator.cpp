@@ -60,11 +60,14 @@ void
 RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
 {
   std::list<AdjLsa> adjLsdb = pnlsr.getLsdb().getAdjLsdb();
+  // For each LSA represented in the map
   for (std::list<AdjLsa>::iterator it = adjLsdb.begin(); it != adjLsdb.end() ; it++) {
+
 
     int32_t row = pMap.getMappingNoByRouterName((*it).getOrigRouter());
 
     std::list<Adjacent> adl = (*it).getAdl().getAdjList();
+    // For each adjacency represented in the LSA
     for (std::list<Adjacent>::iterator itAdl = adl.begin(); itAdl != adl.end() ; itAdl++) {
 
       int32_t col = pMap.getMappingNoByRouterName((*itAdl).getName());
@@ -78,14 +81,17 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
     }
   }
 
-  // Links that do not have the same cost for both directions should have their
-  // costs corrected:
+  // Links that do not have the same cost for both directions should
+  // have their costs corrected:
   //
-  //   If the cost of one side of the link is 0, both sides of the link should have their cost
-  //   corrected to 0.
+  //   If the cost of one side of the link is 0, both sides of the
+  //   link should have their cost corrected to 0.
   //
   //   Otherwise, both sides of the link should use the larger of the two costs.
   //
+  // Additionally, this means that we can halve the amount of space
+  // that the matrix uses by only maintaining a triangle.
+  // - But that is not yet implemented.
   for (size_t row = 0; row < m_nRouters; ++row) {
     for (size_t col = 0; col < m_nRouters; ++col) {
       double toCost = adjMatrix[row][col];
@@ -173,7 +179,6 @@ RoutingTableCalculator::freeAdjMatrix()
   delete [] adjMatrix;
 }
 
-
 void
 RoutingTableCalculator::allocateLinks()
 {
@@ -208,12 +213,12 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
   makeAdjMatrix(pnlsr, pMap);
   writeAdjMatrixLog();
   int sourceRouter = pMap.getMappingNoByRouterName(pnlsr.getConfParameter().getRouterPrefix());
-  allocateParent();
-  allocateDistance();
+  allocateParent(); // These two matrices are used in Dijkstra's algorithm.
+  allocateDistance(); //
   if (pnlsr.getConfParameter().getMaxFacesPerPrefix() == 1) {
-    // Single Path
+    // In the single path case we can simply run Dijkstra's algorithm.
     doDijkstraPathCalculation(sourceRouter);
-    // update routing table
+    // Inform the routing table of the new next hops.
     addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
   }
   else {
@@ -221,12 +226,15 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
     setNoLink(getNumOfLinkfromAdjMatrix(sourceRouter));
     allocateLinks();
     allocateLinkCosts();
+    // Gets a sparse listing of adjacencies for path calculation
     getLinksFromAdjMatrix(links, linkCosts, sourceRouter);
     for (int i = 0 ; i < vNoLink; i++) {
+      // Simulate that only the current neighbor is accessible
       adjustAdMatrix(sourceRouter, links[i], linkCosts[i]);
       writeAdjMatrixLog();
+      // Do Dijkstra's algorithm using the current neighbor as your start.
       doDijkstraPathCalculation(sourceRouter);
-      //update routing table
+      // Update the routing table with the calculations.
       addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
     }
     freeLinks();
@@ -242,32 +250,44 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
 {
   int i;
   int v, u;
-  int* Q = new int[m_nRouters];
+  int* Q = new int[m_nRouters]; // Each cell represents the router with that mapping no.
   int head = 0;
   /* Initiate the Parent */
   for (i = 0 ; i < static_cast<int>(m_nRouters); i++) {
     m_parent[i] = EMPTY_PARENT;
+    // Array where the ith element is the distance to the router with mapping no i.
     m_distance[i] = INF_DISTANCE;
     Q[i] = i;
   }
   if (sourceRouter != NO_MAPPING_NUM) {
+    // Distance to source from source is always 0.
     m_distance[sourceRouter] = 0;
     sortQueueByDistance(Q, m_distance, head, m_nRouters);
+    // While we haven't visited every node.
     while (head < static_cast<int>(m_nRouters)) {
-      u = Q[head];
+      u = Q[head]; // Set u to be the current node pointed to by head.
       if (m_distance[u] == INF_DISTANCE) {
-        break;
+        break; // This can only happen when there are no accessible nodes.
       }
+      // Iterate over the adjacent nodes to u.
       for (v = 0 ; v < static_cast<int>(m_nRouters); v++) {
+        // If the current node is accessible.
         if (adjMatrix[u][v] > 0) {
+          // And we haven't visited it yet.
           if (isNotExplored(Q, v, head + 1, m_nRouters)) {
+            // And if the distance to this node + from this node to v
+            // is less than the distance from our source node to v
+            // that we got when we built the adj LSAs
             if (m_distance[u] + adjMatrix[u][v] <  m_distance[v]) {
+              // Set the new distance
               m_distance[v] = m_distance[u] + adjMatrix[u][v] ;
+              // Set how we get there.
               m_parent[v] = u;
             }
           }
         }
       }
+      // Increment the head position, resort the list by distance from where we are.
       head++;
       sortQueueByDistance(Q, m_distance, head, m_nRouters);
     }
@@ -283,14 +303,19 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, Rou
 
   int nextHopRouter = 0;
 
+  // For each router we have
   for (size_t i = 0; i < m_nRouters ; i++) {
     if (i != sourceRouter) {
 
+      // Obtain the next hop that was determined by the algorithm
       nextHopRouter = getLsNextHop(i, sourceRouter);
 
+      // If this router is accessible at all
       if (nextHopRouter != NO_NEXT_HOP) {
 
+        // Fetch its distance
         double routeCost = m_distance[i];
+        // Fetch its actual name
         ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
         std::string nextHopFace =
           pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFaceUri();

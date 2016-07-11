@@ -77,12 +77,20 @@ public:
     return m_nexthopList;
   }
 
+  /*! \brief Generates a next-hop list from routing table entries. */
   void
   generateNhlfromRteList();
 
   void
   removeRoutingTableEntry(RoutingTableEntry& rte);
 
+  /*! \brief Adds a routing table entry to this object's list.
+    \param rte The routing table entry.
+
+    Adds a routing table entry to this NPT entry's list. (reminder:
+    each RTE has a next-hop list) They are used to calculate this
+    entry's next-hop list.
+  */
   void
   addRoutingTableEntry(RoutingTableEntry& rte);
 
