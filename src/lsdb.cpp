@@ -359,8 +359,15 @@ Lsdb::buildAndInstallOwnCoordinateLsa()
                        getLsaExpirationTimePoint(),
                        m_nlsr.getConfParameter().getCorR(),
                        m_nlsr.getConfParameter().getCorTheta());
-  m_nlsr.getSequencingManager().increaseCorLsaSeq();
+
+  // Sync coordinate LSAs if using HR or HR dry run.
+  if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+    m_nlsr.getSequencingManager().increaseCorLsaSeq();
+    m_sync.publishRoutingUpdate();
+  }
+
   installCoordinateLsa(corLsa);
+
   return true;
 }
 
@@ -411,11 +418,12 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
     clsa.writeLog();
     addCoordinateLsa(clsa);
 
+    // Register the LSA's origin router prefix
     if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().addEntry(clsa.getOrigRouter(),
                                            clsa.getOrigRouter());
     }
-    if (m_nlsr.getConfParameter().getHyperbolicState() >= HYPERBOLIC_STATE_ON) {
+    if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
       m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
     }
     if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
@@ -479,12 +487,12 @@ Lsdb::removeCoordinateLsa(const ndn::Name& key)
                                                                  _1, key));
   if (it != m_corLsdb.end()) {
     _LOG_DEBUG("Deleting Coordinate Lsa");
-    (*it).writeLog();
-    if ((*it).getOrigRouter() !=
-        m_nlsr.getConfParameter().getRouterPrefix()) {
-      m_nlsr.getNamePrefixTable().removeEntry((*it).getOrigRouter(),
-                                              (*it).getOrigRouter());
+    it->writeLog();
+
+    if (it->getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+      m_nlsr.getNamePrefixTable().removeEntry(it->getOrigRouter(), it->getOrigRouter());
     }
+
     m_corLsdb.erase(it);
     return true;
   }
@@ -532,6 +540,11 @@ void
 Lsdb::scheduleAdjLsaBuild()
 {
   m_nlsr.incrementAdjBuildCount();
+
+  if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+    // Don't build adjacency LSAs in hyperbolic routing
+    return;
+  }
 
   if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
     _LOG_DEBUG("Scheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
@@ -681,9 +694,11 @@ Lsdb::buildAndInstallOwnAdjLsa()
                 m_nlsr.getAdjacencyList().getNumOfActiveNeighbor(),
                 m_nlsr.getAdjacencyList());
 
-  m_nlsr.getSequencingManager().increaseAdjLsaSeq();
-
-  m_sync.publishRoutingUpdate();
+  //Sync adjacency LSAs if link-state or dry-run HR is enabled.
+  if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_ON) {
+    m_nlsr.getSequencingManager().increaseAdjLsaSeq();
+    m_sync.publishRoutingUpdate();
+  }
 
   return installAdjLsa(adjLsa);
 }
@@ -815,7 +830,10 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
         _LOG_DEBUG("Deleting Coordinate Lsa");
         chkCorLsa->writeLog();
         chkCorLsa->setLsSeqNo(chkCorLsa->getLsSeqNo() + 1);
-        m_nlsr.getSequencingManager().setCorLsaSeq(chkCorLsa->getLsSeqNo());
+        if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+          m_nlsr.getSequencingManager().setCorLsaSeq(chkCorLsa->getLsSeqNo());
+        }
+
         chkCorLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
         _LOG_DEBUG("Adding Coordinate Lsa");
         chkCorLsa->writeLog();
@@ -824,13 +842,16 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                         chkCorLsa->getKey(),
                                         chkCorLsa->getLsSeqNo(),
                                         m_lsaRefreshTime));
-        m_sync.publishRoutingUpdate();
+        // Only sync coordinate LSAs if link-state routing is disabled
+        if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+          m_sync.publishRoutingUpdate();
+        }
       }
       else {
         _LOG_DEBUG("Other's Cor LSA, so removing form LSDB");
         removeCoordinateLsa(lsaKey);
       }
-      if (m_nlsr.getConfParameter().getHyperbolicState() >= HYPERBOLIC_STATE_ON) {
+      if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
         m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
       }
     }
@@ -934,6 +955,10 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
                                      const ndn::Name& lsaKey,
                                      uint64_t seqNo)
 {
+  if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+    _LOG_ERROR("Received interest for an adjacency LSA when hyperbolic routing is enabled.");
+  }
+
   AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
   if (adjLsa != 0) {
     if (adjLsa->getLsSeqNo() == seqNo) {
@@ -948,6 +973,10 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
                                       const ndn::Name& lsaKey,
                                       uint64_t seqNo)
 {
+  if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+    _LOG_ERROR("Received Interest for a coordinate LSA when link-state routing is enabled.");
+  }
+
   CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
   if (corLsa != 0) {
     if (corLsa->getLsSeqNo() == seqNo) {

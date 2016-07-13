@@ -62,15 +62,34 @@ SequencingManager::writeSeqNoToFile() const
 }
 
 void
-SequencingManager::initiateSeqNoFromFile()
+SequencingManager::initiateSeqNoFromFile(int hypState)
 {
   _LOG_DEBUG("Seq File Name: " << m_seqFileNameWithPath);
   std::ifstream inputFile(m_seqFileNameWithPath.c_str(), ios::binary);
   if (inputFile.good()) {
     inputFile >> m_combinedSeqNo;
     splitSequenceNo(m_combinedSeqNo);
-    m_adjLsaSeq += 10;
-    m_corLsaSeq += 10;
+
+    // Increment the adjacency LSA seq. no. if link-state or dry HR is enabled
+    if (hypState != HYPERBOLIC_STATE_ON) {
+      if (m_corLsaSeq != 0) {
+        _LOG_WARN("This router was previously configured for hyperbolic"
+                   << " routing without clearing the seq. no. file.");
+        m_corLsaSeq = 0;
+      }
+      m_adjLsaSeq += 10;
+    }
+
+    // Similarly, increment the coordinate LSA seq. no only if link-state is disabled.
+    if (hypState != HYPERBOLIC_STATE_OFF) {
+      if (m_adjLsaSeq != 0 &&
+          hypState == HYPERBOLIC_STATE_ON) {
+        _LOG_WARN("This router was previously configured for link-state"
+                  << " routing without clearing the seq. no. file.");
+        m_adjLsaSeq = 0;
+      }
+      m_corLsaSeq += 10;
+    }
     m_nameLsaSeq += 10;
     combineSequenceNo();
     inputFile.close();
@@ -111,5 +130,3 @@ SequencingManager::writeLog() const
 }
 
 }//namespace nlsr
-
-

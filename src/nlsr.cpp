@@ -183,7 +183,7 @@ Nlsr::initialize()
   m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix().toUri());
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());
   m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
-  m_sequencingManager.initiateSeqNoFromFile();
+  m_sequencingManager.initiateSeqNoFromFile(m_confParam.getHyperbolicState());
 
   m_syncLogicHandler.createSyncSocket(m_confParam.getChronosyncPrefix());
 
@@ -204,7 +204,11 @@ Nlsr::initialize()
   m_routingTable.setRoutingCalcInterval(m_confParam.getRoutingCalcInterval());
 
   m_nlsrLsdb.buildAndInstallOwnNameLsa();
-  m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
+
+  // Install coordinate LSAs if using HR or dry-run HR.
+  if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+    m_nlsrLsdb.buildAndInstallOwnCoordinateLsa();
+  }
 
   registerKeyPrefix();
   registerLocalhostPrefix();

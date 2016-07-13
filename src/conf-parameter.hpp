@@ -86,7 +86,7 @@ enum {
   MAX_FACES_PER_PREFIX_MAX = 60
 };
 
-enum {
+enum HyperbolicState {
   HYPERBOLIC_STATE_OFF = 0,
   HYPERBOLIC_STATE_ON = 1,
   HYPERBOLIC_STATE_DRY_RUN = 2,

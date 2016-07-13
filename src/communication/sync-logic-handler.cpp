@@ -201,8 +201,7 @@ SyncLogicHandler::processUpdateFromSync(const SyncUpdate& update)
 
     update.getSequencingManager().writeLog();
 
-    try {
-      if (isLsaNew(originRouter, NameLsa::TYPE_STRING, update.getNameLsaSeqNo())) {
+    if (isLsaNew(originRouter, NameLsa::TYPE_STRING, update.getNameLsaSeqNo())) {
         _LOG_DEBUG("Received sync update with higher Name LSA sequence number than entry in LSDB");
 
         expressInterestForLsa(update, NameLsa::TYPE_STRING, update.getNameLsaSeqNo());
@@ -210,20 +209,29 @@ SyncLogicHandler::processUpdateFromSync(const SyncUpdate& update)
 
       if (isLsaNew(originRouter, AdjLsa::TYPE_STRING, update.getAdjLsaSeqNo())) {
         _LOG_DEBUG("Received sync update with higher Adj LSA sequence number than entry in LSDB");
-
-        expressInterestForLsa(update, AdjLsa::TYPE_STRING, update.getAdjLsaSeqNo());
+        if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+          if (update.getAdjLsaSeqNo() != 0) {
+            _LOG_ERROR("Tried to fetch an adjacency LSA when hyperbolic routing"
+                       << " is enabled.");
+          }
+        }
+        else {
+          expressInterestForLsa(update, AdjLsa::TYPE_STRING, update.getAdjLsaSeqNo());
+        }
       }
 
       if (isLsaNew(originRouter, CoordinateLsa::TYPE_STRING, update.getCorLsaSeqNo())) {
         _LOG_DEBUG("Received sync update with higher Cor LSA sequence number than entry in LSDB");
-
-        expressInterestForLsa(update, CoordinateLsa::TYPE_STRING, update.getCorLsaSeqNo());
+        if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+          if (update.getCorLsaSeqNo() != 0) {
+            _LOG_ERROR("Tried to fetch a coordinate LSA when link-state"
+                       << " is enabled.");
+          }
+        }
+        else {
+          expressInterestForLsa(update, CoordinateLsa::TYPE_STRING, update.getCorLsaSeqNo());
+        }
       }
-    }
-    catch (std::exception& e) {
-      std::cerr << e.what() << std::endl;
-      return;
-    }
   }
 }
 

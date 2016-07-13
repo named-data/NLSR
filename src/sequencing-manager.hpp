@@ -28,7 +28,10 @@
 
 #include <ndn-cxx/face.hpp>
 
+#include "conf-parameter.hpp"
+
 namespace nlsr {
+
 class SequencingManager
 {
 public:
@@ -124,7 +127,7 @@ public:
   writeSeqNoToFile() const;
 
   void
-  initiateSeqNoFromFile();
+  initiateSeqNoFromFile(int hypState);
 
   void
   setSeqFileName(std::string filePath);
