@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2015,  The University of Memphis,
+ * Copyright (c) 2014-2016,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(AdjacencyLsaPublisherBasic)
   publisher.publish(publishingPrefix);
   face->processEvents(ndn::time::milliseconds(1));
 
-  BOOST_REQUIRE_EQUAL(face->sentDatas.size(), 1);
-  ndn::Block parser = face->sentDatas[0].getContent();
+  BOOST_REQUIRE_EQUAL(face->sentData.size(), 1);
+  ndn::Block parser = face->sentData[0].getContent();
   parser.parse();
 
   // Check RouterB LSA
@@ -93,8 +93,8 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaBasic)
   publisher.publish(publishingPrefix);
   face->processEvents(ndn::time::milliseconds(1));
 
-  BOOST_REQUIRE_EQUAL(face->sentDatas.size(), 1);
-  ndn::Block parser = face->sentDatas[0].getContent();
+  BOOST_REQUIRE_EQUAL(face->sentData.size(), 1);
+  ndn::Block parser = face->sentData[0].getContent();
   parser.parse();
 
   // Check RouterC LSA
@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
   publisher.publish(publishingPrefix);
   face->processEvents(ndn::time::milliseconds(1));
 
-  BOOST_REQUIRE_EQUAL(face->sentDatas.size(), 1);
-  ndn::Block parser = face->sentDatas[0].getContent();
+  BOOST_REQUIRE_EQUAL(face->sentData.size(), 1);
+  ndn::Block parser = face->sentData[0].getContent();
   parser.parse();
 
   // Check RouterB LSA

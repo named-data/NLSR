@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2015,  Regents of the University of California,
+ * Copyright (c) 2014-2016,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -158,8 +158,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(Generate, T, DatasetSizes, SegmentPublisherFixt
       nSegments == 0)
     ++nSegments;
 
-  BOOST_CHECK_EQUAL(this->m_face->sentDatas.size(), nSegments);
-  for (const ndn::Data& data : this->m_face->sentDatas) {
+  BOOST_CHECK_EQUAL(this->m_face->sentData.size(), nSegments);
+  for (const ndn::Data& data : this->m_face->sentData) {
     this->validate(data);
   }
 }

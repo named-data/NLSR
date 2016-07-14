@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2015,  The University of Memphis,
+ * Copyright (c) 2014-2016,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -160,23 +160,23 @@ public:
   {
     const ndn::Name& lsaPrefix = nlsr.getConfParameter().getLsaPrefix();
 
-    const auto& it = std::find_if(face->sentDatas.begin(), face->sentDatas.end(),
+    const auto& it = std::find_if(face->sentData.begin(), face->sentData.end(),
       [lsaPrefix] (const ndn::Data& data) {
         return lsaPrefix.isPrefixOf(data.getName());
       });
 
-    return (it != face->sentDatas.end());
+    return (it != face->sentData.end());
   }
 
   void
   checkResponseCode(const Name& commandPrefix, uint64_t expectedCode)
   {
-    std::vector<Data>::iterator it = std::find_if(face->sentDatas.begin(),
-                                                  face->sentDatas.end(),
+    std::vector<Data>::iterator it = std::find_if(face->sentData.begin(),
+                                                  face->sentData.end(),
                                                   [commandPrefix] (const Data& data) {
                                                     return commandPrefix.isPrefixOf(data.getName());
                                                   });
-    BOOST_REQUIRE(it != face->sentDatas.end());
+    BOOST_REQUIRE(it != face->sentData.end());
 
     ndn::nfd::ControlResponse response(it->getContent().blockFromValue());
     BOOST_CHECK_EQUAL(response.getCode(), expectedCode);
@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(namePrefixList.getNameList().front(), parameters.getName());
 
   BOOST_CHECK(wasRoutingUpdatePublished());
-  face->sentDatas.clear();
+  face->sentData.clear();
 
   // Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
@@ -266,12 +266,12 @@ BOOST_AUTO_TEST_CASE(DisabledAndEnabled)
   face->receive(*advertiseInterest);
   face->processEvents(ndn::time::milliseconds(1));
 
-  BOOST_REQUIRE(!face->sentDatas.empty());
+  BOOST_REQUIRE(!face->sentData.empty());
 
-  const ndn::MetaInfo& metaInfo = face->sentDatas.front().getMetaInfo();
+  const ndn::MetaInfo& metaInfo = face->sentData.front().getMetaInfo();
   BOOST_CHECK_EQUAL(metaInfo.getType(), ndn::tlv::ContentType_Nack);
 
-  face->sentDatas.clear();
+  face->sentData.clear();
 
   // Enable PrefixUpdateProcessor so commands will be processed
   updateProcessor.enable();
