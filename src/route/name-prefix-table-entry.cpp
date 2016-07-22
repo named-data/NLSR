@@ -33,72 +33,71 @@ void
 NamePrefixTableEntry::generateNhlfromRteList()
 {
   m_nexthopList.reset();
-  // For every routing table entry associated with this name prefix
-  for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
-       it != m_rteList.end(); ++it)
-  {
-    // Add every next hop from each routing table entry to this entry's NHL.
-    for (std::set<NextHop, NextHopComparator>::iterator nhit =
-           (*it).getNexthopList().getNextHops().begin();
-         nhit != (*it).getNexthopList().getNextHops().end(); ++nhit)
-    {
-      m_nexthopList.addNextHop((*nhit));
+  for (auto rtpeItr = m_rteList.begin(); rtpeItr != m_rteList.end(); ++rtpeItr) {
+    for (auto nhItr = (*rtpeItr)->getNexthopList().getNextHops().begin();
+         nhItr != (*rtpeItr)->getNexthopList().getNextHops().end();
+         ++nhItr) {
+      m_nexthopList.addNextHop((*nhItr));
     }
   }
 }
 
-
-
-static bool
-rteCompare(RoutingTableEntry& rte, ndn::Name& destRouter)
+uint64_t
+NamePrefixTableEntry::removeRoutingTableEntry(shared_ptr<RoutingTablePoolEntry>
+                                              rtpePtr)
 {
-  return rte.getDestination() == destRouter;
+  auto rtpeItr = std::find(m_rteList.begin(), m_rteList.end(), rtpePtr);
+
+  if (rtpeItr != m_rteList.end()) {
+    (*rtpeItr)->decrementUseCount();
+    m_rteList.erase(rtpeItr);
+  }
+  else {
+    _LOG_ERROR("Routing entry for: " << rtpePtr->getDestination()
+               << " not found in NPT entry: " << getNamePrefix());
+  }
+  return (*rtpeItr)->getUseCount();
 }
 
 void
-NamePrefixTableEntry::removeRoutingTableEntry(RoutingTableEntry& rte)
+NamePrefixTableEntry::addRoutingTableEntry(shared_ptr<RoutingTablePoolEntry>
+                                           rtpePtr)
 {
-  std::list<RoutingTableEntry>::iterator it = std::find_if(m_rteList.begin(),
-                                                           m_rteList.end(),
-                                                           bind(&rteCompare, _1, rte.getDestination()));
-  if (it != m_rteList.end())
-  {
-    m_rteList.erase(it);
-  }
-}
+  auto rtpeItr = std::find(m_rteList.begin(), m_rteList.end(), rtpePtr);
 
-void
-NamePrefixTableEntry::addRoutingTableEntry(RoutingTableEntry& rte)
-{
-  std::list<RoutingTableEntry>::iterator it = std::find_if(m_rteList.begin(),
-                                                           m_rteList.end(),
-                                                           bind(&rteCompare, _1, rte.getDestination()));
-  if (it == m_rteList.end())
-  {
-    m_rteList.push_back(rte);
+  // Ensure that this is a new entry
+  if (rtpeItr == m_rteList.end()) {
+    // Adding a new routing entry to the NPT entry
+    rtpePtr->incrementUseCount();
+    m_rteList.push_back(rtpePtr);
   }
-  else
-  {
-    (*it).getNexthopList().reset(); // reseting existing routing table's next hop
-    for (std::set<NextHop, NextHopComparator>::iterator nhit =
-           rte.getNexthopList().getNextHops().begin();
-         nhit != rte.getNexthopList().getNextHops().end(); ++nhit) {
-      (*it).getNexthopList().addNextHop((*nhit));
-    }
-  }
+  // Note: we don't need to update in the else case because these are
+  // pointers, and they are centrally-located in the NPT and will all
+  // be updated there.
 }
 
 void
 NamePrefixTableEntry::writeLog()
 {
   _LOG_DEBUG("Name: " << m_namePrefix);
-  for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
-       it != m_rteList.end(); ++it) {
-    _LOG_DEBUG("Destination: " << (*it).getDestination());
+  for (auto it = m_rteList.begin(); it != m_rteList.end(); ++it) {
+    _LOG_DEBUG("Destination: " << (*it)->getDestination());
     _LOG_DEBUG("Nexthops: ");
-    (*it).getNexthopList().writeLog();
+    (*it)->getNexthopList().writeLog();
   }
   m_nexthopList.writeLog();
+}
+
+bool
+operator==(const NamePrefixTableEntry& lhs, const NamePrefixTableEntry& rhs)
+{
+  return (lhs.getNamePrefix() == rhs.getNamePrefix());
+}
+
+bool
+operator==(const NamePrefixTableEntry& lhs, const ndn::Name& rhs)
+{
+  return (lhs.getNamePrefix() == rhs);
 }
 
 std::ostream&
@@ -106,8 +105,8 @@ operator<<(std::ostream& os, const NamePrefixTableEntry& entry)
 {
   os << "Name: " << entry.getNamePrefix() << "\n";
 
-  for (const RoutingTableEntry& rte : entry.getRteList()) {
-    os << "Destination: " << rte.getDestination() << "\n";
+  for (const shared_ptr<RoutingTablePoolEntry> rtpePtr : entry.getRteList()) {
+    os << "Destination: " << rtpePtr->getDestination() << "\n";
   }
 
   return os;

@@ -21,6 +21,7 @@
 
 #include "nlsr.hpp"
 #include "test-common.hpp"
+#include "route/name-prefix-table.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
@@ -124,12 +125,83 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   it = npt.begin();
   BOOST_REQUIRE_EQUAL(it->getNamePrefix(), buptRouterName);
   BOOST_REQUIRE_EQUAL(it->getRteList().size(), 1);
-  BOOST_CHECK_EQUAL(it->getRteList().begin()->getDestination(), buptRouterName);
+  BOOST_CHECK_EQUAL((*it->getRteList().begin())->getDestination(), buptRouterName);
 
   ++it;
   BOOST_REQUIRE_EQUAL(it->getNamePrefix(), buptAdvertisedName);
   BOOST_REQUIRE_EQUAL(it->getRteList().size(), 1);
-  BOOST_CHECK_EQUAL(it->getRteList().begin()->getDestination(), buptRouterName);
+  BOOST_CHECK_EQUAL((*it->getRteList().begin())->getDestination(), buptRouterName);
+}
+
+BOOST_FIXTURE_TEST_CASE(AddEntryToPool, NamePrefixTableFixture)
+{
+  NamePrefixTable& npt = nlsr.getNamePrefixTable();
+  RoutingTablePoolEntry rtpe1("router1");
+
+  npt.addRtpeToPool(rtpe1);
+
+  BOOST_CHECK_EQUAL(npt.m_rtpool.size(), 1);
+  BOOST_CHECK_EQUAL(*(npt.m_rtpool.find("router1")->second), rtpe1);
+}
+
+BOOST_FIXTURE_TEST_CASE(RemoveEntryFromPool, NamePrefixTableFixture)
+{
+  NamePrefixTable& npt = nlsr.getNamePrefixTable();
+  RoutingTablePoolEntry rtpe1("router1", 0);
+  shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
+
+  npt.addRtpeToPool(rtpe1);
+
+  npt.deleteRtpeFromPool(rtpePtr);
+
+  BOOST_CHECK_EQUAL(npt.m_rtpool.size(), 0);
+  BOOST_CHECK_EQUAL(npt.m_rtpool.count("router1"), 0);
+}
+
+BOOST_FIXTURE_TEST_CASE(AddRoutingEntryToNptEntry, NamePrefixTableFixture)
+{
+  NamePrefixTable& npt = nlsr.getNamePrefixTable();
+  RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr1", 0);
+  shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
+
+  npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
+
+  NamePrefixTable::NptEntryList::iterator nItr =
+    std::find(npt.m_table.begin(),
+              npt.m_table.end(),
+              npte1);
+
+  std::list<shared_ptr<RoutingTablePoolEntry>> rtpeList = nItr->getRteList();
+  std::list<shared_ptr<RoutingTablePoolEntry>>::iterator rItr =
+    std::find(rtpeList.begin(),
+              rtpeList.end(),
+              rtpePtr);
+  BOOST_CHECK_EQUAL(**rItr, *rtpePtr);
+}
+
+BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
+{
+  NamePrefixTable& npt = nlsr.getNamePrefixTable();
+  RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr1", 0);
+
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
+  npt.m_table.push_back(npte1);
+
+  npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
+  npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/altrtr");
+
+  npt.removeEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
+
+  NamePrefixTable::NptEntryList::iterator nItr =
+    std::find(npt.m_table.begin(),
+              npt.m_table.end(),
+              npte1);
+
+  std::list<shared_ptr<RoutingTablePoolEntry>> rtpeList = nItr->getRteList();
+
+  BOOST_CHECK_EQUAL(rtpeList.size(), 1);
+  BOOST_CHECK_EQUAL(npt.m_rtpool.size(), 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

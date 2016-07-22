@@ -16,30 +16,31 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- *
  **/
 
-#include "nexthop.hpp"
+#include "routing-table-pool-entry.hpp"
 
 namespace nlsr {
 
-bool
-operator==(const NextHop& lhs, const NextHop& rhs)
-{
-  return ((lhs.getRouteCostAsAdjustedInteger() == rhs.getRouteCostAsAdjustedInteger())
-          &&
-          (lhs.getConnectingFaceUri() == rhs.getConnectingFaceUri()));
-}
-
 std::ostream&
-operator<<(std::ostream& os, const NextHop& hop)
+operator<<(std::ostream& os, RoutingTablePoolEntry& rtpe)
 {
-  os << "Nexthop("
-     << "face-uri: " << hop.getConnectingFaceUri()
-     << ", cost: " << hop.getRouteCost() << ")";
+  os << "RoutingTablePoolEntry("
+     << "Destination router: " << rtpe.getDestination()
+     << "Next hop list: ";
+  for (auto && nh : rtpe.getNexthopList()) {
+    os << nh;
+  }
 
   return os;
+}
+
+bool
+operator==(const RoutingTablePoolEntry& lhs, const RoutingTablePoolEntry& rhs)
+{
+  return (lhs.getDestination() == rhs.getDestination()
+          &&
+          lhs.getNexthopList() == rhs.getNexthopList());
 }
 
 } // namespace nlsr

@@ -22,7 +22,9 @@
 #ifndef NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
 #define NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
 
-#include "routing-table-entry.hpp"
+#include "routing-table-pool-entry.hpp"
+
+#include "test-access-control.hpp"
 
 #include <list>
 #include <utility>
@@ -48,7 +50,7 @@ public:
     return m_namePrefix;
   }
 
-  const std::list<RoutingTableEntry>&
+  const std::list<std::shared_ptr<RoutingTablePoolEntry>>&
   getRteList() const
   {
     return m_rteList;
@@ -58,9 +60,8 @@ public:
   resetRteListNextHop()
   {
     if (m_rteList.size() > 0) {
-      for (std::list<RoutingTableEntry>::iterator it = m_rteList.begin();
-           it != m_rteList.end(); ++it) {
-        (*it).getNexthopList().reset();
+      for (auto it = m_rteList.begin(); it != m_rteList.end(); ++it) {
+        (*it)->getNexthopList().reset();
       }
     }
   }
@@ -81,27 +82,40 @@ public:
   void
   generateNhlfromRteList();
 
-  void
-  removeRoutingTableEntry(RoutingTableEntry& rte);
+  /*! \brief Removes a routing entry from this NPT entry.
+    \param rtpePtr The routing entry
+    \return The remaining number of other NPTs using the removed routing entry.
+  */
+  uint64_t
+  removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry> rtpePtr);
 
-  /*! \brief Adds a routing table entry to this object's list.
-    \param rte The routing table entry.
+  /*! \brief Adds a routing entry to this NPT entry.
+    \param rtpePtr The routing entry.
 
-    Adds a routing table entry to this NPT entry's list. (reminder:
-    each RTE has a next-hop list) They are used to calculate this
-    entry's next-hop list.
+    Adds a routing table pool entry to this NPT entry's list
+    (reminder: each RTPE has a next-hop list). They are used to
+    calculate this entry's overall next-hop list.
   */
   void
-  addRoutingTableEntry(RoutingTableEntry& rte);
+  addRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry> rtpePtr);
 
   void
   writeLog();
 
 private:
   ndn::Name m_namePrefix;
-  std::list<RoutingTableEntry> m_rteList;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  std::list<std::shared_ptr<RoutingTablePoolEntry>> m_rteList;
   NexthopList m_nexthopList;
+
 };
+
+bool
+operator==(const NamePrefixTableEntry& lhs, const NamePrefixTableEntry& rhs);
+
+bool
+operator==(const NamePrefixTableEntry& lhs, const ndn::Name& rhs);
 
 std::ostream&
 operator<<(std::ostream& os, const NamePrefixTableEntry& entry);

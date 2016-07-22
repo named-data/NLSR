@@ -17,68 +17,87 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
+ * \author Nicholas Gordon <nmgordon@memphis.edu>
  *
  **/
-#ifndef NLSR_ROUTING_TABLE_ENTRY_HPP
-#define NLSR_ROUTING_TABLE_ENTRY_HPP
+
+#ifndef NLSR_ROUTING_TABLE_POOL_ENTRY_HPP
+#define NLSR_ROUTING_TABLE_POOL_ENTRY_HPP
 
 #include <iostream>
 #include <ndn-cxx/name.hpp>
 #include "nexthop-list.hpp"
+#include "routing-table-entry.hpp"
 
 namespace nlsr {
-
-class RoutingTableEntry
+class RoutingTablePoolEntry : public RoutingTableEntry
 {
 public:
-  RoutingTableEntry()
+  RoutingTablePoolEntry()
   {
   }
 
-  ~RoutingTableEntry()
+  ~RoutingTablePoolEntry()
   {
   }
 
-  RoutingTableEntry(const ndn::Name& dest)
+  RoutingTablePoolEntry(const ndn::Name& dest)
   {
     m_destination = dest;
+    m_useCount = 1;
   }
 
-  const ndn::Name&
-  getDestination() const
+  RoutingTablePoolEntry(RoutingTableEntry& rte, uint64_t useCount)
   {
-    return m_destination;
+    m_destination = rte.getDestination();
+    m_nexthopList = rte.getNexthopList();
+    m_useCount = useCount;
   }
 
-  NexthopList&
-  getNexthopList()
+  RoutingTablePoolEntry(const ndn::Name& dest, uint64_t useCount)
   {
-    return m_nexthopList;
+    m_destination = dest;
+    m_useCount = useCount;
   }
 
-  const NexthopList&
-  getNexthopList() const
+  uint64_t
+  getUseCount()
   {
-    return m_nexthopList;
+    return m_useCount;
   }
 
-  inline bool
-  operator==(RoutingTableEntry& rhs)
+  uint64_t
+  incrementUseCount()
   {
-    return ((*this).getDestination() == rhs.getDestination()
-            &&
-           (*this).getNexthopList() == rhs.getNexthopList());
+    return ++m_useCount;
   }
 
-protected:
-  ndn::Name m_destination;
-  NexthopList m_nexthopList;
+  uint64_t
+  decrementUseCount()
+  {
+    if (m_useCount != 0) {
+      return --m_useCount;
+    }
+    return 0;
+  }
+
+  void
+  setNexthopList(NexthopList nhl)
+  {
+    m_nexthopList = nhl;
+  }
+
+private:
+  uint64_t m_useCount;
+
 };
 
+bool
+operator==(const RoutingTablePoolEntry& lhs, const RoutingTablePoolEntry& rhs);
+
 std::ostream&
-operator<<(std::ostream& os, const RoutingTableEntry& rte);
+operator<<(std::ostream& os, RoutingTablePoolEntry& rtpe);
 
 } // namespace nlsr
 
-#endif //NLSR_ROUTING_TABLE_ENTRY_HPP
+#endif // NLSR_ROUTING_TABLE_POOL_ENTRY_HPP

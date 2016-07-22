@@ -113,6 +113,9 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   static const uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 1000;
 };
 
+bool
+operator==(const NextHop& lhs, const NextHop& rhs);
+
 std::ostream&
 operator<<(std::ostream& os, const NextHop& hop);
 

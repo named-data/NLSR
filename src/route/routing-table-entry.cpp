@@ -16,28 +16,19 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- *
  **/
 
-#include "nexthop.hpp"
+#include "routing-table-entry.hpp"
+#include "nexthop-list.hpp"
 
 namespace nlsr {
 
-bool
-operator==(const NextHop& lhs, const NextHop& rhs)
-{
-  return ((lhs.getRouteCostAsAdjustedInteger() == rhs.getRouteCostAsAdjustedInteger())
-          &&
-          (lhs.getConnectingFaceUri() == rhs.getConnectingFaceUri()));
-}
-
 std::ostream&
-operator<<(std::ostream& os, const NextHop& hop)
+operator<<(std::ostream& os, const RoutingTableEntry& rte)
 {
-  os << "Nexthop("
-     << "face-uri: " << hop.getConnectingFaceUri()
-     << ", cost: " << hop.getRouteCost() << ")";
+  os << "RoutingTableEntry("
+     << "Destination: " << rte.getDestination()
+     << "Next hop list: " << rte.getNexthopList() << ")";
 
   return os;
 }

@@ -344,7 +344,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*!
      \brief Success callback when SegmentFetcher returns a valid LSA
 
-     \param The base Interest used to fetch the LSA in the format:
+     \param interestName The base Interest used to fetch the LSA in the format:
             /<network>/NLSR/LSA/<site>/%C1.Router/<router>/<lsa-type>/<seqNo>
    */
   void

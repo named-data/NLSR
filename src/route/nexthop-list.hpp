@@ -60,9 +60,9 @@ public:
   /*! \brief Adds a next hop to the list.
     \param nh The next hop.
 
-    Add next hop to the Next Hop list If next hop is new it is added
-    If next hop already exists in next hop list then updates the route
-    cost with new next hop's route cost
+    Adds a next hop to this object. If the next hop is new it is
+    added. If the next hop already exists in the list then that next
+    hop's route cost is updated.
   */
   void
   addNextHop(const NextHop& nh);
@@ -72,12 +72,17 @@ public:
 
     The next hop gets removed only if both next hop face and route cost are same.
   */
-
   void
   removeNextHop(const NextHop& nh);
 
   size_t
   getSize()
+  {
+    return m_nexthopList.size();
+  }
+
+  size_t
+  getSize() const
   {
     return m_nexthopList.size();
   }
@@ -127,6 +132,15 @@ public:
 private:
   std::set<NextHop, NextHopComparator> m_nexthopList;
 };
+
+bool
+operator==(NexthopList& lhs, NexthopList& rhs);
+
+bool
+operator==(const NexthopList& lhs, const NexthopList& rhs);
+
+std::ostream&
+operator<<(std::ostream& os, const NexthopList& nhl);
 
 } // namespace nlsr
 

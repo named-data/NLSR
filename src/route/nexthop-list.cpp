@@ -43,6 +43,39 @@ nexthopRemoveCompare(const NextHop& nh1, const NextHop& nh2)
           nh1.getRouteCostAsAdjustedInteger() == nh2.getRouteCostAsAdjustedInteger()) ;
 }
 
+bool
+operator==(const NexthopList& lhs, const NexthopList& rhs)
+{
+  if (lhs.getSize() != rhs.getSize()) {
+    return false;
+  }
+
+  NexthopList slhs = lhs;
+  NexthopList srhs = rhs;
+
+  for (struct {std::set<NextHop>::iterator lItr;
+    std::set<NextHop>::iterator rItr;} pair = {slhs.begin(), srhs.begin()};
+       (pair.lItr != slhs.end() || pair.rItr != srhs.end());
+       pair.rItr++, pair.lItr++) {
+    if (!((*pair.lItr) == (*pair.rItr))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const NexthopList& nhl)
+{
+  NexthopList& ucnhl = const_cast<NexthopList&>(nhl);
+  os << "NexthopList(\nNext hops: ";
+  for (auto&& nh : ucnhl.getNextHops()) {
+    os << nh;
+  }
+  os << ")";
+  return os;
+}
+
 void
 NexthopList::addNextHop(const NextHop& nh)
 {

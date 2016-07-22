@@ -332,8 +332,9 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
 
   ndn::nfd::ControlParameters parameters;
   ndn::Name::Component verb;
-  BOOST_REQUIRE_NO_THROW(extractRibCommandParameters(interest, verb, parameters));
-
+  BOOST_REQUIRE_NO_THROW(extractRibCommandParameters(interest,
+                                                     verb,
+                                                     parameters));
   BOOST_CHECK_EQUAL(verb, ndn::Name::Component("register"));
   BOOST_CHECK_EQUAL(parameters.getName(), nameToAdvertise);
 }

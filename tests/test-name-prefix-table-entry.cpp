@@ -36,6 +36,60 @@ BOOST_AUTO_TEST_CASE(NpteConstructorAndNamePrefix)
   BOOST_CHECK_EQUAL(npte1.getNamePrefix(), "/ndn/memphis.edu/cs");
 }
 
+BOOST_AUTO_TEST_CASE(AddRoutingTableEntry)
+{
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
+  RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr2", 0);
+  std::shared_ptr<RoutingTablePoolEntry> rtpePtr
+    = std::make_shared<RoutingTablePoolEntry>(rtpe1);
+
+  BOOST_CHECK_EQUAL(npte1.m_rteList.size(), 0);
+  npte1.addRoutingTableEntry(rtpePtr);
+  BOOST_CHECK_EQUAL(npte1.m_rteList.size(), 1);
+
+  std::list<std::shared_ptr<RoutingTablePoolEntry>>::iterator itr =
+    std::find(npte1.m_rteList.begin(),
+              npte1.m_rteList.end(),
+              rtpePtr);
+
+  BOOST_CHECK_EQUAL(rtpePtr, *itr);
+}
+
+BOOST_AUTO_TEST_CASE(RemoveRoutingTableEntry)
+{
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
+  RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr2", 0);
+  std::shared_ptr<RoutingTablePoolEntry> rtpePtr
+    = std::make_shared<RoutingTablePoolEntry>(rtpe1);
+
+  npte1.addRoutingTableEntry(rtpePtr);
+  npte1.removeRoutingTableEntry(rtpePtr);
+
+  int count = 0;
+  for (auto&& rte : npte1.m_rteList) {
+    if (*rte == rtpe1) {
+      count++;
+    }
+  }
+
+  BOOST_CHECK_EQUAL(count, 0);
+}
+
+BOOST_AUTO_TEST_CASE(EqualsOperatorTwoObj)
+{
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
+  NamePrefixTableEntry npte2("/ndn/memphis/rtr1");
+
+  BOOST_CHECK_EQUAL(npte1, npte2);
+}
+
+BOOST_AUTO_TEST_CASE(EqualsOperatorOneObjOneName)
+{
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
+
+  BOOST_CHECK_EQUAL(npte1, "/ndn/memphis/rtr1");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test
