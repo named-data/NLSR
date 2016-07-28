@@ -1,15 +1,24 @@
-sudo: true
-language: cpp
-os:
-  - linux
-compiler:
-  - gcc
+sudo: required
+language: generic
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      env:
+        - CXX=g++
+        - NODE_LABELS="Linux Ubuntu Ubuntu-14.04"
+    - os: linux
+      dist: trusty
+      env:
+        - CXX=clang++
+        - NODE_LABELS="Linux Ubuntu Ubuntu-14.04"
+    - os: osx
+      env:
+        - CXX=clang++
+        - NODE_LABELS="OSX OSX-10.9"
 notifications:
   email:
     on_success: always
     on_failure: always
-env:
-  global:
-    - NODE_LABELS="Linux Ubuntu Ubuntu-12.04 Ubuntu-12.04-64bit Boost1.48"
 script:
   - ./.jenkins
