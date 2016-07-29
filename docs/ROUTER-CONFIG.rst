@@ -87,6 +87,7 @@ configuration commands follows:
         log-level  INFO       ; default value INFO, valid value DEBUG, INFO
         log-dir /var/log/nlsr/
         seq-dir /var/lib/nlsr/
+        ; log4cxx-conf /path/to/log4cxx-conf
     }
 
     ; the neighbors section contains the configuration for router's neighbors and hello's behavior
@@ -104,6 +105,17 @@ configuration commands follows:
 
        hello-interval  60                  ; interest sending interval in seconds. Default value 60
                                            ; valid values 30-90
+
+       ; adj-lsa-build-interval is the time to wait in seconds after an Adjacency LSA build is scheduled
+       ; before actually building the Adjacency LSA
+
+       adj-lsa-build-interval 5   ; default value 5. Valid values 0-5. It is recommended that
+                                  ; adj-lsa-build-interval have a lower value than routing-calc-interval
+
+       ; first-hello-interval is the time to wait in seconds before sending the first Hello Interest
+
+       first-hello-interval  10   ; Default value 10. Valid values 0-10
+
        ; neighbor command is used to configure router's neighbor. Each neighbor will need
        ; one block of neighbor command
 
