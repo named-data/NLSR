@@ -8,6 +8,8 @@ Release date:  August 1, 2016
 
 **Code changes**:
 
+- Updated validation checker for LSA rule in the configuration file (:issue:`2965`)
+
 - Do not advertise Adjacency LSAs when hyperbolic routing is enabled (:issue:`2402`)
 
 - Do not distribute coordinate LSAs when using link-state routing. (:issue:`3661`)
