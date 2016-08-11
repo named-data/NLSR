@@ -28,7 +28,8 @@
 
 namespace nlsr {
 
-class FaceMapEntry {
+class FaceMapEntry
+{
 
 public:
   FaceMapEntry(const std::string& faceUri, uint32_t faceId)
@@ -72,7 +73,8 @@ private:
   uint32_t m_faceId;
 };
 
-class FaceMap {
+class FaceMap
+{
 
 public:
   FaceMap()
