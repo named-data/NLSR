@@ -104,6 +104,6 @@ private:
 
 };
 
-} //namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_SYNC_LOGIC_HANDLER_HPP

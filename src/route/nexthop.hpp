@@ -119,6 +119,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 std::ostream&
 operator<<(std::ostream& os, const NextHop& hop);
 
-}//namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_NEXTHOP_HPP

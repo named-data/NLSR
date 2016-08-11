@@ -273,5 +273,5 @@ RoutingTable::clearDryRoutingTable()
   }
 }
 
-}//namespace nlsr
+} // namespace nlsr
 

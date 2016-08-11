@@ -288,6 +288,6 @@ private:
   ndn::time::seconds m_adjLsaBuildInterval;
 };
 
-}//namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_LSDB_HPP

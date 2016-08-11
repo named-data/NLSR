@@ -129,4 +129,4 @@ SequencingManager::writeLog() const
   _LOG_DEBUG("Combined LSDB Seq no: " << m_combinedSeqNo);
 }
 
-}//namespace nlsr
+} // namespace nlsr

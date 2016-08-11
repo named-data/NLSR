@@ -274,4 +274,4 @@ HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
   }
 }
 
-} //namespace nlsr
+} // namespace nlsr

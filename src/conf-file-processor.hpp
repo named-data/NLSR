@@ -76,5 +76,5 @@ private:
   Nlsr& m_nlsr;
 };
 
-} //namespace nlsr
+} // namespace nlsr
 #endif //CONF_PROCESSOR_HPP

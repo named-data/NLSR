@@ -40,4 +40,4 @@ FibEntry::writeLog()
   m_nexthopList.writeLog();
 }
 
-}//namespace nlsr
+} // namespace nlsr

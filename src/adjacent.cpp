@@ -88,4 +88,4 @@ Adjacent::writeLog()
   _LOG_DEBUG("Interest Timed out: " << m_interestTimedOutNo);
 }
 
-} //namespace nlsr
+} // namespace nlsr

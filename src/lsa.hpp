@@ -296,6 +296,6 @@ public:
 std::ostream&
 operator<<(std::ostream& os, const AdjLsa& adjLsa);
 
-}//namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_LSA_HPP

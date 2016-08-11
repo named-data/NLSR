@@ -137,4 +137,4 @@ Map::writeLog()
   }
 }
 
-} //namespace nlsr
+} // namespace nlsr

@@ -503,4 +503,4 @@ void HyperbolicRoutingCalculator::addNextHop(ndn::Name dest, std::string faceUri
   }
 }
 
-}//namespace nlsr
+} // namespace nlsr

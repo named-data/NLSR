@@ -72,6 +72,6 @@ private:
 
 };
 
-}//namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_NAME_PREFIX_LIST_HPP

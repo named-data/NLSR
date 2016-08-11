@@ -88,6 +88,6 @@ private:
   static const std::string NLSR_COMPONENT;
 };
 
-} //namespace nlsr
+} // namespace nlsr
 
 #endif // NLSR_HELLO_PROTOCOL_HPP

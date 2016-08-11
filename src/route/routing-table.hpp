@@ -110,6 +110,6 @@ private:
   ndn::time::seconds m_routingCalcInterval;
 };
 
-}//namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_ROUTING_TABLE_HPP

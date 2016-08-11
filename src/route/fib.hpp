@@ -201,5 +201,5 @@ private:
   static const uint64_t GRACE_PERIOD;
 };
 
-}//namespace nlsr
+} // namespace nlsr
 #endif //NLSR_FIB_HPP

@@ -525,4 +525,4 @@ Fib::writeLog()
   }
 }
 
-} //namespace nlsr
+} // namespace nlsr

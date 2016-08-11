@@ -44,5 +44,5 @@ BOOST_AUTO_TEST_CASE(FibEntryConstructorAndGetters)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} //namespace test
-} //namespace nlsr
+} // namespace test
+} // namespace nlsr

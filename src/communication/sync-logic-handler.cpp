@@ -302,4 +302,4 @@ SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqN
   m_syncSocket->publishData(updateName.toUri(), 0, data.c_str(), data.size(), 1000, seqNo);
 }
 
-}//namespace nlsr
+} // namespace nlsr

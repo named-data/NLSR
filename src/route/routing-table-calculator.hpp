@@ -186,6 +186,6 @@ private:
   static const int32_t ROUTER_NOT_FOUND;
 };
 
-}//namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_ROUTING_TABLE_CALCULATOR_HPP

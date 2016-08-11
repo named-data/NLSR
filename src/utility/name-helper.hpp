@@ -53,7 +53,7 @@ getNameComponentPosition(const ndn::Name& name, const std::string& searchString)
   return -1;
 }
 
-} //namespace util
+} // namespace util
 
 } // namespace nlsr
 

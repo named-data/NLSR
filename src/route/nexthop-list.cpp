@@ -116,4 +116,4 @@ NexthopList::writeLog()
   }
 }
 
-}//namespace nlsr
+} // namespace nlsr

@@ -391,6 +391,6 @@ private:
   uint32_t m_firstHelloInterval;
 };
 
-} //namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_HPP

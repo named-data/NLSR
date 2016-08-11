@@ -292,4 +292,4 @@ AdjacencyList::writeLog()
   }
 }
 
-} //namespace nlsr
+} // namespace nlsr

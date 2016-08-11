@@ -120,6 +120,6 @@ private:
   std::list<FaceMapEntry> m_table;
 };
 
-} //namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_FACE_MAP_HPP

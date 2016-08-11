@@ -95,4 +95,4 @@ NamePrefixList::writeLog()
   }
 }
 
-}//namespace nlsr
+} // namespace nlsr

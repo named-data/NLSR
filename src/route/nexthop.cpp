@@ -34,4 +34,4 @@ operator<<(std::ostream& os, const NextHop& hop)
   return os;
 }
 
-}//namespace nlsr
+} // namespace nlsr

@@ -113,6 +113,6 @@ private:
   NexthopList m_nexthopList;
 };
 
-} //namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_FIB_ENTRY_HPP

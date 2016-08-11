@@ -62,6 +62,6 @@ private:
   NexthopList m_nexthopList;
 };
 
-} //namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_ROUTING_TABLE_ENTRY_HPP

@@ -153,5 +153,5 @@ private:
   std::string m_seqFileNameWithPath;
 };
 
-}//namespace nlsr
+} // namespace nlsr
 #endif //NLSR_SEQUENCING_MANAGER_HPP

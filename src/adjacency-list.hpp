@@ -131,5 +131,5 @@ private:
   std::list<Adjacent> m_adjList;
 };
 
-} //namespace nlsr
+} // namespace nlsr
 #endif //NLSR_ADJACENCY_LIST_HPP

@@ -106,6 +106,6 @@ private:
   std::list<NextHop> m_nexthopList;
 };
 
-}//namespace nlsr
+} // namespace nlsr
 
 #endif //NLSR_NEXTHOP_LIST_HPP
