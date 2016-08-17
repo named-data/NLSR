@@ -31,8 +31,8 @@ namespace util {
 class FaceController : boost::noncopyable
 {
 public:
-  typedef ndn::function<void(const ndn::nfd::ControlParameters&)> CommandSuccessCallback;
-  typedef ndn::function<void(uint32_t,const std::string&)> CommandFailureCallback;
+  typedef ndn::nfd::Controller::CommandSucceedCallback CommandSuccessCallback;
+  typedef ndn::nfd::Controller::CommandFailCallback CommandFailureCallback;
 
   FaceController(boost::asio::io_service& io, ndn::nfd::Controller& controller)
     : m_ioService(io)

@@ -47,9 +47,9 @@ public:
   }
 
   void
-  onFailure(uint32_t code, const std::string& reason)
+  onFailure(const ndn::nfd::ControlResponse& response)
   {
-    BOOST_CHECK_EQUAL(code, 408);
+    BOOST_CHECK_EQUAL(response.getCode(), 408);
   }
 
 public:
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateCanonizeFailure)
 {
   faceController.createFace("invalid://256.0.0.1:6363",
                             nullptr,
-                            bind(&FaceControllerFixture::onFailure, this, _1, _2));
+                            bind(&FaceControllerFixture::onFailure, this, _1));
 
   face->processEvents(ndn::time::milliseconds(1));
 

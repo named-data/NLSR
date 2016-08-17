@@ -76,7 +76,8 @@ FaceController::onCanonizeFailure(const std::string& reason,
                                   const FaceUri& request)
 {
   _LOG_WARN("Could not convert " << request << " to canonical form: " << reason);
-  onFailure(CANONIZE_ERROR_CODE, "Could not canonize face-uri: " + request.toString());
+  onFailure(ndn::nfd::ControlResponse(CANONIZE_ERROR_CODE,
+                                      "Could not canonize face-uri: " + request.toString()));
 }
 
 } // namespace util

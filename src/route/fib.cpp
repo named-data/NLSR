@@ -385,7 +385,7 @@ Fib::registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
                                                              "Successful in name registration",
                                                              faceUri),
                                                    ndn::bind(&Fib::onRegistrationFailure,
-                                                             this, _1, _2,
+                                                             this, _1,
                                                              "Failed in name registration",
                                                              parameters,
                                                              faceUri, times));
@@ -426,7 +426,7 @@ Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
                                                      ndn::bind(&Fib::onUnregistration, this, _1,
                                                                "Successful in unregistering name"),
                                                      ndn::bind(&Fib::onUnregistrationFailure,
-                                                               this, _1, _2,
+                                                               this, _1,
                                                                "Failed in unregistering name"));
   }
 }
@@ -442,7 +442,7 @@ Fib::setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t co
   m_controller.start<ndn::nfd::StrategyChoiceSetCommand>(parameters,
                                                          bind(&Fib::onSetStrategySuccess, this, _1,
                                                               "Successfully set strategy choice"),
-                                                         bind(&Fib::onSetStrategyFailure, this, _1, _2,
+                                                         bind(&Fib::onSetStrategyFailure, this, _1,
                                                               parameters,
                                                               count,
                                                               "Failed to set strategy choice"));
@@ -467,13 +467,13 @@ Fib::onUnregistration(const ndn::nfd::ControlParameters& commandSuccessResult,
 }
 
 void
-Fib::onRegistrationFailure(uint32_t code, const std::string& error,
+Fib::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
                            const std::string& message,
                            const ndn::nfd::ControlParameters& parameters,
                            const std::string& faceUri,
                            uint8_t times)
 {
-  _LOG_DEBUG(message << ": " << error << " (code: " << code << ")");
+  _LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
   _LOG_DEBUG("Prefix: " << parameters.getName() << " failed for: " << times);
   if (times < 3) {
     _LOG_DEBUG("Trying to register again...");
@@ -488,10 +488,10 @@ Fib::onRegistrationFailure(uint32_t code, const std::string& error,
 }
 
 void
-Fib::onUnregistrationFailure(uint32_t code, const std::string& error,
-                            const std::string& message)
+Fib::onUnregistrationFailure(const ndn::nfd::ControlResponse& response,
+                             const std::string& message)
 {
-  _LOG_DEBUG(message << ": " << error << " (code: " << code << ")");
+  _LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
 }
 
 void
@@ -503,10 +503,10 @@ Fib::onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResul
 }
 
 void
-Fib::onSetStrategyFailure(uint32_t code, const std::string& error,
-                         const ndn::nfd::ControlParameters& parameters,
-                         uint32_t count,
-                         const std::string& message)
+Fib::onSetStrategyFailure(const ndn::nfd::ControlResponse& response,
+                          const ndn::nfd::ControlParameters& parameters,
+                          uint32_t count,
+                          const std::string& message)
 {
   _LOG_DEBUG(message << ": " << parameters.getStrategy() << " "
             << "for name: " << parameters.getName());

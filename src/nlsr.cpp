@@ -324,9 +324,9 @@ Nlsr::onDestroyFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResu
 }
 
 void
-Nlsr::onDestroyFaceFailure(int32_t code, const std::string& error)
+Nlsr::onDestroyFaceFailure(const ndn::nfd::ControlResponse& response)
 {
-  std::cerr << error << " (code: " << code << ")";
+  std::cerr << response.getText() << " (code: " << response.getCode() << ")";
   throw Error("Error: Face destruction failed");
 }
 
@@ -338,7 +338,7 @@ Nlsr::destroyFaces()
        it != adjacents.end(); it++) {
     m_fib.destroyFace((*it).getConnectingFaceUri(),
                       std::bind(&Nlsr::onDestroyFaceSuccess, this, _1),
-                      std::bind(&Nlsr::onDestroyFaceFailure, this, _1, _2));
+                      std::bind(&Nlsr::onDestroyFaceFailure, this, _1));
   }
 }
 

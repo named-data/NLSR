@@ -35,8 +35,8 @@
 
 namespace nlsr {
 
-typedef ndn::function<void(const ndn::nfd::ControlParameters&)> CommandSucceedCallback;
-typedef ndn::function<void(uint32_t/*code*/,const std::string&/*reason*/)> CommandFailCallback;
+typedef ndn::nfd::Controller::CommandSucceedCallback CommandSucceedCallback;
+typedef ndn::nfd::Controller::CommandFailCallback CommandFailCallback;
 
 class AdjacencyList;
 class ConfParameter;
@@ -163,22 +163,22 @@ private:
                    const std::string& message);
 
   void
-  onRegistrationFailure(uint32_t code, const std::string& error,
+  onRegistrationFailure(const ndn::nfd::ControlResponse& response,
                         const std::string& message,
                         const ndn::nfd::ControlParameters& parameters,
                         const std::string& faceUri,
                         uint8_t times);
 
   void
-  onUnregistrationFailure(uint32_t code, const std::string& error,
-                        const std::string& message);
+  onUnregistrationFailure(const ndn::nfd::ControlResponse& response,
+                          const std::string& message);
 
   void
   onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                        const std::string& message);
 
   void
-  onSetStrategyFailure(uint32_t code, const std::string& error,
+  onSetStrategyFailure(const ndn::nfd::ControlResponse& response,
                        const ndn::nfd::ControlParameters& parameters,
                        uint32_t count,
                        const std::string& message);

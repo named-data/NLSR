@@ -26,6 +26,7 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/management/nfd-control-parameters.hpp>
+#include <ndn-cxx/management/nfd-control-response.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {
@@ -70,7 +71,7 @@ private:
                             const std::string& msg);
 
   void
-  onRegistrationFailure(uint32_t code, const std::string& error,
+  onRegistrationFailure(const ndn::nfd::ControlResponse& response,
                         const ndn::Name& name);
 
   void

@@ -340,7 +340,7 @@ private:
   onDestroyFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult);
 
   void
-  onDestroyFaceFailure(int32_t code, const std::string& error);
+  onDestroyFaceFailure(const ndn::nfd::ControlResponse& response);
 
   void
   onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification);

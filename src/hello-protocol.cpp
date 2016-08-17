@@ -20,6 +20,7 @@
  * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
  *
  **/
+
 #include "nlsr.hpp"
 #include "lsdb.hpp"
 #include "hello-protocol.hpp"
@@ -211,7 +212,7 @@ HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& fac
                                  ndn::bind(&HelloProtocol::onRegistrationSuccess,
                                            this, _1, adjName,timeout),
                                  ndn::bind(&HelloProtocol::onRegistrationFailure,
-                                           this, _1, _2, adjName));
+                                           this, _1, adjName));
 }
 
 void
@@ -247,10 +248,10 @@ HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandS
 }
 
 void
-HelloProtocol::onRegistrationFailure(uint32_t code, const std::string& error,
+HelloProtocol::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
                                      const ndn::Name& name)
 {
-  _LOG_DEBUG(error << " (code: " << code << ")");
+  _LOG_DEBUG(response.getText() << " (code: " << response.getCode() << ")");
   /*
   * If NLSR can not create face for given faceUri then it will treat this
   * failure as one INFO interest timed out. So that NLSR can move on with
