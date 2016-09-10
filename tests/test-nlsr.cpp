@@ -24,7 +24,7 @@
 
 #include "nlsr.hpp"
 
-#include <ndn-cxx/management/nfd-face-event-notification.hpp>
+#include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
 namespace nlsr {

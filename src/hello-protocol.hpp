@@ -25,8 +25,8 @@
 #include "test-access-control.hpp"
 
 #include <ndn-cxx/face.hpp>
-#include <ndn-cxx/management/nfd-control-parameters.hpp>
-#include <ndn-cxx/management/nfd-control-response.hpp>
+#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
+#include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {

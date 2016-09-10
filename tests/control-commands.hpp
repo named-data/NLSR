@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
  * Copyright (c) 2014-2016,  The University of Memphis,
- *                           Regents of the University of California
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,15 +17,13 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- *
  **/
 
 #ifndef NLSR_TEST_CONTROL_COMMANDS_HPP
 #define NLSR_TEST_CONTROL_COMMANDS_HPP
 
 #include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/management/nfd-control-parameters.hpp>
+#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 
 namespace nlsr {
 namespace test {

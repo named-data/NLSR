@@ -25,7 +25,7 @@
 #include "publisher-fixture.hpp"
 #include "../boost-test.hpp"
 
-#include <ndn-cxx/management/nfd-control-response.hpp>
+#include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
 namespace nlsr {
 namespace test {

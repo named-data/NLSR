@@ -22,7 +22,7 @@
 #ifndef UPDATE_PREFIX_UPDATE_COMMANDS_HPP
 #define UPDATE_PREFIX_UPDATE_COMMANDS_HPP
 
-#include <ndn-cxx/management/nfd-control-command.hpp>
+#include <ndn-cxx/mgmt/nfd/control-command.hpp>
 
 namespace nlsr {
 namespace update {

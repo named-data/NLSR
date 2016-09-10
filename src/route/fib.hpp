@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
  * Copyright (c) 2014-2016,  The University of Memphis,
- *                           Regents of the University of California
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -18,7 +19,6 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 #ifndef NLSR_FIB_HPP
 #define NLSR_FIB_HPP
@@ -26,7 +26,7 @@
 #include <list>
 #include <boost/cstdint.hpp>
 
-#include <ndn-cxx/management/nfd-controller.hpp>
+#include <ndn-cxx/mgmt/nfd/controller.hpp>
 #include <ndn-cxx/util/time.hpp>
 #include "face-map.hpp"
 #include "fib-entry.hpp"

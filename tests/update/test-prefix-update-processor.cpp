@@ -26,8 +26,8 @@
 #include "nlsr.hpp"
 
 #include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/management/nfd-control-parameters.hpp>
-#include <ndn-cxx/management/nfd-control-response.hpp>
+#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
+#include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 

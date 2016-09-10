@@ -25,7 +25,7 @@
 #include "utility/face-controller.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/management/nfd-controller.hpp>
+#include <ndn-cxx/mgmt/nfd/controller.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
 namespace nlsr {

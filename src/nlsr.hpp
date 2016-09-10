@@ -29,8 +29,8 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/certificate-cache-ttl.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
-#include <ndn-cxx/management/nfd-face-event-notification.hpp>
-#include <ndn-cxx/management/nfd-face-monitor.hpp>
+#include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
+#include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
 
 #include "adjacency-list.hpp"
 #include "common.hpp"
