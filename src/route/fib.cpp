@@ -17,7 +17,8 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
-#include <list>
+#include <map>
+
 #include <cmath>
 #include <ndn-cxx/common.hpp>
 
@@ -38,18 +39,11 @@ const uint64_t Fib::GRACE_PERIOD = 10;
 using namespace std;
 using namespace ndn;
 
-static bool
-fibEntryNameCompare(const FibEntry& fibEntry, const ndn::Name& name)
-{
-  return fibEntry.getName() == name;
-}
-
 void
 Fib::cancelScheduledExpiringEvent(EventId eid)
 {
   m_scheduler.cancelEvent(eid);
 }
-
 
 ndn::EventId
 Fib::scheduleEntryExpiration(const ndn::Name& name, int32_t feSeqNum,
@@ -65,20 +59,18 @@ void
 Fib::remove(const ndn::Name& name)
 {
   _LOG_DEBUG("Fib::remove called");
-  std::list<FibEntry>::iterator it = std::find_if(m_table.begin(),
-                                                  m_table.end(),
-                                                  bind(&fibEntryNameCompare, _1, name));
+  std::map<ndn::Name, FibEntry>::iterator it = m_table.find(name);
   if (it != m_table.end()) {
     for (std::set<NextHop, NextHopComparator>::iterator nhit =
-           (*it).getNexthopList().getNextHops().begin();
-         nhit != (*it).getNexthopList().getNextHops().end(); nhit++) {
+           (it->second).getNexthopList().getNextHops().begin();
+         nhit != (it->second).getNexthopList().getNextHops().end(); nhit++) {
       //remove entry from NDN-FIB
-      if (isPrefixUpdatable(it->getName())) {
-        unregisterPrefix(it->getName(), nhit->getConnectingFaceUri());
+      if (isPrefixUpdatable((it->second).getName())) {
+        unregisterPrefix((it->second).getName(), nhit->getConnectingFaceUri());
       }
     }
     _LOG_DEBUG("Cancelling Scheduled event. Name: " << name);
-    cancelScheduledExpiringEvent((*it).getExpiringEventId());
+    cancelScheduledExpiringEvent((it->second).getExpiringEventId());
     m_table.erase(it);
   }
 }
@@ -165,9 +157,7 @@ Fib::update(const ndn::Name& name, NexthopList& allHops)
     hopsToAdd.addNextHop(*it);
   }
 
-  std::list<FibEntry>::iterator entryIt = std::find_if(m_table.begin(),
-                                                       m_table.end(),
-                                                       bind(&fibEntryNameCompare, _1, name));
+  std::map<ndn::Name, FibEntry>::iterator entryIt = m_table.find(name);
 
   // New FIB entry
   if (entryIt == m_table.end()) {
@@ -190,13 +180,12 @@ Fib::update(const ndn::Name& name, NexthopList& allHops)
     // Schedule entry to be refreshed
     entry.setExpiringEventId(scheduleEntryExpiration(name , entry.getSeqNo(),
                                                      ndn::time::seconds(m_refreshTime)));
-    m_table.push_back(entry);
+    m_table.emplace(name, entry);
   }
   else {
     // Existing FIB entry
     _LOG_DEBUG("Existing FIB Entry");
-
-    FibEntry& entry = *entryIt;
+    FibEntry& entry = (entryIt->second);
 
     // Remove empty FIB entry
     if (hopsToAdd.getSize() == 0) {
@@ -227,15 +216,16 @@ void
 Fib::clean()
 {
   _LOG_DEBUG("Fib::clean called");
-  for (std::list<FibEntry>::iterator it = m_table.begin(); it != m_table.end();
+  for (std::map<ndn::Name, FibEntry>::iterator it = m_table.begin();
+       it != m_table.end();
        ++it) {
-    _LOG_DEBUG("Cancelling Scheduled event. Name: " << it->getName());
-    cancelScheduledExpiringEvent((*it).getExpiringEventId());
+    _LOG_DEBUG("Cancelling Scheduled event. Name: " << (it->second).getName());
+    cancelScheduledExpiringEvent((it->second).getExpiringEventId());
     for (std::set<NextHop, NextHopComparator>::iterator nhit =
-         (*it).getNexthopList().getNextHops().begin();
-         nhit != (*it).getNexthopList().getNextHops().end(); nhit++) {
+         (it->second).getNexthopList().getNextHops().begin();
+         nhit != (it->second).getNexthopList().getNextHops().end(); nhit++) {
       //Remove entry from NDN-FIB
-      unregisterPrefix(it->getName(), nhit->getConnectingFaceUri());
+      unregisterPrefix((it->second).getName(), nhit->getConnectingFaceUri());
     }
   }
   if (m_table.size() > 0) {
@@ -511,9 +501,10 @@ void
 Fib::writeLog()
 {
   _LOG_DEBUG("-------------------FIB-----------------------------");
-  for (std::list<FibEntry>::iterator it = m_table.begin(); it != m_table.end();
+  for (std::map<ndn::Name, FibEntry>::iterator it = m_table.begin();
+       it != m_table.end();
        ++it) {
-    (*it).writeLog();
+    (it->second).writeLog();
   }
 }
 

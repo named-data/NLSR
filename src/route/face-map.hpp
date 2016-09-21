@@ -17,14 +17,14 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 #ifndef NLSR_FACE_MAP_HPP
 #define NLSR_FACE_MAP_HPP
 
 #include <ndn-cxx/common.hpp>
 #include <algorithm>
+
+#include <map>
 
 namespace nlsr {
 
@@ -89,15 +89,12 @@ public:
   update(const std::string& faceUri, uint32_t faceId)
   {
     FaceMapEntry fme(faceUri, faceId);
-    std::list<FaceMapEntry>::iterator it = std::find_if(m_table.begin(),
-                                                        m_table.end(),
-                                                        bind(&FaceMapEntry::compare,
-                                                             &fme, _1));
+    std::map<std::string, FaceMapEntry>::iterator it = m_table.find(faceUri);
     if (it == m_table.end()) {
-      m_table.push_back(fme);
+      m_table.emplace(faceUri, fme);
     }
     else {
-      (*it).setFaceId(fme.getFaceId());
+      (it->second).setFaceId(fme.getFaceId());
     }
   }
 
@@ -105,12 +102,9 @@ public:
   getFaceId(const std::string& faceUri)
   {
     FaceMapEntry fme(faceUri, 0);
-    std::list<FaceMapEntry>::iterator it = std::find_if(m_table.begin(),
-                                                        m_table.end(),
-                                                        bind(&FaceMapEntry::compare,
-                                                             &fme, _1));
+    std::map<std::string, FaceMapEntry>::iterator it = m_table.find(faceUri);
     if (it != m_table.end()) {
-      return (*it).getFaceId();
+      return (it->second).getFaceId();
     }
     return 0;
   }
@@ -119,7 +113,7 @@ public:
   writeLog();
 
 private:
-  std::list<FaceMapEntry> m_table;
+  std::map<std::string, FaceMapEntry> m_table;
 };
 
 } // namespace nlsr

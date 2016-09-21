@@ -18,12 +18,12 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
  **/
 #ifndef NLSR_FIB_HPP
 #define NLSR_FIB_HPP
 
-#include <list>
+#include <map>
+
 #include <boost/cstdint.hpp>
 
 #include <ndn-cxx/mgmt/nfd/controller.hpp>
@@ -185,8 +185,7 @@ private:
 
 private:
   ndn::Scheduler& m_scheduler;
-
-  std::list<FibEntry> m_table;
+  std::map<ndn::Name, FibEntry> m_table;
   int32_t m_refreshTime;
   ndn::nfd::Controller m_controller;
   util::FaceController m_faceController;

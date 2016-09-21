@@ -21,7 +21,6 @@
  *
  **/
 #include <iostream>
-#include <list>
 #include <utility>
 
 #include "common.hpp"
@@ -36,11 +35,10 @@ void
 FaceMap::writeLog()
 {
   _LOG_DEBUG("------- Face Map-----------");
-  for(std::list<FaceMapEntry>::iterator it = m_table.begin();
-      it != m_table.end(); ++it) {
-    _LOG_DEBUG("Face Map Entry (FaceUri: " << (*it).getFaceUri() << " Face Id: "
-               << (*it).getFaceId() << ")");
+  for (const auto& it : m_table) {
+    _LOG_DEBUG("Face Map Entry (FaceUri: " << (it.second).getFaceUri()
+               << " Face Id: " << (it.second).getFaceId() << ")");
   }
 }
 
-} // namespace NLSR
+} // namespace nlsr
