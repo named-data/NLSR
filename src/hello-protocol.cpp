@@ -259,7 +259,6 @@ HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandS
     m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
                                  faceUri, linkCost, timeout,
                                  ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
-    m_nlsr.setStrategies();
 
     // Sends a Hello Interest to determine status before the next scheduled.
     /* interest name: /<neighbor>/NLSR/INFO/<router> */
