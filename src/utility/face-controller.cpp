@@ -51,20 +51,24 @@ FaceController::queryFace(const std::string& request,
                           const QueryFaceCallback& onSuccess,
                           const CommandFailureCallback& onFailure)
 {
-  if (FaceUri(request).getScheme().compare("dev") == 0)
-  {
+  if (FaceUri(request).getScheme().compare("dev") == 0) {
     ndn::nfd::FaceQueryFilter filter;
     filter.setLocalUri(request);
     m_controller.fetch<ndn::nfd::FaceQueryDataset>(
         filter,
         [=] (const ndn::nfd::FaceQueryDataset::ResultType result) {
-          onSuccess(result.at(0).getFaceId());
+          if (result.size() < 1) {
+            onFailure(ndn::nfd::ControlResponse(
+                  404, "Face LocalUri: " + request + " not found"));
+          } else {
+            onSuccess(result.at(0).getFaceId());
+          }
         },
-    //TODO: Call onFailure
-        nullptr);
+        [=] (uint32_t code, const std::string& reason) {
+          onFailure(ndn::nfd::ControlResponse(code, reason));
+        });
   }
-  else
-  {
+  else {
     createFace(request,
                [=] (const ndn::nfd::ControlParameters& result){
                  onSuccess(result.getFaceId());
