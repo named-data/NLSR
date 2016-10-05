@@ -34,6 +34,8 @@ public:
   typedef ndn::nfd::Controller::CommandSucceedCallback CommandSuccessCallback;
   typedef ndn::nfd::Controller::CommandFailCallback CommandFailureCallback;
 
+  typedef std::function<void(const uint64_t)> QueryFaceCallback;
+
   FaceController(boost::asio::io_service& io, ndn::nfd::Controller& controller)
     : m_ioService(io)
     , m_controller(controller)
@@ -44,6 +46,11 @@ public:
   createFace(const std::string& request,
              const CommandSuccessCallback& onSuccess,
              const CommandFailureCallback& onFailure);
+
+  void
+  queryFace(const std::string& request,
+            const QueryFaceCallback& onSuccess,
+            const CommandFailureCallback& onFailure);
 
 private:
   void

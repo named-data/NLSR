@@ -140,7 +140,7 @@ private:
                       uint8_t times);
 
   void
-  registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
+  registerPrefixInNfd(uint64_t faceId,
                       const ndn::nfd::ControlParameters& parameters,
                       uint8_t times,
                       const CommandSucceedCallback& onSuccess,

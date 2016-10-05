@@ -47,6 +47,34 @@ FaceController::createFace(const std::string& request,
 }
 
 void
+FaceController::queryFace(const std::string& request,
+                          const QueryFaceCallback& onSuccess,
+                          const CommandFailureCallback& onFailure)
+{
+  if (FaceUri(request).getScheme().compare("dev") == 0)
+  {
+    ndn::nfd::FaceQueryFilter filter;
+    filter.setLocalUri(request);
+    m_controller.fetch<ndn::nfd::FaceQueryDataset>(
+        filter,
+        [=] (const ndn::nfd::FaceQueryDataset::ResultType result) {
+          onSuccess(result.at(0).getFaceId());
+        },
+    //TODO: Call onFailure
+        nullptr);
+  }
+  else
+  {
+    createFace(request,
+               [=] (const ndn::nfd::ControlParameters& result){
+                 onSuccess(result.getFaceId());
+               },
+               onFailure);
+  }
+}
+
+
+void
 FaceController::createFaceInNfd(const FaceUri& uri,
                                 const CommandSuccessCallback& onSuccess,
                                 const CommandFailureCallback& onFailure)
