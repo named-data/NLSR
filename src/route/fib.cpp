@@ -209,37 +209,6 @@ Fib::isPrefixUpdatable(const ndn::Name& name) {
 }
 
 void
-Fib::createFace(const std::string& faceUri,
-                const CommandSucceedCallback& onSuccess,
-                const CommandFailCallback& onFailure)
-{
-  m_faceController.createFace(faceUri, onSuccess, onFailure);
-}
-
-void
-Fib::destroyFace(const std::string& faceUri,
-                 const CommandSucceedCallback& onSuccess,
-                 const CommandFailCallback& onFailure)
-{
-  createFace(faceUri,
-             std::bind(&Fib::destroyFaceInNfd, this, _1, onSuccess, onFailure),
-             onFailure);
-}
-
-void
-Fib::destroyFaceInNfd(const ndn::nfd::ControlParameters& faceDestroyResult,
-                        const CommandSucceedCallback& onSuccess,
-                        const CommandFailCallback& onFailure)
-{
-  ndn::nfd::ControlParameters faceParameters;
-  faceParameters
-    .setFaceId(faceDestroyResult.getFaceId());
-  m_controller.start<ndn::nfd::FaceDestroyCommand>(faceParameters,
-                                                   onSuccess,
-                                                   onFailure);
-}
-
-void
 Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
                     uint64_t faceCost, const ndn::time::milliseconds& timeout,
                     uint64_t flags, uint8_t times)
@@ -264,35 +233,6 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
   }
 }
 
-typedef void(Fib::*RegisterPrefixCallback)(const ndn::nfd::ControlParameters&,
-                                           const ndn::nfd::ControlParameters&, uint8_t,
-                                           const CommandSucceedCallback&,
-                                           const CommandFailCallback&);
-
-void
-Fib::registerPrefix(const ndn::Name& namePrefix,
-                    const std::string& faceUri,
-                    uint64_t faceCost,
-                    const ndn::time::milliseconds& timeout,
-                    uint64_t flags,
-                    uint8_t times,
-                    const CommandSucceedCallback& onSuccess,
-                    const CommandFailCallback& onFailure)
-
-{
-  ndn::nfd::ControlParameters parameters;
-  parameters
-    .setName(namePrefix)
-    .setFlags(flags)
-    .setCost(faceCost)
-    .setExpirationPeriod(timeout)
-    .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
-  createFace(faceUri,
-             std::bind(static_cast<RegisterPrefixCallback>(&Fib::registerPrefixInNfd),
-                       this, _1, parameters, times, onSuccess, onFailure),
-             onFailure);
-}
-
 void
 Fib::registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
                          const std::string& faceUri,
@@ -304,30 +244,10 @@ Fib::registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
                                                              "Successful in name registration",
                                                              faceUri),
                                                    std::bind(&Fib::onRegistrationFailure,
-                                                             this, _1,
+                                                            this, _1,
                                                              "Failed in name registration",
                                                              parameters,
                                                              faceUri, times));
-}
-
-void
-Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
-                         const ndn::nfd::ControlParameters& parameters,
-                         uint8_t times,
-                         const CommandSucceedCallback& onSuccess,
-                         const CommandFailCallback& onFailure)
-{
-  ndn::nfd::ControlParameters controlParameters;
-  controlParameters
-    .setName(parameters.getName())
-    .setFaceId(faceCreateResult.getFaceId())
-    .setCost(parameters.getCost())
-    .setFlags(parameters.getFlags())
-    .setExpirationPeriod(parameters.getExpirationPeriod())
-    .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
-  m_controller.start<ndn::nfd::RibRegisterCommand>(controlParameters,
-                                                   onSuccess,
-                                                   onFailure);
 }
 
 void
@@ -374,6 +294,9 @@ Fib::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResu
   _LOG_DEBUG("Register successful Prefix: " << commandSuccessResult.getName() <<
              " Face Uri: " << faceUri);
 
+  // Update the adjacency list with the new Face ID
+  m_adjacencyList.findAdjacent(faceUri)->setFaceId(commandSuccessResult.getFaceId());
+  // Update the fast-access FaceMap with the new Face ID, too
   m_faceMap.update(faceUri, commandSuccessResult.getFaceId());
   m_faceMap.writeLog();
 }

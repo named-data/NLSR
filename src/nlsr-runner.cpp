@@ -75,7 +75,6 @@ NlsrRunner::run()
     std::cerr << "ERROR: " << e.what() << std::endl;
 
     m_nlsr.getFib().clean();
-    m_nlsr.destroyFaces();
   }
 }
 

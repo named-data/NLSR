@@ -25,21 +25,21 @@
 #include "nlsr.hpp"
 
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
-#include <ndn-cxx/util/dummy-client-face.hpp>
 
 namespace nlsr {
 namespace test {
 
 using std::shared_ptr;
 
-class NlsrFixture : public UnitTestTimeFixture
+class NlsrFixture : public MockNfdMgmtFixture
 {
 public:
   NlsrFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
-    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
+    : nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , lsdb(nlsr.getLsdb())
     , neighbors(nlsr.getAdjacencyList())
+    , nSuccessCallbacks(0)
+    , nFailureCallbacks(0)
   {
   }
 
@@ -55,10 +55,12 @@ public:
  }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   Lsdb& lsdb;
   AdjacencyList& neighbors;
+  uint32_t nSuccessCallbacks;
+  uint32_t nFailureCallbacks;
+
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestNlsr, NlsrFixture)
@@ -122,6 +124,92 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
   BOOST_CHECK_EQUAL(lsdb.getAdjLsaBuildInterval(), ndn::time::seconds(3));
   BOOST_CHECK_EQUAL(nlsr.getFirstHelloInterval(), 6);
   BOOST_CHECK_EQUAL(rt.getRoutingCalcInterval(), ndn::time::seconds(9));
+}
+
+BOOST_AUTO_TEST_CASE(FaceCreateEvent)
+{
+  // Setting constants for the unit test
+  const uint32_t faceId = 1;
+  const std::string faceUri = "udp4://10.0.0.1:6363";
+  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(faceUri), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  BOOST_REQUIRE_EQUAL(nlsr.getAdjacencyList().insert(neighbor), 0);
+
+  this->advanceClocks(ndn::time::milliseconds(1));
+
+  // Build, sign, and send the Face Event
+  ndn::nfd::FaceEventNotification event;
+  event.setKind(ndn::nfd::FACE_EVENT_CREATED)
+    .setRemoteUri(faceUri)
+    .setFaceId(faceId);
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  data->setContent(event.wireEncode());
+  nlsr.getKeyChain().sign(*data);
+  face->receive(*data);
+
+  // Move the clocks forward so that the Face processes the event.
+  this->advanceClocks(ndn::time::milliseconds(1));
+
+  // Need to explicitly provide a FaceUri object, because the
+  // conversion will attempt to create Name objects.
+  auto iterator = nlsr.getAdjacencyList().findAdjacent(ndn::util::FaceUri(faceUri));
+  BOOST_REQUIRE(iterator != nlsr.getAdjacencyList().end());
+  BOOST_CHECK_EQUAL(iterator->getFaceId(), faceId);
+}
+
+BOOST_AUTO_TEST_CASE(FaceCreateEventNoMatch)
+{
+  // Setting constants for the unit test
+  const uint32_t faceId = 1;
+  const std::string eventUri = "udp4://10.0.0.1:6363";
+  const std::string neighborUri = "udp4://10.0.0.2:6363";
+  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(neighborUri), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  nlsr.getAdjacencyList().insert(neighbor);
+
+  // Build, sign, and send the Face Event
+  ndn::nfd::FaceEventNotification event;
+  event.setKind(ndn::nfd::FACE_EVENT_CREATED)
+    .setRemoteUri(eventUri)
+    .setFaceId(faceId);
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  data->setContent(event.wireEncode());
+  nlsr.getKeyChain().sign(*data);
+  face->receive(*data);
+
+  // Move the clocks forward so that the Face processes the event.
+  this->advanceClocks(ndn::time::milliseconds(1));
+
+  // The Face URIs did not match, so this neighbor should be unconfigured.
+  auto iterator = nlsr.getAdjacencyList().findAdjacent(ndn::util::FaceUri(neighborUri));
+  BOOST_REQUIRE(iterator != nlsr.getAdjacencyList().end());
+  BOOST_CHECK_EQUAL(iterator->getFaceId(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
+{
+  // Setting constants for the unit test
+  const uint32_t eventFaceId = 1;
+  const uint32_t neighborFaceId = 2;
+  const std::string faceUri = "udp4://10.0.0.1:6363";
+  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(faceUri), 10, Adjacent::STATUS_ACTIVE, 0, neighborFaceId);
+  nlsr.getAdjacencyList().insert(neighbor);
+
+  // Build, sign, and send the Face Event
+  ndn::nfd::FaceEventNotification event;
+  event.setKind(ndn::nfd::FACE_EVENT_CREATED)
+    .setRemoteUri(faceUri)
+    .setFaceId(eventFaceId);
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  data->setContent(event.wireEncode());
+  nlsr.getKeyChain().sign(*data);
+  face->receive(*data);
+
+  // Move the clocks forward so that the Face processes the event.
+  this->advanceClocks(ndn::time::milliseconds(1));
+
+  // Since the neighbor was already configured, this (simply erroneous) event should have no effect.
+  auto iterator = nlsr.getAdjacencyList().findAdjacent(ndn::util::FaceUri(faceUri));
+  BOOST_REQUIRE(iterator != nlsr.getAdjacencyList().end());
+  BOOST_CHECK_EQUAL(iterator->getFaceId(), neighborFaceId);
 }
 
 BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
@@ -478,6 +566,134 @@ BOOST_AUTO_TEST_CASE(CanonizeUris)
 
   BOOST_CHECK_EQUAL(nlsr.getAdjacencyList().getAdjacent(neighborBName).getFaceUri(),
                     ndn::util::FaceUri("udp4://10.0.0.2:6363"));
+}
+
+BOOST_AUTO_TEST_CASE(FaceDatasetFetchSuccess)
+{
+  bool hasResult = false;
+  nlsr.m_validator.m_shouldValidate = false;
+
+  nlsr.initializeFaces([&hasResult] (const std::vector<ndn::nfd::FaceStatus>& faces) {
+      hasResult = true;
+      BOOST_CHECK_EQUAL(faces.size(), 2);
+      BOOST_CHECK_EQUAL(faces.front().getFaceId(), 25401);
+      BOOST_CHECK_EQUAL(faces.back().getFaceId(), 25402);
+    },
+    [] (uint32_t code, const std::string& reason) {});
+
+  this->advanceClocks(ndn::time::milliseconds(500));
+
+  ndn::nfd::FaceStatus payload1;
+  payload1.setFaceId(25401);
+  ndn::nfd::FaceStatus payload2;
+  payload2.setFaceId(25402);
+  this->sendDataset("/localhost/nfd/faces/list", payload1, payload2);
+
+  this->advanceClocks(ndn::time::milliseconds(500));
+  BOOST_CHECK(hasResult);
+}
+
+BOOST_AUTO_TEST_CASE(FaceDatasetFetchFailure)
+{
+  nlsr.m_validator.m_shouldValidate = false;
+  nlsr.initializeFaces([](const std::vector<ndn::nfd::FaceStatus>& faces) {},
+    [this](uint32_t code, const std::string& reason){
+      this->nFailureCallbacks++;
+    });
+  this->advanceClocks(ndn::time::milliseconds(500));
+
+  ndn::Name payload;
+  this->sendDataset("/localhost/nfd/faces/list", payload);
+  this->advanceClocks(ndn::time::milliseconds(500));
+
+  BOOST_CHECK_EQUAL(nFailureCallbacks, 1);
+  BOOST_CHECK_EQUAL(nSuccessCallbacks, 0);
+}
+
+BOOST_AUTO_TEST_CASE(FaceDatasetProcess)
+{
+  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://192.168.0.100:6363"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
+  neighbors.insert(neighborA);
+
+  Adjacent neighborB("/ndn/neighborB", ndn::util::FaceUri("udp4://192.168.0.101:6363"), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  neighbors.insert(neighborB);
+
+  ndn::nfd::FaceStatus payload1;
+  payload1.setFaceId(1)
+    .setRemoteUri("udp4://192.168.0.100:6363");
+  ndn::nfd::FaceStatus payload2;
+  payload2.setFaceId(2)
+    .setRemoteUri("udp4://192.168.0.101:6363");
+  std::vector<ndn::nfd::FaceStatus> faceStatuses = {payload1, payload2};
+
+  nlsr.processFaceDataset(faceStatuses);
+  this->advanceClocks(ndn::time::milliseconds(100));
+
+  AdjacencyList adjList = nlsr.getAdjacencyList();
+
+  BOOST_CHECK_EQUAL(adjList.getAdjacent("/ndn/neighborA").getFaceId(), payload1.getFaceId());
+  BOOST_CHECK_EQUAL(adjList.getAdjacent("/ndn/neighborB").getFaceId(), payload2.getFaceId());
+}
+
+BOOST_AUTO_TEST_CASE(UnconfiguredNeighbor)
+{
+  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://192.168.0.100:6363"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
+  neighbors.insert(neighborA);
+
+  ndn::nfd::FaceStatus payload;
+  payload.setFaceId(1)
+    .setRemoteUri("udp4://192.168.0.101:6363"); // Note dissimilar Face URI.
+  std::vector<ndn::nfd::FaceStatus> faceStatuses = {payload};
+
+  nlsr.processFaceDataset(faceStatuses);
+  this->advanceClocks(ndn::time::milliseconds(100));
+
+  AdjacencyList adjList = nlsr.getAdjacencyList();
+
+  BOOST_CHECK_EQUAL(adjList.getAdjacent("/ndn/neighborA").getFaceId(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(FaceDatasetPeriodicFetch)
+{
+  int nNameMatches = 0;
+  ndn::Name datasetPrefix("/localhost/nfd/faces/list");
+  ndn::nfd::CommandOptions options;
+  ndn::time::milliseconds defaultTimeout = options.getTimeout();
+
+  ndn::time::seconds fetchInterval(1);
+  ConfParameter& conf = nlsr.getConfParameter();
+  conf.setFaceDatasetFetchInterval(fetchInterval);
+  conf.setFaceDatasetFetchTries(0);
+
+  nlsr.initializeFaces(std::bind(&Nlsr::processFaceDataset, &nlsr, _1),
+                       std::bind(&Nlsr::onFaceDatasetFetchTimeout, &nlsr, _1, _2, 0));
+
+  // Elapse the default timeout time of the interest.
+  this->advanceClocks(defaultTimeout);
+
+  // Check that we have one interest for face list in the sent interests.
+  for (const ndn::Interest& interest : face->sentInterests) {
+    if (datasetPrefix.isPrefixOf(interest.getName())) {
+      nNameMatches++;
+    }
+  }
+  BOOST_CHECK_EQUAL(nNameMatches, 1);
+
+  // Elapse the clock by the reschedule time (that we set)
+  this->advanceClocks(fetchInterval);
+  // Elapse the default timeout on the interest.
+  this->advanceClocks(defaultTimeout);
+  // Plus a little more to let the events process.
+  this->advanceClocks(ndn::time::seconds(1));
+
+  // Check that we now have two interests
+  nNameMatches = 0;
+  for (const ndn::Interest& interest : face->sentInterests) {
+    if (datasetPrefix.isPrefixOf(interest.getName())) {
+      nNameMatches++;
+    }
+  }
+  BOOST_CHECK_EQUAL(nNameMatches, 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

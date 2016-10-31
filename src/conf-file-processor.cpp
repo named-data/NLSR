@@ -454,6 +454,33 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   if (!adjLsaBuildInterval.parseFromConfigSection(section)) {
     return false;
   }
+  // Set the retry count for fetching the FaceStatus dataset
+  ConfigurationVariable<uint32_t> faceDatasetFetchTries("face-dataset-fetch-tries",
+                                                        std::bind(&ConfParameter::setFaceDatasetFetchTries,
+                                                                  &m_nlsr.getConfParameter(),
+                                                                  _1));
+
+  faceDatasetFetchTries.setMinAndMaxValue(FACE_DATASET_FETCH_TRIES_MIN,
+                                          FACE_DATASET_FETCH_TRIES_MAX);
+  faceDatasetFetchTries.setOptional(FACE_DATASET_FETCH_TRIES_DEFAULT);
+
+  if (!faceDatasetFetchTries.parseFromConfigSection(section)) {
+    return false;
+  }
+
+  // Set the interval between FaceStatus dataset fetch attempts.
+  ConfigurationVariable<ndn::time::seconds> faceDatasetFetchInterval("face-dataset-fetch-interval",
+                                                           bind(&ConfParameter::setFaceDatasetFetchInterval,
+                                                                &m_nlsr.getConfParameter(),
+                                                                _1));
+
+  faceDatasetFetchInterval.setMinAndMaxValue(ndn::time::seconds(FACE_DATASET_FETCH_INTERVAL_MIN),
+                                             ndn::time::seconds(FACE_DATASET_FETCH_INTERVAL_MAX));
+  faceDatasetFetchInterval.setOptional(ndn::time::seconds(FACE_DATASET_FETCH_INTERVAL_DEFAULT));
+
+  if (!faceDatasetFetchInterval.parseFromConfigSection(section)) {
+    return false;
+  }
 
   // first-hello-interval
   ConfigurationVariable<uint32_t> firstHelloInterval("first-hello-interval",
@@ -469,8 +496,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   for (ConfigSection::const_iterator tn =
            section.begin(); tn != section.end(); ++tn) {
 
-    if (tn->first == "neighbor")
-    {
+    if (tn->first == "neighbor") {
       try {
         ConfigSection CommandAttriTree = tn->second;
         std::string name = CommandAttriTree.get<std::string>("name");
@@ -479,7 +505,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
         ndn::util::FaceUri faceUri;
         try {
           faceUri = ndn::util::FaceUri(uriString);
-        } catch (ndn::util::FaceUri::Error e) {
+        } catch (const ndn::util::FaceUri::Error& e) {
           std::cerr << "Malformed face-uri <" << uriString << "> for " << name << std::endl;
           return false;
         }

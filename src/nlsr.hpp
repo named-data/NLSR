@@ -33,6 +33,9 @@
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 #include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
 #include <ndn-cxx/mgmt/dispatcher.hpp>
+#include <ndn-cxx/mgmt/nfd/face-status.hpp>
+#include <ndn-cxx/data.hpp>
+#include <ndn-cxx/encoding/block.hpp>
 
 #include "adjacency-list.hpp"
 #include "common.hpp"
@@ -57,7 +60,9 @@ static ndn::Name DEFAULT_BROADCAST_PREFIX("/ndn/broadcast");
 
 class Nlsr
 {
-  friend class NlsrRunner;
+public:
+  using FetchDatasetCallback = std::function<void(const std::vector<ndn::nfd::FaceStatus>&)>;
+  using FetchDatasetTimeoutCallback = std::function<void(uint32_t, const std::string&)>;
 
   class Error : public std::runtime_error
   {
@@ -69,7 +74,6 @@ class Nlsr
     }
   };
 
-public:
   Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face, ndn::KeyChain& keyChain);
 
   void
@@ -225,6 +229,51 @@ public:
   void
   initialize();
 
+  /*! \brief Initializes neighbors' Faces using information from NFD.
+   * \sa Nlsr::initialize()
+   * \sa Nlsr::processFaceDataset()
+   *
+   * This function serves as the entry-point for initializing the
+   * neighbors listed in nlsr.conf during Nlsr::initialize(). NLSR
+   * will attempt to fetch a dataset of Faces from NFD, and configure
+   * each of its neighbors using information from that dataset. The
+   * explicit callbacks allow for better testability.
+   */
+  void
+  initializeFaces(const FetchDatasetCallback& onFetchSuccess,
+                  const FetchDatasetTimeoutCallback& onFetchFailure);
+
+  void
+  onFaceDatasetFetchTimeout(uint32_t code,
+                            const std::string& reason,
+                            uint32_t nRetriesSoFar);
+
+  /*! \brief Consumes a Face StatusDataset to configure NLSR neighbors.
+   * \sa Nlsr::initializeFaces
+   * \param faces A Face Dataset that should conform to FaceMgmt specifications.
+   *
+   * This function processes a Face StatusDataset that should conform
+   * to the FaceMgmt specifications listed
+   * [here](https://redmine.named-data.net/projects/nfd/wiki/FaceMgmt#Face-Dataset).
+   * Any newly configured neighbors will have prefixes registered with NFD
+   * and be sent Hello Interests as well.
+   */
+  void
+  processFaceDataset(const std::vector<ndn::nfd::FaceStatus>& faces);
+
+  /*! \brief Registers NLSR-specific prefixes for a neighbor (Adjacent)
+   * \sa Nlsr::initializeFaces
+   * \param adj A reference to the neighbor to register prefixes for
+   * \param timeout The amount of time to give NFD to respond to *each* registration request.
+   *
+   * Registers the prefixes in NFD that NLSR needs to route with a
+   * neighbor. The timeout given is how long to set the timeout for
+   * *each* registration request that is made.
+   */
+  void
+  registerAdjacencyPrefixes(const Adjacent& adj,
+                            const ndn::time::milliseconds& timeout);
+
   void
   initializeKey();
 
@@ -297,14 +346,6 @@ public:
   }
 
   void
-  createFace(const std::string& faceUri,
-             const CommandSucceedCallback& onSuccess,
-             const CommandFailCallback& onFailure);
-
-  void
-  destroyFaces();
-
-  void
   setStrategies();
 
   void
@@ -316,8 +357,7 @@ public:
     return m_firstHelloInterval;
   }
 
-  /**
-   * \brief Canonize the URI for this and all proceeding neighbors in a list.
+  /*! \brief Canonize the URI for this and all proceeding neighbors in a list.
    *
    * This function canonizes the URI of the Adjacent object pointed to
    * by currentNeighbor. It then executes the then callback, providing
@@ -365,12 +405,6 @@ private:
   onKeyPrefixRegSuccess(const ndn::Name& name);
 
   void
-  onDestroyFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult);
-
-  void
-  onDestroyFaceFailure(const ndn::nfd::ControlResponse& response);
-
-  void
   onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification);
 
   void
@@ -379,8 +413,7 @@ private:
     m_firstHelloInterval = interval;
   }
 
-  /**
-   * \brief Continues canonizing neighbor URIs.
+  /*! \brief Continues canonizing neighbor URIs.
    *
    * For testability reasons, we want what each instance of
    * canonization does after completion to be controllable. The best
@@ -389,6 +422,9 @@ private:
    */
   void
   canonizeContinuation(std::list<Adjacent>::iterator iterator);
+
+  void
+  scheduleDatasetFetch();
 
 public:
   static const ndn::Name LOCALHOST_PREFIX;
@@ -421,7 +457,13 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 private:
   std::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
   security::CertificateStore m_certStore;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   Validator m_validator;
+
+private:
+  ndn::nfd::Controller m_controller;
+  ndn::nfd::Controller m_faceDatasetController;
   ndn::security::SigningInfo m_signingInfo;
   ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
@@ -430,6 +472,8 @@ private:
   ndn::nfd::FaceMonitor m_faceMonitor;
 
   uint32_t m_firstHelloInterval;
+
+  friend class NlsrRunner;
 };
 
 } // namespace nlsr

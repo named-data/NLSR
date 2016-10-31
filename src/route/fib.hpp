@@ -26,15 +26,12 @@
 #include "face-map.hpp"
 #include "fib-entry.hpp"
 #include "test-access-control.hpp"
-#include "utility/face-controller.hpp"
 
 #include <ndn-cxx/mgmt/nfd/controller.hpp>
 #include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 
-typedef ndn::nfd::Controller::CommandSucceedCallback CommandSucceedCallback;
-typedef ndn::nfd::Controller::CommandFailCallback CommandFailCallback;
 typedef std::function<void(FibEntry&)> afterRefreshCallback;
 
 class AdjacencyList;
@@ -49,7 +46,6 @@ public:
     : m_scheduler(scheduler)
     , m_refreshTime(0)
     , m_controller(face, keyChain)
-    , m_faceController(face.getIoService(), m_controller)
     , m_adjacencyList(adjacencyList)
     , m_confParameter(conf)
   {
@@ -82,25 +78,10 @@ public:
                  uint8_t times);
 
   void
-  registerPrefix(const ndn::Name& namePrefix,
-                 const std::string& faceUri,
-                 uint64_t faceCost,
-                 const ndn::time::milliseconds& timeout,
-                 uint64_t flags,
-                 uint8_t times,
-                 const CommandSucceedCallback& onSuccess,
-                 const CommandFailCallback& onFailure);
-
-  void
   setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t count);
 
   void
   writeLog();
-
-  void
-  destroyFace(const std::string& faceUri,
-              const CommandSucceedCallback& onSuccess,
-              const CommandFailCallback& onFailure);
 
 private:
   bool
@@ -113,26 +94,9 @@ private:
   getNumberOfFacesForName(NexthopList& nextHopList);
 
   void
-  createFace(const std::string& faceUri,
-             const CommandSucceedCallback& onSuccess,
-             const CommandFailCallback& onFailure);
-
-  void
   registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
                       const std::string& faceUri,
                       uint8_t times);
-
-  void
-  registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
-                      const ndn::nfd::ControlParameters& parameters,
-                      uint8_t times,
-                      const CommandSucceedCallback& onSuccess,
-                      const CommandFailCallback& onFailure);
-
-  void
-  destroyFaceInNfd(const ndn::nfd::ControlParameters& faceDestroyResult,
-                   const CommandSucceedCallback& onSuccess,
-                   const CommandFailCallback& onFailure);
 
   void
   unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri);
@@ -184,7 +148,6 @@ private:
   ndn::Scheduler& m_scheduler;
   int32_t m_refreshTime;
   ndn::nfd::Controller m_controller;
-  util::FaceController m_faceController;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   FaceMap m_faceMap;

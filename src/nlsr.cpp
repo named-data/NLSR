@@ -29,6 +29,7 @@
 #include "adjacent.hpp"
 #include "logger.hpp"
 
+#include <ndn-cxx/util/face-uri.hpp>
 
 namespace nlsr {
 
@@ -63,9 +64,12 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
                          m_routerNameDispatcher,
                          m_nlsrFace,
                          m_keyChain)
+
   , m_helloProtocol(*this, scheduler)
   , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
   , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache, m_certStore)
+  , m_controller(m_nlsrFace, m_keyChain, m_validator)
+  , m_faceDatasetController(m_nlsrFace, m_keyChain)
   , m_prefixUpdateProcessor(m_nlsrFace,
                             m_namePrefixList,
                             m_nlsrLsdb,
@@ -252,6 +256,9 @@ Nlsr::initialize()
   setInfoInterestFilter();
   setLsaInterestFilter();
 
+  initializeFaces(std::bind(&Nlsr::processFaceDataset, this, _1),
+                  std::bind(&Nlsr::onFaceDatasetFetchTimeout, this, _1, _2, 0));
+
   // Set event intervals
   setFirstHelloInterval(m_confParam.getFirstHelloInterval());
   m_nlsrLsdb.setAdjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval());
@@ -377,78 +384,195 @@ Nlsr::onKeyPrefixRegSuccess(const ndn::Name& name)
 }
 
 void
-Nlsr::onDestroyFaceSuccess(const ndn::nfd::ControlParameters& commandSuccessResult)
-{
-}
-
-void
-Nlsr::onDestroyFaceFailure(const ndn::nfd::ControlResponse& response)
-{
-  std::cerr << response.getText() << " (code: " << response.getCode() << ")";
-  BOOST_THROW_EXCEPTION(Error("Error: Face destruction failed"));
-}
-
-void
-Nlsr::destroyFaces()
-{
-  std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
-  for (std::list<Adjacent>::iterator it = adjacents.begin();
-       it != adjacents.end(); it++) {
-    m_fib.destroyFace((*it).getFaceUri().toString(),
-                      std::bind(&Nlsr::onDestroyFaceSuccess, this, _1),
-                      std::bind(&Nlsr::onDestroyFaceFailure, this, _1));
-  }
-}
-
-void
 Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification)
 {
   _LOG_TRACE("Nlsr::onFaceEventNotification called");
-  ndn::nfd::FaceEventKind kind = faceEventNotification.getKind();
 
-  if (kind == ndn::nfd::FACE_EVENT_DESTROYED) {
-    uint64_t faceId = faceEventNotification.getFaceId();
+  switch (faceEventNotification.getKind()) {
+    case ndn::nfd::FACE_EVENT_DESTROYED: {
+      uint64_t faceId = faceEventNotification.getFaceId();
 
-    auto adjacent = m_adjacencyList.findAdjacent(faceId);
+      auto adjacent = m_adjacencyList.findAdjacent(faceId);
 
-    if (adjacent != m_adjacencyList.end()) {
-      _LOG_DEBUG("Face to " << adjacent->getName() << " with face id: " << faceId << " destroyed");
+      if (adjacent != m_adjacencyList.end()) {
+        _LOG_DEBUG("Face to " << adjacent->getName() << " with face id: " << faceId << " destroyed");
 
-      adjacent->setFaceId(0);
+        adjacent->setFaceId(0);
 
-      // Only trigger an Adjacency LSA build if this node is changing
-      // from ACTIVE to INACTIVE since this rebuild will effectively
-      // cancel the previous Adjacency LSA refresh event and schedule
-      // a new one further in the future.
-      //
-      // Continuously scheduling the refresh in the future will block
-      // the router from refreshing its Adjacency LSA. Since other
-      // routers' Name prefixes' expiration times are updated when
-      // this router refreshes its Adjacency LSA, the other routers'
-      // prefixes will expire and be removed from the RIB.
-      //
-      // This check is required to fix Bug #2733 for now. This check
-      // would be unnecessary to fix Bug #2733 when Issue #2732 is
-      // completed, but the check also helps with optimization so it
-      // can remain even when Issue #2732 is implemented.
-      if (adjacent->getStatus() == Adjacent::STATUS_ACTIVE) {
-        adjacent->setStatus(Adjacent::STATUS_INACTIVE);
+        // Only trigger an Adjacency LSA build if this node is changing
+        // from ACTIVE to INACTIVE since this rebuild will effectively
+        // cancel the previous Adjacency LSA refresh event and schedule
+        // a new one further in the future.
+        //
+        // Continuously scheduling the refresh in the future will block
+        // the router from refreshing its Adjacency LSA. Since other
+        // routers' Name prefixes' expiration times are updated when
+        // this router refreshes its Adjacency LSA, the other routers'
+        // prefixes will expire and be removed from the RIB.
+        //
+        // This check is required to fix Bug #2733 for now. This check
+        // would be unnecessary to fix Bug #2733 when Issue #2732 is
+        // completed, but the check also helps with optimization so it
+        // can remain even when Issue #2732 is implemented.
+        if (adjacent->getStatus() == Adjacent::STATUS_ACTIVE) {
+          adjacent->setStatus(Adjacent::STATUS_INACTIVE);
 
-        // A new adjacency LSA cannot be built until the neighbor is marked INACTIVE and
-        // has met the HELLO retry threshold
-        adjacent->setInterestTimedOutNo(m_confParam.getInterestRetryNumber());
+          // A new adjacency LSA cannot be built until the neighbor is marked INACTIVE and
+          // has met the HELLO retry threshold
+          adjacent->setInterestTimedOutNo(m_confParam.getInterestRetryNumber());
 
-        if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
-          getRoutingTable().scheduleRoutingTableCalculation(*this);
-        }
-        else {
-          m_nlsrLsdb.scheduleAdjLsaBuild();
+          if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+            getRoutingTable().scheduleRoutingTableCalculation(*this);
+          }
+          else {
+            m_nlsrLsdb.scheduleAdjLsaBuild();
+          }
         }
       }
+      break;
     }
+    case ndn::nfd::FACE_EVENT_CREATED: {
+      // Find the neighbor in our adjacency list
+      _LOG_DEBUG("Face created event received.");
+      auto adjacent = m_adjacencyList.findAdjacent(
+        ndn::util::FaceUri(faceEventNotification.getRemoteUri()));
+      // If we have a neighbor by that FaceUri and it has no FaceId, we
+      // have a match.
+      if (adjacent != m_adjacencyList.end()) {
+        _LOG_DEBUG("Face creation event matches neighbor: " << adjacent->getName()
+                   << ". New Face ID: " << faceEventNotification.getFaceId()
+                   << ". Registering prefixes.");
+        adjacent->setFaceId(faceEventNotification.getFaceId());
+
+        registerAdjacencyPrefixes(*adjacent, ndn::time::milliseconds::max());
+      }
+      break;
+    }
+    default:
+      break;
   }
 }
 
+void
+Nlsr::initializeFaces(const FetchDatasetCallback& onFetchSuccess,
+                      const FetchDatasetTimeoutCallback& onFetchFailure)
+{
+  _LOG_TRACE("Initializing Faces...");
+
+  m_faceDatasetController.fetch<ndn::nfd::FaceDataset>(onFetchSuccess, onFetchFailure);
+
+}
+
+void
+Nlsr::processFaceDataset(const std::vector<ndn::nfd::FaceStatus>& faces)
+{
+  // Iterate over each neighbor listed in nlsr.conf
+  bool anyFaceChanged = false;
+  for (auto&& adjacency : m_adjacencyList.getAdjList()) {
+
+    const std::string faceUriString = adjacency.getFaceUri().toString();
+    // Check the list of FaceStatus objects we got for a match
+    for (const ndn::nfd::FaceStatus& faceStatus : faces) {
+
+      // Set the adjacency FaceID if we find a URI match and it was
+      // previously unset. Change the boolean to true.
+      if (adjacency.getFaceId() == 0 && faceUriString == faceStatus.getRemoteUri()) {
+        adjacency.setFaceId(faceStatus.getFaceId());
+        anyFaceChanged = true;
+        // Register the prefixes for each neighbor
+        this->registerAdjacencyPrefixes(adjacency, ndn::time::milliseconds::max());
+      }
+    }
+    // If this adjacency has no information in this dataset, then one
+    // of two things is happening: 1. NFD is starting slowly and this
+    // Face wasn't ready yet, or 2. NFD is configured
+    // incorrectly and this Face isn't available.
+    if (adjacency.getFaceId() == 0) {
+      _LOG_WARN("The adjacency " << adjacency.getName() <<
+                " has no Face information in this dataset.");
+    }
+  }
+
+  if (anyFaceChanged) {
+    // Only do these things if something has changed.  Schedule an
+    // adjacency LSA build to update with all of the new neighbors if
+    // HR is off.
+    if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+      getRoutingTable().scheduleRoutingTableCalculation(*this);
+    }
+    else {
+      m_nlsrLsdb.scheduleAdjLsaBuild();
+    }
+
+    // Begin the Hello Protocol loop immediately, so we don't wait.
+    m_helloProtocol.sendScheduledInterest(0);
+  }
+
+  scheduleDatasetFetch();
+}
+
+void
+Nlsr::registerAdjacencyPrefixes(const Adjacent& adj,
+                                const ndn::time::milliseconds& timeout)
+{
+    std::string faceUri = adj.getFaceUri().toString();
+    double linkCost = adj.getLinkCost();
+
+    m_fib.registerPrefix(adj.getName(), faceUri, linkCost,
+                         timeout, ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+
+    m_fib.registerPrefix(m_confParam.getChronosyncPrefix(),
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+
+    m_fib.registerPrefix(m_confParam.getLsaPrefix(),
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+
+    ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
+    broadcastKeyPrefix.append("KEYS");
+    m_fib.registerPrefix(broadcastKeyPrefix,
+                                 faceUri, linkCost, timeout,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+}
+
+void
+Nlsr::onFaceDatasetFetchTimeout(uint32_t code,
+                                const std::string& msg,
+                                uint32_t nRetriesSoFar)
+{
+  // If we have exceeded the maximum attempt count, do not try again.
+  if (nRetriesSoFar++ < m_confParam.getFaceDatasetFetchTries()) {
+    _LOG_DEBUG("Failed to fetch dataset: " << msg << ". Attempting retry #" << nRetriesSoFar);
+    m_faceDatasetController.fetch<ndn::nfd::FaceDataset>(std::bind(&Nlsr::processFaceDataset,
+                                                        this, _1),
+                                              std::bind(&Nlsr::onFaceDatasetFetchTimeout,
+                                                        this, _1, _2, nRetriesSoFar));
+  }
+  else {
+    _LOG_ERROR("Failed to fetch dataset: " << msg << ". Exceeded limit of " <<
+               m_confParam.getFaceDatasetFetchTries() << ", so not trying again this time.");
+    // If we fail to fetch it, just do nothing until the next
+    // interval.  Since this is a backup mechanism, we aren't as
+    // concerned with retrying.
+    scheduleDatasetFetch();
+  }
+}
+
+void
+Nlsr::scheduleDatasetFetch()
+{
+  m_scheduler.scheduleEvent(m_confParam.getFaceDatasetFetchInterval(),
+    [this] {
+      this->initializeFaces(
+        [this] (const std::vector<ndn::nfd::FaceStatus>& faces) {
+         this->processFaceDataset(faces);
+        },
+        [this] (uint32_t code, const std::string& msg) {
+         this->onFaceDatasetFetchTimeout(code, msg, 0);
+        });
+  });
+}
 
 void
 Nlsr::startEventLoop()

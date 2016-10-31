@@ -17,8 +17,6 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 
 #include "nlsr.hpp"
@@ -67,13 +65,6 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
       expressInterest(interestName,
                       m_nlsr.getConfParameter().getInterestResendTime());
       _LOG_DEBUG("Sending scheduled interest: " << interestName);
-    }
-    // If it does not have a Face, we need to give it one.  A
-    // successful registration prompts a callback that sends the hello
-    // Interest to the new Face.
-    else {
-      registerPrefixes((*it).getName(), (*it).getFaceUri().toString(),
-                       (*it).getLinkCost(), ndn::time::milliseconds::max());
     }
   }
   scheduleInterest(m_nlsr.getConfParameter().getInfoInterestInterval());
@@ -125,12 +116,6 @@ HelloProtocol::processInterest(const ndn::Name& name,
         interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
         expressInterest(interestName,
                         m_nlsr.getConfParameter().getInterestResendTime());
-      }
-      // If the originator of the Interest currently lacks a Face, we
-      // need to give it one.
-      else {
-        registerPrefixes(adjacent->getName(), adjacent->getFaceUri().toString(),
-                         adjacent->getLinkCost(), ndn::time::milliseconds::max());
       }
     }
   }
@@ -233,84 +218,6 @@ HelloProtocol::onContentValidationFailed(const std::shared_ptr<const ndn::Data>&
                                          const std::string& msg)
 {
   _LOG_DEBUG("Validation Error: " << msg);
-}
-
-
-  // Asks the FIB to register the supplied adjacency (in other words,
-  // create a Face for it).
-void
-HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
-                               double linkCost, const ndn::time::milliseconds& timeout)
-{
-  m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout,
-                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0,
-                                 std::bind(&HelloProtocol::onRegistrationSuccess,
-                                           this, _1, adjName,timeout),
-                                 std::bind(&HelloProtocol::onRegistrationFailure,
-                                           this, _1, adjName));
-}
-
-  // After we create a new Face, we need to set it up for use. This
-  // function sets the controlling strategy, registers prefixes in
-  // sync, broadcast, and LSA.
-void
-HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                                     const ndn::Name& neighbor,const ndn::time::milliseconds& timeout)
-{
-  auto adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
-  if (adjacent != m_nlsr.getAdjacencyList().end()){
-    adjacent->setFaceId(commandSuccessResult.getFaceId());
-    ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
-    broadcastKeyPrefix.append("KEYS");
-    std::string faceUri = adjacent->getFaceUri().toString();
-    double linkCost = adjacent->getLinkCost();
-    m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
-                                 faceUri, linkCost, timeout,
-                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
-    m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getLsaPrefix(),
-                                 faceUri, linkCost, timeout,
-                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
-    m_nlsr.getFib().registerPrefix(broadcastKeyPrefix,
-                                 faceUri, linkCost, timeout,
-                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
-
-    // Sends a Hello Interest to determine status before the next scheduled.
-    // interest name: /<neighbor>/NLSR/INFO/<router>
-    ndn::Name interestName(neighbor);
-    interestName.append(NLSR_COMPONENT);
-    interestName.append(INFO_COMPONENT);
-    interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
-    expressInterest(interestName,
-                    m_nlsr.getConfParameter().getInterestResendTime());
-  }
-}
-
-void
-HelloProtocol::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
-                                     const ndn::Name& name)
-{
-  _LOG_DEBUG(response.getText() << " (code: " << response.getCode() << ")");
-  /*
-  * If NLSR can not create face for given faceUri then it will treat this
-  * failure as one INFO interest timed out. So that NLSR can move on with
-  * building Adj Lsa and calculate routing table. NLSR does not build Adj
-  * Lsa unless all the neighbors are ACTIVE or DEAD. For considering the
-  * missconfigured(link) neighbour dead this is required.
-  */
-  auto adjacent = m_nlsr.getAdjacencyList().findAdjacent(name);
-  if (adjacent != m_nlsr.getAdjacencyList().end()) {
-    adjacent->setInterestTimedOutNo(adjacent->getInterestTimedOutNo() + 1);
-    Adjacent::Status status = adjacent->getStatus();
-    uint32_t infoIntTimedOutCount = adjacent->getInterestTimedOutNo();
-
-    if (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber()) {
-      if (status == Adjacent::STATUS_ACTIVE) {
-        adjacent->setStatus(Adjacent::STATUS_INACTIVE);
-      }
-
-      m_nlsr.getLsdb().scheduleAdjLsaBuild();
-    }
-  }
 }
 
 } // namespace nlsr

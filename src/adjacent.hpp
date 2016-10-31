@@ -115,7 +115,7 @@ public:
   }
 
   uint64_t
-  getFaceId()
+  getFaceId() const
   {
     return m_faceId;
   }

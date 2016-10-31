@@ -117,9 +117,6 @@ private:
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                         const ndn::Name& neighbor, const ndn::time::milliseconds& timeout);
 
-  void
-  registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
-                   double linkCost, const ndn::time::milliseconds& timeout);
 private:
   Nlsr& m_nlsr;
   ndn::Scheduler& m_scheduler;

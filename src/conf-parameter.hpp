@@ -62,6 +62,19 @@ enum {
   ROUTING_CALC_INTERVAL_MAX = 15
 };
 
+
+enum {
+  FACE_DATASET_FETCH_TRIES_MIN = 1,
+  FACE_DATASET_FETCH_TRIES_MAX = 10,
+  FACE_DATASET_FETCH_TRIES_DEFAULT = 3
+};
+
+enum {
+  FACE_DATASET_FETCH_INTERVAL_MIN = 1800,
+  FACE_DATASET_FETCH_INTERVAL_MAX = 5400,
+  FACE_DATASET_FETCH_INTERVAL_DEFAULT = 3600
+};
+
 enum {
   HELLO_RETRIES_MIN = 1,
   HELLO_RETRIES_DEFAULT = 3,
@@ -261,6 +274,30 @@ public:
   }
 
   void
+  setFaceDatasetFetchTries(uint32_t count)
+  {
+    m_faceDatasetFetchTries = count;
+  }
+
+  uint32_t
+  getFaceDatasetFetchTries() const
+  {
+    return m_faceDatasetFetchTries;
+  }
+
+  void
+  setFaceDatasetFetchInterval(ndn::time::seconds interval)
+  {
+    m_faceDatasetFetchInterval = interval;
+  }
+
+  const ndn::time::seconds
+  getFaceDatasetFetchInterval() const
+  {
+    return m_faceDatasetFetchInterval;
+  }
+
+  void
   setLogLevel(const std::string& logLevel)
   {
     m_logLevel = logLevel;
@@ -422,6 +459,9 @@ private:
   uint32_t m_adjLsaBuildInterval;
   uint32_t m_firstHelloInterval;
   uint32_t m_routingCalcInterval;
+
+  uint32_t m_faceDatasetFetchTries;
+  ndn::time::seconds m_faceDatasetFetchInterval;
 
   ndn::time::seconds m_lsaInterestLifetime;
   uint32_t  m_routerDeadInterval;
