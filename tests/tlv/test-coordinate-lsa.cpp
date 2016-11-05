@@ -24,7 +24,7 @@
 #include "../boost-test.hpp"
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 namespace test {
 
 BOOST_AUTO_TEST_SUITE(TlvTestCoordinateLsa)
@@ -53,7 +53,9 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaEncode)
   coordinateLsa.setLsaInfo(lsaInfo);
 
   coordinateLsa.setHyperbolicRadius(1.65);
-  coordinateLsa.setHyperbolicAngle(1.78);
+  std::vector<double> angles;
+  angles.push_back(1.78);
+  coordinateLsa.setHyperbolicAngle(angles);
 
   const ndn::Block& wire = coordinateLsa.wireEncode();
 
@@ -73,7 +75,8 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaDecode)
   BOOST_REQUIRE_EQUAL(coordinateLsa.getLsaInfo().getExpirationPeriod(),
                       ndn::time::milliseconds(10000));
   BOOST_REQUIRE_EQUAL(coordinateLsa.getHyperbolicRadius(), 1.65);
-  BOOST_REQUIRE_EQUAL(coordinateLsa.getHyperbolicAngle(), 1.78);
+  std::vector<double> angles = {1.78};
+  BOOST_REQUIRE(coordinateLsa.getHyperbolicAngle() == angles);
 }
 
 BOOST_AUTO_TEST_CASE(CoordinateLsaOutputStream)
@@ -87,7 +90,8 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaOutputStream)
   coordinateLsa.setLsaInfo(lsaInfo);
 
   coordinateLsa.setHyperbolicRadius(1.65);
-  coordinateLsa.setHyperbolicAngle(1.78);
+  std::vector<double> angles = {1.78};
+  coordinateLsa.setHyperbolicAngle(angles);
 
   std::ostringstream os;
   os << coordinateLsa;
@@ -97,8 +101,22 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaOutputStream)
                                         "SequenceNumber: 128, "
                                         "ExpirationPeriod: 10000 milliseconds), "
                                 "HyperbolicRadius: 1.65, "
-                                "HyperbolicAngle: 1.78)");
+                                "HyperbolicAngles: 1.78)");
+
+  angles.push_back(3.21);
+  coordinateLsa.setHyperbolicAngle(angles);
+
+  std::ostringstream os2;
+  os2 << coordinateLsa;
+
+  BOOST_CHECK_EQUAL(os2.str(), "CoordinateLsa("
+                                "LsaInfo(OriginRouter: /test, "
+                                        "SequenceNumber: 128, "
+                                        "ExpirationPeriod: 10000 milliseconds), "
+                                "HyperbolicRadius: 1.65, "
+                                "HyperbolicAngles: 1.78, 3.21)");
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
 

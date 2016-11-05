@@ -61,7 +61,9 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   cp1.setCorR(2.5);
 
-  cp1.setCorTheta(102.5);
+  std::vector<double> angles = {102.5};
+
+  cp1.setCorTheta(angles);
 
   cp1.setInfoInterestInterval(3);
 
@@ -89,7 +91,7 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   BOOST_CHECK_EQUAL(cp1.getHyperbolicState(), 1);
 
-  BOOST_CHECK_CLOSE(cp1.getCorTheta(), 102.5, 0.0001);
+  BOOST_CHECK(cp1.getCorTheta() == angles);
 
   BOOST_CHECK_EQUAL(cp1.getInfoInterestInterval(), 3);
 }

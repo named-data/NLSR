@@ -110,7 +110,6 @@ public:
     , m_infoInterestInterval(HELLO_INTERVAL_DEFAULT)
     , m_hyperbolicState(HYPERBOLIC_STATE_OFF)
     , m_corR(0)
-    , m_corTheta(0)
     , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
     , m_isLog4cxxConfAvailable(false)
   {
@@ -338,12 +337,12 @@ public:
   }
 
   void
-  setCorTheta(double ct)
+  setCorTheta(const std::vector<double>& ct)
   {
     m_corTheta = ct;
   }
 
-  double
+  std::vector<double>
   getCorTheta() const
   {
     return m_corTheta;
@@ -435,7 +434,7 @@ private:
 
   int32_t m_hyperbolicState;
   double m_corR;
-  double m_corTheta;
+  std::vector<double> m_corTheta;
 
   uint32_t m_maxFacesPerPrefix;
 

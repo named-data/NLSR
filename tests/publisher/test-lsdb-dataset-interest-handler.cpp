@@ -70,8 +70,10 @@ BOOST_AUTO_TEST_CASE(Basic)
   addAdjacency(adjLsa, "/RouterA/adjacency1", "udp://face-1", 10);
   lsdb.installAdjLsa(adjLsa);
 
+  std::vector<double> angles = {20.00, 30.00};
+
   // Install coordinate LSA
-  CoordinateLsa coordinateLsa = createCoordinateLsa("/RouterA", 10.0, 20.0);
+  CoordinateLsa coordinateLsa = createCoordinateLsa("/RouterA", 10.0, angles);
   lsdb.installCoordinateLsa(coordinateLsa);
 
   // Install Name LSA

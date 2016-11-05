@@ -100,11 +100,14 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
 BOOST_AUTO_TEST_CASE(CoordinateLsaConstructorAndGetters)
 {
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
-  CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, 30.0);
-  CoordinateLsa clsa2("router1", 12, testTimePoint, 2.5, 30.0);
+  std::vector<double> angles1, angles2;
+  angles1.push_back(30.0);
+  angles2.push_back(30.0);
+  CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, angles1);
+  CoordinateLsa clsa2("router1", 12, testTimePoint, 2.5, angles2);
 
   BOOST_CHECK_CLOSE(clsa1.getCorRadius(), 2.5, 0.0001);
-  BOOST_CHECK_CLOSE(clsa1.getCorTheta(), 30.0, 0.0001);
+  BOOST_CHECK(clsa1.getCorTheta() == angles1);
 
   BOOST_CHECK(clsa1.isEqualContent(clsa2));
 
@@ -124,7 +127,6 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
   adjList.insert(adj2);
 
   ndn::time::system_clock::TimePoint testTimePoint = ndn::time::system_clock::now();
-
   std::ostringstream ss;
   ss << testTimePoint;
 
@@ -133,21 +135,21 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
   AdjLsa lsa("router1", 12, testTimePoint, adjList.getSize(), adjList);
 
   std::string EXPECTED_OUTPUT =
-    "Adj Lsa:\n"
-    "  Origination Router: /router1\n"
-    "  Ls Type: adjacency\n"
-    "  Ls Seq No: 12\n"
-    "  Ls Lifetime: " + TEST_TIME_POINT_STRING + "\n"
-    "  Adjacents: \n"
-    "    Adjacent 1:\n"
-    "      Adjacent Name: /adjacent1\n"
-    "      Connecting FaceUri: ://\n"
-    "      Link Cost: 10\n"
-    "    Adjacent 2:\n"
-    "      Adjacent Name: /adjacent2\n"
-    "      Connecting FaceUri: ://\n"
-    "      Link Cost: 10\n"
-    "adj_lsa_end";
+   "Adj Lsa:\n"
+   "  Origination Router: /router1\n"
+   "  Ls Type: adjacency\n"
+   "  Ls Seq No: 12\n"
+   "  Ls Lifetime: " + TEST_TIME_POINT_STRING + "\n"
+   "  Adjacents: \n"
+   "    Adjacent 1:\n"
+   "      Adjacent Name: /adjacent1\n"
+   "      Connecting FaceUri: ://\n"
+   "      Link Cost: 10\n"
+   "    Adjacent 2:\n"
+   "      Adjacent Name: /adjacent2\n"
+   "      Connecting FaceUri: ://\n"
+   "      Link Cost: 10\n"
+   "adj_lsa_end";
 
   std::ostringstream os;
   os << lsa;
@@ -200,7 +202,8 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   BOOST_CHECK_EQUAL(nlsa1.getData(), nlsa2.getData());
 
   //Coordinate LSA
-  CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, 30.0);
+  std::vector<double> angles = {30, 40.0};
+  CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, angles);
   CoordinateLsa clsa2;
 
   BOOST_CHECK(clsa2.initializeFromContent(clsa1.getData()));

@@ -39,9 +39,9 @@ namespace tlv {
    CoordinateLsa := COORDINATE-LSA-TYPE TLV-LENGTH
                       LsaInfo
                       HyperbolicRadius
-                      HyperbolicAngle
+                      HyperbolicAngle+
 
-   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+   \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class CoordinateLsa
 {
@@ -89,14 +89,14 @@ public:
     return *this;
   }
 
-  double
+  const std::vector<double>
   getHyperbolicAngle() const
   {
     return m_hyperbolicAngle;
   }
 
   CoordinateLsa&
-  setHyperbolicAngle(double hyperbolicAngle)
+  setHyperbolicAngle(const std::vector<double>& hyperbolicAngle)
   {
     m_hyperbolicAngle = hyperbolicAngle;
     m_wire.reset();
@@ -116,7 +116,7 @@ public:
 private:
   LsaInfo m_lsaInfo;
   double m_hyperbolicRadius;
-  double m_hyperbolicAngle;
+  std::vector<double> m_hyperbolicAngle;
 
   mutable ndn::Block m_wire;
 };

@@ -22,9 +22,11 @@
 #include "tlv/lsdb-status.hpp"
 
 #include "../boost-test.hpp"
+#include <boost/mpl/vector.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 namespace test {
 
 BOOST_AUTO_TEST_SUITE(TlvTestLsdbStatus)
@@ -123,7 +125,9 @@ BOOST_AUTO_TEST_CASE(LsdbStatusEncode1)
   coordinateLsa.setLsaInfo(lsaInfo);
 
   coordinateLsa.setHyperbolicRadius(1.65);
-  coordinateLsa.setHyperbolicAngle(1.78);
+  std::vector<double> angles;
+  angles.push_back(1.78);
+  coordinateLsa.setHyperbolicAngle(angles);
 
   lsdbStatus.addCoordinateLsa(coordinateLsa);
 
@@ -183,7 +187,9 @@ BOOST_AUTO_TEST_CASE(LsdbStatusDecode1)
   BOOST_CHECK_EQUAL(lsaInfo.getExpirationPeriod(), ndn::time::milliseconds(10000));
 
   BOOST_REQUIRE_EQUAL(it3->getHyperbolicRadius(), 1.65);
-  BOOST_REQUIRE_EQUAL(it3->getHyperbolicAngle(), 1.78);
+  std::vector<double> angles;
+  angles.push_back(1.78);
+  BOOST_REQUIRE(it3->getHyperbolicAngle() == angles);
 
   BOOST_CHECK_EQUAL(lsdbStatus.hasCoordinateLsas(), true);
 
@@ -250,7 +256,9 @@ BOOST_AUTO_TEST_CASE(LsdbStatusClear)
   coordinateLsa.setLsaInfo(lsaInfo);
 
   coordinateLsa.setHyperbolicRadius(1.65);
-  coordinateLsa.setHyperbolicAngle(1.78);
+  std::vector<double> angles;
+  angles.push_back(1.78);
+  coordinateLsa.setHyperbolicAngle(angles);
 
   lsdbStatus.addCoordinateLsa(coordinateLsa);
   BOOST_CHECK_EQUAL(lsdbStatus.hasCoordinateLsas(), true);
@@ -268,8 +276,23 @@ BOOST_AUTO_TEST_CASE(LsdbStatusClear)
   BOOST_CHECK_EQUAL(lsdbStatus.hasNameLsas(), false);
 }
 
-BOOST_AUTO_TEST_CASE(LsdbStatusOutputStream)
+class Theta
 {
+public:
+  std::vector<double> angles = {1.78};
+};
+
+class ThetaAndPhi
+{
+public:
+  std::vector<double> angles = {1.78, 3.21};
+};
+
+typedef boost::mpl::vector<Theta, ThetaAndPhi> HyperbolicAngleVectorFixture;
+
+BOOST_AUTO_TEST_CASE_TEMPLATE(LsdbStatusOutputStream, HRAngleVector, HyperbolicAngleVectorFixture)
+{
+  HRAngleVector angleVector;
   LsdbStatus lsdbStatus;
 
   LsaInfo lsaInfo;
@@ -289,21 +312,33 @@ BOOST_AUTO_TEST_CASE(LsdbStatusOutputStream)
 
   lsdbStatus.addAdjacencyLsa(adjacencyLsa);
 
-  // CoordinateLsa
-  CoordinateLsa coordinateLsa;
-  coordinateLsa.setLsaInfo(lsaInfo);
-
-  coordinateLsa.setHyperbolicRadius(1.65);
-  coordinateLsa.setHyperbolicAngle(1.78);
-
-  lsdbStatus.addCoordinateLsa(coordinateLsa);
-
-  // NameLsa
+    // NameLsa
   NameLsa nameLsa;
   nameLsa.setLsaInfo(lsaInfo);
   nameLsa.addName("name1");
 
   lsdbStatus.addNameLsa(nameLsa);
+
+  // CoordinateLsa
+  CoordinateLsa coordinateLsa;
+  coordinateLsa.setLsaInfo(lsaInfo);
+
+  coordinateLsa.setHyperbolicRadius(1.65);
+  coordinateLsa.setHyperbolicAngle(angleVector.angles);
+
+  std::string outputAngles = "HyperbolicAngles: ";
+  for (uint i = 0; i < angleVector.angles.size(); i++) {
+    std::string angle = boost::lexical_cast<std::string>(angleVector.angles[i]);
+    if (i == angleVector.angles.size()-1) {
+      outputAngles += angle;
+    }
+    else {
+      outputAngles += angle + ", ";
+    }
+  }
+  outputAngles += "), ";
+
+  lsdbStatus.addCoordinateLsa(coordinateLsa);
 
   std::ostringstream os;
   os << lsdbStatus;
@@ -321,7 +356,7 @@ BOOST_AUTO_TEST_CASE(LsdbStatusOutputStream)
                                     "SequenceNumber: 128, "
                                     "ExpirationPeriod: 10000 milliseconds), "
                                   "HyperbolicRadius: 1.65, "
-                                  "HyperbolicAngle: 1.78), "
+                                  + outputAngles +
                                 "NameLsa("
                                   "LsaInfo("
                                     "OriginRouter: /test, "

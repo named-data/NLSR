@@ -528,17 +528,32 @@ ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
   }
 
   try {
-    /* Radius and angle is mandatory configuration parameter in hyperbolic section.
+    /* Radius and angle(s) are mandatory configuration parameters in hyperbolic section.
      * Even if router can have hyperbolic routing calculation off but other router
      * in the network may use hyperbolic routing calculation for FIB generation.
      * So each router need to advertise its hyperbolic coordinates in the network
      */
     double radius = section.get<double>("radius");
-    double angle = section.get<double>("angle");
+    std::string angleString = section.get<std::string>("angle");
+
+    std::stringstream ss(angleString);
+    std::vector<double> angles;
+
+    double angle;
+
+    while (ss >> angle)
+    {
+      angles.push_back(angle);
+      if (ss.peek() == ',' || ss.peek() == ' ')
+      {
+        ss.ignore();
+      }
+    }
+
     if (!m_nlsr.getConfParameter().setCorR(radius)) {
       return false;
     }
-    m_nlsr.getConfParameter().setCorTheta(angle);
+    m_nlsr.getConfParameter().setCorTheta(angles);
   }
   catch (const std::exception& ex) {
     std::cerr << ex.what() << std::endl;

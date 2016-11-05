@@ -24,9 +24,12 @@
 
 #include <ndn-cxx/util/concepts.hpp>
 #include <ndn-cxx/encoding/block-helpers.hpp>
+#include "logger.hpp"
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
+
+INIT_LOGGER("CoordinateLsa");
 
 BOOST_CONCEPT_ASSERT((ndn::WireEncodable<CoordinateLsa>));
 BOOST_CONCEPT_ASSERT((ndn::WireDecodable<CoordinateLsa>));
@@ -35,7 +38,6 @@ static_assert(std::is_base_of<ndn::tlv::Error, CoordinateLsa::Error>::value,
 
 CoordinateLsa::CoordinateLsa()
   : m_hyperbolicRadius(0.0)
-  , m_hyperbolicAngle(0.0)
 {
 }
 
@@ -51,10 +53,14 @@ CoordinateLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
   size_t totalLength = 0;
   size_t doubleLength = 10;
 
-  const uint8_t* doubleBytes1 = reinterpret_cast<const uint8_t*>(&m_hyperbolicAngle);
-  totalLength += block.prependByteArrayBlock(ndn::tlv::nlsr::Double, doubleBytes1, 8);
-  totalLength += block.prependVarNumber(doubleLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::HyperbolicAngle);
+  const uint8_t* doubleBytes1;
+  for (auto it = m_hyperbolicAngle.rbegin(); it != m_hyperbolicAngle.rend(); ++it) {
+    doubleBytes1 = reinterpret_cast<const uint8_t*>(&*it);
+
+    totalLength += block.prependByteArrayBlock(ndn::tlv::nlsr::Double, doubleBytes1, 8);
+    totalLength += block.prependVarNumber(doubleLength);
+    totalLength += block.prependVarNumber(ndn::tlv::nlsr::HyperbolicAngle);
+  }
 
   const uint8_t* doubleBytes2 = reinterpret_cast<const uint8_t*>(&m_hyperbolicRadius);
   totalLength += block.prependByteArrayBlock(ndn::tlv::nlsr::Double, doubleBytes2, 8);
@@ -97,7 +103,7 @@ void
 CoordinateLsa::wireDecode(const ndn::Block& wire)
 {
   m_hyperbolicRadius = 0.0;
-  m_hyperbolicAngle = 0.0;
+  m_hyperbolicAngle.clear();
 
   m_wire = wire;
 
@@ -105,7 +111,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
     std::stringstream error;
     error << "Expected CoordinateLsa Block, but Block is of a different type: #"
           << m_wire.type();
-    throw Error(error.str());
+    BOOST_THROW_EXCEPTION(Error(error.str()));
   }
 
   m_wire.parse();
@@ -117,7 +123,8 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    throw Error("Missing required LsaInfo field");
+    std::cout << "Missing required LsaInfo field" << std::endl;
+    BOOST_THROW_EXCEPTION(Error("Missing required LsaInfo field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::HyperbolicRadius) {
@@ -125,31 +132,33 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
     ndn::Block::element_const_iterator it = val->elements_begin();
     if (it != val->elements_end() && it->type() == ndn::tlv::nlsr::Double) {
       m_hyperbolicRadius = *reinterpret_cast<const double*>(it->value());
+
+      ++val;
     }
     else {
-      throw Error("HyperbolicRadius: Missing required Double field");
+      std::cout << "HyperbolicRadius: Missing required Double field" << std::endl;
+      BOOST_THROW_EXCEPTION(Error("HyperbolicRadius: Missing required Double field"));
     }
-
-    ++val;
   }
   else {
-    throw Error("Missing required HyperbolicRadius field");
+    std::cout << "Missing required HyperbolicRadius field" << std::endl;
+    BOOST_THROW_EXCEPTION(Error("Missing required HyperbolicRadius field"));
   }
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::HyperbolicAngle) {
-    val->parse();
-    ndn::Block::element_const_iterator it = val->elements_begin();
-    if (it != val->elements_end() && it->type() == ndn::tlv::nlsr::Double) {
-      m_hyperbolicAngle = *reinterpret_cast<const double*>(it->value());
-    }
-    else {
-      throw Error("HyperbolicAngle: Missing required Double field");
-    }
+  for (; val != m_wire.elements_end(); ++val) {
+    if (val->type() == ndn::tlv::nlsr::HyperbolicAngle) {
+      val->parse();
 
-    ++val;
-  }
-  else {
-    throw Error("Missing required HyperbolicAngle field");
+      for (auto it = val->elements_begin(); it != val->elements_end(); ++it) {
+        if (it->type() == ndn::tlv::nlsr::Double) {
+          m_hyperbolicAngle.push_back(*reinterpret_cast<const double*>(it->value()));
+        }
+        else {
+          std::cout << "HyperbolicAngle: Missing required Double field" << std::endl;
+          BOOST_THROW_EXCEPTION(Error("HyperbolicAngle: Missing required Double field"));
+        }
+      }
+    }
   }
 }
 
@@ -158,8 +167,20 @@ operator<<(std::ostream& os, const CoordinateLsa& coordinateLsa)
 {
   os << "CoordinateLsa("
      << coordinateLsa.getLsaInfo() << ", "
-     << "HyperbolicRadius: " << coordinateLsa.getHyperbolicRadius() << ", "
-     << "HyperbolicAngle: " << coordinateLsa.getHyperbolicAngle() << ")";
+     << "HyperbolicRadius: " << coordinateLsa.getHyperbolicRadius() << ", ";
+
+  os << "HyperbolicAngles: ";
+  int i = 0;
+  for (const auto& value: coordinateLsa.getHyperbolicAngle()) {
+    if (i == 0) {
+      os << value;
+    }
+    else {
+      os << ", " << value;
+    }
+    ++i;
+  }
+  os << ")";
 
   return os;
 }

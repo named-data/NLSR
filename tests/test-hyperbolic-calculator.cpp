@@ -51,11 +51,11 @@ public:
     , adjacencies(nlsr.getAdjacencyList())
     , lsdb(nlsr.getLsdb())
   {
-    setUpTopology();
   }
 
   // Triangle topology with routers A, B, C connected
-  void setUpTopology()
+  void setUpTopology(std::vector<double> anglesA, std::vector<double> anglesB,
+                     std::vector<double> anglesC)
   {
     INIT_LOGGERS("/tmp", "TRACE");
 
@@ -70,7 +70,8 @@ public:
     AdjLsa adjA(a.getName(), 1, MAX_TIME, 2, adjacencies);
     lsdb.installAdjLsa(adjA);
 
-    CoordinateLsa coordA(adjA.getOrigRouter(), 1, MAX_TIME, 16.23, 2.97);
+
+    CoordinateLsa coordA(adjA.getOrigRouter(), 1, MAX_TIME, 16.23, anglesA);
     lsdb.installCoordinateLsa(coordA);
 
     // Router B
@@ -84,7 +85,7 @@ public:
     AdjLsa adjB(b.getName(), 1, MAX_TIME, 2, adjacencyListB);
     lsdb.installAdjLsa(adjB);
 
-    CoordinateLsa coordB(adjB.getOrigRouter(), 1, MAX_TIME, 16.59, 3.0);
+    CoordinateLsa coordB(adjB.getOrigRouter(), 1, MAX_TIME, 16.59, anglesB);
     lsdb.installCoordinateLsa(coordB);
 
     // Router C
@@ -98,10 +99,53 @@ public:
     AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
     lsdb.installAdjLsa(adjC);
 
-    CoordinateLsa coordC(adjC.getOrigRouter(), 1, MAX_TIME, 14.11, 2.99);
+    CoordinateLsa coordC(adjC.getOrigRouter(), 1, MAX_TIME, 14.11, anglesC);
     lsdb.installCoordinateLsa(coordC);
 
     map.createFromAdjLsdb(nlsr);
+  }
+
+  void runTest(const double& expectedCost)
+  {
+    HyperbolicRoutingCalculator calculator(map.getMapSize(), false, ROUTER_A_NAME);
+    calculator.calculatePaths(map, routingTable, lsdb, adjacencies);
+
+    RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
+
+    // Router A should be able to get to B through B with cost 0 and to B through C
+    NexthopList& bHopList = entryB->getNexthopList();
+    BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 2);
+
+    for (std::set<NextHop, NextHopComparator>::iterator it = bHopList.begin(); it != bHopList.end(); ++it) {
+      std::string faceUri = it->getConnectingFaceUri();
+      uint64_t cost = it->getRouteCostAsAdjustedInteger();
+
+      BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == 0) ||
+                  (faceUri == ROUTER_C_FACE && cost == applyHyperbolicFactorAndRound(expectedCost)));
+    }
+
+    RoutingTableEntry* entryC = routingTable.findRoutingTableEntry(ROUTER_C_NAME);
+
+    // Router A should be able to get to C through C with cost 0 and to C through B
+    NexthopList& cHopList = entryC->getNexthopList();
+    BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 2);
+
+    for (std::set<NextHop, NextHopComparator>::iterator it = cHopList.begin(); it != cHopList.end(); ++it) {
+      std::string faceUri = it->getConnectingFaceUri();
+      uint64_t cost = it->getRouteCostAsAdjustedInteger();
+
+      BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == applyHyperbolicFactorAndRound(expectedCost)) ||
+                  (faceUri == ROUTER_C_FACE && cost == 0));
+    }
+  }
+
+  uint64_t
+  applyHyperbolicFactorAndRound(double d)
+  {
+    // Hyperbolic costs in the tests were calculated with 1*10^-9 precision.
+    // A factor larger than 1*10^9 will cause the tests to fail.
+    BOOST_REQUIRE(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR <= 1000000000);
+    return round(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR*d);
   }
 
 public:
@@ -130,49 +174,26 @@ const std::string HyperbolicCalculatorFixture::ROUTER_A_FACE = "udp4://10.0.0.1"
 const std::string HyperbolicCalculatorFixture::ROUTER_B_FACE = "udp4://10.0.0.2";
 const std::string HyperbolicCalculatorFixture::ROUTER_C_FACE = "udp4://10.0.0.3";
 
-uint64_t
-applyHyperbolicFactorAndRound(double d)
-{
-  // Hyperbolic costs in the tests were calculated with 1*10^-9 precision.
-  // A factor larger than 1*10^9 will cause the tests to fail.
-  BOOST_REQUIRE(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR <= 1000000000);
-  return round(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR*d);
-}
-
 BOOST_FIXTURE_TEST_SUITE(TestHyperbolicRoutingCalculator, HyperbolicCalculatorFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  HyperbolicRoutingCalculator calculator(map.getMapSize(), false, ROUTER_A_NAME);
-  calculator.calculatePaths(map, routingTable, lsdb, adjacencies);
+  std::vector<double> anglesA = {2.97},
+                      anglesB = {3.0},
+                      anglesC = {2.99};
+  setUpTopology(anglesA, anglesB, anglesC);
 
-  RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
+  runTest(20.103356956);
+}
 
-  // Router A should be able to get to B through B with cost 0 and to B through C
-  NexthopList& bHopList = entryB->getNexthopList();
-  BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 2);
+BOOST_AUTO_TEST_CASE(BasicMultipleAngles)
+{
+  std::vector<double> anglesA = {2.97,1.22},
+                      anglesB = {3.0, 0.09},
+                      anglesC = {321, 2.99};
+  setUpTopology(anglesA, anglesB, anglesC);
 
-  for (std::set<NextHop, NextHopComparator>::iterator it = bHopList.begin(); it != bHopList.end(); ++it) {
-    std::string faceUri = it->getConnectingFaceUri();
-    uint64_t cost = it->getRouteCostAsAdjustedInteger();
-
-    BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == 0) ||
-                (faceUri == ROUTER_C_FACE && cost == applyHyperbolicFactorAndRound(20.103356956)));
-  }
-
-  RoutingTableEntry* entryC = routingTable.findRoutingTableEntry(ROUTER_C_NAME);
-
-  // Router A should be able to get to C through C with cost 0 and to C through B
-  NexthopList& cHopList = entryC->getNexthopList();
-  BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 2);
-
-  for (std::set<NextHop, NextHopComparator>::iterator it = cHopList.begin(); it != cHopList.end(); ++it) {
-    std::string faceUri = it->getConnectingFaceUri();
-    uint64_t cost = it->getRouteCostAsAdjustedInteger();
-
-    BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == applyHyperbolicFactorAndRound(20.103356956)) ||
-                (faceUri == ROUTER_C_FACE && cost == 0));
-  }
+  runTest(30.655296361);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

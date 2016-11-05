@@ -76,13 +76,20 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaBasic)
 {
   ndn::Name thisRouter("/RouterA");
 
-  CoordinateLsa routerALsa = createCoordinateLsa(thisRouter.toUri(), 10.0, 20.0);
+  std::vector<double> anglesA, anglesB, anglesC;
+  anglesA.push_back(20.00);
+  anglesB.push_back(543.21);
+  // Setting two angles for testing routerCLsa
+  anglesC.push_back(0.02);
+  anglesC.push_back(1.23);
+
+  CoordinateLsa routerALsa = createCoordinateLsa(thisRouter.toUri(), 10.0, anglesA);
   lsdb.installCoordinateLsa(routerALsa);
 
-  CoordinateLsa routerBLsa = createCoordinateLsa("/RouterB", 123.45, 543.21);
+  CoordinateLsa routerBLsa = createCoordinateLsa("/RouterB", 123.45, anglesB);
   lsdb.installCoordinateLsa(routerBLsa);
 
-  CoordinateLsa routerCLsa = createCoordinateLsa("/RouterC", 0.01, 0.02);
+  CoordinateLsa routerCLsa = createCoordinateLsa("/RouterC", 0.01, anglesC);
   lsdb.installCoordinateLsa(routerCLsa);
 
   CoordinateLsaPublisher publisher(lsdb, *face, keyChain);

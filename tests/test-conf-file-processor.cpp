@@ -98,6 +98,14 @@ const std::string SECTION_HYPERBOLIC_ON =
   "  angle    1.45\n"
   "}\n\n";
 
+const std::string SECTION_HYPERBOLIC_ANGLES_ON =
+    "hyperbolic\n"
+    "{\n"
+    "  state on\n"
+    "  radius   123.456\n"
+    "  angle    1.45,2.25\n"
+    "}\n\n";
+
 const std::string SECTION_HYPERBOLIC_OFF =
   "hyperbolic\n"
   "{\n"
@@ -127,6 +135,10 @@ const std::string CONFIG_LOG4CXX = SECTION_GENERAL_WITH_LOG4CXX;
 
 const std::string CONFIG_HYPERBOLIC = SECTION_GENERAL + SECTION_NEIGHBORS +
                                       SECTION_HYPERBOLIC_ON + SECTION_FIB + SECTION_ADVERTISING;
+
+const std::string CONFIG_HYPERBOLIC_ANGLES = SECTION_GENERAL + SECTION_NEIGHBORS +
+                                             SECTION_HYPERBOLIC_ANGLES_ON + SECTION_FIB +
+                                             SECTION_ADVERTISING;
 
 class ConfFileProcessorFixture : public BaseFixture
 {
@@ -365,7 +377,22 @@ BOOST_AUTO_TEST_CASE(Hyperbolic)
   ConfParameter& conf = nlsr.getConfParameter();
   BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
   BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
-  BOOST_CHECK_EQUAL(conf.getCorTheta(), 1.45);
+  std::vector<double> angles;
+  angles.push_back(1.45);
+  BOOST_CHECK(conf.getCorTheta() == angles);
+}
+
+BOOST_AUTO_TEST_CASE(Hyperbolic2)
+{
+  processConfigurationString(CONFIG_HYPERBOLIC_ANGLES);
+
+  ConfParameter& conf = nlsr.getConfParameter();
+  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
+  BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
+  std::vector<double> angles;
+  angles.push_back(1.45);
+  angles.push_back(2.25);
+  BOOST_CHECK(conf.getCorTheta() == angles);
 }
 
 BOOST_AUTO_TEST_CASE(DefaultValuesGeneral)

@@ -209,9 +209,11 @@ BOOST_AUTO_TEST_CASE(SequenceNumber)
                 3 , adjList);
   lsdb.installAdjLsa(adjLsa);
 
+  std::vector<double> angles = {0.0};
+
   // Install Cor LSA
   CoordinateLsa corLsa(originRouter, 1000, ndn::time::system_clock::TimePoint::max(),
-                       0,0);
+                       0, angles);
   lsdb.installCoordinateLsa(corLsa);
 
   std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +

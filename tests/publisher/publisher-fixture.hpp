@@ -84,7 +84,7 @@ public:
   }
 
   CoordinateLsa
-  createCoordinateLsa(const std::string& origin, double radius, double angle)
+  createCoordinateLsa(const std::string& origin, double radius, std::vector<double> angle)
   {
     CoordinateLsa lsa(origin, 1, ndn::time::system_clock::now(),
                       radius, angle);
@@ -109,7 +109,7 @@ public:
     checkTlvLsaInfo(tlvLsa.getLsaInfo(), lsa);
 
     BOOST_CHECK_EQUAL(tlvLsa.getHyperbolicRadius(), lsa.getCorRadius());
-    BOOST_CHECK_EQUAL(tlvLsa.getHyperbolicAngle(), lsa.getCorTheta());
+    BOOST_CHECK(tlvLsa.getHyperbolicAngle() == lsa.getCorTheta());
   }
 
   void

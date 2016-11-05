@@ -223,6 +223,13 @@ private:
   void
   addNextHop(ndn::Name destinationRouter, std::string faceUri, double cost, RoutingTable& rt);
 
+  double
+  calculateHyperbolicDistance(double rI, double rJ, double deltaTheta);
+
+  double
+  calculateAngularDistance(std::vector<double> angleVectorI,
+                           std::vector<double> angleVectorJ);
+
 private:
   const size_t m_nRouters;
   const bool m_isDryRun;
@@ -236,4 +243,4 @@ private:
 
 } // namespace nlsr
 
-#endif //NLSR_ROUTING_TABLE_CALCULATOR_HPP
+#endif // NLSR_ROUTING_TABLE_CALCULATOR_HPP

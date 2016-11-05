@@ -282,13 +282,12 @@ public:
   CoordinateLsa()
     : Lsa(CoordinateLsa::TYPE_STRING)
     , m_corRad(0)
-    , m_corTheta(0)
   {
   }
 
   CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
                 const ndn::time::system_clock::TimePoint& lt,
-                double r, double theta);
+                double r, std::vector<double> theta);
 
   const ndn::Name
   getKey() const;
@@ -324,16 +323,16 @@ public:
       m_corRad = cr;
   }
 
-  double
+  const std::vector<double>
   getCorTheta() const
   {
-    return m_corTheta;
+    return m_angles;
   }
 
   void
-  setCorTheta(double ct)
+  setCorTheta(std::vector<double> ct)
   {
-    m_corTheta = ct;
+    m_angles = ct;
   }
 
   bool
@@ -344,7 +343,7 @@ public:
 
 private:
   double m_corRad;
-  double m_corTheta;
+  std::vector<double> m_angles;
 
 public:
   static const std::string TYPE_STRING;

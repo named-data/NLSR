@@ -47,7 +47,10 @@ ConfParameter::writeLog()
   _LOG_INFO("Max Faces Per Prefix: " << m_maxFacesPerPrefix);
   _LOG_INFO("Hyperbolic Routing: " << m_hyperbolicState);
   _LOG_INFO("Hyp R: " << m_corR);
-  _LOG_INFO("Hyp theta: " << m_corTheta);
+  int i=0;
+  for (auto const& value: m_corTheta) {
+    _LOG_INFO("Hyp Angle " << i++ << ": "<< value);
+  }
   _LOG_INFO("Log Directory: " << m_logDir);
   _LOG_INFO("Seq Directory: " << m_seqFileDir);
 
