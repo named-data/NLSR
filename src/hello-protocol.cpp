@@ -207,7 +207,12 @@ HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
     _LOG_DEBUG("Old Status: " << oldStatus << " New Status: " << newStatus);
     // change in Adjacency list
     if ((oldStatus - newStatus) != 0) {
-      m_nlsr.getLsdb().scheduleAdjLsaBuild();
+      if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+        m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
+      }
+      else {
+        m_nlsr.getLsdb().scheduleAdjLsaBuild();
+      }
     }
   }
 }
