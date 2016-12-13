@@ -120,7 +120,8 @@ public:
   setNetwork(const ndn::Name& networkName)
   {
     m_network = networkName;
-    m_chronosyncPrefix = m_network;
+
+    m_chronosyncPrefix.append("localhop");
     m_chronosyncPrefix.append("NLSR");
     m_chronosyncPrefix.append("sync");
 
