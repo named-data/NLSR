@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License along with
 NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = '0.3.0'
+VERSION = '0.3.1'
 APPNAME = "nlsr"
 BUGREPORT = "http://redmine.named-data.net/projects/nlsr"
 URL = "http://named-data.net/doc/NLSR/"

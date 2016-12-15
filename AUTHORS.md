@@ -30,6 +30,7 @@ NLSR is an open source project includes contributions from the members of the
     * Vince Lehman         <http://vslehman.com>
     * Muktadir R Chowdhury <mrchwdhr@memphis.edu>
     * Nicholas Gordon      <nmgordon@memphis.edu>
+    * Laqin Fan            <lfan1@memphis.edu>
 
 * University of California, Los Angeles
 
