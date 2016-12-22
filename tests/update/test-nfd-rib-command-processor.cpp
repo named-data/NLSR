@@ -27,8 +27,8 @@
 #include "adjacency-list.hpp"
 #include "nlsr.hpp"
 
+#include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
-
 #include <ndn-cxx/security/key-chain.hpp>
 
 namespace nlsr {
@@ -49,7 +49,12 @@ public:
 
     // Initialize NLSR so a sync socket is created
     nlsr.initialize();
-    this->advanceClocks(ndn::time::milliseconds(10), 1);
+
+    // Saving clock::now before any advanceClocks so that it will
+    // be the same value as what ChronoSync uses in setting the sessionName
+    sessionTime.appendNumber(ndn::time::toUnixTimestamp(ndn::time::system_clock::now()).count());
+
+    this->advanceClocks(ndn::time::milliseconds(10));
     face.sentInterests.clear();
   }
 
@@ -63,9 +68,24 @@ public:
     return interest;
   }
 
+  void sendInterestForPublishedData() {
+    // Need to send an interest now since ChronoSync
+    // no longer does face->put(*data) in publishData.
+    // Instead it does it in onInterest
+    ndn::Name lsaInterestName("/localhop/ndn/NLSR/LSA");
+    // The part after LSA is Chronosync getSession
+    lsaInterestName.append(sessionTime);
+    lsaInterestName.appendNumber(nlsr.getSequencingManager().getCombinedSeqNo());
+    shared_ptr<ndn::Interest> lsaInterest = make_shared<ndn::Interest>(lsaInterestName);
+
+    face.receive(*lsaInterest);
+    this->advanceClocks(ndn::time::milliseconds(10));
+  }
+
   bool
   wasRoutingUpdatePublished()
   {
+    sendInterestForPublishedData();
     const ndn::Name& lsaPrefix = nlsr.getConfParameter().getLsaPrefix();
 
     const auto& it = std::find_if(face.sentData.begin(), face.sentData.end(),
@@ -83,6 +103,7 @@ public:
   Nlsr nlsr;
   NamePrefixList& namePrefixes;
   NfdRibCommandProcessor& processor;
+  ndn::Name sessionTime;
 };
 
 typedef boost::mpl::vector<NfdRibRegisterCommand, NfdRibUnregisterCommand> Commands;
@@ -119,7 +140,7 @@ BOOST_AUTO_TEST_CASE(InsertPrefix)
   parameters.setName(prefixName);
 
   processor.insertPrefix(parameters);
-  this->advanceClocks(ndn::time::milliseconds(10), 1);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
   BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 1);
   auto itr = std::find(namePrefixes.getNameList().begin(), namePrefixes.getNameList().end(),
@@ -140,7 +161,7 @@ BOOST_AUTO_TEST_CASE(RemovePrefix)
 
   BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 1);
   processor.removePrefix(parameters);
-  this->advanceClocks(ndn::time::milliseconds(10), 1);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
   BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 0);
   auto itr = std::find(namePrefixes.getNameList().begin(), namePrefixes.getNameList().end(),
@@ -161,7 +182,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestRegisterCommand)
     .wireEncode()), 0);
 
   face.receive(*command);
-  this->advanceClocks(ndn::time::milliseconds(10), 1);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
   BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 1);
   auto itr = std::find(namePrefixes.getNameList().begin(), namePrefixes.getNameList().end(),
@@ -185,7 +206,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
     .wireEncode()), 0);
 
   face.receive(ndn::Interest(name));
-  this->advanceClocks(ndn::time::milliseconds(10), 1);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
   BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 0);
   BOOST_CHECK(wasRoutingUpdatePublished());
@@ -201,7 +222,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestInvalidPrefix)
     .wireEncode()), 0);
 
   face.receive(ndn::Interest(name));
-  this->advanceClocks(ndn::time::milliseconds(10), 1);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
   BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 0);
   BOOST_CHECK(!wasRoutingUpdatePublished());

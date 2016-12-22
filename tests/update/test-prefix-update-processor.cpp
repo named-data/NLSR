@@ -39,14 +39,14 @@ namespace nlsr {
 namespace update {
 namespace test {
 
-class PrefixUpdateFixture : public nlsr::test::BaseFixture
+class PrefixUpdateFixture : public nlsr::test::UnitTestTimeFixture
 {
 public:
   PrefixUpdateFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
+    : face(g_ioService, keyChain, {true, true})
     , siteIdentity(ndn::Name("/ndn/edu/test-site").appendVersion())
     , opIdentity(ndn::Name(siteIdentity).append(ndn::Name("%C1.Operator")).appendVersion())
-    , nlsr(g_ioService, g_scheduler, *face, g_keyChain)
+    , nlsr(g_ioService, g_scheduler, face, g_keyChain)
     , keyPrefix(("/ndn/broadcast"))
     , updateProcessor(nlsr.getPrefixUpdateProcessor())
     , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
@@ -114,11 +114,12 @@ public:
     // Initialize NLSR so a sync socket is created
     nlsr.initialize();
 
-    // Listen on localhost prefix
-    updateProcessor.startListening();
+    // Saving clock::now before any advanceClocks so that it will
+    // be the same value as what ChronoSync uses in setting the sessionName
+    sessionTime.appendNumber(ndn::time::toUnixTimestamp(ndn::time::system_clock::now()).count());
 
-    face->processEvents(ndn::time::milliseconds(1));
-    face->sentInterests.clear();
+    this->advanceClocks(ndn::time::milliseconds(10));
+    face.sentInterests.clear();
   }
 
   void
@@ -155,28 +156,44 @@ public:
     keyChain.addCertificateAsIdentityDefault(*opCert);
   }
 
+  void sendInterestForPublishedData() {
+    // Need to send an interest now since ChronoSync
+    // no longer does face->put(*data) in publishData.
+    // Instead it does it in onInterest
+    ndn::Name lsaInterestName("/localhop/ndn/NLSR/LSA");
+    // The part after LSA is Chronosync getSession
+    lsaInterestName.append(sessionTime);
+    lsaInterestName.appendNumber(nlsr.getSequencingManager().getCombinedSeqNo());
+    shared_ptr<Interest> lsaInterest = make_shared<Interest>(lsaInterestName);
+
+    face.receive(*lsaInterest);
+    this->advanceClocks(ndn::time::milliseconds(10));
+  }
+
   bool
   wasRoutingUpdatePublished()
   {
+    sendInterestForPublishedData();
+
     const ndn::Name& lsaPrefix = nlsr.getConfParameter().getLsaPrefix();
 
-    const auto& it = std::find_if(face->sentData.begin(), face->sentData.end(),
+    const auto& it = std::find_if(face.sentData.begin(), face.sentData.end(),
       [lsaPrefix] (const ndn::Data& data) {
         return lsaPrefix.isPrefixOf(data.getName());
       });
 
-    return (it != face->sentData.end());
+    return (it != face.sentData.end());
   }
 
   void
   checkResponseCode(const Name& commandPrefix, uint64_t expectedCode)
   {
-    std::vector<Data>::iterator it = std::find_if(face->sentData.begin(),
-                                                  face->sentData.end(),
+    std::vector<Data>::iterator it = std::find_if(face.sentData.begin(),
+                                                  face.sentData.end(),
                                                   [commandPrefix] (const Data& data) {
                                                     return commandPrefix.isPrefixOf(data.getName());
                                                   });
-    BOOST_REQUIRE(it != face->sentData.end());
+    BOOST_REQUIRE(it != face.sentData.end());
 
     ndn::nfd::ControlResponse response(it->getContent().blockFromValue());
     BOOST_CHECK_EQUAL(response.getCode(), expectedCode);
@@ -191,7 +208,7 @@ public:
   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
+  ndn::util::DummyClientFace face;
   ndn::KeyChain keyChain;
 
   ndn::Name siteIdentity;
@@ -207,6 +224,7 @@ public:
   PrefixUpdateProcessor& updateProcessor;
 
   const boost::filesystem::path SITE_CERT_PATH;
+  ndn::Name sessionTime;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)
@@ -225,8 +243,8 @@ BOOST_AUTO_TEST_CASE(Basic)
   std::shared_ptr<Interest> advertiseInterest = std::make_shared<Interest>(advertiseCommand);
   keyChain.signByIdentity(*advertiseInterest, opIdentity);
 
-  face->receive(*advertiseInterest);
-  face->processEvents(ndn::time::milliseconds(1));
+  face.receive(*advertiseInterest);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
   NamePrefixList& namePrefixList = nlsr.getNamePrefixList();
 
@@ -234,7 +252,8 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(namePrefixList.getNameList().front(), parameters.getName());
 
   BOOST_CHECK(wasRoutingUpdatePublished());
-  face->sentData.clear();
+
+  face.sentData.clear();
 
   // Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
@@ -243,8 +262,8 @@ BOOST_AUTO_TEST_CASE(Basic)
   std::shared_ptr<Interest> withdrawInterest = std::make_shared<Interest>(withdrawCommand);
   keyChain.signByIdentity(*withdrawInterest, opIdentity);
 
-  face->receive(*withdrawInterest);
-  face->processEvents(ndn::time::milliseconds(1));
+  face.receive(*withdrawInterest);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
   BOOST_CHECK_EQUAL(namePrefixList.getSize(), 0);
 
@@ -263,22 +282,22 @@ BOOST_AUTO_TEST_CASE(DisabledAndEnabled)
   keyChain.signByIdentity(*advertiseInterest, opIdentity);
 
   // Command should be rejected
-  face->receive(*advertiseInterest);
-  face->processEvents(ndn::time::milliseconds(1));
+  face.receive(*advertiseInterest);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
-  BOOST_REQUIRE(!face->sentData.empty());
+  BOOST_REQUIRE(!face.sentData.empty());
 
-  const ndn::MetaInfo& metaInfo = face->sentData.front().getMetaInfo();
+  const ndn::MetaInfo& metaInfo = face.sentData.front().getMetaInfo();
   BOOST_CHECK_EQUAL(metaInfo.getType(), ndn::tlv::ContentType_Nack);
 
-  face->sentData.clear();
+  face.sentData.clear();
 
   // Enable PrefixUpdateProcessor so commands will be processed
   updateProcessor.enable();
 
   // Command should be accepted
-  face->receive(*advertiseInterest);
-  face->processEvents(ndn::time::milliseconds(1));
+  face.receive(*advertiseInterest);
+  this->advanceClocks(ndn::time::milliseconds(10));
 
   checkResponseCode(advertiseCommand, 200);
 }

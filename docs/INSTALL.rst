@@ -12,6 +12,12 @@ Prerequisites
 Refer to `Getting started with NFD <http://named-data.net/doc/NFD/current/INSTALL.html>`_
 for detailed installation and running instruction.
 
+-  ChronoSync library
+
+   ::
+
+       https://github.com/named-data/ChronoSync#build
+
 -  log4cxx library
 
    On Ubuntu Linux:
@@ -25,34 +31,6 @@ for detailed installation and running instruction.
    ::
 
           sudo port install log4cxx
-
--  protobuf
-
-   On Ubuntu Linux:
-
-   ::
-
-          sudo apt-get install libprotobuf-dev protobuf-compiler
-
-   On OS X with MacPorts:
-
-   ::
-
-          sudo port install protobuf-cpp
-
--  openssl
-
-   On Ubuntu Linux:
-
-   ::
-
-          sudo apt-get install libssl-dev
-
-   On OS X with MacPorts:
-
-   ::
-
-          sudo port install openssl
 
 Build
 -----

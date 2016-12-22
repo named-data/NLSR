@@ -43,7 +43,7 @@ NlsrRunner::run()
   ConfFileProcessor configProcessor(m_nlsr, m_nlsr.getConfFileName());
 
   if (!configProcessor.processConfFile()) {
-    throw Error("Error in configuration file processing! Exiting from NLSR");
+    BOOST_THROW_EXCEPTION(Error("Error in configuration file processing! Exiting from NLSR"));
   }
 
   if (m_nlsr.getConfParameter().isLog4CxxConfAvailable()) {
@@ -53,16 +53,16 @@ NlsrRunner::run()
     INIT_LOGGERS(m_nlsr.getConfParameter().getLogDir(), m_nlsr.getConfParameter().getLogLevel());
   }
 
-  m_nlsr.initialize();
-
   if (m_nlsr.getIsSetDaemonProcess()) {
     m_nlsr.daemonize();
   }
 
+  m_nlsr.initialize();
+
   try {
     m_nlsr.startEventLoop();
   }
-  catch (std::exception& e) {
+  catch (const std::exception& e) {
     _LOG_FATAL("ERROR: " << e.what());
     std::cerr << "ERROR: " << e.what() << std::endl;
 

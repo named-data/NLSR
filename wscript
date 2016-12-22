@@ -33,8 +33,7 @@ import os
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
     opt.load(['default-compiler-flags', 'coverage',
-              'boost', 'protoc', 'openssl',
-              'doxygen', 'sphinx_build'],
+              'boost',  'doxygen', 'sphinx_build'],
             tooldir=['.waf-tools'])
 
     nlsropt = opt.add_option_group('NLSR Options')
@@ -45,8 +44,7 @@ def options(opt):
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
-               'boost', 'openssl',
-               'default-compiler-flags',
+               'boost', 'default-compiler-flags',
                'doxygen', 'sphinx_build'])
 
     if 'PKG_CONFIG_PATH' not in os.environ:
@@ -57,8 +55,6 @@ def configure(conf):
 
     conf.check_cfg(package='liblog4cxx', args=['--cflags', '--libs'],
                    uselib_store='LOG4CXX', mandatory=True)
-
-    conf.check_openssl(mandatory=True)
 
     boost_libs = 'system chrono program_options iostreams thread regex filesystem'
     if conf.options.with_tests:
@@ -73,7 +69,8 @@ def configure(conf):
         Logs.error("Please upgrade your distribution or install custom boost libraries")
         return
 
-    conf.load('protoc')
+    conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.1', '--cflags', '--libs'],
+                   uselib_store='SYNC', mandatory=True)
 
     conf.load('coverage')
 
@@ -100,23 +97,13 @@ def build(bld):
         VERSION_PATCH=VERSION_SPLIT[2],
         )
 
-    nsync_objects = bld(
-        target='nsync-objects',
-        name='nsync-objects',
-        features='cxx',
-        source=bld.path.ant_glob(['nsync/**/*.cc', 'nsync/**/*.proto']),
-        use='BOOST NDN_CXX OPENSSL LOG4CXX',
-        includes='nsync',
-        export_includes='nsync',
-        )
-
     nlsr_objects = bld(
         target='nlsr-objects',
         name='nlsr-objects',
         features='cxx',
         source=bld.path.ant_glob(['src/**/*.cpp'],
                                  excl=['src/main.cpp']),
-        use='nsync-objects NDN_CXX BOOST LOG4CXX',
+        use='NDN_CXX BOOST LOG4CXX SYNC',
         includes='. src',
         export_includes='. src',
         )

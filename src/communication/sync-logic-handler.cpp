@@ -156,22 +156,19 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
   // of the object
   std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
-  m_syncSocket = std::make_shared<Sync::SyncSocket>(m_syncPrefix, m_validator, facePtr,
-                                                    std::bind(&SyncLogicHandler::onNsyncUpdate,
-                                                              this, _1, _2),
-                                                    std::bind(&SyncLogicHandler::onNsyncRemoval,
-                                                              this, _1));
+  m_syncSocket = std::make_shared<chronosync::Socket>(m_syncPrefix, m_updatePrefix, *facePtr,
+                                                      bind(&SyncLogicHandler::onNsyncUpdate, this, _1));
 }
 
 void
-SyncLogicHandler::onNsyncUpdate(const vector<Sync::MissingDataInfo>& v, Sync::SyncSocket* socket)
+SyncLogicHandler::onNsyncUpdate(const vector<chronosync::MissingDataInfo>& v)
 {
   _LOG_DEBUG("Received Nsync update event");
 
   for (size_t i = 0; i < v.size(); i++){
-    _LOG_DEBUG("Update Name: " << v[i].prefix << " Seq no: " << v[i].high.getSeq());
+    _LOG_DEBUG("Update Name: " << v[i].session.getPrefix(-1).toUri() << " Seq no: " << v[i].high);
 
-    SyncUpdate update(v[i].prefix, v[i].high.getSeq());
+    SyncUpdate update(v[i].session.getPrefix(-1), v[i].high);
 
     processUpdateFromSync(update);
   }
@@ -299,7 +296,8 @@ SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqN
   ndn::Name updateName(updatePrefix);
   string data("NoData");
 
-  m_syncSocket->publishData(updateName.toUri(), 0, data.c_str(), data.size(), 1000, seqNo);
+  m_syncSocket->publishData(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(),
+                            ndn::time::milliseconds(1000), seqNo, updateName);
 }
 
 } // namespace nlsr

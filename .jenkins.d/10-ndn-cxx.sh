@@ -49,6 +49,6 @@ popd >/dev/null
 
 if has Linux $NODE_LABELS; then
     sudo ldconfig
-elif has FreeBSD $NODE_LABELS; then
-    sudo ldconfig -a
+elif has FreeBSD10 $NODE_LABELS; then
+    sudo ldconfig -m
 fi

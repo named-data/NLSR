@@ -24,7 +24,7 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/validator-null.hpp>
-#include <nsync/sync-socket.h>
+#include <ChronoSync/socket.hpp>
 
 #include <iostream>
 #include <unistd.h>
@@ -60,10 +60,9 @@ public:
   /*! \brief Simple wrapper function to handle updates from Sync.
 
     \param v The information that Sync has acquired.
-    \param socket The socket that Sync is using to synchronize updates.
    */
   void
-  onNsyncUpdate(const std::vector<Sync::MissingDataInfo>& v, Sync::SyncSocket* socket);
+  onNsyncUpdate(const std::vector<chronosync::MissingDataInfo>& v);
 
   void
   onNsyncRemoval(const std::string& prefix);
@@ -93,7 +92,7 @@ private:
 private:
   std::shared_ptr<ndn::ValidatorNull> m_validator;
   ndn::Face& m_syncFace;
-  std::shared_ptr<Sync::SyncSocket> m_syncSocket;
+  std::shared_ptr<chronosync::Socket> m_syncSocket;
   ndn::Name m_syncPrefix;
 
 private:

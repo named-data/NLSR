@@ -16,11 +16,8 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- * \author Minsheng Zhang <mzhang4@memphis.edu>
- *
  **/
+
 #ifndef NLSR_CONF_FILE_PROCESSOR_HPP
 #define NLSR_CONF_FILE_PROCESSOR_HPP
 

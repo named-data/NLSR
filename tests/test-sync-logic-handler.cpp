@@ -51,15 +51,15 @@ public:
   void
   receiveUpdate(std::string prefix, uint64_t seqNo, SyncLogicHandler& p_sync)
   {
-    Sync::MissingDataInfo info = {prefix, 0, seqNo};
+    chronosync::MissingDataInfo info = {ndn::Name(prefix).appendNumber(1), 0, seqNo};
 
-    std::vector<Sync::MissingDataInfo> updates;
+    std::vector<chronosync::MissingDataInfo> updates;
     updates.push_back(info);
 
     face->processEvents(ndn::time::milliseconds(1));
     face->sentInterests.clear();
 
-    p_sync.onNsyncUpdate(updates, nullptr);
+    p_sync.onNsyncUpdate(updates);
 
     face->processEvents(ndn::time::milliseconds(1));
   }

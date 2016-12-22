@@ -9,8 +9,8 @@ if has OSX $NODE_LABELS && ! has OSX-10.8-c++11-64bit $NODE_LABELS; then
     set -x
     brew update
     brew upgrade
-    brew install boost pkg-config sqlite cryptopp log4cxx protobuf openssl
-    brew link --force openssl log4cxx protobuf
+    brew install boost pkg-config sqlite cryptopp log4cxx openssl
+    brew link --force openssl log4cxx
     brew cleanup
 fi
 
@@ -24,5 +24,5 @@ if has Ubuntu $NODE_LABELS; then
     sudo apt-get update -qq -y
     sudo apt-get -qq -y install build-essential pkg-config $BOOST_PKG \
                                 libcrypto++-dev libsqlite3-dev \
-                                liblog4cxx10-dev protobuf-compiler libprotobuf-dev libssl-dev
+                                liblog4cxx10-dev libssl-dev
 fi

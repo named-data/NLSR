@@ -76,6 +76,7 @@ BOOST_AUTO_TEST_CASE(HyperbolicOn_ZeroCostNeighbors)
   neighbors.insert(neighborC);
 
   nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_ON);
+  nlsr.getConfParameter().setNetwork(ndn::Name("/test"));
 
   nlsr.initialize();
 
