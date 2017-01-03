@@ -46,7 +46,7 @@ public:
     : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
     , siteIdentity(ndn::Name("/ndn/edu/test-site").appendVersion())
     , opIdentity(ndn::Name(siteIdentity).append(ndn::Name("%C1.Operator")).appendVersion())
-    , nlsr(g_ioService, g_scheduler, *face)
+    , nlsr(g_ioService, g_scheduler, *face, g_keyChain)
     , keyPrefix(("/ndn/broadcast"))
     , updateProcessor(nlsr.getPrefixUpdateProcessor())
     , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))

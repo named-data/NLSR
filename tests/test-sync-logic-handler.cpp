@@ -36,7 +36,7 @@ class SyncLogicFixture : public BaseFixture
 public:
   SyncLogicFixture()
     : face(make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
+    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
     , sync(nlsr.getSyncLogicHandler())
     , CONFIG_NETWORK("/ndn")
     , CONFIG_SITE("/site")
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
 
 BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
 {
-  Nlsr nlsr_hr(g_ioService, g_scheduler, ndn::ref(*face));
+  Nlsr nlsr_hr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain);
   SyncLogicHandler& sync_hr(nlsr_hr.getSyncLogicHandler());
 
   nlsr_hr.getConfParameter().setNetwork(CONFIG_NETWORK);
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
 BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
 {
 
-  Nlsr nlsr_hrdry(g_ioService, g_scheduler, ndn::ref(*face));
+  Nlsr nlsr_hrdry(g_ioService, g_scheduler, ndn::ref(*face),g_keyChain);
   SyncLogicHandler& sync_hrdry(nlsr_hrdry.getSyncLogicHandler());
 
   nlsr_hrdry.getConfParameter().setNetwork(CONFIG_NETWORK);

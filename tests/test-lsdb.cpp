@@ -40,7 +40,7 @@ class LsdbFixture : public BaseFixture
 public:
   LsdbFixture()
     : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
+    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
     , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter(), nlsr.getSequencingManager())
     , lsdb(nlsr.getLsdb())
     , conf(nlsr.getConfParameter())

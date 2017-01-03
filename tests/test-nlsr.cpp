@@ -37,7 +37,7 @@ class NlsrFixture : public UnitTestTimeFixture
 public:
   NlsrFixture()
     : face(make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
+    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
     , lsdb(nlsr.getLsdb())
     , neighbors(nlsr.getAdjacencyList())
   {
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
 BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 {
   shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>(g_ioService);
-  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
+  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain);
   Lsdb& lsdb = nlsr.getLsdb();
 
   // Simulate loading configuration file
@@ -237,7 +237,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
 {
   shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>(g_ioService);
-  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face));
+  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain);
   Lsdb& lsdb = nlsr.getLsdb();
 
   // Simulate loading configuration file

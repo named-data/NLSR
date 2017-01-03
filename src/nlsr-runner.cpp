@@ -31,7 +31,7 @@ INIT_LOGGER("NlsrRunner");
 NlsrRunner::NlsrRunner(std::string& configFileName, bool isDaemonProcess)
   : m_scheduler(m_ioService)
   , m_face(m_ioService)
-  , m_nlsr(m_ioService, m_scheduler, m_face)
+  , m_nlsr(m_ioService, m_scheduler, m_face, m_keyChain)
 {
   m_nlsr.setConfFileName(configFileName);
   m_nlsr.setIsDaemonProcess(isDaemonProcess);

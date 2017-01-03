@@ -69,7 +69,7 @@ class Nlsr
   };
 
 public:
-  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face);
+  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face, ndn::KeyChain& keyChain);
 
   void
   registrationFailed(const ndn::Name& name);
@@ -364,6 +364,7 @@ public:
 private:
   ndn::Face& m_nlsrFace;
   ndn::Scheduler& m_scheduler;
+  ndn::KeyChain& m_keyChain;
   ConfParameter m_confParam;
   AdjacencyList m_adjacencyList;
   NamePrefixList m_namePrefixList;
@@ -388,7 +389,6 @@ private:
   ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
   security::CertificateStore m_certStore;
   Validator m_validator;
-  ndn::KeyChain m_keyChain;
   ndn::security::SigningInfo m_signingInfo;
   ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;

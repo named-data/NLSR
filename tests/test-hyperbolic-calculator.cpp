@@ -46,7 +46,7 @@ class HyperbolicCalculatorFixture : public BaseFixture
 public:
   HyperbolicCalculatorFixture()
     : face(make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
+    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
     , routingTable(nlsr.getRoutingTable())
     , adjacencies(nlsr.getAdjacencyList())
     , lsdb(nlsr.getLsdb())

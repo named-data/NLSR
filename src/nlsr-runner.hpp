@@ -57,7 +57,7 @@ private:
   boost::asio::io_service m_ioService;
   ndn::Scheduler m_scheduler;
   ndn::Face m_face;
-
+  ndn::KeyChain m_keyChain;
   Nlsr m_nlsr;
 };
 

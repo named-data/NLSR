@@ -133,7 +133,7 @@ class ConfFileProcessorFixture : public BaseFixture
 public:
   ConfFileProcessorFixture()
     : face(make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face))
+    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
     , CONFIG_FILE("unit-test-nlsr.conf")
     , m_logConfigFileName(boost::filesystem::unique_path().native())
     , m_logFileName(boost::filesystem::unique_path().native())

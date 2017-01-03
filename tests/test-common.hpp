@@ -29,6 +29,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/time-unit-test-clock.hpp>
 
 namespace nlsr {
@@ -45,6 +46,7 @@ public:
 protected:
   boost::asio::io_service g_ioService;
   ndn::Scheduler g_scheduler;
+  ndn::KeyChain g_keyChain;
 };
 
 class UnitTestTimeFixture : public BaseFixture

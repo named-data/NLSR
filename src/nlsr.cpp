@@ -39,9 +39,10 @@ const ndn::Name Nlsr::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
 using namespace ndn;
 using namespace std;
 
-Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face)
+Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face, ndn::KeyChain& keyChain)
   : m_nlsrFace(face)
   , m_scheduler(scheduler)
+  , m_keyChain(keyChain)
   , m_confParam()
   , m_adjacencyList()
   , m_namePrefixList()
