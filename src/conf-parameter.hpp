@@ -125,7 +125,8 @@ public:
     m_chronosyncPrefix.append("NLSR");
     m_chronosyncPrefix.append("sync");
 
-    m_lsaPrefix = m_network;
+    m_lsaPrefix.append("localhop");
+    m_lsaPrefix.append(m_network);
     m_lsaPrefix.append("NLSR");
     m_lsaPrefix.append("LSA");
   }

@@ -72,7 +72,7 @@ public:
       throw Error("Cannot parse update name because expected components are missing");
     }
 
-    ndn::Name networkName = m_name.getSubName(0, nlsrPosition);
+    ndn::Name networkName = m_name.getSubName(1, nlsrPosition-1);
     ndn::Name routerName = m_name.getSubName(lsaPosition + 1);
 
     ndn::Name originRouter = networkName;
