@@ -31,6 +31,7 @@
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 #include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
+#include <ndn-cxx/mgmt/dispatcher.hpp>
 
 #include "adjacency-list.hpp"
 #include "common.hpp"
@@ -288,6 +289,12 @@ public:
     return m_prefixUpdateProcessor;
   }
 
+  ndn::mgmt::Dispatcher&
+  getDispatcher()
+  {
+    return m_dispatcher;
+  }
+
   void
   createFace(const std::string& faceUri,
              const CommandSucceedCallback& onSuccess,
@@ -385,6 +392,7 @@ private:
   ndn::security::SigningInfo m_signingInfo;
   ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
+  ndn::mgmt::Dispatcher m_dispatcher;
 
   ndn::nfd::FaceMonitor m_faceMonitor;
 

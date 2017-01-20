@@ -71,6 +71,7 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
                             m_keyChain,
                             m_certificateCache,
                             m_certStore)
+  , m_dispatcher(m_nlsrFace, m_keyChain, m_signingInfo)
   , m_faceMonitor(m_nlsrFace)
   , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
 {
@@ -197,6 +198,12 @@ Nlsr::initialize()
   _LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
   setInfoInterestFilter();
   setLsaInterestFilter();
+  try {
+    m_dispatcher.addTopPrefix(LOCALHOST_PREFIX, true, m_signingInfo);
+  }
+  catch (const std::exception& e) {
+    _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
+  }
 
   // Set event intervals
   setFirstHelloInterval(m_confParam.getFirstHelloInterval());
