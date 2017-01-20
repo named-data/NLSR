@@ -50,6 +50,7 @@
 #include "route/routing-table.hpp"
 #include "security/certificate-store.hpp"
 #include "update/prefix-update-processor.hpp"
+#include "update/nfd-rib-command-processor.hpp"
 #include "utility/name-helper.hpp"
 
 
@@ -290,6 +291,12 @@ public:
     return m_prefixUpdateProcessor;
   }
 
+  update::NfdRibCommandProcessor&
+  getNfdRibCommandProcessor()
+  {
+    return m_nfdRibCommandProcessor;
+  }
+
   ndn::mgmt::Dispatcher&
   getDispatcher()
   {
@@ -394,6 +401,7 @@ private:
   ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
   ndn::mgmt::Dispatcher m_dispatcher;
+  update::NfdRibCommandProcessor m_nfdRibCommandProcessor;
 
   ndn::nfd::FaceMonitor m_faceMonitor;
 

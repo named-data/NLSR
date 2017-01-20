@@ -55,14 +55,14 @@ public:
   {
   }
 
-  void
-  update(const ndn::Name& name, NexthopList& allHops);
-
   FibEntry*
   processUpdate(const ndn::Name& name, NexthopList& allHops);
 
-  void
+  VIRTUAL_WITH_TESTS void
   remove(const ndn::Name& name);
+
+  VIRTUAL_WITH_TESTS void
+  update(const ndn::Name& name, NexthopList& allHops);
 
   void
   clean();

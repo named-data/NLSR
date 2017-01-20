@@ -73,6 +73,10 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
                             m_certificateCache,
                             m_certStore)
   , m_dispatcher(m_nlsrFace, m_keyChain, m_signingInfo)
+  , m_nfdRibCommandProcessor(m_dispatcher,
+                             m_namePrefixList,
+                             m_nlsrLsdb,
+                             m_syncLogicHandler)
   , m_faceMonitor(m_nlsrFace)
   , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
 {
@@ -104,6 +108,16 @@ Nlsr::onLocalhostRegistrationSuccess(const ndn::Name& name)
 
   m_prefixUpdateProcessor.startListening();
   m_lsdbDatasetHandler.startListeningOnLocalhost();
+  // Dispatcher prefix registrations
+  m_nfdRibCommandProcessor.startListening();
+  // All dispatcher-related sub-prefixes *must* be registered before
+  // the top-level prefixes are added.
+  try {
+    m_dispatcher.addTopPrefix(LOCALHOST_PREFIX, false, m_signingInfo);
+  }
+  catch (const std::exception& e) {
+    _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
+  }
 }
 
 void
@@ -281,16 +295,6 @@ Nlsr::registerKeyPrefix()
 void
 Nlsr::registerLocalhostPrefix()
 {
-  _LOG_TRACE("Registering prefix with dispatcher and Face: " << LOCALHOST_PREFIX);
-  // All dispatcher-related sub-prefixes *must* be registered before
-  // the top-level prefixes are added.
-  try {
-    m_dispatcher.addTopPrefix(LOCALHOST_PREFIX, false, m_signingInfo);
-  }
-  catch (const std::exception& e) {
-    _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
-    registrationFailed(LOCALHOST_PREFIX);
-  }
   m_nlsrFace.registerPrefix(LOCALHOST_PREFIX,
                             std::bind(&Nlsr::onLocalhostRegistrationSuccess, this, _1),
                             std::bind(&Nlsr::registrationFailed, this, _1));
