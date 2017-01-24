@@ -1,0 +1,85 @@
+\documentclass[10pt]{article}
+
+\usepackage[margin=0.5in,bottom=.7in,top=.8in]{geometry}
+\usepackage{graphicx}\graphicspath{{figures/}}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[colorlinks=true,citecolor=Mahogany,linkcolor=Mahogany,urlcolor=Mahogany,filecolor=Mahogany]{hyperref}
+\usepackage{breakurl}
+\usepackage{url}
+\usepackage[nocompress]{cite}
+\usepackage{paralist}
+\usepackage{authblk}
+\usepackage{enumitem}
+\usepackage{multirow}
+
+\title{NLSR Developer's Guide}
+\author[1]{Vince Lehman, Muktdir Chowdhury, Nicholas Gordon}
+
+\affil[1]{University of Memphis}
+
+%\date{NFD Team}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+
+
+\usepackage{eso-pic,xcolor}
+\makeatletter
+\AddToShipoutPicture*{%
+\setlength{\@tempdimb}{20pt}%
+\setlength{\@tempdimc}{\paperheight}%
+\setlength{\unitlength}{1pt}%
+%\put(\strip@pt\@tempdimb,\strip@pt\@tempdimc){%
+%    \makebox(0,-60)[l]{\color{blue}%
+%NDN, Technical Report NDN-0021. \url{http://named-data.net/techreports.html}}
+%  }%
+}
+\makeatother
+
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The Named Data Link-State Routing Protocol (NLSR) is a Named Data Networking (NDN) routing protocol that populates NDN Forwarding Daemon's (NFD) Routing Information Base (RIB).
+The main design goal of NLSR is to provide a routing protocol to populate NFD's RIB and Forwarding Information Base (FIB).
+NLSR calculates the routing table using link-state or hyperbolic routing and produces multiple faces for each reachable name prefix in a single authoritative domain.
+NLSR will continue to evolve alongside the NDN protocol, NFD, and ndn-cxx.
+This document is meant to explain the design of NLSR including major module and data structures descriptions and the interactions between those components.
+
+\end{abstract}
+
+\tableofcontents
+\clearpage
+
+\input{intro}
+\clearpage
+\input{hello-protocol}
+\clearpage
+\input{sync-logic}
+\clearpage
+\input{lsas}
+\clearpage
+\input{lsdb}
+\clearpage
+\input{routing-table}
+\clearpage
+\input{npt}
+\clearpage
+\input{fib}
+\clearpage
+%\input{sequencing-manager}
+%\input{prefix-update}
+%\input{publishers}
+\input{security}
+\clearpage
+\input{configuration}
+\clearpage
+
+\phantomsection
+\addcontentsline{toc}{section}{References}
+
+\bibliographystyle{IEEEtran}
+\bibliography{nlsr}
+
+\end{document}

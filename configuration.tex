@@ -1,0 +1,99 @@
+\section{Configuration File}
+\label{sec:configuration}
+
+NLSR's configuration file contains numerous parameters to control the behavior and performance of NLSR.
+The configuration file also includes the trust schema used by NLSR to verify LSA Data, Hello Data, and prefix update command Interests.
+The configuration file is divided into six sections each with parameters that mainly affect a specific module.
+
+\subsection{General Section}
+
+The \texttt{general} section in the configuration file includes parameters which deal with the general setup of the router, the behavior of the LSDB, and logging configuration.
+
+There are three parameters used to configure the router prefix of the router.
+The router prefix is the name that other routers in the network know this router by.
+\begin{itemize}
+\item \texttt{network} - the name of the network to which the router belongs; e.g., \texttt{/ndn}.
+\item \texttt{site} - the name of the site to which the router belongs; e.g., \texttt{/edu/memphis}.
+\item \texttt{router} - the name to identify the router; e.g., \texttt{/\%C1.Router/cs/pollux}.
+\end{itemize}
+The router prefix is constructed by combining the three parameters following the format: \texttt{/<network>/<site>/<router>}.
+
+There are three parameters which affect the behavior of the LSDB.
+\begin{itemize}
+\item \texttt{lsa-refresh-time} - the time in seconds the router will wait before refreshing its LSAs (Default value: 1800; Valid values: 240 - 7200).
+\item \texttt{router-dead-interval} - the time in seconds after which an inactive router's LSAs are removed.
+The configured value for this parameter must be greater than \texttt{lsa-refresh-time}. (Default value: two times the value configured in \texttt{lsa-refresh-time}).
+\item \texttt{lsa-interest-lifetime} - the interest lifetime used for LSA Interests (Default value: 4; Valid values: 1 - 60).
+\end{itemize}
+
+The \texttt{log-level} parameter configures the verbosity of NLSR's logging.
+The possible \texttt{log-level} values are listed in increasing verbosity:
+\begin{itemize}
+\item \texttt{NONE} - no messages
+\item \texttt{ERROR} - error messages
+\item \texttt{WARN} - warning messages
+\item \texttt{INFO} - informational messages (default)
+\item \texttt{DEBUG} - debugging messages
+\item \texttt{TRACE} - trace messages (most verbose)
+\item \texttt{ALL} - all messages
+\end{itemize}
+Note that all debugging levels listed above the selected value will also be enabled.
+
+The \texttt{general} configuration section also includes parameters to choose where the NLSR log file and the NLSR sequence number file are stored.
+The \texttt{log-dir} parameter is an absolute path to the directory where the NLSR log file should be written, and \texttt{seq-dir} is an absolute path to the directory where the NLSR sequence number should be written.
+
+\subsection{Neighbors Section}
+
+The \texttt{neighbors} section in the configuration file contains parameters that define the behavior of the Hello Protocol and the neighboring routers of the router.
+\begin{itemize}
+\item \texttt{hello-retries} - the number of times to retry a Hello Interest before deciding the neighbor is down (Default value: 3; Valid values: 1 - 10).
+\item \texttt{hello-timeout} - the interest lifetime for Hello Interests in seconds (Default value: 1, Valid values: 1 - 15).
+\item \texttt{hello-interval} - the time in seconds between sending each Hello Interest to a neighbor. (Default value: 60; Valid values: 30 - 90).
+\item \texttt{first-hello-interval} -  the time to wait in seconds before sending the first Hello Interests (Default value: 10; Valid values: 0 - 10).
+\item \texttt{adj-lsa-build-interval} - when the Hello Protocol triggers an Adjacency LSA build, the LSDB will wait this amount of time in seconds before performing the Adjacency LSA build. This parameter is intended to allow for Adjacency LSA build requests to be aggregated and the build can then be performed once. (Default value: 5; Valid values: 0 - 5)
+\end{itemize}
+
+The \texttt{neighbors} section also includes multiple \texttt{neighbor} subsections, each of which configures a neighbor of the router.
+The \texttt{neighbor} subsection includes:
+\begin{itemize}
+\item \texttt{name} - the router prefix of the neighboring router
+\item \texttt{face-uri} - the face that should be used to connect to the neighboring router
+\item \texttt{link-cost} - the cost metric for the link connecting this router to the neighbor router.
+\end{itemize}
+
+\subsection{Hyperbolic Section}
+
+The \texttt{hyperbolic} section in the configuration file is used to enable/disable hyperbolic routing and to specify the hyperbolic coordinates of the router.
+
+The \texttt{state} parameter indicates whether or not hyperbolic routing should be enabled. There are three possible values for this parameter: \texttt{on}, \texttt{off}, and \texttt{dry-run}. \texttt{on} enables hyperbolic routing; \texttt{off} disables hyperbolic routing (link-state routing is used); \texttt{dry-run} uses link-state routing to populate NFD's FIB, but will also perform the hyperbolic routing calculations and write them to the log file for debugging purposes.
+
+The \texttt{radius} parameter defines the router's radius in the hyperbolic coordinate system and \texttt{angle} defines the router's angle in the hyperbolic coordinate system.
+
+\subsection{FIB Section}
+
+The \texttt{fib} section in the configuration file contains two parameters: one to limit the number of next hops registered for each name prefix, and the amount of time to wait before calculating the routing table after a request is made.
+
+\texttt{max-faces-per-prefix} defines the maximum number of next hops that can be registered for a name prefix.
+This value is intended to reduce the FIB size for routers with a large number of neighbors.
+The default value for \texttt{max-faces-per-prefix} is \texttt{0} which indicates that all available next hops may be added to each name prefix. \texttt{max-faces-per-prefix} allows values between 0 and 60.
+
+\texttt{routing-calc-interval} is the time to wait in seconds after a routing table calculation is requested before actually performing the routing table calculation.
+This parameter is intended to limit the number of routing table calculations, which may be performance intensive on some systems.
+The default value for \texttt{max-faces-per-prefix} is 15 seconds and can be configured to be in the range of 0 to 15 seconds.
+
+\subsection{Advertising Section}
+
+The \texttt{advertising} section includes a list of name prefixes that the router should advertise as reachable through itself.
+Each name prefix that should be advertised should be in the following format: \texttt{prefix /name/to/advertise}.
+This section allows for static configuration of the advertised prefixes, but prefixes can be dynamically advertised and withdrawn using the Prefix Update Processor. 
+
+\subsection{Security Section}
+
+The \texttt{security} section of the configuration file includes the configuration for NLSR's validators and the locations of certificates that should be published by the router.
+
+The \texttt{validator} subsection includes the configuration for the validator used by NLSR to verify the signatures of Hello Data and LSA Data.
+
+The \texttt{prefix-update-validator} configures the validator used by the Prefix Update Processor to verify that prefix update command Interests are signed by the operator of the router.
+
+The \texttt{security} section also allows configuration of which certificates should be published by the router using the \texttt{cert-to-publish} keyword.
+If the router should publish a certificate, the absolute path for the certificate file can be configured as \texttt{cert-to-publish} value.

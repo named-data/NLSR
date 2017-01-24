@@ -1,0 +1,21 @@
+\section{FIB Interaction}
+\label{sec:fib}
+
+The FIB module interacts directly with NFD to perform registrations and unregistrations of name prefixes.
+The FIB module is notified of additions, removals, or updates to the Name Prefix Table and will use the updated Name Prefix Table to perform the necessary registrations or unregistrations.
+The Name Prefix Table notifies the FIB module using the \texttt{Fib::update()} method which accepts a name prefix and next hops for that name prefix as parameters.
+The FIB module maintains a shadow FIB which represents its expectations of NFD's FIB.
+The FIB module uses the shadow FIB to determine which registrations and unregistrations are necessary.
+
+\subsection{Updating the FIB}
+When the Name Prefix Table performs an update on the FIB module, the FIB module will first sort the passed next hops with the next hop's costs in increasing order.
+The FIB module will next determine the number of next hops that should be installed for the name prefix using the \texttt{max-faces-per-prefix} parameter as a maximum.
+If there are more passed next hops than the \texttt{max-faces-per-prefix} parameter allows, the FIB module will only use the first \texttt{max-faces-per-prefix} number of next hops from the sorted list.
+If there are less passed next hops than the \texttt{max-faces-per-prefix} parameter, the FIB module will use all of the passed next hops.
+
+The FIB module next determines if there is already a FIB entry in the shadow FIB for the passed name prefix.
+If the name prefix will create a new FIB entry and the number of passed next hops is greater than zero, a new FIB entry will be created,
+the next hops will be registered for the name prefix in NFD's FIB, and the FIB entry will be set to expire in two times the \texttt{lsa-refresh-time} in order to clean up orphaned entries in NFD's FIB.
+If there is already an existing FIB entry for the name prefix and the number of passed next hops is greater than zero, any of the passed next hops that weren't previously registered for the FIB entry are registered.
+Then, any currently registered hops that are not in the passed next hops are removed from NFD's FIB, and the entry's expiration is refreshed.
+If there is already an existing FIB entry for the name prefix and the number of passed next hops is equal to zero, the routing table was unable to find a path to this name prefix and so the name prefix should be removed from NFD's FIB.

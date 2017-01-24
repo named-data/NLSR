@@ -1,0 +1,35 @@
+\section{Link-State Advertisements}
+\label{sec:lsas}
+
+Link-State Advertisements (LSAs) represent pieces of routing information distributed by routers.
+NLSR uses three types of LSAs to distribute routing information:
+Adjacency LSAs which include neighboring node and link information,
+Coordinate LSAs which include a router's hyperbolic coordinates, and
+Name LSAs which include advertised name prefixes reachable through the router.
+All of the LSAs received by the router are maintained by the LSDB module (Section~\ref{sec:lsdb}).
+
+\subsection{LSA Base Class}
+\label{sec:lsa-base-class}
+
+All three LSA implementations inherit from an LSA Base class, \texttt{Lsa}, which maintains information that is included in each LSA.
+The \texttt{LSA} class contains the following member variables:
+\begin{itemize}
+\item \textbf{Origin Router} - the router that advertised the LSA.
+\item \textbf{Sequence Number} - a number used to indicate the LSAs version as well as its ordering compared to other LSAs received from the same router.
+\item \textbf{Expiration Time Point} - a time point indicating when the LSA is no longer valid.
+\end{itemize} 
+
+\subsection{Adjacency LSAs}
+\label{sec:adjacency-lsas}
+
+Adjacency LSAs maintain an \texttt{AdjacencyList} which contains all the currently \texttt{ACTIVE} neighbors of the origin router.
+
+\subsection{Coordinate LSAs}
+\label{sec:coordinate-lsas}
+
+Coordinate LSAs maintains the hyperbolic angle and hyperbolic radius of the origin router.
+
+\subsection{Name LSAs}
+\label{sec:name-lsas}
+
+Name LSAs maintain a \texttt{NamePrefixList} which contains advertised name prefixes that are reachable through the origin router.

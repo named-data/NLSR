@@ -1,0 +1,19 @@
+\section{Sync Logic Handler}
+\label{sec:sync-logic}
+
+The Sync Logic Handler acts as the interface between the synchronization protocol and the NLSR application.
+The Sync Logic Handler receives notifications from the synchronization protocol when an sync update is detected, and the Sync Logic Handler then determines if the updated LSA should be retrieved.
+The Sync Logic Handler also notifies the synchronization protocol when the router's LSAs are modified or refreshed, so the synchronization protocol can update its internal digest and synchronize the updated information.
+
+\subsection{On Sync Update}
+When the synchronization protocol receives a sync update, the updated names and sequence numbers will be passed to \texttt{SyncLogicHandler::onNsyncUpdate()}.
+The Sync Logic Handler will process each updated name individually first by verifying that the update is not for one of the router's own LSAs.
+The Sync Logic Handler will then check the updated sequence number to see which LSAs were updated.
+If the sequence number for the LS in the update is greater than the sequence number of the existing LSA in the LSDB or there is no LSA for the updated Name,
+the Sync Logic Handler will use the \texttt{Lsdb::expressInterest()} interface to retrieve the LSA. The module will not try to retrive Coordinate LSA if link-state routing is on, or Adjacency LSA is hyperbolic routing is on.
+The logic used to express an LSA Interest and handle an LSA Data response is handled by the LSDB module (Section~\ref{sec:lsdb}).
+
+\subsection{Publish Routing Update}
+\label{sssec:routing-update}
+When any of a router's LSAs are updated or refreshed by the LSDB, the LSDB will use the \\ \texttt{SyncLogicHandler::publishRoutingUpdate()} interface to notify the synchronization protocol that the sequence number for the router's LSA prefix has changed.
+The Sync Logic Handler will also write the updated sequence number to file, so that a restarting router can begin publishing routing updates with sequence numbers larger than the sequence numbers it had published previously.
