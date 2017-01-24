@@ -9,7 +9,8 @@
 
     \begin{footnotesize}
       The ``wire'' arrows represent references (i.e. ``x has y''),
-      whereas the ``solid'' arrows represent inheritance (i.e. ``y subclasses x'').
+      whereas the ``solid'' arrows represent inheritance (i.e. ``y subclasses x''). \\
+      The quantification (e.g. 0..*) is standard UML.
     \end{footnotesize}
   \end{caption}
   \label{fig:npt-class-diagram}
@@ -76,6 +77,6 @@ As stated in the \texttt{NamePrefixTable::addEntry()} method, the RTPE will have
 
 \subsection{Removing routing table pool entries from the pool}
 \label{sec:npt-rtpe-del}
-An RTPE will be deleted when, after removing an RTPE from an NPT entry, \texttt{NamePrefixTable::removeEntry()} determines that the just-removed RTPE now has a use count of 0.
+After an RTPE is removed from an NPT entry, it will be deleted from the pool if \texttt{NamePrefixTable::removeEntry()} determines that the RTPE now has a use count of 0.
 It will then call \texttt{NamePrefixTable::deleteRtpeFromPool()}, passing the RTPE as a parameter.
 The method will erase the element from the hash map that they are contained in.
