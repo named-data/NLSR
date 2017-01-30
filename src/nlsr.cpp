@@ -199,12 +199,6 @@ Nlsr::initialize()
   _LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
   setInfoInterestFilter();
   setLsaInterestFilter();
-  try {
-    m_dispatcher.addTopPrefix(LOCALHOST_PREFIX, true, m_signingInfo);
-  }
-  catch (const std::exception& e) {
-    _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
-  }
 
   // Set event intervals
   setFirstHelloInterval(m_confParam.getFirstHelloInterval());
@@ -287,8 +281,16 @@ Nlsr::registerKeyPrefix()
 void
 Nlsr::registerLocalhostPrefix()
 {
-  _LOG_TRACE("Registering prefix: " << LOCALHOST_PREFIX);
-
+  _LOG_TRACE("Registering prefix with dispatcher and Face: " << LOCALHOST_PREFIX);
+  // All dispatcher-related sub-prefixes *must* be registered before
+  // the top-level prefixes are added.
+  try {
+    m_dispatcher.addTopPrefix(LOCALHOST_PREFIX, false, m_signingInfo);
+  }
+  catch (const std::exception& e) {
+    _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
+    registrationFailed(LOCALHOST_PREFIX);
+  }
   m_nlsrFace.registerPrefix(LOCALHOST_PREFIX,
                             std::bind(&Nlsr::onLocalhostRegistrationSuccess, this, _1),
                             std::bind(&Nlsr::registrationFailed, this, _1));
