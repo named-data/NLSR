@@ -67,3 +67,25 @@ The remainder of this documentation will describe the purpose of and interaction
 \label{fig:system-interaction}
 \end{figure}
 
+\subsection{Dispatcher}
+\label{sec:dispatcher}
+
+NLSR takes advantage of a variety of ndn-cxx convenience
+mechanisms. Among these is the dispatcher. The dispatcher provides
+facilities for receiving and decoding ControlCommands, which
+simplifies the processing workflow. The dispatcher itself is
+\href{http://named-data.net/doc/ndn-cxx/current/doxygen/de/d34/classndn_1_1mgmt_1_1Dispatcher.html}{well-documented},
+so we will only give a brief overview here.
+
+\begin{itemize}
+\item Any prefixes that are registered, such as ``prefix/register'',
+  \emph{must} be registered before top-level prefixes. All prefix
+  registrations should go in \texttt{Nlsr::registerLocalhostPrefix}.
+\item The dispatcher can be used to accept incoming ControlCommands
+  and respond to requests for datasets. Currently NLSR uses the
+  dispatcher only for accepting incoming ControlCommands.
+\item Top-level prefixes cannot overlap. For example, you cannot
+  register ``/localhost/nlsr'' and then ``/localhost/nlsr/fib''. The
+  second registration must be done as a sub-prefix of the first,
+  i.e. the first prefix, and then ``fib''.
+\end{itemize}
