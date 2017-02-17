@@ -328,7 +328,7 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
   }
 }
 
-typedef void(Fib::*RegisterPrefixCallback)(const ndn::nfd::ControlParameters&,
+typedef void(Fib::*RegisterPrefixCallback)(uint64_t,
                                            const ndn::nfd::ControlParameters&, uint8_t,
                                            const CommandSucceedCallback&,
                                            const CommandFailCallback&);
@@ -351,10 +351,10 @@ Fib::registerPrefix(const ndn::Name& namePrefix,
     .setCost(faceCost)
     .setExpirationPeriod(timeout)
     .setOrigin(128);
-  createFace(faceUri,
-             ndn::bind(static_cast<RegisterPrefixCallback>(&Fib::registerPrefixInNfd),
-                       this, _1, parameters, times, onSuccess, onFailure),
-             onFailure);
+  m_faceController.queryFace(faceUri,
+                             ndn::bind(static_cast<RegisterPrefixCallback>(&Fib::registerPrefixInNfd),
+                                       this, _1, parameters, times, onSuccess, onFailure),
+                             onFailure);
 }
 
 void
@@ -374,7 +374,7 @@ Fib::registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
 }
 
 void
-Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
+Fib::registerPrefixInNfd(uint64_t faceId,
                          const ndn::nfd::ControlParameters& parameters,
                          uint8_t times,
                          const CommandSucceedCallback& onSuccess,
@@ -383,7 +383,7 @@ Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
   ndn::nfd::ControlParameters controlParameters;
   controlParameters
     .setName(parameters.getName())
-    .setFaceId(faceCreateResult.getFaceId())
+    .setFaceId(faceId)
     .setCost(parameters.getCost())
     .setFlags(parameters.getFlags())
     .setExpirationPeriod(parameters.getExpirationPeriod())
