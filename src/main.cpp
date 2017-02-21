@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -30,16 +30,12 @@ main(int32_t argc, char** argv)
   std::string programName(argv[0]);
 
   std::string configFileName = "nlsr.conf";
-  bool isDaemonProcess = false;
 
   int32_t opt;
   while ((opt = getopt(argc, argv, "df:hV")) != -1) {
     switch (opt) {
       case 'f':
         configFileName = optarg;
-        break;
-      case 'd':
-        isDaemonProcess = true;
         break;
       case 'V':
         std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
@@ -52,7 +48,7 @@ main(int32_t argc, char** argv)
     }
   }
 
-  NlsrRunner runner(configFileName, isDaemonProcess);
+  NlsrRunner runner(configFileName);
 
   try {
     runner.run();

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,7 +26,7 @@
 
 namespace nlsr {
 
-INIT_LOGGER("NexthopList");
+INIT_LOGGER(route.NexthopList);
 
 static bool
 nexthopAddCompare(const NextHop& nh1, const NextHop& nh2)

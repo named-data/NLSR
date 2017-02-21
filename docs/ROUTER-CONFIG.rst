@@ -83,11 +83,7 @@ configuration commands follows:
         ; InterestLifetime (in seconds) for LSA fetching
         lsa-interest-lifetime 4    ; default value 4. Valid values 1-60
 
-        ; log-level is to set the levels of log for NLSR
-        log-level  INFO       ; default value INFO, valid value DEBUG, INFO
-        log-dir /var/log/nlsr/
         seq-dir /var/lib/nlsr/
-        ; log4cxx-conf /path/to/log4cxx-conf
     }
 
     ; the neighbors section contains the configuration for router's neighbors and hello's behavior
@@ -183,28 +179,17 @@ configuration commands follows:
         prefix /ndn/news/memphis/politics/lutherking
     }
 
-
-NLSR will have the following error if ``log-dir`` does not exist:
-
-::
-
-    Provided log directory </var/log/nlsr/> does not exist
-    Error in configuration file processing! Exiting from NLSR
-
-By default ``/var/log/nlsr/`` is set to be NLSR's log directory and ``/var/lib/nlsr/`` is set to be
-NLSR's sequence file directory. They do not exist and will need to be created.
-Also, since these are system directories it will require the user to run NLSR as root.
-If one does not have permission to write to the specified directory,
-then NLSR will produce the following error:
+By default NLSR's sequence file directory is set to ``/var/lib/nlsr/``. User must create this
+directory before starting NLSR. Since this is a system directory, NLSR must either be executed
+as root, or NLSR can be run as user "nlsr" after configuring the filesystem to grant "nlsr"
+read and write permissions. If user lacks permissions, the following error will occur:
 
 ::
 
     User does not have read and write permission on the directory
     Error in configuration file processing! Exiting from NLSR
 
-To avoid this, the directories can be set in a user owned directory.
-The directories for log and sequence file can be same.
-For example:
+To avoid this, the directory can be set in a user-owned directory. For example:
 
 ::
 
@@ -212,7 +197,6 @@ For example:
     {
       ...
 
-      log-dir /home/username/nlsr/log  ; path for log directory (Absolute path)
       seq-dir /home/username/nlsr/log  ; path for sequence directory (Absolute path)
 
     }

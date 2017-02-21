@@ -50,7 +50,6 @@ public:
     , lsdb(nlsr.getLsdb())
     , rt1(nlsr.getRoutingTable())
   {
-    INIT_LOGGERS("/tmp/", "TRACE");
     nlsr.getConfParameter().setNetwork("/ndn");
     nlsr.getConfParameter().setRouterName("/This/Router");
 

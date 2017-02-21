@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -39,8 +39,6 @@ public:
     : face(std::make_shared<ndn::util::DummyClientFace>(m_keyChain))
     , interests(face->sentInterests)
   {
-    INIT_LOGGERS("/tmp", "DEBUG");
-
     Adjacent neighbor1(router1Name, ndn::FaceUri(router1FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
     adjacencies.insert(neighbor1);
 

@@ -53,8 +53,26 @@ You can also run ``nlsr -f`` with the absolute path of the configuration file:
 
     nlsr -f /usr/local/etc/ndn/nlsr.conf
 
-To run NLSR as daemon, use the ``-d`` flag:
+Logging
+-------
+
+NLSR uses the ndn-cxx logging facility. All levels listed below the selected log-level
+value are enabled.
 
 ::
 
-    nlsr -d
+    Valid values:
+
+      TRACE    trace messages (most verbose)
+      DEBUG    debugging messages
+      INFO     informational messages
+      WARN     warning messages
+      ERROR    error messages
+      FATAL    fatal (will be logged unconditionally)
+
+To obtain logs for NLSR, set the NDN_LOG environment variable with the correct prefix and
+log-level settings. For example, running the command `export NDN_LOG=nlsr.*=TRACE && nlsr`
+will display all log messages in NLSR with a DEBUG level or below. If the user is presented
+with an error message `User does not have read and write permission on the directory` it can
+be circumvented by running the application with sudo: `sudo env NDN_LOG=nlsr.*=DEBUG nlsr`.
+Use `man ndn-log` for more detailed instructions.

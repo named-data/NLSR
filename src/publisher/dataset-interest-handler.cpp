@@ -29,7 +29,7 @@
 
 namespace nlsr {
 
-INIT_LOGGER("DatasetInterestHandler");
+INIT_LOGGER(DatasetInterestHandler);
 
 const ndn::PartialName ADJACENCIES_DATASET = ndn::PartialName("lsdb/adjacencies");
 const ndn::PartialName COORDINATES_DATASET = ndn::PartialName("lsdb/coordinates");

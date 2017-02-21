@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -33,7 +33,7 @@
 
 namespace nlsr {
 
-INIT_LOGGER("RoutingTableCalculator");
+INIT_LOGGER(route.RoutingTableCalculator);
 
 void
 RoutingTableCalculator::allocateAdjMatrix()

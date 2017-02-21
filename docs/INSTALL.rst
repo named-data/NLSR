@@ -18,20 +18,6 @@ for detailed installation and running instruction.
 
        https://github.com/named-data/ChronoSync#build
 
--  log4cxx library
-
-   On Ubuntu Linux:
-
-   ::
-
-          sudo apt-get install liblog4cxx10-dev
-
-   On OS X with MacPorts:
-
-   ::
-
-          sudo port install log4cxx
-
 Build
 -----
 

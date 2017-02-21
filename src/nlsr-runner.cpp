@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,21 +20,19 @@
  **/
 
 #include "nlsr-runner.hpp"
-
 #include "conf-file-processor.hpp"
 #include "logger.hpp"
 
 namespace nlsr {
 
-INIT_LOGGER("NlsrRunner");
+INIT_LOGGER(NlsrRunner);
 
-NlsrRunner::NlsrRunner(std::string& configFileName, bool isDaemonProcess)
+NlsrRunner::NlsrRunner(std::string& configFileName)
   : m_scheduler(m_ioService)
   , m_face(m_ioService)
   , m_nlsr(m_ioService, m_scheduler, m_face, m_keyChain)
 {
   m_nlsr.setConfFileName(configFileName);
-  m_nlsr.setIsDaemonProcess(isDaemonProcess);
 }
 
 void
@@ -44,17 +42,6 @@ NlsrRunner::run()
 
   if (!configProcessor.processConfFile()) {
     BOOST_THROW_EXCEPTION(Error("Error in configuration file processing! Exiting from NLSR"));
-  }
-
-  if (m_nlsr.getConfParameter().isLog4CxxConfAvailable()) {
-    INIT_LOG4CXX(m_nlsr.getConfParameter().getLog4CxxConfPath());
-  }
-  else {
-    INIT_LOGGERS(m_nlsr.getConfParameter().getLogDir(), m_nlsr.getConfParameter().getLogLevel());
-  }
-
-  if (m_nlsr.getIsSetDaemonProcess()) {
-    m_nlsr.daemonize();
   }
 
   /** Because URI canonization needs to occur before initialization,
@@ -86,7 +73,6 @@ NlsrRunner::printUsage(const std::string& programName)
 {
   std::cout << "Usage: " << programName << " [OPTIONS...]" << std::endl;
   std::cout << "   NDN routing...." << std::endl;
-  std::cout << "       -d          Run in daemon mode" << std::endl;
   std::cout << "       -f <FILE>   Specify configuration file name" << std::endl;
   std::cout << "       -V          Display version information" << std::endl;
   std::cout << "       -h          Display this help message" << std::endl;

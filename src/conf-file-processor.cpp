@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -287,52 +287,6 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     return false;
   }
 
-  // log-level
-  std::string logLevel = section.get<std::string>("log-level", "INFO");
-
-  if (isValidLogLevel(logLevel)) {
-    m_nlsr.getConfParameter().setLogLevel(logLevel);
-  }
-  else {
-    std::cerr << "Invalid value for log-level ";
-    std::cerr << "Valid values: ALL, TRACE, DEBUG, INFO, WARN, ERROR, NONE" << std::endl;
-    return false;
-  }
-
-  try {
-    std::string logDir = section.get<std::string>("log-dir");
-    if (boost::filesystem::exists(logDir)) {
-      if (boost::filesystem::is_directory(logDir)) {
-        std::string testFileName=logDir+"/test.log";
-        std::ofstream testOutFile;
-        testOutFile.open(testFileName.c_str());
-        if (testOutFile.is_open() && testOutFile.good()) {
-          m_nlsr.getConfParameter().setLogDir(logDir);
-        }
-        else {
-          std::cerr << "User does not have read and write permission on the directory";
-          std::cerr << std::endl;
-          return false;
-        }
-        testOutFile.close();
-        remove(testFileName.c_str());
-      }
-      else {
-        std::cerr << "Provided path is not a directory" << std::endl;
-        return false;
-      }
-    }
-    else {
-      std::cerr << "Provided log directory <" << logDir << "> does not exist" << std::endl;
-      return false;
-    }
-  }
-  catch (const std::exception& ex) {
-    std::cerr << "You must configure log directory" << std::endl;
-    std::cerr << ex.what() << std::endl;
-    return false;
-  }
-
   try {
     std::string seqDir = section.get<std::string>("seq-dir");
     if (boost::filesystem::exists(seqDir)) {
@@ -365,28 +319,6 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     std::cerr << "You must configure sequence directory" << std::endl;
     std::cerr << ex.what() << std::endl;
     return false;
-  }
-
-  try {
-    std::string log4cxxPath = section.get<std::string>("log4cxx-conf");
-
-    if (log4cxxPath == "") {
-      std::cerr << "No value provided for log4cxx-conf" << std::endl;
-      return false;
-    }
-
-    if (boost::filesystem::exists(log4cxxPath)) {
-      m_nlsr.getConfParameter().setLog4CxxConfPath(log4cxxPath);
-    }
-    else {
-      std::cerr << "Provided path for log4cxx-conf <" << log4cxxPath
-                << "> does not exist" << std::endl;
-
-      return false;
-    }
-  }
-  catch (const std::exception& ex) {
-    // Variable is optional so default configuration will be used; continue processing file
   }
 
   return true;

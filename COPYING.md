@@ -9,9 +9,6 @@ licenses:
 - Boost libraries are licensed under the conditions of
   [Boost Software License 1.0](http://www.boost.org/users/license.html)
 
-- log4cxx is licensed under the conditions of
-  [Apache License, Version 2.0](https://logging.apache.org/log4cxx/license.html)
-
 - ndn-cxx is licensed under the conditions of
   [LGPL 3.0](https://github.com/named-data/ndn-cxx/blob/master/COPYING.md)
 

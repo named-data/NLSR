@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,7 +21,6 @@
 
 #include "coordinate-lsa.hpp"
 #include "tlv-nlsr.hpp"
-#include "logger.hpp"
 
 #include <ndn-cxx/util/concepts.hpp>
 #include <ndn-cxx/encoding/block-helpers.hpp>
@@ -30,8 +29,6 @@
 
 namespace nlsr {
 namespace tlv {
-
-INIT_LOGGER("CoordinateLsa");
 
 BOOST_CONCEPT_ASSERT((ndn::WireEncodable<CoordinateLsa>));
 BOOST_CONCEPT_ASSERT((ndn::WireDecodable<CoordinateLsa>));

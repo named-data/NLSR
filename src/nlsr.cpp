@@ -34,7 +34,7 @@
 
 namespace nlsr {
 
-INIT_LOGGER("nlsr");
+INIT_LOGGER(Nlsr);
 
 const ndn::Name Nlsr::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
 
@@ -45,7 +45,6 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_confParam()
   , m_adjacencyList()
   , m_namePrefixList()
-  , m_isDaemonProcess(false)
   , m_configFileName("nlsr.conf")
   , m_nlsrLsdb(*this, scheduler)
   , m_adjBuildCount(0)
@@ -146,32 +145,6 @@ Nlsr::setStrategies()
 
   m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy, 0);
   m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy, 0);
-}
-
-void
-Nlsr::daemonize()
-{
-  pid_t process_id = 0;
-  pid_t sid = 0;
-  process_id = fork();
-  if (process_id < 0){
-    std::cerr << "Daemonization failed!" << std::endl;
-    BOOST_THROW_EXCEPTION(Error("Error: Daemonization process- fork failed!"));
-  }
-  if (process_id > 0) {
-    NLSR_LOG_DEBUG("Process daemonized. Process id: " << process_id);
-    exit(0);
-  }
-
-  umask(0);
-  sid = setsid();
-  if(sid < 0) {
-    BOOST_THROW_EXCEPTION(Error("Error: Daemonization process- setting id failed!"));
-  }
-
-  if (chdir("/") < 0) {
-    BOOST_THROW_EXCEPTION(Error("Error: Daemonization process-chdir failed!"));
-  }
 }
 
 void

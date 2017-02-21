@@ -52,16 +52,13 @@ def configure(conf):
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
                    uselib_store='NDN_CXX', mandatory=True)
 
-    conf.check_cfg(package='liblog4cxx', args=['--cflags', '--libs'],
-                   uselib_store='LOG4CXX', mandatory=True)
-
-    boost_libs = 'system chrono program_options iostreams thread regex filesystem'
+    boost_libs = 'system chrono program_options iostreams thread regex filesystem log log_setup'
     if conf.options.with_tests:
         conf.env['WITH_TESTS'] = 1
         conf.define('WITH_TESTS', 1);
         boost_libs += ' unit_test_framework'
 
-    conf.check_boost(lib=boost_libs)
+    conf.check_boost(lib=boost_libs, mt=True)
 
     if conf.env.BOOST_VERSION_NUMBER < 104800:
         Logs.error("Minimum required boost version is 1.48.0")
@@ -103,7 +100,7 @@ def build(bld):
         features='cxx',
         source=bld.path.ant_glob(['src/**/*.cpp'],
                                  excl=['src/main.cpp']),
-        use='NDN_CXX BOOST LOG4CXX SYNC',
+        use='NDN_CXX BOOST SYNC',
         includes='. src',
         export_includes='. src')
 

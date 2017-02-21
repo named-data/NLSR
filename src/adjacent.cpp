@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -28,7 +28,7 @@
 
 namespace nlsr {
 
-INIT_LOGGER("Adjacent");
+INIT_LOGGER(Adjacent);
 
 const float Adjacent::DEFAULT_LINK_COST = 10.0;
 

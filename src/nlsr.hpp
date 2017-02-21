@@ -117,18 +117,6 @@ public:
     m_configFileName = fileName;
   }
 
-  bool
-  getIsSetDaemonProcess()
-  {
-    return m_isDaemonProcess;
-  }
-
-  void
-  setIsDaemonProcess(bool value)
-  {
-    m_isDaemonProcess = value;
-  }
-
   ConfParameter&
   getConfParameter()
   {
@@ -364,9 +352,6 @@ public:
   void
   setStrategies();
 
-  void
-  daemonize();
-
   uint32_t
   getFirstHelloInterval() const
   {
@@ -479,7 +464,6 @@ private:
   ConfParameter m_confParam;
   AdjacencyList m_adjacencyList;
   NamePrefixList m_namePrefixList;
-  bool m_isDaemonProcess;
   std::string m_configFileName;
   Lsdb m_nlsrLsdb;
   int64_t m_adjBuildCount;

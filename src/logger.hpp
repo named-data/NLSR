@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -30,36 +30,15 @@
 #ifndef NLSR_LOGGER_HPP
 #define NLSR_LOGGER_HPP
 
-#include <log4cxx/logger.h>
+#include <ndn-cxx/util/logger.hpp>
 
-#define INIT_LOGGER(name) \
-  static log4cxx::LoggerPtr staticModuleLogger = log4cxx::Logger::getLogger(name)
+#define INIT_LOGGER(name) NDN_LOG_INIT(nlsr.name)
 
-#define NLSR_LOG_TRACE(x) \
-  LOG4CXX_TRACE(staticModuleLogger, x)
-
-#define NLSR_LOG_DEBUG(x) \
-  LOG4CXX_DEBUG(staticModuleLogger, x)
-
-#define NLSR_LOG_INFO(x) \
-  LOG4CXX_INFO(staticModuleLogger, x)
-
-#define NLSR_LOG_WARN(x) \
-  LOG4CXX_WARN(staticModuleLogger, x)
-
-#define NLSR_LOG_ERROR(x) \
-  LOG4CXX_ERROR(staticModuleLogger, x)
-
-#define NLSR_LOG_FATAL(x) \
-  LOG4CXX_FATAL(staticModuleLogger, x);
-
-void
-INIT_LOGGERS(const std::string& logDir, const std::string& logLevel);
-
-void
-INIT_LOG4CXX(const std::string& log4cxxConfPath);
-
-bool
-isValidLogLevel(const std::string& logLevel);
+#define NLSR_LOG_TRACE(x) NDN_LOG_TRACE(x)
+#define NLSR_LOG_DEBUG(x) NDN_LOG_DEBUG(x)
+#define NLSR_LOG_INFO(x) NDN_LOG_INFO(x)
+#define NLSR_LOG_WARN(x) NDN_LOG_WARN(x)
+#define NLSR_LOG_ERROR(x) NDN_LOG_ERROR(x)
+#define NLSR_LOG_FATAL(x) NDN_LOG_FATAL(x)
 
 #endif // NLSR_LOGGER_HPP

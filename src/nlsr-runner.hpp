@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -36,11 +36,11 @@ namespace nlsr {
  *
  * As its name suggests, this class is responsible for running
  * NLSR. It creates an nlsr::ConfFileProcessor to read a configuration
- * file and uses that to configure and then start an NLSR process. It
- * also initializes loggers and optionally daemonizes the NLSR
- * process. This class only exists to provide this functionality, and
- * there is no special reliance of NLSR on this class.
+ * file and uses that to configure and then start an NLSR process.
+ * This class only exists to provide this functionality, and there is
+ * no special reliance of NLSR on this class.
  */
+
 class NlsrRunner
 {
 public:
@@ -54,7 +54,8 @@ public:
     }
   };
 
-  NlsrRunner(std::string& configFileName, bool isDaemonProcess);
+  explicit
+  NlsrRunner(std::string& configFileName);
 
   /*! \brief Instantiate, configure, and start the NLSR process.
    *

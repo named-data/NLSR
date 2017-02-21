@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -136,7 +136,6 @@ public:
     , m_hyperbolicState(HYPERBOLIC_STATE_OFF)
     , m_corR(0)
     , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
-    , m_isLog4cxxConfAvailable(false)
   {
   }
 
@@ -410,18 +409,6 @@ public:
   }
 
   void
-  setLogDir(const std::string& logDir)
-  {
-    m_logDir = logDir;
-  }
-
-  const std::string&
-  getLogDir() const
-  {
-    return m_logDir;
-  }
-
-  void
   setSeqFileDir(const std::string& ssfd)
   {
     m_seqFileDir = ssfd;
@@ -433,27 +420,6 @@ public:
     return m_seqFileDir;
   }
 
-  bool
-  isLog4CxxConfAvailable() const
-  {
-    return m_isLog4cxxConfAvailable;
-  }
-
-  void
-  setLog4CxxConfPath(const std::string& path)
-  {
-    m_log4CxxConfPath = path;
-    m_isLog4cxxConfAvailable = true;
-  }
-
-  const std::string&
-  getLog4CxxConfPath() const
-  {
-    return m_log4CxxConfPath;
-  }
-
-  /*! \brief Dump the current state of all attributes to the log.
-   */
   void
   writeLog();
 
@@ -492,11 +458,8 @@ private:
 
   uint32_t m_maxFacesPerPrefix;
 
-  std::string m_logDir;
   std::string m_seqFileDir;
 
-  bool m_isLog4cxxConfAvailable;
-  std::string m_log4CxxConfPath;
 };
 
 } // namespace nlsr

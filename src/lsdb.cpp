@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -31,7 +31,7 @@
 
 namespace nlsr {
 
-INIT_LOGGER("Lsdb");
+INIT_LOGGER(Lsdb);
 
 class LsaContentPublisher : public SegmentPublisher<ndn::Face>
 {
@@ -1096,7 +1096,8 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
   lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_INTEREST);
   NLSR_LOG_DEBUG("nameLsa interest " << interest << " received");
   NameLsa*  nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
-  if (nameLsa != 0) {
+  if (nameLsa != nullptr) {
+    NLSR_LOG_TRACE("Verifying SeqNo for NameLsa is same as requested.");
     if (nameLsa->getLsSeqNo() == seqNo) {
       std::string content = nameLsa->serialize();
       putLsaData(interest,content);
@@ -1130,7 +1131,8 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
   lsaIncrementSignal(Statistics::PacketType::RCV_ADJ_LSA_INTEREST);
   NLSR_LOG_DEBUG("AdjLsa interest " << interest << " received");
   AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
-  if (adjLsa != 0) {
+  if (adjLsa != nullptr) {
+    NLSR_LOG_TRACE("Verifying SeqNo for AdjLsa is same as requested.");
     if (adjLsa->getLsSeqNo() == seqNo) {
       std::string content = adjLsa->serialize();
       putLsaData(interest,content);
@@ -1164,7 +1166,8 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
   lsaIncrementSignal(Statistics::PacketType::RCV_COORD_LSA_INTEREST);
   NLSR_LOG_DEBUG("CoordinateLsa interest " << interest << " received");
   CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
-  if (corLsa != 0) {
+  if (corLsa != nullptr) {
+    NLSR_LOG_TRACE("Verifying SeqNo for CoordinateLsa is same as requested.");
     if (corLsa->getLsSeqNo() == seqNo) {
       std::string content = corLsa->serialize();
       putLsaData(interest,content);
