@@ -320,6 +320,7 @@ Fib::registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
                          const std::string& faceUri,
                          uint8_t times)
 {
+  _LOG_DEBUG("Registering prefix: " << parameters.getName() << " faceUri: " << faceUri);
   m_controller.start<ndn::nfd::RibRegisterCommand>(parameters,
                                                    std::bind(&Fib::onRegistrationSuccess, this, _1,
                                                              "Successful in name registration",

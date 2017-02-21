@@ -66,6 +66,7 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
       interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
       expressInterest(interestName,
                       m_nlsr.getConfParameter().getInterestResendTime());
+      _LOG_DEBUG("Sending scheduled interest: " << interestName);
     }
     // If it does not have a Face, we need to give it one.  A
     // successful registration prompts a callback that sends the hello
@@ -95,6 +96,8 @@ HelloProtocol::processInterest(const ndn::Name& name,
   const ndn::Name interestName = interest.getName();
   _LOG_DEBUG("Interest Received for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
+    _LOG_DEBUG("INFO_COMPONENT not found or interestName: " << interestName
+               << " does not match expression");
     return;
   }
   ndn::Name neighbor;
@@ -109,7 +112,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
     m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
     _LOG_DEBUG("Sending out data for name: " << interest.getName());
     m_nlsr.getNlsrFace().put(*data);
-    Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+    Adjacent* adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
     // If this neighbor was previously inactive, send our own hello interest, too
     if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
       // We can only do that if the neighbor currently has a face.
@@ -157,12 +160,15 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
     interestName.append(NLSR_COMPONENT);
     interestName.append(INFO_COMPONENT);
     interestName.append(m_nlsr.getConfParameter().getRouterPrefix().wireEncode());
+    _LOG_DEBUG("Resending interest: " << interestName);
     expressInterest(interestName,
                     m_nlsr.getConfParameter().getInterestResendTime());
   }
   else if ((status == Adjacent::STATUS_ACTIVE) &&
            (infoIntTimedOutCount == m_nlsr.getConfParameter().getInterestRetryNumber())) {
     m_nlsr.getAdjacencyList().setStatusOfNeighbor(neighbor, Adjacent::STATUS_INACTIVE);
+
+    _LOG_DEBUG("Neighbor: " << neighbor << " status changed to INACTIVE");
 
     m_nlsr.getLsdb().scheduleAdjLsaBuild();
   }
@@ -250,7 +256,7 @@ void
 HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                                      const ndn::Name& neighbor,const ndn::time::milliseconds& timeout)
 {
-  Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+  Adjacent* adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
   if (adjacent != 0) {
     adjacent->setFaceId(commandSuccessResult.getFaceId());
     ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
@@ -290,7 +296,7 @@ HelloProtocol::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
   * Lsa unless all the neighbors are ACTIVE or DEAD. For considering the
   * missconfigured(link) neighbour dead this is required.
   */
-  Adjacent *adjacent = m_nlsr.getAdjacencyList().findAdjacent(name);
+  Adjacent* adjacent = m_nlsr.getAdjacencyList().findAdjacent(name);
   if (adjacent != 0) {
     adjacent->setInterestTimedOutNo(adjacent->getInterestTimedOutNo() + 1);
     Adjacent::Status status = adjacent->getStatus();

@@ -312,12 +312,19 @@ Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
       certName = certName.getPrefix(-1);
     }
   else if (certName[-1].toUri() != "ID-CERT")
-    return; //Wrong key interest.
+    {
+      _LOG_DEBUG("certName for interest " << interest << " is malformed,"
+                 << " contains incorrect namespace syntax");
+      return;
+    }
 
   std::shared_ptr<const ndn::IdentityCertificate> cert = getCertificate(certName);
 
   if (!static_cast<bool>(cert))
-    return; // cert is not found
+    {
+      _LOG_DEBUG("cert is not found for " << interest);
+      return; // cert is not found
+    }
 
   std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
   data->setName(interestName);
