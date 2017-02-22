@@ -21,6 +21,7 @@
 
 #include <cmath>
 #include <ndn-cxx/common.hpp>
+#include <ndn-cxx/encoding/nfd-constants.hpp>
 
 #include "adjacency-list.hpp"
 #include "common.hpp"
@@ -317,7 +318,7 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
      .setFlags(flags)
      .setCost(faceCost)
      .setExpirationPeriod(timeout)
-     .setOrigin(128);
+     .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
 
     _LOG_DEBUG("Registering prefix: " << namePrefix << " Face Uri: " << faceUri
                << " Face Id: " << faceId);
@@ -350,7 +351,7 @@ Fib::registerPrefix(const ndn::Name& namePrefix,
     .setFlags(flags)
     .setCost(faceCost)
     .setExpirationPeriod(timeout)
-    .setOrigin(128);
+    .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
   createFace(faceUri,
              ndn::bind(static_cast<RegisterPrefixCallback>(&Fib::registerPrefixInNfd),
                        this, _1, parameters, times, onSuccess, onFailure),
@@ -387,7 +388,7 @@ Fib::registerPrefixInNfd(const ndn::nfd::ControlParameters& faceCreateResult,
     .setCost(parameters.getCost())
     .setFlags(parameters.getFlags())
     .setExpirationPeriod(parameters.getExpirationPeriod())
-    .setOrigin(128);
+    .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
   m_controller.start<ndn::nfd::RibRegisterCommand>(controlParameters,
                                                    onSuccess,
                                                    onFailure);
@@ -403,7 +404,7 @@ Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
     controlParameters
       .setName(namePrefix)
       .setFaceId(faceId)
-      .setOrigin(128);
+      .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
     m_controller.start<ndn::nfd::RibUnregisterCommand>(controlParameters,
                                                      ndn::bind(&Fib::onUnregistration, this, _1,
                                                                "Successful in unregistering name"),
