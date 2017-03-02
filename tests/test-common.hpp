@@ -53,8 +53,8 @@ class UnitTestTimeFixture : public BaseFixture
 {
 protected:
   UnitTestTimeFixture()
-    : steadyClock(make_shared<ndn::time::UnitTestSteadyClock>())
-    , systemClock(make_shared<ndn::time::UnitTestSystemClock>())
+    : steadyClock(std::make_shared<ndn::time::UnitTestSteadyClock>())
+    , systemClock(std::make_shared<ndn::time::UnitTestSystemClock>())
   {
     ndn::time::setCustomClocks(steadyClock, systemClock);
   }
@@ -80,8 +80,8 @@ protected:
   }
 
 protected:
-  shared_ptr<ndn::time::UnitTestSteadyClock> steadyClock;
-  shared_ptr<ndn::time::UnitTestSystemClock> systemClock;
+  std::shared_ptr<ndn::time::UnitTestSteadyClock> steadyClock;
+  std::shared_ptr<ndn::time::UnitTestSystemClock> systemClock;
 };
 
 } // namespace test

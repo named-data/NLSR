@@ -29,6 +29,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <boost/cstdint.hpp>
+#include <boost/throw_exception.hpp>
 
 #include "test-access-control.hpp"
 
@@ -90,9 +91,9 @@ private:
   publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo);
 
 private:
-  ndn::shared_ptr<ndn::ValidatorNull> m_validator;
+  std::shared_ptr<ndn::ValidatorNull> m_validator;
   ndn::Face& m_syncFace;
-  ndn::shared_ptr<Sync::SyncSocket> m_syncSocket;
+  std::shared_ptr<Sync::SyncSocket> m_syncSocket;
   ndn::Name m_syncPrefix;
 
 private:
@@ -111,4 +112,4 @@ private:
 
 } // namespace nlsr
 
-#endif //NLSR_SYNC_LOGIC_HANDLER_HPP
+#endif // NLSR_SYNC_LOGIC_HANDLER_HPP

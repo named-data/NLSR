@@ -26,7 +26,7 @@
 #include <ndn-cxx/encoding/block-helpers.hpp>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
 BOOST_CONCEPT_ASSERT((ndn::WireEncodable<LsaInfo>));
 BOOST_CONCEPT_ASSERT((ndn::WireDecodable<LsaInfo>));
@@ -109,7 +109,7 @@ LsaInfo::wireDecode(const ndn::Block& wire)
     std::stringstream error;
     error << "Expected LsaInfo Block, but Block is of a different type: #"
           << m_wire.type();
-    throw Error(error.str());
+    BOOST_THROW_EXCEPTION(Error(error.str()));
   }
 
   m_wire.parse();
@@ -124,13 +124,13 @@ LsaInfo::wireDecode(const ndn::Block& wire)
       m_originRouter.wireDecode(*it);
     }
     else {
-      throw Error("OriginRouter: Missing required Name field");
+      BOOST_THROW_EXCEPTION(Error("OriginRouter: Missing required Name field"));
     }
 
     ++val;
   }
   else {
-    throw Error("Missing required OriginRouter field");
+    BOOST_THROW_EXCEPTION(Error("Missing required OriginRouter field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::SequenceNumber) {
@@ -138,7 +138,7 @@ LsaInfo::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    throw Error("Missing required SequenceNumber field");
+    BOOST_THROW_EXCEPTION(Error("Missing required SequenceNumber field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::ExpirationPeriod) {

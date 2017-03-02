@@ -235,8 +235,8 @@ AdjacencyList::find(const ndn::Name& adjName)
 {
   std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
                                                   m_adjList.end(),
-                                                  ndn::bind(&Adjacent::compare,
-                                                            _1, ndn::cref(adjName)));
+                                                  std::bind(&Adjacent::compare,
+                                                            _1, std::cref(adjName)));
   return it;
 }
 
@@ -245,8 +245,8 @@ AdjacencyList::findAdjacent(const ndn::Name& adjName)
 {
   std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
                                                   m_adjList.end(),
-                                                  ndn::bind(&Adjacent::compare,
-                                                            _1, ndn::cref(adjName)));
+                                                  std::bind(&Adjacent::compare,
+                                                            _1, std::cref(adjName)));
   if (it != m_adjList.end()) {
     return &(*it);
   }
@@ -259,7 +259,7 @@ AdjacencyList::findAdjacent(uint64_t faceId)
 {
   std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
                                                   m_adjList.end(),
-                                                  ndn::bind(&Adjacent::compareFaceId,
+                                                  std::bind(&Adjacent::compareFaceId,
                                                             _1, faceId));
   if (it != m_adjList.end()) {
     return &(*it);
@@ -273,7 +273,7 @@ AdjacencyList::getFaceId(const std::string& faceUri)
 {
   std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
                                                   m_adjList.end(),
-                                                  ndn::bind(&Adjacent::compareFaceUri,
+                                                  std::bind(&Adjacent::compareFaceUri,
                                                             _1, faceUri));
   if (it != m_adjList.end()) {
     return it->getFaceId();

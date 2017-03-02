@@ -41,8 +41,8 @@ class LinkStateCalculatorFixture : public BaseFixture
 {
 public:
   LinkStateCalculatorFixture()
-    : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
+    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
+    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , routingTable(nlsr.getRoutingTable())
     , lsdb(nlsr.getLsdb())
   {
@@ -101,7 +101,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   Map map;
 

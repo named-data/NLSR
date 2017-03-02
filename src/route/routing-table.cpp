@@ -130,7 +130,7 @@ RoutingTable::calculateLsRoutingTable(Nlsr& nlsr)
 
   LinkStateRoutingTableCalculator calculator(nRouters);
 
-  calculator.calculatePath(map, ndn::ref(*this), nlsr);
+  calculator.calculatePath(map, std::ref(*this), nlsr);
 }
 
 void
@@ -145,7 +145,7 @@ RoutingTable::calculateHypRoutingTable(Nlsr& nlsr)
   HyperbolicRoutingCalculator calculator(nRouters, false,
                                          nlsr.getConfParameter().getRouterPrefix());
 
-  calculator.calculatePaths(map, ndn::ref(*this),
+  calculator.calculatePaths(map, std::ref(*this),
                             nlsr.getLsdb(), nlsr.getAdjacencyList());
 }
 
@@ -161,7 +161,7 @@ RoutingTable::calculateHypDryRoutingTable(Nlsr& nlsr)
   HyperbolicRoutingCalculator calculator(nRouters, true,
                                          nlsr.getConfParameter().getRouterPrefix());
 
-  calculator.calculatePaths(map, ndn::ref(*this),
+  calculator.calculatePaths(map, std::ref(*this),
                             nlsr.getLsdb(), nlsr.getAdjacencyList());
 }
 
@@ -172,7 +172,7 @@ RoutingTable::scheduleRoutingTableCalculation(Nlsr& pnlsr)
     _LOG_DEBUG("Scheduling routing table calculation in " << m_routingCalcInterval);
 
     m_scheduler.scheduleEvent(m_routingCalcInterval,
-                              ndn::bind(&RoutingTable::calculate, this, ndn::ref(pnlsr)));
+                              std::bind(&RoutingTable::calculate, this, std::ref(pnlsr)));
 
     pnlsr.setIsRouteCalculationScheduled(true);
   }
@@ -205,7 +205,7 @@ RoutingTable::findRoutingTableEntry(const ndn::Name& destRouter)
 {
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_rTable.begin(),
                                                            m_rTable.end(),
-                                                           ndn::bind(&routingTableEntryCompare,
+                                                           std::bind(&routingTableEntryCompare,
                                                                      _1, destRouter));
   if (it != m_rTable.end()) {
     return &(*it);
@@ -242,7 +242,7 @@ RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
 
   std::list<RoutingTableEntry>::iterator it = std::find_if(m_dryTable.begin(),
                                                            m_dryTable.end(),
-                                                           ndn::bind(&routingTableEntryCompare,
+                                                           std::bind(&routingTableEntryCompare,
                                                                      _1, destRouter));
   if (it == m_dryTable.end()) {
     RoutingTableEntry rte(destRouter);

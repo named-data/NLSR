@@ -31,15 +31,15 @@
 namespace nlsr {
 namespace test {
 
-using ndn::bind;
-using ndn::shared_ptr;
+using std::bind;
+using std::shared_ptr;
 using ndn::Interest;
 
 class FaceControllerFixture : public BaseFixture
 {
 public:
   FaceControllerFixture()
-    : face(make_shared<ndn::util::DummyClientFace>())
+    : face(std::make_shared<ndn::util::DummyClientFace>())
     , interests(face->sentInterests)
     , controller(*face, keyChain)
     , faceController(g_ioService, controller)
@@ -53,7 +53,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   ndn::KeyChain keyChain;
   std::vector<Interest>& interests;
   ndn::nfd::Controller controller;
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateCanonizeFailure)
 {
   faceController.createFace("invalid://256.0.0.1:6363",
                             nullptr,
-                            bind(&FaceControllerFixture::onFailure, this, _1));
+                            std::bind(&FaceControllerFixture::onFailure, this, _1));
 
   face->processEvents(ndn::time::milliseconds(1));
 

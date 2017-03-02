@@ -43,7 +43,7 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::Face& face,
                                              SyncLogicHandler& sync,
                                              const ndn::Name broadcastPrefix,
                                              ndn::KeyChain& keyChain,
-                                             ndn::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
+                                             std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
                                              security::CertificateStore& certStore)
   : m_face(face)
   , m_namePrefixList(namePrefixList)
@@ -61,7 +61,7 @@ PrefixUpdateProcessor::startListening()
 {
   _LOG_DEBUG("Setting Interest filter for: " << COMMAND_PREFIX);
 
-  m_face.setInterestFilter(COMMAND_PREFIX, bind(&PrefixUpdateProcessor::onInterest, this, _2));
+  m_face.setInterestFilter(COMMAND_PREFIX, std::bind(&PrefixUpdateProcessor::onInterest, this, _2));
 }
 
 void
@@ -75,8 +75,8 @@ PrefixUpdateProcessor::onInterest(const ndn::Interest& request)
   }
 
   m_validator.validate(request,
-                       bind(&PrefixUpdateProcessor::onCommandValidated, this, _1),
-                       bind(&PrefixUpdateProcessor::onCommandValidationFailed, this, _1, _2));
+                       std::bind(&PrefixUpdateProcessor::onCommandValidated, this, _1),
+                       std::bind(&PrefixUpdateProcessor::onCommandValidationFailed, this, _1, _2));
 }
 
 void
@@ -197,7 +197,7 @@ PrefixUpdateProcessor::sendNack(const ndn::Interest& request)
   ndn::MetaInfo metaInfo;
   metaInfo.setType(ndn::tlv::ContentType_Nack);
 
-  shared_ptr<ndn::Data> responseData = std::make_shared<ndn::Data>(request.getName());
+  std::shared_ptr<ndn::Data> responseData = std::make_shared<ndn::Data>(request.getName());
   responseData->setMetaInfo(metaInfo);
 
   m_keyChain.sign(*responseData);

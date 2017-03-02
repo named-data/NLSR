@@ -102,11 +102,11 @@ private:
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
-  onContentValidated(const ndn::shared_ptr<const ndn::Data>& data);
+  onContentValidated(const std::shared_ptr<const ndn::Data>& data);
 
 private:
   void
-  onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
+  onContentValidationFailed(const std::shared_ptr<const ndn::Data>& data,
                             const std::string& msg);
 
   void

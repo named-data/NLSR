@@ -76,15 +76,15 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_faceMonitor(m_nlsrFace)
   , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
 {
-  m_faceMonitor.onNotification.connect(bind(&Nlsr::onFaceEventNotification, this, _1));
+  m_faceMonitor.onNotification.connect(std::bind(&Nlsr::onFaceEventNotification, this, _1));
   m_faceMonitor.start();
 }
 
 void
 Nlsr::registrationFailed(const ndn::Name& name)
 {
-  std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << endl;
-  throw Error("Error: Prefix registration failed");
+  std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << std::endl;
+  BOOST_THROW_EXCEPTION(Error("Error: Prefix registration failed"));
 }
 
 void
@@ -157,7 +157,7 @@ Nlsr::daemonize()
   process_id = fork();
   if (process_id < 0){
     std::cerr << "Daemonization failed!" << std::endl;
-    throw Error("Error: Daemonization process- fork failed!");
+    BOOST_THROW_EXCEPTION(Error("Error: Daemonization process- fork failed!"));
   }
   if (process_id > 0) {
     _LOG_DEBUG("Process daemonized. Process id: " << process_id);
@@ -167,11 +167,11 @@ Nlsr::daemonize()
   umask(0);
   sid = setsid();
   if(sid < 0) {
-    throw Error("Error: Daemonization process- setting id failed!");
+    BOOST_THROW_EXCEPTION(Error("Error: Daemonization process- setting id failed!"));
   }
 
   if (chdir("/") < 0) {
-    throw Error("Error: Daemonization process-chdir failed!");
+    BOOST_THROW_EXCEPTION(Error("Error: Daemonization process-chdir failed!"));
   }
 }
 
@@ -189,11 +189,11 @@ Nlsr::initialize()
 
   m_syncLogicHandler.createSyncSocket(m_confParam.getChronosyncPrefix());
 
-  /* Logging start */
+  // Logging start
   m_confParam.writeLog();
   m_adjacencyList.writeLog();
   m_namePrefixList.writeLog();
-  /* Logging end */
+  // Logging end
   initializeKey();
   setStrategies();
   _LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
@@ -237,15 +237,15 @@ Nlsr::initializeKey()
   try {
     m_keyChain.deleteIdentity(defaultIdentity);
   }
-  catch (std::exception& e) {
+  catch (const std::exception& e) {
   }
   m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID, defaultIdentity);
 
   ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(defaultIdentity, true);
 
-  ndn::shared_ptr<ndn::IdentityCertificate> certificate =
-    ndn::make_shared<ndn::IdentityCertificate>();
-  ndn::shared_ptr<ndn::PublicKey> pubKey = m_keyChain.getPublicKey(keyName);
+  std::shared_ptr<ndn::IdentityCertificate> certificate =
+    std::make_shared<ndn::IdentityCertificate>();
+  std::shared_ptr<ndn::PublicKey> pubKey = m_keyChain.getPublicKey(keyName);
   Name certificateName = keyName.getPrefix(-1);
   certificateName.append("KEY").append(keyName.get(-1)).append("ID-CERT").appendVersion();
   certificate->setName(certificateName);
@@ -310,12 +310,12 @@ Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
   else if (certName[-1].toUri() != "ID-CERT")
     return; //Wrong key interest.
 
-  ndn::shared_ptr<const ndn::IdentityCertificate> cert = getCertificate(certName);
+  std::shared_ptr<const ndn::IdentityCertificate> cert = getCertificate(certName);
 
   if (!static_cast<bool>(cert))
     return; // cert is not found
 
-  ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
   data->setName(interestName);
   data->setContent(cert->wireEncode());
   m_keyChain.signWithSha256(*data);
@@ -337,7 +337,7 @@ void
 Nlsr::onDestroyFaceFailure(const ndn::nfd::ControlResponse& response)
 {
   std::cerr << response.getText() << " (code: " << response.getCode() << ")";
-  throw Error("Error: Face destruction failed");
+  BOOST_THROW_EXCEPTION(Error("Error: Face destruction failed"));
 }
 
 void

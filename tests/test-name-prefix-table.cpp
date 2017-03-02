@@ -32,8 +32,8 @@ class NamePrefixTableFixture : public UnitTestTimeFixture
 {
 public:
   NamePrefixTableFixture()
-    : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
+    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
+    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , lsdb(nlsr.getLsdb())
     , npt(nlsr.getNamePrefixTable())
   {
@@ -41,7 +41,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
 
   Lsdb& lsdb;
@@ -148,7 +148,7 @@ BOOST_FIXTURE_TEST_CASE(RemoveEntryFromPool, NamePrefixTableFixture)
 {
   NamePrefixTable& npt = nlsr.getNamePrefixTable();
   RoutingTablePoolEntry rtpe1("router1", 0);
-  shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
+  std::shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
 
   npt.addRtpeToPool(rtpe1);
 
@@ -162,7 +162,7 @@ BOOST_FIXTURE_TEST_CASE(AddRoutingEntryToNptEntry, NamePrefixTableFixture)
 {
   NamePrefixTable& npt = nlsr.getNamePrefixTable();
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr1", 0);
-  shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
+  std::shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
   NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
 
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
@@ -172,8 +172,8 @@ BOOST_FIXTURE_TEST_CASE(AddRoutingEntryToNptEntry, NamePrefixTableFixture)
               npt.m_table.end(),
               npte1);
 
-  std::list<shared_ptr<RoutingTablePoolEntry>> rtpeList = nItr->getRteList();
-  std::list<shared_ptr<RoutingTablePoolEntry>>::iterator rItr =
+  std::list<std::shared_ptr<RoutingTablePoolEntry>> rtpeList = nItr->getRteList();
+  std::list<std::shared_ptr<RoutingTablePoolEntry>>::iterator rItr =
     std::find(rtpeList.begin(),
               rtpeList.end(),
               rtpePtr);
@@ -198,7 +198,7 @@ BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
               npt.m_table.end(),
               npte1);
 
-  std::list<shared_ptr<RoutingTablePoolEntry>> rtpeList = nItr->getRteList();
+  std::list<std::shared_ptr<RoutingTablePoolEntry>> rtpeList = nItr->getRteList();
 
   BOOST_CHECK_EQUAL(rtpeList.size(), 1);
   BOOST_CHECK_EQUAL(npt.m_rtpool.size(), 1);

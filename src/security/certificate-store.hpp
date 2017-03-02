@@ -35,7 +35,7 @@ class CertificateStore
 {
 public:
   void
-  insert(shared_ptr<ndn::IdentityCertificate> certificate)
+  insert(std::shared_ptr<ndn::IdentityCertificate> certificate)
   {
     if (certificate != nullptr) {
       // Key is cert name without version
@@ -43,7 +43,7 @@ public:
     }
   }
 
-  shared_ptr<const ndn::IdentityCertificate>
+  std::shared_ptr<const ndn::IdentityCertificate>
   find(const ndn::Name& certificateNameWithoutVersion) const
   {
     CertMap::const_iterator it = m_certificates.find(certificateNameWithoutVersion);
@@ -63,7 +63,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
 private:
-  typedef std::map<ndn::Name, shared_ptr<ndn::IdentityCertificate>> CertMap;
+  typedef std::map<ndn::Name, std::shared_ptr<ndn::IdentityCertificate>> CertMap;
   CertMap m_certificates;
 };
 

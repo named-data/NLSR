@@ -32,10 +32,10 @@
 namespace nlsr {
 
 /*! \brief provides a publisher of Status Dataset or other segmented octet stream
-    \sa http://redmine.named-data.net/projects/nfd/wiki/StatusDataset
+    \sa https://redmine.named-data.net/projects/nfd/wiki/StatusDataset
  */
 template <class FaceBase>
-class SegmentPublisher : ndn::noncopyable
+class SegmentPublisher : boost::noncopyable
 {
 public:
   SegmentPublisher(FaceBase& face,
@@ -91,7 +91,7 @@ public:
       ndn::Name segmentName(segmentPrefix);
       segmentName.appendSegment(segmentNo);
 
-      ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>(segmentName);
+      std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(segmentName);
       data->setContent(segmentBegin, segmentEnd - segmentBegin);
       data->setFreshnessPeriod(m_freshnessPeriod);
 
@@ -113,7 +113,7 @@ protected:
 
 private:
   void
-  publishSegment(ndn::shared_ptr<ndn::Data>& data, const ndn::security::SigningInfo& signingInfo)
+  publishSegment(std::shared_ptr<ndn::Data>& data, const ndn::security::SigningInfo& signingInfo)
   {
     m_keyChain.sign(*data, signingInfo);
     m_face.put(*data);

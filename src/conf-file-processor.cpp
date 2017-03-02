@@ -45,7 +45,7 @@ template <class T>
 class ConfigurationVariable
 {
 public:
-  typedef ndn::function<void(T)> ConfParameterCallback;
+  typedef std::function<void(T)> ConfParameterCallback;
   typedef boost::property_tree::ptree ConfigSection;
 
   ConfigurationVariable(const std::string& key, const ConfParameterCallback& setter)
@@ -446,7 +446,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   // Event intervals
   // adj-lsa-build-interval
   ConfigurationVariable<uint32_t> adjLsaBuildInterval("adj-lsa-build-interval",
-                                                      bind(&ConfParameter::setAdjLsaBuildInterval,
+                                                      std::bind(&ConfParameter::setAdjLsaBuildInterval,
                                                       &m_nlsr.getConfParameter(), _1));
   adjLsaBuildInterval.setMinAndMaxValue(ADJ_LSA_BUILD_INTERVAL_MIN, ADJ_LSA_BUILD_INTERVAL_MAX);
   adjLsaBuildInterval.setOptional(ADJ_LSA_BUILD_INTERVAL_DEFAULT);
@@ -457,7 +457,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
 
   // first-hello-interval
   ConfigurationVariable<uint32_t> firstHelloInterval("first-hello-interval",
-                                                     bind(&ConfParameter::setFirstHelloInterval,
+                                                     std::bind(&ConfParameter::setFirstHelloInterval,
                                                      &m_nlsr.getConfParameter(), _1));
   firstHelloInterval.setMinAndMaxValue(FIRST_HELLO_INTERVAL_MIN, FIRST_HELLO_INTERVAL_MAX);
   firstHelloInterval.setOptional(FIRST_HELLO_INTERVAL_DEFAULT);
@@ -569,7 +569,7 @@ ConfFileProcessor::processConfSectionFib(const ConfigSection& section)
 
   // routing-calc-interval
   ConfigurationVariable<uint32_t> routingCalcInterval("routing-calc-interval",
-                                                      bind(&ConfParameter::setRoutingCalcInterval,
+                                                      std::bind(&ConfParameter::setRoutingCalcInterval,
                                                       &m_nlsr.getConfParameter(), _1));
   routingCalcInterval.setMinAndMaxValue(ROUTING_CALC_INTERVAL_MIN, ROUTING_CALC_INTERVAL_MAX);
   routingCalcInterval.setOptional(ROUTING_CALC_INTERVAL_DEFAULT);
@@ -635,7 +635,7 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 
       std::string file = it->second.data();
       path certfilePath = absolute(file, path(m_confFileName).parent_path());
-      shared_ptr<ndn::IdentityCertificate> idCert =
+      std::shared_ptr<ndn::IdentityCertificate> idCert =
         ndn::io::load<ndn::IdentityCertificate>(certfilePath.string());
 
       if (idCert == nullptr) {

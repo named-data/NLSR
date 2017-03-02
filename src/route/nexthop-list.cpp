@@ -81,7 +81,7 @@ NexthopList::addNextHop(const NextHop& nh)
 {
   std::set<NextHop, NextHopComparator>::iterator it = std::find_if(m_nexthopList.begin(),
                                                  m_nexthopList.end(),
-                                                 ndn::bind(&nexthopAddCompare, _1, nh));
+                                                 std::bind(&nexthopAddCompare, _1, nh));
   if (it == m_nexthopList.end()) {
     m_nexthopList.insert(nh);
   }
@@ -96,7 +96,7 @@ NexthopList::removeNextHop(const NextHop& nh)
 {
   std::set<NextHop, NextHopComparator>::iterator it = std::find_if(m_nexthopList.begin(),
                                                  m_nexthopList.end(),
-                                                 ndn::bind(&nexthopRemoveCompare, _1, nh));
+                                                 std::bind(&nexthopRemoveCompare, _1, nh));
   if (it != m_nexthopList.end()) {
     m_nexthopList.erase(it);
   }

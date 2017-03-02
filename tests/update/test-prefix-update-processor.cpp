@@ -43,7 +43,7 @@ class PrefixUpdateFixture : public nlsr::test::BaseFixture
 {
 public:
   PrefixUpdateFixture()
-    : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
+    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
     , siteIdentity(ndn::Name("/ndn/edu/test-site").appendVersion())
     , opIdentity(ndn::Name(siteIdentity).append(ndn::Name("%C1.Operator")).appendVersion())
     , nlsr(g_ioService, g_scheduler, *face, g_keyChain)
@@ -138,8 +138,8 @@ public:
     // Operator cert
     ndn::Name keyName = keyChain.generateRsaKeyPairAsDefault(opIdentity, true);
 
-    opCert = ndn::make_shared<ndn::IdentityCertificate>();
-    ndn::shared_ptr<ndn::PublicKey> pubKey = keyChain.getPublicKey(keyName);
+    opCert = std::make_shared<ndn::IdentityCertificate>();
+    std::shared_ptr<ndn::PublicKey> pubKey = keyChain.getPublicKey(keyName);
     opCertName = keyName.getPrefix(-1);
     opCertName.append("KEY").append(keyName.get(-1)).append("ID-CERT").appendVersion();
     opCert->setName(opCertName);
@@ -191,16 +191,16 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   ndn::KeyChain keyChain;
 
   ndn::Name siteIdentity;
   ndn::Name siteCertName;
-  shared_ptr<IdentityCertificate> siteCert;
+  std::shared_ptr<IdentityCertificate> siteCert;
 
   ndn::Name opIdentity;
   ndn::Name opCertName;
-  shared_ptr<IdentityCertificate> opCert;
+  std::shared_ptr<IdentityCertificate> opCert;
 
   Nlsr nlsr;
   ndn::Name keyPrefix;
@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
   advertiseCommand.append(parameters.wireEncode());
 
-  shared_ptr<Interest> advertiseInterest = make_shared<Interest>(advertiseCommand);
+  std::shared_ptr<Interest> advertiseInterest = std::make_shared<Interest>(advertiseCommand);
   keyChain.signByIdentity(*advertiseInterest, opIdentity);
 
   face->receive(*advertiseInterest);
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
   withdrawCommand.append(parameters.wireEncode());
 
-  shared_ptr<Interest> withdrawInterest = make_shared<Interest>(withdrawCommand);
+  std::shared_ptr<Interest> withdrawInterest = std::make_shared<Interest>(withdrawCommand);
   keyChain.signByIdentity(*withdrawInterest, opIdentity);
 
   face->receive(*withdrawInterest);
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(DisabledAndEnabled)
   ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
   advertiseCommand.append(parameters.wireEncode());
 
-  shared_ptr<Interest> advertiseInterest = make_shared<Interest>(advertiseCommand);
+  std::shared_ptr<Interest> advertiseInterest = std::make_shared<Interest>(advertiseCommand);
   keyChain.signByIdentity(*advertiseInterest, opIdentity);
 
   // Command should be rejected

@@ -31,7 +31,7 @@ namespace nlsr {
 namespace test {
 
 void
-processDatasetInterest(shared_ptr<ndn::util::DummyClientFace> face,
+processDatasetInterest(std::shared_ptr<ndn::util::DummyClientFace> face,
                        std::function<bool(const ndn::Block&)> isSameType)
 {
   face->processEvents(ndn::time::milliseconds(1));
@@ -50,7 +50,7 @@ processDatasetInterest(shared_ptr<ndn::util::DummyClientFace> face,
 }
 
 void
-checkErrorResponse(shared_ptr<ndn::util::DummyClientFace> face, uint64_t expectedCode)
+checkErrorResponse(std::shared_ptr<ndn::util::DummyClientFace> face, uint64_t expectedCode)
 {
   BOOST_REQUIRE_EQUAL(face->sentData.size(), 1);
 

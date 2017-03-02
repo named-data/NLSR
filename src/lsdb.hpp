@@ -303,7 +303,7 @@ private:
                                   const ndn::Name& lsaKey,
                                   uint64_t seqNo);
   void
-  onContentValidated(const ndn::shared_ptr<const ndn::Data>& data);
+  onContentValidated(const std::shared_ptr<const ndn::Data>& data);
 
   void
   processContentNameLsa(const ndn::Name& lsaKey,
@@ -387,4 +387,4 @@ private:
 
 } // namespace nlsr
 
-#endif //NLSR_LSDB_HPP
+#endif // NLSR_LSDB_HPP

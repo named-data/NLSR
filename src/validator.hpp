@@ -45,7 +45,7 @@ public:
   explicit
   Validator(ndn::Face& face,
             const ndn::Name broadcastPrefix,
-            const ndn::shared_ptr<ndn::CertificateCache>& cache,
+            const std::shared_ptr<ndn::CertificateCache>& cache,
             security::CertificateStore& certStore,
             const int stepLimit = 10)
     : ndn::ValidatorConfig(face, cache, ndn::ValidatorConfig::DEFAULT_GRACE_INTERVAL, stepLimit)
@@ -73,7 +73,7 @@ public:
   }
 
 protected:
-  typedef std::vector<ndn::shared_ptr<ndn::ValidationRequest>> NextSteps;
+  typedef std::vector<std::shared_ptr<ndn::ValidationRequest>> NextSteps;
 
   virtual void
   afterCheckPolicy(const NextSteps& nextSteps,
@@ -84,16 +84,16 @@ protected:
       return;
     }
 
-    for (const shared_ptr<ndn::ValidationRequest>& request : nextSteps) {
+    for (const std::shared_ptr<ndn::ValidationRequest>& request : nextSteps) {
 
       ndn::Interest& interest = request->m_interest;
 
       // Look for certificate in permanent storage
-      shared_ptr<const ndn::IdentityCertificate> cert = m_certStore.find(interest.getName());
+      std::shared_ptr<const ndn::IdentityCertificate> cert = m_certStore.find(interest.getName());
 
       if (cert != nullptr) {
         // If the certificate is found, no reason to express interest
-        shared_ptr<ndn::Data> data = make_shared<ndn::Data>(interest.getName());
+        std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(interest.getName());
         data->setContent(cert->wireEncode());
 
         Validator::onData(interest, *data, request);
@@ -106,8 +106,8 @@ protected:
 
         // Attempt to fetch the certificate
         m_face->expressInterest(interest,
-                                bind(&Validator::onData, this, _1, _2, request),
-                                bind(&Validator::onTimeout,
+                                std::bind(&Validator::onData, this, _1, _2, request),
+                                std::bind(&Validator::onTimeout,
                                      this, _1, request->m_nRetries,
                                      onFailure,
                                      request));
@@ -115,10 +115,10 @@ protected:
     }
   }
 
-  virtual ndn::shared_ptr<const ndn::Data>
+  virtual std::shared_ptr<const ndn::Data>
   preCertificateValidation(const ndn::Data& data)
   {
-    ndn::shared_ptr<ndn::Data> internalData = ndn::make_shared<ndn::Data>();
+    std::shared_ptr<ndn::Data> internalData = std::make_shared<ndn::Data>();
     internalData->wireDecode(data.getContent().blockFromValue());
     return internalData;
   }

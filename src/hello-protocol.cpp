@@ -42,10 +42,10 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
   i.setInterestLifetime(ndn::time::seconds(seconds));
   i.setMustBeFresh(true);
   m_nlsr.getNlsrFace().expressInterest(i,
-                                       ndn::bind(&HelloProtocol::onContent,
+                                       std::bind(&HelloProtocol::onContent,
                                                  this,
                                                  _1, _2),
-                                       ndn::bind(&HelloProtocol::processInterestTimedOut,
+                                       std::bind(&HelloProtocol::processInterestTimedOut,
                                                  this, _1));
 }
 
@@ -57,7 +57,7 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
        ++it) {
     // If this adjacency has a Face, just proceed as usual.
     if((*it).getFaceId() != 0) {
-      /* interest name: /<neighbor>/NLSR/INFO/<router> */
+      // interest name: /<neighbor>/NLSR/INFO/<router>
       ndn::Name interestName = (*it).getName() ;
       interestName.append(NLSR_COMPONENT);
       interestName.append(INFO_COMPONENT);
@@ -82,14 +82,14 @@ HelloProtocol::scheduleInterest(uint32_t seconds)
   _LOG_DEBUG("Scheduling HELLO Interests in " << ndn::time::seconds(seconds));
 
   m_scheduler.scheduleEvent(ndn::time::seconds(seconds),
-                            ndn::bind(&HelloProtocol::sendScheduledInterest, this, seconds));
+                            std::bind(&HelloProtocol::sendScheduledInterest, this, seconds));
 }
 
 void
 HelloProtocol::processInterest(const ndn::Name& name,
                                const ndn::Interest& interest)
 {
-  /* interest name: /<neighbor>/NLSR/INFO/<router> */
+  // interest name: /<neighbor>/NLSR/INFO/<router>
   const ndn::Name interestName = interest.getName();
   _LOG_DEBUG("Interest Received for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
@@ -99,7 +99,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
   neighbor.wireDecode(interestName.get(-1).blockFromValue());
   _LOG_DEBUG("Neighbor: " << neighbor);
   if (m_nlsr.getAdjacencyList().isNeighbor(neighbor)) {
-    ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
+    std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
     data->setName(ndn::Name(interest.getName()).appendVersion());
     data->setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
     data->setContent(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.c_str()),
@@ -112,7 +112,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
     if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
       // We can only do that if the neighbor currently has a face.
       if(adjacent->getFaceId() != 0){
-        /* interest name: /<neighbor>/NLSR/INFO/<router> */
+        // interest name: /<neighbor>/NLSR/INFO/<router>
         ndn::Name interestName(neighbor);
         interestName.append(NLSR_COMPONENT);
         interestName.append(INFO_COMPONENT);
@@ -133,7 +133,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
 void
 HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
 {
-  /* interest name: /<neighbor>/NLSR/INFO/<router> */
+  // interest name: /<neighbor>/NLSR/INFO/<router>
   const ndn::Name interestName(interest.getName());
   _LOG_DEBUG("Interest timed out for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
@@ -150,7 +150,7 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   _LOG_DEBUG("Status: " << status);
   _LOG_DEBUG("Info Interest Timed out: " << infoIntTimedOutCount);
   if ((infoIntTimedOutCount < m_nlsr.getConfParameter().getInterestRetryNumber())) {
-    /* interest name: /<neighbor>/NLSR/INFO/<router> */
+    // interest name: /<neighbor>/NLSR/INFO/<router>
     ndn::Name interestName(neighbor);
     interestName.append(NLSR_COMPONENT);
     interestName.append(INFO_COMPONENT);
@@ -179,8 +179,8 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
     }
   }
   m_nlsr.getValidator().validate(data,
-                                 ndn::bind(&HelloProtocol::onContentValidated, this, _1),
-                                 ndn::bind(&HelloProtocol::onContentValidationFailed,
+                                 std::bind(&HelloProtocol::onContentValidated, this, _1),
+                                 std::bind(&HelloProtocol::onContentValidationFailed,
                                            this, _1, _2));
 }
 
@@ -190,9 +190,9 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
   // LSA. If there was a change in status, we schedule an adjacency
   // LSA build.
 void
-HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
+HelloProtocol::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
 {
-  /* data name: /<neighbor>/NLSR/INFO/<router>/<version> */
+  // data name: /<neighbor>/NLSR/INFO/<router>/<version>
   ndn::Name dataName = data->getName();
   _LOG_DEBUG("Data validation successful for INFO(name): " << dataName);
   if (dataName.get(-3).toUri() == INFO_COMPONENT) {
@@ -220,7 +220,7 @@ HelloProtocol::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
   // Simply logs a debug message that the content could not be
   // validated (and is implicitly being discarded as a result).
 void
-HelloProtocol::onContentValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
+HelloProtocol::onContentValidationFailed(const std::shared_ptr<const ndn::Data>& data,
                                          const std::string& msg)
 {
   _LOG_DEBUG("Validation Error: " << msg);
@@ -235,9 +235,9 @@ HelloProtocol::registerPrefixes(const ndn::Name& adjName, const std::string& fac
 {
   m_nlsr.getFib().registerPrefix(adjName, faceUri, linkCost, timeout,
                                  ndn::nfd::ROUTE_FLAG_CAPTURE, 0,
-                                 ndn::bind(&HelloProtocol::onRegistrationSuccess,
+                                 std::bind(&HelloProtocol::onRegistrationSuccess,
                                            this, _1, adjName,timeout),
-                                 ndn::bind(&HelloProtocol::onRegistrationFailure,
+                                 std::bind(&HelloProtocol::onRegistrationFailure,
                                            this, _1, adjName));
 }
 
@@ -266,7 +266,7 @@ HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandS
                                  ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 
     // Sends a Hello Interest to determine status before the next scheduled.
-    /* interest name: /<neighbor>/NLSR/INFO/<router> */
+    // interest name: /<neighbor>/NLSR/INFO/<router>
     ndn::Name interestName(neighbor);
     interestName.append(NLSR_COMPONENT);
     interestName.append(INFO_COMPONENT);

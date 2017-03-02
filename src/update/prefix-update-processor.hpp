@@ -69,7 +69,7 @@ public:
                         SyncLogicHandler& sync,
                         const ndn::Name broadcastPrefix,
                         ndn::KeyChain& keyChain,
-                        ndn::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
+                        std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
                         security::CertificateStore& certStore);
 
   void

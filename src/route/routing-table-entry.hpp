@@ -81,4 +81,4 @@ operator<<(std::ostream& os, const RoutingTableEntry& rte);
 
 } // namespace nlsr
 
-#endif //NLSR_ROUTING_TABLE_ENTRY_HPP
+#endif // NLSR_ROUTING_TABLE_ENTRY_HPP

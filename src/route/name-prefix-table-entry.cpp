@@ -43,7 +43,7 @@ NamePrefixTableEntry::generateNhlfromRteList()
 }
 
 uint64_t
-NamePrefixTableEntry::removeRoutingTableEntry(shared_ptr<RoutingTablePoolEntry>
+NamePrefixTableEntry::removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry>
                                               rtpePtr)
 {
   auto rtpeItr = std::find(m_rteList.begin(), m_rteList.end(), rtpePtr);
@@ -60,7 +60,7 @@ NamePrefixTableEntry::removeRoutingTableEntry(shared_ptr<RoutingTablePoolEntry>
 }
 
 void
-NamePrefixTableEntry::addRoutingTableEntry(shared_ptr<RoutingTablePoolEntry>
+NamePrefixTableEntry::addRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry>
                                            rtpePtr)
 {
   auto rtpeItr = std::find(m_rteList.begin(), m_rteList.end(), rtpePtr);
@@ -105,7 +105,7 @@ operator<<(std::ostream& os, const NamePrefixTableEntry& entry)
 {
   os << "Name: " << entry.getNamePrefix() << "\n";
 
-  for (const shared_ptr<RoutingTablePoolEntry> rtpePtr : entry.getRteList()) {
+  for (const std::shared_ptr<RoutingTablePoolEntry> rtpePtr : entry.getRteList()) {
     os << "Destination: " << rtpePtr->getDestination() << "\n";
   }
 

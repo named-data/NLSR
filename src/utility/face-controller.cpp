@@ -41,8 +41,8 @@ FaceController::createFace(const std::string& request,
   FaceUri uri(request);
 
   _LOG_TRACE("Converting " << uri << " to canonical form");
-  uri.canonize(bind(&FaceController::onCanonizeSuccess, this, _1, onSuccess, onFailure, uri),
-               bind(&FaceController::onCanonizeFailure, this, _1, onSuccess, onFailure, uri),
+  uri.canonize(std::bind(&FaceController::onCanonizeSuccess, this, _1, onSuccess, onFailure, uri),
+               std::bind(&FaceController::onCanonizeFailure, this, _1, onSuccess, onFailure, uri),
                m_ioService, TIME_ALLOWED_FOR_CANONIZATION);
 }
 

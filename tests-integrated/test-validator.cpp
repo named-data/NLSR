@@ -47,9 +47,9 @@ struct ValidatorFixture
     , m_wasValidated(false)
   {
     m_face.setInterestFilter(m_keyPrefix,
-                             ndn::bind(&ValidatorFixture::onKeyInterest, this, _1, _2),
-                             ndn::bind(&ValidatorFixture::onKeyPrefixRegSuccess, this, _1),
-                             ndn::bind(&ValidatorFixture::registrationFailed, this, _1, _2));
+                             std::bind(&ValidatorFixture::onKeyInterest, this, _1, _2),
+                             std::bind(&ValidatorFixture::onKeyPrefixRegSuccess, this, _1),
+                             std::bind(&ValidatorFixture::registrationFailed, this, _1, _2));
 
     m_keyChain.createIdentity(m_identity);
     ndn::Name certName = m_keyChain.getDefaultCertificateNameForIdentity(m_identity);
@@ -137,7 +137,7 @@ struct ValidatorFixture
     if (certName != m_cert->getName().getPrefix(-1))
       return; //No such a cert
 
-    shared_ptr<ndn::Data> data = make_shared<ndn::Data>(interestName);
+    std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(interestName);
     data->setContent(m_cert->wireEncode());
     m_keyChain.signWithSha256(*data);
 
@@ -158,13 +158,13 @@ struct ValidatorFixture
   }
 
   void
-  onValidated(const ndn::shared_ptr<const ndn::Data>& data)
+  onValidated(const std::shared_ptr<const ndn::Data>& data)
   {
     m_wasValidated = true;
   }
 
   void
-  onValidationFailed(const ndn::shared_ptr<const ndn::Data>& data,
+  onValidationFailed(const std::shared_ptr<const ndn::Data>& data,
                      const std::string& failureInfo)
   {
     std::cerr << "Failure Info: " << failureInfo << std::endl;
@@ -172,11 +172,11 @@ struct ValidatorFixture
   }
 
   void
-  validate(const ndn::shared_ptr<const ndn::Data>& data)
+  validate(const std::shared_ptr<const ndn::Data>& data)
   {
     m_validator.validate(*data,
-                         bind(&ValidatorFixture::onValidated, this, _1),
-                         bind(&ValidatorFixture::onValidationFailed, this, _1, _2));
+                         std::bind(&ValidatorFixture::onValidated, this, _1),
+                         std::bind(&ValidatorFixture::onValidationFailed, this, _1, _2));
   }
 
   void
@@ -190,13 +190,13 @@ protected:
   ndn::Face m_face2;
   ndn::Scheduler m_scheduler;
   const ndn::Name m_keyPrefix;
-  ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
+  std::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
   security::CertificateStore m_certStore;
   nlsr::Validator m_validator;
 
   ndn::KeyChain m_keyChain;
   ndn::Name m_identity;
-  ndn::shared_ptr<ndn::IdentityCertificate> m_cert;
+  std::shared_ptr<ndn::IdentityCertificate> m_cert;
 
   bool m_wasValidated;
 };
@@ -205,13 +205,13 @@ BOOST_FIXTURE_TEST_CASE(InfoCertFetch, ValidatorFixture)
 {
   ndn::Name dataName = m_identity;
   dataName.append("INFO").append("neighbor").append("version");
-  ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>(dataName);
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(dataName);
   m_keyChain.signByIdentity(*data, m_identity);
 
   m_scheduler.scheduleEvent(ndn::time::milliseconds(200),
-                            ndn::bind(&ValidatorFixture::validate, this, data));
+                            std::bind(&ValidatorFixture::validate, this, data));
   m_scheduler.scheduleEvent(ndn::time::milliseconds(1000),
-                            ndn::bind(&ValidatorFixture::terminate, this));
+                            std::bind(&ValidatorFixture::terminate, this));
   BOOST_REQUIRE_NO_THROW(m_face.processEvents());
 
   BOOST_CHECK(m_wasValidated);
@@ -227,7 +227,7 @@ BOOST_FIXTURE_TEST_CASE(CertificateStorage, ValidatorFixture)
 
   // Create an operator cert signed by the trust anchor
   ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(opIdentity, true);
-  shared_ptr<ndn::IdentityCertificate> opCert =
+  std::shared_ptr<ndn::IdentityCertificate> opCert =
     m_keyChain.prepareUnsignedIdentityCertificate(keyName,
                                                   m_identity,
                                                   ndn::time::system_clock::now(),
@@ -240,14 +240,14 @@ BOOST_FIXTURE_TEST_CASE(CertificateStorage, ValidatorFixture)
   // Sign data with operator cert
   ndn::Name dataName = opIdentity;
   dataName.append("INFO").append("neighbor").append("version");
-  ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>(dataName);
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(dataName);
   m_keyChain.signByIdentity(*data, opIdentity);
 
   // Check without cert in CertificateStore
   m_scheduler.scheduleEvent(ndn::time::milliseconds(200),
-                            ndn::bind(&ValidatorFixture::validate, this, data));
+                            std::bind(&ValidatorFixture::validate, this, data));
   m_scheduler.scheduleEvent(ndn::time::milliseconds(1000),
-                            ndn::bind(&ValidatorFixture::terminate, this));
+                            std::bind(&ValidatorFixture::terminate, this));
 
   BOOST_REQUIRE_NO_THROW(m_face.processEvents());
   BOOST_CHECK_EQUAL(m_wasValidated, false);
@@ -256,9 +256,9 @@ BOOST_FIXTURE_TEST_CASE(CertificateStorage, ValidatorFixture)
   m_certStore.insert(opCert);
 
   m_scheduler.scheduleEvent(ndn::time::milliseconds(200),
-                            ndn::bind(&ValidatorFixture::validate, this, data));
+                            std::bind(&ValidatorFixture::validate, this, data));
   m_scheduler.scheduleEvent(ndn::time::milliseconds(1000),
-                            ndn::bind(&ValidatorFixture::terminate, this));
+                            std::bind(&ValidatorFixture::terminate, this));
 
   BOOST_REQUIRE_NO_THROW(m_face.processEvents());
   BOOST_CHECK(m_wasValidated);

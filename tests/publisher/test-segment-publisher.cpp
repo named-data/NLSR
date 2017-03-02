@@ -134,7 +134,7 @@ public:
   }
 
 protected:
-  ndn::shared_ptr<ndn::util::DummyClientFace> m_face;
+  std::shared_ptr<ndn::util::DummyClientFace> m_face;
   const ndn::time::milliseconds m_expectedFreshnessPeriod;
   TestSegmentPublisher<N> m_publisher;
   ndn::EncodingBuffer m_buffer;

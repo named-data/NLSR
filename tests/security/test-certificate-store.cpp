@@ -51,7 +51,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::IdentityCertificate> certificate;
+  std::shared_ptr<ndn::IdentityCertificate> certificate;
   ndn::Name certificateKey;
 };
 

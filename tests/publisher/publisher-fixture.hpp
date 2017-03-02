@@ -19,6 +19,9 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#ifndef NLSR_PUBLISHER_FIXTURE_HPP
+#define NLSR_PUBLISHER_FIXTURE_HPP
+
 #include "nlsr.hpp"
 
 #include "../boost-test.hpp"
@@ -33,8 +36,8 @@ class PublisherFixture : public BaseFixture
 {
 public:
   PublisherFixture()
-    : face(make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
+    : face(std::make_shared<ndn::util::DummyClientFace>())
+    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , lsdb(nlsr, g_scheduler, nlsr.getSyncLogicHandler())
   {
   }
@@ -134,7 +137,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   Lsdb lsdb;
   ndn::KeyChain keyChain;
@@ -142,3 +145,5 @@ public:
 
 } // namespace test
 } // namespace nlsr
+
+#endif // NLSR_PUBLISHER_FIXTURE_HPP

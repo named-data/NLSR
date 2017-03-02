@@ -30,14 +30,14 @@
 namespace nlsr {
 namespace test {
 
-using ndn::shared_ptr;
+using std::shared_ptr;
 
 class NlsrFixture : public UnitTestTimeFixture
 {
 public:
   NlsrFixture()
-    : face(make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
+    : face(std::make_shared<ndn::util::DummyClientFace>())
+    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , lsdb(nlsr.getLsdb())
     , neighbors(nlsr.getAdjacencyList())
   {
@@ -49,13 +49,13 @@ public:
     ndn::Name dataName(sender);
     dataName.append("NLSR").append("INFO").append(receiver.wireEncode()).appendVersion();
 
-    shared_ptr<ndn::Data> data = make_shared<ndn::Data>(dataName);
+    std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(dataName);
 
     nlsr.m_helloProtocol.onContentValidated(data);
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   Lsdb& lsdb;
   AdjacencyList& neighbors;
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
 
 BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 {
-  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>(g_ioService);
-  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain);
+  std::shared_ptr<ndn::util::DummyClientFace> face = std::make_shared<ndn::util::DummyClientFace>(g_ioService);
+  Nlsr nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain);
   Lsdb& lsdb = nlsr.getLsdb();
 
   // Simulate loading configuration file
@@ -201,7 +201,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   event.setKind(ndn::nfd::FACE_EVENT_DESTROYED)
        .setFaceId(destroyFaceId);
 
-  shared_ptr<ndn::Data> data = make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
   data->setContent(event.wireEncode());
   nlsr.getKeyChain().sign(*data);
 
@@ -236,8 +236,8 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 // refresh will not cause RIB entries for other nodes' name prefixes to be refreshed.
 BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
 {
-  shared_ptr<ndn::util::DummyClientFace> face = make_shared<ndn::util::DummyClientFace>(g_ioService);
-  Nlsr nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain);
+  std::shared_ptr<ndn::util::DummyClientFace> face = std::make_shared<ndn::util::DummyClientFace>(g_ioService);
+  Nlsr nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain);
   Lsdb& lsdb = nlsr.getLsdb();
 
   // Simulate loading configuration file
@@ -314,7 +314,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
   event.setKind(ndn::nfd::FACE_EVENT_DESTROYED)
        .setFaceId(destroyFaceId);
 
-  shared_ptr<ndn::Data> data = make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
   data->setContent(event.wireEncode());
   nlsr.getKeyChain().sign(*data);
 
@@ -348,7 +348,7 @@ BOOST_AUTO_TEST_CASE(GetCertificate)
   ndn::KeyChain keyChain;
   keyChain.createIdentity(identity);
   ndn::Name certName = keyChain.getDefaultCertificateNameForIdentity(identity);
-  shared_ptr<ndn::IdentityCertificate> certificate = keyChain.getCertificate(certName);
+  std::shared_ptr<ndn::IdentityCertificate> certificate = keyChain.getCertificate(certName);
 
   const ndn::Name certKey = certificate->getName().getPrefix(-1);
 

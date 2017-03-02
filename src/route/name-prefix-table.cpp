@@ -141,7 +141,7 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
   // Ensure that the entry exists
   NptEntryList::iterator nameItr = std::find_if(m_table.begin(),
                                            m_table.end(),
-                                           bind(&npteCompare, _1, name));
+                                           std::bind(&npteCompare, _1, name));
   if (nameItr != m_table.end()) {
     _LOG_TRACE("Removing origin: " << rtpePtr->getDestination()
                << " from prefix: " << *nameItr);

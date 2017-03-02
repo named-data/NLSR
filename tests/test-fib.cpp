@@ -32,13 +32,13 @@
 namespace nlsr {
 namespace test {
 
-using ndn::shared_ptr;
+using std::shared_ptr;
 
 class FibFixture : public BaseFixture
 {
 public:
   FibFixture()
-    : face(make_shared<ndn::util::DummyClientFace>())
+    : face(std::make_shared<ndn::util::DummyClientFace>())
     , interests(face->sentInterests)
   {
     INIT_LOGGERS("/tmp", "DEBUG");
@@ -54,8 +54,8 @@ public:
 
     conf.setMaxFacesPerPrefix(2);
 
-    fib = ndn::make_shared<Fib>(ndn::ref(*face), ndn::ref(g_scheduler), ndn::ref(adjacencies),
-                                ndn::ref(conf), keyChain);
+    fib = std::make_shared<Fib>(std::ref(*face), std::ref(g_scheduler), std::ref(adjacencies),
+                                std::ref(conf), keyChain);
 
     fib->m_faceMap.update(router1FaceUri, router1FaceId);
     fib->m_faceMap.update(router2FaceUri, router2FaceId);
@@ -63,9 +63,9 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   ndn::KeyChain keyChain;
-  shared_ptr<Fib> fib;
+  std::shared_ptr<Fib> fib;
 
   AdjacencyList adjacencies;
   ConfParameter conf;

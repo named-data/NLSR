@@ -19,11 +19,12 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef NLSR_HPP
-#define NLSR_HPP
+#ifndef NLSR_NLSR_HPP
+#define NLSR_NLSR_HPP
 
 #include <boost/cstdint.hpp>
 #include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
@@ -253,12 +254,12 @@ public:
   }
 
   void
-  loadCertToPublish(ndn::shared_ptr<ndn::IdentityCertificate> certificate)
+  loadCertToPublish(std::shared_ptr<ndn::IdentityCertificate> certificate)
   {
     m_certStore.insert(certificate);
   }
 
-  ndn::shared_ptr<const ndn::IdentityCertificate>
+  std::shared_ptr<const ndn::IdentityCertificate>
   getCertificate(const ndn::Name& certificateNameWithoutVersion)
   {
     shared_ptr<const ndn::IdentityCertificate> cert =
@@ -317,7 +318,7 @@ public:
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
-  addCertificateToCache(ndn::shared_ptr<ndn::IdentityCertificate> certificate)
+  addCertificateToCache(std::shared_ptr<ndn::IdentityCertificate> certificate)
   {
     if (certificate != nullptr) {
       m_certificateCache->insertCertificate(certificate);
@@ -386,7 +387,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   HelloProtocol m_helloProtocol;
 
 private:
-  ndn::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
+  std::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
   security::CertificateStore m_certStore;
   Validator m_validator;
   ndn::security::SigningInfo m_signingInfo;
@@ -401,4 +402,4 @@ private:
 
 } // namespace nlsr
 
-#endif //NLSR_HPP
+#endif // NLSR_NLSR_HPP

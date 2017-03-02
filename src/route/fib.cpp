@@ -53,7 +53,7 @@ Fib::scheduleEntryExpiration(const ndn::Name& name, int32_t feSeqNum,
   _LOG_DEBUG("Fib::scheduleEntryExpiration Called");
   _LOG_INFO("Name: " << name << " Seq Num: " << feSeqNum);
 
-  return m_scheduler.scheduleEvent(expTime, ndn::bind(&Fib::remove, this, name));
+  return m_scheduler.scheduleEvent(expTime, std::bind(&Fib::remove, this, name));
 }
 
 void
@@ -117,7 +117,7 @@ Fib::removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, const NexthopList& ins
     // See if the nexthop is installed in NFD's FIB
     NexthopList::const_iterator foundIt = std::find_if(installedHops.cbegin(),
                                                        installedHops.cend(),
-                                                       bind(&compareFaceUri, _1, faceUri));
+                                                       std::bind(&compareFaceUri, _1, faceUri));
 
     // The next hop is not installed
     if (foundIt == installedHops.cend()) {
@@ -287,7 +287,7 @@ Fib::destroyFace(const std::string& faceUri,
                  const CommandFailCallback& onFailure)
 {
   createFace(faceUri,
-             ndn::bind(&Fib::destroyFaceInNfd, this, _1, onSuccess, onFailure),
+             std::bind(&Fib::destroyFaceInNfd, this, _1, onSuccess, onFailure),
              onFailure);
 }
 
@@ -353,7 +353,7 @@ Fib::registerPrefix(const ndn::Name& namePrefix,
     .setExpirationPeriod(timeout)
     .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
   createFace(faceUri,
-             ndn::bind(static_cast<RegisterPrefixCallback>(&Fib::registerPrefixInNfd),
+             std::bind(static_cast<RegisterPrefixCallback>(&Fib::registerPrefixInNfd),
                        this, _1, parameters, times, onSuccess, onFailure),
              onFailure);
 }
@@ -364,10 +364,10 @@ Fib::registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
                          uint8_t times)
 {
   m_controller.start<ndn::nfd::RibRegisterCommand>(parameters,
-                                                   ndn::bind(&Fib::onRegistration, this, _1,
+                                                   std::bind(&Fib::onRegistration, this, _1,
                                                              "Successful in name registration",
                                                              faceUri),
-                                                   ndn::bind(&Fib::onRegistrationFailure,
+                                                   std::bind(&Fib::onRegistrationFailure,
                                                              this, _1,
                                                              "Failed in name registration",
                                                              parameters,
@@ -406,9 +406,9 @@ Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
       .setFaceId(faceId)
       .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
     m_controller.start<ndn::nfd::RibUnregisterCommand>(controlParameters,
-                                                     ndn::bind(&Fib::onUnregistration, this, _1,
+                                                     std::bind(&Fib::onUnregistration, this, _1,
                                                                "Successful in unregistering name"),
-                                                     ndn::bind(&Fib::onUnregistrationFailure,
+                                                     std::bind(&Fib::onUnregistrationFailure,
                                                                this, _1,
                                                                "Failed in unregistering name"));
   }
@@ -423,9 +423,9 @@ Fib::setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t co
     .setStrategy(strategy);
 
   m_controller.start<ndn::nfd::StrategyChoiceSetCommand>(parameters,
-                                                         bind(&Fib::onSetStrategySuccess, this, _1,
+                                                         std::bind(&Fib::onSetStrategySuccess, this, _1,
                                                               "Successfully set strategy choice"),
-                                                         bind(&Fib::onSetStrategyFailure, this, _1,
+                                                         std::bind(&Fib::onSetStrategyFailure, this, _1,
                                                               parameters,
                                                               count,
                                                               "Failed to set strategy choice"));

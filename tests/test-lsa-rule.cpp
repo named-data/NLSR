@@ -41,7 +41,7 @@ class LsaRuleFixture : public nlsr::test::BaseFixture
 {
 public:
   LsaRuleFixture()
-    : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
+    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
     , rootId(ndn::Name("ndn"))
     , siteIdentity(ndn::Name("/ndn/edu/test-site"))
     , opIdentity(ndn::Name(siteIdentity).append(ndn::Name("%C1.Operator/op1")))
@@ -55,7 +55,7 @@ public:
       keyChain.deleteIdentity(opIdentity);
       keyChain.deleteIdentity(routerId);
     }
-    catch (std::exception& e) {
+    catch (const std::exception& e) {
     }
 
     createCert(rootId, rootCertName, rootCert, rootId);
@@ -102,12 +102,12 @@ public:
   }
 
   void
-  createCert(ndn::Name& identity, ndn::Name& certName, shared_ptr<IdentityCertificate>& cert, const ndn::Name& signer)
+  createCert(ndn::Name& identity, ndn::Name& certName, std::shared_ptr<IdentityCertificate>& cert, const ndn::Name& signer)
   {
     ndn::Name keyName = keyChain.generateRsaKeyPairAsDefault(identity, true);
 
-    cert = ndn::make_shared<ndn::IdentityCertificate>();
-    ndn::shared_ptr<ndn::PublicKey> pubKey = keyChain.getPublicKey(keyName);
+    cert = std::make_shared<ndn::IdentityCertificate>();
+    std::shared_ptr<ndn::PublicKey> pubKey = keyChain.getPublicKey(keyName);
     certName = keyName.getPrefix(-1);
     certName.append("KEY").append(keyName.get(-1)).append("ID-CERT").appendVersion();
     cert->setName(certName);
@@ -150,12 +150,12 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   ndn::KeyChain keyChain;
 
   ndn::Name rootId, siteIdentity, opIdentity, routerId;
   ndn::Name rootCertName, siteCertName, opCertName, routerCertName;
-  shared_ptr<IdentityCertificate> rootCert, siteCert, opCert, routerCert;
+  std::shared_ptr<IdentityCertificate> rootCert, siteCert, opCert, routerCert;
 
   Nlsr nlsr;
 
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   // Append version, segmentNo
   lsaInterestName.appendNumber(1).appendNumber(1);
 
-  ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
   data->setName(lsaInterestName);
   data->setFreshnessPeriod(ndn::time::seconds(10));
 
@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
 
   // Make NLSR validate data signed by its own key
   nlsr.getValidator().validate(*data,
-                               [] (const shared_ptr<const Data>&) { BOOST_CHECK(true); },
-                               [] (const shared_ptr<const Data>&, const std::string&) {
+                               [] (const std::shared_ptr<const Data>&) { BOOST_CHECK(true); },
+                               [] (const std::shared_ptr<const Data>&, const std::string&) {
                                  BOOST_CHECK(false);
                                });
 }
@@ -210,15 +210,15 @@ BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
   // Append version, segmentNo
   lsaInterestName.appendNumber(1).appendNumber(1);
 
-  ndn::shared_ptr<ndn::Data> data = ndn::make_shared<ndn::Data>();
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
   data->setName(lsaInterestName);
   data->setFreshnessPeriod(ndn::time::seconds(10));
   nlsr.getKeyChain().sign(*data, ndn::security::signingByCertificate(nlsr.getDefaultCertName()));
 
   // Make NLSR validate data signed by its own key
   nlsr.getValidator().validate(*data,
-                               [] (const shared_ptr<const Data>&) { BOOST_CHECK(false); },
-                               [] (const shared_ptr<const Data>&, const std::string&) {
+                               [] (const std::shared_ptr<const Data>&) { BOOST_CHECK(false); },
+                               [] (const std::shared_ptr<const Data>&, const std::string&) {
                                  BOOST_CHECK(true);
                                });
 }

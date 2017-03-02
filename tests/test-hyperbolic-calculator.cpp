@@ -37,7 +37,7 @@
 namespace nlsr {
 namespace test {
 
-using ndn::shared_ptr;
+using std::shared_ptr;
 using ndn::time::system_clock;
 static const system_clock::TimePoint MAX_TIME = system_clock::TimePoint::max();
 
@@ -45,8 +45,8 @@ class HyperbolicCalculatorFixture : public BaseFixture
 {
 public:
   HyperbolicCalculatorFixture()
-    : face(make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
+    : face(std::make_shared<ndn::util::DummyClientFace>())
+    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , routingTable(nlsr.getRoutingTable())
     , adjacencies(nlsr.getAdjacencyList())
     , lsdb(nlsr.getLsdb())
@@ -105,7 +105,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   Map map;
 

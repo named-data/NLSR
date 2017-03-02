@@ -53,8 +53,8 @@ NamePrefixList::insert(const ndn::Name& name)
 {
   std::list<ndn::Name>::iterator it = std::find_if(m_nameList.begin(),
                                                    m_nameList.end(),
-                                                   ndn::bind(&nameCompare, _1 ,
-                                                             ndn::cref(name)));
+                                                   std::bind(&nameCompare, _1 ,
+                                                   std::cref(name)));
   if (it != m_nameList.end()) {
     return false;
   }
@@ -67,8 +67,8 @@ NamePrefixList::remove(const ndn::Name& name)
 {
   std::list<ndn::Name>::iterator it = std::find_if(m_nameList.begin(),
                                                    m_nameList.end(),
-                                                   ndn::bind(&nameCompare, _1 ,
-                                                   ndn::cref(name)));
+                                                   std::bind(&nameCompare, _1 ,
+                                                   std::cref(name)));
   if (it != m_nameList.end()) {
     m_nameList.erase(it);
     return true;

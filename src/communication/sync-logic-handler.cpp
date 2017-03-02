@@ -69,7 +69,7 @@ public:
     int32_t lsaPosition = util::getNameComponentPosition(m_name, LSA_COMPONENT);
 
     if (nlsrPosition < 0 || lsaPosition < 0) {
-      throw Error("Cannot parse update name because expected components are missing");
+      BOOST_THROW_EXCEPTION(Error("Cannot parse update name because expected components are missing"));
     }
 
     ndn::Name networkName = m_name.getSubName(1, nlsrPosition-1);
@@ -154,12 +154,12 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
 
   // The face's lifetime is managed in main.cpp; SyncSocket should not manage the memory
   // of the object
-  ndn::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
+  std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
-  m_syncSocket = ndn::make_shared<Sync::SyncSocket>(m_syncPrefix, m_validator, facePtr,
-                                                    ndn::bind(&SyncLogicHandler::onNsyncUpdate,
+  m_syncSocket = std::make_shared<Sync::SyncSocket>(m_syncPrefix, m_validator, facePtr,
+                                                    std::bind(&SyncLogicHandler::onNsyncUpdate,
                                                               this, _1, _2),
-                                                    ndn::bind(&SyncLogicHandler::onNsyncRemoval,
+                                                    std::bind(&SyncLogicHandler::onNsyncRemoval,
                                                               this, _1));
 }
 
@@ -191,7 +191,7 @@ SyncLogicHandler::processUpdateFromSync(const SyncUpdate& update)
   try {
     originRouter = update.getOriginRouter();
   }
-  catch (std::exception& e) {
+  catch (const std::exception& e) {
     _LOG_WARN("Received malformed sync update");
     return;
   }
@@ -275,7 +275,7 @@ SyncLogicHandler::publishRoutingUpdate()
   if (m_syncSocket == nullptr) {
     _LOG_FATAL("Cannot publish routing update; SyncSocket does not exist");
 
-    throw SyncLogicHandler::Error("Cannot publish routing update; SyncSocket does not exist");
+    BOOST_THROW_EXCEPTION(SyncLogicHandler::Error("Cannot publish routing update; SyncSocket does not exist"));
   }
 
   m_sequencingManager.writeSeqNoToFile();

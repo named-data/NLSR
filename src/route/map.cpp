@@ -62,7 +62,7 @@ Map::addEntry(MapEntry& mpe)
   //cout << mpe;
   std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
-                                                  ndn::bind(&mapEntryCompareByRouter,
+                                                  std::bind(&mapEntryCompareByRouter,
                                                             _1, mpe.getRouter()));
   if (it == m_table.end()) {
     m_table.push_back(mpe);
@@ -76,7 +76,7 @@ Map::getRouterNameByMappingNo(int32_t mn)
 {
   std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
-                                                  ndn::bind(&mapEntryCompareByMappingNo,
+                                                  std::bind(&mapEntryCompareByMappingNo,
                                                             _1, mn));
   if (it != m_table.end()) {
     return (*it).getRouter();
@@ -89,7 +89,7 @@ Map::getMappingNoByRouterName(const ndn::Name& rName)
 {
   std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
                                                   m_table.end(),
-                                                  ndn::bind(&mapEntryCompareByRouter,
+                                                  std::bind(&mapEntryCompareByRouter,
                                                             _1, rName));
   if (it != m_table.end()) {
     return (*it).getMappingNumber();

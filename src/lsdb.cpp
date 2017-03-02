@@ -107,7 +107,7 @@ Lsdb::onFetchLsaError(uint32_t errorCode,
 void
 Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, ndn::Name& interestName)
 {
-  shared_ptr<ndn::Data> data = make_shared<ndn::Data>(ndn::Name(interestName));
+  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(ndn::Name(interestName));
   data->setContent(bufferPtr);
 
   _LOG_DEBUG("Received data for LSA(name): " << data->getName());
@@ -161,7 +161,7 @@ Lsdb::findNameLsa(const ndn::Name& key)
 {
   std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
                                                  m_nameLsdb.end(),
-                                                 bind(nameLsaCompareByKey, _1, key));
+                                                 std::bind(nameLsaCompareByKey, _1, key));
   if (it != m_nameLsdb.end()) {
     return &(*it);
   }
@@ -190,7 +190,7 @@ Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
                                 const ndn::time::seconds& expTime)
 {
   return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   ndn::bind(&Lsdb::exprireOrRefreshNameLsa, this, key, seqNo));
+                                   std::bind(&Lsdb::exprireOrRefreshNameLsa, this, key, seqNo));
 }
 
 bool
@@ -294,7 +294,7 @@ Lsdb::addNameLsa(NameLsa& nlsa)
 {
   std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
                                                  m_nameLsdb.end(),
-                                                 bind(nameLsaCompareByKey, _1,
+                                                 std::bind(nameLsaCompareByKey, _1,
                                                       nlsa.getKey()));
   if (it == m_nameLsdb.end()) {
     m_nameLsdb.push_back(nlsa);
@@ -308,7 +308,7 @@ Lsdb::removeNameLsa(const ndn::Name& key)
 {
   std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
                                                  m_nameLsdb.end(),
-                                                 ndn::bind(nameLsaCompareByKey, _1, key));
+                                                 std::bind(nameLsaCompareByKey, _1, key));
   if (it != m_nameLsdb.end()) {
     _LOG_DEBUG("Deleting Name Lsa");
     (*it).writeLog();
@@ -336,7 +336,7 @@ Lsdb::doesNameLsaExist(const ndn::Name& key)
 {
   std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
                                                  m_nameLsdb.end(),
-                                                 ndn::bind(nameLsaCompareByKey, _1, key));
+                                                 std::bind(nameLsaCompareByKey, _1, key));
   if (it == m_nameLsdb.end()) {
     return false;
   }
@@ -396,7 +396,7 @@ Lsdb::findCoordinateLsa(const ndn::Name& key)
 {
   std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
                                                        m_corLsdb.end(),
-                                                       ndn::bind(corLsaCompareByKey, _1, key));
+                                                       std::bind(corLsaCompareByKey, _1, key));
   if (it != m_corLsdb.end()) {
     return &(*it);
   }
@@ -429,7 +429,7 @@ Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                       const ndn::time::seconds& expTime)
 {
   return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   ndn::bind(&Lsdb::exprireOrRefreshCoordinateLsa,
+                                   std::bind(&Lsdb::exprireOrRefreshCoordinateLsa,
                                              this, key, seqNo));
 }
 
@@ -500,7 +500,7 @@ Lsdb::addCoordinateLsa(CoordinateLsa& clsa)
 {
   std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
                                                        m_corLsdb.end(),
-                                                       ndn::bind(corLsaCompareByKey, _1,
+                                                       std::bind(corLsaCompareByKey, _1,
                                                                  clsa.getKey()));
   if (it == m_corLsdb.end()) {
     m_corLsdb.push_back(clsa);
@@ -514,7 +514,7 @@ Lsdb::removeCoordinateLsa(const ndn::Name& key)
 {
   std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
                                                        m_corLsdb.end(),
-                                                       ndn::bind(corLsaCompareByKey,
+                                                       std::bind(corLsaCompareByKey,
                                                                  _1, key));
   if (it != m_corLsdb.end()) {
     _LOG_DEBUG("Deleting Coordinate Lsa");
@@ -535,7 +535,7 @@ Lsdb::doesCoordinateLsaExist(const ndn::Name& key)
 {
   std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
                                                        m_corLsdb.end(),
-                                                       ndn::bind(corLsaCompareByKey,
+                                                       std::bind(corLsaCompareByKey,
                                                                  _1, key));
   if (it == m_corLsdb.end()) {
     return false;
@@ -584,7 +584,7 @@ Lsdb::scheduleAdjLsaBuild()
   if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
     _LOG_DEBUG("Scheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
 
-    m_scheduler.scheduleEvent(m_adjLsaBuildInterval, ndn::bind(&Lsdb::buildAdjLsa, this));
+    m_scheduler.scheduleEvent(m_adjLsaBuildInterval, std::bind(&Lsdb::buildAdjLsa, this));
     m_nlsr.setIsBuildAdjLsaSheduled(true);
   }
 }
@@ -611,7 +611,7 @@ Lsdb::buildAdjLsa()
       // router from refreshing the LSA, eventually causing other
       // routers to delete it, too.
       else {
-        _LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors")
+        _LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors");
         // Get this router's key
         ndn::Name key = m_nlsr.getConfParameter().getRouterPrefix();
         key.append(AdjLsa::TYPE_STRING);
@@ -634,7 +634,7 @@ Lsdb::buildAdjLsa()
     int schedulingTime = m_nlsr.getConfParameter().getInterestRetryNumber() *
                          m_nlsr.getConfParameter().getInterestResendTime();
     m_scheduler.scheduleEvent(ndn::time::seconds(schedulingTime),
-                              ndn::bind(&Lsdb::buildAdjLsa, this));
+                              std::bind(&Lsdb::buildAdjLsa, this));
   }
 }
 
@@ -643,7 +643,7 @@ Lsdb::addAdjLsa(AdjLsa& alsa)
 {
   std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
                                                 m_adjLsdb.end(),
-                                                bind(adjLsaCompareByKey, _1,
+                                                std::bind(adjLsaCompareByKey, _1,
                                                      alsa.getKey()));
   if (it == m_adjLsdb.end()) {
     m_adjLsdb.push_back(alsa);
@@ -657,7 +657,7 @@ Lsdb::findAdjLsa(const ndn::Name& key)
 {
   std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
                                                 m_adjLsdb.end(),
-                                                bind(adjLsaCompareByKey, _1, key));
+                                                std::bind(adjLsaCompareByKey, _1, key));
   if (it != m_adjLsdb.end()) {
     return &(*it);
   }
@@ -686,7 +686,7 @@ Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
                                const ndn::time::seconds& expTime)
 {
   return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   ndn::bind(&Lsdb::exprireOrRefreshAdjLsa, this, key, seqNo));
+                                   std::bind(&Lsdb::exprireOrRefreshAdjLsa, this, key, seqNo));
 }
 
 bool
@@ -766,7 +766,7 @@ Lsdb::removeAdjLsa(const ndn::Name& key)
 {
   std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
                                                 m_adjLsdb.end(),
-                                                ndn::bind(adjLsaCompareByKey, _1, key));
+                                                std::bind(adjLsaCompareByKey, _1, key));
   if (it != m_adjLsdb.end()) {
     _LOG_DEBUG("Deleting Adj Lsa");
     (*it).writeLog();
@@ -782,7 +782,7 @@ Lsdb::doesAdjLsaExist(const ndn::Name& key)
 {
   std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
                                                 m_adjLsdb.end(),
-                                                bind(adjLsaCompareByKey, _1, key));
+                                                std::bind(adjLsaCompareByKey, _1, key));
   if (it == m_adjLsdb.end()) {
     return false;
   }
@@ -979,8 +979,8 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
   _LOG_DEBUG("Fetching Data for LSA: " << interestName << " Seq number: " << seqNo);
   ndn::util::SegmentFetcher::fetch(m_nlsr.getNlsrFace(), interest,
                                    m_nlsr.getValidator(),
-                                   ndn::bind(&Lsdb::afterFetchLsa, this, _1, interestName),
-                                   ndn::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
+                                   std::bind(&Lsdb::afterFetchLsa, this, _1, interestName),
+                                   std::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
                                              timeoutCount, deadline, lsaName, seqNo));
 }
 
@@ -1101,7 +1101,7 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
 }
 
 void
-Lsdb::onContentValidated(const ndn::shared_ptr<const ndn::Data>& data)
+Lsdb::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
 {
   const ndn::Name& dataName = data->getName();
   _LOG_DEBUG("Data validation successful for LSA: " << dataName);

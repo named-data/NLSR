@@ -27,6 +27,7 @@
 #include <ndn-cxx/encoding/encoding-buffer.hpp>
 #include <ndn-cxx/encoding/tlv.hpp>
 #include <ndn-cxx/name.hpp>
+#include <boost/throw_exception.hpp>
 
 #include "lsa.hpp"
 
@@ -41,7 +42,7 @@ namespace tlv {
                 SequenceNumber
                 ExpirationPeriod?
 
-   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+   \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class LsaInfo
 {

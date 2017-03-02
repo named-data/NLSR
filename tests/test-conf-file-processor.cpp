@@ -35,7 +35,7 @@
 namespace nlsr {
 namespace test {
 
-using ndn::shared_ptr;
+using std::shared_ptr;
 
 const std::string SECTION_GENERAL =
   "general\n"
@@ -132,8 +132,8 @@ class ConfFileProcessorFixture : public BaseFixture
 {
 public:
   ConfFileProcessorFixture()
-    : face(make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
+    : face(std::make_shared<ndn::util::DummyClientFace>())
+    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , CONFIG_FILE("unit-test-nlsr.conf")
     , m_logConfigFileName(boost::filesystem::unique_path().native())
     , m_logFileName(boost::filesystem::unique_path().native())
@@ -200,7 +200,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
 
 private:
@@ -479,7 +479,7 @@ BOOST_AUTO_TEST_CASE(LoadCertToPublish)
   ndn::KeyChain keyChain;
   keyChain.createIdentity(identity);
   ndn::Name certName = keyChain.getDefaultCertificateNameForIdentity(identity);
-  shared_ptr<ndn::IdentityCertificate> certificate = keyChain.getCertificate(certName);
+  std::shared_ptr<ndn::IdentityCertificate> certificate = keyChain.getCertificate(certName);
 
   const boost::filesystem::path CERT_PATH =
       (boost::filesystem::current_path() / std::string("cert-to-publish.cert"));

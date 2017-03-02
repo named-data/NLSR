@@ -33,14 +33,14 @@
 namespace nlsr {
 namespace test {
 
-using ndn::shared_ptr;
+using std::shared_ptr;
 
 class LsdbFixture : public BaseFixture
 {
 public:
   LsdbFixture()
-    : face(make_shared<ndn::util::DummyClientFace>(g_ioService))
-    , nlsr(g_ioService, g_scheduler, ndn::ref(*face), g_keyChain)
+    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
+    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter(), nlsr.getSequencingManager())
     , lsdb(nlsr.getLsdb())
     , conf(nlsr.getConfParameter())
@@ -90,7 +90,7 @@ public:
   }
 
 public:
-  shared_ptr<ndn::util::DummyClientFace> face;
+  std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   SyncLogicHandler sync;
 
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
   ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/name/");
   interestName.appendNumber(seqNo);
 
-  const ndn::ConstBufferPtr bufferPtr = make_shared<ndn::Buffer>(lsa.getData().c_str(),
+  const ndn::ConstBufferPtr bufferPtr = std::make_shared<ndn::Buffer>(lsa.getData().c_str(),
                                                                  lsa.getData().size());
   lsdb.afterFetchLsa(bufferPtr, interestName);
 
