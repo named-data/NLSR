@@ -48,7 +48,8 @@ public:
     , opIdentity(ndn::Name(siteIdentity).append(ndn::Name("%C1.Operator")).appendVersion())
     , nlsr(g_ioService, g_scheduler, face, g_keyChain)
     , keyPrefix(("/ndn/broadcast"))
-    , updateProcessor(nlsr.getPrefixUpdateProcessor())
+    , namePrefixList(nlsr.getNamePrefixList())
+    , updatePrefixUpdateProcessor(nlsr.getPrefixUpdateProcessor())
     , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
   {
     createSiteCert();
@@ -102,7 +103,7 @@ public:
     const boost::filesystem::path CONFIG_PATH =
       (boost::filesystem::current_path() / std::string("unit-test.conf"));
 
-    updateProcessor.getValidator().load(CONFIG, CONFIG_PATH.native());
+    updatePrefixUpdateProcessor.getValidator().load(CONFIG, CONFIG_PATH.native());
 
     // Insert certs after the validator is loaded since ValidatorConfig::load() clears
     // the certificate cache
@@ -119,6 +120,7 @@ public:
     sessionTime.appendNumber(ndn::time::toUnixTimestamp(ndn::time::system_clock::now()).count());
 
     this->advanceClocks(ndn::time::milliseconds(10));
+
     face.sentInterests.clear();
   }
 
@@ -224,7 +226,8 @@ public:
 
   Nlsr nlsr;
   ndn::Name keyPrefix;
-  PrefixUpdateProcessor& updateProcessor;
+  NamePrefixList& namePrefixList;
+  PrefixUpdateProcessor& updatePrefixUpdateProcessor;
 
   const boost::filesystem::path SITE_CERT_PATH;
   ndn::Name sessionTime;
@@ -235,12 +238,9 @@ BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)
 BOOST_AUTO_TEST_CASE(Basic)
 {
   uint64_t nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
-  updateProcessor.enable();
-
   // Advertise
   ndn::nfd::ControlParameters parameters;
   parameters.setName("/prefix/to/advertise/");
-
   ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
   advertiseCommand.append(parameters.wireEncode());
 
@@ -275,38 +275,6 @@ BOOST_AUTO_TEST_CASE(Basic)
 
   BOOST_CHECK(wasRoutingUpdatePublished());
   BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
-}
-
-BOOST_AUTO_TEST_CASE(DisabledAndEnabled)
-{
-  ndn::nfd::ControlParameters parameters;
-  parameters.setName("/prefix/to/advertise/");
-
-  ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
-  advertiseCommand.append(parameters.wireEncode());
-
-  std::shared_ptr<Interest> advertiseInterest = std::make_shared<Interest>(advertiseCommand);
-  keyChain.signByIdentity(*advertiseInterest, opIdentity);
-
-  // Command should be rejected
-  face.receive(*advertiseInterest);
-  this->advanceClocks(ndn::time::milliseconds(10));
-
-  BOOST_REQUIRE(!face.sentData.empty());
-
-  const ndn::MetaInfo& metaInfo = face.sentData.front().getMetaInfo();
-  BOOST_CHECK_EQUAL(metaInfo.getType(), ndn::tlv::ContentType_Nack);
-
-  face.sentData.clear();
-
-  // Enable PrefixUpdateProcessor so commands will be processed
-  updateProcessor.enable();
-
-  // Command should be accepted
-  face.receive(*advertiseInterest);
-  this->advanceClocks(ndn::time::milliseconds(10));
-
-  checkResponseCode(advertiseCommand, 200);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

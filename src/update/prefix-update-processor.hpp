@@ -22,23 +22,19 @@
 #ifndef NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
 #define NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
 
-#include "name-prefix-list.hpp"
+#include "manager-base.hpp"
+#include "prefix-update-commands.hpp"
 #include "test-access-control.hpp"
 #include "validator.hpp"
 
-#include <ndn-cxx/face.hpp>
-#include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/mgmt/nfd/control-command.hpp>
-#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/security/certificate-cache-ttl.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/v2/validator.hpp>
 
-#include <boost/noncopyable.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <memory>
 
 namespace nlsr {
-
-class Lsdb;
 
 namespace security {
   class CertificateStore;
@@ -48,78 +44,19 @@ namespace update {
 
 typedef boost::property_tree::ptree ConfigSection;
 
-class PrefixUpdateProcessor : boost::noncopyable
+class PrefixUpdateProcessor : public CommandManagerBase
 {
 public:
-  class Error : public std::runtime_error
-  {
-  public:
-    explicit
-    Error(const std::string& what)
-      : std::runtime_error(what)
-    {
-    }
-  };
-
-public:
-  PrefixUpdateProcessor(ndn::Face& face,
+  PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
+                        ndn::Face& face,
                         NamePrefixList& namePrefixList,
                         Lsdb& lsdb,
                         const ndn::Name broadcastPrefix,
                         ndn::KeyChain& keyChain,
                         std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
                         security::CertificateStore& certStore);
-
   void
   loadValidator(ConfigSection section, const std::string& filename);
-
-  void
-  startListening();
-
-  void
-  enable()
-  {
-    m_isEnabled = true;
-  }
-
-private:
-  void
-  onInterest(const ndn::Interest& request);
-
-  void
-  sendNack(const ndn::Interest& request);
-
-  void
-  sendResponse(const std::shared_ptr<const ndn::Interest>& request,
-               uint32_t code,
-               const std::string& text);
-
-  /*! \brief adds desired name prefix to the advertised name prefix list
-   */
-  void
-  advertise(const std::shared_ptr<const ndn::Interest>& request,
-            const ndn::nfd::ControlParameters& parameters);
-
-  /*! \brief removes desired name prefix from the advertised name prefix list
-   */
-  void
-  withdraw(const std::shared_ptr<const ndn::Interest>& request,
-           const ndn::nfd::ControlParameters& parameters);
-
-  void
-  onCommandValidated(const std::shared_ptr<const ndn::Interest>& request);
-
-  void
-  onCommandValidationFailed(const std::shared_ptr<const ndn::Interest>& request,
-                            const std::string& failureInfo);
-
-  static bool
-  extractParameters(const ndn::name::Component& parameterComponent,
-                    ndn::nfd::ControlParameters& extractedParameters);
-
-  bool
-  validateParameters(const ndn::nfd::ControlCommand& command,
-                     const ndn::nfd::ControlParameters& parameters);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   Validator&
@@ -129,18 +66,17 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
 private:
-  ndn::Face& m_face;
-  NamePrefixList& m_namePrefixList;
-  Lsdb& m_lsdb;
-  ndn::KeyChain& m_keyChain;
+  /*! \brief an authorization function for prefix-update module and verb(advertise/withdraw)
+   *  accept if the verb is advertise/withdraw
+   *  reject if the verb is not advertise/withdraw
+      \retval an Authorization function
+      \sa Nlsr::getDispatcher()
+   */
+  ndn::mgmt::Authorization
+  makeAuthorization();
+
+private:
   Validator m_validator;
-  bool m_isEnabled;
-
-  const ndn::Name COMMAND_PREFIX; // /localhost/nlsr/prefix-update
-
-  static const ndn::Name::Component MODULE_COMPONENT;
-  static const ndn::Name::Component ADVERTISE_VERB;
-  static const ndn::Name::Component WITHDRAW_VERB;
 };
 
 } // namespace update

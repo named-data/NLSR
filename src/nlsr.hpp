@@ -22,21 +22,6 @@
 #ifndef NLSR_NLSR_HPP
 #define NLSR_NLSR_HPP
 
-#include <boost/cstdint.hpp>
-#include <stdexcept>
-#include <boost/throw_exception.hpp>
-
-#include <ndn-cxx/face.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/certificate-cache-ttl.hpp>
-#include <ndn-cxx/util/scheduler.hpp>
-#include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
-#include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
-#include <ndn-cxx/mgmt/dispatcher.hpp>
-#include <ndn-cxx/mgmt/nfd/face-status.hpp>
-#include <ndn-cxx/data.hpp>
-#include <ndn-cxx/encoding/block.hpp>
-
 #include "adjacency-list.hpp"
 #include "common.hpp"
 #include "conf-parameter.hpp"
@@ -53,6 +38,22 @@
 #include "update/prefix-update-processor.hpp"
 #include "update/nfd-rib-command-processor.hpp"
 #include "utility/name-helper.hpp"
+
+#include <stdexcept>
+
+#include <ndn-cxx/face.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/certificate-cache-ttl.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
+#include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
+#include <ndn-cxx/mgmt/dispatcher.hpp>
+#include <ndn-cxx/mgmt/nfd/face-status.hpp>
+#include <ndn-cxx/data.hpp>
+#include <ndn-cxx/encoding/block.hpp>
+
+#include <boost/cstdint.hpp>
+#include <boost/throw_exception.hpp>
 
 namespace nlsr {
 
@@ -334,13 +335,13 @@ public:
   }
 
   ndn::mgmt::Dispatcher&
-  getDispatcher()
+  getLocalhostDispatcher()
   {
     return m_localhostDispatcher;
   }
 
   ndn::mgmt::Dispatcher&
-  getDispatcherRouterName()
+  getRouterNameDispatcher()
   {
     return m_routerNameDispatcher;
   }
@@ -446,6 +447,7 @@ private:
   RoutingTable m_routingTable;
   Fib m_fib;
   NamePrefixTable m_namePrefixTable;
+
   ndn::mgmt::Dispatcher m_localhostDispatcher;
   ndn::mgmt::Dispatcher m_routerNameDispatcher;
 

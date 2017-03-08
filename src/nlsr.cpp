@@ -19,15 +19,15 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "nlsr.hpp"
+#include "adjacent.hpp"
+#include "logger.hpp"
+
 #include <cstdlib>
 #include <string>
 #include <sstream>
 #include <cstdio>
 #include <unistd.h>
-
-#include "nlsr.hpp"
-#include "adjacent.hpp"
-#include "logger.hpp"
 
 #include <ndn-cxx/util/face-uri.hpp>
 
@@ -70,7 +70,8 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache, m_certStore)
   , m_controller(m_nlsrFace, m_keyChain, m_validator)
   , m_faceDatasetController(m_nlsrFace, m_keyChain)
-  , m_prefixUpdateProcessor(m_nlsrFace,
+  , m_prefixUpdateProcessor(m_localhostDispatcher,
+                            m_nlsrFace,
                             m_namePrefixList,
                             m_nlsrLsdb,
                             DEFAULT_BROADCAST_PREFIX,
@@ -113,10 +114,6 @@ Nlsr::onRegistrationSuccess(const ndn::Name& name)
 void
 Nlsr::onLocalhostRegistrationSuccess(const ndn::Name& name)
 {
-  _LOG_DEBUG("Successfully registered local prefix: " << name);
-
-  m_prefixUpdateProcessor.startListening();
-  m_nfdRibCommandProcessor.startListening();
   // All dispatcher-related sub-prefixes *must* be registered before
   // the top-level prefixes are added.
   try {

@@ -27,87 +27,20 @@ namespace update {
 
 INIT_LOGGER("NfdRibProcessor");
 
-const ndn::PartialName REGISTER_VERB = ndn::PartialName("rib/register");
-const ndn::PartialName UNREGISTER_VERB = ndn::PartialName("rib/unregister");
-const ndn::Name COMMAND_PREFIX = ndn::Name("/localhost/nlsr");
-
 NfdRibCommandProcessor::NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher,
-                                               NamePrefixList& namePrefixes,
+                                               NamePrefixList& namePrefixList,
                                                Lsdb& lsdb)
-  : m_dispatcher(dispatcher)
-  , m_namePrefixList(namePrefixes)
-  , m_lsdb(lsdb)
+  : CommandManagerBase(dispatcher, namePrefixList, lsdb, "rib")
 {
-}
+  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("register"),
+    ndn::mgmt::makeAcceptAllAuthorization(),
+    std::bind(&NfdRibCommandProcessor::validateParameters<NfdRibRegisterCommand>, this, _1),
+    bind(&NfdRibCommandProcessor::advertiseAndInsertPrefix, this, _1, _2, _3, _4));
 
-void
-NfdRibCommandProcessor::startListening()
-{
-  _LOG_DEBUG("Registering control command prefixes for: " << REGISTER_VERB <<
-             " and " << UNREGISTER_VERB);
-  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(REGISTER_VERB,
-                                 ndn::mgmt::makeAcceptAllAuthorization(),
-                                 std::bind(&NfdRibCommandProcessor::validate<NfdRibRegisterCommand>,
-                                           this, _1, REGISTER_VERB),
-                                 [this] (const ndn::Name& prefix, const ndn::Interest& interest,
-                                         const ndn::mgmt::ControlParameters& parameters,
-                                         const ndn::mgmt::CommandContinuation& done) {
-                                   _LOG_DEBUG("Params verified, calling insertPrefix()");
-                                   this->insertPrefix(parameters);
-                                 });
-  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(UNREGISTER_VERB,
-                                 ndn::mgmt::makeAcceptAllAuthorization(),
-                                 std::bind(&NfdRibCommandProcessor::validate<NfdRibUnregisterCommand>,
-                                           this, _1, UNREGISTER_VERB),
-                                 [this] (const ndn::Name& prefix, const ndn::Interest& interest,
-                                         const ndn::mgmt::ControlParameters& parameters,
-                                         const ndn::mgmt::CommandContinuation& done) {
-                                   _LOG_DEBUG("Params verified, calling removePrefix()");
-                                   this->removePrefix(parameters);
-                                 });
-}
-
-template<typename T>
-bool
-NfdRibCommandProcessor::validate(const ndn::mgmt::ControlParameters& parameters,
-                                 const ndn::PartialName& command)
-{
-  _LOG_DEBUG("Attempting to verify incoming params for " << command <<
-             " command...");
-  bool wasValidated = true;
-  try {
-      wasValidated = this->validateParameters<T>(parameters);
-  } catch (const ndn::nfd::ControlCommand::ArgumentError& ae) {
-    _LOG_DEBUG("Could not parse params. Message: " << ae.what());
-    wasValidated = false;
-  }
-  return wasValidated;
-}
-
-void
-NfdRibCommandProcessor::insertPrefix(const ndn::mgmt::ControlParameters& parameters)
-{
-  const ndn::nfd::ControlParameters& castParams =
-    static_cast<const ndn::nfd::ControlParameters&>(parameters);
-
-  _LOG_DEBUG("Inserting prefix into the FIB: " << castParams.getName() << "\n");
-
-  if (m_namePrefixList.insert(castParams.getName())) {
-    m_lsdb.buildAndInstallOwnNameLsa();
-  }
-}
-
-void
-NfdRibCommandProcessor::removePrefix(const ndn::mgmt::ControlParameters& parameters)
-{
-  const ndn::nfd::ControlParameters& castParams =
-    static_cast<const ndn::nfd::ControlParameters&>(parameters);
-
-  _LOG_DEBUG("Removing prefix from the FIB: " << castParams.getName() << "\n");
-
-  if (m_namePrefixList.remove(castParams.getName())) {
-    m_lsdb.buildAndInstallOwnNameLsa();
-  }
+  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("unregister"),
+    ndn::mgmt::makeAcceptAllAuthorization(),
+    std::bind(&NfdRibCommandProcessor::validateParameters<NfdRibUnregisterCommand>, this, _1),
+    bind(&NfdRibCommandProcessor::withdrawAndRemovePrefix, this, _1, _2, _3, _4));
 }
 
 } // namespace update

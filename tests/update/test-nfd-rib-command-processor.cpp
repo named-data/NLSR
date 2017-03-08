@@ -138,47 +138,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ValidateParametersFailure, NfdRibCommand, Commands
   BOOST_CHECK(!wasValidated);
 }
 
-BOOST_AUTO_TEST_CASE(InsertPrefix)
-{
-  ndn::nfd::ControlParameters parameters;
-  ndn::Name prefixName("/test/prefixA");
-  parameters.setName(prefixName);
-
-  processor.insertPrefix(parameters);
-  this->advanceClocks(ndn::time::milliseconds(10));
-
-  BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 1);
-  auto itr = std::find(namePrefixes.getNameList().begin(), namePrefixes.getNameList().end(),
-                       prefixName);
-  if (itr == namePrefixes.getNameList().end()) {
-    BOOST_FAIL("Prefix was not inserted!");
-  }
-  BOOST_CHECK_EQUAL((*itr), parameters.getName());
-  BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
-}
-
-BOOST_AUTO_TEST_CASE(RemovePrefix)
-{
-  ndn::Name prefixName("/test/prefixA");
-  namePrefixes.getNameList().push_back(prefixName);
-  ndn::nfd::ControlParameters parameters;
-  parameters.setName("/test/prefixA");
-
-  BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 1);
-  processor.removePrefix(parameters);
-  this->advanceClocks(ndn::time::milliseconds(10));
-
-  BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 0);
-  auto itr = std::find(namePrefixes.getNameList().begin(), namePrefixes.getNameList().end(),
-                       prefixName);
-  if (itr != namePrefixes.getNameList().end()) {
-    BOOST_FAIL("Prefix was not removed!");
-  }
-  BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
-}
-
 BOOST_AUTO_TEST_CASE(onReceiveInterestRegisterCommand)
 {
   ndn::Name name("/localhost/nlsr/rib/register");

@@ -503,10 +503,8 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
         std::string uriString = CommandAttriTree.get<std::string>("face-uri");
 
         ndn::util::FaceUri faceUri;
-        try {
-          faceUri = ndn::util::FaceUri(uriString);
-        } catch (const ndn::util::FaceUri::Error& e) {
-          std::cerr << "Malformed face-uri <" << uriString << "> for " << name << std::endl;
+        if (! faceUri.parse(uriString)) {
+          std::cerr << "parsing failed!" << std::endl;
           return false;
         }
 
@@ -554,11 +552,10 @@ ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
   }
 
   try {
-    /* Radius and angle(s) are mandatory configuration parameters in hyperbolic section.
-     * Even if router can have hyperbolic routing calculation off but other router
-     * in the network may use hyperbolic routing calculation for FIB generation.
-     * So each router need to advertise its hyperbolic coordinates in the network
-     */
+    // Radius and angle(s) are mandatory configuration parameters in hyperbolic section.
+    // Even if router can have hyperbolic routing calculation off but other router
+    // in the network may use hyperbolic routing calculation for FIB generation.
+    // So each router need to advertise its hyperbolic coordinates in the network
     double radius = section.get<double>("radius");
     std::string angleString = section.get<std::string>("angle");
 
@@ -567,11 +564,9 @@ ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
 
     double angle;
 
-    while (ss >> angle)
-    {
+    while (ss >> angle) {
       angles.push_back(angle);
-      if (ss.peek() == ',' || ss.peek() == ' ')
-      {
+      if (ss.peek() == ',' || ss.peek() == ' ') {
         ss.ignore();
       }
     }
@@ -663,7 +658,6 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 
   it++;
   if (it != section.end() && it->first == "prefix-update-validator") {
-    m_nlsr.getPrefixUpdateProcessor().enable();
     m_nlsr.getPrefixUpdateProcessor().loadValidator(it->second, m_confFileName);
 
     it++;

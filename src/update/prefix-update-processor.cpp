@@ -20,60 +20,84 @@
  **/
 
 #include "prefix-update-processor.hpp"
-
 #include "lsdb.hpp"
 #include "nlsr.hpp"
-#include "prefix-update-commands.hpp"
-
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
+#include <ndn-cxx/tag.hpp>
+#include <ndn-cxx/util/io.hpp>
 
 namespace nlsr {
 namespace update {
 
 INIT_LOGGER("PrefixUpdateProcessor");
 
-const ndn::Name::Component PrefixUpdateProcessor::MODULE_COMPONENT = ndn::Name::Component("prefix-update");
-const ndn::Name::Component PrefixUpdateProcessor::ADVERTISE_VERB = ndn::Name::Component("advertise");
-const ndn::Name::Component PrefixUpdateProcessor::WITHDRAW_VERB  = ndn::Name::Component("withdraw");
+/** \brief an Interest tag to indicate command signer
+ */
+using SignerTag = ndn::SimpleTag<ndn::Name, 20>;
 
-PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::Face& face,
+/** \brief obtain signer from SignerTag attached to Interest, if available
+ */
+static ndn::optional<std::string>
+getSignerFromTag(const ndn::Interest& interest)
+{
+  shared_ptr<SignerTag> signerTag = interest.getTag<SignerTag>();
+  if (signerTag == nullptr) {
+    return ndn::nullopt;
+  }
+  else {
+    return signerTag->get().toUri();
+  }
+}
+
+PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
+                                             ndn::Face& face,
                                              NamePrefixList& namePrefixList,
                                              Lsdb& lsdb,
                                              const ndn::Name broadcastPrefix,
                                              ndn::KeyChain& keyChain,
                                              std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
                                              security::CertificateStore& certStore)
-  : m_face(face)
-  , m_namePrefixList(namePrefixList)
-  , m_lsdb(lsdb)
-  , m_keyChain(keyChain)
-  , m_validator(m_face, broadcastPrefix, certificateCache, certStore)
-  , m_isEnabled(false)
-  , COMMAND_PREFIX(ndn::Name(Nlsr::LOCALHOST_PREFIX).append(MODULE_COMPONENT))
+  : CommandManagerBase(dispatcher, namePrefixList, lsdb, "prefix-update")
+  , m_validator(face, broadcastPrefix, certificateCache, certStore)
 {
+  _LOG_DEBUG("Setting dispatcher to capture Interests for: "
+    << ndn::Name(Nlsr::LOCALHOST_PREFIX).append("prefix-update"));
+
+  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("advertise"),
+    makeAuthorization(),
+    std::bind(&PrefixUpdateProcessor::validateParameters<AdvertisePrefixCommand>,
+                this, _1),
+    std::bind(&PrefixUpdateProcessor::advertiseAndInsertPrefix, this, _1, _2, _3, _4));
+
+  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("withdraw"),
+    makeAuthorization(),
+    std::bind(&PrefixUpdateProcessor::validateParameters<WithdrawPrefixCommand>,
+                this, _1),
+    std::bind(&PrefixUpdateProcessor::withdrawAndRemovePrefix, this, _1, _2, _3, _4));
 }
 
-void
-PrefixUpdateProcessor::startListening()
+ndn::mgmt::Authorization
+PrefixUpdateProcessor::makeAuthorization()
 {
-  _LOG_DEBUG("Setting Interest filter for: " << COMMAND_PREFIX);
+  return [=] (const ndn::Name& prefix, const ndn::Interest& interest,
+              const ndn::mgmt::ControlParameters* params,
+              const ndn::mgmt::AcceptContinuation& accept,
+              const ndn::mgmt::RejectContinuation& reject) {
+    m_validator.validate(interest,
+      [accept] (const std::shared_ptr<const ndn::Interest>& request) {
 
-  m_face.setInterestFilter(COMMAND_PREFIX, std::bind(&PrefixUpdateProcessor::onInterest, this, _2));
-}
-
-void
-PrefixUpdateProcessor::onInterest(const ndn::Interest& request)
-{
-  _LOG_TRACE("Received Interest: " << request);
-
-  if (!m_isEnabled) {
-    sendNack(request);
-    return;
-  }
-
-  m_validator.validate(request,
-                       std::bind(&PrefixUpdateProcessor::onCommandValidated, this, _1),
-                       std::bind(&PrefixUpdateProcessor::onCommandValidationFailed, this, _1, _2));
+        auto signer1 = getSignerFromTag(*request);
+        std::string signer = signer1.value_or("*");
+        _LOG_DEBUG("accept " << request->getName() << " signer=" << signer);
+        accept(signer);
+      },
+      [reject] (const std::shared_ptr<const ndn::Interest>& request,
+                const std::string& failureInfo) {
+        _LOG_DEBUG("reject " << request->getName() << " signer=" <<
+                      getSignerFromTag(*request).value_or("?") << ' ' << failureInfo);
+        reject(ndn::mgmt::RejectReply::STATUS403);
+      });
+  };
 }
 
 void
@@ -81,141 +105,6 @@ PrefixUpdateProcessor::loadValidator(boost::property_tree::ptree section,
                                      const std::string& filename)
 {
   m_validator.load(section, filename);
-}
-
-void
-PrefixUpdateProcessor::onCommandValidated(const std::shared_ptr<const ndn::Interest>& request)
-{
-  const ndn::Name& command = request->getName();
-  const ndn::Name::Component& verb = command[COMMAND_PREFIX.size()];
-  const ndn::Name::Component& parameterComponent = command[COMMAND_PREFIX.size() + 1];
-
-  if (verb == ADVERTISE_VERB || verb == WITHDRAW_VERB) {
-    ndn::nfd::ControlParameters parameters;
-
-    if (!extractParameters(parameterComponent, parameters)) {
-      sendResponse(request, 400, "Malformed command");
-      return;
-    }
-
-    if (verb == ADVERTISE_VERB) {
-      advertise(request, parameters);
-    }
-    else if (verb == WITHDRAW_VERB) {
-      withdraw(request, parameters);
-    }
-
-    sendResponse(request, 200, "Success");
-  }
-  else {
-    sendResponse(request, 501, "Unsupported command");
-  }
-}
-
-void
-PrefixUpdateProcessor::onCommandValidationFailed(const std::shared_ptr<const ndn::Interest>& request,
-                                                 const std::string& failureInfo)
-{
-  sendResponse(request, 403, failureInfo);
-}
-
-bool
-PrefixUpdateProcessor::extractParameters(const ndn::Name::Component& parameterComponent,
-                                         ndn::nfd::ControlParameters& extractedParameters)
-{
-  try {
-    ndn::Block rawParameters = parameterComponent.blockFromValue();
-    extractedParameters.wireDecode(rawParameters);
-  }
-  catch (const ndn::tlv::Error&) {
-    return false;
-  }
-
-  return true;
-}
-
-void
-PrefixUpdateProcessor::advertise(const std::shared_ptr<const ndn::Interest>& request,
-                                 const ndn::nfd::ControlParameters& parameters)
-{
-  AdvertisePrefixCommand command;
-
-  if (!validateParameters(command, parameters)) {
-    sendResponse(request, 400, "Malformed command");
-    return;
-  }
-
-  _LOG_INFO("Advertising name: " << parameters.getName());
-
-  if (m_namePrefixList.insert(parameters.getName())) {
-    // Only build a Name LSA if the added name is new
-    m_lsdb.buildAndInstallOwnNameLsa();
-  }
-}
-
-void
-PrefixUpdateProcessor::withdraw(const std::shared_ptr<const ndn::Interest>& request,
-                                const ndn::nfd::ControlParameters& parameters)
-{
-  WithdrawPrefixCommand command;
-
-  if (!validateParameters(command, parameters)) {
-    sendResponse(request, 400, "Malformed command");
-    return;
-  }
-
-  _LOG_INFO("Withdrawing name: " << parameters.getName());
-
-  if (m_namePrefixList.remove(parameters.getName())) {
-    // Only build a Name LSA if a name was actually removed
-    m_lsdb.buildAndInstallOwnNameLsa();
-  }
-}
-
-bool
-PrefixUpdateProcessor::validateParameters(const ndn::nfd::ControlCommand& command,
-                                          const ndn::nfd::ControlParameters& parameters)
-{
-  try {
-    command.validateRequest(parameters);
-  }
-  catch (const ndn::nfd::ControlCommand::ArgumentError&) {
-    return false;
-  }
-
-  return true;
-}
-
-void
-PrefixUpdateProcessor::sendNack(const ndn::Interest& request)
-{
-  ndn::MetaInfo metaInfo;
-  metaInfo.setType(ndn::tlv::ContentType_Nack);
-
-  std::shared_ptr<ndn::Data> responseData = std::make_shared<ndn::Data>(request.getName());
-  responseData->setMetaInfo(metaInfo);
-
-  m_keyChain.sign(*responseData);
-  m_face.put(*responseData);
-}
-
-void
-PrefixUpdateProcessor::sendResponse(const std::shared_ptr<const ndn::Interest>& request,
-                                    uint32_t code,
-                                    const std::string& text)
-{
-  if (request == nullptr) {
-    return;
-  }
-
-  ndn::nfd::ControlResponse response(code, text);
-  const ndn::Block& encodedControl = response.wireEncode();
-
-  std::shared_ptr<ndn::Data> responseData = std::make_shared<ndn::Data>(request->getName());
-  responseData->setContent(encodedControl);
-
-  m_keyChain.sign(*responseData);
-  m_face.put(*responseData);
 }
 
 } // namespace update
