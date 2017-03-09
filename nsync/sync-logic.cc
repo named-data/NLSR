@@ -218,7 +218,7 @@ SyncLogic::onSyncRegisterFailed(const Name& prefix, const string& msg)
 }
 
 void
-SyncLogic::onSyncData(const ndn::Interest& interest, Data& data)
+SyncLogic::onSyncData(const ndn::Interest& interest, const Data& data)
 {
   OnDataValidated onValidated = bind(&SyncLogic::onSyncDataValidated, this, _1);
   OnDataValidationFailed onValidationFailed = bind(&SyncLogic::onSyncDataValidationFailed, this, _1);
@@ -624,6 +624,7 @@ SyncLogic::sendSyncInterest ()
 
   m_face->expressInterest(interest,
                           bind(&SyncLogic::onSyncData, this, _1, _2),
+                          bind(&SyncLogic::onSyncTimeout, this, _1), // Nack
                           bind(&SyncLogic::onSyncTimeout, this, _1));
 }
 
@@ -652,6 +653,7 @@ SyncLogic::sendSyncRecoveryInterests (DigestConstPtr digest)
 
   m_face->expressInterest(interest,
                           bind(&SyncLogic::onSyncData, this, _1, _2),
+                          bind(&SyncLogic::onSyncTimeout, this, _1), // Nack
                           bind(&SyncLogic::onSyncTimeout, this, _1));
 }
 

@@ -107,10 +107,14 @@ protected:
         // Attempt to fetch the certificate
         m_face->expressInterest(interest,
                                 std::bind(&Validator::onData, this, _1, _2, request),
+                                std::bind(&Validator::onTimeout, // Nack
+                                          this, _1, request->m_nRetries,
+                                          onFailure,
+                                          request),
                                 std::bind(&Validator::onTimeout,
-                                     this, _1, request->m_nRetries,
-                                     onFailure,
-                                     request));
+                                          this, _1, request->m_nRetries,
+                                          onFailure,
+                                          request));
       }
     }
   }

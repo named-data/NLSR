@@ -106,7 +106,7 @@ private:
   }
 
   void
-  onData(const ndn::Interest& interest, ndn::Data& data,
+  onData(const ndn::Interest& interest, const ndn::Data& data,
          const ndn::OnDataValidated& onValidated,
          const ndn::OnDataValidationFailed& onValidationFailed);
 

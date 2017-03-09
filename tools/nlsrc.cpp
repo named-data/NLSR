@@ -157,6 +157,7 @@ Nlsrc::sendNamePrefixUpdate(const ndn::Name& name,
 
   m_face.expressInterest(interest,
                          std::bind(&Nlsrc::onControlResponse, this, info, _2),
+                         std::bind(&Nlsrc::onTimeout, this, ERROR_CODE_TIMEOUT, "Nack"),
                          std::bind(&Nlsrc::onTimeout, this, ERROR_CODE_TIMEOUT, "Timeout"));
 }
 

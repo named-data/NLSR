@@ -45,6 +45,8 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
                                        std::bind(&HelloProtocol::onContent,
                                                  this,
                                                  _1, _2),
+                                       std::bind(&HelloProtocol::processInterestTimedOut, // Nack
+                                                 this, _1),
                                        std::bind(&HelloProtocol::processInterestTimedOut,
                                                  this, _1));
 }

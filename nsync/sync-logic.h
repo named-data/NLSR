@@ -127,7 +127,7 @@ private:
   onSyncRegisterFailed(const ndn::Name& prefix, const std::string& msg);
 
   void
-  onSyncData(const ndn::Interest& interest, ndn::Data& data);
+  onSyncData(const ndn::Interest& interest, const ndn::Data& data);
 
   void
   onSyncTimeout(const ndn::Interest& interest);

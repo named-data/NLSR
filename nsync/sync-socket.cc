@@ -112,13 +112,15 @@ SyncSocket::fetchData(const Name &prefix, const SeqNo &seq,
   m_face->expressInterest(interest,
                           bind(&SyncSocket::onData, this, _1, _2,
                                onValidated, onValidationFailed),
+                          bind(&SyncSocket::onDataTimeout, this, _1, retry, // Nack
+                               onValidated, onValidationFailed),
                           bind(&SyncSocket::onDataTimeout, this, _1, retry,
                                onValidated, onValidationFailed));
 
 }
 
 void
-SyncSocket::onData(const ndn::Interest& interest, Data& data,
+SyncSocket::onData(const ndn::Interest& interest, const Data& data,
                    const OnDataValidated& onValidated,
                    const OnDataValidationFailed& onValidationFailed)
 {
@@ -138,6 +140,12 @@ SyncSocket::onDataTimeout(const ndn::Interest& interest,
                                    this,
                                    _1,
                                    _2,
+                                   onValidated,
+                                   onValidationFailed),
+                              bind(&SyncSocket::onDataTimeout,
+                                   this,
+                                   _1,
+                                   retry - 1,
                                    onValidated,
                                    onValidationFailed),
                               bind(&SyncSocket::onDataTimeout,
