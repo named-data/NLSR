@@ -219,7 +219,7 @@ BOOST_FIXTURE_TEST_CASE(InfoCertFetch, ValidatorFixture)
 
 BOOST_FIXTURE_TEST_CASE(CertificateStorage, ValidatorFixture)
 {
-  std::vector<ndn::CertificateSubjectDescription> subjectDescription;
+  std::vector<ndn::security::v1::CertificateSubjectDescription> subjectDescription;
 
   // Create an operator identity
   ndn::Name opIdentity("/TestValidator/operator/NLSR");

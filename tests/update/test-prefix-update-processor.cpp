@@ -146,8 +146,8 @@ public:
     opCert->setNotBefore(time::system_clock::now() - time::days(1));
     opCert->setNotAfter(time::system_clock::now() + time::days(1));
     opCert->setPublicKeyInfo(*pubKey);
-    opCert->addSubjectDescription(CertificateSubjectDescription(ndn::oid::ATTRIBUTE_NAME,
-                                                                keyName.toUri()));
+    opCert->addSubjectDescription(ndn::security::v1::CertificateSubjectDescription(ndn::oid::ATTRIBUTE_NAME,
+                                                                                   keyName.toUri()));
     opCert->encode();
 
     keyChain.signByIdentity(*opCert, siteIdentity);
