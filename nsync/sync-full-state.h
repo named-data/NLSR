@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_FULL_STATE_H
-#define SYNC_FULL_STATE_H
+#ifndef NLSR_NSYNC_SYNC_FULL_STATE_H
+#define NLSR_NSYNC_SYNC_FULL_STATE_H
 
 #include <ndn-cxx/util/time.hpp>
 #include "sync-state.h"
@@ -76,4 +76,4 @@ private:
 
 } // Sync
 
-#endif // SYNC_STATE_H
+#endif // NLSR_NSYNC_SYNC_FULL_STATE_H

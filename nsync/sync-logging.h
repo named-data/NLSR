@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_LOG_H
-#define SYNC_LOG_H
+#ifndef NLSR_NSYNC_SYNC_LOGGING_H
+#define NLSR_NSYNC_SYNC_LOGGING_H
 
 #ifdef HAVE_LOG4CXX
 
@@ -71,4 +71,4 @@ INIT_LOGGERS ();
 
 #endif // HAVE_LOG4CXX
 
-#endif // SYNC_LOG_H
+#endif // NLSR_NSYNC_SYNC_LOGGING_H

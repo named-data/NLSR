@@ -1,5 +1,5 @@
-#ifndef NSYNC_OPENSSL_H
-#define NSYNC_OPENSSL_H
+#ifndef NLSR_NSYNC_OPENSSL_H
+#define NLSR_NSYNC_OPENSSL_H
 
 // suppress deprecation warnings in OSX >= 10.7
 
@@ -18,4 +18,4 @@
 
 #include <openssl/evp.h>
 
-#endif // NSYNC_OPENSSL_H
+#endif // NLSR_NSYNC_OPENSSL_H

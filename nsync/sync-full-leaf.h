@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_FULL_LEAF_H
-#define SYNC_FULL_LEAF_H
+#ifndef NLSR_NSYNC_SYNC_FULL_LEAF_H
+#define NLSR_NSYNC_SYNC_FULL_LEAF_H
 
 #include "sync-leaf.h"
 
@@ -68,4 +68,4 @@ typedef shared_ptr<const FullLeaf> FullLeafConstPtr;
 
 } // Sync
 
-#endif // SYNC_FULL_LEAF_H
+#endif // NLSR_NSYNC_SYNC_FULL_LEAF_H

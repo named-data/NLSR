@@ -21,8 +21,8 @@
  * \author Minsheng Zhang <mzhang4@memphis.edu>
  *
  **/
-#ifndef CONF_PROCESSOR_HPP
-#define CONF_PROCESSOR_HPP
+#ifndef NLSR_CONF_FILE_PROCESSOR_HPP
+#define NLSR_CONF_FILE_PROCESSOR_HPP
 
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -77,4 +77,4 @@ private:
 };
 
 } // namespace nlsr
-#endif //CONF_PROCESSOR_HPP
+#endif // NLSR_CONF_FILE_PROCESSOR_HPP

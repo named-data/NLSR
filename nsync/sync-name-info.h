@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_NAME_INFO_H
-#define SYNC_NAME_INFO_H
+#ifndef NLSR_NSYNC_SYNC_NAME_INFO_H
+#define NLSR_NSYNC_SYNC_NAME_INFO_H
 
 #include "sync-common.h"
 
@@ -99,4 +99,4 @@ operator << (std::ostream &os, const NameInfo &info)
 
 } // Sync
 
-#endif // SYNC_NAME_INFO_H
+#endif // NLSR_NSYNC_SYNC_NAME_INFO_H

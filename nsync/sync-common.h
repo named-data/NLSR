@@ -19,8 +19,8 @@
  *
  **/
 
-#ifndef NSYNC_SYNC_COMMON_HPP
-#define NSYNC_SYNC_COMMON_HPP
+#ifndef NLSR_NSYNC_SYNC_COMMON_H
+#define NLSR_NSYNC_SYNC_COMMON_H
 
 #include <boost/exception/all.hpp>
 
@@ -46,4 +46,4 @@ using std::tie;
 
 } // namespace Sync
 
-#endif // NSYNC_SYNC_COMMON_HPP
+#endif // NLSR_NSYNC_SYNC_COMMON_H

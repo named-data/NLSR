@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_LEAF_H
-#define SYNC_LEAF_H
+#ifndef NLSR_NSYNC_SYNC_LEAF_H
+#define NLSR_NSYNC_SYNC_LEAF_H
 
 #include "sync-seq-no.h"
 #include "sync-name-info.h"
@@ -81,4 +81,4 @@ operator << (std::ostream &os, const Leaf &leaf)
 
 } // Sync
 
-#endif // SYNC_LEAF_H
+#endif // NLSR_NSYNC_SYNC_LEAF_H

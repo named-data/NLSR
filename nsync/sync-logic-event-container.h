@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_LOGIC_EVENT_CONTAINER_H
-#define SYNC_LOGIC_EVENT_CONTAINER_H
+#ifndef NLSR_NSYNC_SYNC_LOGIC_EVENT_CONTAINER_H
+#define NLSR_NSYNC_SYNC_LOGIC_EVENT_CONTAINER_H
 
 #include "sync-event.h"
 
@@ -81,4 +81,4 @@ struct EventsContainer : public mi::multi_index_container<
 
 } // Sync
 
-#endif // SYNC_LOGIC_EVENT_CONTAINER_H
+#endif // NLSR_NSYNC_SYNC_LOGIC_EVENT_CONTAINER_H

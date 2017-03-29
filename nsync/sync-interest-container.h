@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_INTEREST_CONTAINER_H
-#define SYNC_INTEREST_CONTAINER_H
+#ifndef NLSR_NSYNC_SYNC_INTEREST_CONTAINER_H
+#define NLSR_NSYNC_SYNC_INTEREST_CONTAINER_H
 
 #include <ndn-cxx/util/time.hpp>
 
@@ -96,4 +96,4 @@ struct InterestContainer : public mi::multi_index_container<
 
 } // Sync
 
-#endif // SYNC_INTEREST_CONTAINER_H
+#endif // NLSR_NSYNC_SYNC_INTEREST_CONTAINER_H

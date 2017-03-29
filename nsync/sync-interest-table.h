@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_INTEREST_TABLE_H
-#define SYNC_INTEREST_TABLE_H
+#ifndef NLSR_NSYNC_SYNC_INTEREST_TABLE_H
+#define NLSR_NSYNC_SYNC_INTEREST_TABLE_H
 
 #include <ndn-cxx/util/scheduler.hpp>
 
@@ -93,4 +93,4 @@ struct InterestTableIsEmpty : virtual boost::exception, virtual std::exception {
 
 } // Sync
 
-#endif // SYNC_INTEREST_TABLE_H
+#endif // NLSR_NSYNC_SYNC_INTEREST_TABLE_H

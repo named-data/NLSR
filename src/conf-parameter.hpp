@@ -19,8 +19,8 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef CONF_PARAMETER_HPP
-#define CONF_PARAMETER_HPP
+#ifndef NLSR_CONF_PARAMETER_HPP
+#define NLSR_CONF_PARAMETER_HPP
 
 #include <iostream>
 #include <boost/cstdint.hpp>
@@ -447,4 +447,4 @@ private:
 
 } // namespace nlsr
 
-#endif //CONF_PARAMETER_HPP
+#endif // NLSR_CONF_PARAMETER_HPP

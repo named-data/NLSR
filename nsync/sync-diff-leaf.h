@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_DIFF_LEAF_H
-#define SYNC_DIFF_LEAF_H
+#ifndef NLSR_NSYNC_SYNC_DIFF_LEAF_H
+#define NLSR_NSYNC_SYNC_DIFF_LEAF_H
 
 #include "sync-leaf.h"
 #include <boost/exception/all.hpp>
@@ -88,4 +88,4 @@ struct SyncDiffLeafOperationParseError : virtual boost::exception, virtual std::
 
 } // Sync
 
-#endif // SYNC_DIFF_LEAF_H
+#endif // NLSR_NSYNC_SYNC_DIFF_LEAF_H

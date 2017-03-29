@@ -19,8 +19,8 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef UPDATE_PREFIX_UPDATE_COMMANDS_HPP
-#define UPDATE_PREFIX_UPDATE_COMMANDS_HPP
+#ifndef NLSR_UPDATE_PREFIX_UPDATE_COMMANDS_HPP
+#define NLSR_UPDATE_PREFIX_UPDATE_COMMANDS_HPP
 
 #include <ndn-cxx/mgmt/nfd/control-command.hpp>
 
@@ -42,4 +42,4 @@ public:
 } // namespace update
 } // namespace nlsr
 
-#endif // UPDATE_PREFIX_UPDATE_COMMANDS_HPP
+#endif // NLSR_UPDATE_PREFIX_UPDATE_COMMANDS_HPP

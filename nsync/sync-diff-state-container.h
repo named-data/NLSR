@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_DIFF_STATE_CONTAINER_H
-#define SYNC_DIFF_STATE_CONTAINER_H
+#ifndef NLSR_NSYNC_SYNC_DIFF_STATE_CONTAINER_H
+#define NLSR_NSYNC_SYNC_DIFF_STATE_CONTAINER_H
 
 #include "sync-diff-state.h"
 #include "sync-digest.h"
@@ -69,4 +69,4 @@ struct DiffStateContainer : public mi::multi_index_container<
 
 } // Sync
 
-#endif // SYNC_DIFF_STATE_CONTAINER_H
+#endif // NLSR_NSYNC_SYNC_DIFF_STATE_CONTAINER_H

@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_DIFF_STATE_H
-#define SYNC_DIFF_STATE_H
+#ifndef NLSR_NSYNC_SYNC_DIFF_STATE_H
+#define NLSR_NSYNC_SYNC_DIFF_STATE_H
 
 #include "sync-state.h"
 #include <iostream>
@@ -99,4 +99,4 @@ private:
 
 } // Sync
 
-#endif // SYNC_DIFF_STATE_H
+#endif // NLSR_NSYNC_SYNC_DIFF_STATE_H

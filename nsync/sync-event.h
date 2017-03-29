@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_EVENT_H
-#define SYNC_EVENT_H
+#ifndef NLSR_NSYNC_SYNC_EVENT_H
+#define NLSR_NSYNC_SYNC_EVENT_H
 
 #include "sync-common.h"
 
@@ -32,4 +32,4 @@ typedef function< void ( ) > Event;
 
 } // Sync
 
-#endif // SYNC_EVENT_H
+#endif // NLSR_NSYNC_SYNC_EVENT_H

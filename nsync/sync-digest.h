@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_DIGEST_H
-#define SYNC_DIGEST_H
+#ifndef NLSR_NSYNC_SYNC_DIGEST_H
+#define NLSR_NSYNC_SYNC_DIGEST_H
 
 #include "sync-common.h"
 
@@ -196,4 +196,4 @@ struct DigestPtrEqual : public std::unary_function<Digest, std::size_t>
 
 } // Sync
 
-#endif // SYNC_DIGEST_H
+#endif // NLSR_NSYNC_SYNC_DIGEST_H

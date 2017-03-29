@@ -18,8 +18,8 @@
  * Author: Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef _SYNC_SOCKET_H
-#define _SYNC_SOCKET_H
+#ifndef NLSR_NSYNC_SYNC_SOCKET_H
+#define NLSR_NSYNC_SYNC_SOCKET_H
 
 #include "sync-common.h"
 
@@ -131,4 +131,4 @@ private:
 
 } // Sync
 
-#endif // SYNC_SOCKET_H
+#endif // NLSR_NSYNC_SYNC_SOCKET_H

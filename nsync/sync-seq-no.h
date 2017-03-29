@@ -21,8 +21,8 @@
  *         Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef SYNC_SEQ_NO_H
-#define SYNC_SEQ_NO_H
+#ifndef NLSR_NSYNC_SYNC_SEQ_NO_H
+#define NLSR_NSYNC_SYNC_SEQ_NO_H
 
 #include <boost/cstdint.hpp>
 #include "sync-digest.h"
@@ -195,4 +195,4 @@ operator << (std::ostream &os, const SeqNo &seqno)
 
 } // Sync
 
-#endif // SYNC_SEQ_NO_H
+#endif // NLSR_NSYNC_SYNC_SEQ_NO_H

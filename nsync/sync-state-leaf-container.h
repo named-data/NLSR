@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_STATE_LEAF_CONTAINER
-#define SYNC_STATE_LEAF_CONTAINER
+#ifndef NLSR_NSYNC_SYNC_STATE_LEAF_CONTAINER_H
+#define NLSR_NSYNC_SYNC_STATE_LEAF_CONTAINER_H
 
 #include "sync-leaf.h"
 #include "sync-name-info.h"
@@ -98,4 +98,4 @@ struct LeafContainer : public mi::multi_index_container<
 
 } // Sync
 
-#endif // SYNC_STATE_LEAF_CONTAINER
+#endif // NLSR_NSYNC_SYNC_STATE_LEAF_CONTAINER_H

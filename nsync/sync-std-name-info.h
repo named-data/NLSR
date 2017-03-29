@@ -20,8 +20,8 @@
  *         Alexander Afanasyev <alexander.afanasyev@ucla.edu>
  */
 
-#ifndef SYNC_STD_NAME_INFO_H
-#define SYNC_STD_NAME_INFO_H
+#ifndef NLSR_NSYNC_SYNC_STD_NAME_INFO_H
+#define NLSR_NSYNC_SYNC_STD_NAME_INFO_H
 
 #include "sync-name-info.h"
 #include <string>
@@ -71,4 +71,4 @@ private:
 
 } // Sync
 
-#endif // SYNC_CCNX_NAME_INFO_H
+#endif // NLSR_NSYNC_SYNC_STD_NAME_INFO_H

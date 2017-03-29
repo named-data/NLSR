@@ -19,8 +19,8 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
-#define UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
+#ifndef NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
+#define NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
 
 #include "name-prefix-list.hpp"
 #include "test-access-control.hpp"
@@ -149,4 +149,4 @@ private:
 } // namespace update
 } // namespace nlsr
 
-#endif // UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
+#endif // NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP

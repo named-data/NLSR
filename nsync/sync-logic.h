@@ -21,8 +21,8 @@
  *         Yingdi Yu <yingdi@cs.ucla.edu>
  */
 
-#ifndef SYNC_LOGIC_H
-#define SYNC_LOGIC_H
+#ifndef NLSR_NSYNC_SYNC_LOGIC_H
+#define NLSR_NSYNC_SYNC_LOGIC_H
 
 #include <boost/random.hpp>
 #include <memory>
@@ -220,4 +220,4 @@ private:
 
 } // Sync
 
-#endif // SYNC_APP_WRAPPER_H
+#endif // NLSR_NSYNC_SYNC_LOGIC_H
