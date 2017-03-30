@@ -3,7 +3,7 @@ NLSR - Named Data Link State Routing Protocol
 
 NLSR is a routing protocol in NDN that populates NDN's Routing Information Base. NLSR will
 continue to evolve alongside the Named Data Networking `protocol
-<http://named-data.net/doc/ndn-tlv/>`_.
+<https://named-data.net/doc/ndn-tlv/>`_.
 
 NLSR is an open and free software package licensed under the GPL 3.0 license and free to
 all Internet users and developers. For more information about the licensing details and
@@ -11,7 +11,7 @@ limitations, refer to `COPYING.md
 <https://github.com/named-data/NLSR/blob/master/COPYING.md>`_.
 
 NLSR is developed by the members of the `NSF-sponsored NDN project team
-<http://named-data.net/project/participants/>`_. For more details, please refer to
+<https://named-data.net/project/participants/>`_. For more details, please refer to
 `AUTHORS.md <https://github.com/named-data/NLSR/blob/master/AUTHORS.md>`_. Bug reports and
 feedback are highly appreciated and can be made through the `NLSR Wiki`_.
 
@@ -57,5 +57,5 @@ Additional information
    Detailed explanation of the NLSR design
 
 
-.. _NLSR Wiki: http://redmine.named-data.net/projects/nlsr
-.. _NLSR Paper: http://www.cs.memphis.edu/~lanwang/paper/nlsr-final.pdf
+.. _NLSR Wiki: https://redmine.named-data.net/projects/nlsr
+.. _NLSR Paper: https://named-data.net/wp-content/uploads/2016/01/ndn-0037-1-nlsr.pdf
