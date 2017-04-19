@@ -45,6 +45,19 @@ Options
       ``name``
         The Name prefix to be withdrawn
 
+Notes
+-----
+
+When security is enabled, NLSR will not be allowed to successfully
+advertise/withdraw names without first setting a default identity of operator.
+If default identity is not set as operator, the user will be presented with the
+error message: “Name prefix update error (code: 403)”. To remedy this
+issue, use command 'ndn-sec-default'.
+
+Example:
+
+  ndnsec-set-default /ndn/a-site/%C1.Operator/op
+
 Exit Status
 -----------
 
