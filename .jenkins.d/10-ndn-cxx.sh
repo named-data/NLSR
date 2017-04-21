@@ -7,7 +7,19 @@ source "$JDIR"/util.sh
 
 pushd /tmp >/dev/null
 
-INSTALLED_VERSION=$((cd ndn-cxx && git rev-parse HEAD) 2>/dev/null || echo NONE)
+INSTALLED_VERSION=
+if has OSX $NODE_LABELS; then
+    BOOST=$(brew ls --versions boost)
+    OLD_BOOST=$(cat boost.txt || :)
+    if [[ $OLD_BOOST != $BOOST ]]; then
+        echo "$BOOST" > boost.txt
+        INSTALLED_VERSION=NONE
+    fi
+fi
+
+if [[ -z $INSTALLED_VERSION ]]; then
+    INSTALLED_VERSION=$((cd ndn-cxx && git rev-parse HEAD) 2>/dev/null || echo NONE)
+fi
 
 sudo rm -Rf ndn-cxx-latest
 
