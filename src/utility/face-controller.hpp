@@ -68,7 +68,6 @@ private:
   ndn::nfd::Controller& m_controller;
 
   static const uint32_t CANONIZE_ERROR_CODE = 408;
-  static const ndn::time::seconds TIME_ALLOWED_FOR_CANONIZATION;
 };
 
 } // namespace util

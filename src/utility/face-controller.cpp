@@ -31,8 +31,6 @@ INIT_LOGGER("FaceController");
 
 using ndn::util::FaceUri;
 
-const ndn::time::seconds FaceController::TIME_ALLOWED_FOR_CANONIZATION = ndn::time::seconds(4);
-
 void
 FaceController::createFace(const std::string& request,
                            const CommandSuccessCallback& onSuccess,

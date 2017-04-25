@@ -190,6 +190,40 @@ Nlsr::daemonize()
 }
 
 void
+Nlsr::canonizeContinuation(std::list<Adjacent>::iterator iterator)
+{
+  canonizeNeighborUris(iterator, [this] (std::list<Adjacent>::iterator iterator) {
+      canonizeContinuation(iterator);
+  });
+}
+
+void
+Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
+                           std::function<void(std::list<Adjacent>::iterator)> then)
+{
+  if (currentNeighbor != m_adjacencyList.getAdjList().end()) {
+    ndn::util::FaceUri uri(currentNeighbor->getConnectingFaceUri());
+    uri.canonize([this, then, currentNeighbor] (ndn::util::FaceUri canonicalUri) {
+        _LOG_DEBUG("Canonized URI: " << currentNeighbor->getConnectingFaceUri()
+                   << " to: " << canonicalUri);
+        currentNeighbor->setConnectingFaceUri(canonicalUri.toString());
+        then(std::next(currentNeighbor));
+      },
+      [this, then, currentNeighbor] (const std::string& reason) {
+        _LOG_ERROR("Could not canonize URI: " << currentNeighbor->getConnectingFaceUri()
+                   << " because: " << reason);
+        then(std::next(currentNeighbor));
+      },
+      m_nlsrFace.getIoService(),
+      TIME_ALLOWED_FOR_CANONIZATION);
+  }
+  // We have finished canonizing all neighbors, so initialize NLSR.
+  else {
+    initialize();
+  }
+}
+
+void
 Nlsr::initialize()
 {
   _LOG_DEBUG("Initializing Nlsr");

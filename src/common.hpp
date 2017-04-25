@@ -23,6 +23,7 @@
 #define NLSR_COMMON_HPP
 
 #include <ndn-cxx/common.hpp>
+#include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 
@@ -31,6 +32,8 @@ using std::make_shared;
 using std::shared_ptr;
 using std::function;
 
-}
+const ndn::time::seconds TIME_ALLOWED_FOR_CANONIZATION = ndn::time::seconds(4);
+
+} // namespace nlsr
 
 #endif // NLSR_COMMON_HPP

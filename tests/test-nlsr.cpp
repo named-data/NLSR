@@ -36,7 +36,7 @@ class NlsrFixture : public UnitTestTimeFixture
 {
 public:
   NlsrFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>())
+    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
     , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
     , lsdb(nlsr.getLsdb())
     , neighbors(nlsr.getAdjacencyList())
@@ -52,7 +52,7 @@ public:
     std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(dataName);
 
     nlsr.m_helloProtocol.onContentValidated(data);
-  }
+ }
 
 public:
   std::shared_ptr<ndn::util::DummyClientFace> face;
@@ -445,6 +445,37 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   lsa = lsdb.findAdjLsa(lsaKey);
   BOOST_REQUIRE(lsa != nullptr);
   BOOST_CHECK_EQUAL(lsa->getAdl().getSize(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(CanonizeUris)
+{
+  ndn::Name neighborAName("/ndn/site/%C1.router/routerA");
+  Adjacent neighborA(neighborAName, "udp://10.0.0.1", 0, Adjacent::STATUS_INACTIVE, 0, 0);
+  neighbors.insert(neighborA);
+
+  ndn::Name neighborBName("/ndn/site/%C1.router/routerB");
+  Adjacent neighborB(neighborBName, "udp://10.0.0.2", 0, Adjacent::STATUS_INACTIVE, 0, 0);
+  neighbors.insert(neighborB);
+
+  int nCanonizationsLeft = nlsr.getAdjacencyList().getAdjList().size();
+  std::function<void(std::list<Adjacent>::iterator)> thenCallback =
+    [this, &thenCallback, &nCanonizationsLeft] (std::list<Adjacent>::iterator iterator) {
+      nCanonizationsLeft--;
+      nlsr.canonizeNeighborUris(iterator, thenCallback);
+  };
+  nlsr.canonizeNeighborUris(nlsr.getAdjacencyList().getAdjList().begin(),
+                            [thenCallback] (std::list<Adjacent>::iterator iterator) {
+                              thenCallback(iterator);
+                            });
+  while (nCanonizationsLeft != 0) {
+    this->advanceClocks(ndn::time::milliseconds(1));
+  }
+
+  BOOST_CHECK_EQUAL(nlsr.getAdjacencyList().getAdjacent(neighborAName).getConnectingFaceUri(),
+                    "udp4://10.0.0.1:6363");
+
+  BOOST_CHECK_EQUAL(nlsr.getAdjacencyList().getAdjacent(neighborBName).getConnectingFaceUri(),
+                    "udp4://10.0.0.2:6363");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -57,8 +57,16 @@ NlsrRunner::run()
     m_nlsr.daemonize();
   }
 
-  m_nlsr.initialize();
-
+  /**
+   * This really should be part of Nlsr::initialize, but because URI
+   * canonization happens asynchronously and we need to ensure that it
+   * happens before we proceed, the canonization function has to be
+   * the one to call initialize.
+   */
+  m_nlsr.canonizeNeighborUris(m_nlsr.getAdjacencyList().getAdjList().begin(),
+                              [this] (std::list<Adjacent>::iterator iterator) {
+                                m_nlsr.canonizeContinuation(iterator);
+                              });
   try {
     m_nlsr.startEventLoop();
   }

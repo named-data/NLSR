@@ -53,13 +53,14 @@
 #include "update/nfd-rib-command-processor.hpp"
 #include "utility/name-helper.hpp"
 
-
 namespace nlsr {
 
 static ndn::Name DEFAULT_BROADCAST_PREFIX("/ndn/broadcast");
 
 class Nlsr
 {
+  friend class NlsrRunner;
+
   class Error : public std::runtime_error
   {
   public:
@@ -323,6 +324,26 @@ public:
     return m_firstHelloInterval;
   }
 
+  /**
+   * \brief Canonize the URI for this and all proceeding neighbors in a list.
+   *
+   * This function canonizes the URI of the Adjacent object pointed to
+   * by currentNeighbor. It then executes the then callback, providing
+   * the next iterator in the list to the callback. A standard
+   * invocation would be to pass the begin() iterator of NLSR's
+   * adjacency list, and to provide Nlsr::canonizeContinuation as the
+   * callback. Because every URI must be canonical before we begin
+   * operations, the canonize function must call initialize itself.
+   *
+   * \sa Nlsr::canonizeContinuation
+   * \sa Nlsr::initialize
+   * \sa NlsrRunner::run
+   */
+  void
+  canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
+                       std::function<void(std::list<Adjacent>::iterator)> then);
+
+
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   addCertificateToCache(std::shared_ptr<ndn::IdentityCertificate> certificate)
@@ -365,6 +386,17 @@ private:
   {
     m_firstHelloInterval = interval;
   }
+
+  /**
+   * \brief Continues canonizing neighbor URIs.
+   *
+   * For testability reasons, we want what each instance of
+   * canonization does after completion to be controllable. The best
+   * way to do this is to control that by simply passing a
+   * continuation function.
+   */
+  void
+  canonizeContinuation(std::list<Adjacent>::iterator iterator);
 
 public:
   static const ndn::Name LOCALHOST_PREFIX;
