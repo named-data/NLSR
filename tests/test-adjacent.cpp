@@ -29,22 +29,60 @@ namespace test {
 
 using namespace std;
 
-BOOST_AUTO_TEST_SUITE(TestAdjacenct)
+BOOST_AUTO_TEST_SUITE(TestAdjacent)
 
-BOOST_AUTO_TEST_CASE(AdjacenctBasic)
+BOOST_AUTO_TEST_CASE(OperatorEquals)
 {
-  const string ADJ_NAME_1 = "testname";
-  const string ADJ_NAME_2 = "testname";
+  const ndn::Name ADJ_NAME_1 = "name1";
+  const ndn::util::FaceUri ADJ_URI_1 = ndn::util::FaceUri("udp4://10.0.0.1:8000");
+  const double ADJ_LINK_COST_1 = 1;
+  Adjacent adjacent1(ADJ_NAME_1);
+  Adjacent adjacent2(ADJ_NAME_1);
+  adjacent1.setFaceUri(ADJ_URI_1);
+  adjacent2.setFaceUri(ADJ_URI_1);
+  adjacent1.setLinkCost(ADJ_LINK_COST_1);
+  adjacent2.setLinkCost(ADJ_LINK_COST_1);
 
+  BOOST_CHECK(adjacent1 == adjacent2);
+}
+
+BOOST_AUTO_TEST_CASE(Accessors)
+{
+  const ndn::Name ADJ_NAME_1 = "name1";
+  Adjacent adjacent1(ADJ_NAME_1);
+
+  // Link cost should always be rounded up to the nearest integer.
+  // The library only acceps integral values for prefix registration.
+  adjacent1.setLinkCost(10.1);
+
+  BOOST_CHECK_EQUAL(adjacent1.getName(), "name1");
+  BOOST_CHECK_EQUAL(adjacent1.getLinkCost(), 11);
+}
+
+BOOST_AUTO_TEST_CASE(compareFaceUri)
+{
+  const ndn::Name ADJ_NAME_1 = "name1";
+  const ndn::Name ADJ_NAME_2 = "name2";
+  const ndn::util::FaceUri ADJ_URI_1 = ndn::util::FaceUri("udp4://10.0.0.1:8000");
   Adjacent adjacent1(ADJ_NAME_1);
   Adjacent adjacent2(ADJ_NAME_2);
-  BOOST_CHECK(adjacent1 == adjacent2);
+  adjacent1.setFaceUri(ADJ_URI_1);
+  adjacent2.setFaceUri(ADJ_URI_1);
 
-  adjacent1.setLinkCost(10.1);
-  BOOST_CHECK_EQUAL(adjacent1.getLinkCost(), 11);
+  BOOST_CHECK(adjacent1.compareFaceUri(adjacent2.getFaceUri()));
+}
 
-  BOOST_CHECK_EQUAL(adjacent1.getName(), "testname");
+BOOST_AUTO_TEST_CASE(compareFaceId)
+{
+  const ndn::Name ADJ_NAME_1 = "name1";
+  const ndn::Name ADJ_NAME_2 = "name2";
+  const uint64_t ADJ_FACEID_1 = 1;
+  Adjacent adjacent1(ADJ_NAME_1);
+  Adjacent adjacent2(ADJ_NAME_2);
+  adjacent1.setFaceId(ADJ_FACEID_1);
+  adjacent2.setFaceId(ADJ_FACEID_1);
 
+  BOOST_CHECK(adjacent1.compareFaceId(adjacent2.getFaceId()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

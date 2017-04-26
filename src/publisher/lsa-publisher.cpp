@@ -52,7 +52,7 @@ AdjacencyLsaPublisher::getTlvLsas()
     for (const Adjacent& adj : lsa.getAdl().getAdjList()) {
       tlv::Adjacency tlvAdj;
       tlvAdj.setName(adj.getName());
-      tlvAdj.setUri(adj.getConnectingFaceUri());
+      tlvAdj.setUri(adj.getFaceUri().toString());
       tlvAdj.setCost(adj.getLinkCost());
       tlvLsa.addAdjacency(tlvAdj);
     }

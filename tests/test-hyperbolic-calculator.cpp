@@ -59,9 +59,9 @@ public:
   {
     INIT_LOGGERS("/tmp", "TRACE");
 
-    Adjacent a(ROUTER_A_NAME, ROUTER_A_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
-    Adjacent b(ROUTER_B_NAME, ROUTER_B_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
-    Adjacent c(ROUTER_C_NAME, ROUTER_C_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent a(ROUTER_A_NAME, ndn::util::FaceUri(ROUTER_A_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent b(ROUTER_B_NAME, ndn::util::FaceUri(ROUTER_B_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent c(ROUTER_C_NAME, ndn::util::FaceUri(ROUTER_C_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
     // Router A
     adjacencies.insert(b);
@@ -126,9 +126,9 @@ const ndn::Name HyperbolicCalculatorFixture::ROUTER_A_NAME = "/ndn/router/a";
 const ndn::Name HyperbolicCalculatorFixture::ROUTER_B_NAME = "/ndn/router/b";
 const ndn::Name HyperbolicCalculatorFixture::ROUTER_C_NAME = "/ndn/router/c";
 
-const std::string HyperbolicCalculatorFixture::ROUTER_A_FACE = "face-a";
-const std::string HyperbolicCalculatorFixture::ROUTER_B_FACE = "face-b";
-const std::string HyperbolicCalculatorFixture::ROUTER_C_FACE = "face-c";
+const std::string HyperbolicCalculatorFixture::ROUTER_A_FACE = "udp4://10.0.0.1";
+const std::string HyperbolicCalculatorFixture::ROUTER_B_FACE = "udp4://10.0.0.2";
+const std::string HyperbolicCalculatorFixture::ROUTER_C_FACE = "udp4://10.0.0.3";
 
 uint64_t
 applyHyperbolicFactorAndRound(double d)

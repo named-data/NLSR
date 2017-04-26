@@ -16,14 +16,13 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 #include <string>
 #include <cmath>
 #include <boost/cstdint.hpp>
+
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/util/face-uri.hpp>
 
 #ifndef NLSR_ADJACENT_HPP
 #define NLSR_ADJACENT_HPP
@@ -45,7 +44,7 @@ public:
 
   Adjacent(const ndn::Name& an);
 
-  Adjacent(const ndn::Name& an, const std::string& cfu,  double lc,
+  Adjacent(const ndn::Name& an, const ndn::util::FaceUri& faceUri, double lc,
            Status s, uint32_t iton, uint64_t faceId);
 
   const ndn::Name&
@@ -60,16 +59,16 @@ public:
     m_name = an;
   }
 
-  const std::string&
-  getConnectingFaceUri() const
+  const ndn::util::FaceUri&
+  getFaceUri() const
   {
-    return m_connectingFaceUri;
+    return m_faceUri;
   }
 
   void
-  setConnectingFaceUri(const std::string& cfu)
+  setFaceUri(const ndn::util::FaceUri& faceUri)
   {
-    m_connectingFaceUri = cfu;
+    m_faceUri = faceUri;
   }
 
   uint64_t
@@ -131,15 +130,15 @@ public:
   }
 
   inline bool
-  compareFaceId(uint64_t faceId)
+  compareFaceId(const uint64_t faceId)
   {
     return m_faceId == faceId;
   }
 
   inline bool
-  compareFaceUri(std::string& faceUri)
+  compareFaceUri(const ndn::util::FaceUri& faceUri)
   {
-    return m_connectingFaceUri == faceUri;
+    return m_faceUri == faceUri;
   }
 
   void
@@ -150,7 +149,7 @@ public:
 
 private:
   ndn::Name m_name;
-  std::string m_connectingFaceUri;
+  ndn::util::FaceUri m_faceUri;
   double m_linkCost;
   Status m_status;
   uint32_t m_interestTimedOutNo;
@@ -159,4 +158,4 @@ private:
 
 } // namespace nlsr
 
-#endif //NLSR_ADJACENT_HPP
+#endif // NLSR_ADJACENT_HPP

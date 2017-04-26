@@ -145,8 +145,11 @@ public:
   AdjacencyList::iterator
   findAdjacent(uint64_t faceId);
 
+  AdjacencyList::iterator
+  findAdjacent(const ndn::util::FaceUri& faceUri);
+
   uint64_t
-  getFaceId(const std::string& faceUri);
+  getFaceId(const ndn::util::FaceUri& faceUri);
 
   void
   writeLog();

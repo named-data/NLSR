@@ -60,9 +60,9 @@ public:
     conf.setRouterName("/a");
     conf.buildRouterPrefix();
 
-    Adjacent a(ROUTER_A_NAME, ROUTER_A_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
-    Adjacent b(ROUTER_B_NAME, ROUTER_B_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
-    Adjacent c(ROUTER_C_NAME, ROUTER_C_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent a(ROUTER_A_NAME, ndn::util::FaceUri(ROUTER_A_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent b(ROUTER_B_NAME, ndn::util::FaceUri(ROUTER_B_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent c(ROUTER_C_NAME, ndn::util::FaceUri(ROUTER_C_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
     // Router A
     b.setLinkCost(LINK_AB_COST);
@@ -125,9 +125,9 @@ const ndn::Name LinkStateCalculatorFixture::ROUTER_A_NAME = "/ndn/router/a";
 const ndn::Name LinkStateCalculatorFixture::ROUTER_B_NAME = "/ndn/router/b";
 const ndn::Name LinkStateCalculatorFixture::ROUTER_C_NAME = "/ndn/router/c";
 
-const std::string LinkStateCalculatorFixture::ROUTER_A_FACE = "face-a";
-const std::string LinkStateCalculatorFixture::ROUTER_B_FACE = "face-b";
-const std::string LinkStateCalculatorFixture::ROUTER_C_FACE = "face-c";
+const std::string LinkStateCalculatorFixture::ROUTER_A_FACE = "udp4://10.0.0.1";
+const std::string LinkStateCalculatorFixture::ROUTER_B_FACE = "udp4://10.0.0.2";
+const std::string LinkStateCalculatorFixture::ROUTER_C_FACE = "udp4://10.0.0.3";
 
 const double LinkStateCalculatorFixture::LINK_AB_COST = 5;
 const double LinkStateCalculatorFixture::LINK_AC_COST = 10;

@@ -266,7 +266,7 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
                     uint64_t faceCost, const ndn::time::milliseconds& timeout,
                     uint64_t flags, uint8_t times)
 {
-  uint64_t faceId = m_adjacencyList.getFaceId(faceUri);
+  uint64_t faceId = m_adjacencyList.getFaceId(ndn::util::FaceUri(faceUri));
   if (faceId != 0) {
     ndn::nfd::ControlParameters faceParameters;
     faceParameters

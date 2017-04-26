@@ -63,10 +63,10 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
 
   NamePrefixTable& npt = nlsr.getNamePrefixTable();
 
-  Adjacent thisRouter(conf.getRouterPrefix(), "udp://face", 0, Adjacent::STATUS_ACTIVE, 0, 0);
+  Adjacent thisRouter(conf.getRouterPrefix(), ndn::util::FaceUri("udp4://10.0.0.1"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
   ndn::Name buptRouterName("/ndn/cn/edu/bupt/%C1.Router/bupthub");
-  Adjacent bupt(buptRouterName, "udp://bupt", 0, Adjacent::STATUS_ACTIVE, 0, 0);
+  Adjacent bupt(buptRouterName, ndn::util::FaceUri("udp4://10.0.0.2"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
   // This router's Adjacency LSA
   nlsr.getAdjacencyList().insert(bupt);

@@ -253,7 +253,7 @@ AdjLsa::getData()
   os << m_origRouter << "|" << AdjLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
      << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_adl.getSize();
   for (const auto& adjacent : m_adl.getAdjList()) {
-    os << "|" << adjacent.getName() << "|" << adjacent.getConnectingFaceUri()
+    os << "|" << adjacent.getName() << "|" << adjacent.getFaceUri()
        << "|" << adjacent.getLinkCost();
   }
   os << "|";
@@ -290,7 +290,8 @@ AdjLsa::initializeFromContent(const std::string& content)
       ndn::Name adjName(*tok_iter++);
       std::string connectingFaceUri(*tok_iter++);
       double linkCost = boost::lexical_cast<double>(*tok_iter++);
-      Adjacent adjacent(adjName, connectingFaceUri, linkCost, Adjacent::STATUS_INACTIVE, 0, 0);
+      Adjacent adjacent(adjName, ndn::util::FaceUri(connectingFaceUri), linkCost,
+                        Adjacent::STATUS_INACTIVE, 0, 0);
       addAdjacent(adjacent);
     }
     catch (const std::exception& e) {
@@ -342,7 +343,7 @@ operator<<(std::ostream& os, const AdjLsa& adjLsa)
   for (const Adjacent& adjacency : adjLsa) {
   os << "    Adjacent " << adjacencyIndex++ << ":\n"
      << "      Adjacent Name: " << adjacency.getName() << "\n"
-     << "      Connecting FaceUri: " << adjacency.getConnectingFaceUri() << "\n"
+     << "      Connecting FaceUri: " << adjacency.getFaceUri() << "\n"
      << "      Link Cost: " << adjacency.getLinkCost() << "\n";
   }
   os << "adj_lsa_end";

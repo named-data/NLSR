@@ -45,8 +45,8 @@ public:
   void
   addAdjacency(AdjLsa& lsa, const std::string& name, const std::string& faceUri, double cost)
   {
-    Adjacent adjacency(name, faceUri, cost, Adjacent::STATUS_ACTIVE, 0, 0);
-    lsa.addAdjacent(adjacency);
+    Adjacent adjacency(name, ndn::util::FaceUri(faceUri), cost, Adjacent::STATUS_ACTIVE, 0, 0);
+    lsa.addAdjacent(std::move(adjacency));
   }
 
   void
@@ -77,7 +77,7 @@ public:
 
     for (const Adjacent& adjacency : lsa.getAdl().getAdjList()) {
       BOOST_CHECK_EQUAL(it->getName(), adjacency.getName());
-      BOOST_CHECK_EQUAL(it->getUri(), adjacency.getConnectingFaceUri());
+      BOOST_CHECK_EQUAL(it->getUri(), adjacency.getFaceUri().toString());
       BOOST_CHECK_EQUAL(it->getCost(), adjacency.getLinkCost());
       ++it;
     }

@@ -252,7 +252,7 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
   int v, u;
   int* Q = new int[m_nRouters]; // Each cell represents the router with that mapping no.
   int head = 0;
-  /* Initiate the Parent */
+  // Initiate the Parent
   for (i = 0 ; i < static_cast<int>(m_nRouters); i++) {
     m_parent[i] = EMPTY_PARENT;
     // Array where the ith element is the distance to the router with mapping no i.
@@ -318,7 +318,7 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, Rou
         // Fetch its actual name
         ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
         std::string nextHopFace =
-          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getConnectingFaceUri();
+          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getFaceUri().toString();
         // Add next hop to routing table
         NextHop nh(nextHopFace, routeCost);
         rt.addNextHop(pMap.getRouterNameByMappingNo(i), nh);
@@ -426,7 +426,7 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
       continue;
     }
 
-    std::string srcFaceUri = adj->getConnectingFaceUri();
+    std::string srcFaceUri = adj->getFaceUri().toString();
 
     // Install nexthops for this router to the neighbor; direct neighbors have a 0 cost link
     addNextHop(srcRouterName, srcFaceUri, 0, rt);
@@ -479,7 +479,7 @@ HyperbolicRoutingCalculator::getHyperbolicDistance(Map& map, Lsdb& lsdb,
   CoordinateLsa* destLsa = lsdb.findCoordinateLsa(destLsaKey);
 
   // Coordinate LSAs do not exist for these routers
-  if (srcLsa == NULL || destLsa == NULL) {
+  if (srcLsa == nullptr || destLsa == nullptr) {
     return UNKNOWN_DISTANCE;
   }
 

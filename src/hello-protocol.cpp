@@ -72,7 +72,7 @@ HelloProtocol::sendScheduledInterest(uint32_t seconds)
     // successful registration prompts a callback that sends the hello
     // Interest to the new Face.
     else {
-      registerPrefixes((*it).getName(), (*it).getConnectingFaceUri(),
+      registerPrefixes((*it).getName(), (*it).getFaceUri().toString(),
                        (*it).getLinkCost(), ndn::time::milliseconds::max());
     }
   }
@@ -129,7 +129,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
       // If the originator of the Interest currently lacks a Face, we
       // need to give it one.
       else {
-        registerPrefixes(adjacent->getName(), adjacent->getConnectingFaceUri(),
+        registerPrefixes(adjacent->getName(), adjacent->getFaceUri().toString(),
                          adjacent->getLinkCost(), ndn::time::milliseconds::max());
       }
     }
@@ -262,7 +262,7 @@ HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandS
     adjacent->setFaceId(commandSuccessResult.getFaceId());
     ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
     broadcastKeyPrefix.append("KEYS");
-    std::string faceUri = adjacent->getConnectingFaceUri();
+    std::string faceUri = adjacent->getFaceUri().toString();
     double linkCost = adjacent->getLinkCost();
     m_nlsr.getFib().registerPrefix(m_nlsr.getConfParameter().getChronosyncPrefix(),
                                  faceUri, linkCost, timeout,

@@ -258,8 +258,18 @@ AdjacencyList::findAdjacent(uint64_t faceId)
                                 _1, faceId));
 }
 
+AdjacencyList::iterator
+AdjacencyList::findAdjacent(const ndn::util::FaceUri& faceUri)
+{
+  return std::find_if(m_adjList.begin(),
+                      m_adjList.end(),
+                      [&faceUri] (const Adjacent& adj) {
+                        return faceUri == adj.getFaceUri();
+                      });
+}
+
 uint64_t
-AdjacencyList::getFaceId(const std::string& faceUri)
+AdjacencyList::getFaceId(const ndn::util::FaceUri& faceUri)
 {
   std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
                                                   m_adjList.end(),

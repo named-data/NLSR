@@ -141,11 +141,11 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
     "  Adjacents: \n"
     "    Adjacent 1:\n"
     "      Adjacent Name: /adjacent1\n"
-    "      Connecting FaceUri: \n"
+    "      Connecting FaceUri: ://\n"
     "      Link Cost: 10\n"
     "    Adjacent 2:\n"
     "      Adjacent Name: /adjacent2\n"
-    "      Connecting FaceUri: \n"
+    "      Connecting FaceUri: ://\n"
     "      Link Cost: 10\n"
     "adj_lsa_end";
 
@@ -167,8 +167,8 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   //If we don't do this the test will fail
   //Adjacent has default cost of 10 but no default
   //connecting face URI, so initializeFromContent fails
-  adj1.setConnectingFaceUri("10.0.0.1");
-  adj2.setConnectingFaceUri("10.0.0.2");
+  adj1.setFaceUri(ndn::util::FaceUri("udp://10.0.0.1"));
+  adj2.setFaceUri(ndn::util::FaceUri("udp://10.0.0.2"));
 
   AdjacencyList adjList;
   adjList.insert(adj1);

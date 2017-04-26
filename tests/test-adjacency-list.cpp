@@ -29,14 +29,12 @@
 namespace nlsr {
 namespace test {
 
-using namespace std;
-
 BOOST_AUTO_TEST_SUITE(TestAdjacencyList)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  const string ADJ_NAME_1 = "testname";
-  const string ADJ_NAME_2 = "testname2";
+  const std::string ADJ_NAME_1 = "testname";
+  const std::string ADJ_NAME_2 = "testname2";
 
 //adjacent needed to test adjacency list.
   Adjacent adjacent1(ADJ_NAME_1);
@@ -57,11 +55,22 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK(adjacentList1.isNeighbor("testname"));
   BOOST_CHECK_EQUAL(adjacentList1.isNeighbor("adjacent"), false);
 
-  string n1 = "testname";
+  std::string n1 = "testname";
   BOOST_CHECK_EQUAL(adjacentList1.getStatusOfNeighbor(n1), Adjacent::STATUS_INACTIVE);
 
   adjacentList1.setStatusOfNeighbor(n1, Adjacent::STATUS_ACTIVE);
   BOOST_CHECK_EQUAL(adjacentList1.getStatusOfNeighbor(n1), Adjacent::STATUS_ACTIVE);
+}
+
+BOOST_AUTO_TEST_CASE(findAdjacentByFaceUri)
+{
+  ndn::util::FaceUri faceUri("udp4://10.0.0.1:6363");
+  Adjacent adj1("/ndn/test/1", faceUri, 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  AdjacencyList adjList;
+  adjList.insert(adj1);
+
+  std::list<Adjacent>::iterator adjIter = adjList.findAdjacent(faceUri);
+  BOOST_CHECK(adjIter != adjList.end());
 }
 
 BOOST_AUTO_TEST_CASE(AdjLsaIsBuildableWithOneNodeActive)
@@ -124,5 +133,5 @@ BOOST_AUTO_TEST_CASE(AdjLsaIsNotBuildable)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace tests
+} // namespace test
 } // namespace nlsr

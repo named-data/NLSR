@@ -198,15 +198,15 @@ Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
                            std::function<void(std::list<Adjacent>::iterator)> then)
 {
   if (currentNeighbor != m_adjacencyList.getAdjList().end()) {
-    ndn::util::FaceUri uri(currentNeighbor->getConnectingFaceUri());
+    ndn::util::FaceUri uri(currentNeighbor->getFaceUri());
     uri.canonize([this, then, currentNeighbor] (ndn::util::FaceUri canonicalUri) {
-        _LOG_DEBUG("Canonized URI: " << currentNeighbor->getConnectingFaceUri()
+        _LOG_DEBUG("Canonized URI: " << currentNeighbor->getFaceUri()
                    << " to: " << canonicalUri);
-        currentNeighbor->setConnectingFaceUri(canonicalUri.toString());
+        currentNeighbor->setFaceUri(canonicalUri);
         then(std::next(currentNeighbor));
       },
       [this, then, currentNeighbor] (const std::string& reason) {
-        _LOG_ERROR("Could not canonize URI: " << currentNeighbor->getConnectingFaceUri()
+        _LOG_ERROR("Could not canonize URI: " << currentNeighbor->getFaceUri()
                    << " because: " << reason);
         then(std::next(currentNeighbor));
       },
@@ -388,7 +388,7 @@ Nlsr::destroyFaces()
   std::list<Adjacent>& adjacents = m_adjacencyList.getAdjList();
   for (std::list<Adjacent>::iterator it = adjacents.begin();
        it != adjacents.end(); it++) {
-    m_fib.destroyFace((*it).getConnectingFaceUri(),
+    m_fib.destroyFace((*it).getFaceUri().toString(),
                       std::bind(&Nlsr::onDestroyFaceSuccess, this, _1),
                       std::bind(&Nlsr::onDestroyFaceFailure, this, _1));
   }

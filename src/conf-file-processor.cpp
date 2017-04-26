@@ -474,12 +474,13 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
       try {
         ConfigSection CommandAttriTree = tn->second;
         std::string name = CommandAttriTree.get<std::string>("name");
-        std::string faceUri = CommandAttriTree.get<std::string>("face-uri");
+        std::string uriString = CommandAttriTree.get<std::string>("face-uri");
 
-        ndn::util::FaceUri uri;
-
-        if (!uri.parse(faceUri)) {
-          std::cerr << "Malformed face-uri <" << faceUri << "> for " << name << std::endl;
+        ndn::util::FaceUri faceUri;
+        try {
+          faceUri = ndn::util::FaceUri(uriString);
+        } catch (ndn::util::FaceUri::Error e) {
+          std::cerr << "Malformed face-uri <" << uriString << "> for " << name << std::endl;
           return false;
         }
 
