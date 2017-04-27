@@ -139,10 +139,10 @@ public:
     }
   }
 
-  Adjacent*
+  AdjacencyList::iterator
   findAdjacent(const ndn::Name& adjName);
 
-  Adjacent*
+  AdjacencyList::iterator
   findAdjacent(uint64_t faceId);
 
   uint64_t
@@ -173,4 +173,4 @@ private:
 };
 
 } // namespace nlsr
-#endif //NLSR_ADJACENCY_LIST_HPP
+#endif // NLSR_ADJACENCY_LIST_HPP

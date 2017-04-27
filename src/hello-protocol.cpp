@@ -112,7 +112,8 @@ HelloProtocol::processInterest(const ndn::Name& name,
     m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
     _LOG_DEBUG("Sending out data for name: " << interest.getName());
     m_nlsr.getNlsrFace().put(*data);
-    Adjacent* adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+
+    auto adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
     // If this neighbor was previously inactive, send our own hello interest, too
     if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
       // We can only do that if the neighbor currently has a face.
@@ -256,8 +257,8 @@ void
 HelloProtocol::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                                      const ndn::Name& neighbor,const ndn::time::milliseconds& timeout)
 {
-  Adjacent* adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
-  if (adjacent != 0) {
+  auto adjacent = m_nlsr.getAdjacencyList().findAdjacent(neighbor);
+  if (adjacent != m_nlsr.getAdjacencyList().end()){
     adjacent->setFaceId(commandSuccessResult.getFaceId());
     ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
     broadcastKeyPrefix.append("KEYS");
@@ -296,8 +297,8 @@ HelloProtocol::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
   * Lsa unless all the neighbors are ACTIVE or DEAD. For considering the
   * missconfigured(link) neighbour dead this is required.
   */
-  Adjacent* adjacent = m_nlsr.getAdjacencyList().findAdjacent(name);
-  if (adjacent != 0) {
+  auto adjacent = m_nlsr.getAdjacencyList().findAdjacent(name);
+  if (adjacent != m_nlsr.getAdjacencyList().end()) {
     adjacent->setInterestTimedOutNo(adjacent->getInterestTimedOutNo() + 1);
     Adjacent::Status status = adjacent->getStatus();
     uint32_t infoIntTimedOutCount = adjacent->getInterestTimedOutNo();

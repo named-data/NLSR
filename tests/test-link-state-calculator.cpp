@@ -179,8 +179,8 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
   AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
-  Adjacent* c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
-  BOOST_REQUIRE(c != nullptr);
+  auto c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
+  BOOST_REQUIRE(c != nlsr.getAdjacencyList().end());
 
   double higherLinkCost = LINK_BC_COST + 1;
   c->setLinkCost(higherLinkCost);
@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCost)
   AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
-  Adjacent* c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
-  BOOST_REQUIRE(c != nullptr);
+  auto c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
+  BOOST_REQUIRE(c != nlsr.getAdjacencyList().end());
 
   c->setLinkCost(0);
 

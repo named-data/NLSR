@@ -375,9 +375,9 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
   if (kind == ndn::nfd::FACE_EVENT_DESTROYED) {
     uint64_t faceId = faceEventNotification.getFaceId();
 
-    Adjacent* adjacent = m_adjacencyList.findAdjacent(faceId);
+    auto adjacent = m_adjacencyList.findAdjacent(faceId);
 
-    if (adjacent != nullptr) {
+    if (adjacent != m_adjacencyList.end()) {
       _LOG_DEBUG("Face to " << adjacent->getName() << " with face id: " << faceId << " destroyed");
 
       adjacent->setFaceId(0);
