@@ -48,14 +48,33 @@ Downloading
 
 -  `GitHub NLSR repository <https://github.com/named-data/NLSR>`_
 
+NLSR mailing list
+-----------------
+
+-  `NLSR Mailing List`_
+
+-  `NLSR Mailing List Archives`_
+
+`Sign up`_ is needed to post to the list or access the archives.
+
 Additional information
 ----------------------
 
 -  `NLSR Wiki`_
 
+-  `NLSR Redmine`_
+   Feature requests and bug reports
+
 -  `NLSR Paper`_
    Detailed explanation of the NLSR design
 
+-  `NLSR Developer's Guide`_
+   For NLSR Development
 
-.. _NLSR Wiki: https://redmine.named-data.net/projects/nlsr
+.. _NLSR Wiki: https://redmine.named-data.net/projects/nlsr/wiki
 .. _NLSR Paper: https://named-data.net/wp-content/uploads/2016/01/ndn-0037-1-nlsr.pdf
+.. _NLSR Mailing List: https://listserv.memphis.edu/scripts/wa.exe?SUBED1=NLSR-HELP-L&A=1
+.. _NLSR Mailing List Archives: https://listserv.memphis.edu/scripts/wa.exe?A0=NLSR-HELP-L
+.. _NLSR Developer's Guide: https://github.com/named-data/NLSR/blob/developers-guide/NLSR-Developers-Guide.pdf
+.. _Sign up: https://listserv.memphis.edu/scripts/wa.exe?GETPW1
+.. _NLSR Redmine: https://redmine.named-data.net/projects/nlsr

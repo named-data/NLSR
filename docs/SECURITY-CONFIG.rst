@@ -37,6 +37,11 @@ NLSR      /\<network\>/\<site\>/%C1.Router/\<router-name\>/NLSR /ndn/edu/ucla/%C
 
 Users should create keys according to the naming and signing hierarchies above.
 
+
+.. note::
+
+    Detailed information about key setup is given in NLSR Developer's Guide.
+
 Certificate Publishing
 ----------------------
 

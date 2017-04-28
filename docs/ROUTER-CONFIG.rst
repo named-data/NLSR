@@ -42,9 +42,9 @@ Type the following in the terminal:
 
 ::
 
-    nfd-status -f
+    nfd-status
 
-If you see ``ERROR: error while connecting to the forwarder (No such file or directory)``,
+If you see ``error while connecting to the forwarder (No such file or directory)``,
 ``nfd`` is not running. Follow the instructions in `Getting started with NFD
 <http://named-data.net/doc/NFD/current/INSTALL.html>`_ to run nfd.
 
@@ -106,11 +106,12 @@ configuration commands follows:
        hello-interval  60                  ; interest sending interval in seconds. Default value 60
                                            ; valid values 30-90
 
-       ; adj-lsa-build-interval is the time to wait in seconds after an Adjacency LSA build is scheduled
-       ; before actually building the Adjacency LSA
+       ; adj-lsa-build-interval is the time to wait in seconds after an Adjacency LSA
+       ; build is scheduled before actually building the Adjacency LSA
 
        adj-lsa-build-interval 5   ; default value 5. Valid values 0-5. It is recommended that
-                                  ; adj-lsa-build-interval have a lower value than routing-calc-interval
+                                  ; adj-lsa-build-interval have a lower value than
+                                  ; routing-calc-interval
 
        ; first-hello-interval is the time to wait in seconds before sending the first Hello Interest
 
@@ -121,8 +122,8 @@ configuration commands follows:
 
       neighbor
       {
-          name /ndn/edu/arizona/%C1.Router/router3        ; name prefix of the neighbor router consists
-                                                          ; of network, site-name and router-name
+          name /ndn/edu/arizona/%C1.Router/router3   ; name prefix of the neighbor router consists
+                                                     ; of network, site-name and router-name
 
           face-uri  udp4://router3.arizona.edu  ; face uri of the face connected to the neighbor
           link-cost 25                         ; cost of the connecting link to neighbor
@@ -130,7 +131,7 @@ configuration commands follows:
 
       neighbor
       {
-          name /ndn/edu/colostate/%C1.Router/router2          ; name prefix of the neighbor router consists
+          name /ndn/edu/colostate/%C1.Router/router2  ; name prefix of the neighbor router consists
                                                    ; of network, site-name and router-name
 
           face-uri  udp4://79.123.10.145     ; face uri of the face connected to the neighbor
@@ -147,9 +148,9 @@ configuration commands follows:
         ; commands in this section follows a strict order
         ; the switch is used to set hyperbolic routing calculation in NLSR
 
-        state off             ; default value 'off', set value 'on' to enable hyperbolic routing table
-                              ; calculation which turns link state routing 'off'. set value to 'dry-run'
-                              ; to test hyperbolic routing and compare with link state routing.
+        state off          ; default value 'off', set value 'on' to enable hyperbolic routing table
+                           ; calculation which turns link state routing 'off'. set value to 'dry-run'
+                           ; to test hyperbolic routing and compare with link state routing.
 
 
         radius   123.456       ; radius of the router in hyperbolic coordinate system
@@ -164,8 +165,8 @@ configuration commands follows:
         ; the max-faces-per-prefix is used to limit the number of faces for each name prefixes
         ; by NLSR in ndn FIB
 
-        max-faces-per-prefix 3   ; default value 0. Valid value 0-60. By default (value 0) NLSR adds
-                                 ; all available faces for each reachable name prefixes in NDN FIB
+        max-faces-per-prefix 3  ; default value 0. Valid value 0-60. By default (value 0) NLSR adds
+                                ; all available faces for each reachable name prefixes in NDN FIB
 
     }
 
@@ -182,10 +183,90 @@ configuration commands follows:
         prefix /ndn/news/memphis/politics/lutherking
     }
 
-.. note::
 
-    Security configuration is discussed in :doc:`SECURITY-CONFIG`, which will be also part
-    of this configuration file
+NLSR will have the following error if ``log-dir`` does not exist:
+
+::
+
+    Provided log directory </var/log/nlsr/> does not exist
+    Error in configuration file processing! Exiting from NLSR
+
+By default ``/var/log/nlsr/`` is set to be NLSR's log directory and ``/var/lib/nlsr/`` is set to be
+NLSR's sequence file directory. They do not exist and will need to be created.
+Also, since these are system directories it will require the user to run NLSR as root.
+If one does not have permission to write to the specified directory,
+then NLSR will produce the following error:
+
+::
+
+    User does not have read and write permission on the directory
+    Error in configuration file processing! Exiting from NLSR
+
+To avoid this, the directories can be set in a user owned directory.
+The directories for log and sequence file can be same.
+For example:
+
+::
+
+    general
+    {
+      ...
+
+      log-dir /home/username/nlsr/log  ; path for log directory (Absolute path)
+      seq-dir /home/username/nlsr/log  ; path for sequence directory (Absolute path)
+
+    }
+    ...
+
+The user will encounter errors such as the following if security is not configured:
+
+::
+
+    Cannot read certificate from file: /home/username/NLSR/root.cert
+
+To get rid of this and similar errors relating to security one has to configure security
+as described in :doc:`SECURITY-CONFIG`. Security can be disabled for testing purposes as follows:
+
+::
+
+    ...
+    trust-anchor
+    {
+      type any
+      ;file-name "root.cert"
+    }
+    ...
+    trust-anchor
+    {
+      type any
+      ;file-name "site.cert"
+    }
+    ; cert-to-publish "root.cert"
+    ; cert-to-publish "router.cert"
+    ; cert-to-publish "site.cert"
+    ; cert-to-publish "router.cert"
+
+Or by simply replacing the whole security section with:
+
+::
+
+    security
+    {
+      validator
+      {
+        trust-anchor
+        {
+          type any
+        }
+      }
+      prefix-update-validator
+      {
+        trust-anchor
+        {
+          type any
+        }
+      }
+    }
 
 Step 4: Running NLSR on /ndn/memphis.edu/router1
 -------------------------------------------------
@@ -207,9 +288,9 @@ The same process needs to be followed for ``/ndn/arizona.edu/router3`` and
 Expected Output
 ----------------
 
-Assuming that all three routers are configured correctly and routing has converged, ``nfd-status`` in
-``/ndn/edu/colostate/%C1.Router/router2`` will have the following entries for the name
-advertised by ``/ndn/edu/memphis/%C1.Router/router1``:
+Assuming that all three routers are configured correctly and routing has converged,
+``nfd-status`` in ``/ndn/edu/colostate/%C1.Router/router2`` will have the following (or similar)
+entries for the name advertised by ``/ndn/edu/memphis/%C1.Router/router1``:
 
 RIB:
 
@@ -219,7 +300,7 @@ RIB:
     /ndn/memphis/sports/basketball/grizzlies route={faceid=17 (origin=128 cost=25 ChildInherit), faceid=7 (origin=128 cost=58 ChildInherit)}
     /ndn/news/memphis/politics/lutherking route={faceid=17 (origin=128 cost=25 ChildInherit, faceid=7 (origin=128 cost=58 ChildInherit)}
 
-This output can be seen by typing ``nfd-status -r`` in the terminal.  Please refer to the
+This output can be seen by typing ``nfdc route list`` in the terminal.  Please refer to the
 network figure for face IDs.
 
 .. _hyperbolic routing table calculation: http://arxiv.org/abs/0805.1266

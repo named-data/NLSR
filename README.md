@@ -41,3 +41,7 @@ Additional information
 - [NLSR Wiki](http://redmine.named-data.net/projects/nlsr/wiki/)
 - Feature requests and bug reports are welcome on our
   [NLSR on NDN Redmine](http://redmine.named-data.net/projects/nlsr)
+- [NLSR Mailing List Sign Up](https://listserv.memphis.edu/scripts/wa.exe?GETPW1)
+- [NLSR Mailing List](https://listserv.memphis.edu/scripts/wa.exe?SUBED1=NLSR-HELP-L&A=1)
+- [NLSR Mailing List Archives](https://listserv.memphis.edu/scripts/wa.exe?A0=NLSR-HELP-L)
+- [NLSR Developer's guide](https://github.com/named-data/NLSR/blob/developers-guide/NLSR-Developers-Guide.pdf)
