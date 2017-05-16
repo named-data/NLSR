@@ -39,22 +39,8 @@ public:
     : m_nameLsaSeq(0)
     , m_adjLsaSeq(0)
     , m_corLsaSeq(0)
-    , m_combinedSeqNo(0)
     , m_seqFileNameWithPath()
   {
-  }
-
-  SequencingManager(uint64_t seqNo)
-  {
-    splitSequenceNo(seqNo);
-  }
-
-  SequencingManager(uint64_t nlsn, uint64_t alsn, uint64_t clsn)
-  {
-    m_nameLsaSeq = nlsn;
-    m_adjLsaSeq  = alsn;
-    m_corLsaSeq  = clsn;
-    combineSequenceNo();
   }
 
   uint64_t
@@ -67,7 +53,6 @@ public:
   setNameLsaSeq(uint64_t nlsn)
   {
     m_nameLsaSeq = nlsn;
-    combineSequenceNo();
   }
 
   uint64_t
@@ -80,7 +65,6 @@ public:
   setAdjLsaSeq(uint64_t alsn)
   {
     m_adjLsaSeq = alsn;
-    combineSequenceNo();
   }
 
   uint64_t
@@ -93,34 +77,24 @@ public:
   setCorLsaSeq(uint64_t clsn)
   {
     m_corLsaSeq = clsn;
-    combineSequenceNo();
   }
 
   void
   increaseNameLsaSeq()
   {
     m_nameLsaSeq++;
-    combineSequenceNo();
   }
 
   void
   increaseAdjLsaSeq()
   {
     m_adjLsaSeq++;
-    combineSequenceNo();
   }
 
   void
   increaseCorLsaSeq()
   {
     m_corLsaSeq++;
-    combineSequenceNo();
-  }
-
-  uint64_t
-  getCombinedSeqNo() const
-  {
-    return m_combinedSeqNo;
   }
 
   void
@@ -129,29 +103,24 @@ public:
   void
   initiateSeqNoFromFile(int hypState);
 
-  void
-  setSeqFileName(std::string filePath);
+  /*! \brief Set the sequence file directory
 
-  std::string
-  getUserHomeDirectory();
+    If the string is empty, home directory is set as sequence file directory
+
+  \param filePath The directory where sequence file will be stored
+ */
+  void
+  setSeqFileDirectory(std::string filePath);
 
   void
   writeLog() const;
 
 private:
-  void
-  splitSequenceNo(uint64_t seqNo);
-
-  void
-  combineSequenceNo();
-
-private:
   uint64_t m_nameLsaSeq;
   uint64_t m_adjLsaSeq;
   uint64_t m_corLsaSeq;
-  uint64_t m_combinedSeqNo;
   std::string m_seqFileNameWithPath;
 };
 
 } // namespace nlsr
-#endif //NLSR_SEQUENCING_MANAGER_HPP
+#endif // NLSR_SEQUENCING_MANAGER_HPP

@@ -26,7 +26,6 @@
 #include "logger.hpp"
 #include "lsa.hpp"
 #include "lsdb.hpp"
-#include "sequencing-manager.hpp"
 #include "utility/name-helper.hpp"
 
 namespace nlsr {
@@ -36,85 +35,8 @@ INIT_LOGGER("SyncLogicHandler");
 using namespace ndn;
 using namespace std;
 
-class SyncUpdate
-{
-public:
-  class Error : public std::runtime_error
-  {
-  public:
-    explicit
-    Error(const std::string& what)
-      : std::runtime_error(what)
-    {
-    }
-  };
-
-public:
-  SyncUpdate(const ndn::Name& name, uint64_t seqNo)
-    : m_name(name)
-    , m_seqManager(seqNo)
-  {
-  }
-
-  const ndn::Name&
-  getName() const
-  {
-    return m_name;
-  }
-
-  const ndn::Name
-  getOriginRouter() const
-  {
-    int32_t nlsrPosition = util::getNameComponentPosition(m_name, NLSR_COMPONENT);
-    int32_t lsaPosition = util::getNameComponentPosition(m_name, LSA_COMPONENT);
-
-    if (nlsrPosition < 0 || lsaPosition < 0) {
-      BOOST_THROW_EXCEPTION(Error("Cannot parse update name because expected components are missing"));
-    }
-
-    ndn::Name networkName = m_name.getSubName(1, nlsrPosition-1);
-    ndn::Name routerName = m_name.getSubName(lsaPosition + 1);
-
-    ndn::Name originRouter = networkName;
-    originRouter.append(routerName);
-
-    return originRouter;
-  }
-
-  uint64_t
-  getNameLsaSeqNo() const
-  {
-    return m_seqManager.getNameLsaSeq();
-  }
-
-  uint64_t
-  getAdjLsaSeqNo() const
-  {
-    return m_seqManager.getAdjLsaSeq();
-  }
-
-  uint64_t
-  getCorLsaSeqNo() const
-  {
-    return m_seqManager.getCorLsaSeq();
-  }
-
-  const SequencingManager&
-  getSequencingManager() const
-  {
-    return m_seqManager;
-  }
-
-private:
-  const ndn::Name m_name;
-  SequencingManager m_seqManager;
-
-  static const std::string NLSR_COMPONENT;
-  static const std::string LSA_COMPONENT;
-};
-
-const std::string SyncUpdate::NLSR_COMPONENT = "NLSR";
-const std::string SyncUpdate::LSA_COMPONENT = "LSA";
+const std::string NLSR_COMPONENT = "NLSR";
+const std::string LSA_COMPONENT = "LSA";
 
 template<class T>
 class NullDeleter
@@ -127,13 +49,10 @@ public:
 };
 
 SyncLogicHandler::SyncLogicHandler(ndn::Face& face,
-                                   Lsdb& lsdb, ConfParameter& conf,
-                                   SequencingManager& seqManager)
-  : m_validator(new ndn::ValidatorNull())
-  , m_syncFace(face)
+                                   Lsdb& lsdb, ConfParameter& conf)
+  : m_syncFace(face)
   , m_lsdb(lsdb)
   , m_confParam(conf)
-  , m_sequencingManager(seqManager)
 {
 }
 
@@ -156,8 +75,16 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
   // of the object
   std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
-  m_syncSocket = std::make_shared<chronosync::Socket>(m_syncPrefix, m_updatePrefix, *facePtr,
+
+  m_syncSocket = std::make_shared<chronosync::Socket>(m_syncPrefix, m_nameLsaUserPrefix, *facePtr,
                                                       bind(&SyncLogicHandler::onNsyncUpdate, this, _1));
+
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+    m_syncSocket->addSyncNode(m_adjLsaUserPrefix);
+  }
+  else {
+    m_syncSocket->addSyncNode(m_coorLsaUserPrefix);
+  }
 }
 
 void
@@ -166,75 +93,64 @@ SyncLogicHandler::onNsyncUpdate(const vector<chronosync::MissingDataInfo>& v)
   _LOG_DEBUG("Received Nsync update event");
 
   for (size_t i = 0; i < v.size(); i++){
-    _LOG_DEBUG("Update Name: " << v[i].session.getPrefix(-1).toUri() << " Seq no: " << v[i].high);
+    ndn::Name updateName = v[i].session.getPrefix(-1);
 
-    SyncUpdate update(v[i].session.getPrefix(-1), v[i].high);
+    _LOG_DEBUG("Update Name: " << updateName << " Seq no: " << v[i].high);
 
-    processUpdateFromSync(update);
+    int32_t nlsrPosition = util::getNameComponentPosition(updateName, nlsr::NLSR_COMPONENT);
+    int32_t lsaPosition = util::getNameComponentPosition(updateName, nlsr::LSA_COMPONENT);
+
+    if (nlsrPosition < 0 || lsaPosition < 0) {
+      _LOG_WARN("Received malformed sync update");
+      return;
+    }
+
+    ndn::Name networkName = updateName.getSubName(1, nlsrPosition-1);
+    ndn::Name routerName = updateName.getSubName(lsaPosition + 1).getPrefix(-1);
+
+    ndn::Name originRouter = networkName;
+    originRouter.append(routerName);
+
+    processUpdateFromSync(originRouter, updateName, v[i].high);
   }
 }
 
 void
-SyncLogicHandler::onNsyncRemoval(const string& prefix)
+SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
+                                        const ndn::Name& updateName, const uint64_t& seqNo)
 {
-  _LOG_DEBUG("Received Nsync removal event");
-}
-
-void
-SyncLogicHandler::processUpdateFromSync(const SyncUpdate& update)
-{
-  ndn::Name originRouter;
-
-  try {
-    originRouter = update.getOriginRouter();
-  }
-  catch (const std::exception& e) {
-    _LOG_WARN("Received malformed sync update");
-    return;
-  }
+  _LOG_DEBUG("Origin Router of update: " << originRouter);
 
   // A router should not try to fetch its own LSA
   if (originRouter != m_confParam.getRouterPrefix()) {
 
-    update.getSequencingManager().writeLog();
+    std::string lsaType = updateName.get(updateName.size()-1).toUri();
 
-    if (isLsaNew(originRouter, NameLsa::TYPE_STRING, update.getNameLsaSeqNo())) {
-        _LOG_DEBUG("Received sync update with higher Name LSA sequence number than entry in LSDB");
+    _LOG_DEBUG("Received sync update with higher " << lsaType
+               << " sequence number than entry in LSDB");
 
-        expressInterestForLsa(update, NameLsa::TYPE_STRING, update.getNameLsaSeqNo());
+    if (isLsaNew(originRouter, lsaType, seqNo)) {
+      if (lsaType == AdjLsa::TYPE_STRING && seqNo != 0 &&
+          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+        _LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing"
+                   << " is enabled. Not going to fetch.");
+        return;
       }
 
-      if (isLsaNew(originRouter, AdjLsa::TYPE_STRING, update.getAdjLsaSeqNo())) {
-        _LOG_DEBUG("Received sync update with higher Adj LSA sequence number than entry in LSDB");
-        if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-          if (update.getAdjLsaSeqNo() != 0) {
-            _LOG_ERROR("Tried to fetch an adjacency LSA when hyperbolic routing"
-                       << " is enabled.");
-          }
-        }
-        else {
-          expressInterestForLsa(update, AdjLsa::TYPE_STRING, update.getAdjLsaSeqNo());
-        }
+      if (lsaType == CoordinateLsa::TYPE_STRING && seqNo != 0 &&
+          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+        _LOG_ERROR("Got an update for coordinate LSA when link-state"
+                   << " is enabled. Not going to fetch.");
+        return;
       }
-
-      if (isLsaNew(originRouter, CoordinateLsa::TYPE_STRING, update.getCorLsaSeqNo())) {
-        _LOG_DEBUG("Received sync update with higher Cor LSA sequence number than entry in LSDB");
-        if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-          if (update.getCorLsaSeqNo() != 0) {
-            _LOG_ERROR("Tried to fetch a coordinate LSA when link-state"
-                       << " is enabled.");
-          }
-        }
-        else {
-          expressInterestForLsa(update, CoordinateLsa::TYPE_STRING, update.getCorLsaSeqNo());
-        }
-      }
+      expressInterestForLsa(updateName, seqNo);
+    }
   }
 }
 
 bool
 SyncLogicHandler::isLsaNew(const ndn::Name& originRouter, const std::string& lsaType,
-                           uint64_t seqNo)
+                           const uint64_t& seqNo)
 {
   ndn::Name lsaKey = originRouter;
   lsaKey.append(lsaType);
@@ -256,18 +172,17 @@ SyncLogicHandler::isLsaNew(const ndn::Name& originRouter, const std::string& lsa
 }
 
 void
-SyncLogicHandler::expressInterestForLsa(const SyncUpdate& update, std::string lsaType,
-                                        uint64_t seqNo)
+SyncLogicHandler::expressInterestForLsa(const ndn::Name& updateName,
+                                        const uint64_t& seqNo)
 {
-  ndn::Name interest(update.getName());
-  interest.append(lsaType);
+  ndn::Name interest(updateName);
   interest.appendNumber(seqNo);
 
   m_lsdb.expressInterest(interest, 0);
 }
 
 void
-SyncLogicHandler::publishRoutingUpdate()
+SyncLogicHandler::publishRoutingUpdate(const ndn::Name& type, const uint64_t& seqNo)
 {
   if (m_syncSocket == nullptr) {
     _LOG_FATAL("Cannot publish routing update; SyncSocket does not exist");
@@ -275,17 +190,32 @@ SyncLogicHandler::publishRoutingUpdate()
     BOOST_THROW_EXCEPTION(SyncLogicHandler::Error("Cannot publish routing update; SyncSocket does not exist"));
   }
 
-  m_sequencingManager.writeSeqNoToFile();
-
-  publishSyncUpdate(m_updatePrefix, m_sequencingManager.getCombinedSeqNo());
+  if (type == NameLsa::TYPE_STRING) {
+    publishSyncUpdate(m_nameLsaUserPrefix, seqNo);
+  }
+  else if (type == AdjLsa::TYPE_STRING) {
+    publishSyncUpdate(m_adjLsaUserPrefix, seqNo);
+  }
+  else {
+    publishSyncUpdate(m_coorLsaUserPrefix, seqNo);
+  }
 }
 
 void
 SyncLogicHandler::buildUpdatePrefix()
 {
-  m_updatePrefix = m_confParam.getLsaPrefix();
-  m_updatePrefix.append(m_confParam.getSiteName());
-  m_updatePrefix.append(m_confParam.getRouterName());
+  ndn::Name updatePrefix = m_confParam.getLsaPrefix();
+  updatePrefix.append(m_confParam.getSiteName());
+  updatePrefix.append(m_confParam.getRouterName());
+
+  m_nameLsaUserPrefix = updatePrefix;
+  m_nameLsaUserPrefix.append(NameLsa::TYPE_STRING);
+
+  m_adjLsaUserPrefix = updatePrefix;
+  m_adjLsaUserPrefix.append(AdjLsa::TYPE_STRING);
+
+  m_coorLsaUserPrefix = updatePrefix;
+  m_coorLsaUserPrefix.append(CoordinateLsa::TYPE_STRING);
 }
 
 void

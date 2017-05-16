@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   BOOST_REQUIRE(lsa != nullptr);
 
   uint32_t lastAdjLsaSeqNo = lsa->getLsSeqNo();
-  nlsr.getSequencingManager().setAdjLsaSeq(lastAdjLsaSeqNo);
+  nlsr.getLsdb().getSequencingManager().setAdjLsaSeq(lastAdjLsaSeqNo);
 
   // Make sure the routing table was calculated
   RoutingTableEntry* rtEntry = nlsr.getRoutingTable().findRoutingTableEntry(failNeighbor.getName());

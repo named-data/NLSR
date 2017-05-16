@@ -37,7 +37,7 @@ public:
   SyncLogicFixture()
     : face(std::make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
-    , sync(nlsr.getSyncLogicHandler())
+    , sync(nlsr.getLsdb().getSyncLogicHandler())
     , CONFIG_NETWORK("/ndn")
     , CONFIG_SITE("/site")
     , CONFIG_ROUTER_NAME("/%C1.Router/this-router")
@@ -72,34 +72,38 @@ public:
   const std::string CONFIG_NETWORK;
   const std::string CONFIG_SITE;
   const std::string CONFIG_ROUTER_NAME;
+  const std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, AdjLsa::TYPE_STRING,
+                                             CoordinateLsa::TYPE_STRING};
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestSyncLogicHandler, SyncLogicFixture)
 
 BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
 {
-  std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                           CONFIG_SITE + "/%C1.Router/other-router/";
+  std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, AdjLsa::TYPE_STRING};
 
   uint64_t syncSeqNo = 1;
-  receiveUpdate(updateName, syncSeqNo, sync);
 
-  std::vector<ndn::Interest>& interests = face->sentInterests;
+  for (const std::string& lsaType : lsaTypes) {
+    std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
+                             CONFIG_SITE + "/%C1.Router/other-router/" + lsaType;
 
-  std::vector<ndn::Interest>::iterator it = interests.begin();
+    receiveUpdate(updateName, syncSeqNo, sync);
 
-  BOOST_REQUIRE_EQUAL(interests.size(), 2);
+    std::vector<ndn::Interest>& interests = face->sentInterests;
 
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + NameLsa::TYPE_STRING + "/");
+    std::vector<ndn::Interest>::iterator it = interests.begin();
 
-  ++it;
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + AdjLsa::TYPE_STRING + "/");
+    BOOST_REQUIRE_EQUAL(interests.size(), 1);
+
+    BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "/");
+  }
 }
 
 BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
 {
   Nlsr nlsr_hr(g_ioService, g_scheduler, std::ref(*face), g_keyChain);
-  SyncLogicHandler& sync_hr(nlsr_hr.getSyncLogicHandler());
+  SyncLogicHandler& sync_hr(nlsr_hr.getLsdb().getSyncLogicHandler());
 
   nlsr_hr.getConfParameter().setNetwork(CONFIG_NETWORK);
   nlsr_hr.getConfParameter().setSiteName(CONFIG_SITE);
@@ -110,30 +114,30 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
 
   nlsr_hr.initialize();
 
-  std::string updateName = nlsr_hr.getConfParameter().getLsaPrefix().toUri() +
-                           CONFIG_SITE + "/%C1.Router/other-router/";
+  uint64_t syncSeqNo = 1;
 
-  uint64_t syncSeqNo = 0;
-  syncSeqNo = syncSeqNo | (static_cast<uint64_t>(1) << 20);
+  std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, CoordinateLsa::TYPE_STRING};
 
-  receiveUpdate(updateName, syncSeqNo, sync_hr);
+  for (const std::string& lsaType : lsaTypes) {
+    std::string updateName = nlsr_hr.getConfParameter().getLsaPrefix().toUri() +
+                           CONFIG_SITE + "/%C1.Router/other-router/" + lsaType;
 
-  std::vector<ndn::Interest>& interests = face->sentInterests;
-  std::vector<ndn::Interest>::iterator it = interests.begin();
+    receiveUpdate(updateName, syncSeqNo, sync_hr);
 
-  BOOST_REQUIRE_EQUAL(interests.size(), 2);
+    std::vector<ndn::Interest>& interests = face->sentInterests;
+    std::vector<ndn::Interest>::iterator it = interests.begin();
 
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + NameLsa::TYPE_STRING + "/");
+    BOOST_REQUIRE_EQUAL(interests.size(), 1);
 
-  ++it;
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + CoordinateLsa::TYPE_STRING + "/");
+    BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "/");
+  }
 }
 
 BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
 {
 
   Nlsr nlsr_hrdry(g_ioService, g_scheduler, std::ref(*face),g_keyChain);
-  SyncLogicHandler& sync_hrdry(nlsr_hrdry.getSyncLogicHandler());
+  SyncLogicHandler& sync_hrdry(nlsr_hrdry.getLsdb().getSyncLogicHandler());
 
   nlsr_hrdry.getConfParameter().setNetwork(CONFIG_NETWORK);
   nlsr_hrdry.getConfParameter().setSiteName(CONFIG_SITE);
@@ -144,56 +148,50 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
 
   nlsr_hrdry.initialize();
 
-  std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                           CONFIG_SITE + "/%C1.Router/other-router/";
+  for (const std::string& lsaType : lsaTypes) {
+
+    std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
+                 CONFIG_SITE + "/%C1.Router/other-router/" + lsaType;
 
 
-  uint64_t syncSeqNo = 1;
-  syncSeqNo = syncSeqNo | (static_cast<uint64_t>(1) << 20);
-  receiveUpdate(updateName, syncSeqNo, sync_hrdry);
+    uint64_t syncSeqNo = 1;
 
-  std::vector<ndn::Interest>& interests = face->sentInterests;
-  std::vector<ndn::Interest>::iterator it = interests.begin();
+    receiveUpdate(updateName, syncSeqNo, sync_hrdry);
 
-  BOOST_REQUIRE_EQUAL(interests.size(), 3);
+    std::vector<ndn::Interest>& interests = face->sentInterests;
 
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + NameLsa::TYPE_STRING + "/");
+    std::vector<ndn::Interest>::iterator it = interests.begin();
 
-  if (nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-      ++it;
-      BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + CoordinateLsa::TYPE_STRING + "/");
-  }
-  else if (nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-      ++it;
-      BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + AdjLsa::TYPE_STRING + "/");
-  }
-  else {
-      ++it;
-      BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + CoordinateLsa::TYPE_STRING + "/");
-
-      ++it;
-      BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + AdjLsa::TYPE_STRING + "/");
+    // In HR dry-state all LSA's should be published
+    BOOST_REQUIRE_EQUAL(interests.size(), 1);
+    BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "/");
   }
 }
+
 
 BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
 {
-  std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                           CONFIG_SITE + CONFIG_ROUTER_NAME;
+  for (const std::string& lsaType : lsaTypes) {
+    std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
+                             CONFIG_SITE + CONFIG_ROUTER_NAME + lsaType;
 
-  receiveUpdate(updateName, 1, sync);
+    receiveUpdate(updateName, 1, sync);
 
-  std::vector<ndn::Interest>& interests = face->sentInterests;
-  BOOST_CHECK_EQUAL(interests.size(), 0);
+    std::vector<ndn::Interest>& interests = face->sentInterests;
+    BOOST_CHECK_EQUAL(interests.size(), 0);
+  }
 }
+
 
 BOOST_AUTO_TEST_CASE(MalformedUpdate)
 {
-  std::string updateName = CONFIG_SITE + nlsr.getConfParameter().getLsaPrefix().toUri() +
-                           CONFIG_ROUTER_NAME;
+  for (const std::string& lsaType : lsaTypes) {
+    std::string updateName = CONFIG_SITE + nlsr.getConfParameter().getLsaPrefix().toUri() +
+                             CONFIG_ROUTER_NAME + lsaType;
 
-  std::vector<ndn::Interest>& interests = face->sentInterests;
-  BOOST_CHECK_EQUAL(interests.size(), 0);
+    std::vector<ndn::Interest>& interests = face->sentInterests;
+    BOOST_CHECK_EQUAL(interests.size(), 0);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(SequenceNumber)
@@ -219,31 +217,31 @@ BOOST_AUTO_TEST_CASE(SequenceNumber)
   lsdb.installCoordinateLsa(corLsa);
 
   std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                           CONFIG_SITE + "/%C1.Router/other-router/";
+                           CONFIG_SITE + "/%C1.Router/other-router/" + NameLsa::TYPE_STRING;
 
   // Lower NameLSA sequence number
-  uint64_t lowerSeqNo = static_cast<uint64_t>(998) << 40;
+  uint64_t lowerSeqNo = 998;
   receiveUpdate(updateName, lowerSeqNo, sync);
 
   std::vector<ndn::Interest>& interests = face->sentInterests;
   BOOST_REQUIRE_EQUAL(interests.size(), 0);
 
   // Same NameLSA sequence number
-  uint64_t sameSeqNo = static_cast<uint64_t>(999) << 40;
+  uint64_t sameSeqNo = 999;
   receiveUpdate(updateName, sameSeqNo, sync);
 
   interests = face->sentInterests;
   BOOST_REQUIRE_EQUAL(interests.size(), 0);
 
   // Higher NameLSA sequence number
-  uint64_t higherSeqNo = static_cast<uint64_t>(1000) << 40;
+  uint64_t higherSeqNo = 1000;
   receiveUpdate(updateName, higherSeqNo, sync);
 
   interests = face->sentInterests;
   BOOST_REQUIRE_EQUAL(interests.size(), 1);
 
   std::vector<ndn::Interest>::iterator it = interests.begin();
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "name/");
+  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "/");
 }
 
 BOOST_AUTO_TEST_CASE(UpdatePrefix)
@@ -254,7 +252,9 @@ BOOST_AUTO_TEST_CASE(UpdatePrefix)
 
   nlsr.initialize();
 
-  BOOST_CHECK_EQUAL(sync.m_updatePrefix, expectedPrefix);
+  BOOST_CHECK_EQUAL(sync.m_nameLsaUserPrefix, ndn::Name(expectedPrefix).append(NameLsa::TYPE_STRING));
+  BOOST_CHECK_EQUAL(sync.m_adjLsaUserPrefix, ndn::Name(expectedPrefix).append(AdjLsa::TYPE_STRING));
+  BOOST_CHECK_EQUAL(sync.m_coorLsaUserPrefix, ndn::Name(expectedPrefix).append(CoordinateLsa::TYPE_STRING));
 }
 
 BOOST_AUTO_TEST_CASE(CreateSyncSocketOnInitialization) // Bug #2649
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(CreateSyncSocketOnInitialization) // Bug #2649
   BOOST_REQUIRE(lsa == nullptr);
 
   // Publish a routing update before an Adjacency LSA is built
-  BOOST_CHECK_NO_THROW(sync.publishRoutingUpdate());
+  BOOST_CHECK_NO_THROW(sync.publishRoutingUpdate(AdjLsa::TYPE_STRING, 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

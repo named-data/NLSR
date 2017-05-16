@@ -161,9 +161,12 @@ public:
     // no longer does face->put(*data) in publishData.
     // Instead it does it in onInterest
     ndn::Name lsaInterestName("/localhop/ndn/NLSR/LSA");
+    lsaInterestName.append(NameLsa::TYPE_STRING);
+
     // The part after LSA is Chronosync getSession
     lsaInterestName.append(sessionTime);
-    lsaInterestName.appendNumber(nlsr.getSequencingManager().getCombinedSeqNo());
+    lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+
     shared_ptr<Interest> lsaInterest = make_shared<Interest>(lsaInterestName);
 
     face.receive(*lsaInterest);
@@ -231,6 +234,7 @@ BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
+  uint64_t nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
   updateProcessor.enable();
 
   // Advertise
@@ -252,8 +256,10 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(namePrefixList.getNameList().front(), parameters.getName());
 
   BOOST_CHECK(wasRoutingUpdatePublished());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 
   face.sentData.clear();
+  nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
 
   // Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
@@ -268,6 +274,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(namePrefixList.getSize(), 0);
 
   BOOST_CHECK(wasRoutingUpdatePublished());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_CASE(DisabledAndEnabled)

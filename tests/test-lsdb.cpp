@@ -41,7 +41,7 @@ public:
   LsdbFixture()
     : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
     , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
-    , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter(), nlsr.getSequencingManager())
+    , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter())
     , lsdb(nlsr.getLsdb())
     , conf(nlsr.getConfParameter())
     , REGISTER_COMMAND_PREFIX("/localhost/nfd/rib")
@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   //1800 is the default life time.
   NameLsa nlsa1(ndn::Name("/router1/1"), 12, testTimePoint, npl1);
 
-  Lsdb lsdb1(nlsr, g_scheduler, nlsr.getSyncLogicHandler());
+  Lsdb lsdb1(nlsr, g_scheduler);
 
   lsdb1.installNameLsa(nlsa1);
   lsdb1.writeNameLsdbLog();

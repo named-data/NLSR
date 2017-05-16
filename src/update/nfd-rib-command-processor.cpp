@@ -33,12 +33,10 @@ const ndn::Name COMMAND_PREFIX = ndn::Name("/localhost/nlsr");
 
 NfdRibCommandProcessor::NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher,
                                                NamePrefixList& namePrefixes,
-                                               Lsdb& lsdb,
-                                               SyncLogicHandler& sync)
+                                               Lsdb& lsdb)
   : m_dispatcher(dispatcher)
   , m_namePrefixList(namePrefixes)
   , m_lsdb(lsdb)
-  , m_sync(sync)
 {
 }
 
@@ -96,7 +94,6 @@ NfdRibCommandProcessor::insertPrefix(const ndn::mgmt::ControlParameters& paramet
 
   if (m_namePrefixList.insert(castParams.getName())) {
     m_lsdb.buildAndInstallOwnNameLsa();
-    m_sync.publishRoutingUpdate();
   }
 }
 
@@ -110,7 +107,6 @@ NfdRibCommandProcessor::removePrefix(const ndn::mgmt::ControlParameters& paramet
 
   if (m_namePrefixList.remove(castParams.getName())) {
     m_lsdb.buildAndInstallOwnNameLsa();
-    m_sync.publishRoutingUpdate();
   }
 }
 

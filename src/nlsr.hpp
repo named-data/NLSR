@@ -40,10 +40,8 @@
 #include "hello-protocol.hpp"
 #include "lsdb.hpp"
 #include "name-prefix-list.hpp"
-#include "sequencing-manager.hpp"
 #include "test-access-control.hpp"
 #include "validator.hpp"
-#include "communication/sync-logic-handler.hpp"
 #include "publisher/lsdb-dataset-interest-handler.hpp"
 #include "route/fib.hpp"
 #include "route/name-prefix-table.hpp"
@@ -140,12 +138,6 @@ public:
     return m_nlsrFace;
   }
 
-  SequencingManager&
-  getSequencingManager()
-  {
-    return m_sequencingManager;
-  }
-
   Lsdb&
   getLsdb()
   {
@@ -222,12 +214,6 @@ public:
   setIsRouteCalculationScheduled(bool ircs)
   {
     m_isRouteCalculationScheduled = ircs;
-  }
-
-  SyncLogicHandler&
-  getSyncLogicHandler()
-  {
-    return m_syncLogicHandler;
   }
 
   LsdbDatasetInterestHandler&
@@ -408,7 +394,6 @@ private:
   ConfParameter m_confParam;
   AdjacencyList m_adjacencyList;
   NamePrefixList m_namePrefixList;
-  SequencingManager m_sequencingManager;
   bool m_isDaemonProcess;
   std::string m_configFileName;
   Lsdb m_nlsrLsdb;
@@ -419,7 +404,6 @@ private:
   RoutingTable m_routingTable;
   Fib m_fib;
   NamePrefixTable m_namePrefixTable;
-  SyncLogicHandler m_syncLogicHandler;
   LsdbDatasetInterestHandler m_lsdbDatasetHandler;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:

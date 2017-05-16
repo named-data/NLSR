@@ -39,7 +39,6 @@
 namespace nlsr {
 
 class Lsdb;
-class SyncLogicHandler;
 
 namespace security {
   class CertificateStore;
@@ -66,7 +65,6 @@ public:
   PrefixUpdateProcessor(ndn::Face& face,
                         NamePrefixList& namePrefixList,
                         Lsdb& lsdb,
-                        SyncLogicHandler& sync,
                         const ndn::Name broadcastPrefix,
                         ndn::KeyChain& keyChain,
                         std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
@@ -134,7 +132,6 @@ private:
   ndn::Face& m_face;
   NamePrefixList& m_namePrefixList;
   Lsdb& m_lsdb;
-  SyncLogicHandler& m_sync;
   ndn::KeyChain& m_keyChain;
   Validator m_validator;
   bool m_isEnabled;

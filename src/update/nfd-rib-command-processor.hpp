@@ -26,7 +26,6 @@
 #include "nfd-rib-commands.hpp"
 #include "name-prefix-list.hpp"
 #include "lsdb.hpp"
-#include "communication/sync-logic-handler.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-command.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
@@ -55,8 +54,7 @@ public:
 public:
   NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher,
                          NamePrefixList& namePrefixes,
-                         Lsdb& lsdb,
-                         SyncLogicHandler& sync);
+                         Lsdb& lsdb);
 
   /*! \brief Registers an Interest filter with face
 
@@ -116,7 +114,6 @@ private:
   ndn::mgmt::Dispatcher& m_dispatcher;
   NamePrefixList& m_namePrefixList;
   Lsdb& m_lsdb;
-  SyncLogicHandler& m_sync;
 };
 
 } // namespace update

@@ -46,10 +46,9 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_confParam()
   , m_adjacencyList()
   , m_namePrefixList()
-  , m_sequencingManager()
   , m_isDaemonProcess(false)
   , m_configFileName("nlsr.conf")
-  , m_nlsrLsdb(*this, scheduler, m_syncLogicHandler)
+  , m_nlsrLsdb(*this, scheduler)
   , m_adjBuildCount(0)
   , m_isBuildAdjLsaSheduled(false)
   , m_isRouteCalculationScheduled(false)
@@ -57,7 +56,6 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_routingTable(scheduler)
   , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, m_keyChain)
   , m_namePrefixTable(*this)
-  , m_syncLogicHandler(m_nlsrFace, m_nlsrLsdb, m_confParam, m_sequencingManager)
   , m_lsdbDatasetHandler(m_nlsrLsdb,
                          m_nlsrFace,
                          m_keyChain)
@@ -67,7 +65,6 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_prefixUpdateProcessor(m_nlsrFace,
                             m_namePrefixList,
                             m_nlsrLsdb,
-                            m_syncLogicHandler,
                             DEFAULT_BROADCAST_PREFIX,
                             m_keyChain,
                             m_certificateCache,
@@ -75,8 +72,7 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_dispatcher(m_nlsrFace, m_keyChain, m_signingInfo)
   , m_nfdRibCommandProcessor(m_dispatcher,
                              m_namePrefixList,
-                             m_nlsrLsdb,
-                             m_syncLogicHandler)
+                             m_nlsrLsdb)
   , m_faceMonitor(m_nlsrFace)
   , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
 {
@@ -232,10 +228,11 @@ Nlsr::initialize()
   m_nlsrLsdb.setLsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()));
   m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix().toUri());
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());
-  m_sequencingManager.setSeqFileName(m_confParam.getSeqFileDir());
-  m_sequencingManager.initiateSeqNoFromFile(m_confParam.getHyperbolicState());
 
-  m_syncLogicHandler.createSyncSocket(m_confParam.getChronosyncPrefix());
+  m_nlsrLsdb.getSequencingManager().setSeqFileDirectory(m_confParam.getSeqFileDir());
+  m_nlsrLsdb.getSequencingManager().initiateSeqNoFromFile(m_confParam.getHyperbolicState());
+
+  m_nlsrLsdb.getSyncLogicHandler().createSyncSocket(m_confParam.getChronosyncPrefix());
 
   // Logging start
   m_confParam.writeLog();

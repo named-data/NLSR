@@ -23,7 +23,6 @@
 #define NLSR_SYNC_LOGIC_HANDLER_HPP
 
 #include <ndn-cxx/face.hpp>
-#include <ndn-cxx/security/validator-null.hpp>
 #include <ChronoSync/socket.hpp>
 
 #include <iostream>
@@ -39,8 +38,6 @@ namespace nlsr {
 
 class ConfParameter;
 class Lsdb;
-class SequencingManager;
-class SyncUpdate;
 
 class SyncLogicHandler
 {
@@ -55,21 +52,29 @@ public:
     }
   };
 
-  SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf, SequencingManager& seqManager);
+  SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf);
 
-  /*! \brief Simple wrapper function to handle updates from Sync.
+  /*! \brief Receive and parse update from Sync
+
+    Parses the router name the update came from and passes it to processUpdateFromSync
 
     \param v The information that Sync has acquired.
    */
   void
   onNsyncUpdate(const std::vector<chronosync::MissingDataInfo>& v);
 
-  void
-  onNsyncRemoval(const std::string& prefix);
+  /*! \brief Wrapper function to call publishSyncUpdate with correct LSA type
 
+    \param type The LSA type constant
+    \param seqNo The latest seqNo known to lsdb
+   */
   void
-  publishRoutingUpdate();
+  publishRoutingUpdate(const ndn::Name& type, const uint64_t& seqNo);
 
+  /*! \brief Creates ChronoSync socket and register additional sync nodes (user prefixes)
+
+    \param syncPrefix /localhop/NLSR/sync
+   */
   void
   createSyncSocket(const ndn::Name& syncPrefix);
 
@@ -78,19 +83,20 @@ private:
   buildUpdatePrefix();
 
   void
-  processUpdateFromSync(const SyncUpdate& updateName);
+  processUpdateFromSync(const ndn::Name& originRouter,
+                        const ndn::Name& updateName, const uint64_t& seqNo);
 
   bool
-  isLsaNew(const ndn::Name& originRouter, const std::string& lsaType, uint64_t seqNo);
+  isLsaNew(const ndn::Name& originRouter, const std::string& lsaType,
+           const uint64_t& seqNo);
 
   void
-  expressInterestForLsa(const SyncUpdate& updateName, std::string lsaType, uint64_t seqNo);
+  expressInterestForLsa(const ndn::Name& updateName, const uint64_t& seqNo);
 
   void
   publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo);
 
 private:
-  std::shared_ptr<ndn::ValidatorNull> m_validator;
   ndn::Face& m_syncFace;
   std::shared_ptr<chronosync::Socket> m_syncSocket;
   ndn::Name m_syncPrefix;
@@ -98,10 +104,11 @@ private:
 private:
   Lsdb& m_lsdb;
   ConfParameter& m_confParam;
-  const SequencingManager& m_sequencingManager;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  ndn::Name m_updatePrefix;
+  ndn::Name m_nameLsaUserPrefix;
+  ndn::Name m_adjLsaUserPrefix;
+  ndn::Name m_coorLsaUserPrefix;
 
 private:
   static const std::string NLSR_COMPONENT;

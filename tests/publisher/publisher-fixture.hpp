@@ -38,7 +38,7 @@ public:
   PublisherFixture()
     : face(std::make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
-    , lsdb(nlsr, g_scheduler, nlsr.getSyncLogicHandler())
+    , lsdb(nlsr, g_scheduler)
   {
   }
 

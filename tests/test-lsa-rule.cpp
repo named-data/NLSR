@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   lsaInterestName.append(ndn::Name("name"));
 
   // This would be the sequence number of its own NameLsa
-  lsaInterestName.appendNumber(nlsr.getSequencingManager().getNameLsaSeq());
+  lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 
   // Append version, segmentNo
   lsaInterestName.appendNumber(1).appendNumber(1);
@@ -205,7 +205,7 @@ BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
   lsaInterestName.append(ndn::Name("name"));
 
   // This would be the sequence number of its own NameLsa
-  lsaInterestName.appendNumber(nlsr.getSequencingManager().getNameLsaSeq());
+  lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 
   // Append version, segmentNo
   lsaInterestName.appendNumber(1).appendNumber(1);

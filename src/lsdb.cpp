@@ -63,12 +63,13 @@ const ndn::Name::Component Lsdb::NAME_COMPONENT = ndn::Name::Component("lsdb");
 const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
 const steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE = steady_clock::TimePoint::min();
 
-Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync)
+Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
   : m_nlsr(nlsr)
   , m_scheduler(scheduler)
-  , m_sync(sync)
+  , m_sync(m_nlsr.getNlsrFace(), *this, m_nlsr.getConfParameter())
   , m_lsaRefreshTime(0)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
+  , m_sequencingManager()
 {
 }
 
@@ -150,10 +151,14 @@ bool
 Lsdb::buildAndInstallOwnNameLsa()
 {
   NameLsa nameLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                  m_nlsr.getSequencingManager().getNameLsaSeq() + 1,
+                  m_sequencingManager.getNameLsaSeq() + 1,
                   getLsaExpirationTimePoint(),
                   m_nlsr.getNamePrefixList());
-  m_nlsr.getSequencingManager().increaseNameLsaSeq();
+  m_sequencingManager.increaseNameLsaSeq();
+
+  m_sequencingManager.writeSeqNoToFile();
+  m_sync.publishRoutingUpdate(NameLsa::TYPE_STRING, m_sequencingManager.getNameLsaSeq());
+
   return installNameLsa(nameLsa);
 }
 
@@ -378,15 +383,16 @@ bool
 Lsdb::buildAndInstallOwnCoordinateLsa()
 {
   CoordinateLsa corLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                       m_nlsr.getSequencingManager().getCorLsaSeq() + 1,
+                       m_sequencingManager.getCorLsaSeq() + 1,
                        getLsaExpirationTimePoint(),
                        m_nlsr.getConfParameter().getCorR(),
                        m_nlsr.getConfParameter().getCorTheta());
 
   // Sync coordinate LSAs if using HR or HR dry run.
   if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
-    m_nlsr.getSequencingManager().increaseCorLsaSeq();
-    m_sync.publishRoutingUpdate();
+    m_sequencingManager.increaseCorLsaSeq();
+    m_sequencingManager.writeSeqNoToFile();
+    m_sync.publishRoutingUpdate(CoordinateLsa::TYPE_STRING, m_sequencingManager.getCorLsaSeq());
   }
 
   installCoordinateLsa(corLsa);
@@ -751,15 +757,16 @@ bool
 Lsdb::buildAndInstallOwnAdjLsa()
 {
   AdjLsa adjLsa(m_nlsr.getConfParameter().getRouterPrefix(),
-                m_nlsr.getSequencingManager().getAdjLsaSeq() + 1,
+                m_sequencingManager.getAdjLsaSeq() + 1,
                 getLsaExpirationTimePoint(),
                 m_nlsr.getAdjacencyList().getNumOfActiveNeighbor(),
                 m_nlsr.getAdjacencyList());
 
   //Sync adjacency LSAs if link-state or dry-run HR is enabled.
   if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_ON) {
-    m_nlsr.getSequencingManager().increaseAdjLsaSeq();
-    m_sync.publishRoutingUpdate();
+    m_sequencingManager.increaseAdjLsaSeq();
+    m_sequencingManager.writeSeqNoToFile();
+    m_sync.publishRoutingUpdate(AdjLsa::TYPE_STRING, m_sequencingManager.getAdjLsaSeq());
   }
 
   return installAdjLsa(adjLsa);
@@ -834,7 +841,7 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         _LOG_DEBUG("Deleting Name Lsa");
         chkNameLsa->writeLog();
         chkNameLsa->setLsSeqNo(chkNameLsa->getLsSeqNo() + 1);
-        m_nlsr.getSequencingManager().setNameLsaSeq(chkNameLsa->getLsSeqNo());
+        m_sequencingManager.setNameLsaSeq(chkNameLsa->getLsSeqNo());
         chkNameLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
         _LOG_DEBUG("Adding Name Lsa");
         chkNameLsa->writeLog();
@@ -842,7 +849,8 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(chkNameLsa->getKey(),
                                                                  chkNameLsa->getLsSeqNo(),
                                                                  m_lsaRefreshTime));
-        m_sync.publishRoutingUpdate();
+        m_sequencingManager.writeSeqNoToFile();
+        m_sync.publishRoutingUpdate(NameLsa::TYPE_STRING, m_sequencingManager.getNameLsaSeq());
       }
       // Since we cannot refresh other router's LSAs, our only choice is to expire.
       else {
@@ -877,7 +885,7 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         _LOG_DEBUG("Deleting Adj Lsa");
         chkAdjLsa->writeLog();
         chkAdjLsa->setLsSeqNo(chkAdjLsa->getLsSeqNo() + 1);
-        m_nlsr.getSequencingManager().setAdjLsaSeq(chkAdjLsa->getLsSeqNo());
+        m_sequencingManager.setAdjLsaSeq(chkAdjLsa->getLsSeqNo());
         chkAdjLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
         _LOG_DEBUG("Adding Adj Lsa");
         chkAdjLsa->writeLog();
@@ -885,7 +893,8 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
         chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(chkAdjLsa->getKey(),
                                                                chkAdjLsa->getLsSeqNo(),
                                                                m_lsaRefreshTime));
-        m_sync.publishRoutingUpdate();
+        m_sequencingManager.writeSeqNoToFile();
+        m_sync.publishRoutingUpdate(AdjLsa::TYPE_STRING, m_sequencingManager.getAdjLsaSeq());
       }
       // An LSA from another router is expiring
       else {
@@ -924,7 +933,7 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
         chkCorLsa->writeLog();
         chkCorLsa->setLsSeqNo(chkCorLsa->getLsSeqNo() + 1);
         if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
-          m_nlsr.getSequencingManager().setCorLsaSeq(chkCorLsa->getLsSeqNo());
+          m_sequencingManager.setCorLsaSeq(chkCorLsa->getLsSeqNo());
         }
 
         chkCorLsa->setExpirationTimePoint(getLsaExpirationTimePoint());
@@ -937,7 +946,8 @@ Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                         m_lsaRefreshTime));
         // Only sync coordinate LSAs if link-state routing is disabled
         if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
-          m_sync.publishRoutingUpdate();
+          m_sequencingManager.writeSeqNoToFile();
+          m_sync.publishRoutingUpdate(CoordinateLsa::TYPE_STRING, m_sequencingManager.getCorLsaSeq());
         }
       }
       // We can't refresh other router's LSAs, so we remove it.

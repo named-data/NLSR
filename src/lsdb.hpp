@@ -30,19 +30,26 @@
 
 #include "conf-parameter.hpp"
 #include "lsa.hpp"
+#include "sequencing-manager.hpp"
 #include "test-access-control.hpp"
+#include "communication/sync-logic-handler.hpp"
 
 namespace nlsr {
 
 using namespace ndn::time;
 
 class Nlsr;
-class SyncLogicHandler;
 
 class Lsdb
 {
 public:
-  Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler, SyncLogicHandler& sync);
+  Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler);
+
+  SyncLogicHandler&
+  getSyncLogicHandler()
+  {
+    return m_sync;
+  }
 
   bool
   doesLsaExist(const ndn::Name& key, const std::string& lsType);
@@ -179,6 +186,12 @@ public:
   getAdjLsaBuildInterval() const
   {
     return m_adjLsaBuildInterval;
+  }
+
+  SequencingManager&
+  getSequencingManager()
+  {
+    return m_sequencingManager;
   }
 
   void
@@ -364,7 +377,7 @@ public:
 private:
   Nlsr& m_nlsr;
   ndn::Scheduler& m_scheduler;
-  SyncLogicHandler& m_sync;
+  SyncLogicHandler m_sync;
 
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
@@ -383,6 +396,8 @@ private:
   static const steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
 
   ndn::time::seconds m_adjLsaBuildInterval;
+
+  SequencingManager m_sequencingManager;
 };
 
 } // namespace nlsr

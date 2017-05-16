@@ -19,40 +19,103 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "test-common.hpp"
 #include "sequencing-manager.hpp"
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
+#include <string>
+#include <iostream>
+#include <fstream>
+
+using namespace ndn;
 
 namespace nlsr {
 
 namespace test {
 
-BOOST_AUTO_TEST_SUITE(TestSequencingManager)
-
-BOOST_AUTO_TEST_CASE(SequencingManagerBasic)
+class SequencingManagerFixture : public BaseFixture
 {
-  SequencingManager sm1(120, 121, 122);
+public:
+  SequencingManagerFixture()
+  : m_seqNumbers("")
+  , m_seqManager()
+  {
+    setFileDir();
+  }
 
-  SequencingManager sm2(sm1.getCombinedSeqNo());
+  ~SequencingManagerFixture()
+  {
+    boost::filesystem::remove(seqFile);
+  }
 
-  BOOST_CHECK_EQUAL(sm2.getNameLsaSeq(), (uint32_t)120);
+  void
+  setFileDir() {
+    m_seqManager.setSeqFileDirectory("/tmp");
+  }
 
-  BOOST_CHECK_EQUAL(sm2.getAdjLsaSeq(), (uint32_t)121);
+  void
+  writeToFile(const std::string& testSeq) {
+    std::ofstream outputFile(seqFile, std::ofstream::trunc);
+    outputFile << testSeq;
+    outputFile.close();
+  }
 
-  BOOST_CHECK_EQUAL(sm2.getCorLsaSeq(), (uint32_t)122);
+  void
+  initiateFromFile(const int& type) {
+    m_seqManager.initiateSeqNoFromFile(type);
+  }
+
+  void
+  checkSeqNumbers(const uint64_t& name, const uint64_t& adj, const uint64_t& cor) {
+    BOOST_CHECK_EQUAL(m_seqManager.getNameLsaSeq(), name);
+
+    BOOST_CHECK_EQUAL(m_seqManager.getAdjLsaSeq(), adj);
+
+    BOOST_CHECK_EQUAL(m_seqManager.getCorLsaSeq(), cor);
+  }
+
+private:
+  std::string m_seqNumbers;
+  std::string seqFile = "/tmp/nlsrSeqNo.txt";
+  SequencingManager m_seqManager;
+};
+
+BOOST_FIXTURE_TEST_SUITE(TestSequencingManager, SequencingManagerFixture)
+
+BOOST_AUTO_TEST_CASE(CombinedSeqNumber)
+{
+  // LS
+  writeToFile("27121653322350672");
+
+  initiateFromFile(HYPERBOLIC_STATE_OFF);
+
+  checkSeqNumbers(24667+10, 80+10, 0);
+
+  // HR
+  writeToFile("27121653322350672");
+
+  initiateFromFile(HYPERBOLIC_STATE_ON);
+
+  // AdjLsa is set to 0 since HR is on
+  checkSeqNumbers(24667+10, 0, 0+10);
 }
 
-BOOST_AUTO_TEST_CASE(BitMask)
+BOOST_AUTO_TEST_CASE(SeparateSeqNumber)
 {
-  uint64_t nameLsaSeqNoMax = 0xFFFFFF;
-  uint64_t corLsaSeqNoMax = 0xFFFFF;
-  uint64_t adjLsaSeqNoMax = 0xFFFFF;
+  // LS
+  writeToFile("NameLsaSeq 100\nAdjLsaSeq 100\nCorLsaSeq 0");
 
-  uint64_t seqNo = (nameLsaSeqNoMax << 40) | (corLsaSeqNoMax << 20) | adjLsaSeqNoMax;
-  SequencingManager manager(seqNo);
+  initiateFromFile(HYPERBOLIC_STATE_OFF);
 
-  BOOST_CHECK_EQUAL(manager.getNameLsaSeq(), nameLsaSeqNoMax);
-  BOOST_CHECK_EQUAL(manager.getCorLsaSeq(), corLsaSeqNoMax);
-  BOOST_CHECK_EQUAL(manager.getAdjLsaSeq(), adjLsaSeqNoMax);
+  checkSeqNumbers(100+10, 100+10, 0);
+
+  // HR
+  writeToFile("NameLsa 100\nAdjLsa 0\nCorLsa 100");
+
+  initiateFromFile(HYPERBOLIC_STATE_ON);
+
+  // AdjLsa is set to 0 since HR is on
+  checkSeqNumbers(100+10, 0, 100+10);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

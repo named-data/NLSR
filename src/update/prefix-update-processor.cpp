@@ -24,7 +24,6 @@
 #include "lsdb.hpp"
 #include "nlsr.hpp"
 #include "prefix-update-commands.hpp"
-#include "communication/sync-logic-handler.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
@@ -40,7 +39,6 @@ const ndn::Name::Component PrefixUpdateProcessor::WITHDRAW_VERB  = ndn::Name::Co
 PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::Face& face,
                                              NamePrefixList& namePrefixList,
                                              Lsdb& lsdb,
-                                             SyncLogicHandler& sync,
                                              const ndn::Name broadcastPrefix,
                                              ndn::KeyChain& keyChain,
                                              std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
@@ -48,7 +46,6 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::Face& face,
   : m_face(face)
   , m_namePrefixList(namePrefixList)
   , m_lsdb(lsdb)
-  , m_sync(sync)
   , m_keyChain(keyChain)
   , m_validator(m_face, broadcastPrefix, certificateCache, certStore)
   , m_isEnabled(false)
@@ -153,7 +150,6 @@ PrefixUpdateProcessor::advertise(const std::shared_ptr<const ndn::Interest>& req
   if (m_namePrefixList.insert(parameters.getName())) {
     // Only build a Name LSA if the added name is new
     m_lsdb.buildAndInstallOwnNameLsa();
-    m_sync.publishRoutingUpdate();
   }
 }
 
@@ -173,7 +169,6 @@ PrefixUpdateProcessor::withdraw(const std::shared_ptr<const ndn::Interest>& requ
   if (m_namePrefixList.remove(parameters.getName())) {
     // Only build a Name LSA if a name was actually removed
     m_lsdb.buildAndInstallOwnNameLsa();
-    m_sync.publishRoutingUpdate();
   }
 }
 
