@@ -30,6 +30,7 @@
 
 #include <ndn-cxx/mgmt/nfd/control-command.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
+#include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/encoding/tlv-nfd.hpp>
 
 #include <boost/noncopyable.hpp>
