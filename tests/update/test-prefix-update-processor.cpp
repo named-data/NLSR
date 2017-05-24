@@ -169,7 +169,7 @@ public:
     lsaInterestName.append(sessionTime);
     lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 
-    shared_ptr<Interest> lsaInterest = make_shared<Interest>(lsaInterestName);
+    std::shared_ptr<Interest> lsaInterest = std::make_shared<Interest>(lsaInterestName);
 
     face.receive(*lsaInterest);
     this->advanceClocks(ndn::time::milliseconds(10));

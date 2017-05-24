@@ -32,9 +32,6 @@ namespace nlsr {
 
 INIT_LOGGER("SyncLogicHandler");
 
-using namespace ndn;
-using namespace std;
-
 const std::string NLSR_COMPONENT = "NLSR";
 const std::string LSA_COMPONENT = "LSA";
 
@@ -75,9 +72,8 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
   // of the object
   std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
-
   m_syncSocket = std::make_shared<chronosync::Socket>(m_syncPrefix, m_nameLsaUserPrefix, *facePtr,
-                                                      bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1));
+                                                      std::bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1));
 
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
     m_syncSocket->addSyncNode(m_adjLsaUserPrefix);
@@ -88,7 +84,7 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
 }
 
 void
-SyncLogicHandler::onChronoSyncUpdate(const vector<chronosync::MissingDataInfo>& v)
+SyncLogicHandler::onChronoSyncUpdate(const std::vector<chronosync::MissingDataInfo>& v)
 {
   _LOG_DEBUG("Received ChronoSync update event");
 
@@ -224,7 +220,7 @@ SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqN
   _LOG_DEBUG("Publishing Sync Update. Prefix: " << updatePrefix << " Seq No: " << seqNo);
 
   ndn::Name updateName(updatePrefix);
-  string data("NoData");
+  std::string data("NoData");
 
   m_syncSocket->publishData(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(),
                             ndn::time::milliseconds(1000), seqNo, updateName);

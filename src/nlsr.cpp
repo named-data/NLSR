@@ -37,9 +37,6 @@ INIT_LOGGER("nlsr");
 
 const ndn::Name Nlsr::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
 
-using namespace ndn;
-using namespace std;
-
 Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face, ndn::KeyChain& keyChain)
   : m_nlsrFace(face)
   , m_scheduler(scheduler)
@@ -303,13 +300,13 @@ Nlsr::initializeKey()
   std::shared_ptr<ndn::IdentityCertificate> certificate =
     std::make_shared<ndn::IdentityCertificate>();
   std::shared_ptr<ndn::PublicKey> pubKey = m_keyChain.getPublicKey(keyName);
-  Name certificateName = keyName.getPrefix(-1);
+  ndn::Name certificateName = keyName.getPrefix(-1);
   certificateName.append("KEY").append(keyName.get(-1)).append("ID-CERT").appendVersion();
   certificate->setName(certificateName);
-  certificate->setNotBefore(time::system_clock::now() - time::days(1));
-  certificate->setNotAfter(time::system_clock::now() + time::days(7300)); // ~20 years
+  certificate->setNotBefore(ndn::time::system_clock::now() - ndn::time::days(1));
+  certificate->setNotAfter(ndn::time::system_clock::now() + ndn::time::days(7300)); // ~20 years
   certificate->setPublicKeyInfo(*pubKey);
-  certificate->addSubjectDescription(CertificateSubjectDescription(ndn::oid::ATTRIBUTE_NAME,
+  certificate->addSubjectDescription(ndn::CertificateSubjectDescription(ndn::oid::ATTRIBUTE_NAME,
                                                                    keyName.toUri()));
   certificate->encode();
   m_keyChain.signByIdentity(*certificate, m_confParam.getRouterPrefix());

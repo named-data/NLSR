@@ -25,8 +25,6 @@ namespace nlsr {
 
 INIT_LOGGER("FibEntry");
 
-using namespace std;
-
 void
 FibEntry::writeLog()
 {

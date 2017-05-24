@@ -19,6 +19,9 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "sequencing-manager.hpp"
+#include "logger.hpp"
+
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -27,14 +30,9 @@
 #include <unistd.h>
 #include <boost/algorithm/string.hpp>
 
-#include "sequencing-manager.hpp"
-#include "logger.hpp"
-
 namespace nlsr {
 
 INIT_LOGGER("SequencingManager");
-
-using namespace std;
 
 void
 SequencingManager::writeSeqNoToFile() const
@@ -112,12 +110,12 @@ SequencingManager::initiateSeqNoFromFile(int hypState)
 }
 
 void
-SequencingManager::setSeqFileDirectory(string filePath)
+SequencingManager::setSeqFileDirectory(std::string filePath)
 {
   m_seqFileNameWithPath = filePath;
 
   if (m_seqFileNameWithPath.empty()) {
-    string homeDirPath(getpwuid(getuid())->pw_dir);
+    std::string homeDirPath(getpwuid(getuid())->pw_dir);
     if (homeDirPath.empty()) {
       homeDirPath = getenv("HOME");
     }

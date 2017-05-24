@@ -23,7 +23,6 @@
 #include "adjacent.hpp"
 #include "lsa.hpp"
 #include "lsdb.hpp"
-
 #include "logger.hpp"
 
 #include <iostream>
@@ -32,8 +31,6 @@
 namespace nlsr {
 
 INIT_LOGGER("Map");
-
-using namespace std;
 
 static bool
 mapEntryCompareByRouter(MapEntry& mpe1, const ndn::Name& rtrName)

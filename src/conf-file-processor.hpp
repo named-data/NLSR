@@ -21,11 +21,12 @@
 #ifndef NLSR_CONF_FILE_PROCESSOR_HPP
 #define NLSR_CONF_FILE_PROCESSOR_HPP
 
+#include "common.hpp"
 #include "nlsr.hpp"
 
-#include <boost/smart_ptr/shared_ptr.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/cstdint.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/property_tree/info_parser.hpp>
+#include <boost/filesystem.hpp>
 
 namespace nlsr {
 

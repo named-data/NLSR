@@ -23,10 +23,10 @@
 #define NLSR_ADJACENCY_LIST_HPP
 
 #include "adjacent.hpp"
+#include "common.hpp"
 
 #include <list>
 #include <boost/cstdint.hpp>
-#include <ndn-cxx/common.hpp>
 
 namespace nlsr {
 

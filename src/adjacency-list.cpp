@@ -31,8 +31,6 @@ namespace nlsr {
 
 INIT_LOGGER("AdjacencyList");
 
-using namespace std;
-
 AdjacencyList::AdjacencyList()
 {
 }

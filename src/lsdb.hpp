@@ -42,9 +42,12 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/time.hpp>
 
-namespace nlsr {
+#include <utility>
+#include <boost/cstdint.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/time.hpp>
 
-using namespace ndn::time;
+namespace nlsr {
 
 class Nlsr;
 
@@ -206,14 +209,14 @@ public:
   writeAdjLsdbLog();
 
   void
-  setLsaRefreshTime(const seconds& lsaRefreshTime);
+  setLsaRefreshTime(const ndn::time::seconds& lsaRefreshTime);
 
   void
   setThisRouterPrefix(std::string trp);
 
   void
   expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
-                  steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
+                  ndn::time::steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
 
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
@@ -272,7 +275,7 @@ private:
    */
   ndn::EventId
   scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
-                            const seconds& expTime);
+                            const ndn::time::seconds& expTime);
 
   /*! \brief Either allow to expire, or refresh a name LSA.
     \param lsaKey The name of the router that published the LSA.
@@ -289,7 +292,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   */
   ndn::EventId
   scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
-                           const seconds& expTime);
+                           const ndn::time::seconds& expTime);
 
 private:
 
@@ -298,7 +301,7 @@ private:
 
   ndn::EventId
   scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
-                                  const seconds& expTime);
+                                  const ndn::time::seconds& expTime);
 
   void
   expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
@@ -372,7 +375,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   afterFetchLsa(const ndn::ConstBufferPtr& data, ndn::Name& interestName);
 
 private:
-  system_clock::TimePoint
+  ndn::time::system_clock::TimePoint
   getLsaExpirationTimePoint();
 
   /*! \brief Cancels an event in the event scheduler. */
@@ -393,7 +396,7 @@ private:
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;
 
-  seconds m_lsaRefreshTime;
+  ndn::time::seconds m_lsaRefreshTime;
   std::string m_thisRouterPrefix;
 
   typedef std::map<ndn::Name, uint64_t> SequenceNumberMap;
@@ -403,7 +406,7 @@ private:
   SequenceNumberMap m_highestSeqNo;
 
   static const ndn::time::seconds GRACE_PERIOD;
-  static const steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
+  static const ndn::time::steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
 
   ndn::time::seconds m_adjLsaBuildInterval;
 

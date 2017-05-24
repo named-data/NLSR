@@ -38,8 +38,6 @@ namespace nlsr {
 
 INIT_LOGGER("Lsa");
 
-using namespace std;
-
 const std::string NameLsa::TYPE_STRING = "name";
 const std::string AdjLsa::TYPE_STRING = "adjacency";
 const std::string CoordinateLsa::TYPE_STRING = "coordinate";
@@ -65,7 +63,7 @@ NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
   }
 }
 
-string
+std::string
 NameLsa::getData()
 {
   std::ostringstream os;
@@ -172,7 +170,7 @@ CoordinateLsa::isEqualContent(const CoordinateLsa& clsa)
           std::numeric_limits<double>::epsilon());
 }
 
-string
+std::string
 CoordinateLsa::getData()
 {
   std::ostringstream os;
@@ -266,7 +264,7 @@ AdjLsa::isEqualContent(AdjLsa& alsa)
   return m_adl == alsa.getAdl();
 }
 
-string
+std::string
 AdjLsa::getData()
 {
   std::ostringstream os;

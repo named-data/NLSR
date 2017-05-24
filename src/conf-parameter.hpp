@@ -22,11 +22,11 @@
 #ifndef NLSR_CONF_PARAMETER_HPP
 #define NLSR_CONF_PARAMETER_HPP
 
+#include "common.hpp"
 #include "logger.hpp"
 
 #include <iostream>
 #include <boost/cstdint.hpp>
-#include <ndn-cxx/common.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/util/time.hpp>
 

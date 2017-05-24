@@ -59,7 +59,8 @@ private:
 
 const ndn::Name::Component Lsdb::NAME_COMPONENT = ndn::Name::Component("lsdb");
 const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
-const steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE = steady_clock::TimePoint::min();
+const ndn::time::steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE =
+  ndn::time::steady_clock::TimePoint::min();
 
 Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
   : m_nlsr(nlsr)
@@ -800,7 +801,7 @@ Lsdb::getAdjLsdb()
 }
 
 void
-Lsdb::setLsaRefreshTime(const seconds& lsaRefreshTime)
+Lsdb::setLsaRefreshTime(const ndn::time::seconds& lsaRefreshTime)
 {
   m_lsaRefreshTime = lsaRefreshTime;
 }
@@ -957,13 +958,13 @@ Lsdb::expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
 
 void
 Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
-                      steady_clock::TimePoint deadline)
+                      ndn::time::steady_clock::TimePoint deadline)
 {
   // increment SENT_LSA_INTEREST
   lsaIncrementSignal(Statistics::PacketType::SENT_LSA_INTEREST);
 
   if (deadline == DEFAULT_LSA_RETRIEVAL_DEADLINE) {
-    deadline = steady_clock::now() + ndn::time::seconds(static_cast<int>(LSA_REFRESH_TIME_MAX));
+    deadline = ndn::time::steady_clock::now() + ndn::time::seconds(static_cast<int>(LSA_REFRESH_TIME_MAX));
   }
   // The first component of the interest is the name.
   ndn::Name lsaName = interestName.getSubName(0, interestName.size()-1);

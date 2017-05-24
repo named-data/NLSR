@@ -19,8 +19,9 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "adjacency-list.hpp"
+#include "common.hpp"
 
+#include "adjacency-list.hpp"
 #include "adjacent.hpp"
 #include "conf-parameter.hpp"
 

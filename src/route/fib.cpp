@@ -35,9 +35,6 @@ INIT_LOGGER("Fib");
 
 const uint64_t Fib::GRACE_PERIOD = 10;
 
-using namespace std;
-using namespace ndn;
-
 void
 Fib::remove(const ndn::Name& name)
 {

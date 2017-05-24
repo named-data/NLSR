@@ -18,17 +18,14 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
-
-#include "common.hpp"
 #include "nexthop-list.hpp"
+#include "common.hpp"
 #include "nexthop.hpp"
 #include "logger.hpp"
 
 namespace nlsr {
 
 INIT_LOGGER("NexthopList");
-
-using namespace std;
 
 static bool
 nexthopAddCompare(const NextHop& nh1, const NextHop& nh2)

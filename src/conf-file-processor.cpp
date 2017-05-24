@@ -25,21 +25,15 @@
 #include "utility/name-helper.hpp"
 #include "update/prefix-update-processor.hpp"
 
-#include <iostream>
-#include <fstream>
+#include <boost/cstdint.hpp>
 
 #include <ndn-cxx/name.hpp>
 #include <ndn-cxx/util/face-uri.hpp>
 
-// boost needs to be included after ndn-cxx, otherwise there will be conflict with _1, _2, ...
-#include <boost/algorithm/string.hpp>
-#include <boost/property_tree/info_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/filesystem.hpp>
+#include <iostream>
+#include <fstream>
 
 namespace nlsr {
-
-using namespace std;
 
 template <class T>
 class ConfigurationVariable
@@ -144,12 +138,12 @@ bool
 ConfFileProcessor::processConfFile()
 {
   bool ret = true;
-  ifstream inputFile;
+  std::ifstream inputFile;
   inputFile.open(m_confFileName.c_str());
   if (!inputFile.is_open()) {
-    string msg = "Failed to read configuration file: ";
+    std::string msg = "Failed to read configuration file: ";
     msg += m_confFileName;
-    cerr << msg << endl;
+    std::cerr << msg << std::endl;
     return false;
   }
   ret = load(inputFile);
@@ -158,7 +152,7 @@ ConfFileProcessor::processConfFile()
 }
 
 bool
-ConfFileProcessor::load(istream& input)
+ConfFileProcessor::load(std::istream& input)
 {
   ConfigSection pt;
   bool ret = true;
@@ -166,7 +160,7 @@ ConfFileProcessor::load(istream& input)
     boost::property_tree::read_info(input, pt);
   }
   catch (const boost::property_tree::info_parser_error& error) {
-    stringstream msg;
+    std::stringstream msg;
     std::cerr << "Failed to parse configuration file " << std::endl;
     std::cerr << m_confFileName << std::endl;
     return false;
@@ -221,15 +215,15 @@ bool
 ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
 {
   try {
-    std::string network = section.get<string>("network");
-    std::string site = section.get<string>("site");
-    std::string router = section.get<string>("router");
+    std::string network = section.get<std::string>("network");
+    std::string site = section.get<std::string>("site");
+    std::string router = section.get<std::string>("router");
     ndn::Name networkName(network);
     if (!networkName.empty()) {
       m_nlsr.getConfParameter().setNetwork(networkName);
     }
     else {
-      cerr << " Network can not be null or empty or in bad URI format :(!" << endl;
+      std::cerr << " Network can not be null or empty or in bad URI format :(!" << std::endl;
       return false;
     }
     ndn::Name siteName(site);
@@ -237,7 +231,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
       m_nlsr.getConfParameter().setSiteName(siteName);
     }
     else {
-      cerr << "Site can not be null or empty or in bad URI format:( !" << endl;
+      std::cerr << "Site can not be null or empty or in bad URI format:( !" << std::endl;
       return false;
     }
     ndn::Name routerName(router);
@@ -245,12 +239,12 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
       m_nlsr.getConfParameter().setRouterName(routerName);
     }
     else {
-      cerr << " Router name can not be null or empty or in bad URI format:( !" << endl;
+      std::cerr << " Router name can not be null or empty or in bad URI format:( !" << std::endl;
       return false;
     }
   }
   catch (const std::exception& ex) {
-    cerr << ex.what() << endl;
+    std::cerr << ex.what() << std::endl;
     return false;
   }
 
@@ -294,7 +288,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   // log-level
-  std::string logLevel = section.get<string>("log-level", "INFO");
+  std::string logLevel = section.get<std::string>("log-level", "INFO");
 
   if (isValidLogLevel(logLevel)) {
     m_nlsr.getConfParameter().setLogLevel(logLevel);
@@ -306,11 +300,11 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   try {
-    std::string logDir = section.get<string>("log-dir");
+    std::string logDir = section.get<std::string>("log-dir");
     if (boost::filesystem::exists(logDir)) {
       if (boost::filesystem::is_directory(logDir)) {
         std::string testFileName=logDir+"/test.log";
-        ofstream testOutFile;
+        std::ofstream testOutFile;
         testOutFile.open(testFileName.c_str());
         if (testOutFile.is_open() && testOutFile.good()) {
           m_nlsr.getConfParameter().setLogDir(logDir);
@@ -340,11 +334,11 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   try {
-    std::string seqDir = section.get<string>("seq-dir");
+    std::string seqDir = section.get<std::string>("seq-dir");
     if (boost::filesystem::exists(seqDir)) {
       if (boost::filesystem::is_directory(seqDir)) {
         std::string testFileName=seqDir+"/test.seq";
-        ofstream testOutFile;
+        std::ofstream testOutFile;
         testOutFile.open(testFileName.c_str());
         if (testOutFile.is_open() && testOutFile.good()) {
           m_nlsr.getConfParameter().setSeqFileDir(seqDir);
@@ -374,7 +368,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   try {
-    std::string log4cxxPath = section.get<string>("log4cxx-conf");
+    std::string log4cxxPath = section.get<std::string>("log4cxx-conf");
 
     if (log4cxxPath == "") {
       std::cerr << "No value provided for log4cxx-conf" << std::endl;
@@ -533,7 +527,7 @@ bool
 ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
 {
   // state
-  std::string state = section.get<string>("state", "off");
+  std::string state = section.get<std::string>("state", "off");
 
   if (boost::iequals(state, "off")) {
     m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_OFF);

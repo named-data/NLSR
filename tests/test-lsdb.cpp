@@ -123,8 +123,8 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   BOOST_CHECK_EQUAL(it->getName(), oldInterestName);
   interests.clear();
 
-  steady_clock::TimePoint deadline = steady_clock::now() +
-                                     ndn::time::seconds(LSA_REFRESH_TIME_MAX);
+  ndn::time::steady_clock::TimePoint deadline = ndn::time::steady_clock::now() +
+    ndn::time::seconds(LSA_REFRESH_TIME_MAX);
 
   // Simulate an LSA interest timeout
   lsdb.onFetchLsaError(ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",

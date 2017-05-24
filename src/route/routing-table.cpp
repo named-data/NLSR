@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
-
 #include "routing-table.hpp"
 #include "nlsr.hpp"
 #include "map.hpp"
@@ -28,14 +27,12 @@
 #include "logger.hpp"
 
 #include <iostream>
-#include <string>
 #include <list>
+#include <string>
 
 namespace nlsr {
 
 INIT_LOGGER("RoutingTable");
-
-using namespace std;
 
 void
 RoutingTable::calculate(Nlsr& pnlsr)

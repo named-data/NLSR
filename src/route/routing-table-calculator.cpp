@@ -18,23 +18,21 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
-
-#include <iostream>
-#include <cmath>
-#include "lsdb.hpp"
 #include "routing-table-calculator.hpp"
+#include "lsdb.hpp"
 #include "map.hpp"
 #include "lsa.hpp"
 #include "nexthop.hpp"
 #include "nlsr.hpp"
 #include "logger.hpp"
 
+#include <iostream>
 #include <boost/math/constants/constants.hpp>
+#include <cmath>
 
 namespace nlsr {
 
 INIT_LOGGER("RoutingTableCalculator");
-using namespace std;
 
 void
 RoutingTableCalculator::allocateAdjMatrix()
@@ -120,7 +118,7 @@ void
 RoutingTableCalculator::writeAdjMatrixLog()
 {
   for (size_t i = 0; i < m_nRouters; i++) {
-    string line="";
+    std::string line="";
     for (size_t j = 0; j < m_nRouters; j++) {
       line += boost::lexical_cast<std::string>(adjMatrix[i][j]);
       line += " ";
@@ -252,7 +250,7 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
   int v, u;
   int* Q = new int[m_nRouters]; // Each cell represents the router with that mapping no.
   int head = 0;
-  // Initiate the Parent
+  // Initiate the parent
   for (i = 0 ; i < static_cast<int>(m_nRouters); i++) {
     m_parent[i] = EMPTY_PARENT;
     // Array where the ith element is the distance to the router with mapping no i.

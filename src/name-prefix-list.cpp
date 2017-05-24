@@ -20,20 +20,15 @@
  **/
 
 #include "name-prefix-list.hpp"
-
 #include "common.hpp"
 #include "logger.hpp"
 
 #include <iostream>
 #include <algorithm>
 
-#include <ndn-cxx/common.hpp>
-
 namespace nlsr {
 
 INIT_LOGGER("NamePrefixList");
-
-using namespace std;
 
 NamePrefixList::NamePrefixList()
 {
