@@ -31,30 +31,30 @@ INIT_LOGGER("ConfParameter");
 void
 ConfParameter::writeLog()
 {
-  _LOG_DEBUG("Router Name: " << m_routerName);
-  _LOG_DEBUG("Site Name: " << m_siteName);
-  _LOG_DEBUG("Network: " << m_network);
-  _LOG_DEBUG("Router Prefix: " << m_routerPrefix);
-  _LOG_DEBUG("ChronoSync sync Prefix: " << m_chronosyncPrefix);
-  _LOG_DEBUG("ChronoSync LSA prefix: " << m_lsaPrefix);
-  _LOG_DEBUG("Hello Interest retry number: " << m_interestRetryNumber);
-  _LOG_DEBUG("Hello Interest resend second: " << m_interestResendTime);
-  _LOG_DEBUG("Info Interest interval: " << m_infoInterestInterval);
-  _LOG_DEBUG("LSA refresh time: " << m_lsaRefreshTime);
-  _LOG_DEBUG("FIB Entry refresh time: " << m_lsaRefreshTime * 2);
-  _LOG_DEBUG("LSA Interest lifetime: " << getLsaInterestLifetime());
-  _LOG_DEBUG("Router dead interval: " << getRouterDeadInterval());
-  _LOG_DEBUG("Max Faces Per Prefix: " << m_maxFacesPerPrefix);
-  _LOG_DEBUG("Hyperbolic Routing: " << m_hyperbolicState);
-  _LOG_DEBUG("Hyp R: " << m_corR);
-  _LOG_DEBUG("Hyp theta: " << m_corTheta);
-  _LOG_DEBUG("Log Directory: " << m_logDir);
-  _LOG_DEBUG("Seq Directory: " << m_seqFileDir);
+  _LOG_INFO("Router Name: " << m_routerName);
+  _LOG_INFO("Site Name: " << m_siteName);
+  _LOG_INFO("Network: " << m_network);
+  _LOG_INFO("Router Prefix: " << m_routerPrefix);
+  _LOG_INFO("ChronoSync sync Prefix: " << m_chronosyncPrefix);
+  _LOG_INFO("ChronoSync LSA prefix: " << m_lsaPrefix);
+  _LOG_INFO("Hello Interest retry number: " << m_interestRetryNumber);
+  _LOG_INFO("Hello Interest resend second: " << m_interestResendTime);
+  _LOG_INFO("Info Interest interval: " << m_infoInterestInterval);
+  _LOG_INFO("LSA refresh time: " << m_lsaRefreshTime);
+  _LOG_INFO("FIB Entry refresh time: " << m_lsaRefreshTime * 2);
+  _LOG_INFO("LSA Interest lifetime: " << getLsaInterestLifetime());
+  _LOG_INFO("Router dead interval: " << getRouterDeadInterval());
+  _LOG_INFO("Max Faces Per Prefix: " << m_maxFacesPerPrefix);
+  _LOG_INFO("Hyperbolic Routing: " << m_hyperbolicState);
+  _LOG_INFO("Hyp R: " << m_corR);
+  _LOG_INFO("Hyp theta: " << m_corTheta);
+  _LOG_INFO("Log Directory: " << m_logDir);
+  _LOG_INFO("Seq Directory: " << m_seqFileDir);
 
   // Event Intervals
-  _LOG_DEBUG("Adjacency LSA build interval:  " << m_adjLsaBuildInterval);
-  _LOG_DEBUG("First Hello Interest interval: " << m_firstHelloInterval);
-  _LOG_DEBUG("Routing calculation interval:  " << m_routingCalcInterval);
+  _LOG_INFO("Adjacency LSA build interval:  " << m_adjLsaBuildInterval);
+  _LOG_INFO("First Hello Interest interval: " << m_firstHelloInterval);
+  _LOG_INFO("Routing calculation interval:  " << m_routingCalcInterval);
 }
 
 } // namespace nlsr
