@@ -70,18 +70,14 @@ NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
 string
 NameLsa::getData()
 {
-  string nameLsaData;
-  nameLsaData = m_origRouter.toUri() + "|" + NameLsa::TYPE_STRING + "|"
-                + boost::lexical_cast<std::string>(m_lsSeqNo) + "|"
-                + ndn::time::toIsoString(m_expirationTimePoint);
-  nameLsaData += "|";
-  nameLsaData += boost::lexical_cast<std::string>(m_npl.getSize());
-  std::list<ndn::Name> nl = m_npl.getNameList();
-  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++) {
-    nameLsaData += "|";
-    nameLsaData += (*it).toUri();
+  std::ostringstream os;
+  os << m_origRouter << "|" << NameLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
+     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_npl.getSize();
+  for (const auto& name : m_npl.getNameList()) {
+    os << "|" << name;
   }
-  return nameLsaData + "|";
+  os << "|";
+  return os.str();
 }
 
 bool
@@ -105,7 +101,7 @@ NameLsa::initializeFromContent(const std::string& content)
     m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
     numName = boost::lexical_cast<uint32_t>(*tok_iter++);
   }
-  catch (std::exception& e) {
+  catch (const std::exception& e) {
     _LOG_ERROR(e.what());
     return false;
   }
@@ -166,15 +162,11 @@ CoordinateLsa::isEqualContent(const CoordinateLsa& clsa)
 string
 CoordinateLsa::getData()
 {
-  string corLsaData;
-  corLsaData = m_origRouter.toUri() + "|";
-  corLsaData += CoordinateLsa::TYPE_STRING;
-  corLsaData += "|";
-  corLsaData += (boost::lexical_cast<std::string>(m_lsSeqNo) + "|");
-  corLsaData += (ndn::time::toIsoString(m_expirationTimePoint) + "|");
-  corLsaData += (boost::lexical_cast<std::string>(m_corRad) + "|");
-  corLsaData += (boost::lexical_cast<std::string>(m_corTheta) + "|");
-  return corLsaData;
+  std::ostringstream os;
+  os << m_origRouter << "|" << CoordinateLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
+     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_corRad << "|"
+     << m_corTheta << "|";
+  return os.str();
 }
 
 bool
@@ -198,7 +190,7 @@ CoordinateLsa::initializeFromContent(const std::string& content)
     m_corRad   = boost::lexical_cast<double>(*tok_iter++);
     m_corTheta = boost::lexical_cast<double>(*tok_iter++);
   }
-  catch (std::exception& e) {
+  catch (const std::exception& e) {
     _LOG_ERROR(e.what());
     return false;
   }
@@ -251,22 +243,15 @@ AdjLsa::isEqualContent(AdjLsa& alsa)
 string
 AdjLsa::getData()
 {
-  string adjLsaData;
-  adjLsaData = m_origRouter.toUri() + "|" + AdjLsa::TYPE_STRING + "|"
-               + boost::lexical_cast<std::string>(m_lsSeqNo) + "|"
-               + ndn::time::toIsoString(m_expirationTimePoint);
-  adjLsaData += "|";
-  adjLsaData += boost::lexical_cast<std::string>(m_adl.getSize());
-  std::list<Adjacent> al = m_adl.getAdjList();
-  for (std::list<Adjacent>::iterator it = al.begin(); it != al.end(); it++) {
-    adjLsaData += "|";
-    adjLsaData += (*it).getName().toUri();
-    adjLsaData += "|";
-    adjLsaData += (*it).getConnectingFaceUri();
-    adjLsaData += "|";
-    adjLsaData += boost::lexical_cast<std::string>((*it).getLinkCost());
+  std::ostringstream os;
+  os << m_origRouter << "|" << AdjLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
+     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_adl.getSize();
+  for (const auto& adjacent : m_adl.getAdjList()) {
+    os << "|" << adjacent.getName() << "|" << adjacent.getConnectingFaceUri()
+       << "|" << adjacent.getLinkCost();
   }
-  return adjLsaData + "|";
+  os << "|";
+  return os.str();
 }
 
 bool
@@ -290,7 +275,7 @@ AdjLsa::initializeFromContent(const std::string& content)
     m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
     numLink    = boost::lexical_cast<uint32_t>(*tok_iter++);
   }
-  catch (std::exception& e) {
+  catch (const std::exception& e) {
     _LOG_ERROR(e.what());
     return false;
   }
@@ -302,7 +287,7 @@ AdjLsa::initializeFromContent(const std::string& content)
       Adjacent adjacent(adjName, connectingFaceUri, linkCost, Adjacent::STATUS_INACTIVE, 0, 0);
       addAdjacent(adjacent);
     }
-    catch (std::exception& e) {
+    catch (const std::exception& e) {
       _LOG_ERROR(e.what());
       return false;
     }
