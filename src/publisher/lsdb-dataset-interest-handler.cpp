@@ -34,110 +34,137 @@
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/util/regex.hpp>
+#include "tlv/lsdb-status.hpp"
 
 namespace nlsr {
 
 INIT_LOGGER("LsdbDatasetInterestHandler");
-
-const uint32_t LsdbDatasetInterestHandler::ERROR_CODE_MALFORMED_COMMAND = 400;
-const uint32_t LsdbDatasetInterestHandler::ERROR_CODE_UNSUPPORTED_COMMAND = 501;
+const ndn::PartialName ADJACENCIES_DATASET = ndn::PartialName("lsdb/adjacencies");
+const ndn::PartialName COORDINATES_DATASET = ndn::PartialName("lsdb/coordinates");
+const ndn::PartialName NAMES_DATASET = ndn::PartialName("lsdb/names");
+const ndn::PartialName LISTS_DATASET = ndn::PartialName("lsdb/list");
+const ndn::PartialName LsdbDatasetInterestHandler::LOCALHOST_COMMAND_PREFIX =
+      ndn::Name(Nlsr::LOCALHOST_PREFIX).append(Lsdb::NAME_COMPONENT);
 
 LsdbDatasetInterestHandler::LsdbDatasetInterestHandler(Lsdb& lsdb,
+                                                       ndn::mgmt::Dispatcher& localHostDispatcher,
+                                                       ndn::mgmt::Dispatcher& routerNameDispatcher,
                                                        ndn::Face& face,
                                                        ndn::KeyChain& keyChain)
-  : LOCALHOST_COMMAND_PREFIX(ndn::Name(Nlsr::LOCALHOST_PREFIX).append(Lsdb::NAME_COMPONENT))
-  , m_face(face)
-  , m_keyChain(keyChain)
+  : m_localhostDispatcher(localHostDispatcher)
+  , m_routerNameDispatcher(routerNameDispatcher)
   , m_adjacencyLsaPublisher(lsdb, face, keyChain)
   , m_coordinateLsaPublisher(lsdb, face, keyChain)
   , m_nameLsaPublisher(lsdb, face, keyChain)
-  , m_lsdbStatusPublisher(lsdb, face, keyChain,
-                          m_adjacencyLsaPublisher,
-                          m_coordinateLsaPublisher,
-                          m_nameLsaPublisher)
-
+  , m_adjacencyLsas(lsdb.getAdjLsdb())
+  , m_coordinateLsas(lsdb.getCoordinateLsdb())
+  , m_nameLsas(lsdb.getNameLsdb())
 {
+  _LOG_DEBUG("Setting dispatcher for lsdb status dataset:");
+  setDispatcher(m_localhostDispatcher);
+  setDispatcher(m_routerNameDispatcher);
 }
 
 void
-LsdbDatasetInterestHandler::startListeningOnLocalhost()
+LsdbDatasetInterestHandler::setDispatcher(ndn::mgmt::Dispatcher& dispatcher)
 {
-  _LOG_DEBUG("Setting interest filter for: " << LOCALHOST_COMMAND_PREFIX);
-  m_face.setInterestFilter(LOCALHOST_COMMAND_PREFIX,
-                           std::bind(&LsdbDatasetInterestHandler::onInterest, this, _2,
-                                     std::cref(LOCALHOST_COMMAND_PREFIX)));
+  dispatcher.addStatusDataset(ADJACENCIES_DATASET,
+    ndn::mgmt::makeAcceptAllAuthorization(),
+    std::bind(&LsdbDatasetInterestHandler::publishAdjStatus, this, _1, _2, _3));
+  dispatcher.addStatusDataset(COORDINATES_DATASET,
+    ndn::mgmt::makeAcceptAllAuthorization(),
+    std::bind(&LsdbDatasetInterestHandler::publishCoordinateStatus, this, _1, _2, _3));
+  dispatcher.addStatusDataset(NAMES_DATASET,
+    ndn::mgmt::makeAcceptAllAuthorization(),
+    std::bind(&LsdbDatasetInterestHandler::publishNameStatus, this, _1, _2, _3));
+  dispatcher.addStatusDataset(LISTS_DATASET,
+    ndn::mgmt::makeAcceptAllAuthorization(),
+    std::bind(&LsdbDatasetInterestHandler::publishAllStatus, this, _1, _2, _3));
 }
 
 void
-LsdbDatasetInterestHandler::startListeningOnRouterPrefix()
+LsdbDatasetInterestHandler::publishAdjStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                             ndn::mgmt::StatusDatasetContext& context)
 {
-  _LOG_DEBUG("Setting interest filter for: " << m_routerNameCommandPrefix);
-  m_face.setInterestFilter(m_routerNameCommandPrefix,
-                           std::bind(&LsdbDatasetInterestHandler::onInterest, this, _2,
-                                     std::cref(m_routerNameCommandPrefix)));
+  _LOG_DEBUG("Received interest:  " << interest);
+  for (AdjLsa lsa : m_adjacencyLsas) {
+    tlv::AdjacencyLsa tlvLsa;
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(lsa);
+    tlvLsa.setLsaInfo(*tlvLsaInfo);
+
+    for (const Adjacent& adj : lsa.getAdl().getAdjList()) {
+      tlv::Adjacency tlvAdj;
+      tlvAdj.setName(adj.getName());
+      tlvAdj.setUri(adj.getFaceUri().toString());
+      tlvAdj.setCost(adj.getLinkCost());
+      tlvLsa.addAdjacency(tlvAdj);
+    }
+    const ndn::Block& wire = tlvLsa.wireEncode();
+    context.append(wire);
+  }
+  context.end();
 }
 
 void
-LsdbDatasetInterestHandler::onInterest(const ndn::Interest& interest,
-                                       const ndn::Name& commandPrefix)
+LsdbDatasetInterestHandler::publishCoordinateStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                                    ndn::mgmt::StatusDatasetContext& context)
 {
-  if (!isValidCommandPrefix(interest, commandPrefix))
-  {
-    _LOG_DEBUG("Received malformed interest: " << interest.getName());
+  _LOG_DEBUG("Received interest:  " << interest);
+  for (const CoordinateLsa lsa : m_coordinateLsas) {
+    tlv::CoordinateLsa tlvLsa;
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(lsa);
+    tlvLsa.setLsaInfo(*tlvLsaInfo);
 
-    sendErrorResponse(interest.getName(), ERROR_CODE_MALFORMED_COMMAND, "Malformed command");
-    return;
+    tlvLsa.setHyperbolicRadius(lsa.getCorRadius());
+    tlvLsa.setHyperbolicAngle(lsa.getCorTheta());
+
+    const ndn::Block& wire = tlvLsa.wireEncode();
+    context.append(wire);
   }
-
-  ndn::Name::Component command = interest.getName().get(commandPrefix.size());
-  processCommand(interest, command);
-}
-
-bool
-LsdbDatasetInterestHandler::isValidCommandPrefix(const ndn::Interest& interest,
-                                                 const ndn::Name& commandPrefix)
-{
-  size_t commandSize = interest.getName().size();
-
-  return (commandSize == commandPrefix.size() + 1 && commandPrefix.isPrefixOf(interest.getName()));
+  context.end();
 }
 
 void
-LsdbDatasetInterestHandler::processCommand(const ndn::Interest& interest,
-                                           const ndn::Name::Component& command)
+LsdbDatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                              ndn::mgmt::StatusDatasetContext& context)
 {
-  _LOG_TRACE("Received interest with command: " << command);
+  _LOG_DEBUG("Received interest:  " << interest);
+  for (NameLsa lsa : m_nameLsas) {
+    tlv::NameLsa tlvLsa;
 
-  if (command.equals(AdjacencyLsaPublisher::DATASET_COMPONENT)) {
-    m_adjacencyLsaPublisher.publish(interest.getName());
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(lsa);
+    tlvLsa.setLsaInfo(*tlvLsaInfo);
+
+    for (const ndn::Name& name : lsa.getNpl().getNameList()) {
+      tlvLsa.addName(name);
+    }
+
+    const ndn::Block& wire = tlvLsa.wireEncode();
+    context.append(wire);
   }
-  else if (command.equals(CoordinateLsaPublisher::DATASET_COMPONENT)) {
-    m_coordinateLsaPublisher.publish(interest.getName());
-  }
-  else if (command.equals(NameLsaPublisher::DATASET_COMPONENT)) {
-    m_nameLsaPublisher.publish(interest.getName());
-  }
-  else if (command.equals(LsdbStatusPublisher::DATASET_COMPONENT)) {
-    m_lsdbStatusPublisher.publish(interest.getName());
-  }
-  else {
-    _LOG_DEBUG("Unsupported command: " << command);
-    sendErrorResponse(interest.getName(), ERROR_CODE_UNSUPPORTED_COMMAND, "Unsupported command");
-  }
+  context.end();
 }
 
 void
-LsdbDatasetInterestHandler::sendErrorResponse(const ndn::Name& name,
-                                              uint32_t code,
-                                              const std::string& error)
+LsdbDatasetInterestHandler::publishAllStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                             ndn::mgmt::StatusDatasetContext& context)
 {
-  ndn::nfd::ControlResponse response(code, error);
+  _LOG_DEBUG("Received interest:  " << interest);
+  tlv::LsdbStatus lsdbStatus;
+  for (const tlv::AdjacencyLsa& tlvLsa : m_adjacencyLsaPublisher.getTlvLsas()) {
+    lsdbStatus.addAdjacencyLsa(tlvLsa);
+  }
 
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(name);
-  data->setContent(response.wireEncode());
+  for (const tlv::CoordinateLsa& tlvLsa : m_coordinateLsaPublisher.getTlvLsas()) {
+    lsdbStatus.addCoordinateLsa(tlvLsa);
+  }
 
-  m_keyChain.sign(*data);
-  m_face.put(*data);
+  for (const tlv::NameLsa& tlvLsa : m_nameLsaPublisher.getTlvLsas()) {
+    lsdbStatus.addNameLsa(tlvLsa);
+  }
+  const ndn::Block& wire = lsdbStatus.wireEncode();
+  context.append(wire);
+  context.end();
 }
 
 } // namespace nlsr

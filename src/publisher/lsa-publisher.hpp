@@ -32,43 +32,12 @@
 
 namespace nlsr {
 
-template <class TlvType>
-class LsaPublisher : public SegmentPublisher<ndn::Face>
-{
-public:
-  LsaPublisher(ndn::Face& face, ndn::KeyChain& keyChain)
-  : SegmentPublisher<ndn::Face>(face, keyChain)
-  {
-  }
-
-  virtual
-  ~LsaPublisher()
-  {
-  }
-
-protected:
-  virtual size_t
-  generate(ndn::EncodingBuffer& outBuffer)
-  {
-    size_t totalLength = 0;
-
-    for (const TlvType& lsaTlv : getTlvLsas()) {
-      totalLength += lsaTlv.wireEncode(outBuffer);
-    }
-
-    return totalLength;
-  }
-
-  virtual std::list<TlvType>
-  getTlvLsas() = 0;
-};
-
   /*! \brief Class to publish adjacency lsa dataset
 
     \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
 
   */
-class AdjacencyLsaPublisher : public LsaPublisher<tlv::AdjacencyLsa>
+class AdjacencyLsaPublisher
 {
 public:
   AdjacencyLsaPublisher(Lsdb& lsdb,
@@ -89,7 +58,7 @@ private:
   /*! \brief Class to publish coordinate lsa dataset
     \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
   */
-class CoordinateLsaPublisher : public LsaPublisher<tlv::CoordinateLsa>
+class CoordinateLsaPublisher
 {
 public:
   CoordinateLsaPublisher(Lsdb& lsdb,
@@ -110,7 +79,7 @@ private:
   /*! \brief Class to publish name lsa dataset
     \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
   */
-class NameLsaPublisher : public LsaPublisher<tlv::NameLsa>
+class NameLsaPublisher
 {
 public:
   NameLsaPublisher(Lsdb& lsdb,

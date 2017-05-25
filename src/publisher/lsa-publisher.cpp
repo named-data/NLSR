@@ -33,8 +33,7 @@ const ndn::Name::Component AdjacencyLsaPublisher::DATASET_COMPONENT =
 AdjacencyLsaPublisher::AdjacencyLsaPublisher(Lsdb& lsdb,
                                              ndn::Face& face,
                                              ndn::KeyChain& keyChain)
-  : LsaPublisher(face, keyChain)
-  , m_adjacencyLsas(lsdb.getAdjLsdb())
+  : m_adjacencyLsas(lsdb.getAdjLsdb())
 {
 }
 
@@ -73,8 +72,7 @@ const ndn::Name::Component CoordinateLsaPublisher::DATASET_COMPONENT =
 CoordinateLsaPublisher::CoordinateLsaPublisher(Lsdb& lsdb,
                                                ndn::Face& face,
                                                ndn::KeyChain& keyChain)
-  : LsaPublisher(face, keyChain)
-  , m_coordinateLsas(lsdb.getCoordinateLsdb())
+  : m_coordinateLsas(lsdb.getCoordinateLsdb())
 {
 }
 
@@ -109,8 +107,7 @@ const ndn::Name::Component NameLsaPublisher::DATASET_COMPONENT =
 NameLsaPublisher::NameLsaPublisher(Lsdb& lsdb,
                                    ndn::Face& face,
                                    ndn::KeyChain& keyChain)
-  : LsaPublisher(face, keyChain)
-  , m_nameLsas(lsdb.getNameLsdb())
+  : m_nameLsas(lsdb.getNameLsdb())
 {
 }
 

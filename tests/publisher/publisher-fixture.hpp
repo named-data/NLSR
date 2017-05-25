@@ -22,12 +22,18 @@
 #ifndef NLSR_PUBLISHER_FIXTURE_HPP
 #define NLSR_PUBLISHER_FIXTURE_HPP
 
+#include "publisher/lsdb-dataset-interest-handler.hpp"
 #include "nlsr.hpp"
 
 #include "../boost-test.hpp"
 #include "../test-common.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+
+#include <boost/filesystem.hpp>
+
+using namespace ndn;
 
 namespace nlsr {
 namespace test {
@@ -36,10 +42,15 @@ class PublisherFixture : public BaseFixture
 {
 public:
   PublisherFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
-    , lsdb(nlsr, g_scheduler)
+    : face(g_ioService, keyChain, {true, true})
+    , nlsr(g_ioService, g_scheduler, face, g_keyChain)
+    , lsdb(nlsr.getLsdb())
   {
+    INIT_LOGGERS("/tmp/","TRACE");
+    nlsr.getConfParameter().setNetwork("/ndn");
+    nlsr.getConfParameter().setRouterName("/This/Router");
+    nlsr.initialize();
+    face.processEvents(ndn::time::milliseconds(10));
   }
 
   void
@@ -88,7 +99,6 @@ public:
   {
     CoordinateLsa lsa(origin, 1, ndn::time::system_clock::now(),
                       radius, angle);
-
     return lsa;
   }
 
@@ -137,10 +147,11 @@ public:
   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
-  Nlsr nlsr;
-  Lsdb lsdb;
+  ndn::util::DummyClientFace face;
   ndn::KeyChain keyChain;
+
+  Nlsr nlsr;
+  Lsdb& lsdb;
 };
 
 } // namespace test

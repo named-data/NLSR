@@ -20,6 +20,7 @@
  **/
 
 #include "publisher/lsdb-dataset-interest-handler.hpp"
+#include "tests/test-common.hpp"
 #include "tlv/tlv-nlsr.hpp"
 
 #include "publisher-fixture.hpp"
@@ -31,13 +32,13 @@ namespace nlsr {
 namespace test {
 
 void
-processDatasetInterest(std::shared_ptr<ndn::util::DummyClientFace> face,
+processDatasetInterest(ndn::util::DummyClientFace& face,
                        std::function<bool(const ndn::Block&)> isSameType)
 {
-  face->processEvents(ndn::time::milliseconds(1));
+  face.processEvents(ndn::time::milliseconds(30));
+  BOOST_REQUIRE_EQUAL(face.sentData.size(), 1);
 
-  BOOST_REQUIRE_EQUAL(face->sentData.size(), 1);
-  ndn::Block parser(face->sentData[0].getContent());
+  ndn::Block parser(face.sentData[0].getContent());
   parser.parse();
 
   ndn::Block::element_const_iterator it = parser.elements_begin();
@@ -46,23 +47,23 @@ processDatasetInterest(std::shared_ptr<ndn::util::DummyClientFace> face,
 
   BOOST_CHECK(it == parser.elements_end());
 
-  face->sentData.clear();
+  face.sentData.clear();
 }
 
 void
-checkErrorResponse(std::shared_ptr<ndn::util::DummyClientFace> face, uint64_t expectedCode)
+checkErrorResponse(ndn::util::DummyClientFace& face, uint64_t expectedCode)
 {
-  BOOST_REQUIRE_EQUAL(face->sentData.size(), 1);
+  BOOST_REQUIRE_EQUAL(face.sentData.size(), 1);
 
-  ndn::nfd::ControlResponse response(face->sentData[0].getContent().blockFromValue());
+  ndn::nfd::ControlResponse response(face.sentData[0].getContent().blockFromValue());
   BOOST_CHECK_EQUAL(response.getCode(), expectedCode);
 
-  face->sentData.clear();
+  face.sentData.clear();
 }
 
 BOOST_FIXTURE_TEST_SUITE(PublisherTestLsdbDatasetInterestHandler, PublisherFixture)
 
-BOOST_AUTO_TEST_CASE(Basic)
+BOOST_AUTO_TEST_CASE(Localhost)
 {
   // Install adjacency LSA
   AdjLsa adjLsa;
@@ -82,109 +83,61 @@ BOOST_AUTO_TEST_CASE(Basic)
   nameLsa.addName("/RouterA/name1");
   lsdb.installNameLsa(nameLsa);
 
-  ndn::Name thisRouter("/This/Router");
-  LsdbDatasetInterestHandler publisher(lsdb, *face, keyChain);
-  publisher.setRouterNameCommandPrefix(thisRouter);
-
-  publisher.startListeningOnLocalhost();
-
-  face->processEvents(ndn::time::milliseconds(10));
-
-  // Localhost prefix
-  ndn::Name localhostCommandPrefix = publisher.getLocalhostCommandPrefix();
-
   // Request adjacency LSAs
-  face->receive(ndn::Interest(ndn::Name(localhostCommandPrefix).append("adjacencies")));
+  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("adjacencies")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
 
   // Request coordinate LSAs
-  face->receive(ndn::Interest(ndn::Name(localhostCommandPrefix).append("coordinates")));
+  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("coordinates")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
 
   // Request Name LSAs
-  face->receive(ndn::Interest(ndn::Name(localhostCommandPrefix).append("names")));
+  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("names")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
 
   // Request LSDB Status
-  face->receive(ndn::Interest(ndn::Name(localhostCommandPrefix).append("list")));
-  processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::LsdbStatus; });
-
-  // Router name prefix
-  ndn::Name routerCommandPrefix = publisher.getLocalhostCommandPrefix();
-
-  // Request adjacency LSAs
-  face->receive(ndn::Interest(ndn::Name(routerCommandPrefix).append("adjacencies")));
-  processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
-
-  // Request coordinate LSAs
-  face->receive(ndn::Interest(ndn::Name(routerCommandPrefix).append("coordinates")));
-  processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
-
-  // Request Name LSAs
-  face->receive(ndn::Interest(ndn::Name(routerCommandPrefix).append("names")));
-  processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
-
-  // Request LSDB Status
-  face->receive(ndn::Interest(ndn::Name(routerCommandPrefix).append("list")));
+  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("list")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::LsdbStatus; });
 }
 
-BOOST_AUTO_TEST_CASE(InvalidCommand)
+
+BOOST_AUTO_TEST_CASE(Routername)
 {
-  ndn::Name thisRouter("/This/Router");
-  LsdbDatasetInterestHandler publisher(lsdb, *face, keyChain);
-  publisher.setRouterNameCommandPrefix(thisRouter);
+  //Install adjacencies LSA
+  AdjLsa adjLsa;
+  adjLsa.setOrigRouter("/RouterA");
+  addAdjacency(adjLsa, "/RouterA/adjacency1", "udp://face-1", 10);
+  lsdb.installAdjLsa(adjLsa);
 
-  // Localhost prefix
-  publisher.startListeningOnLocalhost();
-  face->processEvents(ndn::time::milliseconds(10));
+  std::vector<double> angles = {20.00, 30.00};
 
-  ndn::Name localhostCommandPrefix = publisher.getLocalhostCommandPrefix();
+  //Install coordinate LSA
+  CoordinateLsa coordinateLsa = createCoordinateLsa("/RouterA", 10.0, angles);
+  lsdb.installCoordinateLsa(coordinateLsa);
 
-  // Unsupported command
-  face->receive(ndn::Interest(ndn::Name(localhostCommandPrefix).append("unsupported")));
-  face->processEvents(ndn::time::milliseconds(1));
+  // Request adjacency LSAs
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("adjacencies")));
+  processDatasetInterest(face,
+    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
 
-  checkErrorResponse(face, LsdbDatasetInterestHandler::ERROR_CODE_UNSUPPORTED_COMMAND);
+  // Request coordinate LSAs
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("coordinates")));
+  processDatasetInterest(face,
+    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
 
-  // Long malformed command
-  face->receive(
-    ndn::Interest(ndn::Name(localhostCommandPrefix).append("extra").append("malformed")));
-  face->processEvents(ndn::time::milliseconds(1));
+  // Request Name LSAs
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("names")));
+  processDatasetInterest(face,
+    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
 
-  checkErrorResponse(face, LsdbDatasetInterestHandler::ERROR_CODE_MALFORMED_COMMAND);
-
-  // Router name prefix
-  publisher.startListeningOnRouterPrefix();
-  face->processEvents(ndn::time::milliseconds(10));
-
-  ndn::Name remoteCommandPrefix = publisher.getRouterNameCommandPrefix();
-
-  // Unsupported command
-  face->receive(ndn::Interest(ndn::Name(remoteCommandPrefix).append("unsupported")));
-  face->processEvents(ndn::time::milliseconds(1));
-
-  checkErrorResponse(face, LsdbDatasetInterestHandler::ERROR_CODE_UNSUPPORTED_COMMAND);
-
-  // Long malformed command
-  face->receive(ndn::Interest(ndn::Name(remoteCommandPrefix).append("extra").append("malformed")));
-  face->processEvents(ndn::time::milliseconds(1));
-
-  checkErrorResponse(face, LsdbDatasetInterestHandler::ERROR_CODE_MALFORMED_COMMAND);
-
-  // Short malformed command
-  face->receive(ndn::Interest(ndn::Name(thisRouter).append("malformed")));
-  face->processEvents(ndn::time::milliseconds(1));
-
-  BOOST_CHECK_EQUAL(face->sentData.size(), 0);
+  // Request LSDB Status
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("list")));
+  processDatasetInterest(face,
+    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::LsdbStatus; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

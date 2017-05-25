@@ -23,17 +23,21 @@
 #define NLSR_PUBLISHER_LSDB_DATASET_INTEREST_HANDLER_HPP
 
 #include "lsa-publisher.hpp"
-#include "lsdb-status-publisher.hpp"
 
+#include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/face.hpp>
+#include <boost/noncopyable.hpp>
+#include "tlv/adjacency-lsa.hpp"
+#include "tlv/coordinate-lsa.hpp"
+#include "tlv/name-lsa.hpp"
 
 namespace nlsr {
 
 /*!
    \brief Class to publish all lsa dataset
-   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+   \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
-class LsdbDatasetInterestHandler
+class LsdbDatasetInterestHandler : boost::noncopyable
 {
 public:
   class Error : std::runtime_error
@@ -47,14 +51,10 @@ public:
   };
 
   LsdbDatasetInterestHandler(Lsdb& lsdb,
+                             ndn::mgmt::Dispatcher& localHostDispatcher,
+                             ndn::mgmt::Dispatcher& routerNameDispatcher,
                              ndn::Face& face,
                              ndn::KeyChain& keyChain);
-
-  void
-  startListeningOnLocalhost();
-
-  void
-  startListeningOnRouterPrefix();
 
   const ndn::Name&
   getLocalhostCommandPrefix()
@@ -65,43 +65,59 @@ public:
   ndn::Name&
   getRouterNameCommandPrefix()
   {
-    return m_routerNameCommandPrefix;
+    return m_routerNamePrefix;
   }
 
   void
   setRouterNameCommandPrefix(const ndn::Name& routerName) {
-    m_routerNameCommandPrefix = routerName;
-    m_routerNameCommandPrefix.append(Lsdb::NAME_COMPONENT);
+    m_routerNamePrefix = routerName;
+    m_routerNamePrefix.append(Lsdb::NAME_COMPONENT);
   }
 
 private:
+  /*! \brief set dispatcher for localhost/router name.
+   */
   void
-  onInterest(const ndn::Interest& interest, const ndn::Name& commandPrefix);
+  setDispatcher(ndn::mgmt::Dispatcher& dispatcher);
 
-  bool
-  isValidCommandPrefix(const ndn::Interest& interest, const ndn::Name& commandPrefix);
-
+  /*! \brief provide adjacent status dataset
+   */
   void
-  processCommand(const ndn::Interest& interest, const ndn::Name::Component& command);
+  publishAdjStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                   ndn::mgmt::StatusDatasetContext& context);
 
+  /*! \brief provide coordinate status dataset
+   */
   void
-  sendErrorResponse(const ndn::Name& name, uint32_t code, const std::string& error);
+  publishCoordinateStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                          ndn::mgmt::StatusDatasetContext& context);
+
+  /*! \brief provide name status dataset
+   */
+  void
+  publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                    ndn::mgmt::StatusDatasetContext& context);
+
+  /*! \brief provide ladb status dataset
+   */
+  void
+  publishAllStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                   ndn::mgmt::StatusDatasetContext& context);
 
 private:
-  const ndn::Name LOCALHOST_COMMAND_PREFIX;
-  ndn::Name m_routerNameCommandPrefix;
+  static const ndn::Name LOCALHOST_COMMAND_PREFIX;
+  ndn::Name m_routerNamePrefix;
 
-  ndn::Face& m_face;
-  ndn::KeyChain& m_keyChain;
+  ndn::mgmt::Dispatcher& m_localhostDispatcher;
+  ndn::mgmt::Dispatcher& m_routerNameDispatcher;
 
   AdjacencyLsaPublisher m_adjacencyLsaPublisher;
   CoordinateLsaPublisher m_coordinateLsaPublisher;
   NameLsaPublisher m_nameLsaPublisher;
-  LsdbStatusPublisher m_lsdbStatusPublisher;
 
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  static const uint32_t ERROR_CODE_MALFORMED_COMMAND;
-  static const uint32_t ERROR_CODE_UNSUPPORTED_COMMAND;
+  const std::list<AdjLsa>& m_adjacencyLsas;
+  const std::list<CoordinateLsa>& m_coordinateLsas;
+  const std::list<NameLsa>& m_nameLsas;
 };
 
 } // namespace nlsr

@@ -287,7 +287,13 @@ public:
   ndn::mgmt::Dispatcher&
   getDispatcher()
   {
-    return m_dispatcher;
+    return m_localhostDispatcher;
+  }
+
+  ndn::mgmt::Dispatcher&
+  getDispatcherRouterName()
+  {
+    return m_routerNameDispatcher;
   }
 
   void
@@ -404,6 +410,9 @@ private:
   RoutingTable m_routingTable;
   Fib m_fib;
   NamePrefixTable m_namePrefixTable;
+  ndn::mgmt::Dispatcher m_localhostDispatcher;
+  ndn::mgmt::Dispatcher m_routerNameDispatcher;
+
   LsdbDatasetInterestHandler m_lsdbDatasetHandler;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
@@ -416,7 +425,6 @@ private:
   ndn::security::SigningInfo m_signingInfo;
   ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
-  ndn::mgmt::Dispatcher m_dispatcher;
   update::NfdRibCommandProcessor m_nfdRibCommandProcessor;
 
   ndn::nfd::FaceMonitor m_faceMonitor;

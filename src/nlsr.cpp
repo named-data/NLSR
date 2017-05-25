@@ -56,7 +56,11 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_routingTable(scheduler)
   , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, m_keyChain)
   , m_namePrefixTable(*this)
+  , m_localhostDispatcher(m_nlsrFace, m_keyChain)
+  , m_routerNameDispatcher(m_nlsrFace, m_keyChain)
   , m_lsdbDatasetHandler(m_nlsrLsdb,
+                         m_localhostDispatcher,
+                         m_routerNameDispatcher,
                          m_nlsrFace,
                          m_keyChain)
   , m_helloProtocol(*this, scheduler)
@@ -69,8 +73,7 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
                             m_keyChain,
                             m_certificateCache,
                             m_certStore)
-  , m_dispatcher(m_nlsrFace, m_keyChain, m_signingInfo)
-  , m_nfdRibCommandProcessor(m_dispatcher,
+  , m_nfdRibCommandProcessor(m_localhostDispatcher,
                              m_namePrefixList,
                              m_nlsrLsdb)
   , m_faceMonitor(m_nlsrFace)
@@ -93,23 +96,27 @@ Nlsr::onRegistrationSuccess(const ndn::Name& name)
   _LOG_DEBUG("Successfully registered prefix: " << name);
 
   if (name.equals(m_confParam.getRouterPrefix())) {
-    m_lsdbDatasetHandler.startListeningOnRouterPrefix();
+    // the top-level prefixes are added.
+    try {
+      m_routerNameDispatcher.addTopPrefix(m_confParam.getRouterPrefix(), false, m_signingInfo);
+    }
+    catch (const std::exception& e) {
+      _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
+    }
   }
 }
 
 void
 Nlsr::onLocalhostRegistrationSuccess(const ndn::Name& name)
 {
-  _LOG_DEBUG("Successfully registered prefix: " << name);
+  _LOG_DEBUG("Successfully registered local prefix: " << name);
 
   m_prefixUpdateProcessor.startListening();
-  m_lsdbDatasetHandler.startListeningOnLocalhost();
-  // Dispatcher prefix registrations
   m_nfdRibCommandProcessor.startListening();
   // All dispatcher-related sub-prefixes *must* be registered before
   // the top-level prefixes are added.
   try {
-    m_dispatcher.addTopPrefix(LOCALHOST_PREFIX, false, m_signingInfo);
+    m_localhostDispatcher.addTopPrefix(LOCALHOST_PREFIX, false, m_signingInfo);
   }
   catch (const std::exception& e) {
     _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
@@ -136,7 +143,7 @@ Nlsr::setLsaInterestFilter()
   ndn::Name name = m_confParam.getLsaPrefix();
   name.append(m_confParam.getSiteName());
   name.append(m_confParam.getRouterName());
-  _LOG_DEBUG("Setting interest filter for name: " << name);
+  _LOG_DEBUG("Setting interest filter for LsaPrefix: " << name);
   getNlsrFace().setInterestFilter(name,
                                   std::bind(&Lsdb::processInterest,
                                             &m_nlsrLsdb, _1, _2),
@@ -335,7 +342,6 @@ void
 Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
 {
   const ndn::Name& interestName = interest.getName();
-
   ndn::Name certName = interestName.getSubName(name.size());
 
   if (certName[-2].toUri() == "ID-CERT")
@@ -393,9 +399,6 @@ Nlsr::destroyFaces()
                       std::bind(&Nlsr::onDestroyFaceFailure, this, _1));
   }
 }
-
-
-
 
 void
 Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification)
