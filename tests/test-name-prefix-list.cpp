@@ -46,6 +46,25 @@ BOOST_AUTO_TEST_CASE(NplSizeAndRemove)
   BOOST_CHECK_EQUAL(npl1.getSize(), 1);
 }
 
+BOOST_AUTO_TEST_CASE(OperatorEquals)
+{
+  NamePrefixList list1;
+  NamePrefixList list2;
+  ndn::Name name1("/ndn/test/name1");
+  ndn::Name name2("/ndn/test/name2");
+  ndn::Name name3("/ndn/some/other/name1");
+
+  list1.insert(name1);
+  list1.insert(name2);
+  list1.insert(name3);
+
+  list2.insert(name1);
+  list2.insert(name2);
+  list2.insert(name3);
+
+  BOOST_CHECK_EQUAL(list1, list2);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test

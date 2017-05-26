@@ -208,6 +208,29 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   BOOST_CHECK_EQUAL(clsa1.getData(), clsa2.getData());
 }
 
+BOOST_AUTO_TEST_SUITE(TestNameLsa)
+
+BOOST_AUTO_TEST_CASE(OperatorEquals)
+{
+  NameLsa lsa1;
+  NameLsa lsa2;
+  ndn::Name name1("/ndn/test/name1");
+  ndn::Name name2("/ndn/test/name2");
+  ndn::Name name3("/ndn/some/other/name1");
+
+  lsa1.addName(name1);
+  lsa1.addName(name2);
+  lsa1.addName(name3);
+
+  lsa2.addName(name1);
+  lsa2.addName(name2);
+  lsa2.addName(name3);
+
+  BOOST_CHECK(lsa1.isEqualContent(lsa2));
+}
+
+BOOST_AUTO_TEST_SUITE_END() // TestNameLsa
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test

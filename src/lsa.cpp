@@ -112,6 +112,12 @@ NameLsa::initializeFromContent(const std::string& content)
   return true;
 }
 
+bool
+NameLsa::isEqualContent(const NameLsa& other) const
+{
+  return m_npl == other.getNpl();
+}
+
 void
 NameLsa::writeLog()
 {

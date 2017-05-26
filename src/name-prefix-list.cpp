@@ -77,6 +77,12 @@ NamePrefixList::remove(const ndn::Name& name)
   return false;
 }
 
+bool
+NamePrefixList::operator==(const NamePrefixList& other) const
+{
+  return m_nameList == other.getNameList();
+}
+
 void
 NamePrefixList::sort()
 {
@@ -93,6 +99,16 @@ NamePrefixList::writeLog()
     _LOG_DEBUG("Name " << i << " : " << (*it));
     i++;
   }
+}
+
+std::ostream&
+operator<<(std::ostream& os, const NamePrefixList& list) {
+  os << "Name prefix list: {\n";
+  for (const auto& name : list.getNameList()) {
+    os << name << "\n";
+  }
+  os << "}" << std::endl;
+  return os;
 }
 
 } // namespace nlsr

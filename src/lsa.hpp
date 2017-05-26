@@ -127,6 +127,12 @@ public:
     return m_npl;
   }
 
+  const NamePrefixList&
+  getNpl() const
+  {
+    return m_npl;
+  }
+
   void
   addName(const ndn::Name& name)
   {
@@ -165,6 +171,9 @@ public:
    */
   bool
   initializeFromContent(const std::string& content);
+
+  bool
+  isEqualContent(const NameLsa& other) const;
 
   void
   writeLog();
@@ -346,4 +355,4 @@ operator<<(std::ostream& os, const AdjLsa& adjLsa);
 
 } // namespace nlsr
 
-#endif //NLSR_LSA_HPP
+#endif // NLSR_LSA_HPP

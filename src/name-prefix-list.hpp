@@ -66,6 +66,15 @@ public:
     return m_nameList;
   }
 
+  const std::list<ndn::Name>&
+  getNameList() const
+  {
+    return m_nameList;
+  }
+
+  bool
+  operator==(const NamePrefixList& other) const;
+
   void
   writeLog();
 
@@ -74,6 +83,9 @@ private:
 
 };
 
+std::ostream&
+operator<<(std::ostream& os, const NamePrefixList& list);
+
 } // namespace nlsr
 
-#endif //NLSR_NAME_PREFIX_LIST_HPP
+#endif // NLSR_NAME_PREFIX_LIST_HPP
