@@ -17,17 +17,18 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
+
 #ifndef NLSR_NEXTHOP_LIST_HPP
 #define NLSR_NEXTHOP_LIST_HPP
+
+#include "nexthop.hpp"
+#include "adjacent.hpp"
 
 #include <set>
 #include <iostream>
 #include <boost/cstdint.hpp>
 
 #include <ndn-cxx/face.hpp>
-
-#include "nexthop.hpp"
-#include "adjacent.hpp"
 
 namespace nlsr {
 
@@ -144,4 +145,4 @@ operator<<(std::ostream& os, const NexthopList& nhl);
 
 } // namespace nlsr
 
-#endif //NLSR_NEXTHOP_LIST_HPP
+#endif // NLSR_NEXTHOP_LIST_HPP

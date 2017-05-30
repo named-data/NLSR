@@ -106,6 +106,17 @@ enum HyperbolicState {
   HYPERBOLIC_STATE_DEFAULT = 0
 };
 
+/*! \brief A class to house all the configuration parameters for NLSR.
+ *
+ * This class is conceptually a singleton (but not mechanically) which
+ * is just a collection of attributes that serve as a
+ * separation-of-data for NLSR's configuration variables. NLSR refers
+ * to an instance of this class for all its configuration
+ * parameters. This object is typically populated by a
+ * ConfFileProcessor reading a configuration file.
+ *
+ * \sa nlsr::ConfFileProcessor
+ */
 class ConfParameter
 {
 
@@ -441,6 +452,8 @@ public:
     return m_log4CxxConfPath;
   }
 
+  /*! \brief Dump the current state of all attributes to the log.
+   */
   void
   writeLog();
 

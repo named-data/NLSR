@@ -19,6 +19,18 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+/*! \file
+ * Define parameters for commands to manipulate advertised name prefixes
+ *
+ * These classes serve to define what parameters are required for
+ * Prefix Update commands. We assume these commands are secure because
+ * they are received on the localhost prefix. We require that a name
+ * be present to action upon, and also that our response have a
+ * name. Responses are only sent on failures.
+ *
+ * \sa PrefixUpdateProcessor
+ */
+
 #ifndef NLSR_UPDATE_PREFIX_UPDATE_COMMANDS_HPP
 #define NLSR_UPDATE_PREFIX_UPDATE_COMMANDS_HPP
 

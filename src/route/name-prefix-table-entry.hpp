@@ -56,6 +56,9 @@ public:
     return m_rteList;
   }
 
+  /*! \brief Resets the next hop lists of all routing table entries
+   * that advertise this name prefix.
+   */
   void
   resetRteListNextHop()
   {
@@ -78,24 +81,25 @@ public:
     return m_nexthopList;
   }
 
-  /*! \brief Generates a next-hop list from routing table entries. */
+  /*! \brief Collect all next-hops that are advertised by this entry's
+   * routing entries.
+   */
   void
   generateNhlfromRteList();
 
   /*! \brief Removes a routing entry from this NPT entry.
-    \param rtpePtr The routing entry
-    \return The remaining number of other NPTs using the removed routing entry.
-  */
+   * \return The number of NPTs using the just-removed routing entry.
+   */
   uint64_t
   removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry> rtpePtr);
 
   /*! \brief Adds a routing entry to this NPT entry.
-    \param rtpePtr The routing entry.
-
-    Adds a routing table pool entry to this NPT entry's list
-    (reminder: each RTPE has a next-hop list). They are used to
-    calculate this entry's overall next-hop list.
-  */
+   * \param rtpePtr The routing entry.
+   *
+   * Adds a routing table pool entry to this NPT entry's list
+   * (reminder: each RTPE has a next-hop list). They are used to
+   * calculate this entry's overall next-hop list.
+   */
   void
   addRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry> rtpePtr);
 

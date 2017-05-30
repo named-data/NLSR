@@ -39,7 +39,7 @@ namespace tlv {
                   Uri
                   Cost
 
-   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+   \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class Adjacency
 {
@@ -101,13 +101,31 @@ public:
     return *this;
   }
 
+  /*! \brief TLV-encode this object using the implementation in from TAG.
+   *
+   * This method TLV-encodes this Adjacency object using the
+   * implementation given by TAG. Usually two implementations are
+   * provided: a size estimator and a real encoder, which are used in
+   * sequence to allocate the necessary block size and then encode it.
+   * \sa Adjacency::wireEncode()
+   */
   template<ndn::encoding::Tag TAG>
   size_t
   wireEncode(ndn::EncodingImpl<TAG>& block) const;
 
+  /*! \brief Create a TLV encoding of this object.
+   *
+   * This function automates the process of guessing the necessary
+   * size of a block containing this object, and then creating a block
+   * and putting the TLV encoding into it.
+   * \sa Adjacency::wireEncode(ndn::EncodingImpl<TAG>&)
+   */
   const ndn::Block&
   wireEncode() const;
 
+  /*! \brief Populate this object by decoding the object contained in
+   * the given block.
+   */
   void
   wireDecode(const ndn::Block& wire);
 

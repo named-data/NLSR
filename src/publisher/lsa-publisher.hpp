@@ -44,7 +44,9 @@ public:
                         ndn::Face& face,
                         ndn::KeyChain& keyChain);
 
-  /*! \brief Returns the adj. LSAs represented by this object. */
+  /*! \brief Generates an TLV-format AdjacencyLsa from AdjacencyLsas
+   * and their Adjacents.
+   */
   std::list<tlv::AdjacencyLsa>
   getTlvLsas();
 
@@ -65,7 +67,9 @@ public:
                         ndn::Face& face,
                         ndn::KeyChain& keyChain);
 
-  /*! \brief Returns the cor. LSAs represented by this object. */
+  /*! \brief Generates a TLV-format CoordinateLsa from CoordinateLsas
+   * and their hyperbolic coordinates.
+   */
   std::list<tlv::CoordinateLsa>
   getTlvLsas();
 
@@ -85,7 +89,10 @@ public:
   NameLsaPublisher(Lsdb& lsdb,
                    ndn::Face& face,
                    ndn::KeyChain& keyChain);
-  /*! \brief Returns the name LSAs represented by this object. */
+
+  /*! \brief Generates a TLV-format NameLsa from NameLsas and their
+   * list of name prefixes.
+   */
   std::list<tlv::NameLsa>
   getTlvLsas();
 

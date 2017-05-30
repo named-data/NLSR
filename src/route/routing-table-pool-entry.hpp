@@ -17,19 +17,32 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author Nicholas Gordon <nmgordon@memphis.edu>
- *
  **/
 
 #ifndef NLSR_ROUTING_TABLE_POOL_ENTRY_HPP
 #define NLSR_ROUTING_TABLE_POOL_ENTRY_HPP
 
+#include "routing-table-entry.hpp"
+#include "nexthop-list.hpp"
+
 #include <iostream>
 #include <ndn-cxx/name.hpp>
-#include "nexthop-list.hpp"
-#include "routing-table-entry.hpp"
 
 namespace nlsr {
+
+/*! \brief A deduplication system for the NamePrefixTable
+ *
+ * The NamePrefixTable associates name prefixes to a router. To do
+ * this, it needs to know if certain routers are reachable. This in
+ * turn requires access to entries from the RoutingTable, which are
+ * associated with name prefixes. Doing this naively copies the entry
+ * from the RoutingTable each time, which is costly. This class
+ * provides a deduplication system where the NamePrefixTable can
+ * maintain a collection of RoutingTablePoolEntries. Then, this new
+ * class can be associated with the name prefixes instead of the
+ * original entries, which provides a minimal memory solution.
+ * \sa NamePrefixTable
+ */
 class RoutingTablePoolEntry : public RoutingTableEntry
 {
 public:

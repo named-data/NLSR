@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
+
 #include <string>
 #include <cmath>
 #include <boost/cstdint.hpp>
@@ -29,6 +30,11 @@
 
 namespace nlsr {
 
+/*! \brief A neighbor reachable over a Face.
+ *
+ * Represents another node that we expect to be running NLSR that we
+ * should be able to reach over a direct Face connection.
+ */
 class Adjacent
 {
 
@@ -120,6 +126,7 @@ public:
     return m_faceId;
   }
 
+  /*! \brief Equality is when name, Face URI, and link cost are all equal. */
   bool
   operator==(const Adjacent& adjacent) const;
 
@@ -148,11 +155,18 @@ public:
   static const float DEFAULT_LINK_COST;
 
 private:
+  /*! m_name The NLSR-configured router name of the neighbor */
   ndn::Name m_name;
+  /*! m_connectingFaceUri The NFD-level specification of the Face*/
   ndn::util::FaceUri m_faceUri;
+  /*! m_linkCost The semi-arbitrary cost to traverse the link. */
   double m_linkCost;
+  /*! m_status Whether the neighbor is active or not */
   Status m_status;
+  /*! m_interestTimedOutNo How many failed Hello interests we have sent since the last reply */
   uint32_t m_interestTimedOutNo;
+  /*! m_faceId The NFD-assigned ID for the neighbor, used to
+   * determine whether a Face is available */
   uint64_t m_faceId;
 };
 

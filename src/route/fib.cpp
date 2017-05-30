@@ -48,6 +48,7 @@ Fib::remove(const ndn::Name& name)
            (it->second).getNexthopList().getNextHops().begin();
          nhit != (it->second).getNexthopList().getNextHops().end(); nhit++) {
       //remove entry from NDN-FIB
+      // Only unregister the prefix if it ISN'T a neighbor.
       if (isPrefixUpdatable((it->second).getName())) {
         unregisterPrefix((it->second).getName(), nhit->getConnectingFaceUri());
       }

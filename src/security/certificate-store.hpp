@@ -31,6 +31,13 @@
 namespace nlsr {
 namespace security {
 
+/*! \brief Store certificates for names
+ *
+ * Stores certificates that this router claims to be authoritative
+ * for. That is, this stores only the certificates that we will reply
+ * to KEY interests with, e.g. when other routers are verifying data
+ * we have sent.
+ */
 class CertificateStore
 {
 public:

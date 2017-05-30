@@ -40,7 +40,9 @@
 #include "utility/name-helper.hpp"
 #include "stats-collector.hpp"
 
+#include <boost/cstdint.hpp>
 #include <stdexcept>
+#include <boost/throw_exception.hpp>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
@@ -52,9 +54,6 @@
 #include <ndn-cxx/mgmt/nfd/face-status.hpp>
 #include <ndn-cxx/data.hpp>
 #include <ndn-cxx/encoding/block.hpp>
-
-#include <boost/cstdint.hpp>
-#include <boost/throw_exception.hpp>
 
 namespace nlsr {
 
@@ -292,12 +291,24 @@ public:
     return m_validator;
   }
 
+  /*! \brief Add a certificate NLSR claims to be authoritative for to the certificate store.
+   *
+   * \sa CertificateStore
+   */
   void
   loadCertToPublish(std::shared_ptr<ndn::IdentityCertificate> certificate)
   {
     m_certStore.insert(certificate);
   }
 
+  /*! \brief Find a certificate
+   *
+   * Find a certificate that NLSR has. First it checks against the
+   * certificates this NLSR claims to be authoritative for, usually
+   * something like this specific router's certificate, and then
+   * checks the cache of certficates it has already fetched. If none
+   * can be found, it will return an empty pointer.
+   */
   std::shared_ptr<const ndn::IdentityCertificate>
   getCertificate(const ndn::Name& certificateNameWithoutVersion)
   {
@@ -399,18 +410,28 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
 private:
+  /*! \brief Registers the prefix that NLSR will use for key/certificate interests.
+   */
   void
   registerKeyPrefix();
 
+  /*! \brief Registers the prefix that NLSR will consider to be the machine-local, secure prefix.
+   */
   void
   registerLocalhostPrefix();
 
+  /*! \brief Attempts to satisfy an Interest for a certificate, and send it back.
+   */
   void
   onKeyInterest(const ndn::Name& name, const ndn::Interest& interest);
 
+  /*! \brief Do nothing.
+   */
   void
   onKeyPrefixRegSuccess(const ndn::Name& name);
 
+  /*! \brief Do nothing.
+   */
   void
   onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification);
 
@@ -463,7 +484,13 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   HelloProtocol m_helloProtocol;
 
 private:
+  /*! \brief Where NLSR caches certificates it has fetched to validate
+   * Data signatures.
+   */
   std::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
+  /*! \brief Where NLSR stores certificates it claims to be
+   * authoritative for. Usually the router certificate.
+   */
   security::CertificateStore m_certStore;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:

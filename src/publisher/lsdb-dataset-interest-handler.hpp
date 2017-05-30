@@ -69,7 +69,8 @@ public:
   }
 
 private:
-  /*! \brief set dispatcher for localhost/router name.
+  /*! \brief Capture-point for Interests to verify Interests are
+   * valid, and then process them.
    */
   void
   setDispatcher(ndn::mgmt::Dispatcher& dispatcher);

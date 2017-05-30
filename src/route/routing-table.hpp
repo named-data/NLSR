@@ -23,14 +23,14 @@
 #ifndef NLSR_ROUTING_TABLE_HPP
 #define NLSR_ROUTING_TABLE_HPP
 
+#include "conf-parameter.hpp"
+#include "routing-table-entry.hpp"
+
 #include <iostream>
 #include <utility>
 #include <string>
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
-
-#include "conf-parameter.hpp"
-#include "routing-table-entry.hpp"
 
 namespace nlsr {
 
@@ -48,33 +48,34 @@ public:
   }
 
   /*! \brief Calculates a list of next hops for each router in the network.
-    \param pnlsr The NLSR object that contains the LSAs needed for adj. info.
-
-    Calculates the list of next hops to every other router in the network.
-  */
+   * \param pnlsr The NLSR object that contains the LSAs needed for adj. info.
+   *
+   * Calculates the list of next hops to every other router in the network.
+   */
   void
   calculate(Nlsr& pnlsr);
 
   /*! \brief Adds a next hop to a routing table entry.
-    \param destRouter The destination router whose RTE we want to modify.
-    \param nh The next hop to add to the RTE.
-  */
+   * \param destRouter The destination router whose RTE we want to modify.
+   * \param nh The next hop to add to the RTE.
+   */
   void
   addNextHop(const ndn::Name& destRouter, NextHop& nh);
 
   /*! \brief Adds a next hop to a routing table entry in a dry run scenario.
-    \param destRouter The destination router whose RTE we want to modify.
-    \param nh The next hop to add to the router.
-  */
+   * \param destRouter The destination router whose RTE we want to modify.
+   * \param nh The next hop to add to the router.
+   */
   void
   addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh);
 
   RoutingTableEntry*
   findRoutingTableEntry(const ndn::Name& destRouter);
 
-  /*! \brief Schedules a calculation event in the event scheduler.
-    \param pnlsr The NLSR whose scheduling status is needed.
-  */
+  /*! \brief Schedules a calculation event in the event scheduler only
+   * if one isn't already scheduled.
+   * \param pnlsr The NLSR whose scheduling status is needed.
+   */
   void
   scheduleRoutingTableCalculation(Nlsr& pnlsr);
 
@@ -131,4 +132,4 @@ private:
 
 } // namespace nlsr
 
-#endif //NLSR_ROUTING_TABLE_HPP
+#endif // NLSR_ROUTING_TABLE_HPP

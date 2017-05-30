@@ -22,6 +22,8 @@
 #ifndef NLSR_SYNC_LOGIC_HANDLER_HPP
 #define NLSR_SYNC_LOGIC_HANDLER_HPP
 
+#include "test-access-control.hpp"
+
 #include <ndn-cxx/face.hpp>
 #include <ChronoSync/socket.hpp>
 
@@ -30,8 +32,6 @@
 #include <boost/cstdint.hpp>
 #include <boost/throw_exception.hpp>
 
-#include "test-access-control.hpp"
-
 class InterestManager;
 
 namespace nlsr {
@@ -39,6 +39,14 @@ namespace nlsr {
 class ConfParameter;
 class Lsdb;
 
+/*! \brief NLSR-to-ChronoSync interaction point
+ *
+ * This class serves as the abstraction for the syncing portion of
+ * NLSR and its components. NLSR has no particular reliance on
+ * ChronoSync, except that the NLSR source would need to be modified
+ * for use with other sync protocols.
+ *
+ */
 class SyncLogicHandler
 {
 public:
@@ -54,45 +62,77 @@ public:
 
   SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf);
 
-  /*! \brief Receive and parse update from Sync
-
-    Parses the router name the update came from and passes it to processUpdateFromSync
-
-    \param v The information that Sync has acquired.
+  /*! \brief Hook function to call whenever sync detects new data.
+   *
+   * This function packages the sync information into discrete updates
+   * and passes those off to another function, processUpdateFromSync.
+   * \sa processUpdateFromSync
+   *
+   * \param v A container with the new information sync has received
    */
   void
   onChronoSyncUpdate(const std::vector<chronosync::MissingDataInfo>& v);
 
-  /*! \brief Wrapper function to call publishSyncUpdate with correct LSA type
-
-    \param type The LSA type constant
-    \param seqNo The latest seqNo known to lsdb
+  /*! \brief Instruct ChronoSync to publish an update.
+   *
+   * This function instructs sync to push an update into the network,
+   * based on whatever the state of the sequencing manager is when
+   * this is called. Since each ChronoSync instance maintains its own
+   * PIT, doing this satisfies those interests so that other routers
+   * know a sync update is available.
+   * \sa publishSyncUpdate
    */
   void
   publishRoutingUpdate(const ndn::Name& type, const uint64_t& seqNo);
 
-  /*! \brief Creates ChronoSync socket and register additional sync nodes (user prefixes)
-
-    \param syncPrefix /localhop/NLSR/sync
+  /*! \brief Create and configure a socket to enable ChronoSync for this NLSR.
+   *
+   * In a typical situation this only needs to be called once, when NLSR starts.
+   * \param syncPrefix The sync prefix you want this ChronoSync to use
+   * \sa Nlsr::initialize
    */
   void
   createSyncSocket(const ndn::Name& syncPrefix);
 
 private:
+  /*! \brief Simple function to glue Name components together
+   */
   void
   buildUpdatePrefix();
 
+  /*! \brief Determine which kind of LSA was updated and fetch it.
+   *
+   * Checks that the received update is not from us, which can happen,
+   * and then inspects the update to determine which kind of LSA the
+   * update is for. Finally, it expresses interest for the correct LSA
+   * type.
+   * \throws SyncUpdate::Error If the sync update doesn't look like a sync LSA update.
+   */
   void
   processUpdateFromSync(const ndn::Name& originRouter,
                         const ndn::Name& updateName, const uint64_t& seqNo);
 
+  /*! \brief Consults the LSDB to determine if a sync update has a new LSA.
+   *
+   * Given some information about an LSA, consult the LSDB to
+   * determine if the sequence number represents a new LSA from the
+   * origin router.
+   */
   bool
   isLsaNew(const ndn::Name& originRouter, const std::string& lsaType,
            const uint64_t& seqNo);
 
+  /*! \brief Fetch an LSA of a certain type, with a certain sequence number.
+   */
   void
   expressInterestForLsa(const ndn::Name& updateName, const uint64_t& seqNo);
 
+  /*! \brief Instruct ChronoSync, via the sync socket, to publish an update.
+   *
+   * Each ChronoSync instance maintains its own PIT for sync
+   * updates. This function creates a data that satisfies that update,
+   * so that the interested routers will know new data is available.
+   */
   void
   publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo);
 
@@ -103,7 +143,7 @@ private:
 
 private:
   Lsdb& m_lsdb;
-  ConfParameter& m_confParam;
+  const ConfParameter& m_confParam;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Name m_nameLsaUserPrefix;

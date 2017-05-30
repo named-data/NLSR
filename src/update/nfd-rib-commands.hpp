@@ -19,6 +19,21 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+/*! \file
+ * Define parameters for NFD RIB commands
+ *
+ * When validating an NFD RIB command, NLSR is only concerned with the
+ * name in the command. However, a request is rejected if it has
+ * unsolicited fields, so the origin, which is set by NFD's RIB, must
+ * be considered optional. We consider these to be secure because they
+ * are currently only received over the localhost prefix. These serve
+ * to support NFD RIB to NLSR route readvertising.
+ *
+ * \sa NfdRibCommandProcessor
+ * \sa nlsr::Nlsr::LOCALHOST_PREFIX
+ * \sa nlsr::Nlsr::getDispatcher
+ */
+
 #ifndef UPDATE_NFD_RIB_COMMANDS_HPP
 #define UPDATE_NFD_RIB_COMMANDS_HPP
 

@@ -42,7 +42,7 @@ namespace tlv {
                 LsaInfo
                 Name+
 
-   \sa http://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+   \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class NameLsa
 {
@@ -108,13 +108,33 @@ public:
     return *this;
   }
 
+  /*! \brief Encodes the Name objects and some info using the method in TAG.
+   *
+   * This function will TLV-format the Name objects and some LSA
+   * info using the implementation speciifed by TAG. Usually this is
+   * called with an estimator first to guess how long the buffer needs
+   * to be, then with an encoder to do the real work. This process is
+   * automated by the other wireEncode.
+   * \sa NameLsa::wireEncode()
+   */
   template<ndn::encoding::Tag TAG>
   size_t
   wireEncode(ndn::EncodingImpl<TAG>& block) const;
 
+  /*! \brief Create a TLV encoding of this object.
+   *
+   * Create a block containing the TLV encoding of this object. That
+   * involves two steps: estimating the size that the information will
+   * take up, and then creating a buffer of that size and encoding the
+   * information into it. Both steps are accomplished by
+   * NameLsa::wireEncode(ndn::EncodingImpl<TAG>&)
+   */
   const ndn::Block&
   wireEncode() const;
 
+  /*! \brief Populate this object by decoding the one contained in the
+   * given block.
+   */
   void
   wireDecode(const ndn::Block& wire);
 

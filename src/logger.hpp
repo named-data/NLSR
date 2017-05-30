@@ -16,10 +16,16 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
+/*! \file logger.hpp
+ * \brief Define macros and auxiliary functions for logging.
+ *
+ * This file defines the macros that NLSR uses for logging
+ * messages. An intrepid hacker could replace this system cleanly by
+ * providing a system that redefines all of the _LOG_* macros with an
+ * arbitrary system, as long as the underlying system accepts strings.
+ */
 
 #ifndef NLSR_LOGGER_HPP
 #define NLSR_LOGGER_HPP

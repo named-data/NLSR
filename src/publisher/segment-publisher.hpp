@@ -52,6 +52,8 @@ public:
   {
   }
 
+  /*! \brief Define the max segment size as half the max NDN packet size.
+   */
   static size_t
   getMaxSegmentSize()
   {
@@ -65,7 +67,12 @@ public:
     return ndn::time::milliseconds(1000);
   }
 
-  /*! \brief Publish data under provided prefix
+  /*! \brief Publish data under the provided prefix
+   *
+   * Processes whatever is provided from SegmentPublisher::generate,
+   * by breaking it into segments of MAX_SEGMENT_SIZE and sending each
+   * one individually. The last segment is distinguished by having the
+   * final block ID set to a timestamp.
    */
   void
   publish(const ndn::Name& prefix,
@@ -112,6 +119,8 @@ protected:
   generate(ndn::EncodingBuffer& outBuffer) = 0;
 
 private:
+  /*! \brief Helper function to sign and put data on a Face.
+   */
   void
   publishSegment(std::shared_ptr<ndn::Data>& data, const ndn::security::SigningInfo& signingInfo)
   {

@@ -24,11 +24,15 @@
 
 #include <ndn-cxx/encoding/tlv.hpp>
 
-namespace ndn  {
-namespace tlv  {
+namespace ndn {
+namespace tlv {
 namespace nlsr {
 
-// LSDB DataSet
+/*! The TLV block types that NLSR uses to encode/decode LSA types. The
+ *  way NLSR encodes LSAs to TLV is by encoding each element of the
+ *  LSA as a separate TLV block. So, block types are needed. These are
+ *  used in the LSDB Status Dataset.
+ */
 enum {
   LsaInfo          = 128,
   OriginRouter     = 129,

@@ -55,6 +55,18 @@ public:
                         ndn::KeyChain& keyChain,
                         std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
                         security::CertificateStore& certStore);
+
+  /*! \brief Load the validator's configuration from a section of a
+   * configuration file.
+   * \sa ConfFileProcessor::processConfFile
+   * \sa ConfFileProcessor::processConfSectionSecurity
+   *
+   * Loads the state of the validator for prefix update commands by
+   * reading a section from a configuration file. This function is
+   * expecting the section to be from a Boost property tree object.
+   *
+   * \throws PrefixUpdateProcessor::Error If configuration fails to load successfully
+   */
   void
   loadValidator(ConfigSection section, const std::string& filename);
 

@@ -17,14 +17,14 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
+
+#include "adjacent.hpp"
+#include "logger.hpp"
+
 #include <iostream>
 #include <string>
 #include <cmath>
 #include <limits>
-
-
-#include "adjacent.hpp"
-#include "logger.hpp"
 
 namespace nlsr {
 

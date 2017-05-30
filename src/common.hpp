@@ -19,6 +19,11 @@
  *
  **/
 
+/*! \file
+ * Shared include file to provide a single point-of-entry, and
+ * hopefully improve compile times.
+ */
+
 #ifndef NLSR_COMMON_HPP
 #define NLSR_COMMON_HPP
 

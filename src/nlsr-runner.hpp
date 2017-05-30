@@ -32,6 +32,15 @@
 
 namespace nlsr {
 
+/*! \brief A wrapper class to instantiate and configure an NLSR object.
+ *
+ * As its name suggests, this class is responsible for running
+ * NLSR. It creates an nlsr::ConfFileProcessor to read a configuration
+ * file and uses that to configure and then start an NLSR process. It
+ * also initializes loggers and optionally daemonizes the NLSR
+ * process. This class only exists to provide this functionality, and
+ * there is no special reliance of NLSR on this class.
+ */
 class NlsrRunner
 {
 public:
@@ -47,6 +56,18 @@ public:
 
   NlsrRunner(std::string& configFileName, bool isDaemonProcess);
 
+  /*! \brief Instantiate, configure, and start the NLSR process.
+   *
+   * Each NlsrRunner is uniquely paired to the Face it's instantiated
+   * with. This is *not* a factory-type class, but a one-to-one
+   * relationship. If one wants to create multiple NLSR classes,
+   * multiple NLSR runners need to be created, too.
+   *
+   * \throws Error If the configuration file cannot be processed. NLSR
+   * is not started.
+   *
+   * \sa Nlsr::canonizeNeighborUris
+   */
   void
   run();
 

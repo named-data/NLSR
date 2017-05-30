@@ -103,13 +103,33 @@ public:
     return *this;
   }
 
+  /*! \brief Encodes the hyperbolic coordinates and some info using the method in TAG.
+   *
+   * This function will TLV-format the hyperbolic coordinates objects and some LSA
+   * info using the implementation speciifed by TAG. Usually this is
+   * called with an estimator first to guess how long the buffer needs
+   * to be, then with an encoder to do the real work. This process is
+   * automated by the other wireEncode.
+   * \sa CoordinateLsa::wireEncode()
+   */
   template<ndn::encoding::Tag TAG>
   size_t
   wireEncode(ndn::EncodingImpl<TAG>& block) const;
 
+  /*! \brief Create a TLV encoding of this object.
+   *
+   * Create a block containing the TLV encoding of this object. That
+   * involves two steps: estimating the size that the information will
+   * take up, and then creating a buffer of that size and encoding the
+   * information into it. Both steps are accomplished by
+   * CoordinateLsa::wireEncode(ndn::EncodingImpl<TAG>&)
+   */
   const ndn::Block&
   wireEncode() const;
 
+  /*! \brief Populate this object by decoding the one contained in the
+   * given block.
+   */
   void
   wireDecode(const ndn::Block& wire);
 

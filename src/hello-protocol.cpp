@@ -16,8 +16,8 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
  **/
+#include "hello-protocol.hpp"
 
 #include "hello-protocol.hpp"
 #include "nlsr.hpp"
@@ -150,7 +150,7 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
     m_nlsr.getAdjacencyList().getTimedOutInterestCount(neighbor);
   _LOG_DEBUG("Status: " << status);
   _LOG_DEBUG("Info Interest Timed out: " << infoIntTimedOutCount);
-  if ((infoIntTimedOutCount < m_nlsr.getConfParameter().getInterestRetryNumber())) {
+  if (infoIntTimedOutCount < m_nlsr.getConfParameter().getInterestRetryNumber()) {
     // interest name: /<neighbor>/NLSR/INFO/<router>
     ndn::Name interestName(neighbor);
     interestName.append(NLSR_COMPONENT);
@@ -188,11 +188,6 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
                                            this, _1, _2));
 }
 
-  // A validator is called on the incoming data, and if the data
-  // passes the validator's description/definitions, this function is
-  // called. Set the neighbor's status to active and refresh its
-  // LSA. If there was a change in status, we schedule an adjacency
-  // LSA build.
 void
 HelloProtocol::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
 {
@@ -223,8 +218,6 @@ HelloProtocol::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
   hpIncrementSignal(Statistics::PacketType::RCV_HELLO_DATA);
 }
 
-  // Simply logs a debug message that the content could not be
-  // validated (and is implicitly being discarded as a result).
 void
 HelloProtocol::onContentValidationFailed(const std::shared_ptr<const ndn::Data>& data,
                                          const std::string& msg)

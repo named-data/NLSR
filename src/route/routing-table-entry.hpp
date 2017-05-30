@@ -17,15 +17,15 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #ifndef NLSR_ROUTING_TABLE_ENTRY_HPP
 #define NLSR_ROUTING_TABLE_ENTRY_HPP
 
+#include "nexthop-list.hpp"
+
 #include <iostream>
 #include <ndn-cxx/name.hpp>
-#include "nexthop-list.hpp"
 
 namespace nlsr {
 

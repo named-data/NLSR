@@ -21,14 +21,27 @@
 #ifndef NLSR_CONF_FILE_PROCESSOR_HPP
 #define NLSR_CONF_FILE_PROCESSOR_HPP
 
+#include "nlsr.hpp"
+
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/cstdint.hpp>
 
-#include "nlsr.hpp"
-
 namespace nlsr {
 
+/*! \brief A class containing methods to parse an NLSR configuration file
+ *
+ * This class contains methods to parse an NLSR configuration file and
+ * set all the parameters in NLSR to the received values. There are
+ * defaults for any unconfigured settings.
+ *
+ * This is currently called by the wrapper class NlsrRunner to
+ * populate the NLSR object with its configuration before NLSR is
+ * started.
+ *
+ * \sa nlsr::ConfParameter
+ * \sa NlsrRunner::run
+ */
 class ConfFileProcessor
 {
 public:
@@ -38,38 +51,80 @@ public:
   {
   }
 
+  /*! \brief Load and parse the configuration file, then populate NLSR.
+   *
+   * Entry-point function that chains all the necessary steps together
+   * to configure an NLSR object.
+   *
+   * \return A boolean for whether configuration was successful.
+   */
   bool
   processConfFile();
 
 private:
   typedef boost::property_tree::ptree ConfigSection;
 
+  /*! \brief Parse the configuration file into a tree and process the nodes.
+   *
+   * Reads the configuration file as a property tree, and then iterates
+   * over them, attempting to parse each node. The nodes themselves
+   * are passed to another function that determines what kind of
+   * section it is and handles it appropriately. On any error in
+   * reading the file, return false.
+   *
+   * \return Whether configuration was successful.
+   */
   bool
   load(std::istream& input);
 
+  /*! \brief A dispatcher-like function to send configuration tree nodes to the right subfunction.
+   */
   bool
   processSection(const std::string& sectionName, const ConfigSection& section);
 
+  /*! \brief Parse general options, including router name, logging directory, LSA refresh.
+   */
   bool
   processConfSectionGeneral(const ConfigSection& section);
 
+  /*! \brief Configure options relating to neighbor configuration and detection.
+   *
+   * Parse options that control NLSR's behavior about neighbors. Such
+   * things include how many hello interests are sent and what their
+   * timeout is, as well as parsing neighbor specifications. Neighbor
+   * Face URIs are parsed and confirmed as valid here by ndn-cxx.
+   */
   bool
   processConfSectionNeighbors(const ConfigSection& section);
 
+  /*! \brief Set the state of hyperbolic routing: off, on, dry-run.
+   */
   bool
   processConfSectionHyperbolic(const ConfigSection& section);
 
+  /*! \brief Set options for the FIB: nexthops per prefix, routing calculation interval.
+   */
   bool
   processConfSectionFib(const ConfigSection& section);
 
+  /*! \brief Set prefixes that NLSR is supposed to advertise immediately.
+   */
   bool
   processConfSectionAdvertising(const ConfigSection& section);
 
+  /*! \brief Parse and set rules for the validator.
+   *
+   * This section parses and sets rules for the validators, which
+   * control what criteria Interest and Data need to follow to be
+   * considered valid by this NLSR.
+   */
   bool
   processConfSectionSecurity(const ConfigSection& section);
 
 private:
+  /*! m_confFileName The full path of the configuration file to parse. */
   std::string m_confFileName;
+  /*! m_nlsr The NLSR object to configure upon successful parsing. */
   Nlsr& m_nlsr;
 };
 

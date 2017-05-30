@@ -22,14 +22,14 @@
 #ifndef NLSR_TLV_LSA_INFO_HPP
 #define NLSR_TLV_LSA_INFO_HPP
 
+#include "lsa.hpp"
+
 #include <ndn-cxx/util/time.hpp>
 #include <ndn-cxx/encoding/block.hpp>
 #include <ndn-cxx/encoding/encoding-buffer.hpp>
 #include <ndn-cxx/encoding/tlv.hpp>
 #include <ndn-cxx/name.hpp>
 #include <boost/throw_exception.hpp>
-
-#include "lsa.hpp"
 
 namespace nlsr {
 namespace tlv {
@@ -115,13 +115,33 @@ public:
     return m_hasInfiniteExpirationPeriod;
   }
 
+  /*! \brief Encodes LSA info using the method in TAG.
+   *
+   * This function will TLV-format LSA info using the implementation
+   * speciifed by TAG. Usually this is called with an estimator first
+   * to guess how long the buffer needs to be, then with an encoder to
+   * do the real work. This process is automated by the other
+   * wireEncode.
+   * \sa LsaInfo::wireEncode()
+   */
   template<ndn::encoding::Tag TAG>
   size_t
   wireEncode(ndn::EncodingImpl<TAG>& block) const;
 
+  /*! \brief Create a TLV encoding of this object.
+   *
+   * Create a block containing the TLV encoding of this object. That
+   * involves two steps: estimating the size that the information will
+   * take up, and then creating a buffer of that size and encoding the
+   * information into it. Both steps are accomplished by
+   * LsaInfo::wireEncode(ndn::EncodingImpl<TAG>&)
+   */
   const ndn::Block&
   wireEncode() const;
 
+  /*! \brief Populate this object by decoding the one contained in the
+   * given block.
+   */
   void
   wireDecode(const ndn::Block& wire);
 

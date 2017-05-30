@@ -19,8 +19,8 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "conf-parameter.hpp"
 #include "conf-file-processor.hpp"
+#include "conf-parameter.hpp"
 #include "adjacent.hpp"
 #include "utility/name-helper.hpp"
 #include "update/prefix-update-processor.hpp"
