@@ -26,6 +26,8 @@
 
 #include <map>
 #include <cmath>
+#include <algorithm>
+#include <iterator>
 
 namespace nlsr {
 
@@ -77,43 +79,6 @@ Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
                      it->getRouteCostAsAdjustedInteger(),
                      ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
                      ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
-    }
-  }
-}
-
-void
-Fib::removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, const NexthopList& installedHops)
-{
-  _LOG_DEBUG("Fib::removeOldNextHopsFromFibEntryAndNfd Called");
-
-  const ndn::Name& name = entry.getName();
-  NexthopList& entryHopList = entry.getNexthopList();
-
-  for (NexthopList::iterator it = entryHopList.begin(); it != entryHopList.end();) {
-
-    const std::string& faceUri = it->getConnectingFaceUri();
-
-    // See if the nexthop is installed in NFD's FIB
-    NexthopList::const_iterator foundIt = std::find_if(installedHops.cbegin(),
-                                                       installedHops.cend(),
-                                                       std::bind(&compareFaceUri, _1, faceUri));
-
-    // The next hop is not installed
-    if (foundIt == installedHops.cend()) {
-
-      if (isPrefixUpdatable(name)) {
-        // Remove the nexthop from NDN's FIB
-        unregisterPrefix(name, it->getConnectingFaceUri());
-      }
-
-      // Remove the next hop from the FIB entry
-      _LOG_DEBUG("Removing " << it->getConnectingFaceUri() << " from " << name);
-      // Since the iterator will be invalidated on removal, dereference the original
-      // and increment the copy
-      entryHopList.removeNextHop(*(it++));
-    }
-    else {
-      ++it;
     }
   }
 }
@@ -176,7 +141,20 @@ Fib::processUpdate(const ndn::Name& name, NexthopList& allHops)
     FibEntry& entry = (entryIt->second);
     addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
 
-    removeOldNextHopsFromFibEntryAndNfd(entry, hopsToAdd);
+    std::set<NextHop, NextHopComparator> hopsToRemove;
+    std::set_difference(entry.getNexthopList().begin(), entry.getNexthopList().end(),
+                        hopsToAdd.begin(), hopsToAdd.end(),
+                        std::inserter(hopsToRemove, hopsToRemove.end()), NextHopComparator());
+
+    bool isUpdatable = isPrefixUpdatable(entry.getName());
+    // Remove the uninstalled next hops from NFD and FIB entry
+    for (const auto& hop: hopsToRemove){
+      if (isUpdatable) {
+        unregisterPrefix(entry.getName(), hop.getConnectingFaceUri());
+      }
+      _LOG_DEBUG("Removing " << hop.getConnectingFaceUri() << " from " << entry.getName());
+      entry.getNexthopList().removeNextHop(hop);
+    }
 
     // Increment sequence number
     entry.setSeqNo(entry.getSeqNo() + 1);

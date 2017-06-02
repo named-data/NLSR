@@ -109,9 +109,6 @@ private:
   void
   addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd);
 
-  void
-  removeOldNextHopsFromFibEntryAndNfd(FibEntry& entry, const NexthopList& installedHops);
-
   unsigned int
   getNumberOfFacesForName(NexthopList& nextHopList);
 
