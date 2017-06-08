@@ -2,18 +2,23 @@
 \label{sec:sync-logic}
 
 The Sync Logic Handler acts as the interface between the synchronization protocol and the NLSR application.
-The Sync Logic Handler receives notifications from the synchronization protocol when an sync update is detected, and the Sync Logic Handler then determines if the updated LSA should be retrieved.
-The Sync Logic Handler also notifies the synchronization protocol when the router's LSAs are modified or refreshed, so the synchronization protocol can update its internal digest and synchronize the updated information.
+The Sync Logic Handler receives notifications from the synchronization protocol when another router updates an LSA, where an update can be modification of the contents of the LSA, or just incrementing the sequence number to refresh it. The  Sync Logic Handler then determines if the updated LSA should be retrieved. The Sync Logic Handler is also how NLSR notifies the sync protocol when its own LSAs are updated.
 
 \subsection{On Sync Update}
-When the synchronization protocol receives a sync update, the updated names and sequence numbers will be passed to \texttt{SyncLogicHandler::onNsyncUpdate()}.
-The Sync Logic Handler will process each updated name individually first by verifying that the update is not for one of the router's own LSAs.
-The Sync Logic Handler will then check the updated sequence number to see which LSAs were updated.
-If the sequence number for the LS in the update is greater than the sequence number of the existing LSA in the LSDB or there is no LSA for the updated Name,
-the Sync Logic Handler will use the \texttt{Lsdb::expressInterest()} interface to retrieve the LSA. The module will not try to retrive Coordinate LSA if link-state routing is on, or Adjacency LSA is hyperbolic routing is on.
-The logic used to express an LSA Interest and handle an LSA Data response is handled by the LSDB module (Section~\ref{sec:lsdb}).
+When the sync protocol receives an update, the procedure roughly is this:
+\begin{itemize}
+\item For each name in the update:
+\item Check that the sequence number in the LSA is newer than the one stored in the LSDB.
+\item If so, tell the LSDB to fetch this new LSA. The LSDB will finish processing.
+\end{itemize}
+
+When the synchronization protocol receives a sync update, which may contain multiple distinct items, the names and sequence numbers of each item will be passed to \texttt{SyncLogicHandler::onNsyncUpdate()}.
+%% This may not be necessary. It is currently true, though.
+% The Sync Logic Handler will process each updated name individually first by verifying that the update is not for one of the router's own LSAs.
+Since other syncs in the network blindly transmit what they think is new, we need to check that it's new \emph{to us}, and we use the LSA sequence number to do that. The higher sequence number of the locally-stored LSA with the same name as in the update and the sequence number in the update is taken to be the newer one, noting that an absent LSA has a sequence number of 0.
+If the update is found to be newer, the Sync Logic Handler will call \texttt{Lsdb::expressInterest()}, which attempts to fetch the LSA represented by the update. Other LSDB methods will finish processing and installing the new LSA. (Section~\ref{sec:lsdb})
 
 \subsection{Publish Routing Update}
 \label{sssec:routing-update}
-When any of a router's LSAs are updated or refreshed by the LSDB, the LSDB will use the \\ \texttt{SyncLogicHandler::publishRoutingUpdate()} interface to notify the synchronization protocol that the sequence number for the router's LSA prefix has changed.
-The Sync Logic Handler will also write the updated sequence number to file, so that a restarting router can begin publishing routing updates with sequence numbers larger than the sequence numbers it had published previously.
+When any of a router's LSAs are updated or refreshed by the LSDB, the LSDB will use the \\ \texttt{SyncLogicHandler::publishRoutingUpdate()} method to notify the sync protocol that the sequence number for that LSA has changed.
+The Sync Logic Handler will also write the updated sequence number to file, so that a restarting router can continue publishing routing updates with sequence numbers larger than the sequence numbers it had published before. This is only an optimization. If a router were to reset its sequence number to 1, other routers would initially reject these LSAs as not being new. However, the LSAs in their LSDBs would eventually expire, since they are not being refreshed anymore. Once those LSAs expire, the LSAs that the restarted router is publishing would then be considered new. However, this process could take quite a while, so we optimize by resuming numbering where we left off.

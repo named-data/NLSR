@@ -7,16 +7,15 @@ it stores the calculated routing table entries in a table, and notifies the Name
 \subsection{Routing Table Calculators}
 \label{sec:routing-table-calculator}
 
-The \texttt{RoutingTableCalculator} is a base class provides functionality common to both link-state and hyperbolic routing.
+The \texttt{RoutingTableCalculator} is a base class that provides functionality common to both link-state and hyperbolic routing.
 The Routing Table module uses the implementation class specific to the type of routing currently enabled.
 
 \subsubsection{Link-State Routing Table Calculator}
 
 The \texttt{LinkStateRoutingTableCalculator} class calculates the routing table uses Dijkstra's algorithm to calculate the shortest paths in the network.
 When \texttt{max-faces-per-prefix} is set to one, the \texttt{LinkStateRoutingTableCalculator} can simply run Dijkstra's algorithm.
-When \texttt{max-faces-per-prefix} is set to a value indicating multi-path calculation, the \\ \texttt{LinkStateRoutingTableCalculator} will iteratively perform Dijkstra's using only a single neighbor link as a next hop.
+When \texttt{max-faces-per-prefix} is greater than one, indicating multi-path calculation, the \\ \texttt{LinkStateRoutingTableCalculator} will iteratively perform Dijkstra's using only a single neighbor link as a next hop.
 The calculation will be performed using each neighbor in order to learn the path costs for each destination through each next hop.
-
 
 \subsubsection{Hyperbolic Routing Table Calculator}
 
@@ -27,6 +26,6 @@ The \texttt{HyperbolicRoutingCalculator} also adds a routing table entry to reac
 
 \subsection{Notifications for Newly Calculated Next Hops}
 
-Once the Routing Table Module has finished calculating the routing table, it will notify the Name Prefix Table module using the \texttt{NamePrefixTable::updateWithNewRoute} interface.
+Once the Routing Table Module has finished calculating the routing table, it will update all of the Name Prefix Table's next hops.
 The Name Prefix Table Module will then update the next hops for each name prefix based on the newly calculated routing table.
 This process is described in more detail in Section~\ref{sec:npt-update-with-new-route}.

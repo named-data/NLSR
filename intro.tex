@@ -15,21 +15,25 @@ Many of the modules interact with one another to trigger some behavior or to mod
 NLSR uses the following modules:
 \begin{itemize}
 \item \textbf{Hello Protocol} (Section~\ref{sec:hello-protocol}) - determines the status of neighboring routers using periodic Hello Interests and notifies other modules when neighbors' statuses change.
-\item \textbf{NSync} - provides LSDB synchronization by extending the ChronoSync protocol~\cite{chronosync}.
+\item \textbf{ChronoSync} - provides network-wide synchronization of NLSR LSDBs.~\cite{chronosync}
 \item \textbf{Sync Logic Handler} (Section~\ref{sec:sync-logic}) - handles sync update notifications from NSync by retrieving updated LSAs.
 \item \textbf{LSAs} (Section~\ref{sec:lsas}) - represent routing information published by the router.
 \item \textbf{LSDB} (Section~\ref{sec:lsdb}) - stores the LSA information distributed by other routers in the network.
 \item \textbf{Routing Table} (Section~\ref{sec:routing-table}) - calculates and maintains a list of next hops for each router in the network.
 \item \textbf{Name Prefix Table} (Section~\ref{sec:npt}) - stores all advertised name prefixes and their next hops.
 \item \textbf{FIB} (Section~\ref{sec:fib}) - maintains a shadow FIB which represents the intended state of NFD's FIB~\cite{NFD}.
-\item \textbf{Prefix Update Processor} - listens for dynamic prefix announcements to advertise or withdraw name prefixes.
+\item \textbf{Prefix Update Processor} (Section~\ref{sec:prefix-update}) - listens for dynamic prefix announcements to advertise or withdraw name prefixes.
+\item \textbf{NFD RIB Command Processor} (Section~\ref{sec:nfd-rib-commands}) - listens for readvertise-to-NLSR commands to advertise or withdraw name prefixes that were inserted into NFD.
 \end{itemize}
 
 \subsection{Protocol Overview}
 \label{sec:protocol-overview}
 
-NLSR is designed to accomplish three main tasks: (1) discover adjacent neighbors; (2) disseminate and synchronize topology, name prefix, and hyperbolic routing information; and (3) calculate a consistent routing table and populate NFD's FIB.
-The entire protocol is described in detail in the NLSR paper~\cite{NlsrTr}.
+NLSR is designed to accomplish three main tasks: (1) discover adjacent
+neighbors; (2) disseminate and synchronize topology, name prefix, and
+hyperbolic routing information; and (3) calculate a routing table and
+populate NFD's FIB.  The entire protocol is described in detail in the
+NLSR paper~\cite{NlsrTr}.
 
 \subsubsection{Discovering Neighbors}
 
@@ -38,15 +42,15 @@ When the Hello Protocol detects a status change for a neighbor, it will ask the 
 
 \subsubsection{Disseminating Routing Information}
 
-When one of a router's LSAs (Section~\ref{sec:lsas}) changes, the information of this change should be distributed to every other router in the network.
+When a router's LSAs (Section~\ref{sec:lsas}) changes, the information of this change should be distributed to every other router in the network.
 The Sync Logic Handler module (Section~\ref{sec:sync-logic}) is used to notify the synchronization protocol of changes to the router's own LSAs as well as to learn of LSA changes from other routers in the network;
-the Sync Logic Handler module interfaces with NSync to perform the two tasks.
+the Sync Logic Handler module interfaces with ChronoSync to perform the two tasks.
 
 When the Sync Logic Handler module learns of a new LSA, it will inform the LSDB module.
 The LSDB module will attempt to fetch the new LSA and will store it in the LSDB module's database if it can be retrieved.
 If the newly fetched LSA informs the router of previously unknown routing information, the LSDB module will inform other modules depending on the type of routing information:
 \begin{itemize}
-\item \textbf{Change in network topology} - the LSDB module will inform the Routing Table module (Section~\ref{sec:routing-table}), so the Routing Table module can calculate an up-to-date routing table.
+  \item \textbf{Change in network topology} - the LSDB module will ask the Routing Table module (Section~\ref{sec:routing-table}) to recalculate paths in the network
 \item \textbf{Change in name prefix advertisement} - the LSDB module will inform the Name Prefix Table module (Section~\ref{sec:npt}), which will in turn notify the FIB module (Section~\ref{sec:fib}) in order to add or remove the changed name prefixes.
 \item \textbf{Change in hyperbolic coordinates} - the LSDB module will inform the Routing Table module (Section~\ref{sec:routing-table}), so the Routing Table module can calculate an up-to-date routing table.
 \end{itemize}

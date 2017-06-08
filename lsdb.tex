@@ -1,31 +1,137 @@
 \section{Link-State Database}
 \label{sec:lsdb}
 
-The Link-State Database (LSDB) holds LSA information distributed by other routers in the network.
-The LSDB stores all three types of LSAs and will trigger necessary events when a new LSA is added, when an LSA is updated, and when an LSA expires.
-The LSDB also handles LSA retrieval and validation, performs LSA builds, and triggers routing table calculations.
+The Link-State Database (LSDB) holds LSA information distributed by
+other routers in the network.  The LSDB stores all types of LSAs and
+will trigger events when a new LSA is added, updated, or expires.  The
+LSDB also handles LSA retrieval, performs LSA builds, and triggers
+routing table calculations.
 
 \subsection{Retrieving an LSA}
 
-The LSDB provides \texttt{Lsdb::expressInterest()} as a public interface to retrieve an LSA from the network.
-If LSA Data is returned, the LSDB will handle the Data validation and perform the necessary LSDB modifications.
-If the LSA Interest times out, the LSDB will continue to re-attempt to fetch the LSA Data.
-The LSDB will stop trying these fetch re-attempts once it has tried for as long as the maximum configurable LSA refresh time.
+The LSDB provides the \texttt{Lsdb::expressInterest()} method as a
+public interface to retrieve an LSA from the network.  If LSA Data is
+returned, the LSDB will validate the Data using the Validator
+module. Then, it will perform the necessary LSDB modifications.  If
+the LSA Interest times out, the LSDB will retry until it reaches a
+configurable maximum number of tries, or a configurable deadline
+passes.
 
-\subsection{Building LSAs}
+The LSDB uses the SegmentFetcher system to retrieve LSAs. LSAs very
+often will exceed the maximum NDN packet size. In these cases, the LSA
+needs to be split into segments to be sent, so the LSDB uses the
+SegmentFetcher to send all LSAs. The SegmentFetcher can decide if the
+data actually needs to be split.
 
-The LSDB provides three interfaces to build and install a router's own various LSAs.
+\subsection{General Procedure}
+
+The LSDB is responsible for building, installing, and publishing
+NLSR's LSAs, as well as for installing and processing LSAs from other
+NSLRs. Generally, the functions of the LSDB are:
 \begin{itemize}
-\item \texttt{Lsdb::scheduleAdjLsaBuild()} schedules an Adjacency LSA calculation if one is not already scheduled and if hyperbolic routing is not turned on, i.e. if link-state routing or dry run is on.
-\item \texttt{Lsdb::buildAndInstallOwnAdjLsa()} instantiates a new Adjacency LSA with the router's current adjacency list, incremented sequence number, and number of active neighbors. It also notifies the Sync Logic Handler to publish the routing update(Section~\ref{sssec:routing-update}) if link-state routing or dry-run is enabled to let other node in the network know the newly instlled Adjacency LSA.
-\item \texttt{Lsdb::buildAndInstallOwnCoordinateLsa()} instantiates a new Coordinate LSA with the router's hyperbolic coordinates and an incremented sequence number. The newly constructed Coordinate LSA is then installed in the LSDB. It also notifies the Sync Logic Handler to publish the routing update(Section~\ref{sssec:routing-update}) if hyperbolic routing or dry run is turned on to let other nodes in the network know the newly installed Coordinate LSA.
-\item \texttt{Lsdb::buildAndInstallOwnNameLsa()} instantiates a new Name LSA with the router's current name prefix list and an incremented sequence number. The newly constructed Name LSA is then installed in the LSDB.
+\item Schedule the building of an LSA.
+\item Building the LSA.
+\item Installing the LSA into the LSDB.
 \end{itemize}
 
-\subsection{LSA Installation and Updates}
+\subsection{Scheduling LSA Builds}
+LSAs need to be rebuilt whenever the routing information NLSR has
+changes. This includes events like neighbors becoming active, or when
+a prefix for advertisement is inserted by the Prefix Update Processor,
+which would cause an adjacency LSA or a name LSA rebuild,
+respectively. To improve performance, instead of directly building
+adjacency LSAs the first request schedules the build, and build requests
+that occur after the scheduling but before the actual event are
+aggregated (in other words, ignored), because they will be satisfied
+by the already-scheduled build. Some specifics are shown below.
+below.
+\begin{itemize}
+\item \textbf{Adjacency LSAs} -- will only be scheduled if link-state
+  routing is enabled. In particular, this means Adjacency LSA builds
+  will \emph{not} occur if hyperbolic routing is enabled. Note that
+  adjacency LSAs will be built if dry-run hyperbolic routing is
+  enabled, as the network is still using link-state routing to
+  calculate paths.
+\end{itemize}
 
-The LSDB provides three internal interfaces for each of the three types of LSAs to add or update LSAs in the LSDB.
-The general logic for each type of LSA installation is similar (Figure~\ref{fig:generic-lsdb-flow}), but there are slight differences in the events that are triggered by an installation or update.
+\subsection{Building LSAs}
+Building LSAs has a part common to all LSAs and a part specific to
+each LSA type. For example, all LSA types increment sequence number
+and have the same expiration length, and of course come from the same
+router. Additionally, all LSA builds cause a sync update
+publishing. However, each type of LSA includes different data, to
+represent different kinds of information that NLSR
+has. (Section~\ref{sec:lsas}) In particular:
+\begin{itemize}
+  \item \textbf{Adjacency LSAs} -- the number and a list of active
+    neighbors is included.
+  \item \textbf{Coordinate LSAs} -- the hyperbolic radius and all
+    hyperbolic angles are included.
+  \item \textbf{Name LSAs} -- the list of name prefixes that are
+    accessible at this router is included.
+\end{itemize}
+
+\subsection{Installing and Processing LSAs}
+LSA installation procedure is mostly the same across any type of LSA,
+but each type also has installation behavior specific to that type,
+too. For any LSA type, we need to schedule an expiration event, and we
+need to update several fields in the LSA. However, installing an
+adjacency or coordinate LSA causes a Routing Table calculation, but a
+name LSA does not, for example.
+%%| Not yet true, but it should be true!
+Additionally, the name of the origin router is added as a ``routable prefix'' in the NPT. (Section~\ref{sec:npt}).
+\begin{itemize}
+  \item \textbf{Adjacency LSAs} -- each adjacency in the LSA will be
+    added as a ``routable prefix'' to the NPT. If the adjacencies have
+    changed since the last version of this LSA, a Routing Table
+    calculation needs to be scheduled, because the state of the
+    network has changed. Of course, this is necessarily true if the
+    LSA is new to us. Important to note is that we will also install
+    and process \emph{our own} adjacency LSA in this way.
+  \item \textbf{Coordinate LSAs} -- the router that the LSA is from
+    will be added as a ``routable prefix'' to the NPT. If the radius
+    and coordinates have changed since the last version of this LSA, a
+    Routing Table calculation needs to be scheduled, because the state
+    of the network has changed. As above, this is true for a new
+    LSA. This is only done if the LSA is from a foreign router.
+  \item \textbf{Name LSAs} -- each name prefix in the LSA will be
+    added to our NPT. This is only done if the LSA is from a foreign
+    router.
+\end{itemize}
+
+\subsection{LSA Expiration}
+LSAs expire so that the network can clean up when a router
+crashes. The amount of time an LSA lasts is configurable. When an LSA
+expires, we refresh it if it's our LSA, and remove it from the LSDB if
+not. There is a ``grace period'' window that is appended to the end of
+the expiration period of all LSAs, to provide time for the originating
+router to refresh the LSA and for it to propagate back to us. In all
+expiration cases, the name of the origin router will be removed from
+the NPT. What happens when an LSA is removed from the LSDB differs
+based on the type of LSA:
+\begin{itemize}
+  \item \textbf{Adjacency LSAs} -- a Routing Table calculation needs to occur,
+    since the state of the network has changed, at least from our
+    perspective.
+  \item \textbf{Coordinate LSAs} -- a Routing Table calculation needs to occur,
+    since the state of the network has changed, at least from our
+    perspective.
+  \item \textbf{Name LSAs} -- the name prefixes in the LSA are removed from the
+    NPT.
+\end{itemize}
+
+\subsection{LSA Refreshment}
+NLSR will only refresh its own LSAs. Additionally, the procedure for refreshing an LSA is the same for all types:
+\begin{itemize}
+\item Increment the LSA sequence number
+\item Schedule another expiration event. The length of time to wait
+  until refreshing is configurable, but it should probably be lower
+  than the expiration time that was set when building the LSA
+  initially. This prevents other routers from deleting our LSAs
+  because the network is slow, for instance. The length of time is set
+  by \texttt{lsa-refresh-time} in the configuration file.
+\item Publish an update to sync
+\end{itemize}
 
 \begin{figure}[h]
 \center
@@ -33,71 +139,3 @@ The general logic for each type of LSA installation is similar (Figure~\ref{fig:
 \label{fig:generic-lsdb-flow}
 \caption{The general LSDB logic for each LSA type}
 \end{figure}
-
-\subsubsection{Lsdb::installAdjLsa()}
-
-When an Adjacency LSA is passed to \texttt{Lsdb::installAdjLsa()}, the LSDB first attempts to find the LSA in its current database.
-
-If the Adjacency LSA is not installed in the database, the LSA will first be added to the database.
-If the installed LSA is advertised by a remote router, the remote router's name will be added to the NPT and the LSA will be scheduled to expire after the expiration time point included in the LSA.
-Since a new Adjacency LSA introduces a new node and new links in the network, a routing table calculation is scheduled.
-
-If the Adjacency LSA is already installed in the database, the existing LSA will only be updated if the newly received LSA has a higher sequence number.
-If an Adjacency LSA with a higher sequence number is being installed, the existing LSA's sequence number and expiration time will be updated.
-If the newly received LSA contains an adjacency list that is different from the existing LSA, the existing LSA's adjacencies are updated and a routing table calculation is scheduled to account for the network change.
-Finally, if the updated LSA is advertised by a remote router, the LSA will be scheduled to expire after the expiration time point included in the LSA.
-
-\subsubsection{Lsdb::installCoordinateLsa()}
-
-When a Coordinate LSA is passed to \texttt{Lsdb::installCoordinateLsa()}, the LSDB first attempts to find the LSA in its current database.
-
-If the Coordinate LSA is not installed in the database, the LSA will first be added to the database.
-If the installed LSA is advertised by a remote router, the remote router's name will be added to the NPT, and the LSA will be scheduled to expire after the expiration time point included in the LSA.
-If hyperbolic routing is enabled, a new Coordinate LSA means that the routing table should be re-calculated to include the new destination router.
-
-If the Coordinate LSA is already installed in the database, the existing LSA will only be updated if the newly received LSA has a higher sequence number.
-If a Coordinate LSA with a higher sequence number is being installed, the existing LSA's sequence number and expiration time will be updated.
-If the newly received LSA contains hyperbolic coordinate different from the existing LSA, the existing LSA's coordinates are updated.
-If hyperbolic routing is enabled, an LSA with new coordinates means the routing table should be re-calculated to account for the different coordinates.
-Finally, If the updated LSA is advertised by a remote router, the LSA will be scheduled to expire after the expiration time point included in the LSA.
-
-\subsubsection{Lsdb::installNameLsa()}
-
-When a Name LSA is passed to \texttt{Lsdb::installNameLsa()}, the LSDB first attempts to find the LSA in its current database.
-
-If the Name LSA is not installed in the database, the LSA will first be added to the database.
-If the installed LSA is advertised by a remote router, the remote router's name and each advertised name in the LSA will be added to the NPT,  and the LSA will be scheduled to expire after the expiration time point included in the LSA.
-
-If the Name LSA is already installed in the database, the existing LSA will only be updated if the newly received LSA has a higher sequence number.
-If a Name LSA with a higher sequence number is being installed, the existing LSA's sequence number and expiration time will be updated.
-A set difference is performed between the new LSA's advertised name prefix list and the existing LSA's advertised name prefix list to determine name prefixes that have been added.
-If there are added name prefixes, the name prefixes are added to the NPT and to the existing LSA.
-A set difference is then performed between the new LSA's advertised name prefix list and the existing LSA's advertised name prefix list to determine name prefixes that have been removed.
-If there are removed name prefixes, the name prefixes are removed from the NPT and from the existing LSA.
-Finally, If the updated LSA is advertised by a remote router, the LSA will be scheduled to expire after the expiration time point included in the LSA.
-
-\subsection{LSA Expiration}
-
-LSAs are scheduled to expire after a configurable amount of time in order to allow for LSDB cleanup when a router crashes.
-After the expiration period, if the LSA belongs to the current router, the LSA is refreshed with an incremented sequence number (Section~\ref{sec:lsa-refresh}).
-Otherwise, if the LSA belongs to a remote router, the LSA is removed from the LSDB.
-Removing an LSA from the LSDB triggers different events depending on the type of the LSA.
-\begin{itemize}
-\item \textbf{Adjacency LSA} - When an Adjacency LSA is removed, a routing table calculation is scheduled to determine new paths that don't include the associated router.
-\item \textbf{Coordinate LSA} - When a Coordinate LSA is removed and hyperbolic routing is enabled, a routing table calculation is scheduled.
-\item \textbf{Name LSA} - When a Name LSA is removed, the name prefixes advertised by the LSA are removed from the NPT.
-\end{itemize}
-
-In all three cases, the LSA's origin router's name will also be removed from the NPT.
-
-\subsection{LSA Refresh}
-\label{sec:lsa-refresh}
-
-When a router refreshes its own LSA, all three LSA types trigger the same events:
-\begin{itemize}
-\item Increment the LSA's sequence number by one
-\item Schedule the LSA to expire after the configured \texttt{lsa-refresh-time}.
-\item Publish a routing update in NSync to notify other routers of the change in the LSDB.
-\end{itemize}
-
-

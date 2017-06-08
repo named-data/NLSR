@@ -2,11 +2,6 @@
 \label{sec:lsas}
 
 Link-State Advertisements (LSAs) represent pieces of routing information distributed by routers.
-NLSR uses three types of LSAs to distribute routing information:
-Adjacency LSAs which include neighboring node and link information,
-Coordinate LSAs which include a router's hyperbolic coordinates, and
-Name LSAs which include advertised name prefixes reachable through the router.
-All of the LSAs received by the router are maintained by the LSDB module (Section~\ref{sec:lsdb}).
 
 \subsection{LSA Base Class}
 \label{sec:lsa-base-class}
@@ -14,15 +9,15 @@ All of the LSAs received by the router are maintained by the LSDB module (Sectio
 All three LSA implementations inherit from an LSA Base class, \texttt{Lsa}, which maintains information that is included in each LSA.
 The \texttt{LSA} class contains the following member variables:
 \begin{itemize}
-\item \textbf{Origin Router} - the router that advertised the LSA.
-\item \textbf{Sequence Number} - a number used to indicate the LSAs version as well as its ordering compared to other LSAs received from the same router.
-\item \textbf{Expiration Time Point} - a time point indicating when the LSA is no longer valid.
+\item \textbf{Origin Router} - the router that advertised the LSA. Specifically, this is a name prefix that follows the NLSR convention of router naming.
+\item \textbf{Sequence Number} - a number used to indicate the LSA's version. Because sequence numbers are preserved between NLSR restarts, a higher sequence number also always indicates a \emph{newer} LSA.
+\item \textbf{Expiration Time Point} - a time point indicating when the LSA is no longer valid. This currently is represented as a Unix timestamp (i.e. seconds since Jan 1, 1970).
 \end{itemize}
 
 \subsection{Adjacency LSAs}
 \label{sec:adjacency-lsas}
 
-Adjacency LSAs maintain an \texttt{AdjacencyList} which contains all the currently \texttt{ACTIVE} neighbors of the origin router.
+Adjacency LSAs maintain an \texttt{AdjacencyList} which contains information about all the currently \texttt{ACTIVE} neighbors of the origin router. It also includes the number of active routers, not just the list itself. This aids in serialization.
 
 \subsection{Coordinate LSAs}
 \label{sec:coordinate-lsas}
@@ -32,4 +27,4 @@ Coordinate LSAs maintain the hyperbolic angle(s) and hyperbolic radius of the or
 \subsection{Name LSAs}
 \label{sec:name-lsas}
 
-Name LSAs maintain a \texttt{NamePrefixList} which contains advertised name prefixes that are reachable through the origin router.
+Name LSAs maintain a \texttt{NamePrefixList} which contains the name prefixes that are reachable at the origin router.

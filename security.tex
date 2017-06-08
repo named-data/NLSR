@@ -54,9 +54,10 @@ The steps to create the keys and certificates is outlined below:
 
 \subsection{Certificate Publishing}
 
-In a network, every router should have the root certificate configured as a trust anchor for the \texttt{validator} in the configuration file.
+In a network, every router must have the root certificate configured as a trust anchor for the \texttt{validator} in the configuration file. If two routers in a network do not share a common trust anchor, then when one seeks to validate the data of the other, they may be unable to establish trust in their signature. This is, of course, because of how the trust hierarchy is set up: you trust the person that signed some router's certificate, because it was signed by the site certificate, and the site certificate was signed by the region, etc., and the $nth$ certificate was signed by the root certificate, which is your trust anchor, so you ``just trust it''. Moreover, if your trust anchor is \emph{before} their trust anchor in the ``chain'', then they will be able to trust you, but you will not be able to trust them.
+
 For each site, at least one router should publish the site certificate, and at least one router should publish the certificate of the site operator.
-Each router should publish its own certificate.
+Each router should publish its own certificate. This is a matter of performance; a network would work if all certificates for all nodes were kept centrally, but distributing the certificates in this way improves performance.
 All this information must be explicitly specified in the configuration file.
 
 For example, the following configuration file indicates that NLSR should publish the site certificate and the router certificate:

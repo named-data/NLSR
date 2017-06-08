@@ -3,7 +3,9 @@
 
 NLSR's configuration file contains numerous parameters to control the behavior and performance of NLSR.
 The configuration file also includes the trust schema used by NLSR to verify LSA Data, Hello Data, and prefix update command Interests.
-The configuration file is divided into six sections each with parameters that mainly affect a specific module.
+
+\subsection{Naming Conventions}
+The NLSR naming convention is mostly arbitrary. For example, a router's name, maybe \texttt{\%C1.Router/router1}, is composed of two parts. \texttt{\%C1.Router} is the router ``tag'', and \texttt{router1} is the name or label of the router. Different entities are given different tags, depending on the context.
 
 \subsection{General Section}
 
@@ -14,7 +16,7 @@ The router prefix is the name that other routers in the network know this router
 \begin{itemize}
 \item \texttt{network} - the name of the network to which the router belongs; e.g., \texttt{/ndn}.
 \item \texttt{site} - the name of the site to which the router belongs; e.g., \texttt{/edu/memphis}.
-\item \texttt{router} - the name to identify the router; e.g., \texttt{/\%C1.Router/cs/pollux}.
+\item \texttt{router} - the name to identify the router; e.g., \texttt{/\%C1.Router/cs/pollux}.t
 \end{itemize}
 The router prefix is constructed by combining the three parameters following the format: \texttt{/<network>/<site>/<router>}.
 
@@ -27,20 +29,15 @@ The configured value for this parameter must be greater than \texttt{lsa-refresh
 \end{itemize}
 
 The \texttt{log-level} parameter configures the verbosity of NLSR's logging.
-The possible \texttt{log-level} values are listed in increasing verbosity:
-\begin{itemize}
-\item \texttt{NONE} - no messages
-\item \texttt{ERROR} - error messages
-\item \texttt{WARN} - warning messages
-\item \texttt{INFO} - informational messages (default)
-\item \texttt{DEBUG} - debugging messages
-\item \texttt{TRACE} - trace messages (most verbose)
-\item \texttt{ALL} - all messages
-\end{itemize}
-Note that all debugging levels listed above the selected value will also be enabled.
+The possible \texttt{log-level} values are listed in increasing verbosity. That is, the value all the way to the left includes the values all the way to the right.
+\begin{verbatim}
+NONE < ERROR < WARN < INFO (Default) < DEBUG < TRACE < ALL
+\end{verbatim}
+
+Note that a log level also enables all log levels to its left. That is, setting log level to \texttt{TRACE} causes \texttt{ERROR, WARN, INFO} and \texttt{DEBUG} messages. to also be logged.
 
 The \texttt{general} configuration section also includes parameters to choose where the NLSR log file and the NLSR sequence number file are stored.
-The \texttt{log-dir} parameter is an absolute path to the directory where the NLSR log file should be written, and \texttt{seq-dir} is an absolute path to the directory where the NLSR sequence number should be written.
+The \texttt{log-dir} parameter is an absolute path to the directory where the NLSR log file should be written, and \texttt{seq-dir} is an absolute path to the directory where the NLSR sequence number should be written. The log directory must exist and be writable, or else NLSR will fail to start.
 
 \subsection{Neighbors Section}
 
@@ -63,6 +60,8 @@ The \texttt{neighbor} subsection includes:
 
 \subsection{Hyperbolic Section}
 
+Hyperbolic Routing is a greedy geometric routing technique available in NLSR. The best resource to understand how it works is its white paper. \cite{HyperbolicASF}
+
 The \texttt{hyperbolic} section in the configuration file is used to enable/disable hyperbolic routing and to specify the hyperbolic coordinates of the router.
 
 The \texttt{state} parameter indicates whether or not hyperbolic routing should be enabled. There are three possible values for this parameter: \texttt{on}, \texttt{off}, and \texttt{dry-run}. \texttt{on} enables hyperbolic routing; \texttt{off} disables hyperbolic routing (link-state routing is used); \texttt{dry-run} uses link-state routing to populate NFD's FIB, but will also perform the hyperbolic routing calculations and write them to the log file for debugging purposes.
@@ -79,13 +78,13 @@ The default value for \texttt{max-faces-per-prefix} is \texttt{0} which indicate
 
 \texttt{routing-calc-interval} is the time to wait in seconds after a routing table calculation is requested before actually performing the routing table calculation.
 This parameter is intended to limit the number of routing table calculations, which may be performance intensive on some systems.
-The default value for \texttt{max-faces-per-prefix} is 15 seconds and can be configured to be in the range of 0 to 15 seconds.
+The default value for \texttt{routing-calc-interval} is 15 seconds and can be configured to be in the range of 0 to 15 seconds.
 
 \subsection{Advertising Section}
 
 The \texttt{advertising} section includes a list of name prefixes that the router should advertise as reachable through itself.
 Each name prefix that should be advertised should be in the following format: \texttt{prefix /name/to/advertise}.
-This section allows for static configuration of the advertised prefixes, but prefixes can be dynamically advertised and withdrawn using the Prefix Update Processor. 
+This section allows for static configuration of the advertised prefixes, but prefixes can be dynamically advertised and withdrawn using the Prefix Update Processor.
 
 \subsection{Security Section}
 

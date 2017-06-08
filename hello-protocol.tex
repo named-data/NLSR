@@ -27,14 +27,14 @@ If a Face has not been created for the neighbor, the Hello Protocol will attempt
 If the Face is created successfully, the Hello Protocol registers the Sync prefix, LSA prefix, and Key prefix using the Face ID returned by the Face creation command and sends out the Hello Interest.
 If the Face cannot be created, the Hello Protocol considers the failure as a Hello Interest timeout.
 
-If the Hello Protocol receives Data in response to the Hello Interest, it will first verify that the Data is signed by the correct entity.
+If the Hello Protocol receives Data in response to its Hello Interest, it will first ask the Validator module to verify that the Data is valid. Data is valid if the Data is legitimately signed (in the ordinary cryptographic way) and if the key name and Data name are of a certain format.
 If the Data is valid, the corresponding neighbor is set as \texttt{ACTIVE} and its timeout count is reset to zero.
 If the neighbor was previously \texttt{INACTIVE}, an Adjacency LSA build is scheduled to include the newly \texttt{ACTIVE} neighbor.
 If the Data is not valid, the packet is dropped.
 
 If the Hello Interest sent to the neighbor times out, the corresponding neighbor's timed-out count is incremented.
 If the neighbor's timed-out count is less than \texttt{hello-retries} in the configuration file, the Hello Protocol will send another Hello Interest after \texttt{hello-timeout} seconds.
-If the neighbor's timed-out count equals the \texttt{hello-retries} value and the neighbor is currently marked as \texttt{ACTIVE}, the neighbor's status is set to \texttt{INACTIVE} and an Adjacency LSA build is scheduled. 
+If the neighbor's timed-out count equals the \texttt{hello-retries} value and the neighbor is currently marked as \texttt{ACTIVE}, the neighbor's status is set to \texttt{INACTIVE} and an Adjacency LSA build is scheduled.
 
 \subsection{Responding to Hello Interests}
 \label{sec:respond-to-hello}

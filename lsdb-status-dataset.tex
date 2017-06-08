@@ -1,0 +1,22 @@
+\section{LSDB Status Dataset}
+\label{sec:lsdb-status-dataset}
+
+NLSR makes available the entire contents of the LSDB upon request. A
+command can request LSAs of just a specific type, or request the
+collection of all LSAs. Unlike the Prefix Update and NFD RIB command
+processors, the LSDB Status dataset is available over \emph{both} the
+\texttt{/localhost} and regular router prefixes. That is, you can
+request an arbitrary router's LSDB contents.
+
+\subsection{Requesting the dataset}
+\begin{itemize}
+\item To request the local dataset, simply send an Interest of the
+  form \texttt{/localhost/nlsr/lsdb/<dataset type>}.
+\item To request a remote dataset, send an Interest of the form
+  \texttt{/<router name>/lsdb/<dataset type>}, where \texttt{<router
+    name>} is whatever the router's name is. This is usually
+  \texttt{general.network + general.site + general.router} from the
+  configuration file.
+\end{itemize}
+
+Where \texttt{<dataset type>} is one of \texttt{names, adjacencies, coordinates} or \texttt{list}.

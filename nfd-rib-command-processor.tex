@@ -1,0 +1,23 @@
+\section{NFD RIB Command Processor}
+\label{sec:nfd-rib-commands}
+
+The NFD RIB Command Processor allows modification of NLSR's advertised
+name prefixes using NFD's RibMgmt commands. Such commands may
+originate from something like NFD's Readvertise module, which permits
+routes inserted in NFD to be propagated through to NLSR, so that NLSR
+can provide routing support for them.
+
+\subsection{Advertising and Withdrawing Routes}
+The processor accepts valid RibMgmt commands that have the name prefix
+to manipulate the origin of the route specified. No other validation
+is performed, as stated below.
+
+The processor does not send any kind of response to commands.
+
+\subsection{Security}
+Any RibMgmt commands received on the \texttt{/localhost/nlsr/rib}
+prefix are considered secure, and are processed. This introduces a
+security hole because anyone who can send a RibMgmt command on this
+prefix can arbitrarily manipulate NLSR's advertised prefixes. However,
+because sending commands to this prefix requires root access, a
+would-be attacker will already have root access locally.

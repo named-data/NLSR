@@ -1,2 +1,20 @@
 \section{Prefix Update Processor}
 \label{sec:prefix-update}
+
+The Prefix Update processor allows manipulation of NLSR's advertised
+name prefixes with ordinary ControlCommands. Such commands may
+originate from something like \texttt{nlsrc}, the command line tool
+for manipulating NLSR.
+
+\subsection{Advertising and Withdrawing Routes}
+The processor accepts valid ControlCommands that are signed by the site operator's key. Additionally, the commands must be received on the \texttt{/localhost/nlsr/prefix-update/} prefix. The full condition list is specified in the validator rules in the configuration file.
+
+The processor will send responses to commands.
+
+\subsection{Security}
+Prefix Update commands are similar to NFD RIB commands, but with one
+additional requirement, so they are more secure. In addition to being
+on the root-only \texttt{/localhost/} prefix, Prefix Update commands
+must be signed by the site operator's key. If the site operator's key
+were compromised, an attacker could create any number of NLSRs that
+impersonate the legitimate NLSR running at that site.

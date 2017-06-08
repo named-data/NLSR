@@ -1,21 +1,52 @@
 \section{FIB Interaction}
 \label{sec:fib}
 
-The FIB module interacts directly with NFD to perform registrations and unregistrations of name prefixes.
-The FIB module is notified of additions, removals, or updates to the Name Prefix Table and will use the updated Name Prefix Table to perform the necessary registrations or unregistrations.
-The Name Prefix Table notifies the FIB module using the \texttt{Fib::update()} method which accepts a name prefix and next hops for that name prefix as parameters.
-The FIB module maintains a shadow FIB which represents its expectations of NFD's FIB.
-The FIB module uses the shadow FIB to determine which registrations and unregistrations are necessary.
+The FIB module interacts with NFD to perform registrations and
+unregistrations of routes. By registration, what is meant is the
+submission of a RIB route to the local NFD, which includes a name
+prefix, the Face ID of the nexthop, an expiration time, and the
+calculated cost from the Routing Table calculation. Additionally, NLSR
+sets a field to tell NFD that the route originates from NLSR, and sets
+a route inheritance flag.
+
+The expiration time for a route is pegged at double the value of the
+LSA refresh time, which is defined by \texttt{lsa-refresh-time} in the
+configuration file. The route inheritance flag is set to capture,
+which forbids NFD from using a shorter prefix of the name prefix for
+forwarding.
+
+More information about NFD's RIB can be found on the
+\href{https://redmine.named-data.net/projects/nfd/wiki/RibMgmt}{Redmine
+  wiki}. An important thing to note is that NFD has a module called
+the FIB. Anywhere in this guide, the word ``FIB'' refers to the NLSR
+FIB, which models NLSR's expectation of how NFD would forward packets.
+
+The FIB is directed by the Name Prefix Table, which registers and
+unregisters routes based on calculations by the Routing Table and
+advertisements from LSAs. The connection between the FIB and the NPT
+is through the \texttt{Fib::update()} method.
 
 \subsection{Updating the FIB}
-When the Name Prefix Table performs an update on the FIB module, the FIB module will first sort the passed next hops with the next hop's costs in increasing order.
-The FIB module will next determine the number of next hops that should be installed for the name prefix using the \texttt{max-faces-per-prefix} parameter as a maximum.
-If there are more passed next hops than the \texttt{max-faces-per-prefix} parameter allows, the FIB module will only use the first \texttt{max-faces-per-prefix} number of next hops from the sorted list.
-If there are less passed next hops than the \texttt{max-faces-per-prefix} parameter, the FIB module will use all of the passed next hops.
+Generally, updating the FIB looks like this:
+\begin{itemize}
+\item Sort the list of next hops for the prefix, by cost.
+\item Take the cheapest \texttt{max-faces-per-prefix} hops. This can be set to have no limit, so all next hops are registered.
+\item Send a RIB route registration command for each next hop.
+\item Send a RIB route unregistration command for any next hops that
+  have dropped out of the list. This includes next hops that became
+  invalid since the last Routing Table calculation, as well as valid
+  hops that are no longer in the top \texttt{max-faces-per-prefix}
+  next hops.
+\end{itemize}
 
-The FIB module next determines if there is already a FIB entry in the shadow FIB for the passed name prefix.
-If the name prefix will create a new FIB entry and the number of passed next hops is greater than zero, a new FIB entry will be created,
-the next hops will be registered for the name prefix in NFD's FIB, and the FIB entry will be set to expire in two times the \texttt{lsa-refresh-time} in order to clean up orphaned entries in NFD's FIB.
-If there is already an existing FIB entry for the name prefix and the number of passed next hops is greater than zero, any of the passed next hops that weren't previously registered for the FIB entry are registered.
-Then, any currently registered hops that are not in the passed next hops are removed from NFD's FIB, and the entry's expiration is refreshed.
-If there is already an existing FIB entry for the name prefix and the number of passed next hops is equal to zero, the routing table was unable to find a path to this name prefix and so the name prefix should be removed from NFD's FIB.
+If there are more passed next hops than the
+\texttt{max-faces-per-prefix}, the FIB module will only use the first
+\texttt{max-faces-per-prefix} number of next hops from the sorted
+list.  If there are less passed next hops than
+\texttt{max-faces-per-prefix}, the FIB module will use all of the next hops.
+Specifically, when the NPT updates the FIB, the FIB creates entries so
+that it can compute the difference between the set of new next hops,
+and the set of old next hops that were registered at the last update.
+These entries are unique on the destination name prefix. The FIB will
+update an existing entry instead of creating a new one, which may
+involve unregistering old next hops, as mentioned above.
