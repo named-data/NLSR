@@ -168,21 +168,6 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
   }
 }
 
-
-BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
-{
-  for (const std::string& lsaType : lsaTypes) {
-    std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                             CONFIG_SITE + CONFIG_ROUTER_NAME + lsaType;
-
-    receiveUpdate(updateName, 1, sync);
-
-    std::vector<ndn::Interest>& interests = face->sentInterests;
-    BOOST_CHECK_EQUAL(interests.size(), 0);
-  }
-}
-
-
 BOOST_AUTO_TEST_CASE(MalformedUpdate)
 {
   for (const std::string& lsaType : lsaTypes) {
