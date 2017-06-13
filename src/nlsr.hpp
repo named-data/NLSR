@@ -378,7 +378,8 @@ public:
    * invocation would be to pass the begin() iterator of NLSR's
    * adjacency list, and to provide Nlsr::canonizeContinuation as the
    * callback. Because every URI must be canonical before we begin
-   * operations, the canonize function must call initialize itself.
+   * operations, the canonize function provides a finally() function
+   * to resume whatever needs to occur.
    *
    * \sa Nlsr::canonizeContinuation
    * \sa Nlsr::initialize
@@ -386,7 +387,8 @@ public:
    */
   void
   canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
-                       std::function<void(std::list<Adjacent>::iterator)> then);
+                       std::function<void(std::list<Adjacent>::iterator)> then,
+                       std::function<void(void)> finally);
 
   StatsCollector&
   getStatsCollector()
@@ -449,7 +451,8 @@ private:
    * continuation function.
    */
   void
-  canonizeContinuation(std::list<Adjacent>::iterator iterator);
+  canonizeContinuation(std::list<Adjacent>::iterator iterator,
+                       std::function<void(void)> finally);
 
   void
   scheduleDatasetFetch();

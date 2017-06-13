@@ -436,15 +436,19 @@ BOOST_AUTO_TEST_CASE(CanonizeUris)
   neighbors.insert(neighborB);
 
   int nCanonizationsLeft = nlsr.getAdjacencyList().getAdjList().size();
+  std::function<void(void)> finallyCallback = [this] {
+    nlsr.initialize();
+  };
   std::function<void(std::list<Adjacent>::iterator)> thenCallback =
-    [this, &thenCallback, &nCanonizationsLeft] (std::list<Adjacent>::iterator iterator) {
+    [this, &thenCallback, &finallyCallback, &nCanonizationsLeft] (std::list<Adjacent>::iterator iterator) {
       nCanonizationsLeft--;
-      nlsr.canonizeNeighborUris(iterator, thenCallback);
+      nlsr.canonizeNeighborUris(iterator, thenCallback, finallyCallback);
   };
   nlsr.canonizeNeighborUris(nlsr.getAdjacencyList().getAdjList().begin(),
-                            [thenCallback] (std::list<Adjacent>::iterator iterator) {
+                            [&thenCallback, &finallyCallback] (std::list<Adjacent>::iterator iterator) {
                               thenCallback(iterator);
-                            });
+                            },
+                            finallyCallback);
   while (nCanonizationsLeft != 0) {
     this->advanceClocks(ndn::time::milliseconds(1));
   }

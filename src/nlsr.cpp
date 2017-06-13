@@ -192,16 +192,19 @@ Nlsr::daemonize()
 }
 
 void
-Nlsr::canonizeContinuation(std::list<Adjacent>::iterator iterator)
+Nlsr::canonizeContinuation(std::list<Adjacent>::iterator iterator,
+                           std::function<void(void)> finally)
 {
-  canonizeNeighborUris(iterator, [this] (std::list<Adjacent>::iterator iterator) {
-      canonizeContinuation(iterator);
-  });
+  canonizeNeighborUris(iterator, [this, finally] (std::list<Adjacent>::iterator iterator) {
+      canonizeContinuation(iterator, finally);
+    },
+    finally);
 }
 
 void
 Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
-                           std::function<void(std::list<Adjacent>::iterator)> then)
+                           std::function<void(std::list<Adjacent>::iterator)> then,
+                           std::function<void(void)> finally)
 {
   if (currentNeighbor != m_adjacencyList.getAdjList().end()) {
     ndn::util::FaceUri uri(currentNeighbor->getFaceUri());
@@ -219,9 +222,9 @@ Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
       m_nlsrFace.getIoService(),
       TIME_ALLOWED_FOR_CANONIZATION);
   }
-  // We have finished canonizing all neighbors, so initialize NLSR.
+  // We have finished canonizing all neighbors, so call finally()
   else {
-    initialize();
+    finally();
   }
 }
 
