@@ -89,18 +89,6 @@ NamePrefixList::sort()
   m_nameList.sort();
 }
 
-void
-NamePrefixList::writeLog()
-{
-  _LOG_DEBUG("-------Name Prefix List--------");
-  int i = 1;
-  for (std::list<ndn::Name>::iterator it = m_nameList.begin();
-       it != m_nameList.end(); it++) {
-    _LOG_DEBUG("Name " << i << " : " << (*it));
-    i++;
-  }
-}
-
 std::ostream&
 operator<<(std::ostream& os, const NamePrefixList& list) {
   os << "Name prefix list: {\n";

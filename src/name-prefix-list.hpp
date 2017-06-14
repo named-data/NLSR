@@ -75,9 +75,6 @@ public:
   bool
   operator==(const NamePrefixList& other) const;
 
-  void
-  writeLog();
-
 private:
   std::list<ndn::Name> m_nameList;
 

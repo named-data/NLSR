@@ -237,7 +237,7 @@ Nlsr::initialize()
   // Logging start
   m_confParam.writeLog();
   m_adjacencyList.writeLog();
-  m_namePrefixList.writeLog();
+  _LOG_DEBUG(m_namePrefixList);
   // Logging end
   initializeKey();
   setStrategies();
