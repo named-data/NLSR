@@ -23,9 +23,8 @@ fi
 
 sudo rm -Rf ChronoSync-latest
 ## Remove line when #3920 and #4119 merge.
-if [ ! -d "ChronoSync-hotfix" ]; then
-    git clone git://github.com/named-data/ChronoSync ChronoSync-hotfix
-fi
+sudo rm -rf ChronoSync-hotfix
+git clone git://github.com/named-data/ChronoSync ChronoSync-hotfix
 
 # LATEST_VERSION=$((cd ChronoSync-latest && git rev-parse HEAD) 2>/dev/null || echo UNKNOWN)
 
