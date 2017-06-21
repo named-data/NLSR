@@ -61,7 +61,7 @@ public:
     \param v The information that Sync has acquired.
    */
   void
-  onNsyncUpdate(const std::vector<chronosync::MissingDataInfo>& v);
+  onChronoSyncUpdate(const std::vector<chronosync::MissingDataInfo>& v);
 
   /*! \brief Wrapper function to call publishSyncUpdate with correct LSA type
 

@@ -77,7 +77,7 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
 
 
   m_syncSocket = std::make_shared<chronosync::Socket>(m_syncPrefix, m_nameLsaUserPrefix, *facePtr,
-                                                      bind(&SyncLogicHandler::onNsyncUpdate, this, _1));
+                                                      bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1));
 
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
     m_syncSocket->addSyncNode(m_adjLsaUserPrefix);
@@ -88,9 +88,9 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
 }
 
 void
-SyncLogicHandler::onNsyncUpdate(const vector<chronosync::MissingDataInfo>& v)
+SyncLogicHandler::onChronoSyncUpdate(const vector<chronosync::MissingDataInfo>& v)
 {
-  _LOG_DEBUG("Received Nsync update event");
+  _LOG_DEBUG("Received ChronoSync update event");
 
   for (size_t i = 0; i < v.size(); i++){
     ndn::Name updateName = v[i].session.getPrefix(-1);

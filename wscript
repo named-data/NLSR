@@ -69,7 +69,7 @@ def configure(conf):
         Logs.error("Please upgrade your distribution or install custom boost libraries")
         return
 
-    conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.1', '--cflags', '--libs'],
+    conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.3', '--cflags', '--libs'],
                    uselib_store='SYNC', mandatory=True)
 
     conf.load('coverage')

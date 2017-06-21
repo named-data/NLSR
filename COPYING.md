@@ -19,9 +19,6 @@ licenses:
 - ndn-cxx is licensed under the conditions of
   [LGPL 3.0](https://github.com/named-data/ndn-cxx/blob/master/COPYING.md)
 
-- protobuf is licensed under the conditions of
-  [BSD license](https://github.com/google/protobuf/blob/master/LICENSE)
-
 - SQLite is in [public domain](http://www.sqlite.org/copyright.html)
 
 - waf build system is licensed under the conditions of

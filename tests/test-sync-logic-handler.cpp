@@ -59,7 +59,7 @@ public:
     face->processEvents(ndn::time::milliseconds(1));
     face->sentInterests.clear();
 
-    p_sync.onNsyncUpdate(updates);
+    p_sync.onChronoSyncUpdate(updates);
 
     face->processEvents(ndn::time::milliseconds(1));
   }
