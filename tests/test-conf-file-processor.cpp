@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getSiteName(), "/memphis.edu/");
   BOOST_CHECK_EQUAL(conf.getRouterName(), "/cs/pollux/");
   BOOST_CHECK_EQUAL(conf.getRouterPrefix(), "/ndn/memphis.edu/cs/pollux/");
-  BOOST_CHECK_EQUAL(conf.getChronosyncPrefix(), "/localhop/NLSR/sync");
+  BOOST_CHECK_EQUAL(conf.getChronosyncPrefix(), "/localhop/ndn/NLSR/sync");
   BOOST_CHECK_EQUAL(conf.getLsaPrefix(), "/localhop/ndn/NLSR/LSA");
   BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), 1800);
   BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(), ndn::time::seconds(3));

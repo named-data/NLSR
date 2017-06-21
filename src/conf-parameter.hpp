@@ -122,6 +122,7 @@ public:
     m_network = networkName;
 
     m_chronosyncPrefix.append("localhop");
+    m_chronosyncPrefix.append(m_network);
     m_chronosyncPrefix.append("NLSR");
     m_chronosyncPrefix.append("sync");
 
