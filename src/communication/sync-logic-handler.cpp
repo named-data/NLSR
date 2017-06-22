@@ -121,26 +121,30 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
 {
   _LOG_DEBUG("Origin Router of update: " << originRouter);
 
-  std::string lsaType = updateName.get(updateName.size()-1).toUri();
+  // A router should not try to fetch its own LSA
+  if (originRouter != m_confParam.getRouterPrefix()) {
 
-  _LOG_DEBUG("Received sync update with higher " << lsaType
-             << " sequence number than entry in LSDB");
+    std::string lsaType = updateName.get(updateName.size()-1).toUri();
 
-  if (isLsaNew(originRouter, lsaType, seqNo)) {
-    if (lsaType == AdjLsa::TYPE_STRING && seqNo != 0 &&
-        m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-      _LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing"
-                 << " is enabled. Not going to fetch.");
-      return;
+    _LOG_DEBUG("Received sync update with higher " << lsaType
+               << " sequence number than entry in LSDB");
+
+    if (isLsaNew(originRouter, lsaType, seqNo)) {
+      if (lsaType == AdjLsa::TYPE_STRING && seqNo != 0 &&
+          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+        _LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing"
+                   << " is enabled. Not going to fetch.");
+        return;
+      }
+
+      if (lsaType == CoordinateLsa::TYPE_STRING && seqNo != 0 &&
+          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+        _LOG_ERROR("Got an update for coordinate LSA when link-state"
+                   << " is enabled. Not going to fetch.");
+        return;
+      }
+      expressInterestForLsa(updateName, seqNo);
     }
-
-    if (lsaType == CoordinateLsa::TYPE_STRING && seqNo != 0 &&
-        m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-      _LOG_ERROR("Got an update for coordinate LSA when link-state"
-                 << " is enabled. Not going to fetch.");
-      return;
-    }
-    expressInterestForLsa(updateName, seqNo);
   }
 }
 
