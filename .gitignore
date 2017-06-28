@@ -1,0 +1,13 @@
+.lock-waf_linux2_build
+.waf-*
+VERSION
+build/
+docs/
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.gz
+figures/generic-lsdb-flow-eps-converted-to.pdf

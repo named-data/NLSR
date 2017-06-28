@@ -20,7 +20,7 @@ The calculation will be performed using each neighbor in order to learn the path
 
 \subsubsection{Hyperbolic Routing Table Calculator}
 
-The \texttt{HyperbolicRoutingCalculator} class calculates the routing table uses the Coordinate LSAs received from each router in the network to determine the cost from each of its neighbors to every other router in the network.
+The \texttt{HyperbolicRoutingCalculator} class calculates the routing table using the Coordinate LSAs received from each router in the network to determine the cost from each of its neighbors to every other router in the network.
 The \texttt{HyperbolicRoutingCalculator} iterates through each of the router's neighbors calculating the hyperbolic distance from the neighbor to every other router in the network (excluding itself and the neighbor router).
 The \texttt{HyperbolicRoutingCalculator} then uses these calculated distances to add routing table entries to the destination with the neighbor as the next hop.
 The \texttt{HyperbolicRoutingCalculator} also adds a routing table entry to reach the neighbor itself; a routing table entry using the neighbor as a next hop to the neighbor with a cost of zero is added.

@@ -67,7 +67,7 @@ The \texttt{hyperbolic} section in the configuration file is used to enable/disa
 
 The \texttt{state} parameter indicates whether or not hyperbolic routing should be enabled. There are three possible values for this parameter: \texttt{on}, \texttt{off}, and \texttt{dry-run}. \texttt{on} enables hyperbolic routing; \texttt{off} disables hyperbolic routing (link-state routing is used); \texttt{dry-run} uses link-state routing to populate NFD's FIB, but will also perform the hyperbolic routing calculations and write them to the log file for debugging purposes.
 
-The \texttt{radius} parameter defines the router's radius in the hyperbolic coordinate system and \texttt{angle} defines the router's angle in the hyperbolic coordinate system.
+The \texttt{radius} parameter defines the router's radius in the hyperbolic coordinate system and \texttt{angle} defines the router's angle(s) in the hyperbolic coordinate system. There can be (d-1) angular coordinates in d-dimensional hyperbolic routing. Currently the testbed uses 2-dimensional hyperbolic routing with one radial and one angular coordinate.
 
 \subsection{FIB Section}
 
