@@ -24,10 +24,9 @@ fi
 
 sudo rm -Rf ndn-cxx-latest
 ## Remove this when #3920 and #4119 merge
-if [ ! -d "ndn-cxx-hotfix" ]; then
-    ## Remove '-hotfix' off the end when #3920 and #4119 merge.
-    git clone git://github.com/named-data/ndn-cxx ndn-cxx-hotfix
-fi
+sudo rm -Rf ndn-cxx-hotfix
+git clone git://github.com/named-data/ndn-cxx ndn-cxx-hotfix
+
 
 ## Uncomment when #3920 and #4119 merge.
 # LATEST_VERSION=$((cd ndn-cxx-latest && git rev-parse HEAD) 2>/dev/null || echo UNKNOWN)
