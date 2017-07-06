@@ -159,6 +159,28 @@ BOOST_AUTO_TEST_CASE(SortOnAddAndRemove)
   }
 }
 
+/* If there are two NextHops going to the same neighbor, then the list
+   should always select the one with the cheaper cost. This would be
+   caused by a Name being advertised by two different routers, which
+   are reachable through the same neighbor.
+ */
+BOOST_AUTO_TEST_CASE(UseCheaperNextHop)
+{
+  NexthopList list;
+
+  NextHop hopA("udp4://10.0.0.1:6363", 10);
+  NextHop hopB("udp4://10.0.0.1:6363", 5);
+
+  list.addNextHop(hopA);
+  list.addNextHop(hopB);
+
+  BOOST_REQUIRE_EQUAL(list.getSize(), 1);
+
+  for (const auto& hop : list) {
+    BOOST_CHECK_EQUAL(hop, hopB);
+  }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test
