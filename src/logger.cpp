@@ -55,7 +55,7 @@ INIT_LOGGERS(const std::string& logDir, const std::string& logLevel)
   }
 
   log4cxx::PatternLayoutPtr
-           layout(new log4cxx::PatternLayout("%date{yyyyMMddHHmmssSSS} %p: [%c] %m%n"));
+           layout(new log4cxx::PatternLayout("%date{%s}.%date{SSS} %p: [%c] %m%n"));
 
   log4cxx::RollingFileAppender* rollingFileAppender =
            new log4cxx::RollingFileAppender(layout, logDir+"/nlsr.log", true);
