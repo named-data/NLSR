@@ -122,6 +122,12 @@ def build(bld):
         use='nlsr-objects BOOST',
         )
 
+    bld(features="subst",
+        source='nlsr.conf',
+        target='nlsr.conf.sample',
+        install_path="${SYSCONFDIR}/ndn",
+    )
+
     if bld.env['WITH_TESTS']:
         bld.recurse('tests')
         bld.recurse('tests-integrated')
