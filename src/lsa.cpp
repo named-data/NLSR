@@ -19,6 +19,12 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "lsa.hpp"
+#include "nlsr.hpp"
+#include "name-prefix-list.hpp"
+#include "adjacent.hpp"
+#include "logger.hpp"
+
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -27,12 +33,6 @@
 #include <limits>
 #include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
-
-#include "nlsr.hpp"
-#include "lsa.hpp"
-#include "name-prefix-list.hpp"
-#include "adjacent.hpp"
-#include "logger.hpp"
 
 namespace nlsr {
 
@@ -60,9 +60,8 @@ NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
   m_origRouter = origR;
   m_lsSeqNo = lsn;
   m_expirationTimePoint = lt;
-  std::list<ndn::Name>& nl = npl.getNameList();
-  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++) {
-    addName((*it));
+  for (const auto& name : npl.getNames()) {
+    addName(name);
   }
 }
 
@@ -72,7 +71,7 @@ NameLsa::getData()
   std::ostringstream os;
   os << m_origRouter << "|" << NameLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
      << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_npl.getSize();
-  for (const auto& name : m_npl.getNameList()) {
+  for (const auto& name : m_npl.getNames()) {
     os << "|" << name;
   }
   os << "|";
@@ -127,7 +126,7 @@ NameLsa::writeLog()
   _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
   _LOG_DEBUG("  Names: ");
   int i = 1;
-  std::list<ndn::Name> nl = m_npl.getNameList();
+  std::list<ndn::Name> nl = m_npl.getNames();
   for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++)
   {
     _LOG_DEBUG("    Name " << i << ": " << (*it));

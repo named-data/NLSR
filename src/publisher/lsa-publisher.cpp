@@ -124,7 +124,7 @@ NameLsaPublisher::getTlvLsas()
     std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(lsa);
     tlvLsa.setLsaInfo(*tlvLsaInfo);
 
-    for (const ndn::Name& name : lsa.getNpl().getNameList()) {
+    for (const ndn::Name& name : lsa.getNpl().getNames()) {
       tlvLsa.addName(name);
     }
 

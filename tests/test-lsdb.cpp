@@ -74,10 +74,11 @@ public:
   void
   areNamePrefixListsEqual(NamePrefixList& lhs, NamePrefixList& rhs)
   {
+
     typedef std::list<ndn::Name> NameList;
 
-    NameList& lhsList = lhs.getNameList();
-    NameList& rhsList = rhs.getNameList();
+    NameList lhsList = lhs.getNames();
+    NameList rhsList = rhs.getNames();
 
     BOOST_REQUIRE_EQUAL(lhsList.size(), rhsList.size());
 
@@ -274,7 +275,8 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   BOOST_REQUIRE_EQUAL(lsdb.doesLsaExist(otherRouter + "/name", NameLsa::TYPE_STRING), true);
   NamePrefixList& nameList = lsdb.findNameLsa(otherRouter + "/name")->getNpl();
 
-  areNamePrefixListsEqual(nameList, prefixes);
+  BOOST_CHECK_EQUAL(nameList, prefixes);
+  //areNamePrefixListsEqual(nameList, prefixes);
 
   // Add a prefix: name3
   ndn::Name name3("/ndn/name3");
@@ -284,7 +286,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   lsdb.installNameLsa(addLsa);
 
   // Lsa should include name1, name2, and name3
-  areNamePrefixListsEqual(nameList, prefixes);
+  BOOST_CHECK_EQUAL(nameList, prefixes);
 
   // Remove a prefix: name2
   prefixes.remove(name2);
@@ -293,7 +295,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   lsdb.installNameLsa(removeLsa);
 
   // Lsa should include name1 and name3
-  areNamePrefixListsEqual(nameList, prefixes);
+  BOOST_CHECK_EQUAL(nameList, prefixes);
 
   // Add and remove a prefix: add name2, remove name3
   prefixes.insert(name2);
@@ -303,7 +305,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   lsdb.installNameLsa(addAndRemoveLsa);
 
   // Lsa should include name1 and name2
-  areNamePrefixListsEqual(nameList, prefixes);
+  BOOST_CHECK_EQUAL(nameList, prefixes);
 
   // Install a completely new list of prefixes
   ndn::Name name4("/ndn/name4");
@@ -317,7 +319,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   lsdb.installNameLsa(newLsa);
 
   // Lsa should include name4 and name5
-  areNamePrefixListsEqual(nameList, newPrefixes);
+  BOOST_CHECK_EQUAL(nameList, newPrefixes);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

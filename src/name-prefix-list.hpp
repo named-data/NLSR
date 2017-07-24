@@ -31,8 +31,13 @@
 namespace nlsr {
 class NamePrefixList
 {
-
 public:
+  using NamePair = std::tuple<ndn::Name, std::vector<std::string>>;
+  enum NamePairIndex {
+    NAME,
+    SOURCES
+  };
+
   NamePrefixList();
 
   ~NamePrefixList();
@@ -42,14 +47,14 @@ public:
       \retval false If the name could not be inserted.
    */
   bool
-  insert(const ndn::Name& name);
+  insert(const ndn::Name& name, const std::string& source = "");
 
   /*! \brief removes name from NamePrefixList
       \retval true If the name is removed
       \retval false If the name failed to be removed.
    */
   bool
-  remove(const ndn::Name& name);
+  remove(const ndn::Name& name, const std::string& source = "");
 
   void
   sort();
@@ -57,27 +62,45 @@ public:
   size_t
   getSize()
   {
-    return m_nameList.size();
+    return m_names.size();
   }
 
-  std::list<ndn::Name>&
-  getNameList()
-  {
-    return m_nameList;
-  }
-
-  const std::list<ndn::Name>&
-  getNameList() const
-  {
-    return m_nameList;
-  }
+  std::list<ndn::Name>
+  getNames() const;
 
   bool
   operator==(const NamePrefixList& other) const;
 
-private:
-  std::list<ndn::Name> m_nameList;
+  /*! Returns how many unique sources this name has.
 
+    \retval 0 if the name is not in the list, else the number of sources.
+   */
+  uint32_t
+  countSources(const ndn::Name& name) const;
+
+  /*! Returns the sources that this name has.
+
+    \retval an empty vector if the name is not in the list, else a
+    vector containing the sources.
+   */
+  const std::vector<std::string>
+  getSources(const ndn::Name& name) const;
+
+private:
+  /*! Obtain an iterator to the entry matching name.
+
+    \note We could do this quite easily inline with a lambda, but this
+    is slightly more efficient.
+   */
+  std::vector<NamePair>::iterator
+  get(const ndn::Name& name);
+
+  /*! Obtain an iterator to a specific source in an entry
+   */
+  std::vector<std::string>::iterator
+  getSource(const std::string& source, std::vector<NamePair>::iterator& entry);
+
+  std::vector<NamePair> m_names;
 };
 
 std::ostream&

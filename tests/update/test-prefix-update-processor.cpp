@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   NamePrefixList& namePrefixList = nlsr.getNamePrefixList();
 
   BOOST_REQUIRE_EQUAL(namePrefixList.getSize(), 1);
-  BOOST_CHECK_EQUAL(namePrefixList.getNameList().front(), parameters.getName());
+  BOOST_CHECK_EQUAL(namePrefixList.getNames().front(), parameters.getName());
 
   BOOST_CHECK(wasRoutingUpdatePublished());
   BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());

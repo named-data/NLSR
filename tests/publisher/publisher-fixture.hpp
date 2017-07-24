@@ -140,7 +140,7 @@ public:
 
     std::list<ndn::Name>::const_iterator it = tlvLsa.getNames().begin();
 
-    for (const ndn::Name& name : lsa.getNpl().getNameList()) {
+    for (const ndn::Name& name : lsa.getNpl().getNames()) {
       BOOST_CHECK_EQUAL(*it, name);
       ++it;
     }

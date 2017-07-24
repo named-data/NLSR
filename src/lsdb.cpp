@@ -216,7 +216,7 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       // prefixes to the NPT.
       m_nlsr.getNamePrefixTable().addEntry(nlsa.getOrigRouter(),
                                            nlsa.getOrigRouter());
-      std::list<ndn::Name> nameList = nlsa.getNpl().getNameList();
+      std::list<ndn::Name> nameList = nlsa.getNpl().getNames();
       for (std::list<ndn::Name>::iterator it = nameList.begin(); it != nameList.end();
            it++) {
         if ((*it) != m_nlsr.getConfParameter().getRouterPrefix()) {
@@ -245,14 +245,13 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       nlsa.getNpl().sort();
       // Obtain the set difference of the current and the incoming
       // name prefix sets, and add those.
-      std::list<ndn::Name> nameToAdd;
-      std::set_difference(nlsa.getNpl().getNameList().begin(),
-                          nlsa.getNpl().getNameList().end(),
-                          chkNameLsa->getNpl().getNameList().begin(),
-                          chkNameLsa->getNpl().getNameList().end(),
-                          std::inserter(nameToAdd, nameToAdd.begin()));
-      for (std::list<ndn::Name>::iterator it = nameToAdd.begin();
-           it != nameToAdd.end(); ++it) {
+      std::list<ndn::Name> newNames = nlsa.getNpl().getNames();
+      std::list<ndn::Name> oldNames = chkNameLsa->getNpl().getNames();
+      std::list<ndn::Name> namesToAdd;
+      std::set_difference(newNames.begin(), newNames.end(), oldNames.begin(), oldNames.end(),
+                          std::inserter(namesToAdd, namesToAdd.begin()));
+      for (std::list<ndn::Name>::iterator it = namesToAdd.begin();
+           it != namesToAdd.end(); ++it) {
         chkNameLsa->addName((*it));
         if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
           if ((*it) != m_nlsr.getConfParameter().getRouterPrefix()) {
@@ -264,14 +263,11 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       chkNameLsa->getNpl().sort();
 
       // Also remove any names that are no longer being advertised.
-      std::list<ndn::Name> nameToRemove;
-      std::set_difference(chkNameLsa->getNpl().getNameList().begin(),
-                          chkNameLsa->getNpl().getNameList().end(),
-                          nlsa.getNpl().getNameList().begin(),
-                          nlsa.getNpl().getNameList().end(),
-                          std::inserter(nameToRemove, nameToRemove.begin()));
-      for (std::list<ndn::Name>::iterator it = nameToRemove.begin();
-           it != nameToRemove.end(); ++it) {
+      std::list<ndn::Name> namesToRemove;
+      std::set_difference(oldNames.begin(), oldNames.end(), newNames.begin(), newNames.end(),
+                          std::inserter(namesToRemove, namesToRemove.begin()));
+      for (std::list<ndn::Name>::iterator it = namesToRemove.begin();
+           it != namesToRemove.end(); ++it) {
         _LOG_DEBUG("Removing name LSA no longer advertised: " << (*it).toUri());
         chkNameLsa->removeName((*it));
         if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
@@ -326,10 +322,9 @@ Lsdb::removeNameLsa(const ndn::Name& key)
         m_nlsr.getConfParameter().getRouterPrefix()) {
       m_nlsr.getNamePrefixTable().removeEntry((*it).getOrigRouter(),
                                               (*it).getOrigRouter());
-      for (std::list<ndn::Name>::iterator nit = (*it).getNpl().getNameList().begin();
-           nit != (*it).getNpl().getNameList().end(); ++nit) {
-        if ((*nit) != m_nlsr.getConfParameter().getRouterPrefix()) {
-          m_nlsr.getNamePrefixTable().removeEntry((*nit), (*it).getOrigRouter());
+      for (const auto& name : it->getNpl().getNames()) {
+        if (name != m_nlsr.getConfParameter().getRouterPrefix()) {
+          m_nlsr.getNamePrefixTable().removeEntry(name, it->getOrigRouter());
         }
       }
     }

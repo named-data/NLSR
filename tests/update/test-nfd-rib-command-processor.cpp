@@ -150,10 +150,10 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestRegisterCommand)
   face.receive(*command);
   this->advanceClocks(ndn::time::milliseconds(10));
 
-  BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 1);
-  auto itr = std::find(namePrefixes.getNameList().begin(), namePrefixes.getNameList().end(),
-                       prefixName);
-  if (itr == namePrefixes.getNameList().end()) {
+  BOOST_CHECK_EQUAL(namePrefixes.getNames().size(), 1);
+  std::list<ndn::Name> names = namePrefixes.getNames();
+  auto itr = std::find(names.begin(), names.end(), prefixName);
+  if (itr == namePrefixes.getNames().end()) {
     BOOST_FAIL("Prefix was not inserted!");
   }
   BOOST_CHECK_EQUAL((*itr), prefixName);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
   ndn::Name prefixName("/test/prefixA");
   ndn::nfd::ControlParameters parameters;
 
-  namePrefixes.getNameList().push_back(prefixName);
+  namePrefixes.insert(prefixName);
 
   shared_ptr<ndn::Interest> command = makeInterest(name.append(parameters.setName(prefixName)
     .wireEncode()), 0);
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
   face.receive(ndn::Interest(name));
   this->advanceClocks(ndn::time::milliseconds(10));
 
-  BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 0);
+  BOOST_CHECK_EQUAL(namePrefixes.getNames().size(), 0);
   BOOST_CHECK(wasRoutingUpdatePublished());
   BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 }
@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestInvalidPrefix)
   face.receive(ndn::Interest(name));
   this->advanceClocks(ndn::time::milliseconds(10));
 
-  BOOST_CHECK_EQUAL(namePrefixes.getNameList().size(), 0);
+  BOOST_CHECK_EQUAL(namePrefixes.getNames().size(), 0);
 
   // Cannot use routingUpdatePublish test now since in
   // initialize nlsr calls buildOwnNameLsa which publishes the routing update

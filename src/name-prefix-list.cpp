@@ -19,14 +19,15 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "name-prefix-list.hpp"
+
+#include "common.hpp"
+#include "logger.hpp"
+
 #include <iostream>
 #include <algorithm>
 
 #include <ndn-cxx/common.hpp>
-
-#include "common.hpp"
-#include "name-prefix-list.hpp"
-#include "logger.hpp"
 
 namespace nlsr {
 
@@ -42,58 +43,115 @@ NamePrefixList::~NamePrefixList()
 {
 }
 
-static bool
-nameCompare(const ndn::Name& name1, const ndn::Name& name2)
+std::vector<NamePrefixList::NamePair>::iterator
+NamePrefixList::get(const ndn::Name& name)
 {
-  return name1 == name2;
+  return std::find_if(m_names.begin(), m_names.end(),
+                      [&] (const NamePrefixList::NamePair& pair) {
+                        return name == std::get<NamePrefixList::NamePairIndex::NAME>(pair);
+                      });
+}
+
+std::vector<std::string>::iterator
+NamePrefixList::getSource(const std::string& source, std::vector<NamePair>::iterator& entry)
+{
+  return std::find_if(std::get<NamePairIndex::SOURCES>(*entry).begin(),
+                      std::get<NamePairIndex::SOURCES>(*entry).end(),
+                      [&] (const std::string& containerSource) {
+                        return source == containerSource;
+                      });
 }
 
 bool
-NamePrefixList::insert(const ndn::Name& name)
+NamePrefixList::insert(const ndn::Name& name, const std::string& source)
 {
-  std::list<ndn::Name>::iterator it = std::find_if(m_nameList.begin(),
-                                                   m_nameList.end(),
-                                                   std::bind(&nameCompare, _1 ,
-                                                   std::cref(name)));
-  if (it != m_nameList.end()) {
-    return false;
-  }
-  m_nameList.push_back(name);
-  return true;
-}
-
-bool
-NamePrefixList::remove(const ndn::Name& name)
-{
-  std::list<ndn::Name>::iterator it = std::find_if(m_nameList.begin(),
-                                                   m_nameList.end(),
-                                                   std::bind(&nameCompare, _1 ,
-                                                   std::cref(name)));
-  if (it != m_nameList.end()) {
-    m_nameList.erase(it);
+  auto pairItr = get(name);
+  if (pairItr == m_names.end()) {
+    std::vector<std::string> sources{source};
+    m_names.push_back(std::tie(name, sources));
     return true;
   }
+  else {
+    std::vector<std::string>& sources = std::get<NamePrefixList::NamePairIndex::SOURCES>(*pairItr);
+    auto sourceItr = getSource(source, pairItr);
+    if (sourceItr == sources.end()) {
+      sources.push_back(source);
+      return true;
+    }
+  }
+  return false;
+}
 
+bool
+NamePrefixList::remove(const ndn::Name& name, const std::string& source)
+{
+  auto pairItr = get(name);
+  if (pairItr != m_names.end()) {
+    std::vector<std::string>& sources = std::get<NamePrefixList::NamePairIndex::SOURCES>(*pairItr);
+    auto sourceItr = getSource(source, pairItr);
+    if (sourceItr != sources.end()) {
+      sources.erase(sourceItr);
+      if (sources.size() == 0) {
+        m_names.erase(pairItr);
+      }
+      return true;
+    }
+  }
   return false;
 }
 
 bool
 NamePrefixList::operator==(const NamePrefixList& other) const
 {
-  return m_nameList == other.getNameList();
+  return m_names == other.m_names;
 }
 
 void
 NamePrefixList::sort()
 {
-  m_nameList.sort();
+  std::sort(m_names.begin(), m_names.end());
+}
+
+std::list<ndn::Name>
+NamePrefixList::getNames() const
+{
+  std::list<ndn::Name> names;
+  for (const auto& namePair : m_names) {
+    names.push_back(std::get<NamePrefixList::NamePairIndex::NAME>(namePair));
+  }
+  return names;
+}
+
+uint32_t
+NamePrefixList::countSources(const ndn::Name& name) const
+{
+  return getSources(name).size();
+}
+
+const std::vector<std::string>
+NamePrefixList::getSources(const ndn::Name& name) const
+{
+  auto it = std::find_if(m_names.begin(), m_names.end(),
+                         [&] (const NamePrefixList::NamePair& pair) {
+                           return name == std::get<NamePrefixList::NamePairIndex::NAME>(pair);
+                         });
+  if (it != m_names.end()) {
+    return std::get<NamePrefixList::NamePairIndex::SOURCES>(*it);
+  }
+  else {
+    return std::vector<std::string>{};
+  }
 }
 
 std::ostream&
 operator<<(std::ostream& os, const NamePrefixList& list) {
   os << "Name prefix list: {\n";
-  for (const auto& name : list.getNameList()) {
-    os << name << "\n";
+  for (const auto& name : list.getNames()) {
+    os << name << "\n"
+       << "Sources:\n";
+    for (const auto& source : list.getSources(name)) {
+      os << "  " << source << "\n";
+    }
   }
   os << "}" << std::endl;
   return os;
