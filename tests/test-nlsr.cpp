@@ -19,10 +19,9 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "nlsr.hpp"
 #include "test-common.hpp"
 #include "control-commands.hpp"
-
-#include "nlsr.hpp"
 
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 
@@ -660,7 +659,7 @@ BOOST_AUTO_TEST_CASE(FaceDatasetPeriodicFetch)
   ndn::nfd::CommandOptions options;
   ndn::time::milliseconds defaultTimeout = options.getTimeout();
 
-  ndn::time::seconds fetchInterval(1);
+  int fetchInterval(1);
   ConfParameter& conf = nlsr.getConfParameter();
   conf.setFaceDatasetFetchInterval(fetchInterval);
   conf.setFaceDatasetFetchTries(0);
@@ -680,7 +679,7 @@ BOOST_AUTO_TEST_CASE(FaceDatasetPeriodicFetch)
   BOOST_CHECK_EQUAL(nNameMatches, 1);
 
   // Elapse the clock by the reschedule time (that we set)
-  this->advanceClocks(fetchInterval);
+  this->advanceClocks(ndn::time::seconds(fetchInterval));
   // Elapse the default timeout on the interest.
   this->advanceClocks(defaultTimeout);
   // Plus a little more to let the events process.

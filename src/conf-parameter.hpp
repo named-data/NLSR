@@ -22,13 +22,13 @@
 #ifndef NLSR_CONF_PARAMETER_HPP
 #define NLSR_CONF_PARAMETER_HPP
 
+#include "logger.hpp"
+
 #include <iostream>
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/common.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/util/time.hpp>
-
-#include "logger.hpp"
 
 namespace nlsr {
 
@@ -115,6 +115,7 @@ public:
     , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
     , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
     , m_routingCalcInterval(ROUTING_CALC_INTERVAL_DEFAULT)
+    , m_faceDatasetFetchInterval(ndn::time::seconds(static_cast<int>(FACE_DATASET_FETCH_INTERVAL_DEFAULT)))
     , m_lsaInterestLifetime(ndn::time::seconds(static_cast<int>(LSA_INTEREST_LIFETIME_DEFAULT)))
     , m_routerDeadInterval(2 * LSA_REFRESH_TIME_DEFAULT)
     , m_logLevel("INFO")
@@ -286,9 +287,9 @@ public:
   }
 
   void
-  setFaceDatasetFetchInterval(ndn::time::seconds interval)
+  setFaceDatasetFetchInterval(uint32_t interval)
   {
-    m_faceDatasetFetchInterval = interval;
+    m_faceDatasetFetchInterval = ndn::time::seconds(interval);
   }
 
   const ndn::time::seconds

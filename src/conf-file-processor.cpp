@@ -19,6 +19,12 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "conf-parameter.hpp"
+#include "conf-file-processor.hpp"
+#include "adjacent.hpp"
+#include "utility/name-helper.hpp"
+#include "update/prefix-update-processor.hpp"
+
 #include <iostream>
 #include <fstream>
 
@@ -30,12 +36,6 @@
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/filesystem.hpp>
-
-#include "conf-parameter.hpp"
-#include "conf-file-processor.hpp"
-#include "adjacent.hpp"
-#include "utility/name-helper.hpp"
-#include "update/prefix-update-processor.hpp"
 
 namespace nlsr {
 
@@ -469,14 +469,14 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   }
 
   // Set the interval between FaceStatus dataset fetch attempts.
-  ConfigurationVariable<ndn::time::seconds> faceDatasetFetchInterval("face-dataset-fetch-interval",
+  ConfigurationVariable<uint32_t> faceDatasetFetchInterval("face-dataset-fetch-interval",
                                                            bind(&ConfParameter::setFaceDatasetFetchInterval,
                                                                 &m_nlsr.getConfParameter(),
                                                                 _1));
 
-  faceDatasetFetchInterval.setMinAndMaxValue(ndn::time::seconds(FACE_DATASET_FETCH_INTERVAL_MIN),
-                                             ndn::time::seconds(FACE_DATASET_FETCH_INTERVAL_MAX));
-  faceDatasetFetchInterval.setOptional(ndn::time::seconds(FACE_DATASET_FETCH_INTERVAL_DEFAULT));
+  faceDatasetFetchInterval.setMinAndMaxValue(FACE_DATASET_FETCH_INTERVAL_MIN,
+                                             FACE_DATASET_FETCH_INTERVAL_MAX);
+  faceDatasetFetchInterval.setOptional(FACE_DATASET_FETCH_INTERVAL_DEFAULT);
 
   if (!faceDatasetFetchInterval.parseFromConfigSection(section)) {
     return false;
