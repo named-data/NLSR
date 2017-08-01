@@ -57,12 +57,6 @@ Fib::remove(const ndn::Name& name)
   }
 }
 
-bool
-compareFaceUri(const NextHop& hop, const std::string& faceUri)
-{
-  return hop.getConnectingFaceUri() == faceUri;
-}
-
 void
 Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
 {
@@ -75,7 +69,7 @@ Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
 
     if (isPrefixUpdatable(name)) {
       // Add nexthop to NDN-FIB
-      registerPrefix(name, it->getConnectingFaceUri(),
+      registerPrefix(name, ndn::util::FaceUri(it->getConnectingFaceUri()),
                      it->getRouteCostAsAdjustedInteger(),
                      ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
                      ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
@@ -209,11 +203,13 @@ Fib::isPrefixUpdatable(const ndn::Name& name) {
 }
 
 void
-Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
-                    uint64_t faceCost, const ndn::time::milliseconds& timeout,
+Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::util::FaceUri& faceUri,
+                    uint64_t faceCost,
+                    const ndn::time::milliseconds& timeout,
                     uint64_t flags, uint8_t times)
 {
   uint64_t faceId = m_adjacencyList.getFaceId(ndn::util::FaceUri(faceUri));
+
   if (faceId != 0) {
     ndn::nfd::ControlParameters faceParameters;
     faceParameters
@@ -224,30 +220,58 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const std::string& faceUri,
      .setExpirationPeriod(timeout)
      .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
 
-    _LOG_DEBUG("Registering prefix: " << namePrefix << " Face Uri: " << faceUri
-               << " Face Id: " << faceId);
-    registerPrefixInNfd(faceParameters, faceUri, times);
-  }
-  else {
-    _LOG_DEBUG("Error: No Face Id for face uri: " << faceUri);
-  }
-}
-
-void
-Fib::registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
-                         const std::string& faceUri,
-                         uint8_t times)
-{
-  _LOG_DEBUG("Registering prefix: " << parameters.getName() << " faceUri: " << faceUri);
-  m_controller.start<ndn::nfd::RibRegisterCommand>(parameters,
+    _LOG_DEBUG("Registering prefix: " << faceParameters.getName() << " faceUri: " << faceUri);
+    m_controller.start<ndn::nfd::RibRegisterCommand>(faceParameters,
                                                    std::bind(&Fib::onRegistrationSuccess, this, _1,
                                                              "Successful in name registration",
                                                              faceUri),
                                                    std::bind(&Fib::onRegistrationFailure,
-                                                            this, _1,
+                                                             this, _1,
                                                              "Failed in name registration",
-                                                             parameters,
+                                                             faceParameters,
                                                              faceUri, times));
+  }
+  else {
+    _LOG_WARN("Error: No Face Id for face uri: " << faceUri);
+  }
+}
+
+void
+Fib::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
+                           const std::string& message, const ndn::util::FaceUri& faceUri)
+{
+  _LOG_DEBUG(message << ": " << commandSuccessResult.getName() <<
+             " Face Uri: " << faceUri << " faceId: " << commandSuccessResult.getFaceId());
+
+  AdjacencyList::iterator adjacent = m_adjacencyList.findAdjacent(faceUri);
+  if (adjacent != m_adjacencyList.end()) {
+    adjacent->setFaceId(commandSuccessResult.getFaceId());
+  }
+
+  // Update the fast-access FaceMap with the new Face ID, too
+  m_faceMap.update(faceUri.toString(), commandSuccessResult.getFaceId());
+  m_faceMap.writeLog();
+}
+
+void
+Fib::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
+                           const std::string& message,
+                           const ndn::nfd::ControlParameters& parameters,
+                           const ndn::util::FaceUri& faceUri,
+                           uint8_t times)
+{
+  _LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
+  _LOG_DEBUG("Prefix: " << parameters.getName() << " failed for: " << times);
+  if (times < 3) {
+    _LOG_DEBUG("Trying to register again...");
+    registerPrefix(parameters.getName(), faceUri,
+                   parameters.getCost(),
+                   parameters.getExpirationPeriod(),
+                   parameters.getFlags(), times+1);
+  }
+  else {
+    _LOG_DEBUG("Registration trial given up");
+  }
 }
 
 void
@@ -271,6 +295,21 @@ Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
 }
 
 void
+Fib::onUnregistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
+                             const std::string& message)
+{
+  _LOG_DEBUG("Unregister successful Prefix: " << commandSuccessResult.getName() <<
+             " Face Id: " << commandSuccessResult.getFaceId());
+}
+
+void
+Fib::onUnregistrationFailure(const ndn::nfd::ControlResponse& response,
+                             const std::string& message)
+{
+  _LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
+}
+
+void
 Fib::setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t count)
 {
   ndn::nfd::ControlParameters parameters;
@@ -285,56 +324,6 @@ Fib::setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t co
                                                               parameters,
                                                               count,
                                                               "Failed to set strategy choice"));
-}
-
-void
-Fib::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                           const std::string& message, const std::string& faceUri)
-{
-  _LOG_DEBUG("Register successful Prefix: " << commandSuccessResult.getName() <<
-             " Face Uri: " << faceUri);
-
-  // Update the adjacency list with the new Face ID
-  m_adjacencyList.findAdjacent(faceUri)->setFaceId(commandSuccessResult.getFaceId());
-  // Update the fast-access FaceMap with the new Face ID, too
-  m_faceMap.update(faceUri, commandSuccessResult.getFaceId());
-  m_faceMap.writeLog();
-}
-
-void
-Fib::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
-                           const std::string& message,
-                           const ndn::nfd::ControlParameters& parameters,
-                           const std::string& faceUri,
-                           uint8_t times)
-{
-  _LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
-  _LOG_DEBUG("Prefix: " << parameters.getName() << " failed for: " << times);
-  if (times < 3) {
-    _LOG_DEBUG("Trying to register again...");
-    registerPrefix(parameters.getName(), faceUri,
-                   parameters.getCost(),
-                   parameters.getExpirationPeriod(),
-                   parameters.getFlags(), times+1);
-  }
-  else {
-    _LOG_DEBUG("Registration trial given up");
-  }
-}
-
-void
-Fib::onUnregistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                             const std::string& message)
-{
-  _LOG_DEBUG("Unregister successful Prefix: " << commandSuccessResult.getName() <<
-             " Face Id: " << commandSuccessResult.getFaceId());
-}
-
-void
-Fib::onUnregistrationFailure(const ndn::nfd::ControlResponse& response,
-                             const std::string& message)
-{
-  _LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
 }
 
 void
@@ -403,10 +392,10 @@ Fib::refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb)
 
   for (const NextHop& hop : entry) {
     registerPrefix(entry.getName(),
-    hop.getConnectingFaceUri(),
-    hop.getRouteCostAsAdjustedInteger(),
-    ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
-    ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+                   ndn::util::FaceUri(hop.getConnectingFaceUri()),
+                   hop.getRouteCostAsAdjustedInteger(),
+                   ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
+                   ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
   }
 
   refreshCb(entry);

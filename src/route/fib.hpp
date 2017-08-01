@@ -71,7 +71,7 @@ public:
 
   void
   registerPrefix(const ndn::Name& namePrefix,
-                 const std::string& faceUri,
+                 const ndn::util::FaceUri& faceUri,
                  uint64_t faceCost,
                  const ndn::time::milliseconds& timeout,
                  uint64_t flags,
@@ -94,22 +94,17 @@ private:
   getNumberOfFacesForName(NexthopList& nextHopList);
 
   void
-  registerPrefixInNfd(ndn::nfd::ControlParameters& parameters,
-                      const std::string& faceUri,
-                      uint8_t times);
-
-  void
   unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri);
 
   void
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                        const std::string& message, const std::string& faceUri);
+                        const std::string& message, const ndn::util::FaceUri& faceUri);
 
   void
   onRegistrationFailure(const ndn::nfd::ControlResponse& response,
                         const std::string& message,
                         const ndn::nfd::ControlParameters& parameters,
-                        const std::string& faceUri,
+                        const ndn::util::FaceUri& faceUri,
                         uint8_t times);
 
   void

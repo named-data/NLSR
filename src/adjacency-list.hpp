@@ -1,4 +1,4 @@
- /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
  * Copyright (c) 2014-2017,  The University of Memphis,
  *                           Regents of the University of California,
@@ -22,11 +22,11 @@
 #ifndef NLSR_ADJACENCY_LIST_HPP
 #define NLSR_ADJACENCY_LIST_HPP
 
+#include "adjacent.hpp"
+
 #include <list>
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/common.hpp>
-
-#include "adjacent.hpp"
 
 namespace nlsr {
 
@@ -147,6 +147,19 @@ public:
 
   AdjacencyList::iterator
   findAdjacent(const ndn::util::FaceUri& faceUri);
+
+  /*! \brief Hack to stop developers from using this function
+
+    It is here so that faceUri cannot be passed in as string,
+    converted to Name and findAdjacent(Name) be used.
+    So when faceUri is passed as string this will cause a compile error
+   */
+  template <typename T = float> void
+  findAdjacent(const std::string& faceUri)
+  {
+    BOOST_STATIC_ASSERT_MSG(std::is_integral<T>::value,
+      "Don't use std::string with findAdjacent!");
+  }
 
   uint64_t
   getFaceId(const ndn::util::FaceUri& faceUri);

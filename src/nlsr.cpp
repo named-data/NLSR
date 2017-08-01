@@ -91,7 +91,7 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
 void
 Nlsr::registrationFailed(const ndn::Name& name)
 {
-  std::cerr << "ERROR: Failed to register prefix in local hub's daemon" << std::endl;
+  _LOG_ERROR("ERROR: Failed to register prefix in local hub's daemon");
   BOOST_THROW_EXCEPTION(Error("Error: Prefix registration failed"));
 }
 
@@ -430,7 +430,6 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
     }
     case ndn::nfd::FACE_EVENT_CREATED: {
       // Find the neighbor in our adjacency list
-      _LOG_DEBUG("Face created event received.");
       auto adjacent = m_adjacencyList.findAdjacent(
         ndn::util::FaceUri(faceEventNotification.getRemoteUri()));
       // If we have a neighbor by that FaceUri and it has no FaceId, we
@@ -442,6 +441,13 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
         adjacent->setFaceId(faceEventNotification.getFaceId());
 
         registerAdjacencyPrefixes(*adjacent, ndn::time::milliseconds::max());
+
+        if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+          getRoutingTable().scheduleRoutingTableCalculation(*this);
+        }
+        else {
+         m_nlsrLsdb.scheduleAdjLsaBuild();
+        }
       }
       break;
     }
@@ -463,46 +469,32 @@ Nlsr::initializeFaces(const FetchDatasetCallback& onFetchSuccess,
 void
 Nlsr::processFaceDataset(const std::vector<ndn::nfd::FaceStatus>& faces)
 {
-  // Iterate over each neighbor listed in nlsr.conf
-  bool anyFaceChanged = false;
-  for (auto&& adjacency : m_adjacencyList.getAdjList()) {
+  _LOG_DEBUG("Processing face dataset");
 
-    const std::string faceUriString = adjacency.getFaceUri().toString();
+  // Iterate over each neighbor listed in nlsr.conf
+  for (auto& adjacent : m_adjacencyList.getAdjList()) {
+
+    const std::string faceUriString = adjacent.getFaceUri().toString();
     // Check the list of FaceStatus objects we got for a match
     for (const ndn::nfd::FaceStatus& faceStatus : faces) {
-
       // Set the adjacency FaceID if we find a URI match and it was
       // previously unset. Change the boolean to true.
-      if (adjacency.getFaceId() == 0 && faceUriString == faceStatus.getRemoteUri()) {
-        adjacency.setFaceId(faceStatus.getFaceId());
-        anyFaceChanged = true;
+      if (adjacent.getFaceId() == 0 && faceUriString == faceStatus.getRemoteUri()) {
+        _LOG_DEBUG("FaceUri: " << faceStatus.getRemoteUri() <<
+                   " FaceId: "<< faceStatus.getFaceId());
+        adjacent.setFaceId(faceStatus.getFaceId());
         // Register the prefixes for each neighbor
-        this->registerAdjacencyPrefixes(adjacency, ndn::time::milliseconds::max());
+        this->registerAdjacencyPrefixes(adjacent, ndn::time::milliseconds::max());
       }
     }
     // If this adjacency has no information in this dataset, then one
     // of two things is happening: 1. NFD is starting slowly and this
     // Face wasn't ready yet, or 2. NFD is configured
     // incorrectly and this Face isn't available.
-    if (adjacency.getFaceId() == 0) {
-      _LOG_WARN("The adjacency " << adjacency.getName() <<
+    if (adjacent.getFaceId() == 0) {
+      _LOG_WARN("The adjacency " << adjacent.getName() <<
                 " has no Face information in this dataset.");
     }
-  }
-
-  if (anyFaceChanged) {
-    // Only do these things if something has changed.  Schedule an
-    // adjacency LSA build to update with all of the new neighbors if
-    // HR is off.
-    if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
-      getRoutingTable().scheduleRoutingTableCalculation(*this);
-    }
-    else {
-      m_nlsrLsdb.scheduleAdjLsaBuild();
-    }
-
-    // Begin the Hello Protocol loop immediately, so we don't wait.
-    m_helloProtocol.sendScheduledInterest(0);
   }
 
   scheduleDatasetFetch();
@@ -512,25 +504,25 @@ void
 Nlsr::registerAdjacencyPrefixes(const Adjacent& adj,
                                 const ndn::time::milliseconds& timeout)
 {
-    std::string faceUri = adj.getFaceUri().toString();
-    double linkCost = adj.getLinkCost();
+  ndn::util::FaceUri faceUri = adj.getFaceUri();
+  double linkCost = adj.getLinkCost();
 
-    m_fib.registerPrefix(adj.getName(), faceUri, linkCost,
-                         timeout, ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+  m_fib.registerPrefix(adj.getName(), faceUri, linkCost,
+                       timeout, ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 
-    m_fib.registerPrefix(m_confParam.getChronosyncPrefix(),
-                                 faceUri, linkCost, timeout,
-                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+  m_fib.registerPrefix(m_confParam.getChronosyncPrefix(),
+                       faceUri, linkCost, timeout,
+                       ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 
-    m_fib.registerPrefix(m_confParam.getLsaPrefix(),
-                                 faceUri, linkCost, timeout,
-                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+  m_fib.registerPrefix(m_confParam.getLsaPrefix(),
+                       faceUri, linkCost, timeout,
+                       ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 
-    ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
-    broadcastKeyPrefix.append("KEYS");
-    m_fib.registerPrefix(broadcastKeyPrefix,
-                                 faceUri, linkCost, timeout,
-                                 ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+  ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
+  broadcastKeyPrefix.append("KEYS");
+  m_fib.registerPrefix(broadcastKeyPrefix,
+                       faceUri, linkCost, timeout,
+                       ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 }
 
 void
@@ -538,6 +530,7 @@ Nlsr::onFaceDatasetFetchTimeout(uint32_t code,
                                 const std::string& msg,
                                 uint32_t nRetriesSoFar)
 {
+  _LOG_DEBUG("onFaceDatasetFetchTimeout");
   // If we have exceeded the maximum attempt count, do not try again.
   if (nRetriesSoFar++ < m_confParam.getFaceDatasetFetchTries()) {
     _LOG_DEBUG("Failed to fetch dataset: " << msg << ". Attempting retry #" << nRetriesSoFar);
@@ -559,6 +552,8 @@ Nlsr::onFaceDatasetFetchTimeout(uint32_t code,
 void
 Nlsr::scheduleDatasetFetch()
 {
+  _LOG_DEBUG("Scheduling Dataset Fetch in " << m_confParam.getFaceDatasetFetchInterval()
+             << " seconds");
   m_scheduler.scheduleEvent(m_confParam.getFaceDatasetFetchInterval(),
     [this] {
       this->initializeFaces(

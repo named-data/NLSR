@@ -50,7 +50,7 @@ public:
     nlsr.getConfParameter().setNetwork("/ndn");
     nlsr.getConfParameter().setRouterName("/This/Router");
     nlsr.initialize();
-    face.processEvents(ndn::time::milliseconds(10));
+    face.processEvents(ndn::time::milliseconds(100));
   }
 
   void

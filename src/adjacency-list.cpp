@@ -263,9 +263,8 @@ AdjacencyList::findAdjacent(const ndn::util::FaceUri& faceUri)
 {
   return std::find_if(m_adjList.begin(),
                       m_adjList.end(),
-                      [&faceUri] (const Adjacent& adj) {
-                        return faceUri == adj.getFaceUri();
-                      });
+                      std::bind(&Adjacent::compareFaceUri,
+                                _1, faceUri));
 }
 
 uint64_t
