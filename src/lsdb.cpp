@@ -1154,7 +1154,8 @@ Lsdb::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
     originRouter.append(dataName.getSubName(lsaPosition + 1, dataName.size() - lsaPosition - 3));
 
     uint64_t seqNo = dataName[-1].toNumber();
-    std::string dataContent(reinterpret_cast<const char*>(data->getContent().value()));
+    std::string dataContent(reinterpret_cast<const char*>(data->getContent().value()),
+                            data->getContent().value_size());
 
     std::string interestedLsType  = dataName[-2].toUri();
 
