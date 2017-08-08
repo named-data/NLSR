@@ -43,6 +43,9 @@ NLSR is an open source project includes contributions from the members of the
 
     * Junxiao Shi         <https://www.cs.arizona.edu/people/shijunxiao/>
 
+* University Pierre & Marie Curie, Sorbonne University
+
+    * Davide Pesavento    <https://www.linkedin.com/in/davidepesavento>
 
 ## Queries about NLSR
 

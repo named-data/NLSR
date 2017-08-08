@@ -1,7 +1,7 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
 """
-Copyright (c) 2014-2016,  The University of Memphis,
+Copyright (c) 2014-2017,  The University of Memphis,
                           Regents of the University of California,
                           Arizona Board of Regents.
 
@@ -32,7 +32,7 @@ import os
 
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
-    opt.load(['default-compiler-flags', 'coverage',
+    opt.load(['default-compiler-flags', 'coverage', 'sanitizers',
               'boost',  'doxygen', 'sphinx_build'],
             tooldir=['.waf-tools'])
 
@@ -74,6 +74,8 @@ def configure(conf):
 
     conf.load('coverage')
 
+    conf.load('sanitizers')
+
     conf.define('DEFAULT_CONFIG_FILE', '%s/ndn/nlsr.conf' % conf.env['SYSCONFDIR'])
 
     conf.write_config_header('config.hpp')
@@ -94,8 +96,7 @@ def build(bld):
                 int(VERSION_SPLIT[2]),
         VERSION_MAJOR=VERSION_SPLIT[0],
         VERSION_MINOR=VERSION_SPLIT[1],
-        VERSION_PATCH=VERSION_SPLIT[2],
-        )
+        VERSION_PATCH=VERSION_SPLIT[2])
 
     nlsr_objects = bld(
         target='nlsr-objects',
@@ -105,28 +106,24 @@ def build(bld):
                                  excl=['src/main.cpp']),
         use='NDN_CXX BOOST LOG4CXX SYNC',
         includes='. src',
-        export_includes='. src',
-        )
+        export_includes='. src')
 
     nlsr = bld(
         target='bin/nlsr',
         features='cxx cxxprogram',
         source='src/main.cpp',
-        use='nlsr-objects',
-        )
+        use='nlsr-objects')
 
     nlsrc = bld(
         target='bin/nlsrc',
         features='cxx cxxprogram',
         source='tools/nlsrc.cpp',
-        use='nlsr-objects BOOST',
-        )
+        use='nlsr-objects BOOST')
 
     bld(features="subst",
         source='nlsr.conf',
         target='nlsr.conf.sample',
-        install_path="${SYSCONFDIR}/ndn",
-    )
+        install_path="${SYSCONFDIR}/ndn")
 
     if bld.env['WITH_TESTS']:
         bld.recurse('tests')
@@ -149,14 +146,13 @@ def doxygen(bld):
     version(bld)
 
     if not bld.env.DOXYGEN:
-        Logs.error("ERROR: cannot build documentation (`doxygen' is not found in $PATH)")
+        Logs.error("ERROR: cannot build documentation (`doxygen' not found in $PATH)")
     else:
         bld(features="subst",
             name="doxygen-conf",
             source="docs/doxygen.conf.in",
             target="docs/doxygen.conf",
-            VERSION=VERSION_BASE,
-            )
+            VERSION=VERSION_BASE)
 
         bld(features="doxygen",
             doxyfile='docs/doxygen.conf',
@@ -166,7 +162,7 @@ def sphinx(bld):
     version(bld)
 
     if not bld.env.SPHINX_BUILD:
-        bld.fatal("ERROR: cannot build documentation (`sphinx-build' is not found in $PATH)")
+        bld.fatal("ERROR: cannot build documentation (`sphinx-build' not found in $PATH)")
     else:
         bld(features="sphinx",
             outdir="docs",

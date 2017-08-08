@@ -158,13 +158,12 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
 
     receiveUpdate(updateName, syncSeqNo, sync_hrdry);
 
-    std::vector<ndn::Interest>& interests = face->sentInterests;
-
-    std::vector<ndn::Interest>::iterator it = interests.begin();
-
     // In HR dry-state all LSA's should be published
-    BOOST_REQUIRE_EQUAL(interests.size(), 1);
-    BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "/");
+    const auto& it = std::find_if(face->sentInterests.begin(), face->sentInterests.end(),
+                     [updateName] (const ndn::Interest& interest) {
+                       return interest.getName().getPrefix(-1) == updateName + "/";
+                     });
+    BOOST_REQUIRE(it != face->sentInterests.end());
   }
 }
 
