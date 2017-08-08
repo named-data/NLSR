@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -19,66 +19,56 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-/*! \file lsdb-dataset-interest-handler.cpp
-
-  This file details a class that is used by NLSRC and other command-line
-  tools to examine the state of NLSR. This system is not designed to
-  be used by routers to publish data to each other.
- */
-
-#include "lsdb-dataset-interest-handler.hpp"
-
+#include "dataset-interest-handler.hpp"
 #include "nlsr.hpp"
 #include "tlv/lsdb-status.hpp"
 #include "logger.hpp"
 
-#include <ndn-cxx/face.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/util/regex.hpp>
 
 namespace nlsr {
 
-INIT_LOGGER("LsdbDatasetInterestHandler");
+INIT_LOGGER("DatasetInterestHandler");
 
 const ndn::PartialName ADJACENCIES_DATASET = ndn::PartialName("lsdb/adjacencies");
 const ndn::PartialName COORDINATES_DATASET = ndn::PartialName("lsdb/coordinates");
 const ndn::PartialName NAMES_DATASET = ndn::PartialName("lsdb/names");
-const ndn::PartialName LISTS_DATASET = ndn::PartialName("lsdb/list");
+const ndn::PartialName RT_DATASET = ndn::PartialName("routing-table");
 
-LsdbDatasetInterestHandler::LsdbDatasetInterestHandler(Lsdb& lsdb,
-                                                       ndn::mgmt::Dispatcher& localHostDispatcher,
-                                                       ndn::mgmt::Dispatcher& routerNameDispatcher,
-                                                       ndn::Face& face,
-                                                       ndn::KeyChain& keyChain)
+DatasetInterestHandler::DatasetInterestHandler(const Lsdb& lsdb,
+                                               const RoutingTable& rt,
+                                               ndn::mgmt::Dispatcher& dispatcher,
+                                               const ndn::Face& face,
+                                               const ndn::KeyChain& keyChain)
   : m_lsdb(lsdb)
-  , m_localhostDispatcher(localHostDispatcher)
-  , m_routerNameDispatcher(routerNameDispatcher)
+  , m_dispatcher(dispatcher)
+  , m_routingTableEntries(rt.getRoutingTableEntry())
+  , m_dryRoutingTableEntries(rt.getDryRoutingTableEntry())
 {
-  NLSR_LOG_DEBUG("Setting dispatcher for lsdb status dataset:");
-  setDispatcher(m_localhostDispatcher);
-  setDispatcher(m_routerNameDispatcher);
+  setDispatcher(m_dispatcher);
 }
 
 void
-LsdbDatasetInterestHandler::setDispatcher(ndn::mgmt::Dispatcher& dispatcher)
+DatasetInterestHandler::setDispatcher(ndn::mgmt::Dispatcher& dispatcher)
 {
   dispatcher.addStatusDataset(ADJACENCIES_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&LsdbDatasetInterestHandler::publishAdjStatus, this, _1, _2, _3));
+    std::bind(&DatasetInterestHandler::publishAdjStatus, this, _1, _2, _3));
   dispatcher.addStatusDataset(COORDINATES_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&LsdbDatasetInterestHandler::publishCoordinateStatus, this, _1, _2, _3));
+    std::bind(&DatasetInterestHandler::publishCoordinateStatus, this, _1, _2, _3));
   dispatcher.addStatusDataset(NAMES_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&LsdbDatasetInterestHandler::publishNameStatus, this, _1, _2, _3));
-  dispatcher.addStatusDataset(LISTS_DATASET,
+    std::bind(&DatasetInterestHandler::publishNameStatus, this, _1, _2, _3));
+  dispatcher.addStatusDataset(RT_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&LsdbDatasetInterestHandler::publishAllStatus, this, _1, _2, _3));
+    std::bind(&DatasetInterestHandler::publishRtStatus, this, _1, _2, _3));
 }
 
 void
-LsdbDatasetInterestHandler::publishAdjStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                                             ndn::mgmt::StatusDatasetContext& context)
+DatasetInterestHandler::publishAdjStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                         ndn::mgmt::StatusDatasetContext& context)
 {
   NLSR_LOG_DEBUG("Received interest:  " << interest);
 
@@ -104,8 +94,8 @@ LsdbDatasetInterestHandler::publishAdjStatus(const ndn::Name& topPrefix, const n
 }
 
 void
-LsdbDatasetInterestHandler::publishCoordinateStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                                                    ndn::mgmt::StatusDatasetContext& context)
+DatasetInterestHandler::publishCoordinateStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                                ndn::mgmt::StatusDatasetContext& context)
 {
   auto lsaRange = std::make_pair<std::list<CoordinateLsa>::const_iterator,
                                  std::list<CoordinateLsa>::const_iterator>(
@@ -127,8 +117,8 @@ LsdbDatasetInterestHandler::publishCoordinateStatus(const ndn::Name& topPrefix, 
 }
 
 void
-LsdbDatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                                              ndn::mgmt::StatusDatasetContext& context)
+DatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                          ndn::mgmt::StatusDatasetContext& context)
 {
   auto lsaRange = std::make_pair<std::list<NameLsa>::const_iterator, std::list<NameLsa>::const_iterator>(
     m_lsdb.getNameLsdb().cbegin(), m_lsdb.getNameLsdb().cend());
@@ -150,24 +140,42 @@ LsdbDatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const 
 }
 
 void
-LsdbDatasetInterestHandler::publishAllStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                                             ndn::mgmt::StatusDatasetContext& context)
+DatasetInterestHandler::publishRtStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                        ndn::mgmt::StatusDatasetContext& context)
 {
-  NLSR_LOG_DEBUG("Received interest:  " << interest);
-  tlv::LsdbStatus lsdbStatus;
-  for (const tlv::AdjacencyLsa& tlvLsa : getTlvLsas<tlv::AdjacencyLsa>(m_lsdb)) {
-    lsdbStatus.addAdjacencyLsa(tlvLsa);
+  NLSR_LOG_DEBUG("Received interest for routing table:  " << interest);
+  tlv::RoutingTable tlvRoutingTable;
+
+  for (const auto& rte : m_routingTableEntries) {
+    std::shared_ptr<tlv::Destination> tlvDes = tlv::makeDes(rte);
+    tlvRoutingTable.setDestination(*tlvDes);
+
+    for (const auto& nh : rte.getNexthopList().getNextHops()) {
+      tlv::NextHop tlvNexthop;
+      tlvNexthop.setUri(nh.getConnectingFaceUri());
+      tlvNexthop.setCost(nh.getRouteCost());
+      tlvRoutingTable.addNexthops(tlvNexthop);
+    }
+
+    const ndn::Block& wire = tlvRoutingTable.wireEncode();
+    context.append(wire);
+  }
+  if (!m_dryRoutingTableEntries.empty()) {
+    for (const auto& dry_rte : m_dryRoutingTableEntries ) {
+        std::shared_ptr<tlv::Destination> tlvDes = tlv::makeDes(dry_rte);
+        tlvRoutingTable.setDestination(*tlvDes);
+
+        for (const auto& nh : dry_rte.getNexthopList().getNextHops()) {
+          tlv::NextHop tlvNexthop;
+          tlvNexthop.setUri(nh.getConnectingFaceUri());
+          tlvNexthop.setCost(nh.getRouteCost());
+          tlvRoutingTable.addNexthops(tlvNexthop);
+        }
+        const ndn::Block& wire = tlvRoutingTable.wireEncode();
+        context.append(wire);
+      }
   }
 
-  for (const tlv::CoordinateLsa& tlvLsa : getTlvLsas<tlv::CoordinateLsa>(m_lsdb)) {
-    lsdbStatus.addCoordinateLsa(tlvLsa);
-  }
-
-  for (const tlv::NameLsa& tlvLsa : getTlvLsas<tlv::NameLsa>(m_lsdb)) {
-    lsdbStatus.addNameLsa(tlvLsa);
-  }
-  const ndn::Block& wire = lsdbStatus.wireEncode();
-  context.append(wire);
   context.end();
 }
 
@@ -249,6 +257,5 @@ getTlvLsas<tlv::NameLsa>(const Lsdb& lsdb)
   return lsas;
 
 }
-
 
 } // namespace nlsr

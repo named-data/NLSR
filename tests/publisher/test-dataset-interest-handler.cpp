@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -19,7 +19,7 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "publisher/lsdb-dataset-interest-handler.hpp"
+#include "publisher/dataset-interest-handler.hpp"
 #include "tests/test-common.hpp"
 #include "tlv/tlv-nlsr.hpp"
 
@@ -27,6 +27,8 @@
 #include "../boost-test.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
+
+#include <iostream>
 
 namespace nlsr {
 namespace test {
@@ -36,6 +38,7 @@ processDatasetInterest(ndn::util::DummyClientFace& face,
                        std::function<bool(const ndn::Block&)> isSameType)
 {
   face.processEvents(ndn::time::milliseconds(30));
+
   BOOST_REQUIRE_EQUAL(face.sentData.size(), 1);
 
   ndn::Block parser(face.sentData[0].getContent());
@@ -46,17 +49,6 @@ processDatasetInterest(ndn::util::DummyClientFace& face,
   ++it;
 
   BOOST_CHECK(it == parser.elements_end());
-
-  face.sentData.clear();
-}
-
-void
-checkErrorResponse(ndn::util::DummyClientFace& face, uint64_t expectedCode)
-{
-  BOOST_REQUIRE_EQUAL(face.sentData.size(), 1);
-
-  ndn::nfd::ControlResponse response(face.sentData[0].getContent().blockFromValue());
-  BOOST_CHECK_EQUAL(response.getCode(), expectedCode);
 
   face.sentData.clear();
 }
@@ -83,6 +75,14 @@ BOOST_AUTO_TEST_CASE(Localhost)
   nameLsa.addName("/RouterA/name1");
   lsdb.installNameLsa(nameLsa);
 
+  // Install routing table
+  RoutingTableEntry rte1("desrouter1");
+  const ndn::Name& DEST_ROUTER = rte1.getDestination();
+
+  NextHop nh = createNextHop("udp://face-test1", 10);
+
+  rt1.addNextHop(DEST_ROUTER, nh);
+
   // Request adjacency LSAs
   face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("adjacencies")));
   processDatasetInterest(face,
@@ -98,10 +98,11 @@ BOOST_AUTO_TEST_CASE(Localhost)
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
 
-  // Request LSDB Status
-  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("list")));
+  // Request Routing Table
+  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/routing-table")));
   processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::LsdbStatus; });
+    [] (const ndn::Block& block) {
+      return block.type() == ndn::tlv::nlsr::RouteTableEntry; });
 }
 
 
@@ -119,6 +120,14 @@ BOOST_AUTO_TEST_CASE(Routername)
   CoordinateLsa coordinateLsa = createCoordinateLsa("/RouterA", 10.0, angles);
   lsdb.installCoordinateLsa(coordinateLsa);
 
+  //Install routing table
+  RoutingTableEntry rte1("desrouter1");
+  const ndn::Name& DEST_ROUTER = rte1.getDestination();
+
+  NextHop nh = createNextHop("udp://face-test1", 10);
+
+  rt1.addNextHop(DEST_ROUTER, nh);
+
   // Request adjacency LSAs
   face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("adjacencies")));
   processDatasetInterest(face,
@@ -134,10 +143,11 @@ BOOST_AUTO_TEST_CASE(Routername)
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
 
-  // Request LSDB Status
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("list")));
+  // Request Routing Table
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/routing-table")));
   processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::LsdbStatus; });
+    [] (const ndn::Block& block) {
+      return block.type() == ndn::tlv::nlsr::RouteTableEntry; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

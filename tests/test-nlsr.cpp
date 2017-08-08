@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -362,7 +362,7 @@ BOOST_AUTO_TEST_CASE(SetRouterCommandPrefix)
 {
   nlsr.initialize();
 
-  BOOST_CHECK_EQUAL(nlsr.getLsdbDatasetHandler().getRouterNameCommandPrefix(),
+  BOOST_CHECK_EQUAL(nlsr.getDatasetHandler().getRouterNameCommandPrefix(),
                     ndn::Name("/ndn/site/%C1.Router/this-router/lsdb"));
 }
 

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -19,31 +19,47 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#ifndef NLSR_PUBLISHER_LSDB_DATASET_INTEREST_HANDLER_HPP
-#define NLSR_PUBLISHER_LSDB_DATASET_INTEREST_HANDLER_HPP
+ /*! \file dataset-interest-handler.hpp
+
+  This file details a class that is used by NLSRC and other command-line
+  tools to examine the state of NLSR. This class doesn't only handle interest
+  from local host, but also handle interests from remote router.
+  This system is not designed to
+  be used by routers to publish data to each other.
+ */
+
+#ifndef NLSR_PUBLISHER_DATASET_INTEREST_HANDLER_HPP
+#define NLSR_PUBLISHER_DATASET_INTEREST_HANDLER_HPP
+
+#include "route/routing-table-entry.hpp"
+#include "route/routing-table.hpp"
+#include "route/nexthop-list.hpp"
+#include "lsdb.hpp"
+#include "logger.hpp"
 
 #include "tlv/adjacency-lsa.hpp"
 #include "tlv/coordinate-lsa.hpp"
 #include "tlv/name-lsa.hpp"
-#include "lsdb.hpp"
+#include "tlv/routing-table-status.hpp"
+#include "tlv/routing-table-entry.hpp"
 
 #include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/face.hpp>
 #include <boost/noncopyable.hpp>
 
 namespace nlsr {
-
 namespace dataset {
-  const ndn::Name::Component ADJACENCY_COMPONENT = ndn::Name::Component{"adjacencies"};
-  const ndn::Name::Component NAME_COMPONENT = ndn::Name::Component{"names"};
-  const ndn::Name::Component COORDINATE_COMPONENT = ndn::Name::Component{"coordinates"};
+const ndn::Name::Component ADJACENCY_COMPONENT = ndn::Name::Component{"adjacencies"};
+const ndn::Name::Component NAME_COMPONENT = ndn::Name::Component{"names"};
+const ndn::Name::Component COORDINATE_COMPONENT = ndn::Name::Component{"coordinates"};
 } // namespace dataset
 
 /*!
-   \brief Class to publish all lsa dataset
+   \brief Class to publish all dataset
    \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+   \sa https://redmine.named-data.net/projects/nlsr/wiki/Routing_Table_DataSet
  */
-class LsdbDatasetInterestHandler : boost::noncopyable
+class DatasetInterestHandler : boost::noncopyable
 {
 public:
   class Error : std::runtime_error
@@ -56,11 +72,11 @@ public:
     }
   };
 
-  LsdbDatasetInterestHandler(Lsdb& lsdb,
-                             ndn::mgmt::Dispatcher& localHostDispatcher,
-                             ndn::mgmt::Dispatcher& routerNameDispatcher,
-                             ndn::Face& face,
-                             ndn::KeyChain& keyChain);
+  DatasetInterestHandler(const Lsdb& lsdb,
+                         const RoutingTable& rt,
+                         ndn::mgmt::Dispatcher& dispatcher,
+                         const ndn::Face& face,
+                         const ndn::KeyChain& keyChain);
 
   ndn::Name&
   getRouterNameCommandPrefix()
@@ -75,11 +91,16 @@ public:
   }
 
 private:
-  /*! \brief Capture-point for Interests to verify Interests are
-   * valid, and then process them.
+  /*! \brief set dispatcher for localhost or remote router
    */
   void
   setDispatcher(ndn::mgmt::Dispatcher& dispatcher);
+
+  /*! \brief provide routing-table dataset
+  */
+  void
+  publishRtStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                  ndn::mgmt::StatusDatasetContext& context);
 
   /*! \brief provide adjacent status dataset
    */
@@ -99,18 +120,14 @@ private:
   publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                     ndn::mgmt::StatusDatasetContext& context);
 
-  /*! \brief provide ladb status dataset
-   */
-  void
-  publishAllStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                   ndn::mgmt::StatusDatasetContext& context);
-
 private:
   const Lsdb& m_lsdb;
   ndn::Name m_routerNamePrefix;
 
-  ndn::mgmt::Dispatcher& m_localhostDispatcher;
-  ndn::mgmt::Dispatcher& m_routerNameDispatcher;
+  ndn::mgmt::Dispatcher& m_dispatcher;
+
+  const std::list<RoutingTableEntry>& m_routingTableEntries;
+  const std::list<RoutingTableEntry>& m_dryRoutingTableEntries;
 };
 
 template<typename T> std::list<T>
@@ -127,4 +144,4 @@ getTlvLsas<tlv::NameLsa>(const Lsdb& lsdb);
 
 } // namespace nlsr
 
-#endif // NLSR_PUBLISHER_LSDB_DATASET_INTEREST_HANDLER_HPP
+#endif // NLSR_PUBLISHER_DATASET_INTEREST_HANDLER_HPP

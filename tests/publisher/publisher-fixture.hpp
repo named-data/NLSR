@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,7 +22,7 @@
 #ifndef NLSR_PUBLISHER_FIXTURE_HPP
 #define NLSR_PUBLISHER_FIXTURE_HPP
 
-#include "publisher/lsdb-dataset-interest-handler.hpp"
+#include "publisher/dataset-interest-handler.hpp"
 #include "nlsr.hpp"
 
 #include "../boost-test.hpp"
@@ -48,6 +48,7 @@ public:
     : face(m_ioService, m_keyChain, {true, true})
     , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , lsdb(nlsr.getLsdb())
+    , rt1(nlsr.getRoutingTable())
   {
     INIT_LOGGERS("/tmp/", "TRACE");
     nlsr.getConfParameter().setNetwork("/ndn");
@@ -98,6 +99,13 @@ public:
       BOOST_CHECK_EQUAL(it->getCost(), adjacency.getLinkCost());
       ++it;
     }
+  }
+
+  NextHop
+  createNextHop(const std::string& faceUri, double cost)
+  {
+    NextHop nexthop(faceUri, cost);
+    return nexthop;
   }
 
   CoordinateLsa
@@ -159,6 +167,7 @@ public:
   Lsdb& lsdb;
 
   ndn::security::pib::Identity routerId;
+  RoutingTable& rt1;
 };
 
 } // namespace test

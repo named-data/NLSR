@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -47,7 +47,11 @@ enum {
   LsdbStatus       = 138,
   ExpirationPeriod = 139,
   Cost             = 140,
-  Uri              = 141
+  Uri              = 141,
+  Destination      = 142,
+  NextHop          = 143,
+  RoutingTable     = 144,
+  RouteTableEntry  = 145
 };
 
 } // namespace nlsr

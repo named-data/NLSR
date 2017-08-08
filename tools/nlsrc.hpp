@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,6 +22,8 @@
 #include "tlv/adjacency-lsa.hpp"
 #include "tlv/coordinate-lsa.hpp"
 #include "tlv/name-lsa.hpp"
+#include "tlv/routing-table-status.hpp"
+
 
 #include <boost/noncopyable.hpp>
 #include <ndn-cxx/face.hpp>
@@ -47,7 +49,7 @@ public:
   printUsage();
 
   void
-  getStatus();
+  getStatus(const std::string& command);
 
   bool
   dispatch(const std::string& cmd);
@@ -89,6 +91,12 @@ private:
   fetchAdjacencyLsas();
 
   void
+  fetchRtables();
+
+  void
+  fetchHRRtables();
+
+  void
   fetchCoordinateLsas();
 
   void
@@ -98,6 +106,10 @@ private:
   void
   fetchFromLsdb(const ndn::Name::Component& datasetType,
                 const std::function<void(const T&)>& recordLsa);
+
+  template <class T>
+  void
+  fetchFromRt(const std::function<void(const T&)>& recordLsa);
 
   template <class T>
   void
@@ -111,6 +123,9 @@ private:
   std::string
   getLsaInfoString(const nlsr::tlv::LsaInfo& info);
 
+  std::string
+  getDesString(const nlsr::tlv::Destination& des);
+
   void
   recordAdjacencyLsa(const nlsr::tlv::AdjacencyLsa& lsa);
 
@@ -121,7 +136,16 @@ private:
   recordNameLsa(const nlsr::tlv::NameLsa& lsa);
 
   void
+  recordRtable(const nlsr::tlv::RoutingTable& rts);
+
+  void
   printLsdb();
+
+  void
+  printRT();
+
+  void
+  printAll();
 
 public:
   const char* programName;
@@ -136,10 +160,14 @@ private:
     std::string adjacencyLsaString;
     std::string coordinateLsaString;
     std::string nameLsaString;
+    std::string rtString;
   };
 
   Router&
-  getRouter(const nlsr::tlv::LsaInfo& info);
+  getRouterLsdb(const nlsr::tlv::LsaInfo& info);
+
+  Router&
+  getRouterRT(const nlsr::tlv::Destination& des);
 
   typedef std::map<const ndn::Name, Router> RouterMap;
   RouterMap m_routers;
@@ -148,12 +176,15 @@ private:
   ndn::KeyChain m_keyChain;
   ndn::Face& m_face;
   ndn::security::ValidatorNull m_validator;
+  std::string commandString;
 
   std::deque<std::function<void()>> m_fetchSteps;
 
   static const ndn::Name LOCALHOST_PREFIX;
   static const ndn::Name LSDB_PREFIX;
   static const ndn::Name NAME_UPDATE_PREFIX;
+
+  static const ndn::Name RT_PREFIX;
 
   static const uint32_t ERROR_CODE_TIMEOUT;
   static const uint32_t RESPONSE_CODE_SUCCESS;

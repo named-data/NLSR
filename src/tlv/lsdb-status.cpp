@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,7 +26,7 @@
 #include <ndn-cxx/encoding/block-helpers.hpp>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
 BOOST_CONCEPT_ASSERT((ndn::WireEncodable<LsdbStatus>));
 BOOST_CONCEPT_ASSERT((ndn::WireDecodable<LsdbStatus>));
@@ -43,6 +43,57 @@ LsdbStatus::LsdbStatus()
 LsdbStatus::LsdbStatus(const ndn::Block& block)
 {
   wireDecode(block);
+}
+
+LsdbStatus&
+LsdbStatus::addAdjacencyLsa(const AdjacencyLsa& adjacencyLsa)
+{
+  m_adjacencyLsas.push_back(adjacencyLsa);
+  m_wire.reset();
+  m_hasAdjacencyLsas = true;
+  return *this;
+}
+
+LsdbStatus&
+LsdbStatus::clearAdjacencyLsas()
+{
+  m_adjacencyLsas.clear();
+  m_hasAdjacencyLsas = false;
+  return *this;
+}
+
+LsdbStatus&
+LsdbStatus::addCoordinateLsa(const CoordinateLsa& coordinateLsa)
+{
+  m_coordinateLsas.push_back(coordinateLsa);
+  m_wire.reset();
+  m_hasCoordinateLsas = true;
+  return *this;
+}
+
+LsdbStatus&
+LsdbStatus::clearCoordinateLsas()
+{
+  m_coordinateLsas.clear();
+  m_hasCoordinateLsas = false;
+  return *this;
+}
+
+LsdbStatus&
+LsdbStatus::addNameLsa(const NameLsa& nameLsa)
+{
+  m_nameLsas.push_back(nameLsa);
+  m_wire.reset();
+  m_hasNameLsas = true;
+  return *this;
+}
+
+LsdbStatus&
+LsdbStatus::clearNameLsas()
+{
+  m_nameLsas.clear();
+  m_hasNameLsas = false;
+  return *this;
 }
 
 template<ndn::encoding::Tag TAG>
@@ -71,6 +122,8 @@ LsdbStatus::wireEncode(ndn::EncodingImpl<TAG>& block) const
 
   return totalLength;
 }
+
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(LsdbStatus);
 
 template size_t
 LsdbStatus::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
@@ -113,7 +166,7 @@ LsdbStatus::wireDecode(const ndn::Block& wire)
     std::stringstream error;
     error << "Expected LsdbStatus Block, but Block is of a different type: #"
           << m_wire.type();
-    throw Error(error.str());
+    BOOST_THROW_EXCEPTION(Error(error.str()));
   }
 
   m_wire.parse();
@@ -139,7 +192,7 @@ LsdbStatus::wireDecode(const ndn::Block& wire)
     std::stringstream error;
     error << "Expected the end of elements, but Block is of a different type: #"
           << val->type();
-    throw Error(error.str());
+    BOOST_THROW_EXCEPTION(Error(error.str()));
   }
 }
 

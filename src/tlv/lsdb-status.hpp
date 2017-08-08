@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -37,15 +37,14 @@
 namespace nlsr {
 namespace tlv {
 
-/*!
-   \brief Data abstraction for LsdbStatus
-
-   LsdbStatus := LSDB-STATUS-TYPE TLV-LENGTH
-                   AdjacencyLsa*
-                   CoordinateLsa*
-                   NameLsa*
-
-   \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
+/*! \brief Data abstraction for LsdbStatus
+ *
+ *  LsdbStatus := LSDB-STATUS-TYPE TLV-LENGTH
+ *                  AdjacencyLsa*
+ *                  CoordinateLsa*
+ *                  NameLsa*
+ *
+ * \sa https://redmine.named-data.net/projects/nlsr/wiki/LSDB_DataSet
  */
 class LsdbStatus
 {
@@ -76,21 +75,10 @@ public:
   }
 
   LsdbStatus&
-  addAdjacencyLsa(const AdjacencyLsa& adjacencyLsa)
-  {
-    m_adjacencyLsas.push_back(adjacencyLsa);
-    m_wire.reset();
-    m_hasAdjacencyLsas = true;
-    return *this;
-  }
+  addAdjacencyLsa(const AdjacencyLsa& adjacencyLsa);
 
   LsdbStatus&
-  clearAdjacencyLsas()
-  {
-    m_adjacencyLsas.clear();
-    m_hasAdjacencyLsas = false;
-    return *this;
-  }
+  clearAdjacencyLsas();
 
   bool
   hasAdjacencyLsas()
@@ -105,21 +93,10 @@ public:
   }
 
   LsdbStatus&
-  addCoordinateLsa(const CoordinateLsa& coordinateLsa)
-  {
-    m_coordinateLsas.push_back(coordinateLsa);
-    m_wire.reset();
-    m_hasCoordinateLsas = true;
-    return *this;
-  }
+  addCoordinateLsa(const CoordinateLsa& coordinateLsa);
 
   LsdbStatus&
-  clearCoordinateLsas()
-  {
-    m_coordinateLsas.clear();
-    m_hasCoordinateLsas = false;
-    return *this;
-  }
+  clearCoordinateLsas();
 
   bool
   hasCoordinateLsas()
@@ -134,21 +111,10 @@ public:
   }
 
   LsdbStatus&
-  addNameLsa(const NameLsa& nameLsa)
-  {
-    m_nameLsas.push_back(nameLsa);
-    m_wire.reset();
-    m_hasNameLsas = true;
-    return *this;
-  }
+  addNameLsa(const NameLsa& nameLsa);
 
   LsdbStatus&
-  clearNameLsas()
-  {
-    m_nameLsas.clear();
-    m_hasNameLsas = false;
-    return *this;
-  }
+  clearNameLsas();
 
   bool
   hasNameLsas()

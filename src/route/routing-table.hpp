@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -37,29 +37,30 @@ namespace nlsr {
 class Nlsr;
 class NextHop;
 
-class RoutingTable
+class RoutingTable : boost::noncopyable
 {
 public:
+  explicit
   RoutingTable(ndn::Scheduler& scheduler);
 
   /*! \brief Calculates a list of next hops for each router in the network.
-   * \param pnlsr The NLSR object that contains the LSAs needed for adj. info.
+   *  \param nlsr The NLSR object that contains the LSAs needed for adj. info.
    *
-   * Calculates the list of next hops to every other router in the network.
+   *  Calculates the list of next hops to every other router in the network.
    */
   void
-  calculate(Nlsr& pnlsr);
+  calculate(Nlsr& nlsr);
 
   /*! \brief Adds a next hop to a routing table entry.
-   * \param destRouter The destination router whose RTE we want to modify.
-   * \param nh The next hop to add to the RTE.
+   *  \param destRouter The destination router whose RTE we want to modify.
+   *  \param nh The next hop to add to the RTE.
    */
   void
   addNextHop(const ndn::Name& destRouter, NextHop& nh);
 
   /*! \brief Adds a next hop to a routing table entry in a dry run scenario.
-   * \param destRouter The destination router whose RTE we want to modify.
-   * \param nh The next hop to add to the router.
+   *  \param destRouter The destination router whose RTE we want to modify.
+   *  \param nh The next hop to add to the router.
    */
   void
   addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh);
@@ -68,8 +69,8 @@ public:
   findRoutingTableEntry(const ndn::Name& destRouter);
 
   /*! \brief Schedules a calculation event in the event scheduler only
-   * if one isn't already scheduled.
-   * \param pnlsr The NLSR whose scheduling status is needed.
+   *  if one isn't already scheduled.
+   *  \param pnlsr The NLSR whose scheduling status is needed.
    */
   void
   scheduleRoutingTableCalculation(Nlsr& pnlsr);
@@ -90,6 +91,24 @@ public:
   getRoutingCalcInterval() const
   {
     return m_routingCalcInterval;
+  }
+
+  const std::list<RoutingTableEntry>&
+  getRoutingTableEntry() const
+  {
+    return m_rTable;
+  }
+
+  const std::list<RoutingTableEntry>&
+  getDryRoutingTableEntry() const
+  {
+    return m_dryTable;
+  }
+
+  uint64_t
+  getRtSize()
+  {
+    return m_rTable.size();
   }
 
 private:

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -55,22 +55,21 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_routingTable(scheduler)
   , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, m_keyChain)
   , m_namePrefixTable(*this, m_routingTable.afterRoutingChange)
-  , m_localhostDispatcher(m_nlsrFace, m_keyChain)
-  , m_routerNameDispatcher(m_nlsrFace, m_keyChain)
-  , m_lsdbDatasetHandler(m_nlsrLsdb,
-                         m_localhostDispatcher,
-                         m_routerNameDispatcher,
-                         m_nlsrFace,
-                         m_keyChain)
+  , m_dispatcher(m_nlsrFace, m_keyChain)
+  , m_datasetHandler(m_nlsrLsdb,
+                     m_routingTable,
+                     m_dispatcher,
+                     m_nlsrFace,
+                     m_keyChain)
   , m_helloProtocol(*this, scheduler)
   , m_validator(ndn::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(m_nlsrFace))
   , m_controller(m_nlsrFace, m_keyChain)
   , m_faceDatasetController(m_nlsrFace, m_keyChain)
-  , m_prefixUpdateProcessor(m_localhostDispatcher,
+  , m_prefixUpdateProcessor(m_dispatcher,
                             m_nlsrFace,
                             m_namePrefixList,
                             m_nlsrLsdb)
-  , m_nfdRibCommandProcessor(m_localhostDispatcher,
+  , m_nfdRibCommandProcessor(m_dispatcher,
                              m_namePrefixList,
                              m_nlsrLsdb)
   , m_statsCollector(m_nlsrLsdb, m_helloProtocol)
@@ -133,12 +132,7 @@ void
 Nlsr::addDispatcherTopPrefix(const ndn::Name& topPrefix)
 {
   try {
-    if (topPrefix.equals(m_confParam.getRouterPrefix())) {
-      m_routerNameDispatcher.addTopPrefix(topPrefix, false, m_signingInfo);
-    }
-    else {
-      m_localhostDispatcher.addTopPrefix(topPrefix, false, m_signingInfo);
-    }
+    m_dispatcher.addTopPrefix(topPrefix, false, m_signingInfo);
   }
   catch (const std::exception& e) {
     NLSR_LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
@@ -234,7 +228,7 @@ Nlsr::initialize()
 {
   NLSR_LOG_DEBUG("Initializing Nlsr");
   m_confParam.buildRouterPrefix();
-  m_lsdbDatasetHandler.setRouterNameCommandPrefix(m_confParam.getRouterPrefix());
+  m_datasetHandler.setRouterNameCommandPrefix(m_confParam.getRouterPrefix());
   m_nlsrLsdb.setLsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()));
   m_nlsrLsdb.setThisRouterPrefix(m_confParam.getRouterPrefix().toUri());
   m_fib.setEntryRefreshTime(2 * m_confParam.getLsaRefreshTime());

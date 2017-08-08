@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -29,7 +29,7 @@
 #include "lsdb.hpp"
 #include "name-prefix-list.hpp"
 #include "test-access-control.hpp"
-#include "publisher/lsdb-dataset-interest-handler.hpp"
+#include "publisher/dataset-interest-handler.hpp"
 #include "route/fib.hpp"
 #include "route/name-prefix-table.hpp"
 #include "route/routing-table.hpp"
@@ -231,10 +231,10 @@ public:
     m_isRouteCalculationScheduled = ircs;
   }
 
-  LsdbDatasetInterestHandler&
-  getLsdbDatasetHandler()
+  DatasetInterestHandler&
+  getDatasetHandler()
   {
-    return m_lsdbDatasetHandler;
+    return m_datasetHandler;
   }
 
   void
@@ -356,15 +356,9 @@ public:
   }
 
   ndn::mgmt::Dispatcher&
-  getLocalhostDispatcher()
+  getDispatcher()
   {
-    return m_localhostDispatcher;
-  }
-
-  ndn::mgmt::Dispatcher&
-  getRouterNameDispatcher()
-  {
-    return m_routerNameDispatcher;
+    return m_dispatcher;
   }
 
   void
@@ -496,10 +490,9 @@ private:
   Fib m_fib;
   NamePrefixTable m_namePrefixTable;
 
-  ndn::mgmt::Dispatcher m_localhostDispatcher;
-  ndn::mgmt::Dispatcher m_routerNameDispatcher;
+  ndn::mgmt::Dispatcher m_dispatcher;
 
-  LsdbDatasetInterestHandler m_lsdbDatasetHandler;
+  DatasetInterestHandler m_datasetHandler;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   HelloProtocol m_helloProtocol;

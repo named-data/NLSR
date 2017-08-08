@@ -26,8 +26,14 @@ Options
 
 ``COMMAND``
 
-  ``status``
+  ``lsdb``
     Retrieve LSDB status information
+
+  ``routing``
+    Retrieve routing table status information
+
+  ``status``
+    Retrieve LSDB status and routing table status information
 
   ``advertise``
     Add a Name prefix to be advertised by NLSR

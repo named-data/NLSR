@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,7 +22,7 @@
 #include "nlsrc.hpp"
 
 #include "version.hpp"
-#include "src/publisher/lsdb-dataset-interest-handler.hpp"
+#include "src/publisher/dataset-interest-handler.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/data.hpp>
@@ -42,6 +42,8 @@ const ndn::Name Nlsrc::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
 const ndn::Name Nlsrc::LSDB_PREFIX = ndn::Name(Nlsrc::LOCALHOST_PREFIX).append("lsdb");
 const ndn::Name Nlsrc::NAME_UPDATE_PREFIX = ndn::Name(Nlsrc::LOCALHOST_PREFIX).append("prefix-update");
 
+const ndn::Name Nlsrc::RT_PREFIX = ndn::Name(Nlsrc::LOCALHOST_PREFIX).append("routing-table");
+
 const uint32_t Nlsrc::ERROR_CODE_TIMEOUT = 10060;
 const uint32_t Nlsrc::RESPONSE_CODE_SUCCESS = 200;
 
@@ -58,8 +60,12 @@ Nlsrc::printUsage()
     "       -V print version and exit\n"
     "\n"
     "   COMMAND can be one of the following:\n"
+    "       lsdb\n"
+    "           display NLSR lsdb status\n"
+    "       routing\n"
+    "           display routing table status\n"
     "       status\n"
-    "           display NLSR status\n"
+    "           display all NLSR status (lsdb & routingtable)\n"
     "       advertise name\n"
     "           advertise a name prefix through NLSR\n"
     "       withdraw name\n"
@@ -68,13 +74,25 @@ Nlsrc::printUsage()
 }
 
 void
-Nlsrc::getStatus()
+Nlsrc::getStatus(const std::string& command)
 {
-  m_fetchSteps.push_back(std::bind(&Nlsrc::fetchAdjacencyLsas, this));
-  m_fetchSteps.push_back(std::bind(&Nlsrc::fetchCoordinateLsas, this));
-  m_fetchSteps.push_back(std::bind(&Nlsrc::fetchNameLsas, this));
-  m_fetchSteps.push_back(std::bind(&Nlsrc::printLsdb, this));
-
+  if (command == "lsdb") {
+    m_fetchSteps.push_back(std::bind(&Nlsrc::fetchAdjacencyLsas, this));
+    m_fetchSteps.push_back(std::bind(&Nlsrc::fetchCoordinateLsas, this));
+    m_fetchSteps.push_back(std::bind(&Nlsrc::fetchNameLsas, this));
+    m_fetchSteps.push_back(std::bind(&Nlsrc::printLsdb, this));
+  }
+  else if (command == "routing") {
+    m_fetchSteps.push_back(std::bind(&Nlsrc::fetchRtables, this));
+    m_fetchSteps.push_back(std::bind(&Nlsrc::printRT, this));
+  }
+  else if(command == "status") {
+    m_fetchSteps.push_back(std::bind(&Nlsrc::fetchAdjacencyLsas, this));
+    m_fetchSteps.push_back(std::bind(&Nlsrc::fetchCoordinateLsas, this));
+    m_fetchSteps.push_back(std::bind(&Nlsrc::fetchNameLsas, this));
+    m_fetchSteps.push_back(std::bind(&Nlsrc::fetchRtables, this));
+    m_fetchSteps.push_back(std::bind(&Nlsrc::printAll, this));
+  }
   runNextStep();
 }
 
@@ -97,12 +115,13 @@ Nlsrc::dispatch(const std::string& command)
     withdrawName();
     return true;
   }
-  else if (command == "status") {
+  else if ((command == "lsdb")|| (command == "routing")||(command == "status")) {
     if (nOptions != 0) {
       return false;
     }
+    commandString = command;
 
-    getStatus();
+    getStatus(command);
     return true;
   }
 
@@ -218,6 +237,15 @@ Nlsrc::fetchNameLsas()
                                     std::bind(&Nlsrc::recordNameLsa, this, _1));
 }
 
+void
+Nlsrc::fetchRtables()
+{
+  fetchFromRt<nlsr::tlv::RoutingTable>(
+    [this] (const nlsr::tlv::RoutingTable& rts) {
+      recordRtable(rts);
+    });
+}
+
 template <class T>
 void
 Nlsrc::fetchFromLsdb(const ndn::Name::Component& datasetType,
@@ -238,8 +266,24 @@ Nlsrc::fetchFromLsdb(const ndn::Name::Component& datasetType,
 
 template <class T>
 void
+Nlsrc::fetchFromRt(const std::function<void(const T&)>& recordDataset)
+{
+  ndn::Name command = RT_PREFIX;
+
+  ndn::Interest interest(command);
+
+  ndn::util::SegmentFetcher::fetch(m_face,
+                                   interest,
+                                   m_validator,
+                                   std::bind(&Nlsrc::onFetchSuccess<T>,
+                                             this, _1, recordDataset),
+                                   std::bind(&Nlsrc::onTimeout, this, _1, _2));
+}
+
+template <class T>
+void
 Nlsrc::onFetchSuccess(const ndn::ConstBufferPtr& data,
-                      const std::function<void(const T&)>& recordLsa)
+                      const std::function<void(const T&)>& recordDataset)
 {
   ndn::Block block;
   size_t offset = 0;
@@ -255,8 +299,8 @@ Nlsrc::onFetchSuccess(const ndn::ConstBufferPtr& data,
 
     offset += block.size();
 
-    T lsa(block);
-    recordLsa(lsa);
+    T data(block);
+    recordDataset(data);
   }
 
   runNextStep();
@@ -278,10 +322,19 @@ Nlsrc::getLsaInfoString(const nlsr::tlv::LsaInfo& info)
   return os.str();
 }
 
+std::string
+Nlsrc::getDesString(const nlsr::tlv::Destination& des)
+{
+  std::ostringstream os;
+  os << "    " << des;
+
+  return os.str();
+}
+
 void
 Nlsrc::recordAdjacencyLsa(const nlsr::tlv::AdjacencyLsa& lsa)
 {
-  Router& router = getRouter(lsa.getLsaInfo());
+  Router& router = getRouterLsdb(lsa.getLsaInfo());
 
   std::ostringstream os;
   os << "    AdjacencyLsa:" << std::endl;
@@ -298,7 +351,7 @@ Nlsrc::recordAdjacencyLsa(const nlsr::tlv::AdjacencyLsa& lsa)
 void
 Nlsrc::recordCoordinateLsa(const nlsr::tlv::CoordinateLsa& lsa)
 {
-  Router& router = getRouter(lsa.getLsaInfo());
+  Router& router = getRouterLsdb(lsa.getLsaInfo());
 
   std::ostringstream os;
   os << "    Coordinate LSA:" << std::endl;
@@ -317,7 +370,7 @@ Nlsrc::recordCoordinateLsa(const nlsr::tlv::CoordinateLsa& lsa)
 void
 Nlsrc::recordNameLsa(const nlsr::tlv::NameLsa& lsa)
 {
-  Router& router = getRouter(lsa.getLsaInfo());
+  Router& router = getRouterLsdb(lsa.getLsaInfo());
 
   std::ostringstream os;
   os << "    Name LSA:" << std::endl;
@@ -332,9 +385,25 @@ Nlsrc::recordNameLsa(const nlsr::tlv::NameLsa& lsa)
 }
 
 void
+Nlsrc::recordRtable(const nlsr::tlv::RoutingTable& rt)
+{
+  Router& router = getRouterRT(rt.getDestination());
+
+  std::ostringstream os;
+
+  os << getDesString(rt.getDestination()) << std::endl;
+
+  os << "    NextHopList: " <<std::endl;
+  for (const auto& nhs : rt.getNextHops()) {
+    os << "      " << nhs;
+  }
+
+  router.rtString = os.str();
+}
+
+void
 Nlsrc::printLsdb()
 {
-  std::cout << "NLSR Status" << std::endl;
   std::cout << "LSDB:" << std::endl;
 
   for (const auto& item : m_routers) {
@@ -357,13 +426,47 @@ Nlsrc::printLsdb()
   }
 }
 
+void
+Nlsrc::printRT()
+{
+  std::cout << "Routing Table Status:" << std::endl;
+
+  for (const auto& item : m_routers) {
+
+    const Router& router = item.second;
+
+    if (!router.rtString.empty()) {
+      std::cout << router.rtString << std::endl;
+    }
+  }
+}
+
+void
+Nlsrc::printAll()
+{
+  std::cout << "NLSR Status" << std::endl;
+  printLsdb();
+  printRT();
+}
+
 Nlsrc::Router&
-Nlsrc::getRouter(const nlsr::tlv::LsaInfo& info)
+Nlsrc::getRouterLsdb(const nlsr::tlv::LsaInfo& info)
 {
   const ndn::Name& originRouterName = info.getOriginRouter();
 
   const auto& pair =
     m_routers.insert(std::make_pair(originRouterName, Router()));
+
+  return pair.first->second;
+}
+
+Nlsrc::Router&
+Nlsrc::getRouterRT(const nlsr::tlv::Destination& des)
+{
+  const ndn::Name& desName = des.getName();
+
+  const auto& pair =
+    m_routers.insert(std::make_pair(desName, Router()));
 
   return pair.first->second;
 }
