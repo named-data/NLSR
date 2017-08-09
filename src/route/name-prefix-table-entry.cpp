@@ -33,9 +33,9 @@ void
 NamePrefixTableEntry::generateNhlfromRteList()
 {
   m_nexthopList.reset();
-  for (auto rtpeItr = m_rteList.begin(); rtpeItr != m_rteList.end(); ++rtpeItr) {
-    for (auto nhItr = (*rtpeItr)->getNexthopList().getNextHops().begin();
-         nhItr != (*rtpeItr)->getNexthopList().getNextHops().end();
+  for (auto iterator = m_rteList.begin(); iterator != m_rteList.end(); ++iterator) {
+    for (auto nhItr = (*iterator)->getNexthopList().getNextHops().begin();
+         nhItr != (*iterator)->getNexthopList().getNextHops().end();
          ++nhItr) {
       m_nexthopList.addNextHop((*nhItr));
     }
@@ -44,32 +44,32 @@ NamePrefixTableEntry::generateNhlfromRteList()
 
 uint64_t
 NamePrefixTableEntry::removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry>
-                                              rtpePtr)
+                                              entryPtr)
 {
-  auto rtpeItr = std::find(m_rteList.begin(), m_rteList.end(), rtpePtr);
+  auto iterator = std::find(m_rteList.begin(), m_rteList.end(), entryPtr);
 
-  if (rtpeItr != m_rteList.end()) {
-    (*rtpeItr)->decrementUseCount();
-    m_rteList.erase(rtpeItr);
+  if (iterator != m_rteList.end()) {
+    (*iterator)->decrementUseCount();
+    m_rteList.erase(iterator);
   }
   else {
-    _LOG_ERROR("Routing entry for: " << rtpePtr->getDestination()
+    _LOG_ERROR("Routing entry for: " << entryPtr->getDestination()
                << " not found in NPT entry: " << getNamePrefix());
   }
-  return (*rtpeItr)->getUseCount();
+  return entryPtr->getUseCount();
 }
 
 void
 NamePrefixTableEntry::addRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry>
-                                           rtpePtr)
+                                           entryPtr)
 {
-  auto rtpeItr = std::find(m_rteList.begin(), m_rteList.end(), rtpePtr);
+  auto iterator = std::find(m_rteList.begin(), m_rteList.end(), entryPtr);
 
   // Ensure that this is a new entry
-  if (rtpeItr == m_rteList.end()) {
+  if (iterator == m_rteList.end()) {
     // Adding a new routing entry to the NPT entry
-    rtpePtr->incrementUseCount();
-    m_rteList.push_back(rtpePtr);
+    entryPtr->incrementUseCount();
+    m_rteList.push_back(entryPtr);
   }
   // Note: we don't need to update in the else case because these are
   // pointers, and they are centrally-located in the NPT and will all
@@ -105,8 +105,8 @@ operator<<(std::ostream& os, const NamePrefixTableEntry& entry)
 {
   os << "Name: " << entry.getNamePrefix() << "\n";
 
-  for (const std::shared_ptr<RoutingTablePoolEntry> rtpePtr : entry.getRteList()) {
-    os << "Destination: " << rtpePtr->getDestination() << "\n";
+  for (const std::shared_ptr<RoutingTablePoolEntry> entryPtr : entry.getRteList()) {
+    os << "Destination: " << entryPtr->getDestination() << "\n";
   }
 
   return os;

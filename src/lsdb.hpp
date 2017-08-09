@@ -22,17 +22,17 @@
 #ifndef NLSR_LSDB_HPP
 #define NLSR_LSDB_HPP
 
-#include <utility>
-#include <boost/cstdint.hpp>
-
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/util/time.hpp>
-
 #include "conf-parameter.hpp"
 #include "lsa.hpp"
 #include "sequencing-manager.hpp"
 #include "test-access-control.hpp"
 #include "communication/sync-logic-handler.hpp"
+
+#include <utility>
+#include <boost/cstdint.hpp>
+
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 
@@ -271,7 +271,7 @@ private:
     \param seqNo The seq. no. of the LSA to check.
   */
   void
-  exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo);
+  expireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Schedules an expire/refresh event in the LSA.
@@ -286,14 +286,14 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 private:
 
   void
-  exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo);
+  expireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
   ndn::EventId
   scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                   const seconds& expTime);
 
   void
-  exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
+  expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                 uint64_t seqNo);
 
 private:

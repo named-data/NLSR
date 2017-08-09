@@ -23,13 +23,13 @@
 #define NLSR_PUBLISHER_LSDB_DATASET_INTEREST_HANDLER_HPP
 
 #include "lsa-publisher.hpp"
+#include "tlv/adjacency-lsa.hpp"
+#include "tlv/coordinate-lsa.hpp"
+#include "tlv/name-lsa.hpp"
 
 #include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/face.hpp>
 #include <boost/noncopyable.hpp>
-#include "tlv/adjacency-lsa.hpp"
-#include "tlv/coordinate-lsa.hpp"
-#include "tlv/name-lsa.hpp"
 
 namespace nlsr {
 
@@ -55,12 +55,6 @@ public:
                              ndn::mgmt::Dispatcher& routerNameDispatcher,
                              ndn::Face& face,
                              ndn::KeyChain& keyChain);
-
-  const ndn::Name&
-  getLocalhostCommandPrefix()
-  {
-    return LOCALHOST_COMMAND_PREFIX;
-  }
 
   ndn::Name&
   getRouterNameCommandPrefix()
@@ -105,7 +99,6 @@ private:
                    ndn::mgmt::StatusDatasetContext& context);
 
 private:
-  static const ndn::Name LOCALHOST_COMMAND_PREFIX;
   ndn::Name m_routerNamePrefix;
 
   ndn::mgmt::Dispatcher& m_localhostDispatcher;

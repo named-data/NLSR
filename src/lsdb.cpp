@@ -196,7 +196,7 @@ Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
                                 const ndn::time::seconds& expTime)
 {
   return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   std::bind(&Lsdb::exprireOrRefreshNameLsa, this, key, seqNo));
+                                   std::bind(&Lsdb::expireOrRefreshNameLsa, this, key, seqNo));
 }
 
 bool
@@ -438,7 +438,7 @@ Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                       const ndn::time::seconds& expTime)
 {
   return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   std::bind(&Lsdb::exprireOrRefreshCoordinateLsa,
+                                   std::bind(&Lsdb::expireOrRefreshCoordinateLsa,
                                              this, key, seqNo));
 }
 
@@ -696,7 +696,7 @@ Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
                                const ndn::time::seconds& expTime)
 {
   return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   std::bind(&Lsdb::exprireOrRefreshAdjLsa, this, key, seqNo));
+                                   std::bind(&Lsdb::expireOrRefreshAdjLsa, this, key, seqNo));
 }
 
 bool
@@ -826,9 +826,9 @@ Lsdb::setThisRouterPrefix(std::string trp)
   // lsaKey is the key of the LSA's publishing router.
   // seqNo is the seq. no. of the candidate LSA.
 void
-Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
+Lsdb::expireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
 {
-  _LOG_DEBUG("Lsdb::exprireOrRefreshNameLsa Called");
+  _LOG_DEBUG("Lsdb::expireOrRefreshNameLsa Called");
   _LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   NameLsa* chkNameLsa = findNameLsa(lsaKey);
   // If this name LSA exists in the LSDB
@@ -869,9 +869,9 @@ Lsdb::exprireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
   // lsaKey is the key of the LSA's publishing router.
   // seqNo is the seq. no. of the candidate LSA.
 void
-Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
+Lsdb::expireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
 {
-  _LOG_DEBUG("Lsdb::exprireOrRefreshAdjLsa Called");
+  _LOG_DEBUG("Lsdb::expireOrRefreshAdjLsa Called");
   _LOG_DEBUG("LSA Key: " << lsaKey << " Seq No: " << seqNo);
   AdjLsa* chkAdjLsa = findAdjLsa(lsaKey);
   // If this is a valid LSA
@@ -916,10 +916,10 @@ Lsdb::exprireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
   // lsaKey is the key of the LSA's publishing router.
   // seqNo is the seq. no. of the candidate LSA.
 void
-Lsdb::exprireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
+Lsdb::expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                     uint64_t seqNo)
 {
-  _LOG_DEBUG("Lsdb::exprireOrRefreshCorLsa Called ");
+  _LOG_DEBUG("Lsdb::expireOrRefreshCorLsa Called ");
   _LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   CoordinateLsa* chkCorLsa = findCoordinateLsa(lsaKey);
   // Whether the LSA is in the LSDB or not.

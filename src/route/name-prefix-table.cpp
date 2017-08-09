@@ -45,8 +45,8 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
 
   // Check if the advertised name prefix is in the table already.
   NptEntryList::iterator nameItr = std::find(m_table.begin(),
-                                           m_table.end(),
-                                           name);
+                                             m_table.end(),
+                                             name);
 
   // Attempt to find a routing table pool entry (RTPE) we can use.
   RtpEntryMap::iterator rtpeItr = m_rtpool.find(destRouter);
@@ -139,9 +139,8 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
   std::shared_ptr<RoutingTablePoolEntry> rtpePtr = rtpeItr->second;
 
   // Ensure that the entry exists
-  NptEntryList::iterator nameItr = std::find_if(m_table.begin(),
-                                           m_table.end(),
-                                           std::bind(&npteCompare, _1, name));
+  NptEntryList::iterator nameItr = std::find_if(m_table.begin(), m_table.end(),
+                                                std::bind(&npteCompare, _1, name));
   if (nameItr != m_table.end()) {
     _LOG_TRACE("Removing origin: " << rtpePtr->getDestination()
                << " from prefix: " << *nameItr);
@@ -182,7 +181,7 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
   }
   else {
     _LOG_DEBUG("Attempted to remove origin: " << rtpePtr->getDestination()
-               << " from non-existant prefix: " << name);
+               << " from non-existent prefix: " << name);
   }
 }
 
@@ -239,7 +238,7 @@ void
 NamePrefixTable::deleteRtpeFromPool(std::shared_ptr<RoutingTablePoolEntry> rtpePtr)
 {
   if (m_rtpool.erase(rtpePtr->getDestination()) != 1) {
-    _LOG_DEBUG("Attempted to delete non-existant origin: "
+    _LOG_DEBUG("Attempted to delete non-existent origin: "
                << rtpePtr->getDestination()
                << " from NPT routing table entry storage pool.");
   }

@@ -27,24 +27,22 @@
  */
 
 #include "lsdb-dataset-interest-handler.hpp"
-
 #include "logger.hpp"
 #include "nlsr.hpp"
+#include "tlv/lsdb-status.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/util/regex.hpp>
-#include "tlv/lsdb-status.hpp"
 
 namespace nlsr {
 
 INIT_LOGGER("LsdbDatasetInterestHandler");
+
 const ndn::PartialName ADJACENCIES_DATASET = ndn::PartialName("lsdb/adjacencies");
 const ndn::PartialName COORDINATES_DATASET = ndn::PartialName("lsdb/coordinates");
 const ndn::PartialName NAMES_DATASET = ndn::PartialName("lsdb/names");
 const ndn::PartialName LISTS_DATASET = ndn::PartialName("lsdb/list");
-const ndn::PartialName LsdbDatasetInterestHandler::LOCALHOST_COMMAND_PREFIX =
-      ndn::Name(Nlsr::LOCALHOST_PREFIX).append(Lsdb::NAME_COMPONENT);
 
 LsdbDatasetInterestHandler::LsdbDatasetInterestHandler(Lsdb& lsdb,
                                                        ndn::mgmt::Dispatcher& localHostDispatcher,
