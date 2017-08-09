@@ -95,7 +95,7 @@ public:
   writeNameLsdbLog();
 
   const std::list<NameLsa>&
-  getNameLsdb();
+  getNameLsdb() const;
 
   /*! \brief Builds a cor. LSA for this router and installs it into the LSDB. */
   bool
@@ -134,7 +134,7 @@ public:
   writeCorLsdbLog();
 
   const std::list<CoordinateLsa>&
-  getCoordinateLsdb();
+  getCoordinateLsdb() const;
 
   //function related to Adj LSDB
 
@@ -175,7 +175,7 @@ public:
   findAdjLsa(const ndn::Name& key);
 
   const std::list<AdjLsa>&
-  getAdjLsdb();
+  getAdjLsdb() const;
 
   void
   setAdjLsaBuildInterval(uint32_t interval)

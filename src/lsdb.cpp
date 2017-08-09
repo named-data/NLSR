@@ -366,7 +366,7 @@ Lsdb::writeNameLsdbLog()
 }
 
 const std::list<NameLsa>&
-Lsdb::getNameLsdb()
+Lsdb::getNameLsdb() const
 {
   return m_nameLsdb;
 }
@@ -567,7 +567,7 @@ Lsdb::writeCorLsdbLog()
 }
 
 const std::list<CoordinateLsa>&
-Lsdb::getCoordinateLsdb()
+Lsdb::getCoordinateLsdb() const
 {
   return m_corLsdb;
 }
@@ -805,7 +805,7 @@ Lsdb::doesAdjLsaExist(const ndn::Name& key)
 }
 
 const std::list<AdjLsa>&
-Lsdb::getAdjLsdb()
+Lsdb::getAdjLsdb() const
 {
   return m_adjLsdb;
 }

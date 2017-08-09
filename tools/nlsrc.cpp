@@ -22,7 +22,7 @@
 #include "nlsrc.hpp"
 
 #include "version.hpp"
-#include "src/publisher/lsa-publisher.hpp"
+#include "src/publisher/lsdb-dataset-interest-handler.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/data.hpp>
@@ -192,21 +192,21 @@ Nlsrc::onControlResponse(const std::string& info, const ndn::Data& data)
 void
 Nlsrc::fetchAdjacencyLsas()
 {
-  fetchFromLsdb<nlsr::tlv::AdjacencyLsa>(nlsr::AdjacencyLsaPublisher::DATASET_COMPONENT,
+  fetchFromLsdb<nlsr::tlv::AdjacencyLsa>(nlsr::dataset::ADJACENCY_COMPONENT,
                                          std::bind(&Nlsrc::recordAdjacencyLsa, this, _1));
 }
 
 void
 Nlsrc::fetchCoordinateLsas()
 {
-  fetchFromLsdb<nlsr::tlv::CoordinateLsa>(nlsr::CoordinateLsaPublisher::DATASET_COMPONENT,
+  fetchFromLsdb<nlsr::tlv::CoordinateLsa>(nlsr::dataset::COORDINATE_COMPONENT,
                                           std::bind(&Nlsrc::recordCoordinateLsa, this, _1));
 }
 
 void
 Nlsrc::fetchNameLsas()
 {
-  fetchFromLsdb<nlsr::tlv::NameLsa>(nlsr::NameLsaPublisher::DATASET_COMPONENT,
+  fetchFromLsdb<nlsr::tlv::NameLsa>(nlsr::dataset::NAME_COMPONENT,
                                     std::bind(&Nlsrc::recordNameLsa, this, _1));
 }
 

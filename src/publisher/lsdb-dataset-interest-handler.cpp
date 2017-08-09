@@ -27,9 +27,10 @@
  */
 
 #include "lsdb-dataset-interest-handler.hpp"
-#include "logger.hpp"
+
 #include "nlsr.hpp"
 #include "tlv/lsdb-status.hpp"
+#include "logger.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
@@ -49,14 +50,9 @@ LsdbDatasetInterestHandler::LsdbDatasetInterestHandler(Lsdb& lsdb,
                                                        ndn::mgmt::Dispatcher& routerNameDispatcher,
                                                        ndn::Face& face,
                                                        ndn::KeyChain& keyChain)
-  : m_localhostDispatcher(localHostDispatcher)
+  : m_lsdb(lsdb)
+  , m_localhostDispatcher(localHostDispatcher)
   , m_routerNameDispatcher(routerNameDispatcher)
-  , m_adjacencyLsaPublisher(lsdb, face, keyChain)
-  , m_coordinateLsaPublisher(lsdb, face, keyChain)
-  , m_nameLsaPublisher(lsdb, face, keyChain)
-  , m_adjacencyLsas(lsdb.getAdjLsdb())
-  , m_coordinateLsas(lsdb.getCoordinateLsdb())
-  , m_nameLsas(lsdb.getNameLsdb())
 {
   _LOG_DEBUG("Setting dispatcher for lsdb status dataset:");
   setDispatcher(m_localhostDispatcher);
@@ -85,12 +81,16 @@ LsdbDatasetInterestHandler::publishAdjStatus(const ndn::Name& topPrefix, const n
                                              ndn::mgmt::StatusDatasetContext& context)
 {
   _LOG_DEBUG("Received interest:  " << interest);
-  for (AdjLsa lsa : m_adjacencyLsas) {
+
+  auto lsaRange = std::make_pair<std::list<AdjLsa>::const_iterator,
+                                 std::list<AdjLsa>::const_iterator>(
+    m_lsdb.getAdjLsdb().cbegin(), m_lsdb.getAdjLsdb().cend());
+  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
     tlv::AdjacencyLsa tlvLsa;
-    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(lsa);
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
     tlvLsa.setLsaInfo(*tlvLsaInfo);
 
-    for (const Adjacent& adj : lsa.getAdl().getAdjList()) {
+    for (const Adjacent& adj : lsa->getAdl().getAdjList()) {
       tlv::Adjacency tlvAdj;
       tlvAdj.setName(adj.getName());
       tlvAdj.setUri(adj.getFaceUri().toString());
@@ -107,14 +107,18 @@ void
 LsdbDatasetInterestHandler::publishCoordinateStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                                     ndn::mgmt::StatusDatasetContext& context)
 {
+  auto lsaRange = std::make_pair<std::list<CoordinateLsa>::const_iterator,
+                                 std::list<CoordinateLsa>::const_iterator>(
+    m_lsdb.getCoordinateLsdb().cbegin(), m_lsdb.getCoordinateLsdb().cend());
+
   _LOG_DEBUG("Received interest:  " << interest);
-  for (const CoordinateLsa lsa : m_coordinateLsas) {
+  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
     tlv::CoordinateLsa tlvLsa;
-    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(lsa);
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
     tlvLsa.setLsaInfo(*tlvLsaInfo);
 
-    tlvLsa.setHyperbolicRadius(lsa.getCorRadius());
-    tlvLsa.setHyperbolicAngle(lsa.getCorTheta());
+    tlvLsa.setHyperbolicRadius(lsa->getCorRadius());
+    tlvLsa.setHyperbolicAngle(lsa->getCorTheta());
 
     const ndn::Block& wire = tlvLsa.wireEncode();
     context.append(wire);
@@ -126,14 +130,16 @@ void
 LsdbDatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                               ndn::mgmt::StatusDatasetContext& context)
 {
+  auto lsaRange = std::make_pair<std::list<NameLsa>::const_iterator, std::list<NameLsa>::const_iterator>(
+    m_lsdb.getNameLsdb().cbegin(), m_lsdb.getNameLsdb().cend());
   _LOG_DEBUG("Received interest:  " << interest);
-  for (NameLsa lsa : m_nameLsas) {
+  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
     tlv::NameLsa tlvLsa;
 
-    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(lsa);
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
     tlvLsa.setLsaInfo(*tlvLsaInfo);
 
-    for (const ndn::Name& name : lsa.getNpl().getNames()) {
+    for (const ndn::Name& name : lsa->getNpl().getNames()) {
       tlvLsa.addName(name);
     }
 
@@ -149,20 +155,100 @@ LsdbDatasetInterestHandler::publishAllStatus(const ndn::Name& topPrefix, const n
 {
   _LOG_DEBUG("Received interest:  " << interest);
   tlv::LsdbStatus lsdbStatus;
-  for (const tlv::AdjacencyLsa& tlvLsa : m_adjacencyLsaPublisher.getTlvLsas()) {
+  for (const tlv::AdjacencyLsa& tlvLsa : getTlvLsas<tlv::AdjacencyLsa>(m_lsdb)) {
     lsdbStatus.addAdjacencyLsa(tlvLsa);
   }
 
-  for (const tlv::CoordinateLsa& tlvLsa : m_coordinateLsaPublisher.getTlvLsas()) {
+  for (const tlv::CoordinateLsa& tlvLsa : getTlvLsas<tlv::CoordinateLsa>(m_lsdb)) {
     lsdbStatus.addCoordinateLsa(tlvLsa);
   }
 
-  for (const tlv::NameLsa& tlvLsa : m_nameLsaPublisher.getTlvLsas()) {
+  for (const tlv::NameLsa& tlvLsa : getTlvLsas<tlv::NameLsa>(m_lsdb)) {
     lsdbStatus.addNameLsa(tlvLsa);
   }
   const ndn::Block& wire = lsdbStatus.wireEncode();
   context.append(wire);
   context.end();
 }
+
+template<> std::list<tlv::AdjacencyLsa>
+getTlvLsas<tlv::AdjacencyLsa>(const Lsdb& lsdb)
+{
+  std::list<tlv::AdjacencyLsa> lsas;
+
+  auto lsaRange = std::make_pair<std::list<AdjLsa>::const_iterator,
+                                 std::list<AdjLsa>::const_iterator>(
+    lsdb.getAdjLsdb().cbegin(), lsdb.getAdjLsdb().cend());
+  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
+    tlv::AdjacencyLsa tlvLsa;
+
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
+    tlvLsa.setLsaInfo(*tlvLsaInfo);
+
+    for (const Adjacent& adj : lsa->getAdl().getAdjList()) {
+      tlv::Adjacency tlvAdj;
+      tlvAdj.setName(adj.getName());
+      tlvAdj.setUri(adj.getFaceUri().toString());
+      tlvAdj.setCost(adj.getLinkCost());
+      tlvLsa.addAdjacency(tlvAdj);
+    }
+
+    lsas.push_back(tlvLsa);
+  }
+
+  return lsas;
+
+}
+
+template<> std::list<tlv::CoordinateLsa>
+getTlvLsas<tlv::CoordinateLsa>(const Lsdb& lsdb)
+{
+  std::list<tlv::CoordinateLsa> lsas;
+
+  auto lsaRange = std::make_pair<std::list<CoordinateLsa>::const_iterator,
+                                 std::list<CoordinateLsa>::const_iterator>(
+    lsdb.getCoordinateLsdb().cbegin(), lsdb.getCoordinateLsdb().cend());
+
+  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
+    tlv::CoordinateLsa tlvLsa;
+
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
+    tlvLsa.setLsaInfo(*tlvLsaInfo);
+
+    tlvLsa.setHyperbolicRadius(lsa->getCorRadius());
+    tlvLsa.setHyperbolicAngle(lsa->getCorTheta());
+
+    lsas.push_back(tlvLsa);
+  }
+
+  return lsas;
+
+}
+
+template<> std::list<tlv::NameLsa>
+getTlvLsas<tlv::NameLsa>(const Lsdb& lsdb)
+{
+  std::list<tlv::NameLsa> lsas;
+
+  auto lsaRange = std::make_pair<std::list<NameLsa>::const_iterator,
+                                 std::list<NameLsa>::const_iterator>(
+    lsdb.getNameLsdb().cbegin(), lsdb.getNameLsdb().cend());
+  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
+    tlv::NameLsa tlvLsa;
+
+    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
+    tlvLsa.setLsaInfo(*tlvLsaInfo);
+
+    for (const ndn::Name& name : lsa->getNpl().getNames()) {
+      tlvLsa.addName(name);
+    }
+
+    lsas.push_back(tlvLsa);
+  }
+
+  return lsas;
+
+}
+
 
 } // namespace nlsr

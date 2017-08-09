@@ -22,16 +22,22 @@
 #ifndef NLSR_PUBLISHER_LSDB_DATASET_INTEREST_HANDLER_HPP
 #define NLSR_PUBLISHER_LSDB_DATASET_INTEREST_HANDLER_HPP
 
-#include "lsa-publisher.hpp"
 #include "tlv/adjacency-lsa.hpp"
 #include "tlv/coordinate-lsa.hpp"
 #include "tlv/name-lsa.hpp"
+#include "lsdb.hpp"
 
 #include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/face.hpp>
 #include <boost/noncopyable.hpp>
 
 namespace nlsr {
+
+namespace dataset {
+  const ndn::Name::Component ADJACENCY_COMPONENT = ndn::Name::Component{"adjacencies"};
+  const ndn::Name::Component NAME_COMPONENT = ndn::Name::Component{"names"};
+  const ndn::Name::Component COORDINATE_COMPONENT = ndn::Name::Component{"coordinates"};
+} // namespace dataset
 
 /*!
    \brief Class to publish all lsa dataset
@@ -100,19 +106,24 @@ private:
                    ndn::mgmt::StatusDatasetContext& context);
 
 private:
+  const Lsdb& m_lsdb;
   ndn::Name m_routerNamePrefix;
 
   ndn::mgmt::Dispatcher& m_localhostDispatcher;
   ndn::mgmt::Dispatcher& m_routerNameDispatcher;
-
-  AdjacencyLsaPublisher m_adjacencyLsaPublisher;
-  CoordinateLsaPublisher m_coordinateLsaPublisher;
-  NameLsaPublisher m_nameLsaPublisher;
-
-  const std::list<AdjLsa>& m_adjacencyLsas;
-  const std::list<CoordinateLsa>& m_coordinateLsas;
-  const std::list<NameLsa>& m_nameLsas;
 };
+
+template<typename T> std::list<T>
+getTlvLsas(const Lsdb& lsdb);
+
+template<> std::list<tlv::AdjacencyLsa>
+getTlvLsas<tlv::AdjacencyLsa>(const Lsdb& lsdb);
+
+template<> std::list<tlv::CoordinateLsa>
+getTlvLsas<tlv::CoordinateLsa>(const Lsdb& lsdb);
+
+template<> std::list<tlv::NameLsa>
+getTlvLsas<tlv::NameLsa>(const Lsdb& lsdb);
 
 } // namespace nlsr
 
