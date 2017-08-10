@@ -97,7 +97,7 @@ public:
     AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
     lsdb.installAdjLsa(adjC);
 
-    map.createFromAdjLsdb(nlsr);
+    map.createFromAdjLsdb(lsdb.getAdjLsdb().begin(), lsdb.getAdjLsdb().end());
   }
 
 public:

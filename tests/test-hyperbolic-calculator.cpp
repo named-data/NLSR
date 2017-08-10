@@ -102,7 +102,7 @@ public:
     CoordinateLsa coordC(adjC.getOrigRouter(), 1, MAX_TIME, 14.11, anglesC);
     lsdb.installCoordinateLsa(coordC);
 
-    map.createFromAdjLsdb(nlsr);
+    map.createFromAdjLsdb(lsdb.getAdjLsdb().begin(), lsdb.getAdjLsdb().end());
   }
 
   void runTest(const double& expectedCost)

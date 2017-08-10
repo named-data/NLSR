@@ -16,19 +16,19 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
-#include <iostream>
-#include <list>
 
+#include "map.hpp"
 #include "nlsr.hpp"
 #include "adjacent.hpp"
 #include "lsa.hpp"
 #include "lsdb.hpp"
-#include "map.hpp"
+
 #include "logger.hpp"
+
+#include <iostream>
+#include <list>
+
 namespace nlsr {
 
 INIT_LOGGER("Map");
@@ -95,29 +95,6 @@ Map::getMappingNoByRouterName(const ndn::Name& rName)
     return (*it).getMappingNumber();
   }
   return -1;
-}
-
-void
-Map::createFromAdjLsdb(Nlsr& pnlsr)
-{
-  std::list<AdjLsa> adjLsdb = pnlsr.getLsdb().getAdjLsdb();
-  for (std::list<AdjLsa>::iterator it = adjLsdb.begin();
-       it != adjLsdb.end() ; it++) {
-    addEntry((*it).getOrigRouter());
-    std::list<Adjacent> adl = (*it).getAdl().getAdjList();
-    for (std::list<Adjacent>::iterator itAdl = adl.begin();
-         itAdl != adl.end() ; itAdl++) {
-      addEntry((*itAdl).getName());
-    }
-  }
-}
-
-void
-Map::createFromCoordinateLsdb(Nlsr& nlsr)
-{
-  for (CoordinateLsa lsa : nlsr.getLsdb().getCoordinateLsdb()) {
-    addEntry(lsa.getOrigRouter());
-  }
 }
 
 void

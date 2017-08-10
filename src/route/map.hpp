@@ -16,20 +16,17 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #ifndef NLSR_MAP_HPP
 #define NLSR_MAP_HPP
+
+#include "common.hpp"
+#include "map-entry.hpp"
 
 #include <iostream>
 #include <list>
 #include <boost/cstdint.hpp>
-
-#include <ndn-cxx/common.hpp>
-
-#include "map-entry.hpp"
 
 namespace nlsr {
 
@@ -52,11 +49,36 @@ public:
   void
   addEntry(const ndn::Name& rtrName);
 
-  void
-  createFromAdjLsdb(Nlsr& pnlsr);
+  /*! Populates the Map with AdjacencyLsas.
 
+    \note IteratorType must an iterator type, and begin to end must represent a valid range.
+  */
+  template<typename IteratorType>
   void
-  createFromCoordinateLsdb(Nlsr& nlsr);
+  createFromAdjLsdb(IteratorType begin, IteratorType end)
+  {
+    BOOST_STATIC_ASSERT_MSG(is_iterator<IteratorType>::value, "IteratorType must be an iterator!");
+    for (auto lsa = begin; lsa != end; lsa++) {
+      addEntry(lsa->getOrigRouter());
+      for (const auto& adjacent : lsa->getAdl().getAdjList()) {
+        addEntry(adjacent.getName());
+      }
+    }
+  }
+
+  /*! Populates the Map with CoordinateLsas.
+
+    \note IteratorType must an iterator type, and begin to end must represent a valid range.
+  */
+  template<typename IteratorType>
+  void
+  createFromCoordinateLsdb(IteratorType begin, IteratorType end)
+  {
+    BOOST_STATIC_ASSERT_MSG(is_iterator<IteratorType>::value, "IteratorType must be an iterator!");
+    for (auto lsa = begin; lsa != end; lsa++) {
+      addEntry(lsa->getOrigRouter());
+    }
+  }
 
   const ndn::Name
   getRouterNameByMappingNo(int32_t mn);
@@ -91,4 +113,5 @@ private:
 };
 
 } // namespace nlsr
-#endif //NLSR_MAP_HPP
+
+#endif // NLSR_MAP_HPP

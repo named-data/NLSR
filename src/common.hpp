@@ -34,6 +34,22 @@ using std::function;
 
 const ndn::time::seconds TIME_ALLOWED_FOR_CANONIZATION = ndn::time::seconds(4);
 
+template<typename T, typename = void>
+struct is_iterator
+{
+   static constexpr bool value = false;
+};
+
+/*! Use C++11 iterator_traits to check if some type is an iterator
+ */
+template<typename T>
+struct is_iterator<T, typename std::enable_if<!std::is_same<
+  typename std::iterator_traits<T>::value_type,
+  void>::value>::type>
+{
+   static constexpr bool value = true;
+};
+
 } // namespace nlsr
 
 #endif // NLSR_COMMON_HPP

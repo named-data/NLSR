@@ -194,6 +194,12 @@ AdjacencyList::getAdjList()
   return m_adjList;
 }
 
+const std::list<Adjacent>&
+AdjacencyList::getAdjList() const
+{
+  return m_adjList;
+}
+
 bool
 AdjacencyList::isAdjLsaBuildable(const uint32_t interestRetryNo) const
 {

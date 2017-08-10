@@ -22,13 +22,13 @@
 #ifndef NLSR_LSA_HPP
 #define NLSR_LSA_HPP
 
+#include "name-prefix-list.hpp"
+#include "adjacent.hpp"
+#include "adjacency-list.hpp"
+
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/util/time.hpp>
-
-#include "adjacent.hpp"
-#include "name-prefix-list.hpp"
-#include "adjacency-list.hpp"
 
 namespace nlsr {
 
@@ -201,6 +201,12 @@ public:
 
   AdjacencyList&
   getAdl()
+  {
+    return m_adl;
+  }
+
+  const AdjacencyList&
+  getAdl() const
   {
     return m_adl;
   }

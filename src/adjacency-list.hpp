@@ -70,6 +70,9 @@ public:
   std::list<Adjacent>&
   getAdjList();
 
+  const std::list<Adjacent>&
+  getAdjList() const;
+
   bool
   isNeighbor(const ndn::Name& adjName);
 
