@@ -17,11 +17,12 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #ifndef NLSR_ROUTING_TABLE_CALCULATOR_HPP
 #define NLSR_ROUTING_TABLE_CALCULATOR_HPP
+
+#include "common.hpp"
 
 #include <list>
 #include <iostream>
@@ -238,7 +239,6 @@ private:
   static const double MATH_PI;
   static const double UNKNOWN_DISTANCE;
   static const double UNKNOWN_RADIUS;
-  static const int32_t ROUTER_NOT_FOUND;
 };
 
 } // namespace nlsr

@@ -28,7 +28,31 @@
 #include <list>
 #include <boost/cstdint.hpp>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/tag.hpp>
+
 namespace nlsr {
+
+namespace detail {
+
+  using namespace boost::multi_index;
+  // Define tags so that we can search by different indices.
+  struct byRouterName {};
+  struct byMappingNumber{};
+  using entryContainer = multi_index_container<
+    MapEntry,
+    indexed_by<
+      hashed_unique<tag<byRouterName>,
+                    const_mem_fun<MapEntry, const ndn::Name&, &MapEntry::getRouter>,
+                    std::hash<ndn::Name>>,
+      hashed_unique<tag<byMappingNumber>,
+                    const_mem_fun<MapEntry, int32_t, &MapEntry::getMappingNumber>>
+      >
+    >;
+
+} // namespace detail
 
 class Nlsr;
 
@@ -80,25 +104,19 @@ public:
     }
   }
 
-  const ndn::Name
+  ndn::optional<ndn::Name>
   getRouterNameByMappingNo(int32_t mn);
 
-  int32_t
+  ndn::optional<int32_t>
   getMappingNoByRouterName(const ndn::Name& rName);
 
   void
   reset();
 
-  std::list<MapEntry>&
-  getMapList()
-  {
-    return m_table;
-  }
-
   size_t
   getMapSize() const
   {
-    return m_table.size();
+    return m_entries.size();
   }
 
   void
@@ -109,7 +127,7 @@ private:
   addEntry(MapEntry& mpe);
 
   int32_t m_mappingIndex;
-  std::list<MapEntry> m_table;
+  detail::entryContainer m_entries;
 };
 
 } // namespace nlsr

@@ -32,18 +32,6 @@ namespace nlsr {
 
 INIT_LOGGER("Map");
 
-static bool
-mapEntryCompareByRouter(MapEntry& mpe1, const ndn::Name& rtrName)
-{
-  return mpe1.getRouter() == rtrName;
-}
-
-static bool
-mapEntryCompareByMappingNo(MapEntry& mpe1, int32_t mappingNo)
-{
-  return mpe1.getMappingNumber() == mappingNo;
-}
-
 void
 Map::addEntry(const ndn::Name& rtrName)
 {
@@ -56,48 +44,39 @@ Map::addEntry(const ndn::Name& rtrName)
 bool
 Map::addEntry(MapEntry& mpe)
 {
-  //cout << mpe;
-  std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
-                                                  m_table.end(),
-                                                  std::bind(&mapEntryCompareByRouter,
-                                                            _1, mpe.getRouter()));
-  if (it == m_table.end()) {
-    m_table.push_back(mpe);
-    return true;
-  }
-  return false;
+  return m_entries.insert(mpe).second;
 }
 
-const ndn::Name
+ndn::optional<ndn::Name>
 Map::getRouterNameByMappingNo(int32_t mn)
 {
-  std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
-                                                  m_table.end(),
-                                                  std::bind(&mapEntryCompareByMappingNo,
-                                                            _1, mn));
-  if (it != m_table.end()) {
-    return (*it).getRouter();
+  auto&& mappingNumberView = m_entries.get<detail::byMappingNumber>();
+  auto iterator = mappingNumberView.find(mn);
+  if (iterator == mappingNumberView.end()) {
+    return {};
   }
-  return ndn::Name();
+  else {
+    return {iterator->getRouter()};
+  }
 }
 
-int32_t
+ndn::optional<int32_t>
 Map::getMappingNoByRouterName(const ndn::Name& rName)
 {
-  std::list<MapEntry>::iterator it = std::find_if(m_table.begin(),
-                                                  m_table.end(),
-                                                  std::bind(&mapEntryCompareByRouter,
-                                                            _1, rName));
-  if (it != m_table.end()) {
-    return (*it).getMappingNumber();
+  auto&& routerNameView = m_entries.get<detail::byRouterName>();
+  auto iterator = routerNameView.find(rName);
+  if (iterator == routerNameView.end()) {
+    return {};
   }
-  return -1;
+  else {
+    return {iterator->getMappingNumber()};
+  }
 }
 
 void
 Map::reset()
 {
-  m_table.clear();
+  m_entries = detail::entryContainer{};
   m_mappingIndex = 0;
 }
 
@@ -105,9 +84,10 @@ void
 Map::writeLog()
 {
   _LOG_DEBUG("---------------Map----------------------");
-  for (std::list<MapEntry>::iterator it = m_table.begin(); it != m_table.end() ; it++) {
-    _LOG_DEBUG("MapEntry: ( Router: " << (*it).getRouter() << " Mapping No: "
-               << (*it).getMappingNumber() << " )");
+  auto&& routerNameView = m_entries.get<detail::byRouterName>();
+  for (auto entry = routerNameView.begin(); entry != routerNameView.end(); entry++) {
+    _LOG_DEBUG("MapEntry: ( Router: " << entry->getRouter() << " Mapping No: "
+               << entry->getMappingNumber() << " )");
   }
 }
 

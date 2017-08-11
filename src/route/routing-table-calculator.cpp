@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
+
 #include "routing-table-calculator.hpp"
 #include "lsdb.hpp"
 #include "map.hpp"
@@ -62,19 +63,19 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
   for (std::list<AdjLsa>::iterator it = adjLsdb.begin(); it != adjLsdb.end() ; it++) {
 
 
-    int32_t row = pMap.getMappingNoByRouterName((*it).getOrigRouter());
+    ndn::optional<int32_t> row = pMap.getMappingNoByRouterName((*it).getOrigRouter());
 
     std::list<Adjacent> adl = (*it).getAdl().getAdjList();
     // For each adjacency represented in the LSA
     for (std::list<Adjacent>::iterator itAdl = adl.begin(); itAdl != adl.end() ; itAdl++) {
 
-      int32_t col = pMap.getMappingNoByRouterName((*itAdl).getName());
+      ndn::optional<int32_t> col = pMap.getMappingNoByRouterName((*itAdl).getName());
       double cost = (*itAdl).getLinkCost();
 
-      if ((row >= 0 && row < static_cast<int32_t>(m_nRouters)) &&
-          (col >= 0 && col < static_cast<int32_t>(m_nRouters)))
+      if (row && col && *row < static_cast<int32_t>(m_nRouters)
+          && *col < static_cast<int32_t>(m_nRouters))
       {
-        adjMatrix[row][col] = cost;
+        adjMatrix[*row][*col] = cost;
       }
     }
   }
@@ -210,30 +211,32 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
   initMatrix();
   makeAdjMatrix(pnlsr, pMap);
   writeAdjMatrixLog();
-  int sourceRouter = pMap.getMappingNoByRouterName(pnlsr.getConfParameter().getRouterPrefix());
+  ndn::optional<int32_t> sourceRouter =
+    pMap.getMappingNoByRouterName(pnlsr.getConfParameter().getRouterPrefix());
   allocateParent(); // These two matrices are used in Dijkstra's algorithm.
   allocateDistance(); //
-  if (pnlsr.getConfParameter().getMaxFacesPerPrefix() == 1) {
+  // We only bother to do the calculation if we have a router by that name.
+  if (sourceRouter && pnlsr.getConfParameter().getMaxFacesPerPrefix() == 1) {
     // In the single path case we can simply run Dijkstra's algorithm.
-    doDijkstraPathCalculation(sourceRouter);
+    doDijkstraPathCalculation(*sourceRouter);
     // Inform the routing table of the new next hops.
-    addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
+    addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, *sourceRouter);
   }
   else {
     // Multi Path
-    setNoLink(getNumOfLinkfromAdjMatrix(sourceRouter));
+    setNoLink(getNumOfLinkfromAdjMatrix(*sourceRouter));
     allocateLinks();
     allocateLinkCosts();
     // Gets a sparse listing of adjacencies for path calculation
-    getLinksFromAdjMatrix(links, linkCosts, sourceRouter);
+    getLinksFromAdjMatrix(links, linkCosts, *sourceRouter);
     for (int i = 0 ; i < vNoLink; i++) {
       // Simulate that only the current neighbor is accessible
-      adjustAdMatrix(sourceRouter, links[i], linkCosts[i]);
+      adjustAdMatrix(*sourceRouter, links[i], linkCosts[i]);
       writeAdjMatrixLog();
       // Do Dijkstra's algorithm using the current neighbor as your start.
-      doDijkstraPathCalculation(sourceRouter);
+      doDijkstraPathCalculation(*sourceRouter);
       // Update the routing table with the calculations.
-      addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, sourceRouter);
+      addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, *sourceRouter);
     }
     freeLinks();
     freeLinksCosts();
@@ -314,12 +317,15 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, Rou
         // Fetch its distance
         double routeCost = m_distance[i];
         // Fetch its actual name
-        ndn::Name nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
-        std::string nextHopFace =
-          pnlsr.getAdjacencyList().getAdjacent(nextHopRouterName).getFaceUri().toString();
-        // Add next hop to routing table
-        NextHop nh(nextHopFace, routeCost);
-        rt.addNextHop(pMap.getRouterNameByMappingNo(i), nh);
+        ndn::optional<ndn::Name> nextHopRouterName= pMap.getRouterNameByMappingNo(nextHopRouter);
+        if (nextHopRouterName) {
+          std::string nextHopFace =
+            pnlsr.getAdjacencyList().getAdjacent(*nextHopRouterName).getFaceUri().toString();
+          // Add next hop to routing table
+          NextHop nh(nextHopFace, routeCost);
+          rt.addNextHop(*(pMap.getRouterNameByMappingNo(i)), nh);
+
+        }
       }
     }
   }
@@ -397,15 +403,13 @@ const double HyperbolicRoutingCalculator::MATH_PI = boost::math::constants::pi<d
 const double HyperbolicRoutingCalculator::UNKNOWN_DISTANCE = -1.0;
 const double HyperbolicRoutingCalculator::UNKNOWN_RADIUS   = -1.0;
 
-const int32_t HyperbolicRoutingCalculator::ROUTER_NOT_FOUND = -1.0;
-
 void
 HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
                                             Lsdb& lsdb, AdjacencyList& adjacencies)
 {
   _LOG_TRACE("Calculating hyperbolic paths");
 
-  int thisRouter = map.getMappingNoByRouterName(m_thisRouterName);
+  ndn::optional<int32_t> thisRouter = map.getMappingNoByRouterName(m_thisRouterName);
 
   // Iterate over directly connected neighbors
   std::list<Adjacent> neighbors = adjacencies.getAdjList();
@@ -429,9 +433,9 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
     // Install nexthops for this router to the neighbor; direct neighbors have a 0 cost link
     addNextHop(srcRouterName, srcFaceUri, 0, rt);
 
-    int src = map.getMappingNoByRouterName(srcRouterName);
+    ndn::optional<int32_t> src = map.getMappingNoByRouterName(srcRouterName);
 
-    if (src == ROUTER_NOT_FOUND) {
+    if (!src) {
       _LOG_WARN(adj->getName() << " does not exist in the router map!");
       continue;
     }
@@ -439,20 +443,21 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
     // Get hyperbolic distance from direct neighbor to every other router
     for (int dest = 0; dest < static_cast<int>(m_nRouters); ++dest) {
       // Don't calculate nexthops to this router or from a router to itself
-      if (dest != thisRouter && dest != src) {
+      if (thisRouter && dest != *thisRouter && dest != *src) {
 
-        ndn::Name destRouterName = map.getRouterNameByMappingNo(dest);
+        ndn::optional<ndn::Name> destRouterName = map.getRouterNameByMappingNo(dest);
+        if (destRouterName) {
+          double distance = getHyperbolicDistance(map, lsdb, srcRouterName, *destRouterName);
 
-        double distance = getHyperbolicDistance(map, lsdb, srcRouterName, destRouterName);
+          // Could not compute distance
+          if (distance == UNKNOWN_DISTANCE) {
+            _LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName << " to " <<
+                      *destRouterName);
+            continue;
+          }
 
-        // Could not compute distance
-        if (distance == UNKNOWN_DISTANCE) {
-          _LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName << " to " <<
-                    destRouterName);
-          continue;
+          addNextHop(*destRouterName, srcFaceUri, distance, rt);
         }
-
-        addNextHop(destRouterName, srcFaceUri, distance, rt);
       }
     }
   }

@@ -58,6 +58,9 @@ public:
     return m_mappingNumber;
   }
 
+  void
+  reset();
+
 private:
   ndn::Name m_router;
   int32_t m_mappingNumber;
