@@ -50,6 +50,8 @@ NamePrefixTableEntry::removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEn
 
   if (iterator != m_rteList.end()) {
     (*iterator)->decrementUseCount();
+    // Remove this NamePrefixEntry from the RoutingTablePoolEntry
+    (*iterator)->namePrefixTableEntries.erase(getNamePrefix());
     m_rteList.erase(iterator);
   }
   else {

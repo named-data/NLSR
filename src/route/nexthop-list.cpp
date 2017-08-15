@@ -18,6 +18,7 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
+
 #include "nexthop-list.hpp"
 #include "common.hpp"
 #include "nexthop.hpp"
@@ -59,6 +60,12 @@ operator==(const NexthopList& lhs, const NexthopList& rhs)
     }
   }
   return true;
+}
+
+bool
+operator!=(const NexthopList& lhs, const NexthopList& rhs)
+{
+  return !(lhs == rhs);
 }
 
 std::ostream&

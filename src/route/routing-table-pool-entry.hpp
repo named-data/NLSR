@@ -27,6 +27,7 @@
 
 #include <iostream>
 #include <ndn-cxx/name.hpp>
+#include <unordered_map>
 
 namespace nlsr {
 
@@ -43,6 +44,8 @@ namespace nlsr {
  * original entries, which provides a minimal memory solution.
  * \sa NamePrefixTable
  */
+class NamePrefixTableEntry;
+
 class RoutingTablePoolEntry : public RoutingTableEntry
 {
 public:
@@ -99,6 +102,10 @@ public:
   {
     m_nexthopList = nhl;
   }
+
+public:
+  std::unordered_map<ndn::Name, std::weak_ptr<NamePrefixTableEntry>>
+    namePrefixTableEntries;
 
 private:
   uint64_t m_useCount;

@@ -19,6 +19,7 @@
  **/
 
 #include "routing-table-pool-entry.hpp"
+#include "name-prefix-table-entry.hpp"
 
 namespace nlsr {
 
@@ -28,8 +29,12 @@ operator<<(std::ostream& os, RoutingTablePoolEntry& rtpe)
   os << "RoutingTablePoolEntry("
      << "Destination router: " << rtpe.getDestination()
      << "Next hop list: ";
-  for (auto && nh : rtpe.getNexthopList()) {
+  for (const auto& nh : rtpe.getNexthopList()) {
     os << nh;
+  }
+  os << "NamePrefixTableEntries using this entry:";
+  for (const auto& entryPtr : rtpe.namePrefixTableEntries) {
+    os << entryPtr.first << ":";
   }
 
   return os;

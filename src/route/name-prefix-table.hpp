@@ -36,12 +36,10 @@ class Nlsr;
 class NamePrefixTable
 {
 public:
-
-  typedef std::list<NamePrefixTableEntry> NptEntryList;
-  typedef NptEntryList::const_iterator const_iterator;
-
-  typedef std::unordered_map<ndn::Name, std::shared_ptr<RoutingTablePoolEntry>>
-           RtpEntryMap;
+  using RoutingTableEntryPool =
+    std::unordered_map<ndn::Name, std::shared_ptr<RoutingTablePoolEntry>>;
+  using NptEntryList = std::list<std::shared_ptr<NamePrefixTableEntry>>;
+  using const_iterator = NptEntryList::const_iterator;
 
   NamePrefixTable(Nlsr& nlsr)
     : m_nlsr(nlsr)
@@ -122,7 +120,8 @@ public:
   end() const;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  RtpEntryMap m_rtpool;
+  RoutingTableEntryPool m_rtpool;
+
   NptEntryList m_table;
 
 private:

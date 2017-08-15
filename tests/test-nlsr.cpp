@@ -22,6 +22,7 @@
 #include "nlsr.hpp"
 #include "test-common.hpp"
 #include "control-commands.hpp"
+#include "logger.hpp"
 
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 
@@ -313,118 +314,6 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   // Make sure the routing table was recalculated
   rtEntry = nlsr.getRoutingTable().findRoutingTableEntry(failNeighbor.getName());
   BOOST_CHECK(rtEntry == nullptr);
-}
-
-// Bug #2733
-// This test checks that when a face for an inactive node is destroyed, an
-// Adjacency LSA build does not postpone the LSA refresh and cause RIB
-// entries for other nodes' name prefixes to not be refreshed.
-//
-// This test is invalid when Issue #2732 is implemented since an Adjacency LSA
-// refresh will not cause RIB entries for other nodes' name prefixes to be refreshed.
-BOOST_FIXTURE_TEST_CASE(FaceDestroyEventInactive, UnitTestTimeFixture)
-{
-  std::shared_ptr<ndn::util::DummyClientFace> face = std::make_shared<ndn::util::DummyClientFace>(g_ioService);
-  Nlsr nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain);
-  Lsdb& lsdb = nlsr.getLsdb();
-
-  // Simulate loading configuration file
-  ConfParameter& conf = nlsr.getConfParameter();
-  conf.setNetwork("/ndn");
-  conf.setSiteName("/site");
-  conf.setRouterName("/%C1.router/this-router");
-  conf.setFirstHelloInterval(0);
-  conf.setAdjLsaBuildInterval(0);
-  conf.setRoutingCalcInterval(0);
-
-  // Add neighbors
-  AdjacencyList& neighbors = nlsr.getAdjacencyList();
-
-  uint64_t destroyFaceId = 128;
-
-  // Create an inactive neighbor whose Face will be destroyed
-  Adjacent failNeighbor("/ndn/neighborA", ndn::util::FaceUri("udp4://10.0.0.1"), 10, Adjacent::STATUS_INACTIVE, 3,
-                        destroyFaceId);
-  neighbors.insert(failNeighbor);
-
-  // Create an additional active neighbor so an adjacency LSA can be built
-  Adjacent otherNeighbor("/ndn/neighborB", ndn::util::FaceUri("udp4://10.0.0.2"), 25, Adjacent::STATUS_ACTIVE, 0, 256);
-  neighbors.insert(otherNeighbor);
-
-  // Add a name for the neighbor to advertise
-  NamePrefixList nameList;
-  ndn::Name nameToAdvertise("/ndn/neighborB/name");
-  nameList.insert(nameToAdvertise);
-
-  NameLsa nameLsa("/ndn/neighborB", 25, ndn::time::system_clock::now(), nameList);
-  lsdb.installNameLsa(nameLsa);
-
-  nlsr.initialize();
-
-  // Simulate successful HELLO responses from neighbor B
-  lsdb.scheduleAdjLsaBuild();
-
-  // Set up adjacency LSAs
-  // This router
-  Adjacent thisRouter(conf.getRouterPrefix(), ndn::util::FaceUri("udp4://10.0.0.2"), 25, Adjacent::STATUS_ACTIVE, 0, 256);
-
-  AdjLsa ownAdjLsa(conf.getRouterPrefix(), 10, ndn::time::system_clock::now(), 1, neighbors);
-  lsdb.installAdjLsa(ownAdjLsa);
-
-  // Other ACTIVE router
-  AdjacencyList otherAdjacencies;
-  otherAdjacencies.insert(thisRouter);
-
-  AdjLsa otherAdjLsa("/ndn/neighborB", 10,
-                     ndn::time::system_clock::now() + ndn::time::seconds(3600), 1, otherAdjacencies);
-
-  lsdb.installAdjLsa(otherAdjLsa);
-
-  // Run the scheduler to build an adjacency LSA
-  this->advanceClocks(ndn::time::milliseconds(1));
-
-  ndn::Name key = ndn::Name(nlsr.getConfParameter().getRouterPrefix()).append(AdjLsa::TYPE_STRING);
-  AdjLsa* lsa = lsdb.findAdjLsa(key);
-  BOOST_REQUIRE(lsa != nullptr);
-
-  // Cancel previous LSA expiration event
-  g_scheduler.cancelEvent(lsa->getExpiringEventId());
-
-  // Set expiration time for own Adjacency LSA to earlier value for unit-test
-  //
-  // Expiration time is negative to offset the GRACE_PERIOD (10 seconds) automatically applied
-  // to expiration times
-  ndn::EventId id = lsdb.scheduleAdjLsaExpiration(key, lsa->getLsSeqNo(), -ndn::time::seconds(9));
-  lsa->setExpiringEventId(id);
-
-  // Generate a FaceEventDestroyed notification
-  ndn::nfd::FaceEventNotification event;
-  event.setKind(ndn::nfd::FACE_EVENT_DESTROYED)
-       .setFaceId(destroyFaceId);
-
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
-  data->setContent(event.wireEncode());
-  nlsr.getKeyChain().sign(*data);
-
-  // Receive the FaceEventDestroyed notification
-  face->receive(*data);
-
-  // Run the scheduler to expire the Adjacency LSA. The expiration should refresh the RIB
-  // entries associated with Neighbor B's advertised prefix.
-  face->sentInterests.clear();
-  this->advanceClocks(ndn::time::seconds(1));
-
-  // The Face should have two sent Interests: the face event and a RIB registration
-  BOOST_REQUIRE(face->sentInterests.size() > 0);
-  const ndn::Interest& interest = face->sentInterests.back();
-
-  ndn::nfd::ControlParameters parameters;
-  ndn::Name::Component verb;
-  BOOST_REQUIRE_NO_THROW(extractRibCommandParameters(interest,
-                                                     verb,
-                                                     parameters));
-  BOOST_CHECK_EQUAL(verb, ndn::Name::Component("register"));
-  BOOST_CHECK_EQUAL(parameters.getName(), nameToAdvertise);
 }
 
 BOOST_AUTO_TEST_CASE(GetCertificate)

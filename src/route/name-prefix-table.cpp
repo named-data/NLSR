@@ -34,9 +34,9 @@ namespace nlsr {
 INIT_LOGGER("NamePrefixTable");
 
 bool
-npteCompare(NamePrefixTableEntry& npte, const ndn::Name& name)
+npteCompare(std::shared_ptr<NamePrefixTableEntry>& npte, const ndn::Name& name)
 {
-  return npte.getNamePrefix() == name;
+  return npte->getNamePrefix() == name;
 }
 
 void
@@ -44,12 +44,15 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
 {
 
   // Check if the advertised name prefix is in the table already.
-  NptEntryList::iterator nameItr = std::find(m_table.begin(),
-                                             m_table.end(),
-                                             name);
+  NptEntryList::iterator nameItr =
+    std::find_if(m_table.begin(),
+                 m_table.end(),
+                 [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
+                   return name == entry->getNamePrefix();
+                 });
 
   // Attempt to find a routing table pool entry (RTPE) we can use.
-  RtpEntryMap::iterator rtpeItr = m_rtpool.find(destRouter);
+  RoutingTableEntryPool::iterator rtpeItr = m_rtpool.find(destRouter);
 
   // These declarations just to make the compiler happy...
   RoutingTablePoolEntry rtpe;
@@ -78,19 +81,19 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     rtpePtr = (*rtpeItr).second;
   }
 
+  std::shared_ptr<NamePrefixTableEntry> npte;
   // Either we have to make a new NPT entry or there already was one.
   if (nameItr == m_table.end()) {
     _LOG_DEBUG("Adding origin: " << rtpePtr->getDestination()
                << " to a new name prefix: " << name);
-    NamePrefixTableEntry npte(name);
-    npte.addRoutingTableEntry(rtpePtr);
-    npte.generateNhlfromRteList();
+    npte = make_shared<NamePrefixTableEntry>(name);
+    npte->addRoutingTableEntry(rtpePtr);
+    npte->generateNhlfromRteList();
     m_table.push_back(npte);
-
     // If this entry has next hops, we need to inform the FIB
-    if (npte.getNexthopList().getSize() > 0) {
+    if (npte->getNexthopList().getSize() > 0) {
       _LOG_TRACE("Updating FIB with next hops for " << npte);
-      m_nlsr.getFib().update(name, npte.getNexthopList());
+      m_nlsr.getFib().update(name, npte->getNexthopList());
     }
     // The routing table may recalculate and add a routing table entry
     // with no next hops to replace an existing routing table entry. In
@@ -99,25 +102,29 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     // remain in the Name Prefix Table as a future routing table
     // calculation may add next hops.
     else {
-      _LOG_TRACE(npte << " has no next hops; removing from FIB");
+      _LOG_TRACE(*npte << " has no next hops; removing from FIB");
       m_nlsr.getFib().remove(name);
     }
   }
   else {
+    npte = *nameItr;
     _LOG_TRACE("Adding origin: " << rtpePtr->getDestination()
                << " to existing prefix: " << *nameItr);
-    nameItr->addRoutingTableEntry(rtpePtr);
-    nameItr->generateNhlfromRteList();
+    (*nameItr)->addRoutingTableEntry(rtpePtr);
+    (*nameItr)->generateNhlfromRteList();
 
-    if (nameItr->getNexthopList().getSize() > 0) {
+    if ((*nameItr)->getNexthopList().getSize() > 0) {
       _LOG_TRACE("Updating FIB with next hops for " << (*nameItr));
-      m_nlsr.getFib().update(name, nameItr->getNexthopList());
+      m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
     }
     else {
       _LOG_TRACE((*nameItr) << " has no next hops; removing from FIB");
       m_nlsr.getFib().remove(name);
     }
   }
+  // Add the reference to this NPT to the RTPE.
+  rtpePtr->namePrefixTableEntries.emplace(
+    std::make_pair(npte->getNamePrefix(), std::weak_ptr<NamePrefixTableEntry>(npte)));
 }
 
 void
@@ -126,7 +133,7 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
   _LOG_DEBUG("Removing origin: " << destRouter << " from " << name);
 
   // Fetch an iterator to the appropriate pair object in the pool.
-  RtpEntryMap::iterator rtpeItr = m_rtpool.find(destRouter);
+  RoutingTableEntryPool::iterator rtpeItr = m_rtpool.find(destRouter);
 
   // Simple error checking to prevent any unusual behavior in the case
   // that we try to remove an entry that isn't there.
@@ -139,15 +146,18 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
   std::shared_ptr<RoutingTablePoolEntry> rtpePtr = rtpeItr->second;
 
   // Ensure that the entry exists
-  NptEntryList::iterator nameItr = std::find_if(m_table.begin(), m_table.end(),
-                                                std::bind(&npteCompare, _1, name));
+  NptEntryList::iterator nameItr =
+    std::find_if(m_table.begin(), m_table.end(),
+                 [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
+                   return entry->getNamePrefix() == name;
+                 });
   if (nameItr != m_table.end()) {
     _LOG_TRACE("Removing origin: " << rtpePtr->getDestination()
-               << " from prefix: " << *nameItr);
+               << " from prefix: " << **nameItr);
 
     // Rather than iterating through the whole list periodically, just
     // delete them here if they have no references.
-    if ((*nameItr).removeRoutingTableEntry(rtpePtr) == 0) {
+    if ((*nameItr)->removeRoutingTableEntry(rtpePtr) == 0) {
       deleteRtpeFromPool(rtpePtr);
     }
 
@@ -166,17 +176,17 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
     //   Prefix Table. Once a new Name LSA advertises this prefix, a
     //   new entry for the prefix will be created.
     //
-    if ((*nameItr).getRteListSize() == 0) {
-      _LOG_TRACE(*nameItr << " has no routing table entries;"
+    if ((*nameItr)->getRteListSize() == 0) {
+      _LOG_TRACE(**nameItr << " has no routing table entries;"
                  << " removing from table and FIB");
       m_table.erase(nameItr);
       m_nlsr.getFib().remove(name);
     }
     else {
-      _LOG_TRACE(*nameItr << " has other routing table entries;"
+      _LOG_TRACE(**nameItr << " has other routing table entries;"
                  << " updating FIB with next hops");
-      (*nameItr).generateNhlfromRteList();
-      m_nlsr.getFib().update(name, (*nameItr).getNexthopList());
+      (*nameItr)->generateNhlfromRteList();
+      m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
     }
   }
   else {
@@ -190,24 +200,32 @@ NamePrefixTable::updateWithNewRoute()
 {
   _LOG_DEBUG("Updating table with newly calculated routes");
 
-  // Update each name prefix table entry in the NPT with the
-  // newly calculated next hops.
-  for (auto&& npte : m_table) {
-    // For each routing table pool entry in this NPT entry.
-    for (auto&& rtpe : npte.getRteList()) {
-      _LOG_TRACE("Updating next hops to origin: " << rtpe->getDestination()
-                 << " for prefix: " << npte);
-      RoutingTableEntry* rteCheck =
-        m_nlsr.getRoutingTable().findRoutingTableEntry(rtpe->getDestination());
+  // Iterate over each pool entry we have
+  for (auto&& poolEntryPair : m_rtpool) {
+    auto&& poolEntry = poolEntryPair.second;
+    RoutingTableEntry* sourceEntry =
+      m_nlsr.getRoutingTable().findRoutingTableEntry(poolEntry->getDestination());
+    // If this pool entry has a corresponding entry in the routing table now
+    if (sourceEntry != nullptr && poolEntry->getNexthopList() != sourceEntry->getNexthopList()) {
+      _LOG_DEBUG("Routing entry: " << poolEntry->getDestination() << " has changed next-hops.");
+      poolEntry->setNexthopList(sourceEntry->getNexthopList());
+      for (const auto& nameEntry : poolEntry->namePrefixTableEntries) {
+        auto nameEntryFullPtr = nameEntry.second.lock();
+        addEntry(nameEntryFullPtr->getNamePrefix(), poolEntry->getDestination());
+      }
+    }
+    else if (sourceEntry == nullptr) {
+      _LOG_DEBUG("Routing entry: " << poolEntry->getDestination() << " now has no next-hops.");
+      poolEntry->getNexthopList().reset();
+      for (const auto& nameEntry : poolEntry->namePrefixTableEntries) {
+        auto nameEntryFullPtr = nameEntry.second.lock();
+        addEntry(nameEntryFullPtr->getNamePrefix(), poolEntry->getDestination());
+      }
 
-      // If there is a routing table entry for this prefix, update the NPT with it.
-      if (rteCheck != nullptr) {
-        rtpe->setNexthopList(rteCheck->getNexthopList());
-      }
-      else {
-        rtpe->getNexthopList().reset();
-      }
-      addEntry(npte.getNamePrefix(), rtpe->getDestination());
+    }
+    else {
+      _LOG_TRACE("No change in routing entry:" << poolEntry->getDestination()
+                 << ", no action necessary.");
     }
   }
 }
@@ -218,13 +236,11 @@ NamePrefixTable::updateWithNewRoute()
 std::shared_ptr<RoutingTablePoolEntry>
 NamePrefixTable::addRtpeToPool(RoutingTablePoolEntry& rtpe)
 {
-  RtpEntryMap::iterator poolItr =
+  RoutingTableEntryPool::iterator poolItr =
     m_rtpool.insert(std::make_pair(rtpe.getDestination(),
                                    std::make_shared<RoutingTablePoolEntry>
                                    (rtpe)))
     .first;
-  //| There's gotta be a more efficient way to do this
-  //std::shared_ptr<RoutingTablePoolEntry> poolPtr = &(poolItr->second);
   return poolItr->second;
 }
 
@@ -255,8 +271,8 @@ operator<<(std::ostream& os, const NamePrefixTable& table)
 {
   os << "----------------NPT----------------------\n";
 
-  for (const NamePrefixTableEntry& entry : table) {
-    os << entry << std::endl;
+  for (const auto& entryPtr : table) {
+    os << *entryPtr << std::endl;
   }
 
   return os;

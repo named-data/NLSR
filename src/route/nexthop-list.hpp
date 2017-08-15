@@ -27,7 +27,6 @@
 #include <set>
 #include <iostream>
 #include <boost/cstdint.hpp>
-
 #include <ndn-cxx/face.hpp>
 
 namespace nlsr {
@@ -139,6 +138,9 @@ operator==(NexthopList& lhs, NexthopList& rhs);
 
 bool
 operator==(const NexthopList& lhs, const NexthopList& rhs);
+
+bool
+operator!=(const NexthopList& lhs, const NexthopList& rhs);
 
 std::ostream&
 operator<<(std::ostream& os, const NexthopList& nhl);
