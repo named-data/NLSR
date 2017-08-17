@@ -17,14 +17,14 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
+
 #ifndef NLSR_ROUTING_TABLE_HPP
 #define NLSR_ROUTING_TABLE_HPP
 
 #include "conf-parameter.hpp"
 #include "routing-table-entry.hpp"
+#include "signals.hpp"
 
 #include <iostream>
 #include <utility>
@@ -40,12 +40,7 @@ class NextHop;
 class RoutingTable
 {
 public:
-  RoutingTable(ndn::Scheduler& scheduler)
-    : m_scheduler(scheduler)
-    , m_NO_NEXT_HOP(-12345)
-    , m_routingCalcInterval(static_cast<uint32_t>(ROUTING_CALC_INTERVAL_DEFAULT))
-  {
-  }
+  RoutingTable(ndn::Scheduler& scheduler);
 
   /*! \brief Calculates a list of next hops for each router in the network.
    * \param pnlsr The NLSR object that contains the LSAs needed for adj. info.
@@ -119,12 +114,17 @@ private:
   void
   writeLog(int hyperbolicState);
 
+public:
+  std::shared_ptr<AfterRoutingChange> afterRoutingChange;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  std::list<RoutingTableEntry> m_rTable;
+
 private:
   ndn::Scheduler& m_scheduler;
 
   const int m_NO_NEXT_HOP;
 
-  std::list<RoutingTableEntry> m_rTable;
   std::list<RoutingTableEntry> m_dryTable;
 
   ndn::time::seconds m_routingCalcInterval;

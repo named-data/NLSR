@@ -33,6 +33,20 @@ namespace nlsr {
 
 INIT_LOGGER("NamePrefixTable");
 
+NamePrefixTable::NamePrefixTable(Nlsr& nlsr, std::shared_ptr<AfterRoutingChange>& afterRoutingChangeSignal)
+  : m_nlsr(nlsr)
+{
+  m_afterRoutingChangeConnection = afterRoutingChangeSignal->connect(
+    [this] (const std::list<RoutingTableEntry>& entries) {
+      updateWithNewRoute(entries);
+    });
+}
+
+NamePrefixTable::~NamePrefixTable()
+{
+  m_afterRoutingChangeConnection.disconnect();
+}
+
 bool
 npteCompare(std::shared_ptr<NamePrefixTableEntry>& npte, const ndn::Name& name)
 {
@@ -196,17 +210,20 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
 }
 
 void
-NamePrefixTable::updateWithNewRoute()
+NamePrefixTable::updateWithNewRoute(const std::list<RoutingTableEntry>& entries)
 {
   _LOG_DEBUG("Updating table with newly calculated routes");
 
   // Iterate over each pool entry we have
   for (auto&& poolEntryPair : m_rtpool) {
     auto&& poolEntry = poolEntryPair.second;
-    RoutingTableEntry* sourceEntry =
-      m_nlsr.getRoutingTable().findRoutingTableEntry(poolEntry->getDestination());
+    auto sourceEntry = std::find_if(entries.begin(), entries.end(),
+                                    [&poolEntry] (const RoutingTableEntry& entry) {
+                                      return poolEntry->getDestination() == entry.getDestination();
+                                    });
     // If this pool entry has a corresponding entry in the routing table now
-    if (sourceEntry != nullptr && poolEntry->getNexthopList() != sourceEntry->getNexthopList()) {
+    if (sourceEntry != entries.end()
+        && poolEntry->getNexthopList() != sourceEntry->getNexthopList()) {
       _LOG_DEBUG("Routing entry: " << poolEntry->getDestination() << " has changed next-hops.");
       poolEntry->setNexthopList(sourceEntry->getNexthopList());
       for (const auto& nameEntry : poolEntry->namePrefixTableEntries) {
@@ -214,14 +231,13 @@ NamePrefixTable::updateWithNewRoute()
         addEntry(nameEntryFullPtr->getNamePrefix(), poolEntry->getDestination());
       }
     }
-    else if (sourceEntry == nullptr) {
+    else if (sourceEntry == entries.end()) {
       _LOG_DEBUG("Routing entry: " << poolEntry->getDestination() << " now has no next-hops.");
       poolEntry->getNexthopList().reset();
       for (const auto& nameEntry : poolEntry->namePrefixTableEntries) {
         auto nameEntryFullPtr = nameEntry.second.lock();
         addEntry(nameEntryFullPtr->getNamePrefix(), poolEntry->getDestination());
       }
-
     }
     else {
       _LOG_TRACE("No change in routing entry:" << poolEntry->getDestination()

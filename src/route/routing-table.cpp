@@ -34,6 +34,14 @@ namespace nlsr {
 
 INIT_LOGGER("RoutingTable");
 
+RoutingTable::RoutingTable(ndn::Scheduler& scheduler)
+  : afterRoutingChange{std::make_shared<AfterRoutingChange>()}
+  , m_scheduler(scheduler)
+  , m_NO_NEXT_HOP{-12345}
+  , m_routingCalcInterval{static_cast<uint32_t>(ROUTING_CALC_INTERVAL_DEFAULT)}
+{
+}
+
 void
 RoutingTable::calculate(Nlsr& pnlsr)
 {
@@ -81,7 +89,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
         }
         // Inform the NPT that updates have been made
         _LOG_DEBUG("Calling Update NPT With new Route");
-        pnlsr.getNamePrefixTable().updateWithNewRoute();
+        (*afterRoutingChange)(m_rTable);
         writeLog(pnlsr.getConfParameter().getHyperbolicState());
         pnlsr.getNamePrefixTable().writeLog();
         pnlsr.getFib().writeLog();
@@ -98,7 +106,7 @@ RoutingTable::calculate(Nlsr& pnlsr)
       clearDryRoutingTable(); // for dry run options
       // need to update NPT here
       _LOG_DEBUG("Calling Update NPT With new Route");
-      pnlsr.getNamePrefixTable().updateWithNewRoute();
+      (*afterRoutingChange)(m_rTable);
       writeLog(pnlsr.getConfParameter().getHyperbolicState());
       pnlsr.getNamePrefixTable().writeLog();
       pnlsr.getFib().writeLog();

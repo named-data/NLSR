@@ -53,7 +53,7 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_isRoutingTableCalculating(false)
   , m_routingTable(scheduler)
   , m_fib(m_nlsrFace, scheduler, m_adjacencyList, m_confParam, m_keyChain)
-  , m_namePrefixTable(*this)
+  , m_namePrefixTable(*this, m_routingTable.afterRoutingChange)
   , m_localhostDispatcher(m_nlsrFace, m_keyChain)
   , m_routerNameDispatcher(m_nlsrFace, m_keyChain)
   , m_lsdbDatasetHandler(m_nlsrLsdb,

@@ -24,7 +24,7 @@
 
 #include "name-prefix-table-entry.hpp"
 #include "routing-table-pool-entry.hpp"
-
+#include "signals.hpp"
 #include "test-access-control.hpp"
 
 #include <list>
@@ -41,10 +41,9 @@ public:
   using NptEntryList = std::list<std::shared_ptr<NamePrefixTableEntry>>;
   using const_iterator = NptEntryList::const_iterator;
 
-  NamePrefixTable(Nlsr& nlsr)
-    : m_nlsr(nlsr)
-  {
-  }
+  NamePrefixTable(Nlsr& nlsr, std::shared_ptr<AfterRoutingChange>& afterRoutingChangeSignal);
+
+  ~NamePrefixTable();
 
   /*! \brief Adds a destination to the specified name prefix.
     \param name The name prefix
@@ -78,14 +77,14 @@ public:
 
   /*! \brief Updates all routing information in the NPT.
 
-    Naively iterates over all the NPT entries, then over each of their
-    RoutingTablePoolEntries, passing the name/destination pair back to
-    addEntry after updating the pool entry with new information. This
-    ensures that the FIB is appropriately apprised of any changes to a
-    prefix's preferred next hops.
+    Takes in a list of entries that are assumed to be exhaustive, and
+    updates each pool entry with the next hop information contained in
+    the corresponding entry in entries. If no entry is found, it is
+    assumed that the destination for that pool entry is inaccessible,
+    and its next hop information is deleted.
    */
   void
-  updateWithNewRoute();
+  updateWithNewRoute(const std::list<RoutingTableEntry>& entries);
 
   /*! \brief Adds a pool entry to the pool.
     \param rtpe The entry.
@@ -126,7 +125,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
 private:
   Nlsr& m_nlsr;
-
+  ndn::util::signal::Connection m_afterRoutingChangeConnection;
 };
 
 inline NamePrefixTable::const_iterator

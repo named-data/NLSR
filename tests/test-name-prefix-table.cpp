@@ -286,7 +286,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
   routingTable.addNextHop(destination, hop1);
   routingTable.addNextHop(destination, hop2);
 
-  namePrefixTable.updateWithNewRoute();
+  namePrefixTable.updateWithNewRoute(routingTable.m_rTable);
 
   // At this point the NamePrefixTableEntry should have two NextHops.
   auto nameIterator = std::find_if(namePrefixTable.begin(), namePrefixTable.end(),
@@ -302,7 +302,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
 
   // Add the other NextHop
   routingTable.addNextHop(destination, hop3);
-  namePrefixTable.updateWithNewRoute();
+  namePrefixTable.updateWithNewRoute(routingTable.m_rTable);
 
   // At this point the NamePrefixTableEntry should have three NextHops.
   nameIterator = std::find_if(namePrefixTable.begin(), namePrefixTable.end(),
