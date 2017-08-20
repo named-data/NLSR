@@ -1,25 +1,32 @@
 sudo: required
 language: generic
+
 matrix:
   include:
+    # Linux/gcc
     - os: linux
       dist: trusty
       env:
-        - CXX=g++
+        - CXX=g++-4.8
         - NODE_LABELS="Linux Ubuntu Ubuntu-14.04"
+
+    # Linux/clang
     - os: linux
       dist: trusty
       env:
         - CXX=clang++
         - NODE_LABELS="Linux Ubuntu Ubuntu-14.04"
+
+    # macOS/clang
+    # https://docs.travis-ci.com/user/osx-ci-environment/#OS-X-Version
     - os: osx
       osx_image: xcode8.2
       env:
-        - CXX=clang++
         - NODE_LABELS="OSX OSX-10.12"
-notifications:
-  email:
-    on_success: always
-    on_failure: always
+
+before_script:
+  - ${CXX:-c++} --version
+  - python --version
+
 script:
   - ./.jenkins

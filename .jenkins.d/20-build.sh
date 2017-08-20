@@ -1,27 +1,31 @@
 #!/usr/bin/env bash
-set -x
 set -e
+
+JDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+source "$JDIR"/util.sh
+
+set -x
 
 git submodule init
 git submodule sync
 git submodule update
 
 # Cleanup
-sudo ./waf -j1 --color=yes distclean
+sudo env "PATH=$PATH" ./waf --color=yes distclean
 
 # Configure/build in debug mode
 ./waf -j1 --color=yes configure --with-tests --debug
 ./waf -j1 --color=yes build
 
 # Cleanup
-sudo ./waf -j1 --color=yes distclean
+sudo env "PATH=$PATH" ./waf --color=yes distclean
 
 # Configure/build in optimized mode without tests
 ./waf -j1 --color=yes configure
 ./waf -j1 --color=yes build
 
 # Cleanup
-sudo ./waf -j1 --color=yes distclean
+sudo env "PATH=$PATH" ./waf --color=yes distclean
 
 if [[ $JOB_NAME == *"code-coverage" ]]; then
     COVERAGE="--with-coverage"
@@ -35,4 +39,5 @@ fi
 
 # (tests will be run against optimized version)
 
-sudo ./waf install --color=yes
+# Install
+sudo env "PATH=$PATH" ./waf --color=yes install

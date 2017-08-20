@@ -35,7 +35,7 @@ git clone git://github.com/named-data/ChronoSync ChronoSync-hotfix
 #     sudo rm -Rf ChronoSync-latest
 # fi
 
-sudo rm -Rf /usr/local/include/ChronoSync
+sudo rm -fr /usr/local/include/ChronoSync
 sudo rm -f /usr/local/lib/libChronoSync*
 sudo rm -f /usr/local/lib/pkgconfig/ChronoSync*
 
@@ -48,7 +48,7 @@ fi
 
 ./waf -j1 --color=yes configure
 ./waf -j1 --color=yes build
-sudo ./waf install -j1 --color=yes
+sudo env "PATH=$PATH" ./waf install --color=yes
 
 popd >/dev/null
 popd >/dev/null

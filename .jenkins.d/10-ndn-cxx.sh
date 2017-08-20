@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-set -x
 set -e
 
 JDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$JDIR"/util.sh
+
+set -x
 
 pushd /tmp >/dev/null
 
@@ -39,9 +40,10 @@ git clone git://github.com/named-data/ndn-cxx ndn-cxx-hotfix
 #     sudo rm -Rf ndn-cxx-latest
 # fi
 
-sudo rm -Rf /usr/local/include/ndn-cxx
+sudo rm -f /usr/local/bin/ndnsec*
+sudo rm -fr /usr/local/include/ndn-cxx
 sudo rm -f /usr/local/lib/libndn-cxx*
-sudo rm -f /usr/local/lib/pkgconfig/libndn-cxx*
+sudo rm -f /usr/local/lib/pkgconfig/libndn-cxx.pc
 
 ## Change to the hotfix directory instead of the normal ndn-cxx directory
 ## Restore below line when #3920 and #4119 merge.
@@ -51,7 +53,7 @@ git checkout b555b00c280b9c9ed46f24a1fbebc73b720601af
 
 ./waf configure -j1 --color=yes --enable-shared --disable-static --without-osx-keychain
 ./waf -j1 --color=yes
-sudo ./waf install -j1 --color=yes
+sudo env "PATH=$PATH" ./waf install --color=yes
 
 popd >/dev/null
 popd >/dev/null
