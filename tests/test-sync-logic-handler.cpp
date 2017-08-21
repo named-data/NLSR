@@ -90,13 +90,11 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
 
     receiveUpdate(updateName, syncSeqNo, sync);
 
-    std::vector<ndn::Interest>& interests = face->sentInterests;
-
-    std::vector<ndn::Interest>::iterator it = interests.begin();
-
-    BOOST_REQUIRE_EQUAL(interests.size(), 1);
-
-    BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "/");
+    const auto& it = std::find_if(face->sentInterests.begin(), face->sentInterests.end(),
+                                  [updateName] (const ndn::Interest& interest) {
+                                    return interest.getName().getPrefix(-1) == updateName + "/";
+                                  });
+    BOOST_REQUIRE(it != face->sentInterests.end());
   }
 }
 
@@ -124,12 +122,12 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
 
     receiveUpdate(updateName, syncSeqNo, sync_hr);
 
-    std::vector<ndn::Interest>& interests = face->sentInterests;
-    std::vector<ndn::Interest>::iterator it = interests.begin();
+    const auto& it = std::find_if(face->sentInterests.begin(), face->sentInterests.end(),
+                                  [updateName] (const ndn::Interest& interest) {
+                                    return interest.getName().getPrefix(-1) == updateName + "/";
+                                  });
 
-    BOOST_REQUIRE_EQUAL(interests.size(), 1);
-
-    BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "/");
+    BOOST_REQUIRE(it != face->sentInterests.end());
   }
 }
 
