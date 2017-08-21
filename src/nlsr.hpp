@@ -29,7 +29,6 @@
 #include "lsdb.hpp"
 #include "name-prefix-list.hpp"
 #include "test-access-control.hpp"
-#include "validator.hpp"
 #include "publisher/lsdb-dataset-interest-handler.hpp"
 #include "route/fib.hpp"
 #include "route/name-prefix-table.hpp"
@@ -46,7 +45,10 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/certificate-cache-ttl.hpp>
+#include <ndn-cxx/security/validator-config.hpp>
+#include <ndn-cxx/security/v2/certificate-fetcher-direct-fetch.hpp>
+#include <ndn-cxx/security/signing-helpers.hpp>
+#include <ndn-cxx/security/signing-info.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 #include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
@@ -54,6 +56,9 @@
 #include <ndn-cxx/mgmt/nfd/face-status.hpp>
 #include <ndn-cxx/data.hpp>
 #include <ndn-cxx/encoding/block.hpp>
+#include <ndn-cxx/encoding/nfd-constants.hpp>
+#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
+#include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
 namespace nlsr {
 
@@ -84,13 +89,18 @@ public:
   onRegistrationSuccess(const ndn::Name& name);
 
   void
-  onLocalhostRegistrationSuccess(const ndn::Name& name);
-
-  void
   setInfoInterestFilter();
 
   void
   setLsaInterestFilter();
+
+  /*! \brief Add top level prefixes for Dispatcher
+   *
+   * All dispatcher-related sub-prefixes *must* be registered before sub-prefixes
+   * must be added before adding top
+   */
+  void
+  addDispatcherTopPrefix(const ndn::Name& topPrefix);
 
   void
   startEventLoop();
@@ -275,6 +285,13 @@ public:
   registerAdjacencyPrefixes(const Adjacent& adj,
                             const ndn::time::milliseconds& timeout);
 
+  /*! \brief Add a certificate NLSR claims to be authoritative for to the certificate store.
+   *
+   * \sa CertificateStore
+   */
+  void
+  loadCertToPublish(const ndn::security::v2::Certificate& certificate);
+
   void
   initializeKey();
 
@@ -285,20 +302,10 @@ public:
     m_validator.load(section, filename);
   }
 
-  Validator&
+  ndn::security::ValidatorConfig&
   getValidator()
   {
     return m_validator;
-  }
-
-  /*! \brief Add a certificate NLSR claims to be authoritative for to the certificate store.
-   *
-   * \sa CertificateStore
-   */
-  void
-  loadCertToPublish(std::shared_ptr<ndn::IdentityCertificate> certificate)
-  {
-    m_certStore.insert(certificate);
   }
 
   /*! \brief Find a certificate
@@ -309,20 +316,16 @@ public:
    * checks the cache of certficates it has already fetched. If none
    * can be found, it will return an empty pointer.
    */
-  std::shared_ptr<const ndn::IdentityCertificate>
-  getCertificate(const ndn::Name& certificateNameWithoutVersion)
+  const ndn::security::v2::Certificate*
+  getCertificate(const ndn::Name& certificateKeyName)
   {
-    shared_ptr<const ndn::IdentityCertificate> cert =
-      m_certStore.find(certificateNameWithoutVersion);
+    const ndn::security::v2::Certificate* cert =
+      m_certStore.find(certificateKeyName);
 
-    if (cert != nullptr) {
-      return cert;
-    }
-
-    return m_certificateCache->getCertificate(certificateNameWithoutVersion);
+    return cert;
   }
 
-  ndn::KeyChain&
+  ndn::security::v2::KeyChain&
   getKeyChain()
   {
     return m_keyChain;
@@ -332,6 +335,12 @@ public:
   getDefaultCertName()
   {
     return m_defaultCertName;
+  }
+
+  const ndn::security::SigningInfo&
+  getSigningInfo()
+  {
+    return m_signingInfo;
   }
 
   update::PrefixUpdateProcessor&
@@ -397,13 +406,6 @@ public:
   }
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  void
-  addCertificateToCache(std::shared_ptr<ndn::IdentityCertificate> certificate)
-  {
-    if (certificate != nullptr) {
-      m_certificateCache->insertCertificate(certificate);
-    }
-  }
 
   security::CertificateStore&
   getCertificateStore()
@@ -457,13 +459,29 @@ private:
   void
   scheduleDatasetFetch();
 
+  /*! \brief Enables NextHopFaceId indication in NFD for incoming data packet.
+   *
+   * After enabling, when NFD gets a data packet, it will put the incoming face id
+   * of the data in NextHopFaceId field of the packet. The NextHopFaceId will be used
+   * by DirectFetcher to fetch the certificates needed to validate the data packet.
+   * \sa https://redmine.named-data.net/projects/nfd/wiki/NDNLPv2#Consumer-Controlled-Forwarding
+   */
+  void
+  enableIncomingFaceIdIndication();
+
+  void
+  onFaceIdIndicationSuccess(const ndn::nfd::ControlParameters& cp);
+
+  void
+  onFaceIdIndicationFailure(const ndn::nfd::ControlResponse& cr);
+
 public:
   static const ndn::Name LOCALHOST_PREFIX;
 
 private:
   ndn::Face& m_nlsrFace;
   ndn::Scheduler& m_scheduler;
-  ndn::KeyChain& m_keyChain;
+  ndn::security::v2::KeyChain& m_keyChain;
   ConfParameter m_confParam;
   AdjacencyList m_adjacencyList;
   NamePrefixList m_namePrefixList;
@@ -486,20 +504,14 @@ private:
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   HelloProtocol m_helloProtocol;
 
+  ndn::security::ValidatorConfig m_validator;
+
 private:
-  /*! \brief Where NLSR caches certificates it has fetched to validate
-   * Data signatures.
-   */
-  std::shared_ptr<ndn::CertificateCacheTtl> m_certificateCache;
   /*! \brief Where NLSR stores certificates it claims to be
    * authoritative for. Usually the router certificate.
    */
   security::CertificateStore m_certStore;
 
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  Validator m_validator;
-
-private:
   ndn::nfd::Controller m_controller;
   ndn::nfd::Controller m_faceDatasetController;
   ndn::security::SigningInfo m_signingInfo;

@@ -161,9 +161,9 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
 
   //If we don't do this the test will fail
   //Adjacent has default cost of 10 but no default
-  //connecting face URI, so deserialize fails
-  adj1.setFaceUri(ndn::util::FaceUri("udp://10.0.0.1"));
-  adj2.setFaceUri(ndn::util::FaceUri("udp://10.0.0.2"));
+  //connecting face URI, so initializeFromContent fails
+  adj1.setFaceUri(ndn::FaceUri("udp://10.0.0.1"));
+  adj2.setFaceUri(ndn::FaceUri("udp://10.0.0.2"));
 
   AdjacencyList adjList;
   adjList.insert(adj1);

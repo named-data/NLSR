@@ -149,7 +149,7 @@ public:
   findAdjacent(uint64_t faceId);
 
   AdjacencyList::iterator
-  findAdjacent(const ndn::util::FaceUri& faceUri);
+  findAdjacent(const ndn::FaceUri& faceUri);
 
   /*! \brief Hack to stop developers from using this function
 
@@ -165,7 +165,7 @@ public:
   }
 
   uint64_t
-  getFaceId(const ndn::util::FaceUri& faceUri);
+  getFaceId(const ndn::FaceUri& faceUri);
 
   void
   writeLog();

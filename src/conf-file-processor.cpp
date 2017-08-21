@@ -28,7 +28,7 @@
 #include <boost/cstdint.hpp>
 
 #include <ndn-cxx/name.hpp>
-#include <ndn-cxx/util/face-uri.hpp>
+#include <ndn-cxx/net/face-uri.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -496,7 +496,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
         std::string name = CommandAttriTree.get<std::string>("name");
         std::string uriString = CommandAttriTree.get<std::string>("face-uri");
 
-        ndn::util::FaceUri faceUri;
+        ndn::FaceUri faceUri;
         if (! faceUri.parse(uriString)) {
           std::cerr << "parsing failed!" << std::endl;
           return false;
@@ -665,15 +665,15 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 
       std::string file = it->second.data();
       path certfilePath = absolute(file, path(m_confFileName).parent_path());
-      std::shared_ptr<ndn::IdentityCertificate> idCert =
-        ndn::io::load<ndn::IdentityCertificate>(certfilePath.string());
+      std::shared_ptr<ndn::security::v2::Certificate> idCert =
+        ndn::io::load<ndn::security::v2::Certificate>(certfilePath.string());
 
       if (idCert == nullptr) {
         std::cerr << "Error: Cannot load cert-to-publish: " << file << "!" << std::endl;
         return false;
       }
 
-      m_nlsr.loadCertToPublish(idCert);
+      m_nlsr.loadCertToPublish(*idCert);
     }
   }
 

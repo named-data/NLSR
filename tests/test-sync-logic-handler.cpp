@@ -33,12 +33,12 @@ namespace test {
 
 using std::shared_ptr;
 
-class SyncLogicFixture : public BaseFixture
+class SyncLogicFixture : public UnitTestTimeFixture
 {
 public:
   SyncLogicFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
+    : face(m_ioService, m_keyChain)
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , testIsLsaNew([] (const ndn::Name& name, const Lsa::Type& lsaType,
                        const uint64_t sequenceNumber) {
                      return true;
@@ -57,6 +57,9 @@ public:
     conf.setSiteName(CONFIG_SITE);
     conf.setRouterName(CONFIG_ROUTER_NAME);
     conf.buildRouterPrefix();
+
+    addIdentity(conf.getRouterPrefix());
+
     INIT_LOGGERS("/tmp", "TRACE");
   }
 
@@ -68,16 +71,16 @@ public:
     std::vector<chronosync::MissingDataInfo> updates;
     updates.push_back(info);
 
-    face->processEvents(ndn::time::milliseconds(1));
-    face->sentInterests.clear();
+    this->advanceClocks(ndn::time::milliseconds(1), 10);
+    face.sentInterests.clear();
 
     p_sync.onChronoSyncUpdate(updates);
 
-    face->processEvents(ndn::time::milliseconds(1));
+    this->advanceClocks(ndn::time::milliseconds(1), 10);
   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
+  ndn::util::DummyClientFace face;
   Nlsr nlsr;
   ConfParameter conf;
   SyncLogicHandler::IsLsaNew testIsLsaNew;
@@ -98,7 +101,7 @@ BOOST_FIXTURE_TEST_SUITE(TestSyncLogicHandler, SyncLogicFixture)
  */
 BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
 {
-  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  SyncLogicHandler sync{face, testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
   std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME, Lsa::Type::ADJACENCY};
@@ -128,7 +131,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
 {
   conf.setHyperbolicState(HYPERBOLIC_STATE_ON);
 
-  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  SyncLogicHandler sync{face, testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
   uint64_t syncSeqNo = 1;
@@ -156,7 +159,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
 {
   conf.setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
 
-  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  SyncLogicHandler sync{face, testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
   for (const Lsa::Type& lsaType : lsaTypes) {
@@ -183,7 +186,7 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
 {
   const uint64_t sequenceNumber = 1;
 
-  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  SyncLogicHandler sync{face, testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
   for (const Lsa::Type& lsaType : lsaTypes) {
@@ -209,7 +212,7 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
 {
   const uint64_t sequenceNumber = 1;
 
-  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  SyncLogicHandler sync{face, testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
   for (const Lsa::Type& lsaType : lsaTypes) {
@@ -237,7 +240,7 @@ BOOST_AUTO_TEST_CASE(LsaNotNew)
   };
 
   const uint64_t sequenceNumber = 1;
-  SyncLogicHandler sync{std::ref(*face), testLsaAlwaysFalse, conf};
+  SyncLogicHandler sync{face, testLsaAlwaysFalse, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
       [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
@@ -258,7 +261,7 @@ BOOST_AUTO_TEST_CASE(LsaNotNew)
 BOOST_AUTO_TEST_CASE(UpdatePrefix)
 {
 
-  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  SyncLogicHandler sync{face, testIsLsaNew, conf};
 
   ndn::Name expectedPrefix = nlsr.getConfParameter().getLsaPrefix();
   expectedPrefix.append(CONFIG_SITE);

@@ -29,7 +29,11 @@
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/pib/identity.hpp>
+#include <ndn-cxx/security/signing-helpers.hpp>
+#include <ndn-cxx/security/command-interest-signer.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
+#include <ndn-cxx/lp/tags.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -43,74 +47,78 @@ class PrefixUpdateFixture : public nlsr::test::UnitTestTimeFixture
 {
 public:
   PrefixUpdateFixture()
-    : face(g_ioService, keyChain, {true, true})
-    , siteIdentity(ndn::Name("/ndn/edu/test-site").appendVersion())
-    , opIdentity(ndn::Name(siteIdentity).append(ndn::Name("%C1.Operator")).appendVersion())
-    , nlsr(g_ioService, g_scheduler, face, g_keyChain)
-    , keyPrefix(("/ndn/broadcast"))
+    : face(m_ioService, m_keyChain, {true, true})
+    , siteIdentityName(ndn::Name("/edu/test-site"))
+    , opIdentityName(ndn::Name("/edu/test-site").append(ndn::Name("%C1.Operator")))
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , namePrefixList(nlsr.getNamePrefixList())
     , updatePrefixUpdateProcessor(nlsr.getPrefixUpdateProcessor())
     , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
   {
-    createSiteCert();
-    BOOST_REQUIRE(siteCert != nullptr);
+    // Site cert
+    siteIdentity = addIdentity(siteIdentityName);
+    saveCertificate(siteIdentity, SITE_CERT_PATH.string());
 
-    createOperatorCert();
-    BOOST_REQUIRE(opCert != nullptr);
+    // Operator cert
+    opIdentity = addSubCertificate(opIdentityName, siteIdentity);
 
-    const std::string CONFIG =
-      "rule\n"
-      "{\n"
-      "  id \"NLSR ControlCommand Rule\"\n"
-      "  for interest\n"
-      "  filter\n"
-      "  {\n"
-      "    type name\n"
-      "    regex ^<localhost><nlsr><prefix-update>[<advertise><withdraw>]<>$\n"
-      "  }\n"
-      "  checker\n"
-      "  {\n"
-      "    type customized\n"
-      "    sig-type rsa-sha256\n"
-      "    key-locator\n"
-      "    {\n"
-      "      type name\n"
-      "      regex ^([^<KEY><%C1.Operator>]*)<%C1.Operator>[^<KEY>]*<KEY><ksk-.*><ID-CERT>$\n"
-      "    }\n"
-      "  }\n"
-      "}\n"
-      "rule\n"
-      "{\n"
-      "  id \"NLSR Hierarchy Rule\"\n"
-      "  for data\n"
-      "  filter\n"
-      "  {\n"
-      "    type name\n"
-      "    regex ^[^<KEY>]*<KEY><ksk-.*><ID-CERT><>$\n"
-      "  }\n"
-      "  checker\n"
-      "  {\n"
-      "    type hierarchical\n"
-      "    sig-type rsa-sha256\n"
-      "  }\n"
-      "}\n"
-      "trust-anchor\n"
-      "{\n"
-      " type file\n"
-      " file-name \"site.cert\"\n"
-      "}\n";
+    const std::string CONFIG = R"CONF(
+        rule
+        {
+          id "NLSR ControlCommand Rule"
+          for interest
+          filter
+          {
+            type name
+            regex ^(<localhost><nlsr>)<prefix-update>[<advertise><withdraw>]<><><>$
+          }
+          checker
+          {
+            type customized
+            sig-type rsa-sha256
+            key-locator
+            {
+              type name
+              regex ^<>*<KEY><>$
+            }
+          }
+        }
+        rule
+        {
+          id "NLSR Hierarchy Rule"
+          for data
+          filter
+          {
+            type name
+            regex ^[^<KEY>]*<KEY><><><>$
+          }
+          checker
+          {
+            type hierarchical
+            sig-type rsa-sha256
+          }
+        }
+        trust-anchor
+        {
+         type file
+         file-name "site.cert"
+        }
+    )CONF";
 
     const boost::filesystem::path CONFIG_PATH =
       (boost::filesystem::current_path() / std::string("unit-test.conf"));
 
     updatePrefixUpdateProcessor.getValidator().load(CONFIG, CONFIG_PATH.native());
 
-    // Insert certs after the validator is loaded since ValidatorConfig::load() clears
-    // the certificate cache
-    nlsr.addCertificateToCache(opCert);
+    nlsr.loadCertToPublish(opIdentity.getDefaultKey().getDefaultCertificate());
 
     // Set the network so the LSA prefix is constructed
     nlsr.getConfParameter().setNetwork("/ndn");
+    nlsr.getConfParameter().setSiteName("/edu/test-site");
+    nlsr.getConfParameter().setRouterName("/%C1.Router/this-router");
+    nlsr.getConfParameter().buildRouterPrefix();
+
+    addIdentity(ndn::Name("/ndn/edu/test-site/%C1.Router/this-router"));
 
     // Initialize NLSR so a sync socket is created
     nlsr.initialize();
@@ -124,45 +132,14 @@ public:
     face.sentInterests.clear();
   }
 
-  void
-  createSiteCert()
+  void sendInterestForPublishedData()
   {
-    // Site cert
-    keyChain.createIdentity(siteIdentity);
-    siteCertName = keyChain.getDefaultCertificateNameForIdentity(siteIdentity);
-    siteCert = keyChain.getCertificate(siteCertName);
-
-    ndn::io::save(*siteCert, SITE_CERT_PATH.string());
-  }
-
-  void
-  createOperatorCert()
-  {
-    // Operator cert
-    ndn::Name keyName = keyChain.generateRsaKeyPairAsDefault(opIdentity, true);
-
-    opCert = std::make_shared<ndn::IdentityCertificate>();
-    std::shared_ptr<ndn::PublicKey> pubKey = keyChain.getPublicKey(keyName);
-    opCertName = keyName.getPrefix(-1);
-    opCertName.append("KEY").append(keyName.get(-1)).append("ID-CERT").appendVersion();
-    opCert->setName(opCertName);
-    opCert->setNotBefore(time::system_clock::now() - time::days(1));
-    opCert->setNotAfter(time::system_clock::now() + time::days(1));
-    opCert->setPublicKeyInfo(*pubKey);
-    opCert->addSubjectDescription(ndn::security::v1::CertificateSubjectDescription(ndn::oid::ATTRIBUTE_NAME,
-                                                                                   keyName.toUri()));
-    opCert->encode();
-
-    keyChain.signByIdentity(*opCert, siteIdentity);
-
-    keyChain.addCertificateAsIdentityDefault(*opCert);
-  }
-
-  void sendInterestForPublishedData() {
     // Need to send an interest now since ChronoSync
     // no longer does face->put(*data) in publishData.
     // Instead it does it in onInterest
-    ndn::Name lsaInterestName("/localhop/ndn/NLSR/LSA");
+    ndn::Name lsaInterestName = nlsr.getConfParameter().getLsaPrefix();
+    lsaInterestName.append(nlsr.getConfParameter().getSiteName());
+    lsaInterestName.append(nlsr.getConfParameter().getRouterName());
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
     // The part after LSA is Chronosync getSession
@@ -172,7 +149,7 @@ public:
     std::shared_ptr<Interest> lsaInterest = std::make_shared<Interest>(lsaInterestName);
 
     face.receive(*lsaInterest);
-    this->advanceClocks(ndn::time::milliseconds(10));
+    this->advanceClocks(ndn::time::milliseconds(100));
   }
 
   bool
@@ -185,7 +162,8 @@ public:
     const auto& it = std::find_if(face.sentData.begin(), face.sentData.end(),
       [lsaPrefix] (const ndn::Data& data) {
         return lsaPrefix.isPrefixOf(data.getName());
-      });
+      }
+    );
 
     return (it != face.sentData.end());
   }
@@ -204,28 +182,16 @@ public:
     BOOST_CHECK_EQUAL(response.getCode(), expectedCode);
   }
 
-  ~PrefixUpdateFixture()
-  {
-    keyChain.deleteIdentity(siteIdentity);
-    keyChain.deleteIdentity(opIdentity);
-
-    boost::filesystem::remove(SITE_CERT_PATH);
-  }
-
 public:
   ndn::util::DummyClientFace face;
-  ndn::KeyChain keyChain;
 
-  ndn::Name siteIdentity;
-  ndn::Name siteCertName;
-  std::shared_ptr<IdentityCertificate> siteCert;
+  ndn::Name siteIdentityName;
+  ndn::security::pib::Identity siteIdentity;
 
-  ndn::Name opIdentity;
-  ndn::Name opCertName;
-  std::shared_ptr<IdentityCertificate> opCert;
+  ndn::Name opIdentityName;
+  ndn::security::pib::Identity opIdentity;
 
   Nlsr nlsr;
-  ndn::Name keyPrefix;
   NamePrefixList& namePrefixList;
   PrefixUpdateProcessor& updatePrefixUpdateProcessor;
 
@@ -238,16 +204,29 @@ BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)
 BOOST_AUTO_TEST_CASE(Basic)
 {
   uint64_t nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
-  // Advertise
+
   ndn::nfd::ControlParameters parameters;
   parameters.setName("/prefix/to/advertise/");
+
+  // Control Command format: /<prefix>/<management-module>/<command-verb>/<control-parameters>
+  // /<timestamp>/<random-value>/<signed-interests-components>
+
+  // Advertise
   ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
+
+  // append /<control-parameters>
   advertiseCommand.append(parameters.wireEncode());
 
-  std::shared_ptr<Interest> advertiseInterest = std::make_shared<Interest>(advertiseCommand);
-  keyChain.signByIdentity(*advertiseInterest, opIdentity);
+  ndn::security::CommandInterestSigner cis(m_keyChain);
 
-  face.receive(*advertiseInterest);
+  // CommandInterestSigner::makeCommandInterest() will append the last
+  // three components: (<timestamp>/<random-value>/<signed-interests-components>)
+  ndn::Interest advertiseInterest =
+    cis.makeCommandInterest(advertiseCommand,
+                            ndn::security::signingByIdentity(opIdentity));
+
+  face.receive(advertiseInterest);
+
   this->advanceClocks(ndn::time::milliseconds(10));
 
   NamePrefixList& namePrefixList = nlsr.getNamePrefixList();
@@ -261,14 +240,15 @@ BOOST_AUTO_TEST_CASE(Basic)
   face.sentData.clear();
   nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
 
-  // Withdraw
+  //Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
   withdrawCommand.append(parameters.wireEncode());
 
-  std::shared_ptr<Interest> withdrawInterest = std::make_shared<Interest>(withdrawCommand);
-  keyChain.signByIdentity(*withdrawInterest, opIdentity);
+  ndn::Interest withdrawInterest
+    = cis.makeCommandInterest(withdrawCommand,
+                              ndn::security::signingByIdentity(opIdentity));
 
-  face.receive(*withdrawInterest);
+  face.receive(withdrawInterest);
   this->advanceClocks(ndn::time::milliseconds(10));
 
   BOOST_CHECK_EQUAL(namePrefixList.size(), 0);

@@ -21,8 +21,8 @@
  *
  **/
 
-#include "test-common.hpp"
 #include "route/routing-table.hpp"
+#include "test-common.hpp"
 #include "route/routing-table-entry.hpp"
 #include "route/nexthop.hpp"
 #include <boost/test/unit_test.hpp>
@@ -34,7 +34,7 @@ BOOST_FIXTURE_TEST_SUITE(TestRoutingTable, BaseFixture)
 
 BOOST_AUTO_TEST_CASE(RoutingTableAddNextHop)
 {
-  RoutingTable rt1(g_scheduler);
+  RoutingTable rt1(m_scheduler);
 
   NextHop nh1;
 

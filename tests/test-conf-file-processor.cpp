@@ -25,6 +25,7 @@
 #include "nlsr.hpp"
 
 #include <fstream>
+
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -142,11 +143,11 @@ class ConfFileProcessorFixture : public BaseFixture
 {
 public:
   ConfFileProcessorFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
+    : face(m_ioService, m_keyChain)
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , CONFIG_FILE("unit-test-nlsr.conf")
-    , m_logConfigFileName(boost::filesystem::unique_path().native())
-    , m_logFileName(boost::filesystem::unique_path().native())
+    , m_logConfigFileName(boost::filesystem::unique_path().string())
+    , m_logFileName(boost::filesystem::unique_path().string())
   {
   }
 
@@ -159,7 +160,8 @@ public:
     boost::filesystem::remove(boost::filesystem::path(getLogFileName()));
   }
 
-  bool processConfigurationString(std::string confString)
+  bool
+  processConfigurationString(std::string confString)
   {
     std::ofstream config;
     config.open("unit-test-nlsr.conf");
@@ -210,7 +212,7 @@ public:
   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
+  ndn::util::DummyClientFace face;
   Nlsr nlsr;
 
 private:
@@ -498,64 +500,51 @@ BOOST_AUTO_TEST_CASE(NegativeValue)
 
 BOOST_AUTO_TEST_CASE(LoadCertToPublish)
 {
-  ndn::Name identity("/TestNLSR/identity");
-  identity.appendVersion();
+  auto identity = addIdentity("/TestNLSR/identity");
+  saveCertificate(identity, "cert-to-publish.cert");
 
-  ndn::KeyChain keyChain;
-  keyChain.createIdentity(identity);
-  ndn::Name certName = keyChain.getDefaultCertificateNameForIdentity(identity);
-  std::shared_ptr<ndn::IdentityCertificate> certificate = keyChain.getCertificate(certName);
-
-  const boost::filesystem::path CERT_PATH =
-      (boost::filesystem::current_path() / std::string("cert-to-publish.cert"));
-  ndn::io::save(*certificate, CERT_PATH.string());
-
-  const std::string SECTION_SECURITY =
-  "security\n"
-  "{\n"
-  "  validator\n"
-  "  {\n"
-  "    trust-anchor\n"
-  "    {\n"
-  "      type any\n"
-  "    }\n"
-  "  }\n"
-  "  prefix-update-validator\n"
-  "  {\n"
-  "    trust-anchor\n"
-  "    {\n"
-  "      type any\n"
-  "    }\n"
-  "  }\n"
-  "  cert-to-publish \"cert-to-publish.cert\"\n"
-  "}\n\n";
+  const std::string SECTION_SECURITY = R"CONF(
+      security
+      {
+        validator
+        {
+          trust-anchor
+          {
+            type any
+          }
+        }
+        prefix-update-validator
+        {
+          trust-anchor
+          {
+            type any
+          }
+        }
+        cert-to-publish "cert-to-publish.cert"
+      }
+    )CONF";
 
   BOOST_CHECK(processConfigurationString(SECTION_SECURITY));
 
   // Certificate should now be in the CertificateStore
-  const security::CertificateStore& certStore = nlsr.getCertificateStore();
-  const ndn::Name certKey = certificate->getName().getPrefix(-1);
-
-  BOOST_CHECK(certStore.find(certKey) != nullptr);
-
-  // Cleanup
-  keyChain.deleteIdentity(identity);
-  boost::filesystem::remove(CERT_PATH);
+  security::CertificateStore& certStore = nlsr.getCertificateStore();
+  BOOST_CHECK(certStore.find(identity.getDefaultKey().getName()) != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(PrefixUpdateValidatorOptional) // Bug #2814
 {
-  const std::string SECTION_SECURITY =
-  "security\n"
-  "{\n"
-  "  validator\n"
-  "  {\n"
-  "    trust-anchor\n"
-  "    {\n"
-  "      type any\n"
-  "    }\n"
-  "  }\n"
-  "}\n\n";
+  const std::string SECTION_SECURITY = R"CONF(
+      security
+      {
+        validator
+        {
+          trust-anchor
+          {
+            type any
+          }
+        }
+      }
+    )CONF";
 
   BOOST_CHECK(processConfigurationString(SECTION_SECURITY));
 }

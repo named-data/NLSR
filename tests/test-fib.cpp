@@ -36,24 +36,23 @@ class FibFixture : public UnitTestTimeFixture
 {
 public:
   FibFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>())
+    : face(std::make_shared<ndn::util::DummyClientFace>(m_keyChain))
     , interests(face->sentInterests)
   {
     INIT_LOGGERS("/tmp", "DEBUG");
 
-    Adjacent neighbor1(router1Name, ndn::util::FaceUri(router1FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
+    Adjacent neighbor1(router1Name, ndn::FaceUri(router1FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
     adjacencies.insert(neighbor1);
 
-    Adjacent neighbor2(router2Name, ndn::util::FaceUri(router2FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router2FaceId);
+    Adjacent neighbor2(router2Name, ndn::FaceUri(router2FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router2FaceId);
     adjacencies.insert(neighbor2);
 
-    Adjacent neighbor3(router3Name, ndn::util::FaceUri(router3FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router3FaceId);
+    Adjacent neighbor3(router3Name, ndn::FaceUri(router3FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router3FaceId);
     adjacencies.insert(neighbor3);
 
     conf.setMaxFacesPerPrefix(2);
 
-    fib = std::make_shared<Fib>(std::ref(*face), std::ref(g_scheduler), std::ref(adjacencies),
-                                std::ref(conf), keyChain);
+    fib = std::make_shared<Fib>(*face, m_scheduler, adjacencies, conf, m_keyChain);
 
     fib->m_faceMap.update(router1FaceUri, router1FaceId);
     fib->m_faceMap.update(router2FaceUri, router2FaceId);
@@ -62,7 +61,6 @@ public:
 
 public:
   std::shared_ptr<ndn::util::DummyClientFace> face;
-  ndn::KeyChain keyChain;
   std::shared_ptr<Fib> fib;
 
   AdjacencyList adjacencies;

@@ -55,7 +55,7 @@ CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
                                              const ndn::Interest& interest,
                                              const ndn::mgmt::ControlParameters& parameters,
                                              const ndn::mgmt::CommandContinuation& done)
-    {
+{
   const ndn::nfd::ControlParameters& castParams =
     static_cast<const ndn::nfd::ControlParameters&>(parameters);
 

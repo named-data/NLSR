@@ -266,7 +266,7 @@ AdjacencyList::findAdjacent(uint64_t faceId)
 }
 
 AdjacencyList::iterator
-AdjacencyList::findAdjacent(const ndn::util::FaceUri& faceUri)
+AdjacencyList::findAdjacent(const ndn::FaceUri& faceUri)
 {
   return std::find_if(m_adjList.begin(),
                       m_adjList.end(),
@@ -275,7 +275,7 @@ AdjacencyList::findAdjacent(const ndn::util::FaceUri& faceUri)
 }
 
 uint64_t
-AdjacencyList::getFaceId(const ndn::util::FaceUri& faceUri)
+AdjacencyList::getFaceId(const ndn::FaceUri& faceUri)
 {
   std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
                                                   m_adjList.end(),

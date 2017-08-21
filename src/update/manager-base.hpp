@@ -103,9 +103,9 @@ class CommandManagerBase: public ManagerBase
 {
 public:
   CommandManagerBase(ndn::mgmt::Dispatcher& m_dispatcher,
-                      NamePrefixList& m_namePrefixList,
-                      Lsdb& lsdb,
-                      const std::string& module);
+                     NamePrefixList& m_namePrefixList,
+                     Lsdb& lsdb,
+                     const std::string& module);
 
   /*! \brief add desired name prefix to the advertised name prefix list
    *         or insert a prefix into the FIB if parameters is valid.

@@ -30,14 +30,14 @@ class AdvertiseCrashFixture : public nlsr::test::UnitTestTimeFixture
 {
 public:
   AdvertiseCrashFixture()
-    : face(g_ioService, keyChain, {true, true})
-    , nlsr(g_ioService, g_scheduler, face, g_keyChain)
+    : face(m_ioService, m_keyChain, {true, true})
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , namePrefixList(nlsr.getNamePrefixList())
     , updatePrefixUpdateProcessor(nlsr.getPrefixUpdateProcessor())
   {
     // Add an adjacency to nlsr
     Adjacent adj("/ndn/edu/test-site-2/%C1.Router/test",
-                 ndn::util::FaceUri("udp://1.0.0.2"), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+                 ndn::FaceUri("udp://1.0.0.2"), 10, Adjacent::STATUS_INACTIVE, 0, 0);
     nlsr.getAdjacencyList().insert(adj);
 
     // Create a face dataset response with the face having the same uri as
@@ -50,6 +50,9 @@ public:
 
     // Set the network so the LSA prefix is constructed
     nlsr.getConfParameter().setNetwork("/ndn");
+    nlsr.getConfParameter().setRouterName(ndn::Name("/This/router"));
+
+    addIdentity(ndn::Name("/ndn/This/router"));
 
     // So that NLSR starts listening on prefixes
     nlsr.initialize();
@@ -59,14 +62,13 @@ public:
     // in fib.cpp if an operation is done on non-existent faceUri
     nlsr.processFaceDataset(faces);
 
-    this->advanceClocks(ndn::time::milliseconds(1));
+    this->advanceClocks(ndn::time::milliseconds(1), 10);
 
     face.sentInterests.clear();
   }
 
 public:
   ndn::util::DummyClientFace face;
-  ndn::KeyChain keyChain;
 
   Nlsr nlsr;
   NamePrefixList& namePrefixList;
@@ -89,7 +91,7 @@ BOOST_FIXTURE_TEST_CASE(TestAdvertiseCrash, AdvertiseCrashFixture)
   std::shared_ptr<ndn::Interest> advertiseInterest = std::make_shared<ndn::Interest>(advertiseCommand);
 
   face.receive(*advertiseInterest);
-  this->advanceClocks(ndn::time::milliseconds(10));
+  this->advanceClocks(ndn::time::milliseconds(10), 10);
 }
 
 } // namespace test

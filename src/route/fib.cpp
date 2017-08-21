@@ -67,7 +67,7 @@ Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
 
     if (isPrefixUpdatable(name)) {
       // Add nexthop to NDN-FIB
-      registerPrefix(name, ndn::util::FaceUri(it->getConnectingFaceUri()),
+      registerPrefix(name, ndn::FaceUri(it->getConnectingFaceUri()),
                      it->getRouteCostAsAdjustedInteger(),
                      ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
                      ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
@@ -196,12 +196,12 @@ Fib::isPrefixUpdatable(const ndn::Name& name) {
 }
 
 void
-Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::util::FaceUri& faceUri,
+Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri,
                     uint64_t faceCost,
                     const ndn::time::milliseconds& timeout,
                     uint64_t flags, uint8_t times)
 {
-  uint64_t faceId = m_adjacencyList.getFaceId(ndn::util::FaceUri(faceUri));
+  uint64_t faceId = m_adjacencyList.getFaceId(ndn::FaceUri(faceUri));
 
   if (faceId != 0) {
     ndn::nfd::ControlParameters faceParameters;
@@ -231,7 +231,7 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::util::FaceUri& faceU
 
 void
 Fib::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                           const std::string& message, const ndn::util::FaceUri& faceUri)
+                           const std::string& message, const ndn::FaceUri& faceUri)
 {
   NLSR_LOG_DEBUG(message << ": " << commandSuccessResult.getName() <<
              " Face Uri: " << faceUri << " faceId: " << commandSuccessResult.getFaceId());
@@ -250,7 +250,7 @@ void
 Fib::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
                            const std::string& message,
                            const ndn::nfd::ControlParameters& parameters,
-                           const ndn::util::FaceUri& faceUri,
+                           const ndn::FaceUri& faceUri,
                            uint8_t times)
 {
   NLSR_LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
@@ -385,7 +385,7 @@ Fib::refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb)
 
   for (const NextHop& hop : entry) {
     registerPrefix(entry.getName(),
-                   ndn::util::FaceUri(hop.getConnectingFaceUri()),
+                   ndn::FaceUri(hop.getConnectingFaceUri()),
                    hop.getRouteCostAsAdjustedInteger(),
                    ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
                    ndn::nfd::ROUTE_FLAG_CAPTURE, 0);

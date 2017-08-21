@@ -126,7 +126,6 @@ def build(bld):
 
     if bld.env['WITH_TESTS']:
         bld.recurse('tests')
-        bld.recurse('tests-integrated')
 
     if bld.env['SPHINX_BUILD']:
         bld(features="sphinx",

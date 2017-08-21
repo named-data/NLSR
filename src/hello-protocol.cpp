@@ -114,8 +114,11 @@ HelloProtocol::processInterest(const ndn::Name& name,
     data->setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
     data->setContent(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.c_str()),
                     INFO_COMPONENT.size());
-    m_nlsr.getKeyChain().sign(*data, m_nlsr.getDefaultCertName());
+
+    m_nlsr.getKeyChain().sign(*data, m_nlsr.getSigningInfo());
+
     NLSR_LOG_DEBUG("Sending out data for name: " << interest.getName());
+
     m_nlsr.getNlsrFace().put(*data);
     // increment SENT_HELLO_DATA
     hpIncrementSignal(Statistics::PacketType::SENT_HELLO_DATA);
@@ -195,11 +198,12 @@ HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
 }
 
 void
-HelloProtocol::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
+HelloProtocol::onContentValidated(const ndn::Data& data)
 {
   // data name: /<neighbor>/NLSR/INFO/<router>/<version>
-  ndn::Name dataName = data->getName();
+  ndn::Name dataName = data.getName();
   NLSR_LOG_DEBUG("Data validation successful for INFO(name): " << dataName);
+
   if (dataName.get(-3).toUri() == INFO_COMPONENT) {
     ndn::Name neighbor = dataName.getPrefix(-4);
 
@@ -225,10 +229,10 @@ HelloProtocol::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
 }
 
 void
-HelloProtocol::onContentValidationFailed(const std::shared_ptr<const ndn::Data>& data,
-                                         const std::string& msg)
+HelloProtocol::onContentValidationFailed(const ndn::Data& data,
+                                         const ndn::security::v2::ValidationError& ve)
 {
-  NLSR_LOG_DEBUG("Validation Error: " << msg);
+  NLSR_LOG_DEBUG("Validation Error: " << ve);
 }
 
 } // namespace nlsr

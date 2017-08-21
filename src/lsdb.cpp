@@ -38,9 +38,10 @@ class LsaContentPublisher : public SegmentPublisher<ndn::Face>
 public:
   LsaContentPublisher(ndn::Face& face,
                       ndn::KeyChain& keyChain,
+                      const ndn::security::SigningInfo& signingInfo,
                       const ndn::time::milliseconds& freshnessPeriod,
                       const std::string& content)
-    : SegmentPublisher(face, keyChain, freshnessPeriod)
+    : SegmentPublisher(face, keyChain, signingInfo, freshnessPeriod)
     , m_content(content)
   {
   }
@@ -1073,12 +1074,12 @@ Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
 {
   LsaContentPublisher publisher(m_nlsr.getNlsrFace(),
                                 m_nlsr.getKeyChain(),
+                                m_nlsr.getSigningInfo(),
                                 m_lsaRefreshTime,
                                 content);
   NLSR_LOG_DEBUG("Sending requested data ( " << content << ")  for interest (" << interest
              << ") to be published and added to face.");
-  publisher.publish(interest.getName(),
-                    ndn::security::signingByCertificate(m_nlsr.getDefaultCertName()));
+  publisher.publish(interest.getName());
 }
 
   // \brief Finds and sends a requested name LSA.

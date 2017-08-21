@@ -32,8 +32,8 @@ class NamePrefixTableFixture : public UnitTestTimeFixture
 {
 public:
   NamePrefixTableFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
-    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
+    : face(m_ioService, m_keyChain)
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , lsdb(nlsr.getLsdb())
     , npt(nlsr.getNamePrefixTable())
   {
@@ -41,7 +41,7 @@ public:
   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
+  ndn::util::DummyClientFace face;
   Nlsr nlsr;
 
   Lsdb& lsdb;
@@ -63,10 +63,10 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
 
   NamePrefixTable& npt = nlsr.getNamePrefixTable();
 
-  Adjacent thisRouter(conf.getRouterPrefix(), ndn::util::FaceUri("udp4://10.0.0.1"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+  Adjacent thisRouter(conf.getRouterPrefix(), ndn::FaceUri("udp4://10.0.0.1"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
   ndn::Name buptRouterName("/ndn/cn/edu/bupt/%C1.Router/bupthub");
-  Adjacent bupt(buptRouterName, ndn::util::FaceUri("udp4://10.0.0.2"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+  Adjacent bupt(buptRouterName, ndn::FaceUri("udp4://10.0.0.2"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
   // This router's Adjacency LSA
   nlsr.getAdjacencyList().insert(bupt);

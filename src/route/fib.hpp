@@ -55,7 +55,7 @@ class Fib
 {
 public:
   Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList, ConfParameter& conf,
-      ndn::KeyChain& keyChain)
+      ndn::security::v2::KeyChain& keyChain)
     : m_scheduler(scheduler)
     , m_refreshTime(0)
     , m_controller(face, keyChain)
@@ -131,7 +131,7 @@ public:
    */
   void
   registerPrefix(const ndn::Name& namePrefix,
-                 const ndn::util::FaceUri& faceUri,
+                 const ndn::FaceUri& faceUri,
                  uint64_t faceCost,
                  const ndn::time::milliseconds& timeout,
                  uint64_t flags,
@@ -173,7 +173,7 @@ private:
    */
   void
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                        const std::string& message, const ndn::util::FaceUri& faceUri);
+                        const std::string& message, const ndn::FaceUri& faceUri);
 
   /*! \brief Retry a prefix (next-hop) registration up to three (3) times.
    */
@@ -181,7 +181,7 @@ private:
   onRegistrationFailure(const ndn::nfd::ControlResponse& response,
                         const std::string& message,
                         const ndn::nfd::ControlParameters& parameters,
-                        const ndn::util::FaceUri& faceUri,
+                        const ndn::FaceUri& faceUri,
                         uint8_t times);
 
   /*! \brief Log a successful unregistration.

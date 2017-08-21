@@ -18,37 +18,29 @@ if has OSX $NODE_LABELS; then
     fi
 fi
 
-## Uncomment when #3920 and #4119 merge.
-# if [[ -z $INSTALLED_VERSION ]]; then
-#     INSTALLED_VERSION=$(git -C ndn-cxx rev-parse HEAD 2>/dev/null || echo NONE)
-# fi
+if [[ -z $INSTALLED_VERSION ]]; then
+    INSTALLED_VERSION=$(git -C ndn-cxx rev-parse HEAD 2>/dev/null || echo NONE)
+fi
 
 sudo rm -Rf ndn-cxx-latest
-## Remove this when #3920 and #4119 merge
-sudo rm -Rf ndn-cxx-hotfix
-git clone git://github.com/named-data/ndn-cxx ndn-cxx-hotfix
 
-## Uncomment when #3920 and #4119 merge.
-# LATEST_VERSION=$(git -C ndn-cxx-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
+git clone --depth 1 git://github.com/named-data/ndn-cxx ndn-cxx-latest
 
-# if [[ $INSTALLED_VERSION != $LATEST_VERSION ]]; then
-#     sudo rm -Rf ndn-cxx
-#     mv ndn-cxx-latest ndn-cxx
-#     cp ndn-cxx ndn-cxx-hotfix
-# else
-#     sudo rm -Rf ndn-cxx-latest
-# fi
+LATEST_VERSION=$(git -C ndn-cxx-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
+
+if [[ $INSTALLED_VERSION != $LATEST_VERSION ]]; then
+    sudo rm -Rf ndn-cxx
+    mv ndn-cxx-latest ndn-cxx
+else
+    sudo rm -Rf ndn-cxx-latest
+fi
 
 sudo rm -f /usr/local/bin/ndnsec*
 sudo rm -fr /usr/local/include/ndn-cxx
 sudo rm -f /usr/local/lib/libndn-cxx*
 sudo rm -f /usr/local/lib/pkgconfig/libndn-cxx.pc
 
-## Change to the hotfix directory instead of the normal ndn-cxx directory
-## Restore below line when #3920 and #4119 merge.
-#pushd ndn-cxx >/dev/null
-pushd ndn-cxx-hotfix >/dev/null
-git checkout b555b00c280b9c9ed46f24a1fbebc73b720601af
+pushd ndn-cxx >/dev/null
 
 ./waf configure --color=yes --enable-shared --disable-static --without-osx-keychain
 ./waf build --color=yes -j${WAF_JOBS:-1}

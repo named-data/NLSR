@@ -23,7 +23,7 @@
 #include <boost/cstdint.hpp>
 
 #include <ndn-cxx/face.hpp>
-#include <ndn-cxx/util/face-uri.hpp>
+#include <ndn-cxx/net/face-uri.hpp>
 
 #ifndef NLSR_ADJACENT_HPP
 #define NLSR_ADJACENT_HPP
@@ -50,7 +50,7 @@ public:
 
   Adjacent(const ndn::Name& an);
 
-  Adjacent(const ndn::Name& an, const ndn::util::FaceUri& faceUri, double lc,
+  Adjacent(const ndn::Name& an, const ndn::FaceUri& faceUri, double lc,
            Status s, uint32_t iton, uint64_t faceId);
 
   const ndn::Name&
@@ -65,14 +65,14 @@ public:
     m_name = an;
   }
 
-  const ndn::util::FaceUri&
+  const ndn::FaceUri&
   getFaceUri() const
   {
     return m_faceUri;
   }
 
   void
-  setFaceUri(const ndn::util::FaceUri& faceUri)
+  setFaceUri(const ndn::FaceUri& faceUri)
   {
     m_faceUri = faceUri;
   }
@@ -152,7 +152,7 @@ public:
   }
 
   inline bool
-  compareFaceUri(const ndn::util::FaceUri& faceUri)
+  compareFaceUri(const ndn::FaceUri& faceUri)
   {
     return m_faceUri == faceUri;
   }
@@ -166,8 +166,8 @@ public:
 private:
   /*! m_name The NLSR-configured router name of the neighbor */
   ndn::Name m_name;
-  /*! m_connectingFaceUri The NFD-level specification of the Face*/
-  ndn::util::FaceUri m_faceUri;
+  /*! m_faceUri The NFD-level specification of the Face*/
+  ndn::FaceUri m_faceUri;
   /*! m_linkCost The semi-arbitrary cost to traverse the link. */
   double m_linkCost;
   /*! m_status Whether the neighbor is active or not */

@@ -30,6 +30,9 @@
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/pib/identity.hpp>
+
+#include <ndn-cxx/util/io.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -42,13 +45,16 @@ class PublisherFixture : public BaseFixture
 {
 public:
   PublisherFixture()
-    : face(g_ioService, keyChain, {true, true})
-    , nlsr(g_ioService, g_scheduler, face, g_keyChain)
+    : face(m_ioService, m_keyChain, {true, true})
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , lsdb(nlsr.getLsdb())
   {
-    INIT_LOGGERS("/tmp/","TRACE");
+    INIT_LOGGERS("/tmp/", "TRACE");
     nlsr.getConfParameter().setNetwork("/ndn");
     nlsr.getConfParameter().setRouterName("/This/Router");
+
+    routerId = addIdentity("/ndn/This/Router");
+
     nlsr.initialize();
     face.processEvents(ndn::time::milliseconds(100));
   }
@@ -56,7 +62,7 @@ public:
   void
   addAdjacency(AdjLsa& lsa, const std::string& name, const std::string& faceUri, double cost)
   {
-    Adjacent adjacency(name, ndn::util::FaceUri(faceUri), cost, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent adjacency(name, ndn::FaceUri(faceUri), cost, Adjacent::STATUS_ACTIVE, 0, 0);
     lsa.addAdjacent(std::move(adjacency));
   }
 
@@ -148,10 +154,11 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
-  ndn::KeyChain keyChain;
 
   Nlsr nlsr;
   Lsdb& lsdb;
+
+  ndn::security::pib::Identity routerId;
 };
 
 } // namespace test

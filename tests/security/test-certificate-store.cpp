@@ -30,28 +30,20 @@ namespace security {
 namespace test {
 
 using std::shared_ptr;
+using namespace nlsr::test;
 
-class CertificateStoreFixture
+class CertificateStoreFixture : public BaseFixture
 {
 public:
   CertificateStoreFixture()
   {
-    // Create certificate
-    ndn::Name identity("/TestNLSR/identity");
-    identity.appendVersion();
-
-    ndn::KeyChain keyChain;
-    keyChain.createIdentity(identity);
-    ndn::Name certName = keyChain.getDefaultCertificateNameForIdentity(identity);
-    certificate = keyChain.getCertificate(certName);
-
-    BOOST_REQUIRE(certificate != nullptr);
-
-    certificateKey = certificate->getName().getPrefix(-1);
+    auto identity = addIdentity("/TestNLSR/identity");
+    certificateKey = identity.getDefaultKey().getName();
+    certificate = identity.getDefaultKey().getDefaultCertificate();
   }
 
 public:
-  std::shared_ptr<ndn::IdentityCertificate> certificate;
+  ndn::security::v2::Certificate certificate;
   ndn::Name certificateKey;
 };
 
@@ -64,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_REQUIRE(store.find(certificateKey) == nullptr);
   store.insert(certificate);
 
-  BOOST_CHECK(*store.find(certificateKey) == *certificate);
+  BOOST_CHECK(*store.find(certificateKey) == certificate);
 
   store.clear();
   BOOST_REQUIRE(store.find(certificateKey) == nullptr);

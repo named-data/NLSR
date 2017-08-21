@@ -26,7 +26,7 @@
 #include "../test-access-control.hpp"
 
 #include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/security/v1/identity-certificate.hpp>
+#include <ndn-cxx/security/v2/certificate.hpp>
 
 namespace nlsr {
 namespace security {
@@ -42,21 +42,18 @@ class CertificateStore
 {
 public:
   void
-  insert(std::shared_ptr<ndn::IdentityCertificate> certificate)
+  insert(const ndn::security::v2::Certificate& certificate)
   {
-    if (certificate != nullptr) {
-      // Key is cert name without version
-      m_certificates[certificate->getName().getPrefix(-1)] = certificate;
-    }
+    m_certificates[certificate.getKeyName()] = certificate;
   }
 
-  std::shared_ptr<const ndn::IdentityCertificate>
-  find(const ndn::Name& certificateNameWithoutVersion) const
+  const ndn::security::v2::Certificate*
+  find(const ndn::Name keyName)
   {
-    CertMap::const_iterator it = m_certificates.find(certificateNameWithoutVersion);
+    CertMap::iterator it = m_certificates.find(keyName);
 
     if (it != m_certificates.end()) {
-      return it->second;
+      return &it->second;
     }
 
     return nullptr;
@@ -70,7 +67,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
 private:
-  typedef std::map<ndn::Name, std::shared_ptr<ndn::IdentityCertificate>> CertMap;
+  typedef std::map<ndn::Name, ndn::security::v2::Certificate> CertMap;
   CertMap m_certificates;
 };
 

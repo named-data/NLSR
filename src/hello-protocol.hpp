@@ -30,6 +30,7 @@
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/security/v2/validation-error.hpp>
 
 namespace nlsr {
 
@@ -128,14 +129,14 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
    * to contact this neighbor so that we will retry later.
    */
   void
-  onContentValidated(const std::shared_ptr<const ndn::Data>& data);
+  onContentValidated(const ndn::Data& data);
 
 private:
   /*! \brief Log that incoming data couldn't be validated, but do nothing else.
    */
   void
-  onContentValidationFailed(const std::shared_ptr<const ndn::Data>& data,
-                            const std::string& msg);
+  onContentValidationFailed(const ndn::Data& data,
+                            const ndn::security::v2::ValidationError& ve);
 
   /*! \brief Treat a failed Face registration as an INACTIVE neighbor.
    *

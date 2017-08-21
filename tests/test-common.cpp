@@ -35,7 +35,7 @@ signData(ndn::Data& data)
 }
 
 MockNfdMgmtFixture::MockNfdMgmtFixture()
-  : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
+  : m_face(m_ioService, m_keyChain, {true, true})
 {
 }
 
@@ -52,11 +52,11 @@ UnitTestTimeFixture::advanceClocks(const ndn::time::nanoseconds& tick, size_t nT
     steadyClock->advance(tick);
     systemClock->advance(tick);
 
-    if (g_ioService.stopped()) {
-      g_ioService.reset();
+    if (m_ioService.stopped()) {
+      m_ioService.reset();
     }
 
-    g_ioService.poll();
+    m_ioService.poll();
   }
 }
 

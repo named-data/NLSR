@@ -248,7 +248,7 @@ AdjLsa::deserialize(const std::string& content) noexcept
       ndn::Name adjName(*tok_iter++);
       std::string connectingFaceUri(*tok_iter++);
       double linkCost = boost::lexical_cast<double>(*tok_iter++);
-      Adjacent adjacent(adjName, ndn::util::FaceUri(connectingFaceUri), linkCost,
+      Adjacent adjacent(adjName, ndn::FaceUri(connectingFaceUri), linkCost,
                         Adjacent::STATUS_INACTIVE, 0, 0);
       addAdjacent(adjacent);
     }

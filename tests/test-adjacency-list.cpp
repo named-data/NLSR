@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 
 BOOST_AUTO_TEST_CASE(findAdjacentByFaceUri)
 {
-  ndn::util::FaceUri faceUri("udp4://10.0.0.1:6363");
+  ndn::FaceUri faceUri("udp4://10.0.0.1:6363");
   Adjacent adj1("/ndn/test/1", faceUri, 10, Adjacent::STATUS_INACTIVE, 0, 0);
   AdjacencyList adjList;
   adjList.insert(adj1);

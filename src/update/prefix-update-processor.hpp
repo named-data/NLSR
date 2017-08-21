@@ -25,11 +25,11 @@
 #include "manager-base.hpp"
 #include "prefix-update-commands.hpp"
 #include "test-access-control.hpp"
-#include "validator.hpp"
 
-#include <ndn-cxx/security/certificate-cache-ttl.hpp>
+#include <ndn-cxx/util/io.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/v2/validator.hpp>
+#include <ndn-cxx/security/v2/certificate-storage.hpp>
+#include <ndn-cxx/util/io.hpp>
 
 #include <boost/property_tree/ptree.hpp>
 #include <memory>
@@ -50,11 +50,7 @@ public:
   PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
                         ndn::Face& face,
                         NamePrefixList& namePrefixList,
-                        Lsdb& lsdb,
-                        const ndn::Name broadcastPrefix,
-                        ndn::KeyChain& keyChain,
-                        std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
-                        security::CertificateStore& certStore);
+                        Lsdb& lsdb);
 
   /*! \brief Load the validator's configuration from a section of a
    * configuration file.
@@ -70,8 +66,7 @@ public:
   void
   loadValidator(ConfigSection section, const std::string& filename);
 
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  Validator&
+  ndn::security::ValidatorConfig&
   getValidator()
   {
     return m_validator;
@@ -88,7 +83,7 @@ private:
   makeAuthorization();
 
 private:
-  Validator m_validator;
+  ndn::security::ValidatorConfig m_validator;
 };
 
 } // namespace update

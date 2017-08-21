@@ -29,7 +29,8 @@
 #include <cstdio>
 #include <unistd.h>
 
-#include <ndn-cxx/util/face-uri.hpp>
+#include <ndn-cxx/net/face-uri.hpp>
+#include <ndn-cxx/signature.hpp>
 
 namespace nlsr {
 
@@ -61,20 +62,14 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
                          m_routerNameDispatcher,
                          m_nlsrFace,
                          m_keyChain)
-
   , m_helloProtocol(*this, scheduler)
-  , m_certificateCache(new ndn::CertificateCacheTtl(ioService))
-  , m_validator(m_nlsrFace, DEFAULT_BROADCAST_PREFIX, m_certificateCache, m_certStore)
-  , m_controller(m_nlsrFace, m_keyChain, m_validator)
+  , m_validator(ndn::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(m_nlsrFace))
+  , m_controller(m_nlsrFace, m_keyChain)
   , m_faceDatasetController(m_nlsrFace, m_keyChain)
   , m_prefixUpdateProcessor(m_localhostDispatcher,
                             m_nlsrFace,
                             m_namePrefixList,
-                            m_nlsrLsdb,
-                            DEFAULT_BROADCAST_PREFIX,
-                            m_keyChain,
-                            m_certificateCache,
-                            m_certStore)
+                            m_nlsrLsdb)
   , m_nfdRibCommandProcessor(m_localhostDispatcher,
                              m_namePrefixList,
                              m_nlsrLsdb)
@@ -97,36 +92,17 @@ void
 Nlsr::onRegistrationSuccess(const ndn::Name& name)
 {
   NLSR_LOG_DEBUG("Successfully registered prefix: " << name);
-
-  if (name.equals(m_confParam.getRouterPrefix())) {
-    // the top-level prefixes are added.
-    try {
-      m_routerNameDispatcher.addTopPrefix(m_confParam.getRouterPrefix(), false, m_signingInfo);
-    }
-    catch (const std::exception& e) {
-      NLSR_LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
-    }
-  }
-}
-
-void
-Nlsr::onLocalhostRegistrationSuccess(const ndn::Name& name)
-{
-  // All dispatcher-related sub-prefixes *must* be registered before
-  // the top-level prefixes are added.
-  try {
-    m_localhostDispatcher.addTopPrefix(LOCALHOST_PREFIX, false, m_signingInfo);
-  }
-  catch (const std::exception& e) {
-    NLSR_LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
-  }
 }
 
 void
 Nlsr::setInfoInterestFilter()
 {
   ndn::Name name(m_confParam.getRouterPrefix());
-  NLSR_LOG_DEBUG("Setting interest filter for name: " << name);
+  name.append("NLSR");
+  name.append("INFO");
+
+  NLSR_LOG_DEBUG("Setting interest filter for Hello interest: " << name);
+
   getNlsrFace().setInterestFilter(name,
                                   std::bind(&HelloProtocol::processInterest,
                                             &m_helloProtocol, _1, _2),
@@ -142,7 +118,9 @@ Nlsr::setLsaInterestFilter()
   ndn::Name name = m_confParam.getLsaPrefix();
   name.append(m_confParam.getSiteName());
   name.append(m_confParam.getRouterName());
+
   NLSR_LOG_DEBUG("Setting interest filter for LsaPrefix: " << name);
+
   getNlsrFace().setInterestFilter(name,
                                   std::bind(&Lsdb::processInterest,
                                             &m_nlsrLsdb, _1, _2),
@@ -152,16 +130,29 @@ Nlsr::setLsaInterestFilter()
                                   ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
+
+void
+Nlsr::addDispatcherTopPrefix(const ndn::Name& topPrefix)
+{
+  try {
+    if (topPrefix.equals(m_confParam.getRouterPrefix())) {
+      m_routerNameDispatcher.addTopPrefix(topPrefix, false, m_signingInfo);
+    }
+    else {
+      m_localhostDispatcher.addTopPrefix(topPrefix, false, m_signingInfo);
+    }
+  }
+  catch (const std::exception& e) {
+    NLSR_LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
+  }
+}
+
 void
 Nlsr::setStrategies()
 {
   const std::string strategy("ndn:/localhost/nfd/strategy/multicast");
 
-  ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
-  broadcastKeyPrefix.append("KEYS");
-
   m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy, 0);
-  m_fib.setStrategy(broadcastKeyPrefix, strategy, 0);
   m_fib.setStrategy(m_confParam.getChronosyncPrefix(), strategy, 0);
 }
 
@@ -207,8 +198,8 @@ Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
                            std::function<void(void)> finally)
 {
   if (currentNeighbor != m_adjacencyList.getAdjList().end()) {
-    ndn::util::FaceUri uri(currentNeighbor->getFaceUri());
-    uri.canonize([this, then, currentNeighbor] (ndn::util::FaceUri canonicalUri) {
+    ndn::FaceUri uri(currentNeighbor->getFaceUri());
+    uri.canonize([this, then, currentNeighbor] (ndn::FaceUri canonicalUri) {
         NLSR_LOG_DEBUG("Canonized URI: " << currentNeighbor->getFaceUri()
                    << " to: " << canonicalUri);
         currentNeighbor->setFaceUri(canonicalUri);
@@ -226,6 +217,18 @@ Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
   else {
     finally();
   }
+}
+
+
+void
+Nlsr::loadCertToPublish(const ndn::security::v2::Certificate& certificate)
+{
+  m_certStore.insert(certificate);
+  m_validator.loadAnchor("Authoritative-Certificate",
+                          ndn::security::v2::Certificate(certificate));
+  m_prefixUpdateProcessor.getValidator().
+                          loadAnchor("Authoritative-Certificate",
+                                      ndn::security::v2::Certificate(certificate));
 }
 
 void
@@ -248,14 +251,23 @@ Nlsr::initialize()
   m_adjacencyList.writeLog();
   NLSR_LOG_DEBUG(m_namePrefixList);
   // Logging end
+
   initializeKey();
   setStrategies();
+
   NLSR_LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
+
   setInfoInterestFilter();
   setLsaInterestFilter();
 
+  // add top-level prefixes: router and localhost prefix
+  addDispatcherTopPrefix(m_confParam.getRouterPrefix());
+  addDispatcherTopPrefix(LOCALHOST_PREFIX);
+
   initializeFaces(std::bind(&Nlsr::processFaceDataset, this, _1),
                   std::bind(&Nlsr::onFaceDatasetFetchTimeout, this, _1, _2, 0));
+
+  enableIncomingFaceIdIndication();
 
   // Set event intervals
   setFirstHelloInterval(m_confParam.getFirstHelloInterval());
@@ -288,44 +300,71 @@ Nlsr::initialize()
 void
 Nlsr::initializeKey()
 {
-  ndn::Name defaultIdentity = m_confParam.getRouterPrefix();
-  defaultIdentity.append("NLSR");
+  NLSR_LOG_DEBUG("Initializing Key ...");
+
+  ndn::Name nlsrInstanceName = m_confParam.getRouterPrefix();
+  nlsrInstanceName.append("NLSR");
 
   try {
-    m_keyChain.deleteIdentity(defaultIdentity);
+    m_keyChain.deleteIdentity(m_keyChain.getPib().getIdentity(nlsrInstanceName));
+  } catch (const std::exception& e) {
+    NLSR_LOG_WARN(e.what());
+  }
+
+  auto nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName);
+  auto nlsrInstanceKey = nlsrInstanceIdentity.getDefaultKey();
+
+  ndn::security::v2::Certificate certificate;
+
+  ndn::Name certificateName = nlsrInstanceKey.getName();
+  certificateName.append("NA");
+  certificateName.appendVersion();
+  certificate.setName(certificateName);
+
+  // set metainfo
+  certificate.setContentType(ndn::tlv::ContentType_Key);
+  certificate.setFreshnessPeriod(ndn::time::days(7300));
+
+  // set content
+  certificate.setContent(nlsrInstanceKey.getPublicKey().data(), nlsrInstanceKey.getPublicKey().size());
+
+  // set signature-info
+  ndn::SignatureInfo signatureInfo;
+  signatureInfo.setValidityPeriod(ndn::security::ValidityPeriod(ndn::time::system_clock::TimePoint(),
+                                                                ndn::time::system_clock::now()
+                                                                + ndn::time::days(20 * 365)));
+  try {
+    m_keyChain.sign(certificate,
+                    ndn::security::SigningInfo(m_keyChain.getPib().getIdentity(m_confParam.getRouterPrefix()))
+                                               .setSignatureInfo(signatureInfo));
   }
   catch (const std::exception& e) {
+    NLSR_LOG_WARN("ERROR: Router's " << e.what()
+                  << "NLSR is running without security."
+                  << " If security is enabled NLSR will not converge.");
+
+    std::cerr << "Router's " << e.what() << "NLSR is running without security "
+              << "(Only for testing, should not be used in production.)"
+              << " If security is enabled NLSR will not converge." << std::endl;
   }
-  m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID, defaultIdentity);
 
-  ndn::Name keyName = m_keyChain.generateRsaKeyPairAsDefault(defaultIdentity, true);
+  m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
+                                             nlsrInstanceName);
 
-  std::shared_ptr<ndn::IdentityCertificate> certificate =
-    std::make_shared<ndn::IdentityCertificate>();
-  std::shared_ptr<ndn::PublicKey> pubKey = m_keyChain.getPublicKey(keyName);
-  ndn::Name certificateName = keyName.getPrefix(-1);
-  certificateName.append("KEY").append(keyName.get(-1)).append("ID-CERT").appendVersion();
-  certificate->setName(certificateName);
-  certificate->setNotBefore(ndn::time::system_clock::now() - ndn::time::days(1));
-  certificate->setNotAfter(ndn::time::system_clock::now() + ndn::time::days(7300)); // ~20 years
-  certificate->setPublicKeyInfo(*pubKey);
-  certificate->addSubjectDescription(ndn::CertificateSubjectDescription(ndn::oid::ATTRIBUTE_NAME,
-                                                                   keyName.toUri()));
-  certificate->encode();
-  m_keyChain.signByIdentity(*certificate, m_confParam.getRouterPrefix());
-
-  m_keyChain.addCertificateAsIdentityDefault(*certificate);
   loadCertToPublish(certificate);
 
-  m_defaultCertName = certificate->getName();
+  m_defaultCertName = certificate.getName();
 }
 
 void
 Nlsr::registerKeyPrefix()
 {
-  ndn::Name keyPrefix = DEFAULT_BROADCAST_PREFIX;
-  keyPrefix.append("KEYS");
-  m_nlsrFace.setInterestFilter(keyPrefix,
+  // Start listening for the interest of this router's NLSR certificate
+  ndn::Name nlsrKeyPrefix = getConfParameter().getRouterPrefix();
+  nlsrKeyPrefix.append("NLSR");
+  nlsrKeyPrefix.append("KEY");
+
+  m_nlsrFace.setInterestFilter(nlsrKeyPrefix,
                                std::bind(&Nlsr::onKeyInterest,
                                          this, _1, _2),
                                std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
@@ -333,52 +372,73 @@ Nlsr::registerKeyPrefix()
                                m_signingInfo,
                                ndn::nfd::ROUTE_FLAG_CAPTURE);
 
+  // Start listening for the interest of this router's certificate
+  ndn::Name routerKeyPrefix = getConfParameter().getRouterPrefix();
+  routerKeyPrefix.append("KEY");
+
+  m_nlsrFace.setInterestFilter(routerKeyPrefix,
+                                 std::bind(&Nlsr::onKeyInterest,
+                                           this, _1, _2),
+                                 std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
+                                 std::bind(&Nlsr::registrationFailed, this, _1),
+                                 m_signingInfo,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE);
+
+  // Start listening for the interest of this router's operator's certificate
+  ndn::Name operatorKeyPrefix = getConfParameter().getNetwork();
+  operatorKeyPrefix.append(getConfParameter().getSiteName());
+  operatorKeyPrefix.append(std::string("%C1.Operator"));
+
+  m_nlsrFace.setInterestFilter(operatorKeyPrefix,
+                               std::bind(&Nlsr::onKeyInterest,
+                                         this, _1, _2),
+                               std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
+                               std::bind(&Nlsr::registrationFailed, this, _1),
+                               m_signingInfo,
+                               ndn::nfd::ROUTE_FLAG_CAPTURE);
+
+  // Start listening for the interest of this router's site's certificate
+  ndn::Name siteKeyPrefix = getConfParameter().getNetwork();
+  siteKeyPrefix.append(getConfParameter().getSiteName());
+  siteKeyPrefix.append("KEY");
+
+  m_nlsrFace.setInterestFilter(siteKeyPrefix,
+                               std::bind(&Nlsr::onKeyInterest,
+                                          this, _1, _2),
+                               std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
+                               std::bind(&Nlsr::registrationFailed, this, _1),
+                               m_signingInfo,
+                               ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
 void
 Nlsr::registerLocalhostPrefix()
 {
   m_nlsrFace.registerPrefix(LOCALHOST_PREFIX,
-                            std::bind(&Nlsr::onLocalhostRegistrationSuccess, this, _1),
+                            std::bind(&Nlsr::onRegistrationSuccess, this, _1),
                             std::bind(&Nlsr::registrationFailed, this, _1));
 }
 
 void
 Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
 {
+  NLSR_LOG_DEBUG("Got interest for certificate. Interest: " << interest.getName());
+
   const ndn::Name& interestName = interest.getName();
-  ndn::Name certName = interestName.getSubName(name.size());
+  const ndn::security::v2::Certificate* cert = getCertificate(interestName);
 
-  if (certName[-2].toUri() == "ID-CERT")
-    {
-      certName = certName.getPrefix(-1);
-    }
-  else if (certName[-1].toUri() != "ID-CERT")
-    {
-      NLSR_LOG_DEBUG("certName for interest " << interest << " is malformed,"
-                 << " contains incorrect namespace syntax");
-      return;
-    }
-
-  std::shared_ptr<const ndn::IdentityCertificate> cert = getCertificate(certName);
-
-  if (!static_cast<bool>(cert))
-    {
-      NLSR_LOG_DEBUG("cert is not found for " << interest);
+  if (cert == nullptr) {
+      NLSR_LOG_DEBUG("Certificate is not found for: " << interest);
       return; // cert is not found
-    }
+  }
 
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
-  data->setName(interestName);
-  data->setContent(cert->wireEncode());
-  m_keyChain.signWithSha256(*data);
-
-  m_nlsrFace.put(*data);
+  m_nlsrFace.put(*cert);
 }
 
 void
 Nlsr::onKeyPrefixRegSuccess(const ndn::Name& name)
 {
+  NLSR_LOG_DEBUG("KEY prefix: " << name << " registration is successful.");
 }
 
 void
@@ -432,7 +492,7 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
     case ndn::nfd::FACE_EVENT_CREATED: {
       // Find the neighbor in our adjacency list
       auto adjacent = m_adjacencyList.findAdjacent(
-        ndn::util::FaceUri(faceEventNotification.getRemoteUri()));
+        ndn::FaceUri(faceEventNotification.getRemoteUri()));
       // If we have a neighbor by that FaceUri and it has no FaceId, we
       // have a match.
       if (adjacent != m_adjacencyList.end()) {
@@ -505,10 +565,11 @@ void
 Nlsr::registerAdjacencyPrefixes(const Adjacent& adj,
                                 const ndn::time::milliseconds& timeout)
 {
-  ndn::util::FaceUri faceUri = adj.getFaceUri();
+  ndn::FaceUri faceUri = adj.getFaceUri();
   double linkCost = adj.getLinkCost();
+  const ndn::Name& adjName = adj.getName();
 
-  m_fib.registerPrefix(adj.getName(), faceUri, linkCost,
+  m_fib.registerPrefix(adjName, faceUri, linkCost,
                        timeout, ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 
   m_fib.registerPrefix(m_confParam.getChronosyncPrefix(),
@@ -516,12 +577,6 @@ Nlsr::registerAdjacencyPrefixes(const Adjacent& adj,
                        ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 
   m_fib.registerPrefix(m_confParam.getLsaPrefix(),
-                       faceUri, linkCost, timeout,
-                       ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
-
-  ndn::Name broadcastKeyPrefix = DEFAULT_BROADCAST_PREFIX;
-  broadcastKeyPrefix.append("KEYS");
-  m_fib.registerPrefix(broadcastKeyPrefix,
                        faceUri, linkCost, timeout,
                        ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 }
@@ -553,8 +608,8 @@ Nlsr::onFaceDatasetFetchTimeout(uint32_t code,
 void
 Nlsr::scheduleDatasetFetch()
 {
-  NLSR_LOG_DEBUG("Scheduling Dataset Fetch in " << m_confParam.getFaceDatasetFetchInterval()
-             << " seconds");
+  NLSR_LOG_DEBUG("Scheduling Dataset Fetch in " << m_confParam.getFaceDatasetFetchInterval());
+
   m_scheduler.scheduleEvent(m_confParam.getFaceDatasetFetchInterval(),
     [this] {
       this->initializeFaces(
@@ -565,6 +620,35 @@ Nlsr::scheduleDatasetFetch()
          this->onFaceDatasetFetchTimeout(code, msg, 0);
         });
   });
+}
+
+void
+Nlsr::enableIncomingFaceIdIndication()
+{
+  NLSR_LOG_DEBUG("Enabling incoming face id indication for local face.");
+
+  m_controller.start<ndn::nfd::FaceUpdateCommand>(
+    ndn::nfd::ControlParameters()
+      .setFlagBit(ndn::nfd::FaceFlagBit::BIT_LOCAL_FIELDS_ENABLED, true),
+    bind(&Nlsr::onFaceIdIndicationSuccess, this, _1),
+    bind(&Nlsr::onFaceIdIndicationFailure, this, _1));
+}
+
+void
+Nlsr::onFaceIdIndicationSuccess(const ndn::nfd::ControlParameters& cp)
+{
+  NLSR_LOG_DEBUG("Successfully enabled incoming face id indication"
+                 << "for face id " << cp.getFaceId());
+}
+
+void
+Nlsr::onFaceIdIndicationFailure(const ndn::nfd::ControlResponse& cr)
+{
+  std::ostringstream os;
+  os << "Failed to enable incoming face id indication feature: " <<
+        "(code: " << cr.getCode() << ", reason: " << cr.getText() << ")";
+
+  NLSR_LOG_DEBUG(os.str());
 }
 
 void

@@ -18,30 +18,28 @@ if has OSX $NODE_LABELS; then
     fi
 fi
 
-# if [[ -z $INSTALLED_VERSION ]]; then
-#     INSTALLED_VERSION=$(git -C ChronoSync rev-parse HEAD 2>/dev/null || echo NONE)
-# fi
+if [[ -z $INSTALLED_VERSION ]]; then
+    INSTALLED_VERSION=$(git -C ChronoSync rev-parse HEAD 2>/dev/null || echo NONE)
+fi
 
 sudo rm -Rf ChronoSync-latest
-## Remove line when #3920 and #4119 merge.
-sudo rm -rf ChronoSync-hotfix
-git clone git://github.com/named-data/ChronoSync ChronoSync-hotfix
 
-# LATEST_VERSION=$(git -C ChronoSync-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
+git clone --depth 1 git://github.com/named-data/ChronoSync ChronoSync-latest
 
-# if [[ $INSTALLED_VERSION != $LATEST_VERSION ]]; then
-#     sudo rm -Rf ChronoSync
-#     mv ChronoSync-latest ChronoSync
-# else
-#     sudo rm -Rf ChronoSync-latest
-# fi
+LATEST_VERSION=$(git -C ChronoSync-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
+
+if [[ $INSTALLED_VERSION != $LATEST_VERSION ]]; then
+    sudo rm -Rf ChronoSync
+    mv ChronoSync-latest ChronoSync
+else
+    sudo rm -Rf ChronoSync-latest
+fi
 
 sudo rm -fr /usr/local/include/ChronoSync
 sudo rm -f /usr/local/lib/libChronoSync*
 sudo rm -f /usr/local/lib/pkgconfig/ChronoSync*
 
-pushd ChronoSync-hotfix >/dev/null
-git checkout 097bb448f46b8bd9a5c1f431e824f8f6a169b650
+pushd ChronoSync >/dev/null
 
 if has FreeBSD10 $NODE_LABELS; then
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/

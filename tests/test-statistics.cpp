@@ -30,12 +30,12 @@
 namespace nlsr {
 namespace test {
 
-class StatisticsFixture : public BaseFixture
+class StatisticsFixture : public UnitTestTimeFixture
 {
 public:
   StatisticsFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
-    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
+    : face(m_ioService, m_keyChain)
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , lsdb(nlsr.getLsdb())
     , hello(nlsr.m_helloProtocol)
     , conf(nlsr.getConfParameter())
@@ -43,13 +43,15 @@ public:
   {
     conf.setNetwork("/ndn");
     conf.setSiteName("/site");
-    conf.setRouterName("/%C1.router/this-router");
+    conf.setRouterName("/%C1.Router/this-router");
     conf.buildRouterPrefix();
+
+    addIdentity(conf.getRouterPrefix());
 
     nlsr.initialize();
 
-    face->processEvents(ndn::time::milliseconds(1));
-    face->sentInterests.clear();
+    this->advanceClocks(ndn::time::milliseconds(1), 10);
+    face.sentInterests.clear();
   }
 
   /*!
@@ -77,7 +79,7 @@ public:
 
     ndn::Name interestName = ndn::Name(ndn::Name(interestPrefix + lsaType).appendNumber(seqNo));
     lsdb.processInterest(ndn::Name(), ndn::Interest(interestName));
-    face->processEvents(ndn::time::milliseconds(1));
+    this->advanceClocks(ndn::time::milliseconds(1), 10);
 
     BOOST_CHECK_EQUAL(collector.getStatistics().get(receivedInterestType), rcvBefore + 1);
     BOOST_CHECK_EQUAL(collector.getStatistics().get(sentDataType), sentBefore + 1);
@@ -104,13 +106,13 @@ public:
 
     lsdb.expressInterest(ndn::Name(prefix + lsaType).appendNumber(seqNo), 0,
                          ndn::time::steady_clock::TimePoint::min());
-    face->processEvents(ndn::time::milliseconds(1));
+    this->advanceClocks(ndn::time::milliseconds(1), 10);
 
     BOOST_CHECK_EQUAL(collector.getStatistics().get(statsType), sentBefore + 1);
   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
+  ndn::util::DummyClientFace face;
   Nlsr nlsr;
 
   Lsdb& lsdb;
@@ -143,48 +145,44 @@ BOOST_AUTO_TEST_CASE(StatsReset)
   BOOST_CHECK_EQUAL(stats.get(Statistics::PacketType::SENT_HELLO_INTEREST), 0);
 }
 
-
 /*
  * This tests hello interests and hello data statistical collection by constructing an adjacency lsa
  * and calling functions that trigger the sending and receiving hello of interests/data.
  */
 BOOST_AUTO_TEST_CASE(SendHelloInterest)
 {
-  nlsr.initialize();
-
-  face->processEvents(ndn::time::milliseconds(1));
-  face->sentInterests.clear();
-
-  Adjacent other("/ndn/router/other", ndn::util::FaceUri("udp4://other"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent other("/ndn/router/other", ndn::FaceUri("udp4://other"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
 
   // This router's Adjacency LSA
   nlsr.getAdjacencyList().insert(other);
 
-  ndn::Name name(conf.getRouterPrefix());
-  name.append("NLSR");
-  name.append("INFO");
-  name.append(other.getName().wireEncode());
+  ndn::Name otherName(other.getName());
+  otherName.append("NLSR");
+  otherName.append("INFO");
+  otherName.append(conf.getRouterPrefix().wireEncode());
 
-  hello.expressInterest(name, 1);
-  face->processEvents(ndn::time::milliseconds(1));
+  hello.expressInterest(otherName, 1);
+  this->advanceClocks(ndn::time::milliseconds(1), 10);
 
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::SENT_HELLO_INTEREST), 1);
 
-  ndn::Interest interest(name);
+  ndn::Name thisName(conf.getRouterPrefix());
+  thisName.append("NLSR");
+  thisName.append("INFO");
+  thisName.append(other.getName().wireEncode());
+
+  ndn::Interest interest(thisName);
   hello.processInterest(ndn::Name(), interest);
 
-  face->processEvents(ndn::time::milliseconds(1));
+  this->advanceClocks(ndn::time::milliseconds(1), 10);
 
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_HELLO_INTEREST), 1);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::SENT_HELLO_DATA), 1);
 
   // Receive Hello Data
-  ndn::Name dataName = other.getName();
-  dataName.append("NLSR");
-  dataName.append("INFO");
-  dataName.append(conf.getRouterPrefix().wireEncode());
+  ndn::Name dataName = otherName;
 
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(dataName);
+  ndn::Data data(dataName);
   hello.onContentValidated(data);
 
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_HELLO_DATA), 1);

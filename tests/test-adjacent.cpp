@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(TestAdjacent)
 BOOST_AUTO_TEST_CASE(OperatorEquals)
 {
   const ndn::Name ADJ_NAME_1 = "name1";
-  const ndn::util::FaceUri ADJ_URI_1 = ndn::util::FaceUri("udp4://10.0.0.1:8000");
+  const ndn::FaceUri ADJ_URI_1 = ndn::FaceUri("udp4://10.0.0.1:8000");
   const double ADJ_LINK_COST_1 = 1;
   Adjacent adjacent1(ADJ_NAME_1);
   Adjacent adjacent2(ADJ_NAME_1);
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(compareFaceUri)
 {
   const ndn::Name ADJ_NAME_1 = "name1";
   const ndn::Name ADJ_NAME_2 = "name2";
-  const ndn::util::FaceUri ADJ_URI_1 = ndn::util::FaceUri("udp4://10.0.0.1:8000");
+  const ndn::FaceUri ADJ_URI_1 = ndn::FaceUri("udp4://10.0.0.1:8000");
   Adjacent adjacent1(ADJ_NAME_1);
   Adjacent adjacent2(ADJ_NAME_2);
   adjacent1.setFaceUri(ADJ_URI_1);

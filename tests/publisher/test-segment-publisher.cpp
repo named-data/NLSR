@@ -26,6 +26,7 @@
 #include "publisher/segment-publisher.hpp"
 
 #include "../boost-test.hpp"
+#include "../test-common.hpp"
 
 #include <ndn-cxx/encoding/tlv.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
@@ -36,14 +37,17 @@
 namespace nlsr {
 namespace tests {
 
+using namespace nlsr::test;
+
 template<int64_t N=10000>
 class TestSegmentPublisher : public SegmentPublisher<ndn::util::DummyClientFace>
 {
 public:
   TestSegmentPublisher(ndn::util::DummyClientFace& face,
                        ndn::KeyChain& keyChain,
+                       ndn::security::SigningInfo& signingInfo,
                        const ndn::time::milliseconds freshnessPeriod)
-    : SegmentPublisher(face, keyChain, freshnessPeriod)
+    : SegmentPublisher(face, keyChain, signingInfo, freshnessPeriod)
     , m_totalPayloadLength(0)
   {
 
@@ -72,10 +76,10 @@ protected:
   generate(ndn::EncodingBuffer& outBuffer)
   {
     size_t totalLength = 0;
-    for (int64_t i = 0; i < N; i++)
-      {
+    for (int64_t i = 0; i < N; i++) {
         totalLength += prependNonNegativeIntegerBlock(outBuffer, ndn::tlv::Content, i);
-      }
+    }
+
     m_totalPayloadLength += totalLength;
     return totalLength;
   }
@@ -85,13 +89,13 @@ protected:
 };
 
 template<int64_t N>
-class SegmentPublisherFixture
+class SegmentPublisherFixture : public BaseFixture
 {
 public:
   SegmentPublisherFixture()
-    : m_face(std::make_shared<ndn::util::DummyClientFace>())
+    : m_face(std::make_shared<ndn::util::DummyClientFace>(m_ioService, m_keyChain))
     , m_expectedFreshnessPeriod(ndn::time::milliseconds(111))
-    , m_publisher(*m_face, m_keyChain, m_expectedFreshnessPeriod)
+    , m_publisher(*m_face, m_keyChain, m_signingInfo, m_expectedFreshnessPeriod)
     , m_publishingPrefix("/localhost/nfd/SegmentPublisherFixture")
   {
   }
@@ -106,10 +110,9 @@ public:
     m_buffer.appendByteArray(payload.value(), payload.value_size());
 
     // uint64_t segmentNo = data.getName()[-1].toSegment();
-    if (data.getFinalBlockId() != data.getName()[-1])
-      {
+    if (data.getFinalBlockId() != data.getName()[-1]) {
         return;
-      }
+    }
 
     // wrap data in a single Content TLV for easy parsing
     m_buffer.prependVarNumber(m_buffer.size());
@@ -138,7 +141,7 @@ protected:
   const ndn::time::milliseconds m_expectedFreshnessPeriod;
   TestSegmentPublisher<N> m_publisher;
   ndn::EncodingBuffer m_buffer;
-  ndn::KeyChain m_keyChain;
+  ndn::security::SigningInfo m_signingInfo;
   const ndn::Name m_publishingPrefix;
 };
 

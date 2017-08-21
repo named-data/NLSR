@@ -52,7 +52,7 @@ Adjacent::Adjacent(const ndn::Name& an)
   {
   }
 
-Adjacent::Adjacent(const ndn::Name& an, const ndn::util::FaceUri& faceUri,  double lc,
+Adjacent::Adjacent(const ndn::Name& an, const ndn::FaceUri& faceUri,  double lc,
                    Status s, uint32_t iton, uint64_t faceId)
     : m_name(an)
     , m_faceUri(faceUri)

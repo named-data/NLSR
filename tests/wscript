@@ -1,8 +1,8 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
 """
-Copyright (c) 2014-2016,  The University of Memphis
-                          Regents of the University of California,
+Copyright (c) 2014-2017,  The University of Memphis
+                          Regents of the University of California
 
 This file is part of NLSR (Named-data Link State Routing).
 See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -22,23 +22,23 @@ NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 top = '..'
 
 def build(bld):
-    # Unit tests
-    if bld.env['WITH_TESTS']:
-        unit_test_main = bld(
-            target='unit-tests-main',
-            name='unit-tests-main',
-            features='cxx',
-            source=bld.path.ant_glob(['**/*.cpp']),
-            use='nlsr-objects',
-          )
+    if not bld.env['WITH_TESTS']:
+        return
 
+    bld(
+        features='cxx',
+        name='unit-tests-main',
+        target='unit-tests-main',
+        source='main.cpp',
+        defines=['BOOST_TEST_MODULE=NLSR Unit Tests'],
+        use='nlsr-objects'
+    )
 
-        # nlsr tests
-        unit_tests_nlsr = bld.program(
-            target='../unit-tests-nlsr',
-            features='cxx cxxprogram',
-            source=bld.path.ant_glob(['nlsr/**/*.cpp']),
-            use='nlsr-objects unit-tests-main',
-            includes='.',
-            install_path=None,
-          )
+    bld.program(
+        target='../unit-tests-nlsr',
+        features='cxx cxxprogram',
+        source=bld.path.ant_glob(['**/*.cpp'], excl=['main.cpp']),
+        use='nlsr-objects unit-tests-main',
+        install_path=None,
+        # defines='TEST_CONFIG_PATH=\"%s/conf-test\"' %(bld.bldnode)
+    )

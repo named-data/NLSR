@@ -37,38 +37,32 @@ using namespace ndn;
 namespace nlsr {
 namespace test {
 
-class LsaRuleFixture : public nlsr::test::BaseFixture
+class LsaRuleFixture : public nlsr::test::UnitTestTimeFixture
 {
 public:
   LsaRuleFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
-    , rootId(ndn::Name("ndn"))
-    , siteIdentity(ndn::Name("/ndn/edu/test-site"))
-    , opIdentity(ndn::Name(siteIdentity).append(ndn::Name("%C1.Operator/op1")))
-    , routerId(ndn::Name("/ndn/edu/test-site/%C1.Router/router1"))
-    , nlsr(g_ioService, g_scheduler, *face, g_keyChain)
+    : face(m_ioService, m_keyChain, {true, true})
+    , rootIdName("/ndn")
+    , siteIdentityName("/ndn/edu/test-site")
+    , opIdentityName("/ndn/edu/test-site/%C1.Operator/op1")
+    , routerIdName("/ndn/edu/test-site/%C1.Router/router1")
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))
   {
-    try {
-      keyChain.deleteIdentity(rootId);
-      keyChain.deleteIdentity(siteIdentity);
-      keyChain.deleteIdentity(opIdentity);
-      keyChain.deleteIdentity(routerId);
-    }
-    catch (const std::exception& e) {
-    }
+    rootId = addIdentity(rootIdName);
+    siteIdentity = addSubCertificate(siteIdentityName, rootId);
+    opIdentity = addSubCertificate(opIdentityName, siteIdentity);
+    routerId = addSubCertificate(routerIdName, opIdentity);
 
-    createCert(rootId, rootCertName, rootCert, rootId);
-    BOOST_REQUIRE(rootCert != nullptr);
+    saveCertificate(rootId, ROOT_CERT_PATH.string());
 
-    createCert(siteIdentity, siteCertName, siteCert, rootId);
-    BOOST_REQUIRE(siteCert != nullptr);
-
-    createCert(opIdentity, opCertName, opCert, siteIdentity);
-    BOOST_REQUIRE(opCert != nullptr);
-
-    createCert(routerId, routerCertName, routerCert, opIdentity);
-    BOOST_REQUIRE(routerCert != nullptr);
+    auto load = [this] (const ndn::security::Identity& id) {
+      nlsr.loadCertToPublish(id.getDefaultKey().getDefaultCertificate());
+    };
+    load(rootId);
+    load(siteIdentity);
+    load(opIdentity);
+    load(routerId);
 
     // Loading the security section's validator part into the validator
     // See conf file processor for more details
@@ -99,97 +93,52 @@ public:
 
     // Initialize NLSR to initialize the keyChain
     nlsr.initialize();
-  }
 
-  void
-  createCert(ndn::Name& identity, ndn::Name& certName, std::shared_ptr<IdentityCertificate>& cert, const ndn::Name& signer)
-  {
-    ndn::Name keyName = keyChain.generateRsaKeyPairAsDefault(identity, true);
+    this->advanceClocks(ndn::time::milliseconds(10));
 
-    cert = std::make_shared<ndn::IdentityCertificate>();
-    std::shared_ptr<ndn::PublicKey> pubKey = keyChain.getPublicKey(keyName);
-    certName = keyName.getPrefix(-1);
-    certName.append("KEY").append(keyName.get(-1)).append("ID-CERT").appendVersion();
-    cert->setName(certName);
-    cert->setNotBefore(time::system_clock::now() - time::days(1));
-    cert->setNotAfter(time::system_clock::now() + time::days(1));
-    cert->setPublicKeyInfo(*pubKey);
-    cert->addSubjectDescription(CertificateSubjectDescription(ndn::oid::ATTRIBUTE_NAME,
-                                                                keyName.toUri()));
-    cert->encode();
-
-    // root is self signed and root.cert is saved
-    if (signer == identity) {
-      keyChain.selfSign(*cert);
-
-      keyChain.addCertificateAsIdentityDefault(*cert);
-
-      nlsr.loadCertToPublish(cert);
-
-      ndn::io::save(*cert, ROOT_CERT_PATH.string());
-    }
-    else {
-      ndn::security::SigningInfo signingInfo;
-      signingInfo.setSigningIdentity(signer);
-      keyChain.sign(*cert, signingInfo);
-
-      keyChain.addCertificateAsIdentityDefault(*cert);
-
-      nlsr.loadCertToPublish(cert);
-    }
-  }
-
-  ~LsaRuleFixture()
-  {
-    keyChain.deleteIdentity(rootId);
-    keyChain.deleteIdentity(siteIdentity);
-    keyChain.deleteIdentity(opIdentity);
-    keyChain.deleteIdentity(routerId);
-
-    boost::filesystem::remove(ROOT_CERT_PATH);
-  }
+    face.sentInterests.clear();
+   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
-  ndn::KeyChain keyChain;
+  ndn::util::DummyClientFace face;
 
-  ndn::Name rootId, siteIdentity, opIdentity, routerId;
-  ndn::Name rootCertName, siteCertName, opCertName, routerCertName;
-  std::shared_ptr<IdentityCertificate> rootCert, siteCert, opCert, routerCert;
+  ndn::Name rootIdName, siteIdentityName, opIdentityName, routerIdName;
+  ndn::security::pib::Identity rootId, siteIdentity, opIdentity, routerId;
 
   Nlsr nlsr;
 
   const boost::filesystem::path ROOT_CERT_PATH;
+
+  //std::function<void(const ndn::Interest& interest)> processInterest;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestLsaDataValidation, LsaRuleFixture)
 
 BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
 {
-  ndn::Name lsaInterestName = nlsr.getConfParameter().getLsaPrefix();
-  lsaInterestName.append(nlsr.getConfParameter().getSiteName());
-  lsaInterestName.append(nlsr.getConfParameter().getRouterName());
+  ndn::Name lsaDataName = nlsr.getConfParameter().getLsaPrefix();
+  lsaDataName.append(nlsr.getConfParameter().getSiteName());
+  lsaDataName.append(nlsr.getConfParameter().getRouterName());
 
   // Append LSA type
-  lsaInterestName.append(std::to_string(Lsa::Type::NAME));
+  lsaDataName.append(std::to_string(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
-  lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  lsaDataName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 
   // Append version, segmentNo
-  lsaInterestName.appendNumber(1).appendNumber(1);
+  lsaDataName.appendNumber(1).appendNumber(1);
 
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
-  data->setName(lsaInterestName);
-  data->setFreshnessPeriod(ndn::time::seconds(10));
+  ndn::Data data(lsaDataName);
+  data.setFreshnessPeriod(ndn::time::seconds(10));
 
   // Sign data with NLSR's key
-  nlsr.getKeyChain().sign(*data, ndn::security::signingByCertificate(nlsr.getDefaultCertName()));
+  nlsr.getKeyChain().sign(data, nlsr.getSigningInfo());
 
   // Make NLSR validate data signed by its own key
-  nlsr.getValidator().validate(*data,
-                               [] (const std::shared_ptr<const Data>&) { BOOST_CHECK(true); },
-                               [] (const std::shared_ptr<const Data>&, const std::string&) {
+  nlsr.getValidator().validate(data,
+                               [] (const Data&) { BOOST_CHECK(true); },
+                               [] (const Data&, const ndn::security::v2::ValidationError&) {
                                  BOOST_CHECK(false);
                                });
 }
@@ -197,28 +146,26 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
 BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
 {
   // getSubName removes the /localhop compnonent from /localhop/ndn/NLSR/LSA
-  ndn::Name lsaInterestName = nlsr.getConfParameter().getLsaPrefix().getSubName(1);
-  lsaInterestName.append(nlsr.getConfParameter().getSiteName());
-  lsaInterestName.append(nlsr.getConfParameter().getRouterName());
+  ndn::Name lsaDataName = nlsr.getConfParameter().getLsaPrefix().getSubName(1);
+  lsaDataName.append(nlsr.getConfParameter().getSiteName());
+  lsaDataName.append(nlsr.getConfParameter().getRouterName());
 
   // Append LSA type
-  lsaInterestName.append(std::to_string(Lsa::Type::NAME));
+  lsaDataName.append(std::to_string(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
-  lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  lsaDataName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 
   // Append version, segmentNo
-  lsaInterestName.appendNumber(1).appendNumber(1);
+  lsaDataName.appendNumber(1).appendNumber(1);
 
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
-  data->setName(lsaInterestName);
-  data->setFreshnessPeriod(ndn::time::seconds(10));
-  nlsr.getKeyChain().sign(*data, ndn::security::signingByCertificate(nlsr.getDefaultCertName()));
+  ndn::Data data(lsaDataName);
+  data.setFreshnessPeriod(ndn::time::seconds(10));
 
   // Make NLSR validate data signed by its own key
-  nlsr.getValidator().validate(*data,
-                               [] (const std::shared_ptr<const Data>&) { BOOST_CHECK(false); },
-                               [] (const std::shared_ptr<const Data>&, const std::string&) {
+  nlsr.getValidator().validate(data,
+                               [] (const Data&) { BOOST_CHECK(false); },
+                               [] (const Data&, const ndn::security::v2::ValidationError&) {
                                  BOOST_CHECK(true);
                                });
 }

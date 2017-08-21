@@ -45,8 +45,8 @@ class HyperbolicCalculatorFixture : public BaseFixture
 {
 public:
   HyperbolicCalculatorFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>())
-    , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
+    : face(m_ioService, m_keyChain)
+    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , routingTable(nlsr.getRoutingTable())
     , adjacencies(nlsr.getAdjacencyList())
     , lsdb(nlsr.getLsdb())
@@ -59,9 +59,9 @@ public:
   {
     INIT_LOGGERS("/tmp", "TRACE");
 
-    Adjacent a(ROUTER_A_NAME, ndn::util::FaceUri(ROUTER_A_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
-    Adjacent b(ROUTER_B_NAME, ndn::util::FaceUri(ROUTER_B_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
-    Adjacent c(ROUTER_C_NAME, ndn::util::FaceUri(ROUTER_C_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent a(ROUTER_A_NAME, ndn::FaceUri(ROUTER_A_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent b(ROUTER_B_NAME, ndn::FaceUri(ROUTER_B_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent c(ROUTER_C_NAME, ndn::FaceUri(ROUTER_C_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
     // Router A
     adjacencies.insert(b);
@@ -149,7 +149,7 @@ public:
   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
+  ndn::util::DummyClientFace face;
   Nlsr nlsr;
   Map map;
 

@@ -23,6 +23,7 @@
 #define NLSR_TEST_COMMON_HPP
 
 #include "common.hpp"
+#include "identity-management-fixture.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
@@ -50,18 +51,17 @@ signData(shared_ptr<ndn::Data> data)
   return data;
 }
 
-class BaseFixture
+class BaseFixture : public tests::IdentityManagementFixture
 {
 public:
   BaseFixture()
-    : g_scheduler(g_ioService)
+    : m_scheduler(m_ioService)
   {
   }
 
 protected:
-  boost::asio::io_service g_ioService;
-  ndn::Scheduler g_scheduler;
-  ndn::KeyChain g_keyChain;
+  boost::asio::io_service m_ioService;
+  ndn::Scheduler m_scheduler;
 };
 
 class UnitTestTimeFixture : public BaseFixture
@@ -140,12 +140,12 @@ public:
 
     // These warnings assist in debugging when nfdc does not receive StatusDataset.
     // They usually indicate a misspelled prefix or incorrect timing in the test case.
-    if (face->sentInterests.empty()) {
+    if (m_face.sentInterests.empty()) {
       BOOST_WARN_MESSAGE(false, "no Interest expressed");
     }
     else {
-      BOOST_WARN_MESSAGE(face->sentInterests.back().getName().isPrefixOf(name),
-                         "last Interest " << face->sentInterests.back().getName() <<
+      BOOST_WARN_MESSAGE(m_face.sentInterests.back().getName().isPrefixOf(name),
+                         "last Interest " << m_face.sentInterests.back().getName() <<
                          " cannot be satisfied by this Data " << name);
     }
 
@@ -153,14 +153,14 @@ public:
     data->setFinalBlockId(name[-1]);
     data->setContent(std::forward<ContentArgs>(contentArgs)...);
     this->signDatasetReply(*data);
-    face->receive(*data);
+    m_face.receive(*data);
   }
 
   virtual void
   signDatasetReply(ndn::Data& data);
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
+  ndn::util::DummyClientFace m_face;
 };
 
 } // namespace test

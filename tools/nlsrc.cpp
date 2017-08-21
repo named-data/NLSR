@@ -31,6 +31,8 @@
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/util/segment-fetcher.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/command-interest-signer.hpp>
 
 #include <iostream>
 
@@ -150,12 +152,18 @@ Nlsrc::sendNamePrefixUpdate(const ndn::Name& name,
 
   ndn::Name commandName = NAME_UPDATE_PREFIX;
   commandName.append(verb);
+  commandName.append(parameters.wireEncode());
 
-  ndn::Interest interest(commandName.append(parameters.wireEncode()));
-  interest.setMustBeFresh(true);
-  m_keyChain.sign(interest);
+  ndn::security::CommandInterestSigner cis(m_keyChain);
 
-  m_face.expressInterest(interest,
+  ndn::Interest commandInterest =
+    cis.makeCommandInterest(commandName,
+                            ndn::security::signingByIdentity(m_keyChain.getPib().
+                                                             getDefaultIdentity()));
+
+  commandInterest.setMustBeFresh(true);
+
+  m_face.expressInterest(commandInterest,
                          std::bind(&Nlsrc::onControlResponse, this, info, _2),
                          std::bind(&Nlsrc::onTimeout, this, ERROR_CODE_TIMEOUT, "Nack"),
                          std::bind(&Nlsrc::onTimeout, this, ERROR_CODE_TIMEOUT, "Timeout"));

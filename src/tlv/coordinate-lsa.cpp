@@ -21,10 +21,12 @@
 
 #include "coordinate-lsa.hpp"
 #include "tlv-nlsr.hpp"
+#include "logger.hpp"
 
 #include <ndn-cxx/util/concepts.hpp>
 #include <ndn-cxx/encoding/block-helpers.hpp>
-#include "logger.hpp"
+
+#include <iostream>
 
 namespace nlsr {
 namespace tlv {

@@ -24,7 +24,7 @@
 #include "nlsr.hpp"
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/tag.hpp>
-#include <ndn-cxx/util/io.hpp>
+#include <ndn-cxx/face.hpp>
 
 namespace nlsr {
 namespace update {
@@ -52,13 +52,10 @@ getSignerFromTag(const ndn::Interest& interest)
 PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
                                              ndn::Face& face,
                                              NamePrefixList& namePrefixList,
-                                             Lsdb& lsdb,
-                                             const ndn::Name broadcastPrefix,
-                                             ndn::KeyChain& keyChain,
-                                             std::shared_ptr<ndn::CertificateCacheTtl> certificateCache,
-                                             security::CertificateStore& certStore)
+                                             Lsdb& lsdb)
   : CommandManagerBase(dispatcher, namePrefixList, lsdb, "prefix-update")
-  , m_validator(face, broadcastPrefix, certificateCache, certStore)
+
+  , m_validator(ndn::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
 {
   NLSR_LOG_DEBUG("Setting dispatcher to capture Interests for: "
     << ndn::Name(Nlsr::LOCALHOST_PREFIX).append("prefix-update"));
@@ -84,17 +81,16 @@ PrefixUpdateProcessor::makeAuthorization()
               const ndn::mgmt::AcceptContinuation& accept,
               const ndn::mgmt::RejectContinuation& reject) {
     m_validator.validate(interest,
-      [accept] (const std::shared_ptr<const ndn::Interest>& request) {
+      [accept] (const ndn::Interest& request) {
 
-        auto signer1 = getSignerFromTag(*request);
+        auto signer1 = getSignerFromTag(request);
         std::string signer = signer1.value_or("*");
-        NLSR_LOG_DEBUG("accept " << request->getName() << " signer=" << signer);
+        NLSR_LOG_DEBUG("accept " << request.getName() << " signer=" << signer);
         accept(signer);
       },
-      [reject] (const std::shared_ptr<const ndn::Interest>& request,
-                const std::string& failureInfo) {
-        NLSR_LOG_DEBUG("reject " << request->getName() << " signer=" <<
-                      getSignerFromTag(*request).value_or("?") << ' ' << failureInfo);
+      [reject] (const ndn::Interest& request, const ndn::security::v2::ValidationError& error) {
+        NLSR_LOG_DEBUG("reject " << request.getName() << " signer=" <<
+                        getSignerFromTag(request).value_or("?") << ' ' << error);
         reject(ndn::mgmt::RejectReply::STATUS403);
       });
   };

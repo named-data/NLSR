@@ -147,7 +147,7 @@ private:
 private:
   ndn::KeyChain m_keyChain;
   ndn::Face& m_face;
-  ndn::ValidatorNull m_validator;
+  ndn::security::ValidatorNull m_validator;
 
   std::deque<std::function<void()>> m_fetchSteps;
 

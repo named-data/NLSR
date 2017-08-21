@@ -40,9 +40,11 @@ class SegmentPublisher : boost::noncopyable
 public:
   SegmentPublisher(FaceBase& face,
                    ndn::KeyChain& keyChain,
+                   const ndn::security::SigningInfo& signingInfo,
                    const ndn::time::milliseconds& freshnessPeriod = getDefaultFreshness())
     : m_face(face)
     , m_keyChain(keyChain)
+    , m_signingInfo(signingInfo)
     , m_freshnessPeriod(freshnessPeriod)
   {
   }
@@ -75,8 +77,7 @@ public:
    * final block ID set to a timestamp.
    */
   void
-  publish(const ndn::Name& prefix,
-          const ndn::security::SigningInfo& signingInfo = ndn::security::KeyChain::DEFAULT_SIGNING_INFO)
+  publish(const ndn::Name& prefix)
   {
     ndn::EncodingBuffer buffer;
     generate(buffer);
@@ -107,7 +108,7 @@ public:
         data->setFinalBlockId(segmentName[-1]);
       }
 
-      publishSegment(data, signingInfo);
+      publishSegment(data);
       ++segmentNo;
     } while (segmentBegin < end);
   }
@@ -122,15 +123,16 @@ private:
   /*! \brief Helper function to sign and put data on a Face.
    */
   void
-  publishSegment(std::shared_ptr<ndn::Data>& data, const ndn::security::SigningInfo& signingInfo)
+  publishSegment(std::shared_ptr<ndn::Data>& data)
   {
-    m_keyChain.sign(*data, signingInfo);
+    m_keyChain.sign(*data, m_signingInfo);
     m_face.put(*data);
   }
 
 private:
   FaceBase& m_face;
   ndn::KeyChain& m_keyChain;
+  const ndn::security::SigningInfo& m_signingInfo;
   const ndn::time::milliseconds m_freshnessPeriod;
 };
 
