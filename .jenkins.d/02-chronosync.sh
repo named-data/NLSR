@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-set -x
 set -e
 
 JDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 source "$JDIR"/util.sh
 
-pushd /tmp >/dev/null
+set -x
+
+pushd "${CACHE_DIR:-/tmp}" >/dev/null
 
 INSTALLED_VERSION=
 if has OSX $NODE_LABELS; then
@@ -18,7 +19,7 @@ if has OSX $NODE_LABELS; then
 fi
 
 # if [[ -z $INSTALLED_VERSION ]]; then
-#     INSTALLED_VERSION=$((cd ChronoSync && git rev-parse HEAD) 2>/dev/null || echo NONE)
+#     INSTALLED_VERSION=$(git -C ChronoSync rev-parse HEAD 2>/dev/null || echo NONE)
 # fi
 
 sudo rm -Rf ChronoSync-latest
@@ -26,7 +27,7 @@ sudo rm -Rf ChronoSync-latest
 sudo rm -rf ChronoSync-hotfix
 git clone git://github.com/named-data/ChronoSync ChronoSync-hotfix
 
-# LATEST_VERSION=$((cd ChronoSync-latest && git rev-parse HEAD) 2>/dev/null || echo UNKNOWN)
+# LATEST_VERSION=$(git -C ChronoSync-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
 
 # if [[ $INSTALLED_VERSION != $LATEST_VERSION ]]; then
 #     sudo rm -Rf ChronoSync
@@ -46,8 +47,8 @@ if has FreeBSD10 $NODE_LABELS; then
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
 fi
 
-./waf -j1 --color=yes configure
-./waf -j1 --color=yes build
+./waf configure --color=yes
+./waf build --color=yes -j${WAF_JOBS:-1}
 sudo env "PATH=$PATH" ./waf install --color=yes
 
 popd >/dev/null

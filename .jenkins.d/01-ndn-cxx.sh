@@ -6,7 +6,7 @@ source "$JDIR"/util.sh
 
 set -x
 
-pushd /tmp >/dev/null
+pushd "${CACHE_DIR:-/tmp}" >/dev/null
 
 INSTALLED_VERSION=
 if has OSX $NODE_LABELS; then
@@ -20,7 +20,7 @@ fi
 
 ## Uncomment when #3920 and #4119 merge.
 # if [[ -z $INSTALLED_VERSION ]]; then
-#     INSTALLED_VERSION=$((cd ndn-cxx && git rev-parse HEAD) 2>/dev/null || echo NONE)
+#     INSTALLED_VERSION=$(git -C ndn-cxx rev-parse HEAD 2>/dev/null || echo NONE)
 # fi
 
 sudo rm -Rf ndn-cxx-latest
@@ -28,9 +28,8 @@ sudo rm -Rf ndn-cxx-latest
 sudo rm -Rf ndn-cxx-hotfix
 git clone git://github.com/named-data/ndn-cxx ndn-cxx-hotfix
 
-
 ## Uncomment when #3920 and #4119 merge.
-# LATEST_VERSION=$((cd ndn-cxx-latest && git rev-parse HEAD) 2>/dev/null || echo UNKNOWN)
+# LATEST_VERSION=$(git -C ndn-cxx-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
 
 # if [[ $INSTALLED_VERSION != $LATEST_VERSION ]]; then
 #     sudo rm -Rf ndn-cxx
@@ -51,8 +50,8 @@ sudo rm -f /usr/local/lib/pkgconfig/libndn-cxx.pc
 pushd ndn-cxx-hotfix >/dev/null
 git checkout b555b00c280b9c9ed46f24a1fbebc73b720601af
 
-./waf configure -j1 --color=yes --enable-shared --disable-static --without-osx-keychain
-./waf -j1 --color=yes
+./waf configure --color=yes --enable-shared --disable-static --without-osx-keychain
+./waf build --color=yes -j${WAF_JOBS:-1}
 sudo env "PATH=$PATH" ./waf install --color=yes
 
 popd >/dev/null

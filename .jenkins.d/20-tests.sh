@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-set -x
 set -e
+set -x
 
+# Prepare environment
 rm -Rf ~/.ndn
+
+ut_log_args() {
+    echo --log_level=test_suite
+}
 
 ASAN_OPTIONS="color=always"
 ASAN_OPTIONS+=":detect_stack_use_after_return=true"
@@ -14,4 +19,5 @@ ASAN_OPTIONS+=":strict_string_checks=true"
 ASAN_OPTIONS+=":strip_path_prefix=${PWD}/"
 export ASAN_OPTIONS
 
-./build/unit-tests-nlsr -l test_suite
+# Run unit tests
+./build/unit-tests-nlsr $(ut_log_args)
