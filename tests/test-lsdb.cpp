@@ -19,9 +19,8 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "test-common.hpp"
-
 #include "lsdb.hpp"
+#include "test-common.hpp"
 #include "nlsr.hpp"
 #include "lsa.hpp"
 #include "name-prefix-list.hpp"
@@ -118,9 +117,13 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   std::vector<ndn::Interest>& interests = face->sentInterests;
 
   BOOST_REQUIRE(interests.size() > 0);
-  std::vector<ndn::Interest>::iterator it = interests.begin();
 
-  BOOST_CHECK_EQUAL(it->getName(), oldInterestName);
+  bool didFindInterest = false;
+  for (const auto& interest : interests) {
+    didFindInterest = didFindInterest || interest.getName() == oldInterestName;
+  }
+
+  BOOST_CHECK(didFindInterest);
   interests.clear();
 
   ndn::time::steady_clock::TimePoint deadline = ndn::time::steady_clock::now() +
@@ -132,9 +135,13 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_REQUIRE(interests.size() > 0);
-  it = interests.begin();
 
-  BOOST_CHECK_EQUAL(it->getName(), oldInterestName);
+  didFindInterest = false;
+  for (const auto& interest : interests) {
+    didFindInterest = didFindInterest || interest.getName() == oldInterestName;
+  }
+
+  BOOST_CHECK(didFindInterest);
   interests.clear();
 
   uint64_t newSeqNo = 83;
@@ -146,9 +153,14 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   face->processEvents(ndn::time::milliseconds(1));
 
   BOOST_REQUIRE(interests.size() > 0);
-  it = interests.begin();
 
-  BOOST_CHECK_EQUAL(it->getName(), newInterestName);
+  didFindInterest = false;
+  for (const auto& interest : interests) {
+    didFindInterest = didFindInterest || interest.getName() == newInterestName;
+  }
+
+  BOOST_CHECK(didFindInterest);
+
   interests.clear();
 
   // Simulate an LSA interest timeout where the sequence number is outdated
