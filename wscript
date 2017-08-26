@@ -20,20 +20,19 @@ You should have received a copy of the GNU General Public License along with
 NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = '0.3.2'
+VERSION = "0.3.2"
 APPNAME = "nlsr"
-BUGREPORT = "http://redmine.named-data.net/projects/nlsr"
-URL = "http://named-data.net/doc/NLSR/"
+BUGREPORT = "https://redmine.named-data.net/projects/nlsr"
+URL = "https://named-data.net/doc/NLSR/"
 GIT_TAG_PREFIX = "NLSR-"
 
-from waflib import Build, Logs, Utils, Task, TaskGen, Configure, Context
-from waflib.Tools import c_preproc
+from waflib import Logs, Utils, Context
 import os
 
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
     opt.load(['default-compiler-flags', 'coverage', 'sanitizers',
-              'boost',  'doxygen', 'sphinx_build'],
+              'boost', 'doxygen', 'sphinx_build'],
             tooldir=['.waf-tools'])
 
     nlsropt = opt.add_option_group('NLSR Options')
@@ -44,7 +43,7 @@ def options(opt):
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
-               'boost', 'default-compiler-flags',
+               'default-compiler-flags', 'boost',
                'doxygen', 'sphinx_build'])
 
     if 'PKG_CONFIG_PATH' not in os.environ:

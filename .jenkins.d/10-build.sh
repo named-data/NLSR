@@ -14,8 +14,8 @@ git submodule update
 sudo env "PATH=$PATH" ./waf --color=yes distclean
 
 if [[ $JOB_NAME != *"code-coverage" && $JOB_NAME != *"limited-build" ]]; then
-  # Configure/build in debug mode with tests
-  ./waf --color=yes configure --with-tests --debug
+  # Configure/build in optimized mode with tests
+  ./waf --color=yes configure --with-tests
   ./waf --color=yes build -j${WAF_JOBS:-1}
 
   # Cleanup
@@ -29,16 +29,16 @@ if [[ $JOB_NAME != *"code-coverage" && $JOB_NAME != *"limited-build" ]]; then
   sudo env "PATH=$PATH" ./waf --color=yes distclean
 fi
 
-# Configure/build in optimized mode with tests
+# Configure/build in debug mode with tests
 if [[ $JOB_NAME == *"code-coverage" ]]; then
     COVERAGE="--with-coverage"
 elif [[ -n $BUILD_WITH_ASAN || -z $TRAVIS ]]; then
     ASAN="--with-sanitizer=address"
 fi
-./waf --color=yes configure --with-tests $COVERAGE $ASAN
+./waf --color=yes configure --debug --with-tests $COVERAGE $ASAN
 ./waf --color=yes build -j${WAF_JOBS:-1}
 
-# (tests will be run against optimized version)
+# (tests will be run against debug version)
 
 # Install
 sudo env "PATH=$PATH" ./waf --color=yes install
