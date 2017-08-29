@@ -32,20 +32,8 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/signal.hpp>
 #include <ndn-cxx/util/time.hpp>
-
 #include <utility>
 #include <boost/cstdint.hpp>
-
-#include <utility>
-#include <boost/cstdint.hpp>
-
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/util/time.hpp>
-
-#include <utility>
-#include <boost/cstdint.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 
@@ -411,6 +399,9 @@ private:
   ndn::time::seconds m_adjLsaBuildInterval;
 
   SequencingManager m_sequencingManager;
+
+  ndn::util::signal::ScopedConnection m_onNewLsaConnection;
+
 };
 
 } // namespace nlsr

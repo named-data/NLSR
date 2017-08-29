@@ -23,13 +23,11 @@
 #define NLSR_SYNC_LOGIC_HANDLER_HPP
 
 #include "test-access-control.hpp"
+#include "signals.hpp"
 
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/util/signal.hpp>
 #include <ChronoSync/socket.hpp>
-
-#include <iostream>
-#include <unistd.h>
-#include <boost/cstdint.hpp>
 #include <boost/throw_exception.hpp>
 
 class InterestManager;
@@ -37,7 +35,6 @@ class InterestManager;
 namespace nlsr {
 
 class ConfParameter;
-class Lsdb;
 
 /*! \brief NLSR-to-ChronoSync interaction point
  *
@@ -50,6 +47,9 @@ class Lsdb;
 class SyncLogicHandler
 {
 public:
+  using IsLsaNew =
+    std::function<bool(const ndn::Name&, const std::string& lsaType, const uint64_t&)>;
+
   class Error : public std::runtime_error
   {
   public:
@@ -60,7 +60,7 @@ public:
     }
   };
 
-  SyncLogicHandler(ndn::Face& face, Lsdb& lsdb, ConfParameter& conf);
+  SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew, ConfParameter& conf);
 
   /*! \brief Hook function to call whenever sync detects new data.
    *
@@ -112,21 +112,6 @@ private:
   processUpdateFromSync(const ndn::Name& originRouter,
                         const ndn::Name& updateName, const uint64_t& seqNo);
 
-  /*! \brief Consults the LSDB to determine if a sync update has a new LSA.
-   *
-   * Given some information about an LSA, consult the LSDB to
-   * determine if the sequence number represents a new LSA from the
-   * origin router.
-   */
-  bool
-  isLsaNew(const ndn::Name& originRouter, const std::string& lsaType,
-           const uint64_t& seqNo);
-
-  /*! \brief Fetch an LSA of a certain type, with a certain sequence number.
-   */
-  void
-  expressInterestForLsa(const ndn::Name& updateName, const uint64_t& seqNo);
-
   /*! \brief Instruct ChronoSync, via the sync socket, to publish an update.
    *
    * Each ChronoSync instance maintains its own PIT for sync
@@ -136,13 +121,14 @@ private:
   void
   publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo);
 
+public:
+  std::unique_ptr<OnNewLsa> onNewLsa;
+
 private:
   ndn::Face& m_syncFace;
   std::shared_ptr<chronosync::Socket> m_syncSocket;
   ndn::Name m_syncPrefix;
-
-private:
-  Lsdb& m_lsdb;
+  IsLsaNew m_isLsaNew;
   const ConfParameter& m_confParam;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:

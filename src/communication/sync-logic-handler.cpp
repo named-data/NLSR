@@ -20,13 +20,11 @@
  **/
 
 #include "sync-logic-handler.hpp"
-
 #include "common.hpp"
 #include "conf-parameter.hpp"
-#include "logger.hpp"
 #include "lsa.hpp"
-#include "lsdb.hpp"
 #include "utility/name-helper.hpp"
+#include "logger.hpp"
 
 namespace nlsr {
 
@@ -45,10 +43,10 @@ public:
   }
 };
 
-SyncLogicHandler::SyncLogicHandler(ndn::Face& face,
-                                   Lsdb& lsdb, ConfParameter& conf)
-  : m_syncFace(face)
-  , m_lsdb(lsdb)
+SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew, ConfParameter& conf)
+  : onNewLsa(ndn::make_unique<OnNewLsa>())
+  , m_syncFace(face)
+  , m_isLsaNew(isLsaNew)
   , m_confParam(conf)
 {
 }
@@ -125,7 +123,7 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
     _LOG_DEBUG("Received sync update with higher " << lsaType
                << " sequence number than entry in LSDB");
 
-    if (isLsaNew(originRouter, lsaType, seqNo)) {
+    if (m_isLsaNew(originRouter, lsaType, seqNo)) {
       if (lsaType == AdjLsa::TYPE_STRING && seqNo != 0 &&
           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
         _LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing"
@@ -139,42 +137,9 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
                    << " is enabled. Not going to fetch.");
         return;
       }
-      expressInterestForLsa(updateName, seqNo);
+      (*onNewLsa)(updateName, seqNo);
     }
   }
-}
-
-bool
-SyncLogicHandler::isLsaNew(const ndn::Name& originRouter, const std::string& lsaType,
-                           const uint64_t& seqNo)
-{
-  ndn::Name lsaKey = originRouter;
-  lsaKey.append(lsaType);
-
-  if (lsaType == NameLsa::TYPE_STRING)
-  {
-    return m_lsdb.isNameLsaNew(lsaKey, seqNo);
-  }
-  else if (lsaType == AdjLsa::TYPE_STRING)
-  {
-    return m_lsdb.isAdjLsaNew(lsaKey, seqNo);
-  }
-  else if (lsaType == CoordinateLsa::TYPE_STRING)
-  {
-    return m_lsdb.isCoordinateLsaNew(lsaKey, seqNo);
-  }
-
-  return false;
-}
-
-void
-SyncLogicHandler::expressInterestForLsa(const ndn::Name& updateName,
-                                        const uint64_t& seqNo)
-{
-  ndn::Name interest(updateName);
-  interest.appendNumber(seqNo);
-
-  m_lsdb.expressInterest(interest, 0);
 }
 
 void

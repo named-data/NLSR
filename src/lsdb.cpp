@@ -65,10 +65,35 @@ const ndn::time::steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE =
 Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
   : m_nlsr(nlsr)
   , m_scheduler(scheduler)
-  , m_sync(m_nlsr.getNlsrFace(), *this, m_nlsr.getConfParameter())
+  , m_sync(m_nlsr.getNlsrFace(),
+           [this] (const ndn::Name& routerName, const std::string& lsaType,
+                   const uint64_t& sequenceNumber) {
+             ndn::Name lsaKey = routerName;
+             lsaKey.append(lsaType);
+
+             if (lsaType == NameLsa::TYPE_STRING) {
+                 return isNameLsaNew(lsaKey, sequenceNumber);
+             }
+             else if (lsaType == AdjLsa::TYPE_STRING) {
+                 return isAdjLsaNew(lsaKey, sequenceNumber);
+             }
+             else if (lsaType == CoordinateLsa::TYPE_STRING) {
+                 return isCoordinateLsaNew(lsaKey, sequenceNumber);
+             }
+             else {
+               return false;
+             }
+           },
+           m_nlsr.getConfParameter())
   , m_lsaRefreshTime(0)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
   , m_sequencingManager()
+  , m_onNewLsaConnection(m_sync.onNewLsa->connect(
+      [this] (const ndn::Name& updateName, const uint64_t& sequenceNumber) {
+        ndn::Name lsaInterest{updateName};
+        lsaInterest.appendNumber(sequenceNumber);
+        expressInterest(lsaInterest, 0);
+      }))
 {
 }
 

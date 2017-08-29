@@ -40,7 +40,6 @@ public:
   LsdbFixture()
     : face(std::make_shared<ndn::util::DummyClientFace>(g_ioService))
     , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
-    , sync(*face, nlsr.getLsdb(), nlsr.getConfParameter())
     , lsdb(nlsr.getLsdb())
     , conf(nlsr.getConfParameter())
     , REGISTER_COMMAND_PREFIX("/localhost/nfd/rib")
@@ -92,8 +91,6 @@ public:
 public:
   std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
-  SyncLogicHandler sync;
-
   Lsdb& lsdb;
   ConfParameter& conf;
 

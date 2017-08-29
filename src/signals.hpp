@@ -22,14 +22,18 @@
 #ifndef NLSR_SIGNALS_HPP
 #define NLSR_SIGNALS_HPP
 
+#include "common.hpp"
 #include <ndn-cxx/util/signal.hpp>
+#include <ndn-cxx/name.hpp>
 
 namespace nlsr {
 
 class RoutingTable;
 class RoutingTableEntry;
+class SyncLogicHandler;
 
 using AfterRoutingChange = ndn::util::Signal<RoutingTable, const std::list<RoutingTableEntry>&>;
+using OnNewLsa = ndn::util::Signal<SyncLogicHandler, const ndn::Name&, const uint64_t&>;
 
 } // namespace nlsr
 
