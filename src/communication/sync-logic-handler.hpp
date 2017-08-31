@@ -94,12 +94,13 @@ public:
   void
   createSyncSocket(const ndn::Name& syncPrefix);
 
-private:
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Simple function to glue Name components together
    */
   void
   buildUpdatePrefix();
 
+private:
   /*! \brief Determine which kind of LSA was updated and fetch it.
    *
    * Checks that the received update is not from us, which can happen,

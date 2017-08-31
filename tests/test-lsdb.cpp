@@ -331,7 +331,33 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   BOOST_CHECK_EQUAL(nameList, newPrefixes);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(TestIsLsaNew)
+{
+  const ndn::Name::Component CONFIG_NETWORK{"/ndn"};
+  const ndn::Name::Component CONFIG_SITE{"/memphis"};
+  ndn::Name originRouter{};
+  originRouter.append(CONFIG_NETWORK).append(CONFIG_SITE).append("/%C1.Router/other-router");
+
+  // Install Name LSA
+  NamePrefixList nameList;
+  NameLsa lsa(originRouter, 999, ndn::time::system_clock::TimePoint::max(), nameList);
+
+  lsdb.installNameLsa(lsa);
+
+  // Lower NameLSA sequence number
+  uint64_t lowerSeqNo = 998;
+  BOOST_CHECK(!lsdb.isLsaNew(originRouter, NameLsa::TYPE_STRING, lowerSeqNo));
+
+  // Same NameLSA sequence number
+  uint64_t sameSeqNo = 999;
+  BOOST_CHECK(!lsdb.isLsaNew(originRouter, NameLsa::TYPE_STRING, sameSeqNo));
+
+  // Higher NameLSA sequence number
+  uint64_t higherSeqNo = 1000;
+  BOOST_CHECK(lsdb.isLsaNew(originRouter, NameLsa::TYPE_STRING, higherSeqNo));
+}
+
+BOOST_AUTO_TEST_SUITE_END() // TestLsdb
 
 } // namespace test
 } // namespace nlsr

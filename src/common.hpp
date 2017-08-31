@@ -29,6 +29,7 @@
 
 #include <ndn-cxx/common.hpp>
 #include <ndn-cxx/util/time.hpp>
+#include <ndn-cxx/name.hpp>
 
 namespace nlsr {
 
@@ -54,6 +55,8 @@ struct is_iterator<T, typename std::enable_if<!std::is_same<
 {
    static constexpr bool value = true;
 };
+
+using IsLsaNew = std::function<bool(const ndn::Name&, const std::string&, const uint64_t&)>;
 
 } // namespace nlsr
 

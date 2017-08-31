@@ -68,23 +68,8 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
   , m_sync(m_nlsr.getNlsrFace(),
            [this] (const ndn::Name& routerName, const std::string& lsaType,
                    const uint64_t& sequenceNumber) {
-             ndn::Name lsaKey = routerName;
-             lsaKey.append(lsaType);
-
-             if (lsaType == NameLsa::TYPE_STRING) {
-                 return isNameLsaNew(lsaKey, sequenceNumber);
-             }
-             else if (lsaType == AdjLsa::TYPE_STRING) {
-                 return isAdjLsaNew(lsaKey, sequenceNumber);
-             }
-             else if (lsaType == CoordinateLsa::TYPE_STRING) {
-                 return isCoordinateLsaNew(lsaKey, sequenceNumber);
-             }
-             else {
-               return false;
-             }
-           },
-           m_nlsr.getConfParameter())
+             return isLsaNew(routerName, lsaType, sequenceNumber);
+           }, m_nlsr.getConfParameter())
   , m_lsaRefreshTime(0)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
   , m_sequencingManager()
@@ -1311,6 +1296,26 @@ Lsdb::doesLsaExist(const ndn::Name& key, const std::string& lsType)
     return doesCoordinateLsaExist(key);
   }
   return false;
+}
+
+bool
+Lsdb::isLsaNew(const ndn::Name& routerName, const std::string& lsaType,
+               const uint64_t& sequenceNumber) {
+  ndn::Name lsaKey = routerName;
+  lsaKey.append(lsaType);
+
+  if (lsaType == NameLsa::TYPE_STRING) {
+    return isNameLsaNew(lsaKey, sequenceNumber);
+  }
+  else if (lsaType == AdjLsa::TYPE_STRING) {
+    return isAdjLsaNew(lsaKey, sequenceNumber);
+  }
+  else if (lsaType == CoordinateLsa::TYPE_STRING) {
+    return isCoordinateLsaNew(lsaKey, sequenceNumber);
+  }
+  else {
+    return false;
+  }
 }
 
 } // namespace nlsr

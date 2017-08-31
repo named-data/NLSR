@@ -19,10 +19,11 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "test-common.hpp"
-
-#include "nlsr.hpp"
 #include "communication/sync-logic-handler.hpp"
+#include "test-common.hpp"
+#include "common.hpp"
+#include "nlsr.hpp"
+#include "logger.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
@@ -37,15 +38,25 @@ public:
   SyncLogicFixture()
     : face(std::make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
-    , sync(nlsr.getLsdb().getSyncLogicHandler())
+    , testIsLsaNew([] (const ndn::Name& name, const std::string& lsaType,
+                       const uint64_t sequenceNumber) {
+                     return true;
+                   })
     , CONFIG_NETWORK("/ndn")
     , CONFIG_SITE("/site")
     , CONFIG_ROUTER_NAME("/%C1.Router/this-router")
+    , OTHER_ROUTER_NAME("/%C1.Router/other-router/")
   {
     nlsr.getConfParameter().setNetwork(CONFIG_NETWORK);
     nlsr.getConfParameter().setSiteName(CONFIG_SITE);
     nlsr.getConfParameter().setRouterName(CONFIG_ROUTER_NAME);
     nlsr.getConfParameter().buildRouterPrefix();
+
+    conf.setNetwork(CONFIG_NETWORK);
+    conf.setSiteName(CONFIG_SITE);
+    conf.setRouterName(CONFIG_ROUTER_NAME);
+    conf.buildRouterPrefix();
+    INIT_LOGGERS("/tmp", "TRACE");
   }
 
   void
@@ -67,193 +78,207 @@ public:
 public:
   std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
-  SyncLogicHandler& sync;
+  ConfParameter conf;
+  IsLsaNew testIsLsaNew;
 
   const std::string CONFIG_NETWORK;
   const std::string CONFIG_SITE;
   const std::string CONFIG_ROUTER_NAME;
+  const std::string OTHER_ROUTER_NAME;
   const std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, AdjLsa::TYPE_STRING,
                                              CoordinateLsa::TYPE_STRING};
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestSyncLogicHandler, SyncLogicFixture)
 
+/* Tests that when SyncLogicHandler receives an LSA of either Name or
+   Adjacency type that appears to be newer, it will emit to its signal
+   with those LSA details.
+ */
 BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
 {
+  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  sync.createSyncSocket(conf.getChronosyncPrefix());
+
   std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, AdjLsa::TYPE_STRING};
 
   uint64_t syncSeqNo = 1;
 
   for (const std::string& lsaType : lsaTypes) {
-    std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                             CONFIG_SITE + "/%C1.Router/other-router/" + lsaType;
+    std::string updateName = conf.getLsaPrefix().toUri() + CONFIG_SITE
+      + OTHER_ROUTER_NAME + lsaType;
+
+    // Actual testing done here -- signal function callback
+    ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
+      [&, this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+        BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
+        BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
+      });
 
     receiveUpdate(updateName, syncSeqNo, sync);
-
-    const auto& it = std::find_if(face->sentInterests.begin(), face->sentInterests.end(),
-                                  [updateName] (const ndn::Interest& interest) {
-                                    return interest.getName().getPrefix(-1) == updateName + "/";
-                                  });
-    BOOST_REQUIRE(it != face->sentInterests.end());
   }
 }
 
+/* Tests that when SyncLogicHandler in HR mode receives an LSA of
+   either Coordinate or Name type that appears to be newer, it will
+   emit to its signal with those LSA details.
+ */
 BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
 {
-  Nlsr nlsr_hr(g_ioService, g_scheduler, std::ref(*face), g_keyChain);
-  SyncLogicHandler& sync_hr(nlsr_hr.getLsdb().getSyncLogicHandler());
+  conf.setHyperbolicState(HYPERBOLIC_STATE_ON);
 
-  nlsr_hr.getConfParameter().setNetwork(CONFIG_NETWORK);
-  nlsr_hr.getConfParameter().setSiteName(CONFIG_SITE);
-  nlsr_hr.getConfParameter().setRouterName(CONFIG_ROUTER_NAME);
-  nlsr_hr.getConfParameter().buildRouterPrefix();
-
-  nlsr_hr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_ON);
-
-  nlsr_hr.initialize();
+  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  sync.createSyncSocket(conf.getChronosyncPrefix());
 
   uint64_t syncSeqNo = 1;
-
   std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, CoordinateLsa::TYPE_STRING};
 
   for (const std::string& lsaType : lsaTypes) {
-    std::string updateName = nlsr_hr.getConfParameter().getLsaPrefix().toUri() +
-                           CONFIG_SITE + "/%C1.Router/other-router/" + lsaType;
+    std::string updateName = conf.getLsaPrefix().toUri() + CONFIG_SITE
+      + OTHER_ROUTER_NAME + lsaType;
 
-    receiveUpdate(updateName, syncSeqNo, sync_hr);
+    ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
+      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+        BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
+        BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
+      });
 
-    const auto& it = std::find_if(face->sentInterests.begin(), face->sentInterests.end(),
-                                  [updateName] (const ndn::Interest& interest) {
-                                    return interest.getName().getPrefix(-1) == updateName + "/";
-                                  });
-
-    BOOST_REQUIRE(it != face->sentInterests.end());
+    receiveUpdate(updateName, syncSeqNo, sync);
   }
 }
 
+/* Tests that when SyncLogicHandler in HR-dry mode receives an LSA of
+   any type that appears to be newer, it will emit to its signal with
+   those LSA details.
+ */
 BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
 {
+  conf.setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
 
-  Nlsr nlsr_hrdry(g_ioService, g_scheduler, std::ref(*face),g_keyChain);
-  SyncLogicHandler& sync_hrdry(nlsr_hrdry.getLsdb().getSyncLogicHandler());
-
-  nlsr_hrdry.getConfParameter().setNetwork(CONFIG_NETWORK);
-  nlsr_hrdry.getConfParameter().setSiteName(CONFIG_SITE);
-  nlsr_hrdry.getConfParameter().setRouterName(CONFIG_ROUTER_NAME);
-  nlsr_hrdry.getConfParameter().buildRouterPrefix();
-
-  nlsr_hrdry.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
-
-  nlsr_hrdry.initialize();
+  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  sync.createSyncSocket(conf.getChronosyncPrefix());
 
   for (const std::string& lsaType : lsaTypes) {
-
-    std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                 CONFIG_SITE + "/%C1.Router/other-router/" + lsaType;
-
-
     uint64_t syncSeqNo = 1;
 
-    receiveUpdate(updateName, syncSeqNo, sync_hrdry);
+    std::string updateName = conf.getLsaPrefix().toUri() + CONFIG_SITE
+      + OTHER_ROUTER_NAME + lsaType;
 
-    // In HR dry-state all LSA's should be published
-    const auto& it = std::find_if(face->sentInterests.begin(), face->sentInterests.end(),
-                     [updateName] (const ndn::Interest& interest) {
-                       return interest.getName().getPrefix(-1) == updateName + "/";
-                     });
-    BOOST_REQUIRE(it != face->sentInterests.end());
+    ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
+      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+        BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
+        BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
+      });
+
+    receiveUpdate(updateName, syncSeqNo, sync);
   }
 }
 
+/* Tests that when SyncLogicHandler receives an update for an LSA with
+   details matching this router's details, it will *not* emit to its
+   signal those LSA details.
+ */
 BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
 {
+  const uint64_t sequenceNumber = 1;
+
+  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  sync.createSyncSocket(conf.getChronosyncPrefix());
+
   for (const std::string& lsaType : lsaTypes) {
-    std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                             CONFIG_SITE + CONFIG_ROUTER_NAME + lsaType;
+    // To ensure that we get correctly-separated components, create
+    // and modify a Name to hand off.
+    ndn::Name updateName = ndn::Name{conf.getLsaPrefix()};
+    updateName.append(CONFIG_SITE).append(CONFIG_ROUTER_NAME).append(lsaType);
 
-    receiveUpdate(updateName, 1, sync);
+    ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
+      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+        BOOST_FAIL("Updates for self should not be emitted!");
+      });
 
-    std::vector<ndn::Interest>& interests = face->sentInterests;
-    BOOST_CHECK_EQUAL(interests.size(), 0);
+    receiveUpdate(updateName.toUri(), sequenceNumber, sync);
   }
 }
 
+/* Tests that when SyncLogicHandler receives an update for an LSA with
+   details that do not match the expected format, it will *not* emit
+   to its signal those LSA details.
+ */
 BOOST_AUTO_TEST_CASE(MalformedUpdate)
 {
-  for (const std::string& lsaType : lsaTypes) {
-    std::string updateName = CONFIG_SITE + nlsr.getConfParameter().getLsaPrefix().toUri() +
-                             CONFIG_ROUTER_NAME + lsaType;
+  const uint64_t sequenceNumber = 1;
 
-    std::vector<ndn::Interest>& interests = face->sentInterests;
-    BOOST_CHECK_EQUAL(interests.size(), 0);
+  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+  sync.createSyncSocket(conf.getChronosyncPrefix());
+
+  for (const std::string& lsaType : lsaTypes) {
+    ndn::Name updateName{CONFIG_SITE};
+    updateName.append(CONFIG_ROUTER_NAME).append(lsaType);
+
+    ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
+      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+        BOOST_FAIL("Malformed updates should not be emitted!");
+      });
+
+    receiveUpdate(updateName.toUri(), sequenceNumber, sync);
   }
 }
 
-BOOST_AUTO_TEST_CASE(SequenceNumber)
+/* Tests that when SyncLogicHandler receives an update for an LSA with
+   details that do not appear to be new, it will *not* emit to its
+   signal those LSA details.
+ */
+BOOST_AUTO_TEST_CASE(LsaNotNew)
 {
-  std::string originRouter = CONFIG_NETWORK + CONFIG_SITE + "/%C1.Router/other-router/";
+  auto testLsaAlwaysFalse = [] (const ndn::Name& routerName, const std::string& lsaType,
+                           const uint64_t& sequenceNumber) {
+    return false;
+  };
 
-  Lsdb& lsdb = nlsr.getLsdb();
-
-  // Install Name LSA
-  NamePrefixList nameList;
-  NameLsa lsa(originRouter, 999, ndn::time::system_clock::TimePoint::max(), nameList);
-  lsdb.installNameLsa(lsa);
-
-  // Install Adj LSA
-  AdjacencyList adjList;
-  AdjLsa adjLsa(originRouter, 1000, ndn::time::system_clock::TimePoint::max(),
-                3 , adjList);
-  lsdb.installAdjLsa(adjLsa);
-
-  std::vector<double> angles = {0.0};
-
-  // Install Cor LSA
-  CoordinateLsa corLsa(originRouter, 1000, ndn::time::system_clock::TimePoint::max(),
-                       0, angles);
-  lsdb.installCoordinateLsa(corLsa);
+  const uint64_t sequenceNumber = 1;
+  SyncLogicHandler sync{std::ref(*face), testLsaAlwaysFalse, conf};
+  sync.createSyncSocket(conf.getChronosyncPrefix());
+    ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
+      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+        BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
+      });
 
   std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
                            CONFIG_SITE + "/%C1.Router/other-router/" + NameLsa::TYPE_STRING;
 
-  // Lower NameLSA sequence number
-  uint64_t lowerSeqNo = 998;
-  receiveUpdate(updateName, lowerSeqNo, sync);
-
-  std::vector<ndn::Interest>& interests = face->sentInterests;
-  BOOST_REQUIRE_EQUAL(interests.size(), 0);
-
-  // Same NameLSA sequence number
-  uint64_t sameSeqNo = 999;
-  receiveUpdate(updateName, sameSeqNo, sync);
-
-  interests = face->sentInterests;
-  BOOST_REQUIRE_EQUAL(interests.size(), 0);
-
-  // Higher NameLSA sequence number
-  uint64_t higherSeqNo = 1000;
-  receiveUpdate(updateName, higherSeqNo, sync);
-
-  interests = face->sentInterests;
-  BOOST_REQUIRE_EQUAL(interests.size(), 1);
-
-  std::vector<ndn::Interest>::iterator it = interests.begin();
-  BOOST_CHECK_EQUAL(it->getName().getPrefix(-1), updateName + "/");
+  receiveUpdate(updateName, sequenceNumber, sync);
 }
 
+/* Tests that SyncLogicHandler successfully concatenates configured
+   variables together to form the necessary prefixes to advertise
+   through ChronoSync.
+ */
 BOOST_AUTO_TEST_CASE(UpdatePrefix)
 {
+
+  SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
+
   ndn::Name expectedPrefix = nlsr.getConfParameter().getLsaPrefix();
   expectedPrefix.append(CONFIG_SITE);
   expectedPrefix.append(CONFIG_ROUTER_NAME);
 
-  nlsr.initialize();
+  sync.buildUpdatePrefix();
 
-  BOOST_CHECK_EQUAL(sync.m_nameLsaUserPrefix, ndn::Name(expectedPrefix).append(NameLsa::TYPE_STRING));
-  BOOST_CHECK_EQUAL(sync.m_adjLsaUserPrefix, ndn::Name(expectedPrefix).append(AdjLsa::TYPE_STRING));
-  BOOST_CHECK_EQUAL(sync.m_coorLsaUserPrefix, ndn::Name(expectedPrefix).append(CoordinateLsa::TYPE_STRING));
+  BOOST_CHECK_EQUAL(sync.m_nameLsaUserPrefix,
+                    ndn::Name(expectedPrefix).append(NameLsa::TYPE_STRING));
+  BOOST_CHECK_EQUAL(sync.m_adjLsaUserPrefix,
+                    ndn::Name(expectedPrefix).append(AdjLsa::TYPE_STRING));
+  BOOST_CHECK_EQUAL(sync.m_coorLsaUserPrefix,
+                    ndn::Name(expectedPrefix).append(CoordinateLsa::TYPE_STRING));
 }
 
+/* Tests that SyncLogicHandler's socket will be created when
+   Nlsr::initialize is called, preventing use of sync before the
+   socket is created.
+
+   NB: This test is as much an Nlsr class test as a SyncLogicHandler
+   class test, but it rides the line and ends up here.
+ */
 BOOST_AUTO_TEST_CASE(CreateSyncSocketOnInitialization) // Bug #2649
 {
   nlsr.initialize();
@@ -264,7 +289,8 @@ BOOST_AUTO_TEST_CASE(CreateSyncSocketOnInitialization) // Bug #2649
   BOOST_REQUIRE(lsa == nullptr);
 
   // Publish a routing update before an Adjacency LSA is built
-  BOOST_CHECK_NO_THROW(sync.publishRoutingUpdate(AdjLsa::TYPE_STRING, 0));
+  BOOST_CHECK_NO_THROW(nlsr.getLsdb().getSyncLogicHandler()
+                       .publishRoutingUpdate(AdjLsa::TYPE_STRING, 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
