@@ -40,6 +40,10 @@ NLSR paper~\cite{NlsrTr}.
 NLSR determines the adjacency status of neighboring routers using the Hello Protocol module (Section~\ref{sec:hello-protocol}).
 When the Hello Protocol detects a status change for a neighbor, it will ask the LSDB module (Section~\ref{sec:lsdb}) to update the router's advertised adjacency information.
 
+Additionally, NLSR discovers the infrastructure for communicating with
+neighbors by querying NFD, which maintains a dataset of all
+information for its Faces.
+
 \subsubsection{Disseminating Routing Information}
 
 When a router's LSAs (Section~\ref{sec:lsas}) changes, the information of this change should be distributed to every other router in the network.

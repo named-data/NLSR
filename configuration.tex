@@ -46,8 +46,16 @@ The \texttt{neighbors} section in the configuration file contains parameters tha
 \item \texttt{hello-retries} - the number of times to retry a Hello Interest before deciding the neighbor is down (Default value: 3; Valid values: 1 - 10).
 \item \texttt{hello-timeout} - the interest lifetime for Hello Interests in seconds (Default value: 1, Valid values: 1 - 15).
 \item \texttt{hello-interval} - the time in seconds between sending each Hello Interest to a neighbor. (Default value: 60; Valid values: 30 - 90).
-\item \texttt{first-hello-interval} -  the time to wait in seconds before sending the first Hello Interests (Default value: 10; Valid values: 0 - 10).
 \item \texttt{adj-lsa-build-interval} - when the Hello Protocol triggers an Adjacency LSA build, the LSDB will wait this amount of time in seconds before performing the Adjacency LSA build. This parameter is intended to allow for Adjacency LSA build requests to be aggregated and the build can then be performed once. (Default value: 5; Valid values: 0 - 5)
+\item \texttt{first-hello-interval} -  the time to wait in seconds before sending the first Hello Interests (Default value: 10; Valid values: 0 - 10).
+\item \texttt{face-dataset-fetch-tries} - how many times to re-fetch
+  the Face status dataset from NFD. (Default value: 3; Valid values: 1 - 10)
+\item \texttt{face-dataset-fetch-interval} - how often to fetch the
+  Face status dataset from NFD. This dataset is needed to communicate
+  with neighbors, but Face events are considered the main source of
+  this information. This dataset is intended as a backup to that
+  mechanism, so the interval is very long. (Default value: 3600. 
+  Valid values: 1800 - 5400)
 \end{itemize}
 
 The \texttt{neighbors} section also includes multiple \texttt{neighbor} subsections, each of which configures a neighbor of the router.
@@ -57,6 +65,15 @@ The \texttt{neighbor} subsection includes:
 \item \texttt{face-uri} - the face that should be used to connect to the neighboring router
 \item \texttt{link-cost} - the cost metric for the link connecting this router to the neighbor router.
 \end{itemize}
+
+\emph{NB: NLSR no longer creates and configures Faces in NFD!} NLSR
+periodically fetches from NFD a dataset containing information about
+all of NFD's Faces. NLSR scans this information and internally
+configures neighbors with that information. Additionally, NLSR listens
+to activity from NFD concerning Faces. These two sources of
+information should cover all Faces; any neighbor not represented in
+these two sources of information will be assumed inactive or
+inaccessible, and will not be contacted.
 
 \subsection{Hyperbolic Section}
 
