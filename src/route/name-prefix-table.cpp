@@ -33,7 +33,8 @@ namespace nlsr {
 
 INIT_LOGGER("NamePrefixTable");
 
-NamePrefixTable::NamePrefixTable(Nlsr& nlsr, std::shared_ptr<AfterRoutingChange>& afterRoutingChangeSignal)
+NamePrefixTable::NamePrefixTable(Nlsr& nlsr,
+                                 std::unique_ptr<AfterRoutingChange>& afterRoutingChangeSignal)
   : m_nlsr(nlsr)
 {
   m_afterRoutingChangeConnection = afterRoutingChangeSignal->connect(

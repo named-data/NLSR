@@ -41,7 +41,7 @@ public:
   using NptEntryList = std::list<std::shared_ptr<NamePrefixTableEntry>>;
   using const_iterator = NptEntryList::const_iterator;
 
-  NamePrefixTable(Nlsr& nlsr, std::shared_ptr<AfterRoutingChange>& afterRoutingChangeSignal);
+  NamePrefixTable(Nlsr& nlsr, std::unique_ptr<AfterRoutingChange>& afterRoutingChangeSignal);
 
   ~NamePrefixTable();
 

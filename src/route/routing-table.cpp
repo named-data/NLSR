@@ -35,7 +35,7 @@ namespace nlsr {
 INIT_LOGGER("RoutingTable");
 
 RoutingTable::RoutingTable(ndn::Scheduler& scheduler)
-  : afterRoutingChange{std::make_shared<AfterRoutingChange>()}
+  : afterRoutingChange{ndn::make_unique<AfterRoutingChange>()}
   , m_scheduler(scheduler)
   , m_NO_NEXT_HOP{-12345}
   , m_routingCalcInterval{static_cast<uint32_t>(ROUTING_CALC_INTERVAL_DEFAULT)}

@@ -115,7 +115,7 @@ private:
   writeLog(int hyperbolicState);
 
 public:
-  std::shared_ptr<AfterRoutingChange> afterRoutingChange;
+  std::unique_ptr<AfterRoutingChange> afterRoutingChange;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::list<RoutingTableEntry> m_rTable;
