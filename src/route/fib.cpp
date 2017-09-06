@@ -78,18 +78,6 @@ Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
 void
 Fib::update(const ndn::Name& name, NexthopList& allHops)
 {
-  FibEntry* entry = processUpdate(name, allHops);
-  if (entry != nullptr && !entry->getRefreshEventId()) {
-    scheduleEntryRefresh(*entry,
-                         [this] (FibEntry& fibEntry) {
-                           this->scheduleLoop(fibEntry);
-                         });
-  }
-}
-
-FibEntry*
-Fib::processUpdate(const ndn::Name& name, NexthopList& allHops)
-{
   _LOG_DEBUG("Fib::update called");
 
   // Get the max possible faces which is the minumum of the configuration setting and
@@ -117,7 +105,7 @@ Fib::processUpdate(const ndn::Name& name, NexthopList& allHops)
 
     m_table.emplace(name, entry);
 
-    return &m_table.find(name)->second;
+    entryIt = m_table.find(name);
   }
   // Existing FIB entry that may or may not have nextHops
   else {
@@ -127,7 +115,7 @@ Fib::processUpdate(const ndn::Name& name, NexthopList& allHops)
     // Remove empty FIB entry
     if (hopsToAdd.getSize() == 0) {
       remove(name);
-      return nullptr;
+      return;
     }
 
     FibEntry& entry = (entryIt->second);
@@ -151,7 +139,14 @@ Fib::processUpdate(const ndn::Name& name, NexthopList& allHops)
     // Increment sequence number
     entry.setSeqNo(entry.getSeqNo() + 1);
 
-    return &(m_table.find(name)->second);
+    entryIt = m_table.find(name);
+
+  }
+  if (entryIt != m_table.end() && !entryIt->second.getRefreshEventId()) {
+    scheduleEntryRefresh(entryIt->second,
+                         [this] (FibEntry& entry) {
+                           scheduleLoop(entry);
+                         });
   }
 }
 

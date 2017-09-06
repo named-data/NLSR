@@ -19,11 +19,9 @@
  *
  **/
 
+#include "route/fib.hpp"
 #include "test-common.hpp"
 #include "control-commands.hpp"
-
-#include "route/fib.hpp"
-
 #include "adjacency-list.hpp"
 #include "conf-parameter.hpp"
 
@@ -107,7 +105,7 @@ BOOST_AUTO_TEST_CASE(NextHopsAdd)
   hops.addNextHop(hop1);
   hops.addNextHop(hop2);
 
-  fib->processUpdate("/ndn/name", hops);
+  fib->update("/ndn/name", hops);
   face->processEvents(ndn::time::milliseconds(-1));
 
   // Should register faces 1 and 2 for /ndn/name
@@ -141,13 +139,13 @@ BOOST_AUTO_TEST_CASE(NextHopsNoChange)
   oldHops.addNextHop(hop1);
   oldHops.addNextHop(hop2);
 
-  fib->processUpdate("/ndn/name", oldHops);
+  fib->update("/ndn/name", oldHops);
   face->processEvents(ndn::time::milliseconds(-1));
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
   interests.clear();
 
-  fib->processUpdate("/ndn/name", oldHops);
+  fib->update("/ndn/name", oldHops);
   face->processEvents(ndn::time::milliseconds(-1));
 
   // Should register face 1 and 2 for /ndn/name
@@ -180,7 +178,7 @@ BOOST_AUTO_TEST_CASE(NextHopsRemoveAll)
   oldHops.addNextHop(hop1);
   oldHops.addNextHop(hop2);
 
-  fib->processUpdate("/ndn/name", oldHops);
+  fib->update("/ndn/name", oldHops);
   face->processEvents(ndn::time::milliseconds(-1));
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
@@ -188,7 +186,7 @@ BOOST_AUTO_TEST_CASE(NextHopsRemoveAll)
 
   NexthopList empty;
 
-  fib->processUpdate("/ndn/name", empty);
+  fib->update("/ndn/name", empty);
   face->processEvents(ndn::time::milliseconds(-1));
 
   // Should unregister faces 1 and 2 for /ndn/name
@@ -223,7 +221,7 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixes)
   hops.addNextHop(hop2);
   hops.addNextHop(hop3);
 
-  fib->processUpdate("/ndn/name", hops);
+  fib->update("/ndn/name", hops);
   face->processEvents(ndn::time::milliseconds(-1));
 
   // Should only register faces 1 and 2 for /ndn/name
@@ -256,7 +254,7 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   hops.addNextHop(hop1);
   hops.addNextHop(hop2);
 
-  fib->processUpdate("/ndn/name", hops);
+  fib->update("/ndn/name", hops);
   face->processEvents(ndn::time::milliseconds(-1));
 
   // FIB
@@ -269,7 +267,7 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   NextHop hop3(router3FaceUri, 5);
   hops.addNextHop(hop3);
 
-  fib->processUpdate("/ndn/name", hops);
+  fib->update("/ndn/name", hops);
   face->processEvents(ndn::time::milliseconds(-1));
 
   // To maintain a max 2 face requirement, face 3 should be registered and face 2 should be

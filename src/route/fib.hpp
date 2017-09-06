@@ -211,12 +211,6 @@ private:
                        const std::string& message);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  /*! \brief Internal portion of Fib::update.
-   * \sa Fib::update
-   */
-  FibEntry*
-  processUpdate(const ndn::Name& name, NexthopList& allHops);
-
   /*! \brief Schedule a refresh event for an entry.
    *
    * Schedules a refresh event for an entry. In order to form a
