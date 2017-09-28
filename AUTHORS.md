@@ -4,13 +4,15 @@ NLSR Authors
 NLSR is an open source project includes contributions from the members of the
 [NDN project team](http://named-data.net/project/participants/).
 
-## Project lead:
+## Project co-leads:
 
-* Vince Lehman <http://vslehman.com>
+* Ashlesh Gawande  <https://www.linkedin.com/in/agawande>
+* Nicholas Gordon  <nmgordon@memphis.edu>
 
 ## Past project leads:
 
 * A K M Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
+* Vince Lehman <http://vslehman.com>
 
 ## Technical advisors:
 
@@ -24,24 +26,25 @@ NLSR is an open source project includes contributions from the members of the
 * The University of Memphis
 
     * A K M Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
-    * Ashlesh Gawande      <agawande@memphis.edu>
-    * Minsheng Zhang       <mzhang4@memphis.edu>
+    * Ashlesh Gawande      <https://www.linkedin.com/in/agawande>
+    * Minsheng Zhang       <https://www.linkedin.com/in/minsheng-zhang-032023a1>
     * Syed Obaid Amin      <http://obaidamin.weebly.com/>
     * Vince Lehman         <http://vslehman.com>
     * Muktadir R Chowdhury <mrchwdhr@memphis.edu>
     * Nicholas Gordon      <nmgordon@memphis.edu>
     * Laqin Fan            <lfan1@memphis.edu>
+    * Damian Coomes        <dmcoomes@memphis.edu>
 
 * University of California, Los Angeles
 
     * Yingdi Yu           <http://irl.cs.ucla.edu/~yingdi/web/index.html>
     * Alexander Afanasyev <http://lasr.cs.ucla.edu/afanasyev/index.html>
     * Spyridon Mastorakis <http://cs.ucla.edu/~mastorakis/>
-    * Jiewen Tan          <alanwake@ucla.edu>
+    * Jiewen Tan          <https://www.linkedin.com/in/jiewentan>
 
 * University of Arizona
 
-    * Junxiao Shi         <https://www.cs.arizona.edu/people/shijunxiao/>
+    * Junxiao Shi         <https://www.linkedin.com/in/shijunxiao>
 
 * University Pierre & Marie Curie, Sorbonne University
 
