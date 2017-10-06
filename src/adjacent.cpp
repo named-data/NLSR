@@ -72,14 +72,26 @@ Adjacent::operator==(const Adjacent& adjacent) const
           std::numeric_limits<double>::epsilon());
 }
 
+bool
+Adjacent::operator<(const Adjacent& adjacent) const
+{
+  return (m_name < adjacent.getName()) ||
+         (m_linkCost < adjacent.getLinkCost());
+}
+
+std::ostream&
+operator<<(std::ostream& os, const Adjacent& adjacent)
+{
+  os << "Adjacent: " << adjacent.m_name << "\n Connecting FaceUri: " << adjacent.m_faceUri
+     << "\n Link cost: " << adjacent.m_linkCost << "\n Status: " << adjacent.m_status
+     << "\n Interest Timed Out: " << adjacent.m_interestTimedOutNo << std::endl;
+  return os;
+}
+
 void
 Adjacent::writeLog()
 {
-  _LOG_DEBUG("Adjacent : " << m_name);
-  _LOG_DEBUG("Connecting FaceUri: " << m_faceUri);
-  _LOG_DEBUG("Link Cost: " << m_linkCost);
-  _LOG_DEBUG("Status: " << m_status);
-  _LOG_DEBUG("Interest Timed out: " << m_interestTimedOutNo);
+  _LOG_DEBUG(*this);
 }
 
 } // namespace nlsr

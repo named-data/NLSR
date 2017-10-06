@@ -84,32 +84,36 @@ AdjacencyList::getAdjacent(const ndn::Name& adjName)
   return adj;
 }
 
-static bool
-compareAdjacent(const Adjacent& adjacent1, const Adjacent& adjacent2)
-{
-  return adjacent1.getName() < adjacent2.getName();
-}
-
 bool
-AdjacencyList::operator==(AdjacencyList& adl)
+AdjacencyList::operator==(AdjacencyList& adl) const
 {
-  if (getSize() != adl.getSize()) {
+  if (m_adjList.size() != adl.getSize()) {
     return false;
   }
-  m_adjList.sort(compareAdjacent);
-  adl.getAdjList().sort(compareAdjacent);
-  uint32_t equalAdjCount = 0;
-  std::list<Adjacent>& adjList2 = adl.getAdjList();
-  std::list<Adjacent>::iterator it1;
-  std::list<Adjacent>::iterator it2;
-  for (it1 = m_adjList.begin(), it2 = adjList2.begin();
-       it1 != m_adjList.end(); it1++, it2++) {
-    if (!((*it1) == (*it2))) {
-      break;
+
+  auto comparator =
+    [] (const Adjacent* lhs, const Adjacent* rhs) {
+      return *lhs < *rhs;
+  };
+
+  std::vector<const Adjacent*> ourList;
+  std::transform(m_adjList.begin(), m_adjList.end(),
+                 std::back_inserter(ourList), std::pointer_traits<const Adjacent*>::pointer_to);
+
+  std::vector<const Adjacent*> theirList;
+  std::transform(adl.getAdjList().begin(), adl.getAdjList().end(),
+                 std::back_inserter(theirList), std::pointer_traits<const Adjacent*>::pointer_to);
+
+  std::sort(ourList.begin(), ourList.end(), std::bind(comparator, _1, _2));
+  std::sort(theirList.begin(), theirList.end(), std::bind(comparator, _1, _2));
+
+  for (size_t i = 0; i < ourList.size(); i++) {
+    if (*(ourList[i]) != *(theirList[i])) {
+      std::cout << *ourList[i] << ":" << *theirList[i];
+      return false;
     }
-    equalAdjCount++;
   }
-  return equalAdjCount == getSize();
+  return true;
 }
 
 int32_t

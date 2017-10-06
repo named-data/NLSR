@@ -130,6 +130,15 @@ public:
   bool
   operator==(const Adjacent& adjacent) const;
 
+  bool
+  operator!=(const Adjacent& adjacent) const
+  {
+    return !(*this == adjacent);
+  }
+
+  bool
+  operator<(const Adjacent& adjacent) const;
+
   inline bool
   compare(const ndn::Name& adjacencyName)
   {
@@ -168,7 +177,13 @@ private:
   /*! m_faceId The NFD-assigned ID for the neighbor, used to
    * determine whether a Face is available */
   uint64_t m_faceId;
+
+  friend std::ostream&
+  operator<<(std::ostream& os, const Adjacent& adjacent);
 };
+
+std::ostream&
+operator<<(std::ostream& os, const Adjacent& adjacent);
 
 } // namespace nlsr
 

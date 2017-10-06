@@ -46,6 +46,25 @@ BOOST_AUTO_TEST_CASE(OperatorEquals)
   BOOST_CHECK(adjacent1 == adjacent2);
 }
 
+BOOST_AUTO_TEST_CASE(OperatorLessThan)
+{
+  const ndn::Name ADJ_NAME_1 = "name1";
+  const double ADJ_LINK_COST_1 = 1;
+  const ndn::Name ADJ_NAME_2 = "name2";
+  const double ADJ_LINK_COST_2 = 2;
+  Adjacent adjacent1(ADJ_NAME_1);
+  Adjacent adjacent2(ADJ_NAME_1);
+  adjacent1.setLinkCost(ADJ_LINK_COST_1);
+  adjacent2.setLinkCost(ADJ_LINK_COST_2);
+
+  BOOST_CHECK(adjacent1 < adjacent2);
+
+  Adjacent adjacent3(ADJ_NAME_2);
+  adjacent3.setLinkCost(ADJ_LINK_COST_1);
+
+  BOOST_CHECK(adjacent1 < adjacent3);
+}
+
 BOOST_AUTO_TEST_CASE(Accessors)
 {
   const ndn::Name ADJ_NAME_1 = "name1";

@@ -126,7 +126,7 @@ public:
   getAdjacent(const ndn::Name& adjName);
 
   bool
-  operator==(AdjacencyList& adl);
+  operator==(AdjacencyList& adl) const;
 
   size_t
   getSize()
