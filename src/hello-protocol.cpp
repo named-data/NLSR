@@ -32,6 +32,12 @@ INIT_LOGGER("HelloProtocol");
 const std::string HelloProtocol::INFO_COMPONENT = "INFO";
 const std::string HelloProtocol::NLSR_COMPONENT = "NLSR";
 
+HelloProtocol::HelloProtocol(Nlsr& nlsr, ndn::Scheduler& scheduler)
+  : m_nlsr(nlsr)
+  , m_scheduler(scheduler)
+{
+}
+
 void
 HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
 {

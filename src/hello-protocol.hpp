@@ -38,11 +38,7 @@ class Nlsr;
 class HelloProtocol
 {
 public:
-  HelloProtocol(Nlsr& nlsr, ndn::Scheduler& scheduler)
-    : m_nlsr(nlsr)
-    , m_scheduler(scheduler)
-  {
-  }
+  HelloProtocol(Nlsr& nlsr, ndn::Scheduler& scheduler);
 
   /*! \brief Schedules a Hello Interest event.
    *
