@@ -19,9 +19,8 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "common.hpp"
-
 #include "adjacency-list.hpp"
+#include "common.hpp"
 #include "adjacent.hpp"
 #include "conf-parameter.hpp"
 
@@ -50,7 +49,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   adjacentList1.insert(adjacent1);
   adjacentList2.insert(adjacent2);
 
-  BOOST_CHECK_EQUAL(adjacentList1.getSize(), (uint32_t)1);
+  BOOST_CHECK_EQUAL(adjacentList1.size(), (uint32_t)1);
   BOOST_CHECK_EQUAL(adjacentList1 == adjacentList2, false);
 
   BOOST_CHECK(adjacentList1.isNeighbor("testname"));

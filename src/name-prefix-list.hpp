@@ -60,7 +60,7 @@ public:
   sort();
 
   size_t
-  getSize()
+  size() const
   {
     return m_names.size();
   }

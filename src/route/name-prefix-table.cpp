@@ -106,7 +106,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     npte->generateNhlfromRteList();
     m_table.push_back(npte);
     // If this entry has next hops, we need to inform the FIB
-    if (npte->getNexthopList().getSize() > 0) {
+    if (npte->getNexthopList().size() > 0) {
       _LOG_TRACE("Updating FIB with next hops for " << npte);
       m_nlsr.getFib().update(name, npte->getNexthopList());
     }
@@ -128,7 +128,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     (*nameItr)->addRoutingTableEntry(rtpePtr);
     (*nameItr)->generateNhlfromRteList();
 
-    if ((*nameItr)->getNexthopList().getSize() > 0) {
+    if ((*nameItr)->getNexthopList().size() > 0) {
       _LOG_TRACE("Updating FIB with next hops for " << (*nameItr));
       m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
     }

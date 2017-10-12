@@ -298,7 +298,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
   auto iterator = namePrefixTable.m_rtpool.find(destination);
   BOOST_REQUIRE(iterator != namePrefixTable.m_rtpool.end());
   auto nextHops = (iterator->second)->getNexthopList();
-  BOOST_CHECK_EQUAL(nextHops.getSize(), 2);
+  BOOST_CHECK_EQUAL(nextHops.size(), 2);
 
   // Add the other NextHop
   routingTable.addNextHop(destination, hop3);
@@ -313,7 +313,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
   iterator = namePrefixTable.m_rtpool.find(destination);
   BOOST_REQUIRE(iterator != namePrefixTable.m_rtpool.end());
   nextHops = (iterator->second)->getNexthopList();
-  BOOST_CHECK_EQUAL(nextHops.getSize(), 3);
+  BOOST_CHECK_EQUAL(nextHops.size(), 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

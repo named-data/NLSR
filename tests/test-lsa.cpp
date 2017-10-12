@@ -19,14 +19,12 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "test-common.hpp"
-
-#include "adjacent.hpp"
 #include "lsa.hpp"
+#include "test-common.hpp"
+#include "adjacent.hpp"
 #include "name-prefix-list.hpp"
 
 #include <ndn-cxx/util/time.hpp>
-
 #include <sstream>
 
 namespace nlsr {
@@ -70,8 +68,8 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
   activeAdjacencies.insert(activeAdjacency);
 
   AdjLsa alsa1(routerName, seqNo, testTimePoint,
-               activeAdjacencies.getSize(), activeAdjacencies);
-  BOOST_CHECK_EQUAL(alsa1.getAdl().getSize(), 1);
+               activeAdjacencies.size(), activeAdjacencies);
+  BOOST_CHECK_EQUAL(alsa1.getAdl().size(), 1);
   BOOST_CHECK_EQUAL(alsa1.getLsType(), AdjLsa::TYPE_STRING);
   BOOST_CHECK_EQUAL(alsa1.getLsSeqNo(), seqNo);
   BOOST_CHECK_EQUAL(alsa1.getExpirationTimePoint(), testTimePoint);
@@ -85,15 +83,15 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
   inactiveAdjacencies.insert(inactiveAdjacency);
 
   AdjLsa alsa2(routerName, seqNo, testTimePoint,
-               inactiveAdjacencies.getSize(), inactiveAdjacencies);
-  BOOST_CHECK_EQUAL(alsa2.getAdl().getSize(), 0);
+               inactiveAdjacencies.size(), inactiveAdjacencies);
+  BOOST_CHECK_EQUAL(alsa2.getAdl().size(), 0);
 
   // Thus, the two LSAs should not have equal content
   BOOST_CHECK_EQUAL(alsa1.isEqualContent(alsa2), false);
 
   // Create a duplicate of alsa1 which should have equal content
   AdjLsa alsa3(routerName, seqNo, testTimePoint,
-               activeAdjacencies.getSize(), activeAdjacencies);
+               activeAdjacencies.size(), activeAdjacencies);
   BOOST_CHECK(alsa1.isEqualContent(alsa3));
 }
 
@@ -132,7 +130,7 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
 
   const std::string TEST_TIME_POINT_STRING = ss.str();
 
-  AdjLsa lsa("router1", 12, testTimePoint, adjList.getSize(), adjList);
+  AdjLsa lsa("router1", 12, testTimePoint, adjList.size(), adjList);
 
   std::string EXPECTED_OUTPUT =
    "Adj Lsa:\n"
@@ -178,7 +176,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
 
   ndn::time::system_clock::TimePoint testTimePoint = ndn::time::system_clock::now();
 
-  AdjLsa adjlsa1("router1", 1, testTimePoint, adjList.getSize(), adjList);
+  AdjLsa adjlsa1("router1", 1, testTimePoint, adjList.size(), adjList);
   AdjLsa adjlsa2;
 
   BOOST_CHECK(adjlsa2.initializeFromContent(adjlsa1.getData()));

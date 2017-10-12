@@ -44,7 +44,7 @@ nexthopRemoveCompare(const NextHop& nh1, const NextHop& nh2)
 bool
 operator==(const NexthopList& lhs, const NexthopList& rhs)
 {
-  if (lhs.getSize() != rhs.getSize()) {
+  if (lhs.size() != rhs.size()) {
     return false;
   }
 

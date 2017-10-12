@@ -96,7 +96,7 @@ Fib::update(const ndn::Name& name, NexthopList& allHops)
   std::map<ndn::Name, FibEntry>::iterator entryIt = m_table.find(name);
 
   // New FIB entry that has nextHops
-  if (entryIt == m_table.end() && hopsToAdd.getSize() != 0) {
+  if (entryIt == m_table.end() && hopsToAdd.size() != 0) {
     _LOG_DEBUG("New FIB Entry");
 
     FibEntry entry(name);
@@ -113,7 +113,7 @@ Fib::update(const ndn::Name& name, NexthopList& allHops)
     _LOG_DEBUG("Existing FIB Entry");
 
     // Remove empty FIB entry
-    if (hopsToAdd.getSize() == 0) {
+    if (hopsToAdd.size() == 0) {
       remove(name);
       return;
     }

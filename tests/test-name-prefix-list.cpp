@@ -39,11 +39,11 @@ BOOST_AUTO_TEST_CASE(NplSizeAndRemove)
   npl1.insert(a);
   npl1.insert(b);
 
-  BOOST_CHECK_EQUAL(npl1.getSize(), 2);
+  BOOST_CHECK_EQUAL(npl1.size(), 2);
 
   npl1.remove(b);
 
-  BOOST_CHECK_EQUAL(npl1.getSize(), 1);
+  BOOST_CHECK_EQUAL(npl1.size(), 1);
 }
 
 /*

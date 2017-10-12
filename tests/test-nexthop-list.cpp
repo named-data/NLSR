@@ -36,10 +36,10 @@ BOOST_AUTO_TEST_CASE(NhlAddNextHop)
   NexthopList nhl1;
 
   nhl1.addNextHop(np1);
-  BOOST_CHECK_EQUAL(nhl1.getSize(), (uint32_t)1);
+  BOOST_CHECK_EQUAL(nhl1.size(), (uint32_t)1);
 
   nhl1.removeNextHop(np1);
-  BOOST_CHECK_EQUAL(nhl1.getSize(), (uint32_t)0);
+  BOOST_CHECK_EQUAL(nhl1.size(), (uint32_t)0);
 }
 
 BOOST_AUTO_TEST_CASE(LinkStateRemoveNextHop)
@@ -53,13 +53,13 @@ BOOST_AUTO_TEST_CASE(LinkStateRemoveNextHop)
   NextHop hop2;
   hop2.setRouteCost(13.01);
 
-  BOOST_REQUIRE_EQUAL(hopList.getSize(), 1);
+  BOOST_REQUIRE_EQUAL(hopList.size(), 1);
 
   hopList.removeNextHop(hop2);
-  BOOST_CHECK_EQUAL(hopList.getSize(), 1);
+  BOOST_CHECK_EQUAL(hopList.size(), 1);
 
   hopList.removeNextHop(hop1);
-  BOOST_CHECK_EQUAL(hopList.getSize(), 0);
+  BOOST_CHECK_EQUAL(hopList.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(HyperbolicRemoveNextHop)
@@ -75,13 +75,13 @@ BOOST_AUTO_TEST_CASE(HyperbolicRemoveNextHop)
   hop2.setHyperbolic(true);
   hop2.setRouteCost(12.35);
 
-  BOOST_REQUIRE_EQUAL(hopList.getSize(), 1);
+  BOOST_REQUIRE_EQUAL(hopList.size(), 1);
 
   hopList.removeNextHop(hop2);
-  BOOST_CHECK_EQUAL(hopList.getSize(), 1);
+  BOOST_CHECK_EQUAL(hopList.size(), 1);
 
   hopList.removeNextHop(hop1);
-  BOOST_CHECK_EQUAL(hopList.getSize(), 0);
+  BOOST_CHECK_EQUAL(hopList.size(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(TieBreaker)
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(SortOnAddAndRemove)
   list.addNextHop(hopB);
   list.addNextHop(hopC);
 
-  BOOST_REQUIRE_EQUAL(list.getSize(), 3);
+  BOOST_REQUIRE_EQUAL(list.size(), 3);
 
   double lastCost = 0;
   for (const auto& hop : list) {
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(SortOnAddAndRemove)
   // removing a hop keep the list sorted
   list.removeNextHop(hopA);
 
-  BOOST_REQUIRE_EQUAL(list.getSize(), 2);
+  BOOST_REQUIRE_EQUAL(list.size(), 2);
 
   lastCost = 0;
   for (const auto& hop : list) {
@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(UseCheaperNextHop)
   list.addNextHop(hopA);
   list.addNextHop(hopB);
 
-  BOOST_REQUIRE_EQUAL(list.getSize(), 1);
+  BOOST_REQUIRE_EQUAL(list.size(), 1);
 
   for (const auto& hop : list) {
     BOOST_CHECK_EQUAL(hop, hopB);

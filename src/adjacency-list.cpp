@@ -87,7 +87,7 @@ AdjacencyList::getAdjacent(const ndn::Name& adjName)
 bool
 AdjacencyList::operator==(AdjacencyList& adl) const
 {
-  if (m_adjList.size() != adl.getSize()) {
+  if (size() != adl.size()) {
     return false;
   }
 

@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 
   NamePrefixList& namePrefixList = nlsr.getNamePrefixList();
 
-  BOOST_REQUIRE_EQUAL(namePrefixList.getSize(), 1);
+  BOOST_REQUIRE_EQUAL(namePrefixList.size(), 1);
   BOOST_CHECK_EQUAL(namePrefixList.getNames().front(), parameters.getName());
 
   BOOST_CHECK(wasRoutingUpdatePublished());
@@ -271,7 +271,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   face.receive(*withdrawInterest);
   this->advanceClocks(ndn::time::milliseconds(10));
 
-  BOOST_CHECK_EQUAL(namePrefixList.getSize(), 0);
+  BOOST_CHECK_EQUAL(namePrefixList.size(), 0);
 
   BOOST_CHECK(wasRoutingUpdatePublished());
   BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());

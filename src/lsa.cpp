@@ -68,7 +68,7 @@ NameLsa::getData()
 {
   std::ostringstream os;
   os << m_origRouter << "|" << NameLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
-     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_npl.getSize();
+     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_npl.size();
   for (const auto& name : m_npl.getNames()) {
     os << "|" << name;
   }
@@ -269,7 +269,7 @@ AdjLsa::getData()
 {
   std::ostringstream os;
   os << m_origRouter << "|" << AdjLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
-     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_adl.getSize();
+     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_adl.size();
   for (const auto& adjacent : m_adl.getAdjList()) {
     os << "|" << adjacent.getName() << "|" << adjacent.getFaceUri()
        << "|" << adjacent.getLinkCost();

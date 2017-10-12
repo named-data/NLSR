@@ -129,7 +129,7 @@ public:
   operator==(AdjacencyList& adl) const;
 
   size_t
-  getSize()
+  size() const
   {
     return m_adjList.size();
   }

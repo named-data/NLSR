@@ -19,17 +19,15 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "conf-file-processor.hpp"
 #include "test-common.hpp"
 #include "logger.hpp"
-
-#include <fstream>
-#include "conf-file-processor.hpp"
 #include "nlsr.hpp"
 
+#include <fstream>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
-
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
 namespace nlsr {
@@ -271,7 +269,7 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getRoutingCalcInterval(), 9);
 
   // Advertising
-  BOOST_CHECK_EQUAL(nlsr.getNamePrefixList().getSize(), 2);
+  BOOST_CHECK_EQUAL(nlsr.getNamePrefixList().size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(Log4cxxFileExists)

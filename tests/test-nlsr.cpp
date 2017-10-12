@@ -283,7 +283,7 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   // Make sure the routing table was calculated
   RoutingTableEntry* rtEntry = nlsr.getRoutingTable().findRoutingTableEntry(failNeighbor.getName());
   BOOST_REQUIRE(rtEntry != nullptr);
-  BOOST_REQUIRE_EQUAL(rtEntry->getNexthopList().getSize(), 1);
+  BOOST_REQUIRE_EQUAL(rtEntry->getNexthopList().size(), 1);
 
   // Receive FaceEventDestroyed notification
   ndn::nfd::FaceEventNotification event;
@@ -394,7 +394,7 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   // Adjacency LSA should be built even though other router is INACTIVE
   AdjLsa* lsa = lsdb.findAdjLsa(lsaKey);
   BOOST_REQUIRE(lsa != nullptr);
-  BOOST_CHECK_EQUAL(lsa->getAdl().getSize(), 1);
+  BOOST_CHECK_EQUAL(lsa->getAdl().size(), 1);
 
   // Receive HELLO response from Router B
   receiveHelloData(neighborBName, conf.getRouterPrefix());
@@ -420,7 +420,7 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   // Adjacency LSA should be built
   lsa = lsdb.findAdjLsa(lsaKey);
   BOOST_REQUIRE(lsa != nullptr);
-  BOOST_CHECK_EQUAL(lsa->getAdl().getSize(), 2);
+  BOOST_CHECK_EQUAL(lsa->getAdl().size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(CanonizeUris)

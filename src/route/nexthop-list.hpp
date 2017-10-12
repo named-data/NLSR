@@ -76,13 +76,7 @@ public:
   removeNextHop(const NextHop& nh);
 
   size_t
-  getSize()
-  {
-    return m_nexthopList.size();
-  }
-
-  size_t
-  getSize() const
+  size() const
   {
     return m_nexthopList.size();
   }
