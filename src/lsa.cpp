@@ -38,22 +38,17 @@ namespace nlsr {
 
 INIT_LOGGER("Lsa");
 
-const std::string NameLsa::TYPE_STRING = "name";
-const std::string AdjLsa::TYPE_STRING = "adjacency";
-const std::string CoordinateLsa::TYPE_STRING = "coordinate";
-
 const ndn::Name
 NameLsa::getKey() const
 {
   ndn::Name key = m_origRouter;
-  key.append(NameLsa::TYPE_STRING);
+  key.append(std::to_string(Lsa::Type::NAME));
   return key;
 }
 
 NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
                  const ndn::time::system_clock::TimePoint& lt,
                  NamePrefixList& npl)
-  : Lsa(NameLsa::TYPE_STRING)
 {
   m_origRouter = origR;
   m_lsSeqNo = lsn;
@@ -67,7 +62,7 @@ std::string
 NameLsa::getData()
 {
   std::ostringstream os;
-  os << m_origRouter << "|" << NameLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
+  os << m_origRouter << "|" << Lsa::Type::NAME << "|" << m_lsSeqNo << "|"
      << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_npl.size();
   for (const auto& name : m_npl.getNames()) {
     os << "|" << name;
@@ -89,7 +84,7 @@ NameLsa::initializeFromContent(const std::string& content)
     return false;
   }
   try {
-    if (*tok_iter++ != NameLsa::TYPE_STRING) {
+    if (*tok_iter++ != std::to_string(Lsa::Type::NAME)) {
       return false;
     }
 
@@ -119,7 +114,7 @@ NameLsa::writeLog()
 {
   _LOG_DEBUG("Name Lsa: ");
   _LOG_DEBUG("  Origination Router: " << m_origRouter);
-  _LOG_DEBUG("  Ls Type: " << m_lsType);
+  _LOG_DEBUG("  Ls Type: " << getType());
   _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
   _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
   _LOG_DEBUG("  Names: ");
@@ -135,7 +130,6 @@ NameLsa::writeLog()
 CoordinateLsa::CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
                              const ndn::time::system_clock::TimePoint& lt,
                              double r, std::vector<double> theta)
-  : Lsa(CoordinateLsa::TYPE_STRING)
 {
   m_origRouter = origR;
   m_lsSeqNo = lsn;
@@ -148,7 +142,7 @@ const ndn::Name
 CoordinateLsa::getKey() const
 {
   ndn::Name key = m_origRouter;
-  key.append(CoordinateLsa::TYPE_STRING);
+  key.append(std::to_string(Lsa::Type::COORDINATE));
   return key;
 }
 
@@ -174,7 +168,7 @@ std::string
 CoordinateLsa::getData()
 {
   std::ostringstream os;
-  os << m_origRouter << "|" << CoordinateLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
+  os << m_origRouter << "|" << Lsa::Type::COORDINATE << "|" << m_lsSeqNo << "|"
      << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_corRad << "|"
      << m_angles.size() << "|";
 
@@ -198,7 +192,7 @@ CoordinateLsa::initializeFromContent(const std::string& content)
   }
 
   try {
-    if (*tok_iter++ != CoordinateLsa::TYPE_STRING) {
+    if (*tok_iter++ != std::to_string(Lsa::Type::COORDINATE)) {
       return false;
     }
 
@@ -223,7 +217,7 @@ CoordinateLsa::writeLog()
 {
   _LOG_DEBUG("Cor Lsa: ");
   _LOG_DEBUG("  Origination Router: " << m_origRouter);
-  _LOG_DEBUG("  Ls Type: " << m_lsType);
+  _LOG_DEBUG("  Ls Type: " << getType());
   _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
   _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
   _LOG_DEBUG("    Hyperbolic Radius: " << m_corRad);
@@ -236,7 +230,6 @@ CoordinateLsa::writeLog()
 AdjLsa::AdjLsa(const ndn::Name& origR, uint32_t lsn,
                const ndn::time::system_clock::TimePoint& lt,
                uint32_t nl , AdjacencyList& adl)
-  : Lsa(AdjLsa::TYPE_STRING)
 {
   m_origRouter = origR;
   m_lsSeqNo = lsn;
@@ -254,7 +247,7 @@ const ndn::Name
 AdjLsa::getKey() const
 {
   ndn::Name key = m_origRouter;
-  key.append(AdjLsa::TYPE_STRING);
+  key.append(std::to_string(Lsa::Type::ADJACENCY));
   return key;
 }
 
@@ -268,7 +261,7 @@ std::string
 AdjLsa::getData()
 {
   std::ostringstream os;
-  os << m_origRouter << "|" << AdjLsa::TYPE_STRING << "|" << m_lsSeqNo << "|"
+  os << m_origRouter << "|" << Lsa::Type::ADJACENCY << "|" << m_lsSeqNo << "|"
      << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_adl.size();
   for (const auto& adjacent : m_adl.getAdjList()) {
     os << "|" << adjacent.getName() << "|" << adjacent.getFaceUri()
@@ -291,7 +284,7 @@ AdjLsa::initializeFromContent(const std::string& content)
     return false;
   }
   try {
-    if (*tok_iter++ != AdjLsa::TYPE_STRING) {
+    if (*tok_iter++ != std::to_string(Lsa::Type::ADJACENCY)) {
       return false;
     }
 
@@ -351,7 +344,7 @@ operator<<(std::ostream& os, const AdjLsa& adjLsa)
 {
   os << "Adj Lsa:\n"
      << "  Origination Router: " << adjLsa.getOrigRouter() << "\n"
-     << "  Ls Type: " << adjLsa.getLsType() << "\n"
+     << "  Ls Type: " << adjLsa.getType() << "\n"
      << "  Ls Seq No: " << adjLsa.getLsSeqNo() << "\n"
      << "  Ls Lifetime: " << adjLsa.getExpirationTimePoint() << "\n"
      << "  Adjacents: \n";
@@ -369,4 +362,49 @@ operator<<(std::ostream& os, const AdjLsa& adjLsa)
   return os;
 }
 
+std::ostream&
+operator<<(std::ostream& os, const Lsa::Type& type)
+{
+  os << std::to_string(type);
+  return os;
+}
+
+std::istream&
+operator>>(std::istream& is, Lsa::Type& type)
+{
+  std::string typeString;
+  is >> typeString;
+  if (typeString == "ADJACENCY") {
+    type = Lsa::Type::ADJACENCY;
+  }
+  else if (typeString == "COORDINATE") {
+    type = Lsa::Type::COORDINATE;
+  }
+  else if (typeString == "NAME") {
+    type = Lsa::Type::NAME;
+  }
+  else {
+    type = Lsa::Type::BASE;
+  }
+  return is;
+}
+
 } // namespace nlsr
+
+namespace std {
+std::string
+to_string(const nlsr::Lsa::Type& type)
+{
+  switch (type) {
+  case nlsr::Lsa::Type::ADJACENCY:
+     return "ADJACENCY";
+  case nlsr::Lsa::Type::COORDINATE:
+    return "COORDINATE";
+  case nlsr::Lsa::Type::NAME:
+    return "NAME";
+  default:
+    return "BASE";
+  }
+}
+
+} // namespace std

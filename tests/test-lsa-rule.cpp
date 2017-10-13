@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   lsaInterestName.append(nlsr.getConfParameter().getRouterName());
 
   // Append LSA type
-  lsaInterestName.append(ndn::Name("name"));
+  lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
   lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
@@ -202,7 +202,7 @@ BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
   lsaInterestName.append(nlsr.getConfParameter().getRouterName());
 
   // Append LSA type
-  lsaInterestName.append(ndn::Name("name"));
+  lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
   lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());

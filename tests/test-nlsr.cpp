@@ -68,13 +68,16 @@ BOOST_FIXTURE_TEST_SUITE(TestNlsr, NlsrFixture)
 BOOST_AUTO_TEST_CASE(HyperbolicOn_ZeroCostNeighbors)
 {
   // Simulate loading configuration file
-  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://10.0.0.1"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://10.0.0.1"), 25,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborA);
 
-  Adjacent neighborB("/ndn/neighborB", ndn::util::FaceUri("udp4://10.0.0.2"), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborB("/ndn/neighborB", ndn::util::FaceUri("udp4://10.0.0.2"), 10,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborB);
 
-  Adjacent neighborC("/ndn/neighborC", ndn::util::FaceUri("udp4://10.0.0.3"), 17, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborC("/ndn/neighborC", ndn::util::FaceUri("udp4://10.0.0.3"), 17,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborC);
 
   nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_ON);
@@ -91,13 +94,16 @@ BOOST_AUTO_TEST_CASE(HyperbolicOn_ZeroCostNeighbors)
 BOOST_AUTO_TEST_CASE(HyperbolicOff_LinkStateCost)
 {
   // Simulate loading configuration file
-  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://10.0.0.1"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://10.0.0.1"), 25,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborA);
 
-  Adjacent neighborB("/ndn/neighborB", ndn::util::FaceUri("udp4://10.0.0.2"), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborB("/ndn/neighborB", ndn::util::FaceUri("udp4://10.0.0.2"), 10,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborB);
 
-  Adjacent neighborC("/ndn/neighborC", ndn::util::FaceUri("udp4://10.0.0.3"), 17, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborC("/ndn/neighborC", ndn::util::FaceUri("udp4://10.0.0.3"), 17,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborC);
 
   nlsr.initialize();
@@ -131,7 +137,8 @@ BOOST_AUTO_TEST_CASE(FaceCreateEvent)
   // Setting constants for the unit test
   const uint32_t faceId = 1;
   const std::string faceUri = "udp4://10.0.0.1:6363";
-  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(faceUri), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(faceUri), 10,
+                    Adjacent::STATUS_INACTIVE, 0, 0);
   BOOST_REQUIRE_EQUAL(nlsr.getAdjacencyList().insert(neighbor), 0);
 
   this->advanceClocks(ndn::time::milliseconds(1));
@@ -162,7 +169,8 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventNoMatch)
   const uint32_t faceId = 1;
   const std::string eventUri = "udp4://10.0.0.1:6363";
   const std::string neighborUri = "udp4://10.0.0.2:6363";
-  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(neighborUri), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(neighborUri), 10,
+                    Adjacent::STATUS_INACTIVE, 0, 0);
   nlsr.getAdjacencyList().insert(neighbor);
 
   // Build, sign, and send the Face Event
@@ -190,7 +198,8 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
   const uint32_t eventFaceId = 1;
   const uint32_t neighborFaceId = 2;
   const std::string faceUri = "udp4://10.0.0.1:6363";
-  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(faceUri), 10, Adjacent::STATUS_ACTIVE, 0, neighborFaceId);
+  Adjacent neighbor("/ndn/neighborA", ndn::util::FaceUri(faceUri), 10,
+                    Adjacent::STATUS_ACTIVE, 0, neighborFaceId);
   nlsr.getAdjacencyList().insert(neighbor);
 
   // Build, sign, and send the Face Event
@@ -214,7 +223,8 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
 
 BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 {
-  std::shared_ptr<ndn::util::DummyClientFace> face = std::make_shared<ndn::util::DummyClientFace>(g_ioService);
+  std::shared_ptr<ndn::util::DummyClientFace> face =
+    std::make_shared<ndn::util::DummyClientFace>(g_ioService);
   Nlsr nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain);
   Lsdb& lsdb = nlsr.getLsdb();
 
@@ -236,7 +246,8 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   neighbors.insert(failNeighbor);
 
   // Create an additional neighbor so an adjacency LSA can be built after the face is destroyed
-  Adjacent otherNeighbor("/ndn/neighborB", ndn::util::FaceUri("udp4://10.0.0.2"), 10, Adjacent::STATUS_ACTIVE, 0, 256);
+  Adjacent otherNeighbor("/ndn/neighborB", ndn::util::FaceUri("udp4://10.0.0.2"), 10,
+                         Adjacent::STATUS_ACTIVE, 0, 256);
   neighbors.insert(otherNeighbor);
 
   nlsr.initialize();
@@ -246,7 +257,8 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
 
   // Set up adjacency LSAs
   // This router
-  Adjacent thisRouter(conf.getRouterPrefix(), ndn::util::FaceUri("udp4://10.0.0.3"), 10, Adjacent::STATUS_ACTIVE, 0, 256);
+  Adjacent thisRouter(conf.getRouterPrefix(), ndn::util::FaceUri("udp4://10.0.0.3"), 10,
+                      Adjacent::STATUS_ACTIVE, 0, 256);
 
   AdjLsa ownAdjLsa(conf.getRouterPrefix(), 10, ndn::time::system_clock::now(), 1, neighbors);
   lsdb.installAdjLsa(ownAdjLsa);
@@ -273,7 +285,8 @@ BOOST_FIXTURE_TEST_CASE(FaceDestroyEvent, UnitTestTimeFixture)
   this->advanceClocks(ndn::time::milliseconds(1));
 
   // Make sure an adjacency LSA was built
-  ndn::Name key = ndn::Name(nlsr.getConfParameter().getRouterPrefix()).append(AdjLsa::TYPE_STRING);
+  ndn::Name key = ndn::Name(nlsr.getConfParameter().getRouterPrefix())
+    .append(std::to_string(Lsa::Type::ADJACENCY));
   AdjLsa* lsa = lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
@@ -374,12 +387,14 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   // Add neighbors
   // Router A
   ndn::Name neighborAName("/ndn/site/%C1.router/routerA");
-  Adjacent neighborA(neighborAName, ndn::util::FaceUri("udp4://10.0.0.1"), 0, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborA(neighborAName, ndn::util::FaceUri("udp4://10.0.0.1"), 0,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborA);
 
   // Router B
   ndn::Name neighborBName("/ndn/site/%C1.router/routerB");
-  Adjacent neighborB(neighborBName, ndn::util::FaceUri("udp4://10.0.0.1"), 0, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborB(neighborBName, ndn::util::FaceUri("udp4://10.0.0.1"), 0,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborB);
 
   nlsr.initialize();
@@ -389,7 +404,7 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   receiveHelloData(neighborAName, conf.getRouterPrefix());
   this->advanceClocks(ndn::time::seconds(1));
 
-  ndn::Name lsaKey = ndn::Name(conf.getRouterPrefix()).append(AdjLsa::TYPE_STRING);
+  ndn::Name lsaKey = ndn::Name(conf.getRouterPrefix()).append(std::to_string(Lsa::Type::ADJACENCY));
 
   // Adjacency LSA should be built even though other router is INACTIVE
   AdjLsa* lsa = lsdb.findAdjLsa(lsaKey);
@@ -440,12 +455,14 @@ BOOST_AUTO_TEST_CASE(CanonizeUris)
     nlsr.initialize();
   };
   std::function<void(std::list<Adjacent>::iterator)> thenCallback =
-    [this, &thenCallback, &finallyCallback, &nCanonizationsLeft] (std::list<Adjacent>::iterator iterator) {
+    [this, &thenCallback, &finallyCallback, &nCanonizationsLeft]
+    (std::list<Adjacent>::iterator iterator) {
       nCanonizationsLeft--;
       nlsr.canonizeNeighborUris(iterator, thenCallback, finallyCallback);
   };
   nlsr.canonizeNeighborUris(nlsr.getAdjacencyList().getAdjList().begin(),
-                            [&thenCallback, &finallyCallback] (std::list<Adjacent>::iterator iterator) {
+                            [&thenCallback, &finallyCallback]
+                            (std::list<Adjacent>::iterator iterator) {
                               thenCallback(iterator);
                             },
                             finallyCallback);
@@ -504,10 +521,12 @@ BOOST_AUTO_TEST_CASE(FaceDatasetFetchFailure)
 
 BOOST_AUTO_TEST_CASE(FaceDatasetProcess)
 {
-  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://192.168.0.100:6363"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://192.168.0.100:6363"), 25,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborA);
 
-  Adjacent neighborB("/ndn/neighborB", ndn::util::FaceUri("udp4://192.168.0.101:6363"), 10, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborB("/ndn/neighborB", ndn::util::FaceUri("udp4://192.168.0.101:6363"), 10,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborB);
 
   ndn::nfd::FaceStatus payload1;
@@ -529,7 +548,8 @@ BOOST_AUTO_TEST_CASE(FaceDatasetProcess)
 
 BOOST_AUTO_TEST_CASE(UnconfiguredNeighbor)
 {
-  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://192.168.0.100:6363"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
+  Adjacent neighborA("/ndn/neighborA", ndn::util::FaceUri("udp4://192.168.0.100:6363"), 25,
+                     Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborA);
 
   ndn::nfd::FaceStatus payload;

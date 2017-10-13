@@ -58,14 +58,14 @@ RoutingTable::calculate(Nlsr& pnlsr)
     if ((!isHrEnabled
          &&
          pnlsr.getLsdb()
-         .doesLsaExist(pnlsr.getConfParameter().getRouterPrefix().toUri()
-                       + "/" + "adjacency", std::string("adjacency")))
+         .doesLsaExist(ndn::Name{pnlsr.getConfParameter().getRouterPrefix()}
+                       .append(std::to_string(Lsa::Type::ADJACENCY)), Lsa::Type::ADJACENCY))
         ||
         (isHrEnabled
          &&
          pnlsr.getLsdb()
-         .doesLsaExist(pnlsr.getConfParameter().getRouterPrefix().toUri()
-                       + "/" + "coordinate", std::string("coordinate")))) {
+         .doesLsaExist(ndn::Name{pnlsr.getConfParameter().getRouterPrefix()}
+                       .append(std::to_string(Lsa::Type::COORDINATE)), Lsa::Type::COORDINATE))) {
       if (pnlsr.getIsBuildAdjLsaSheduled() != 1) {
         _LOG_TRACE("Clearing old routing table");
         clearRoutingTable();

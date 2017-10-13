@@ -24,7 +24,7 @@
 #include "../boost-test.hpp"
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 namespace test {
 
 BOOST_AUTO_TEST_SUITE(TlvTestLsaInfo)
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(LsaInfoOutputStream)
 
 BOOST_AUTO_TEST_CASE(LsaInfoMake)
 {
-  Lsa lsa("lsa-type");
+  Lsa lsa;
   lsa.setOrigRouter("/test/lsa/info/tlv");
   lsa.setLsSeqNo(128);
   lsa.setExpirationTimePoint(ndn::time::system_clock::now());

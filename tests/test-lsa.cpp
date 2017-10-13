@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
   NameLsa nlsa1("router1", 12, testTimePoint, npl1);
   NameLsa nlsa2("router2", 12, testTimePoint, npl1);
 
-  BOOST_CHECK_EQUAL(nlsa1.getLsType(), NameLsa::TYPE_STRING);
+  BOOST_CHECK_EQUAL(nlsa1.getType(), Lsa::Type::NAME);
 
   BOOST_CHECK(nlsa1.getExpirationTimePoint() == nlsa2.getExpirationTimePoint());
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(AdjacentLsaConstructorAndGetters)
   AdjLsa alsa1(routerName, seqNo, testTimePoint,
                activeAdjacencies.size(), activeAdjacencies);
   BOOST_CHECK_EQUAL(alsa1.getAdl().size(), 1);
-  BOOST_CHECK_EQUAL(alsa1.getLsType(), AdjLsa::TYPE_STRING);
+  BOOST_CHECK_EQUAL(alsa1.getType(), Lsa::Type::ADJACENCY);
   BOOST_CHECK_EQUAL(alsa1.getLsSeqNo(), seqNo);
   BOOST_CHECK_EQUAL(alsa1.getExpirationTimePoint(), testTimePoint);
   BOOST_CHECK_EQUAL(alsa1.getNoLink(), 1);
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
   std::string EXPECTED_OUTPUT =
    "Adj Lsa:\n"
    "  Origination Router: /router1\n"
-   "  Ls Type: adjacency\n"
+   "  Ls Type: ADJACENCY\n"
    "  Ls Seq No: 12\n"
    "  Ls Lifetime: " + TEST_TIME_POINT_STRING + "\n"
    "  Adjacents: \n"

@@ -24,6 +24,7 @@
 
 #include "test-access-control.hpp"
 #include "signals.hpp"
+#include "lsa.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/util/signal.hpp>
@@ -48,7 +49,7 @@ class SyncLogicHandler
 {
 public:
   using IsLsaNew =
-    std::function<bool(const ndn::Name&, const std::string& lsaType, const uint64_t&)>;
+    std::function<bool(const ndn::Name&, const Lsa::Type& lsaType, const uint64_t&)>;
 
   class Error : public std::runtime_error
   {
@@ -83,7 +84,7 @@ public:
    * \sa publishSyncUpdate
    */
   void
-  publishRoutingUpdate(const ndn::Name& type, const uint64_t& seqNo);
+  publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo);
 
   /*! \brief Create and configure a socket to enable ChronoSync for this NLSR.
    *

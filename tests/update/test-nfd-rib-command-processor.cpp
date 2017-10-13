@@ -75,7 +75,7 @@ public:
     // no longer does face->put(*data) in publishData.
     // Instead it does it in onInterest
     ndn::Name lsaInterestName("/localhop/ndn/NLSR/LSA");
-    lsaInterestName.append(NameLsa::TYPE_STRING);
+    lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
     // The part after LSA is Chronosync getSession
     lsaInterestName.append(sessionTime);

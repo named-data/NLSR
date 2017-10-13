@@ -23,6 +23,7 @@
 #include "test-common.hpp"
 #include "common.hpp"
 #include "nlsr.hpp"
+#include "lsa.hpp"
 #include "logger.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
@@ -38,7 +39,7 @@ public:
   SyncLogicFixture()
     : face(std::make_shared<ndn::util::DummyClientFace>())
     , nlsr(g_ioService, g_scheduler, std::ref(*face), g_keyChain)
-    , testIsLsaNew([] (const ndn::Name& name, const std::string& lsaType,
+    , testIsLsaNew([] (const ndn::Name& name, const Lsa::Type& lsaType,
                        const uint64_t sequenceNumber) {
                      return true;
                    })
@@ -79,14 +80,14 @@ public:
   std::shared_ptr<ndn::util::DummyClientFace> face;
   Nlsr nlsr;
   ConfParameter conf;
-  IsLsaNew testIsLsaNew;
+  SyncLogicHandler::IsLsaNew testIsLsaNew;
 
   const std::string CONFIG_NETWORK;
   const std::string CONFIG_SITE;
   const std::string CONFIG_ROUTER_NAME;
   const std::string OTHER_ROUTER_NAME;
-  const std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, AdjLsa::TYPE_STRING,
-                                             CoordinateLsa::TYPE_STRING};
+  const std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME, Lsa::Type::ADJACENCY,
+                                             Lsa::Type::COORDINATE};
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestSyncLogicHandler, SyncLogicFixture)
@@ -100,13 +101,13 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
   SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
-  std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, AdjLsa::TYPE_STRING};
+  std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME, Lsa::Type::ADJACENCY};
 
   uint64_t syncSeqNo = 1;
 
-  for (const std::string& lsaType : lsaTypes) {
+  for (const Lsa::Type& lsaType : lsaTypes) {
     std::string updateName = conf.getLsaPrefix().toUri() + CONFIG_SITE
-      + OTHER_ROUTER_NAME + lsaType;
+      + OTHER_ROUTER_NAME + std::to_string(lsaType);
 
     // Actual testing done here -- signal function callback
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
@@ -131,11 +132,11 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
   uint64_t syncSeqNo = 1;
-  std::vector<std::string> lsaTypes = {NameLsa::TYPE_STRING, CoordinateLsa::TYPE_STRING};
+  std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME, Lsa::Type::COORDINATE};
 
-  for (const std::string& lsaType : lsaTypes) {
+  for (const Lsa::Type& lsaType : lsaTypes) {
     std::string updateName = conf.getLsaPrefix().toUri() + CONFIG_SITE
-      + OTHER_ROUTER_NAME + lsaType;
+      + OTHER_ROUTER_NAME + std::to_string(lsaType);
 
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
       [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
@@ -158,11 +159,11 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
   SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
-  for (const std::string& lsaType : lsaTypes) {
+  for (const Lsa::Type& lsaType : lsaTypes) {
     uint64_t syncSeqNo = 1;
 
     std::string updateName = conf.getLsaPrefix().toUri() + CONFIG_SITE
-      + OTHER_ROUTER_NAME + lsaType;
+      + OTHER_ROUTER_NAME + std::to_string(lsaType);
 
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
       [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
@@ -185,11 +186,11 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
   SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
-  for (const std::string& lsaType : lsaTypes) {
+  for (const Lsa::Type& lsaType : lsaTypes) {
     // To ensure that we get correctly-separated components, create
     // and modify a Name to hand off.
     ndn::Name updateName = ndn::Name{conf.getLsaPrefix()};
-    updateName.append(CONFIG_SITE).append(CONFIG_ROUTER_NAME).append(lsaType);
+    updateName.append(CONFIG_SITE).append(CONFIG_ROUTER_NAME).append(std::to_string(lsaType));
 
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
       [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
@@ -211,9 +212,9 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
   SyncLogicHandler sync{std::ref(*face), testIsLsaNew, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
 
-  for (const std::string& lsaType : lsaTypes) {
+  for (const Lsa::Type& lsaType : lsaTypes) {
     ndn::Name updateName{CONFIG_SITE};
-    updateName.append(CONFIG_ROUTER_NAME).append(lsaType);
+    updateName.append(CONFIG_ROUTER_NAME).append(std::to_string(lsaType));
 
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
       [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
@@ -230,7 +231,7 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
  */
 BOOST_AUTO_TEST_CASE(LsaNotNew)
 {
-  auto testLsaAlwaysFalse = [] (const ndn::Name& routerName, const std::string& lsaType,
+  auto testLsaAlwaysFalse = [] (const ndn::Name& routerName, const Lsa::Type& lsaType,
                            const uint64_t& sequenceNumber) {
     return false;
   };
@@ -244,7 +245,8 @@ BOOST_AUTO_TEST_CASE(LsaNotNew)
       });
 
   std::string updateName = nlsr.getConfParameter().getLsaPrefix().toUri() +
-                           CONFIG_SITE + "/%C1.Router/other-router/" + NameLsa::TYPE_STRING;
+                           CONFIG_SITE + "/%C1.Router/other-router/" +
+                           std::to_string(Lsa::Type::NAME);
 
   receiveUpdate(updateName, sequenceNumber, sync);
 }
@@ -265,32 +267,32 @@ BOOST_AUTO_TEST_CASE(UpdatePrefix)
   sync.buildUpdatePrefix();
 
   BOOST_CHECK_EQUAL(sync.m_nameLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(NameLsa::TYPE_STRING));
+                    ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::NAME)));
   BOOST_CHECK_EQUAL(sync.m_adjLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(AdjLsa::TYPE_STRING));
+                    ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::ADJACENCY)));
   BOOST_CHECK_EQUAL(sync.m_coorLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(CoordinateLsa::TYPE_STRING));
+                    ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::COORDINATE)));
 }
 
 /* Tests that SyncLogicHandler's socket will be created when
    Nlsr::initialize is called, preventing use of sync before the
    socket is created.
 
-   NB: This test is as much an Nlsr class test as a SyncLogicHandler
-   class test, but it rides the line and ends up here.
+   NB: This test is as much an Nlsr class test as a
+   SyncLogicHandler class test, but it rides the line and ends up here.
  */
 BOOST_AUTO_TEST_CASE(CreateSyncSocketOnInitialization) // Bug #2649
 {
   nlsr.initialize();
 
   // Make sure an adjacency LSA has not been built yet
-  ndn::Name key = ndn::Name(nlsr.getConfParameter().getRouterPrefix()).append(AdjLsa::TYPE_STRING);
+  ndn::Name key = ndn::Name(nlsr.getConfParameter().getRouterPrefix()).append(std::to_string(Lsa::Type::ADJACENCY));
   AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
   BOOST_REQUIRE(lsa == nullptr);
 
   // Publish a routing update before an Adjacency LSA is built
   BOOST_CHECK_NO_THROW(nlsr.getLsdb().getSyncLogicHandler()
-                       .publishRoutingUpdate(AdjLsa::TYPE_STRING, 0));
+                       .publishRoutingUpdate(Lsa::Type::ADJACENCY, 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -200,21 +200,25 @@ BOOST_AUTO_TEST_CASE(LsdbSendLsaInterest)
   uint32_t seqNo = 1;
 
   // Adjacency LSA
-  sendInterestAndCheckStats(interestPrefix, AdjLsa::TYPE_STRING, seqNo, Statistics::PacketType::SENT_ADJ_LSA_INTEREST);
+  sendInterestAndCheckStats(interestPrefix, std::to_string(Lsa::Type::ADJACENCY), seqNo,
+                            Statistics::PacketType::SENT_ADJ_LSA_INTEREST);
 
   // Coordinate LSA
-  sendInterestAndCheckStats(interestPrefix, CoordinateLsa::TYPE_STRING, seqNo, Statistics::PacketType::SENT_COORD_LSA_INTEREST);
+  sendInterestAndCheckStats(interestPrefix, std::to_string(Lsa::Type::COORDINATE), seqNo,
+                            Statistics::PacketType::SENT_COORD_LSA_INTEREST);
 
   // Name LSA
-  sendInterestAndCheckStats(interestPrefix, NameLsa::TYPE_STRING, seqNo, Statistics::PacketType::SENT_NAME_LSA_INTEREST);
+  sendInterestAndCheckStats(interestPrefix, std::to_string(Lsa::Type::NAME), seqNo,
+                            Statistics::PacketType::SENT_NAME_LSA_INTEREST);
 
   // 3 total lsa interests were sent
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::SENT_LSA_INTEREST), 3);
 }
 
 /*
- * Tests the statistics collected upon processing incoming lsa interests and respective outgoing data.
- * This process will trigger both an increment for received lsa interest and sent lsa data.
+ * Tests the statistics collected upon processing incoming lsa
+ * interests and respective outgoing data. This process will trigger
+ * both an increment for received lsa interest and sent lsa data.
  *
  * /sa receiveInterestAndCheckSentStats
  */
@@ -238,7 +242,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
 
   // Receive Adjacency LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
-                                   AdjLsa::TYPE_STRING,
+                                   std::to_string(Lsa::Type::ADJACENCY),
                                    seqNo,
                                    Statistics::PacketType::RCV_ADJ_LSA_INTEREST,
                                    Statistics::PacketType::SENT_ADJ_LSA_DATA);
@@ -252,7 +256,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
 
   // Receive Name LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
-                                   NameLsa::TYPE_STRING,
+                                   std::to_string(Lsa::Type::NAME),
                                    seqNo,
                                    Statistics::PacketType::RCV_NAME_LSA_INTEREST,
                                    Statistics::PacketType::SENT_NAME_LSA_DATA);
@@ -264,7 +268,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
 
   // Receive Adjacency LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
-                                   CoordinateLsa::TYPE_STRING,
+                                   std::to_string(Lsa::Type::COORDINATE),
                                    seqNo,
                                    Statistics::PacketType::RCV_COORD_LSA_INTEREST,
                                    Statistics::PacketType::SENT_COORD_LSA_DATA);
@@ -287,7 +291,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   ndn::time::system_clock::TimePoint MAX_TIME = ndn::time::system_clock::TimePoint::max();
 
   // adjacency lsa
-  ndn::Name adjInterest("/ndn/NLSR/LSA/cs/%C1.Router/router1/adjacency/");
+  ndn::Name adjInterest("/ndn/NLSR/LSA/cs/%C1.Router/router1/ADJACENCY/");
   adjInterest.appendNumber(seqNo);
   AdjLsa aLsa(routerName, seqNo, MAX_TIME, 1, nlsr.getAdjacencyList());
   lsdb.installAdjLsa(aLsa);
@@ -298,7 +302,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_ADJ_LSA_DATA), 1);
 
   // coordinate lsa
-  ndn::Name coordInterest("/ndn/NLSR/LSA/cs/%C1.Router/router1/coordinate/");
+  ndn::Name coordInterest("/ndn/NLSR/LSA/cs/%C1.Router/router1/COORDINATE/");
   coordInterest.appendNumber(seqNo);
   std::vector<double> angles = {20.0, 30.0};
   CoordinateLsa cLsa(routerName, seqNo, MAX_TIME, 2.5, angles);
@@ -310,7 +314,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_COORD_LSA_DATA), 1);
 
   // name lsa
-  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/name/");
+  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
   NameLsa nLsa(routerName, seqNo, MAX_TIME, nlsr.getNamePrefixList());
   lsdb.installNameLsa(nLsa);

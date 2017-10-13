@@ -51,10 +51,10 @@ public:
   }
 
   bool
-  isLsaNew(const ndn::Name& routerName, const std::string& lsaType, const uint64_t& sequenceNumber);
+  isLsaNew(const ndn::Name& routerName, const Lsa::Type& lsaType, const uint64_t& sequenceNumber);
 
   bool
-  doesLsaExist(const ndn::Name& key, const std::string& lsType);
+  doesLsaExist(const ndn::Name& key, const Lsa::Type& lsType);
 
   /*! \brief Builds a name LSA for this router and then installs it
       into the LSDB.

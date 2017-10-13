@@ -37,19 +37,25 @@ class Nlsr;
 class Lsa
 {
 public:
-  Lsa(const std::string& lsaType)
+  enum class Type {
+    ADJACENCY,
+    COORDINATE,
+    NAME,
+    BASE
+  };
+
+  Lsa()
     : m_origRouter()
-    , m_lsType(lsaType)
     , m_lsSeqNo()
     , m_expirationTimePoint()
     , m_expiringEventId()
   {
   }
 
-  const std::string&
-  getLsType() const
+  virtual Type
+  getType() const
   {
-    return m_lsType;
+    return Type::BASE;
   }
 
   void
@@ -102,7 +108,6 @@ public:
 
 protected:
   ndn::Name m_origRouter;
-  const std::string m_lsType;
   uint32_t m_lsSeqNo;
   ndn::time::system_clock::TimePoint m_expirationTimePoint;
   ndn::EventId m_expiringEventId;
@@ -112,14 +117,18 @@ class NameLsa: public Lsa
 {
 public:
   NameLsa()
-    : Lsa(NameLsa::TYPE_STRING)
-    , m_npl()
   {
   }
 
   NameLsa(const ndn::Name& origR, uint32_t lsn,
           const ndn::time::system_clock::TimePoint& lt,
           NamePrefixList& npl);
+
+  Lsa::Type
+  getType() const override
+  {
+    return Lsa::Type::NAME;
+  }
 
   NamePrefixList&
   getNpl()
@@ -180,8 +189,6 @@ public:
 
 private:
   NamePrefixList m_npl;
-public:
-  static const std::string TYPE_STRING;
 };
 
 class AdjLsa: public Lsa
@@ -190,14 +197,18 @@ public:
   typedef AdjacencyList::const_iterator const_iterator;
 
   AdjLsa()
-    : Lsa(AdjLsa::TYPE_STRING)
-    , m_adl()
   {
   }
 
   AdjLsa(const ndn::Name& origR, uint32_t lsn,
          const ndn::time::system_clock::TimePoint& lt,
          uint32_t nl , AdjacencyList& adl);
+
+  Lsa::Type
+  getType() const override
+  {
+    return Lsa::Type::ADJACENCY;
+  }
 
   AdjacencyList&
   getAdl()
@@ -277,23 +288,25 @@ public:
 private:
   uint32_t m_noLink;
   AdjacencyList m_adl;
-
-public:
-  static const std::string TYPE_STRING;
 };
 
 class CoordinateLsa: public Lsa
 {
 public:
   CoordinateLsa()
-    : Lsa(CoordinateLsa::TYPE_STRING)
-    , m_corRad(0)
+    : m_corRad(0)
   {
   }
 
   CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
                 const ndn::time::system_clock::TimePoint& lt,
                 double r, std::vector<double> theta);
+
+  Lsa::Type
+  getType() const override
+  {
+    return Lsa::Type::COORDINATE;
+  }
 
   const ndn::Name
   getKey() const;
@@ -350,14 +363,22 @@ public:
 private:
   double m_corRad;
   std::vector<double> m_angles;
-
-public:
-  static const std::string TYPE_STRING;
 };
 
 std::ostream&
 operator<<(std::ostream& os, const AdjLsa& adjLsa);
 
+std::ostream&
+operator<<(std::ostream& os, const Lsa::Type& type);
+
+std::istream&
+operator>>(std::istream& is, Lsa::Type& type);
+
 } // namespace nlsr
+
+namespace std {
+  std::string
+  to_string(const nlsr::Lsa::Type& type);
+} // namespace std
 
 #endif // NLSR_LSA_HPP

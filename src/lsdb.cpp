@@ -66,7 +66,7 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
   : m_nlsr(nlsr)
   , m_scheduler(scheduler)
   , m_sync(m_nlsr.getNlsrFace(),
-           [this] (const ndn::Name& routerName, const std::string& lsaType,
+           [this] (const ndn::Name& routerName, const Lsa::Type& lsaType,
                    const uint64_t& sequenceNumber) {
              return isLsaNew(routerName, lsaType, sequenceNumber);
            }, m_nlsr.getConfParameter())
@@ -166,7 +166,7 @@ Lsdb::buildAndInstallOwnNameLsa()
   m_sequencingManager.increaseNameLsaSeq();
 
   m_sequencingManager.writeSeqNoToFile();
-  m_sync.publishRoutingUpdate(NameLsa::TYPE_STRING, m_sequencingManager.getNameLsaSeq());
+  m_sync.publishRoutingUpdate(Lsa::Type::NAME, m_sequencingManager.getNameLsaSeq());
 
   return installNameLsa(nameLsa);
 }
@@ -396,7 +396,7 @@ Lsdb::buildAndInstallOwnCoordinateLsa()
   if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
     m_sequencingManager.increaseCorLsaSeq();
     m_sequencingManager.writeSeqNoToFile();
-    m_sync.publishRoutingUpdate(CoordinateLsa::TYPE_STRING, m_sequencingManager.getCorLsaSeq());
+    m_sync.publishRoutingUpdate(Lsa::Type::COORDINATE, m_sequencingManager.getCorLsaSeq());
   }
 
   installCoordinateLsa(corLsa);
@@ -628,7 +628,7 @@ Lsdb::buildAdjLsa()
         _LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors");
         // Get this router's key
         ndn::Name key = m_nlsr.getConfParameter().getRouterPrefix();
-        key.append(AdjLsa::TYPE_STRING);
+        key.append(std::to_string(Lsa::Type::ADJACENCY));
 
         removeAdjLsa(key);
         // Recompute routing table after removal
@@ -770,7 +770,7 @@ Lsdb::buildAndInstallOwnAdjLsa()
   if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_ON) {
     m_sequencingManager.increaseAdjLsaSeq();
     m_sequencingManager.writeSeqNoToFile();
-    m_sync.publishRoutingUpdate(AdjLsa::TYPE_STRING, m_sequencingManager.getAdjLsaSeq());
+    m_sync.publishRoutingUpdate(Lsa::Type::ADJACENCY, m_sequencingManager.getAdjLsaSeq());
   }
 
   return installAdjLsa(adjLsa);
@@ -854,7 +854,7 @@ Lsdb::expireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                                  chkNameLsa->getLsSeqNo(),
                                                                  m_lsaRefreshTime));
         m_sequencingManager.writeSeqNoToFile();
-        m_sync.publishRoutingUpdate(NameLsa::TYPE_STRING, m_sequencingManager.getNameLsaSeq());
+        m_sync.publishRoutingUpdate(Lsa::Type::NAME, m_sequencingManager.getNameLsaSeq());
       }
       // Since we cannot refresh other router's LSAs, our only choice is to expire.
       else {
@@ -898,7 +898,7 @@ Lsdb::expireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
                                                                chkAdjLsa->getLsSeqNo(),
                                                                m_lsaRefreshTime));
         m_sequencingManager.writeSeqNoToFile();
-        m_sync.publishRoutingUpdate(AdjLsa::TYPE_STRING, m_sequencingManager.getAdjLsaSeq());
+        m_sync.publishRoutingUpdate(Lsa::Type::ADJACENCY, m_sequencingManager.getAdjLsaSeq());
       }
       // An LSA from another router is expiring
       else {
@@ -951,7 +951,7 @@ Lsdb::expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
         // Only sync coordinate LSAs if link-state routing is disabled
         if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
           m_sequencingManager.writeSeqNoToFile();
-          m_sync.publishRoutingUpdate(CoordinateLsa::TYPE_STRING, m_sequencingManager.getCorLsaSeq());
+          m_sync.publishRoutingUpdate(Lsa::Type::COORDINATE, m_sequencingManager.getCorLsaSeq());
         }
       }
       // We can't refresh other router's LSAs, so we remove it.
@@ -1004,18 +1004,20 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                                    std::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
                                              timeoutCount, deadline, lsaName, seqNo));
   // increment a specific SENT_LSA_INTEREST
-  std::string typeLSA = interestName[-2].toUri();
-  if (typeLSA == AdjLsa::TYPE_STRING) {
+  Lsa::Type lsaType;
+  std::istringstream(interestName[-2].toUri()) >> lsaType;
+  switch (lsaType) {
+  case Lsa::Type::ADJACENCY:
     lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_INTEREST);
-  }
-  else if (typeLSA == CoordinateLsa::TYPE_STRING) {
+    break;
+  case Lsa::Type::COORDINATE:
     lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_INTEREST);
-  }
-  else if (typeLSA == NameLsa::TYPE_STRING) {
+    break;
+  case Lsa::Type::NAME:
     lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_INTEREST);
-  }
-  else {
-    _LOG_ERROR("typeLSA " + typeLSA + " not recognized; failed Statistics::PacketType conversion");
+    break;
+  default:
+    _LOG_ERROR("lsaType " << lsaType << " not recognized; failed Statistics::PacketType conversion");
   }
 }
 
@@ -1041,16 +1043,20 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
     uint64_t seqNo = interestName[-1].toNumber();
     _LOG_DEBUG("LSA sequence number from interest: " << seqNo);
 
-    std::string interestedLsType = interestName[-2].toUri();
+    Lsa::Type interestedLsType;
+    std::istringstream(interestName[-2].toUri()) >> interestedLsType;
 
-    if (interestedLsType == NameLsa::TYPE_STRING) {
-      processInterestForNameLsa(interest, originRouter.append(interestedLsType), seqNo);
+    if (interestedLsType == Lsa::Type::NAME) {
+      processInterestForNameLsa(interest, originRouter.append(std::to_string(interestedLsType)),
+                                seqNo);
     }
-    else if (interestedLsType == AdjLsa::TYPE_STRING) {
-      processInterestForAdjacencyLsa(interest, originRouter.append(interestedLsType), seqNo);
+    else if (interestedLsType == Lsa::Type::ADJACENCY) {
+      processInterestForAdjacencyLsa(interest, originRouter.append(std::to_string(interestedLsType)),
+                                     seqNo);
     }
-    else if (interestedLsType == CoordinateLsa::TYPE_STRING) {
-      processInterestForCoordinateLsa(interest, originRouter.append(interestedLsType), seqNo);
+    else if (interestedLsType == Lsa::Type::COORDINATE) {
+      processInterestForCoordinateLsa(interest, originRouter.append(std::to_string(interestedLsType)),
+                                      seqNo);
     }
     else {
       _LOG_WARN("Received unrecognized LSA type: " << interestedLsType);
@@ -1192,16 +1198,20 @@ Lsdb::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
     std::string dataContent(reinterpret_cast<const char*>(data->getContent().value()),
                             data->getContent().value_size());
 
-    std::string interestedLsType  = dataName[-2].toUri();
+    Lsa::Type interestedLsType;
+    std::istringstream(dataName[-2].toUri()) >> interestedLsType;
 
-    if (interestedLsType == NameLsa::TYPE_STRING) {
-      processContentNameLsa(originRouter.append(interestedLsType), seqNo, dataContent);
+    if (interestedLsType == Lsa::Type::NAME) {
+      processContentNameLsa(originRouter.append(std::to_string(interestedLsType)), seqNo,
+                            dataContent);
     }
-    else if (interestedLsType == AdjLsa::TYPE_STRING) {
-      processContentAdjacencyLsa(originRouter.append(interestedLsType), seqNo, dataContent);
+    else if (interestedLsType == Lsa::Type::ADJACENCY) {
+      processContentAdjacencyLsa(originRouter.append(std::to_string(interestedLsType)), seqNo,
+                                 dataContent);
     }
-    else if (interestedLsType == CoordinateLsa::TYPE_STRING) {
-      processContentCoordinateLsa(originRouter.append(interestedLsType), seqNo, dataContent);
+    else if (interestedLsType == Lsa::Type::COORDINATE) {
+      processContentCoordinateLsa(originRouter.append(std::to_string(interestedLsType)), seqNo,
+                                  dataContent);
     }
     else {
       _LOG_WARN("Received unrecognized LSA Type: " << interestedLsType);
@@ -1284,36 +1294,34 @@ Lsdb::writeAdjLsdbLog()
 
 //-----utility function -----
 bool
-Lsdb::doesLsaExist(const ndn::Name& key, const std::string& lsType)
+Lsdb::doesLsaExist(const ndn::Name& key, const Lsa::Type& lsType)
 {
-  if (lsType == NameLsa::TYPE_STRING) {
-    return doesNameLsaExist(key);
-  }
-  else if (lsType == AdjLsa::TYPE_STRING) {
+  switch (lsType) {
+  case Lsa::Type::ADJACENCY:
     return doesAdjLsaExist(key);
-  }
-  else if (lsType == CoordinateLsa::TYPE_STRING) {
+  case Lsa::Type::COORDINATE:
     return doesCoordinateLsaExist(key);
+  case Lsa::Type::NAME:
+    return doesNameLsaExist(key);
+  default:
+    return false;
   }
-  return false;
 }
 
 bool
-Lsdb::isLsaNew(const ndn::Name& routerName, const std::string& lsaType,
+Lsdb::isLsaNew(const ndn::Name& routerName, const Lsa::Type& lsaType,
                const uint64_t& sequenceNumber) {
   ndn::Name lsaKey = routerName;
-  lsaKey.append(lsaType);
+  lsaKey.append(std::to_string(lsaType));
 
-  if (lsaType == NameLsa::TYPE_STRING) {
-    return isNameLsaNew(lsaKey, sequenceNumber);
-  }
-  else if (lsaType == AdjLsa::TYPE_STRING) {
+  switch (lsaType) {
+  case Lsa::Type::ADJACENCY:
     return isAdjLsaNew(lsaKey, sequenceNumber);
-  }
-  else if (lsaType == CoordinateLsa::TYPE_STRING) {
+  case Lsa::Type::COORDINATE:
     return isCoordinateLsaNew(lsaKey, sequenceNumber);
-  }
-  else {
+  case Lsa::Type::NAME:
+    return isNameLsaNew(lsaKey, sequenceNumber);
+  default:
     return false;
   }
 }

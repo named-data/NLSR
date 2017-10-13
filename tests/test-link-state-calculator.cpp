@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 BOOST_AUTO_TEST_CASE(Asymmetric)
 {
   // Asymmetric link cost between B and C
-  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(AdjLsa::TYPE_STRING);
+  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
   AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
 BOOST_AUTO_TEST_CASE(AsymmetricZeroCost)
 {
   // Asymmetric link cost between B and C
-  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(AdjLsa::TYPE_STRING);
+  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
   AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 

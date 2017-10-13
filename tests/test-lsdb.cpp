@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
   std::string expectedDataContent = lsa.getData();
   lsdb.installNameLsa(lsa);
 
-  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/name/");
+  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
 
   ndn::Interest interest(interestName);
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
     lsa.addName(ndn::Name(prefix).appendNumber(nPrefixes));
   }
 
-  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/name/");
+  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
 
   const ndn::ConstBufferPtr bufferPtr = std::make_shared<ndn::Buffer>(lsa.getData().c_str(),
@@ -258,11 +258,11 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   lsdb1.installNameLsa(nlsa1);
   lsdb1.writeNameLsdbLog();
 
-  BOOST_CHECK(lsdb1.doesLsaExist(ndn::Name("/router1/1/name"), NameLsa::TYPE_STRING));
+  BOOST_CHECK(lsdb1.doesLsaExist(ndn::Name("/router1/1/NAME"), Lsa::Type::NAME));
 
   lsdb1.removeNameLsa(router1);
 
-  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(ndn::Name("/router1/1"), NameLsa::TYPE_STRING), false);
+  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(ndn::Name("/router1/1"), Lsa::Type::NAME), false);
 }
 
 BOOST_AUTO_TEST_CASE(InstallNameLsa)
@@ -281,8 +281,8 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   NameLsa lsa(otherRouter, 1, MAX_TIME, prefixes);
   lsdb.installNameLsa(lsa);
 
-  BOOST_REQUIRE_EQUAL(lsdb.doesLsaExist(otherRouter + "/name", NameLsa::TYPE_STRING), true);
-  NamePrefixList& nameList = lsdb.findNameLsa(otherRouter + "/name")->getNpl();
+  BOOST_REQUIRE_EQUAL(lsdb.doesLsaExist(otherRouter + "/NAME", Lsa::Type::NAME), true);
+  NamePrefixList& nameList = lsdb.findNameLsa(otherRouter + "/NAME")->getNpl();
 
   BOOST_CHECK_EQUAL(nameList, prefixes);
   //areNamePrefixListsEqual(nameList, prefixes);
@@ -346,15 +346,15 @@ BOOST_AUTO_TEST_CASE(TestIsLsaNew)
 
   // Lower NameLSA sequence number
   uint64_t lowerSeqNo = 998;
-  BOOST_CHECK(!lsdb.isLsaNew(originRouter, NameLsa::TYPE_STRING, lowerSeqNo));
+  BOOST_CHECK(!lsdb.isLsaNew(originRouter, Lsa::Type::NAME, lowerSeqNo));
 
   // Same NameLSA sequence number
   uint64_t sameSeqNo = 999;
-  BOOST_CHECK(!lsdb.isLsaNew(originRouter, NameLsa::TYPE_STRING, sameSeqNo));
+  BOOST_CHECK(!lsdb.isLsaNew(originRouter, Lsa::Type::NAME, sameSeqNo));
 
   // Higher NameLSA sequence number
   uint64_t higherSeqNo = 1000;
-  BOOST_CHECK(lsdb.isLsaNew(originRouter, NameLsa::TYPE_STRING, higherSeqNo));
+  BOOST_CHECK(lsdb.isLsaNew(originRouter, Lsa::Type::NAME, higherSeqNo));
 }
 
 BOOST_AUTO_TEST_SUITE_END() // TestLsdb

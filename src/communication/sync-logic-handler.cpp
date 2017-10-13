@@ -118,20 +118,21 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
   // A router should not try to fetch its own LSA
   if (originRouter != m_confParam.getRouterPrefix()) {
 
-    std::string lsaType = updateName.get(updateName.size()-1).toUri();
+    Lsa::Type lsaType;
+    std::istringstream(updateName.get(updateName.size()-1).toUri()) >> lsaType;
 
     _LOG_DEBUG("Received sync update with higher " << lsaType
                << " sequence number than entry in LSDB");
 
     if (m_isLsaNew(originRouter, lsaType, seqNo)) {
-      if (lsaType == AdjLsa::TYPE_STRING && seqNo != 0 &&
+      if (lsaType == Lsa::Type::ADJACENCY && seqNo != 0 &&
           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
         _LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing"
                    << " is enabled. Not going to fetch.");
         return;
       }
 
-      if (lsaType == CoordinateLsa::TYPE_STRING && seqNo != 0 &&
+      if (lsaType == Lsa::Type::COORDINATE && seqNo != 0 &&
           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
         _LOG_ERROR("Got an update for coordinate LSA when link-state"
                    << " is enabled. Not going to fetch.");
@@ -143,7 +144,7 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
 }
 
 void
-SyncLogicHandler::publishRoutingUpdate(const ndn::Name& type, const uint64_t& seqNo)
+SyncLogicHandler::publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo)
 {
   if (m_syncSocket == nullptr) {
     _LOG_FATAL("Cannot publish routing update; SyncSocket does not exist");
@@ -151,14 +152,19 @@ SyncLogicHandler::publishRoutingUpdate(const ndn::Name& type, const uint64_t& se
     BOOST_THROW_EXCEPTION(SyncLogicHandler::Error("Cannot publish routing update; SyncSocket does not exist"));
   }
 
-  if (type == NameLsa::TYPE_STRING) {
-    publishSyncUpdate(m_nameLsaUserPrefix, seqNo);
-  }
-  else if (type == AdjLsa::TYPE_STRING) {
+
+  switch (type) {
+  case Lsa::Type::ADJACENCY:
     publishSyncUpdate(m_adjLsaUserPrefix, seqNo);
-  }
-  else {
+    break;
+  case Lsa::Type::COORDINATE:
     publishSyncUpdate(m_coorLsaUserPrefix, seqNo);
+    break;
+  case Lsa::Type::NAME:
+    publishSyncUpdate(m_nameLsaUserPrefix, seqNo);
+    break;
+  default:
+    break;
   }
 }
 
@@ -170,13 +176,13 @@ SyncLogicHandler::buildUpdatePrefix()
   updatePrefix.append(m_confParam.getRouterName());
 
   m_nameLsaUserPrefix = updatePrefix;
-  m_nameLsaUserPrefix.append(NameLsa::TYPE_STRING);
+  m_nameLsaUserPrefix.append(std::to_string(Lsa::Type::NAME));
 
   m_adjLsaUserPrefix = updatePrefix;
-  m_adjLsaUserPrefix.append(AdjLsa::TYPE_STRING);
+  m_adjLsaUserPrefix.append(std::to_string(Lsa::Type::ADJACENCY));
 
   m_coorLsaUserPrefix = updatePrefix;
-  m_coorLsaUserPrefix.append(CoordinateLsa::TYPE_STRING);
+  m_coorLsaUserPrefix.append(std::to_string(Lsa::Type::COORDINATE));
 }
 
 void

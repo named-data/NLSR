@@ -56,8 +56,6 @@ struct is_iterator<T, typename std::enable_if<!std::is_same<
    static constexpr bool value = true;
 };
 
-using IsLsaNew = std::function<bool(const ndn::Name&, const std::string&, const uint64_t&)>;
-
 } // namespace nlsr
 
 #endif // NLSR_COMMON_HPP

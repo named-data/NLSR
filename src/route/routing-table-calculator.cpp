@@ -472,12 +472,12 @@ HyperbolicRoutingCalculator::getHyperbolicDistance(Map& map, Lsdb& lsdb,
   double distance = UNKNOWN_DISTANCE;
 
   ndn::Name srcLsaKey = src;
-  srcLsaKey.append("coordinate");
+  srcLsaKey.append(std::to_string(Lsa::Type::COORDINATE));
 
   CoordinateLsa* srcLsa = lsdb.findCoordinateLsa(srcLsaKey);
 
   ndn::Name destLsaKey = dest;
-  destLsaKey.append("coordinate");
+  destLsaKey.append(std::to_string(Lsa::Type::COORDINATE));
 
   CoordinateLsa* destLsa = lsdb.findCoordinateLsa(destLsaKey);
 
