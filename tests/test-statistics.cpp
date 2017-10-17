@@ -248,8 +248,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
                                    Statistics::PacketType::SENT_ADJ_LSA_DATA);
 
   // Name LSA
-  NamePrefixList prefixes;
-  prefixes.insert("/ndn/name");
+  NamePrefixList prefixes{ndn::Name{"/ndn/name"}};
 
   NameLsa nameLsa(routerName, seqNo, MAX_TIME, prefixes);
   lsdb.installNameLsa(nameLsa);

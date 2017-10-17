@@ -89,8 +89,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   // BUPT Name LSA
   ndn::Name buptAdvertisedName("/ndn/cn/edu/bupt");
 
-  NamePrefixList buptNames;
-  buptNames.insert(buptAdvertisedName);
+  NamePrefixList buptNames{buptAdvertisedName};
 
   NameLsa buptNameLsa(buptRouterName, 1, ndn::time::system_clock::now(),
                       buptNames);

@@ -34,13 +34,10 @@ BOOST_AUTO_TEST_SUITE(TestLsa)
 
 BOOST_AUTO_TEST_CASE(NameLsaBasic)
 {
-  NamePrefixList npl1;
+  ndn::Name s1{"name1"};
+  ndn::Name s2{"name2"};
+  NamePrefixList npl1{s1, s2};
 
-  std::string s1 = "name1";
-  std::string s2 = "name2";
-
-  npl1.insert(s1);
-  npl1.insert(s2);
   ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
 
   //3rd arg is seqNo. which will be a random number I just put in 12.
@@ -184,13 +181,9 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   BOOST_CHECK(adjlsa1.isEqualContent(adjlsa2));
 
   //Name LSA
-  NamePrefixList npl1;
-
-  std::string s1 = "name1";
-  std::string s2 = "name2";
-
-  npl1.insert(s1);
-  npl1.insert(s2);
+  ndn::Name s1{"name1"};
+  ndn::Name s2{"name2"};
+  NamePrefixList npl1{s1, s2};
 
   NameLsa nlsa1("router1", 1, testTimePoint, npl1);
   NameLsa nlsa2;

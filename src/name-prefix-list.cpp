@@ -34,6 +34,21 @@ NamePrefixList::NamePrefixList()
 {
 }
 
+NamePrefixList::NamePrefixList(const std::initializer_list<ndn::Name>& names)
+{
+  std::vector<NamePrefixList::NamePair> namePairs;
+  std::transform(names.begin(), names.end(), std::back_inserter(namePairs),
+    [] (const ndn::Name& name) {
+      return NamePrefixList::NamePair{name, {""}};
+    });
+  m_names = std::move(namePairs);
+}
+
+NamePrefixList::NamePrefixList(const std::initializer_list<NamePrefixList::NamePair>& namesAndSources)
+  : m_names(namesAndSources)
+{
+}
+
 NamePrefixList::~NamePrefixList()
 {
 }

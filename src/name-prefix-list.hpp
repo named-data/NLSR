@@ -40,6 +40,18 @@ public:
 
   NamePrefixList();
 
+  NamePrefixList(const std::initializer_list<ndn::Name>& names);
+
+  NamePrefixList(const std::initializer_list<NamePrefixList::NamePair>& namesAndSources);
+
+  template<class ContainerType>
+  NamePrefixList(const ContainerType& names)
+  {
+    for (const auto& elem : names) {
+      m_names.push_back(NamePair{elem, {""}});
+    }
+  }
+
   ~NamePrefixList();
 
   /*! \brief inserts name into NamePrefixList

@@ -31,13 +31,10 @@ BOOST_AUTO_TEST_SUITE(TestNpl)
  */
 BOOST_AUTO_TEST_CASE(NplSizeAndRemove)
 {
-  NamePrefixList npl1;
+  ndn::Name a{"testname"};
+  ndn::Name b{"name"};
 
-  std::string a = "testname";
-  std::string b = "name";
-
-  npl1.insert(a);
-  npl1.insert(b);
+  NamePrefixList npl1{a, b};
 
   BOOST_CHECK_EQUAL(npl1.size(), 2);
 
@@ -52,19 +49,11 @@ BOOST_AUTO_TEST_CASE(NplSizeAndRemove)
  */
 BOOST_AUTO_TEST_CASE(OperatorEquals)
 {
-  NamePrefixList list1;
-  NamePrefixList list2;
   ndn::Name name1("/ndn/test/name1");
   ndn::Name name2("/ndn/test/name2");
   ndn::Name name3("/ndn/some/other/name1");
-
-  list1.insert(name1);
-  list1.insert(name2);
-  list1.insert(name3);
-
-  list2.insert(name1);
-  list2.insert(name2);
-  list2.insert(name3);
+  NamePrefixList list1{name1, name2, name3};
+  NamePrefixList list2{name1, name2, name3};
 
   BOOST_CHECK_EQUAL(list1, list2);
 }
@@ -75,13 +64,10 @@ BOOST_AUTO_TEST_CASE(OperatorEquals)
  */
 BOOST_AUTO_TEST_CASE(GetNames)
 {
-  NamePrefixList list;
   const ndn::Name name1{"/ndn/test/prefix1"};
   const ndn::Name name2{"/ndn/test/prefix2"};
   const ndn::Name name3{"/ndn/test/prefix3"};
-  list.insert(name1);
-  list.insert(name2);
-  list.insert(name3);
+  NamePrefixList list{name1, name2, name3};
 
   std::vector<ndn::Name> referenceNames{name1, name2, name3};
 
@@ -103,9 +89,9 @@ BOOST_AUTO_TEST_CASE(GetNames)
  */
 BOOST_AUTO_TEST_CASE(countSources)
 {
-  NamePrefixList list;
   const ndn::Name name1{"/ndn/test/prefix1"};
   const ndn::Name invalidName{"/not/a/prefix"};
+  NamePrefixList list;
   list.insert(name1, "nlsr.conf");
   list.insert(name1, "readvertise");
   list.insert(name1, "prefix-update");
@@ -167,6 +153,40 @@ BOOST_AUTO_TEST_CASE(RemainingSourcesAfterRemoval)
     }
     BOOST_CHECK(didMatch);
   }
+}
+
+BOOST_AUTO_TEST_CASE(BraceInitializerCtors)
+{
+  const ndn::Name name1{"/ndn/test/prefix1"};
+  const ndn::Name name2{"/ndn/test/prefix2"};
+  const ndn::Name name3{"/ndn/test/prefix3"};
+  std::list<ndn::Name> testList{name1, name2, name3};
+
+  const std::vector<std::string> sources1{"static", "readvertise"};
+  const std::vector<std::string> sources2{"static", "nlsrc"};
+  const std::vector<std::string> sources3{"static"};
+
+  NamePrefixList list1{name1, name2, name3};
+  auto list = list1.getNames();
+  BOOST_CHECK_EQUAL(list1.size(), 3);
+  BOOST_CHECK(testList == list);
+
+  NamePrefixList list2{ NamePrefixList::NamePair{name1, sources1},
+      NamePrefixList::NamePair{name2, sources2}, NamePrefixList::NamePair{name3, sources3} };
+  auto name1Sources = list2.getSources(name1);
+  BOOST_CHECK(sources1 == name1Sources);
+  auto name2Sources = list2.getSources(name2);
+  BOOST_CHECK(sources2 == name2Sources);
+  auto name3Sources = list2.getSources(name3);
+  BOOST_CHECK(sources3 == name3Sources);
+
+  const std::vector<ndn::Name> namesVector{name1, name2, name3};
+  NamePrefixList list3(namesVector);
+  BOOST_CHECK(list1 == list3);
+
+  const std::list<ndn::Name> namesList{name1, name2, name3};
+  NamePrefixList list4(namesList);
+  BOOST_CHECK(list1 == list4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
