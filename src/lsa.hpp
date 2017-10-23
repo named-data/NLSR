@@ -123,6 +123,9 @@ public:
   virtual bool
   deserialize(const std::string& content) = 0;
 
+  virtual void
+  writeLog() const = 0;
+
 protected:
   /*! Get data common to all LSA types.
 
@@ -131,6 +134,11 @@ protected:
    */
   std::string
   getData() const;
+
+  /*! Print data common to all LSA types.
+   */
+  std::string
+  toString() const;
 
   bool
   deserializeCommon(boost::tokenizer<boost::char_separator<char>>::iterator& iterator);
@@ -198,7 +206,7 @@ public:
   isEqualContent(const NameLsa& other) const;
 
   void
-  writeLog();
+  writeLog() const override;
 
   /*! \brief Returns the data that this name LSA has.
 
@@ -211,6 +219,9 @@ public:
 
 private:
   NamePrefixList m_npl;
+
+  friend std::ostream&
+  operator<<(std::ostream& os, const NameLsa& lsa);
 };
 
 class AdjLsa: public Lsa
@@ -279,7 +290,7 @@ public:
   removeNptEntries(Nlsr& pnlsr);
 
   void
-  writeLog();
+  writeLog() const override;
 
   const_iterator
   begin() const
@@ -306,6 +317,9 @@ public:
 private:
   uint32_t m_noLink;
   AdjacencyList m_adl;
+
+  friend std::ostream&
+  operator<<(std::ostream& os, const AdjLsa& lsa);
 };
 
 class CoordinateLsa: public Lsa
@@ -365,7 +379,7 @@ public:
   isEqualContent(const CoordinateLsa& clsa);
 
   void
-  writeLog();
+  writeLog() const override;
 
   /*! \brief Returns the data that this coordinate LSA represents.
 
@@ -378,10 +392,19 @@ public:
 private:
   double m_corRad;
   std::vector<double> m_angles;
+
+  friend std::ostream&
+  operator<<(std::ostream& os, const CoordinateLsa& lsa);
 };
 
 std::ostream&
-operator<<(std::ostream& os, const AdjLsa& adjLsa);
+operator<<(std::ostream& os, const AdjLsa& lsa);
+
+std::ostream&
+operator<<(std::ostream& os, const CoordinateLsa& lsa);
+
+std::ostream&
+operator<<(std::ostream& os, const NameLsa& lsa);
 
 std::ostream&
 operator<<(std::ostream& os, const Lsa::Type& type);

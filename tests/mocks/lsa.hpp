@@ -43,6 +43,9 @@ public:
 
   bool
   deserialize(const std::string& content) override;
+
+  void
+  writeLog() const override;
 };
 
 } // namespace test

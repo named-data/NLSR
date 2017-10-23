@@ -47,5 +47,10 @@ MockLsa::deserialize(const std::string& content)
   return true;
 }
 
+void
+MockLsa::writeLog() const
+{
+}
+
 } // namespace test
 } // namespace nlsr

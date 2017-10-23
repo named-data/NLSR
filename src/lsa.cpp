@@ -121,21 +121,9 @@ NameLsa::isEqualContent(const NameLsa& other) const
 }
 
 void
-NameLsa::writeLog()
+NameLsa::writeLog() const
 {
-  NLSR_LOG_DEBUG("Name Lsa: ");
-  NLSR_LOG_DEBUG("  Origination Router: " << m_origRouter);
-  NLSR_LOG_DEBUG("  Ls Type: " << getType());
-  NLSR_LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
-  NLSR_LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
-  NLSR_LOG_DEBUG("  Names: ");
-  int i = 1;
-  std::list<ndn::Name> nl = m_npl.getNames();
-  for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++)
-  {
-    NLSR_LOG_DEBUG("    Name " << i << ": " << (*it));
-  }
-  NLSR_LOG_DEBUG("name_lsa_end");
+  NLSR_LOG_DEBUG(*this);
 }
 
 CoordinateLsa::CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
@@ -203,18 +191,9 @@ CoordinateLsa::deserialize(const std::string& content)
 }
 
 void
-CoordinateLsa::writeLog()
+CoordinateLsa::writeLog() const
 {
-  NLSR_LOG_DEBUG("Cor Lsa: ");
-  NLSR_LOG_DEBUG("  Origination Router: " << m_origRouter);
-  NLSR_LOG_DEBUG("  Ls Type: " << getType());
-  NLSR_LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
-  NLSR_LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
-  NLSR_LOG_DEBUG("    Hyperbolic Radius: " << m_corRad);
-  int i = 0;
-  for(auto const& value: m_angles) {
-    NLSR_LOG_DEBUG("    Hyperbolic Theta " << i++ << ": "<< value);
-  }
+  NLSR_LOG_DEBUG(*this);
 }
 
 AdjLsa::AdjLsa(const ndn::Name& origR, uint32_t lsn,
@@ -302,30 +281,55 @@ AdjLsa::removeNptEntries(Nlsr& pnlsr)
 }
 
 void
-AdjLsa::writeLog()
+AdjLsa::writeLog() const
 {
   NLSR_LOG_DEBUG(*this);
 }
 
 std::ostream&
-operator<<(std::ostream& os, const AdjLsa& adjLsa)
+operator<<(std::ostream& os, const AdjLsa& lsa)
 {
-  os << "Adj Lsa:\n"
-     << "  Origination Router: " << adjLsa.getOrigRouter() << "\n"
-     << "  Ls Type: " << adjLsa.getType() << "\n"
-     << "  Ls Seq No: " << adjLsa.getLsSeqNo() << "\n"
-     << "  Ls Lifetime: " << adjLsa.getExpirationTimePoint() << "\n"
-     << "  Adjacents: \n";
+  os << lsa.toString();
+  os << "-Adjacents:";
 
   int adjacencyIndex = 1;
 
-  for (const Adjacent& adjacency : adjLsa) {
-  os << "    Adjacent " << adjacencyIndex++ << ":\n"
-     << "      Adjacent Name: " << adjacency.getName() << "\n"
-     << "      Connecting FaceUri: " << adjacency.getFaceUri() << "\n"
-     << "      Link Cost: " << adjacency.getLinkCost() << "\n";
+  for (const Adjacent& adjacency : lsa.m_adl) {
+  os << "--Adjacent" << adjacencyIndex++ << ":\n"
+     << "---Adjacent Name: " << adjacency.getName() << "\n"
+     << "---Connecting FaceUri: " << adjacency.getFaceUri() << "\n"
+     << "---Link Cost: " << adjacency.getLinkCost() << "\n";
   }
   os << "adj_lsa_end";
+
+  return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const CoordinateLsa& lsa)
+{
+  os << lsa.toString();
+  os << "--Hyperbolic Radius: " << lsa.m_corRad << "\n";
+  int i = 0;
+  for (const auto& value : lsa.m_angles) {
+    os << "---Hyperbolic Theta: " << i++ << ": " << value << "\n";
+  }
+  os << "cor_lsa_end";
+
+  return os;
+}
+
+std::ostream&
+operator<<(std::ostream& os, const NameLsa& lsa)
+{
+  os << lsa.toString();
+  os << "--Names:\n";
+  int i = 0;
+  auto names = lsa.m_npl.getNames();
+  for (const auto& name : names) {
+    os << "---Name " << i++ << ": " << name << "\n";
+  }
+  os << "name_lsa_end";
 
   return os;
 }
@@ -355,6 +359,16 @@ operator>>(std::istream& is, Lsa::Type& type)
     type = Lsa::Type::BASE;
   }
   return is;
+}
+
+std::string
+Lsa::toString() const
+{
+  std::ostringstream os;
+  os << "LSA of type " << getType() << ":\n-Origin Router: " << getOrigRouter()
+     << "\n-Sequence Number: " << getLsSeqNo() << "\n-Expiration Point: "
+     << getExpirationTimePoint() << "\n";
+  return os.str();
 }
 
 } // namespace nlsr

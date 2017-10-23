@@ -130,21 +130,19 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
   AdjLsa lsa("router1", 12, testTimePoint, adjList.size(), adjList);
 
   std::string EXPECTED_OUTPUT =
-   "Adj Lsa:\n"
-   "  Origination Router: /router1\n"
-   "  Ls Type: ADJACENCY\n"
-   "  Ls Seq No: 12\n"
-   "  Ls Lifetime: " + TEST_TIME_POINT_STRING + "\n"
-   "  Adjacents: \n"
-   "    Adjacent 1:\n"
-   "      Adjacent Name: /adjacent1\n"
-   "      Connecting FaceUri: ://\n"
-   "      Link Cost: 10\n"
-   "    Adjacent 2:\n"
-   "      Adjacent Name: /adjacent2\n"
-   "      Connecting FaceUri: ://\n"
-   "      Link Cost: 10\n"
-   "adj_lsa_end";
+    "LSA of type ADJACENCY:\n"
+    "-Origin Router: /router1\n"
+    "-Sequence Number: 12\n"
+    "-Expiration Point: " + TEST_TIME_POINT_STRING + "\n"
+    "-Adjacents:--Adjacent1:\n"
+    "---Adjacent Name: /adjacent1\n"
+    "---Connecting FaceUri: ://\n"
+    "---Link Cost: 10\n"
+    "--Adjacent2:\n"
+    "---Adjacent Name: /adjacent2\n"
+    "---Connecting FaceUri: ://\n"
+    "---Link Cost: 10\n"
+    "adj_lsa_end";
 
   std::ostringstream os;
   os << lsa;
