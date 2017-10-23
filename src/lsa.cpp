@@ -31,7 +31,6 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <boost/tokenizer.hpp>
 #include <boost/algorithm/string.hpp>
 
 namespace nlsr {
@@ -51,6 +50,19 @@ const ndn::Name
 Lsa::getKey() const
 {
   return ndn::Name(m_origRouter).append(std::to_string(getType()));
+}
+
+bool
+Lsa::deserializeCommon(boost::tokenizer<boost::char_separator<char>>::iterator& iterator)
+{
+  m_origRouter = ndn::Name(*iterator++);
+  if (m_origRouter.size() <= 0)
+    return false;
+  if (*iterator++ != std::to_string(getType()))
+    return false;
+  m_lsSeqNo = boost::lexical_cast<uint32_t>(*iterator++);
+  m_expirationTimePoint = ndn::time::fromIsoString(*iterator++);
+  return true;
 }
 
 NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
@@ -78,33 +90,26 @@ NameLsa::serialize() const
 }
 
 bool
-NameLsa::initializeFromContent(const std::string& content)
+NameLsa::deserialize(const std::string& content)
 {
   uint32_t numName = 0;
   boost::char_separator<char> sep("|");
   boost::tokenizer<boost::char_separator<char> >tokens(content, sep);
   boost::tokenizer<boost::char_separator<char> >::iterator tok_iter =
                                                tokens.begin();
-  m_origRouter = ndn::Name(*tok_iter++);
-  if (!(m_origRouter.size() > 0)) {
-    return false;
-  }
-  try {
-    if (*tok_iter++ != std::to_string(Lsa::Type::NAME)) {
-      return false;
-    }
 
-    m_lsSeqNo = boost::lexical_cast<uint32_t>(*tok_iter++);
-    m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
+  try {
+    if (!deserializeCommon(tok_iter))
+      return false;
     numName = boost::lexical_cast<uint32_t>(*tok_iter++);
+    for (uint32_t i = 0; i < numName; i++) {
+      ndn::Name name(*tok_iter++);
+      addName(name);
+    }
   }
   catch (const std::exception& e) {
-    _LOG_ERROR(e.what());
+    _LOG_ERROR("Could not deserialize from content: " << e.what());
     return false;
-  }
-  for (uint32_t i = 0; i < numName; i++) {
-    ndn::Name name(*tok_iter++);
-    addName(name);
   }
   return true;
 }
@@ -174,33 +179,24 @@ CoordinateLsa::serialize() const
 }
 
 bool
-CoordinateLsa::initializeFromContent(const std::string& content)
+CoordinateLsa::deserialize(const std::string& content)
 {
   boost::char_separator<char> sep("|");
   boost::tokenizer<boost::char_separator<char> >tokens(content, sep);
   boost::tokenizer<boost::char_separator<char> >::iterator tok_iter =
                                                tokens.begin();
-  m_origRouter = ndn::Name(*tok_iter++);
-  if (!(m_origRouter.size() > 0)) {
-    return false;
-  }
 
   try {
-    if (*tok_iter++ != std::to_string(Lsa::Type::COORDINATE)) {
+    if (!deserializeCommon(tok_iter))
       return false;
-    }
-
-    m_lsSeqNo  = boost::lexical_cast<uint32_t>(*tok_iter++);
-    m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
-    m_corRad   = boost::lexical_cast<double>(*tok_iter++);
+    m_corRad = boost::lexical_cast<double>(*tok_iter++);
     int numAngles = boost::lexical_cast<uint32_t>(*tok_iter++);
-
-   for (int i = 0; i < numAngles; i++) {
-     m_angles.push_back(boost::lexical_cast<double>(*tok_iter++));
-   }
+    for (int i = 0; i < numAngles; i++) {
+      m_angles.push_back(boost::lexical_cast<double>(*tok_iter++));
+    }
   }
   catch (const std::exception& e) {
-    _LOG_ERROR(e.what());
+    _LOG_ERROR("Could not deserialize from content: " << e.what());
     return false;
   }
   return true;
@@ -257,32 +253,19 @@ AdjLsa::serialize() const
 }
 
 bool
-AdjLsa::initializeFromContent(const std::string& content)
+AdjLsa::deserialize(const std::string& content)
 {
   uint32_t numLink = 0;
   boost::char_separator<char> sep("|");
   boost::tokenizer<boost::char_separator<char> >tokens(content, sep);
   boost::tokenizer<boost::char_separator<char> >::iterator tok_iter =
                                                tokens.begin();
-  m_origRouter = ndn::Name(*tok_iter++);
-  if (!(m_origRouter.size() > 0)) {
-    return false;
-  }
-  try {
-    if (*tok_iter++ != std::to_string(Lsa::Type::ADJACENCY)) {
-      return false;
-    }
 
-    m_lsSeqNo  = boost::lexical_cast<uint32_t>(*tok_iter++);
-    m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
-    numLink    = boost::lexical_cast<uint32_t>(*tok_iter++);
-  }
-  catch (const std::exception& e) {
-    _LOG_ERROR(e.what());
-    return false;
-  }
-  for (uint32_t i = 0; i < numLink; i++) {
-    try {
+  try {
+    if (!deserializeCommon(tok_iter))
+      return false;
+    numLink = boost::lexical_cast<uint32_t>(*tok_iter++);
+    for (uint32_t i = 0; i < numLink; i++) {
       ndn::Name adjName(*tok_iter++);
       std::string connectingFaceUri(*tok_iter++);
       double linkCost = boost::lexical_cast<double>(*tok_iter++);
@@ -290,10 +273,10 @@ AdjLsa::initializeFromContent(const std::string& content)
                         Adjacent::STATUS_INACTIVE, 0, 0);
       addAdjacent(adjacent);
     }
-    catch (const std::exception& e) {
-      _LOG_ERROR(e.what());
-      return false;
-    }
+  }
+  catch (const std::exception& e) {
+    _LOG_ERROR("Could not deserialize from content: " << e.what());
+    return false;
   }
   return true;
 }

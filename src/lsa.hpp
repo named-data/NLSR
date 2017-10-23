@@ -29,6 +29,7 @@
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/util/time.hpp>
+#include <boost/tokenizer.hpp>
 
 namespace nlsr {
 
@@ -120,7 +121,7 @@ public:
   getKey() const;
 
   virtual bool
-  initializeFromContent(const std::string& content) = 0;
+  deserialize(const std::string& content) = 0;
 
 protected:
   /*! Get data common to all LSA types.
@@ -130,6 +131,9 @@ protected:
    */
   std::string
   getData() const;
+
+  bool
+  deserializeCommon(boost::tokenizer<boost::char_separator<char>>::iterator& iterator);
 
 protected:
   ndn::Name m_origRouter;
@@ -188,7 +192,7 @@ public:
     getData(); getData() returns data of this format, in other words.
    */
   bool
-  initializeFromContent(const std::string& content) override;
+  deserialize(const std::string& content) override;
 
   bool
   isEqualContent(const NameLsa& other) const;
@@ -252,7 +256,7 @@ public:
     according to getData().
    */
   bool
-  initializeFromContent(const std::string& content) override;
+  deserialize(const std::string& content) override;
 
   uint32_t
   getNoLink()
@@ -331,7 +335,7 @@ public:
     same as for getData();
   */
   bool
-  initializeFromContent(const std::string& content) override;
+  deserialize(const std::string& content) override;
 
   double
   getCorRadius() const

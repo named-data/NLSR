@@ -31,22 +31,15 @@ MockLsa::serialize() const
 }
 
 bool
-MockLsa::initializeFromContent(const std::string& content)
+MockLsa::deserialize(const std::string& content)
 {
   boost::char_separator<char> sep("|");
   boost::tokenizer<boost::char_separator<char> >tokens(content, sep);
   boost::tokenizer<boost::char_separator<char> >::iterator tok_iter =
     tokens.begin();
-  m_origRouter = ndn::Name(*tok_iter++);
-  if (!(m_origRouter.size() > 0)) {
-    return false;
-  }
+
   try {
-    if (*tok_iter++ != std::to_string(Lsa::Type::MOCK)) {
-      return false;
-    }
-    m_lsSeqNo = boost::lexical_cast<uint32_t>(*tok_iter++);
-    m_expirationTimePoint = ndn::time::fromIsoString(*tok_iter++);
+    deserializeCommon(tok_iter);
   }
   catch (const std::exception& e) {
     return false;

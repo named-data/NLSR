@@ -1230,7 +1230,7 @@ Lsdb::processContentNameLsa(const ndn::Name& lsaKey,
   lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_DATA);
   if (isNameLsaNew(lsaKey, lsSeqNo)) {
     NameLsa nameLsa;
-    if (nameLsa.initializeFromContent(dataContent)) {
+    if (nameLsa.deserialize(dataContent)) {
       installNameLsa(nameLsa);
     }
     else {
@@ -1247,7 +1247,7 @@ Lsdb::processContentAdjacencyLsa(const ndn::Name& lsaKey,
   lsaIncrementSignal(Statistics::PacketType::RCV_ADJ_LSA_DATA);
   if (isAdjLsaNew(lsaKey, lsSeqNo)) {
     AdjLsa adjLsa;
-    if (adjLsa.initializeFromContent(dataContent)) {
+    if (adjLsa.deserialize(dataContent)) {
       installAdjLsa(adjLsa);
     }
     else {
@@ -1264,7 +1264,7 @@ Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
   lsaIncrementSignal(Statistics::PacketType::RCV_COORD_LSA_DATA);
   if (isCoordinateLsaNew(lsaKey, lsSeqNo)) {
     CoordinateLsa corLsa;
-    if (corLsa.initializeFromContent(dataContent)) {
+    if (corLsa.deserialize(dataContent)) {
       installCoordinateLsa(corLsa);
     }
     else {

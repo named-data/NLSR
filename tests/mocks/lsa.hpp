@@ -42,7 +42,7 @@ public:
   serialize() const override;
 
   bool
-  initializeFromContent(const std::string& content) override;
+  deserialize(const std::string& content) override;
 };
 
 } // namespace test

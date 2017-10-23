@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
 
   //If we don't do this the test will fail
   //Adjacent has default cost of 10 but no default
-  //connecting face URI, so initializeFromContent fails
+  //connecting face URI, so deserialize fails
   adj1.setFaceUri(ndn::util::FaceUri("udp://10.0.0.1"));
   adj2.setFaceUri(ndn::util::FaceUri("udp://10.0.0.2"));
 
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   AdjLsa adjlsa1("router1", 1, testTimePoint, adjList.size(), adjList);
   AdjLsa adjlsa2;
 
-  BOOST_CHECK(adjlsa2.initializeFromContent(adjlsa1.serialize()));
+  BOOST_CHECK(adjlsa2.deserialize(adjlsa1.serialize()));
 
   BOOST_CHECK(adjlsa1.isEqualContent(adjlsa2));
 
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   NameLsa nlsa1("router1", 1, testTimePoint, npl1);
   NameLsa nlsa2;
 
-  BOOST_CHECK(nlsa2.initializeFromContent(nlsa1.serialize()));
+  BOOST_CHECK(nlsa2.deserialize(nlsa1.serialize()));
 
   BOOST_CHECK_EQUAL(nlsa1.serialize(), nlsa2.serialize());
 
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, angles);
   CoordinateLsa clsa2;
 
-  BOOST_CHECK(clsa2.initializeFromContent(clsa1.serialize()));
+  BOOST_CHECK(clsa2.deserialize(clsa1.serialize()));
 
   BOOST_CHECK_EQUAL(clsa1.serialize(), clsa2.serialize());
 }
