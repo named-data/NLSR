@@ -59,7 +59,7 @@ NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
 }
 
 std::string
-NameLsa::getData()
+NameLsa::getData() const
 {
   std::ostringstream os;
   os << m_origRouter << "|" << Lsa::Type::NAME << "|" << m_lsSeqNo << "|"
@@ -165,7 +165,7 @@ CoordinateLsa::isEqualContent(const CoordinateLsa& clsa)
 }
 
 std::string
-CoordinateLsa::getData()
+CoordinateLsa::getData() const
 {
   std::ostringstream os;
   os << m_origRouter << "|" << Lsa::Type::COORDINATE << "|" << m_lsSeqNo << "|"
@@ -258,7 +258,7 @@ AdjLsa::isEqualContent(AdjLsa& alsa)
 }
 
 std::string
-AdjLsa::getData()
+AdjLsa::getData() const
 {
   std::ostringstream os;
   os << m_origRouter << "|" << Lsa::Type::ADJACENCY << "|" << m_lsSeqNo << "|"
@@ -402,6 +402,8 @@ to_string(const nlsr::Lsa::Type& type)
     return "COORDINATE";
   case nlsr::Lsa::Type::NAME:
     return "NAME";
+  case nlsr::Lsa::Type::MOCK:
+    return "MOCK";
   default:
     return "BASE";
   }

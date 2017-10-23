@@ -41,7 +41,8 @@ public:
     ADJACENCY,
     COORDINATE,
     NAME,
-    BASE
+    BASE,
+    MOCK
   };
 
   Lsa()
@@ -106,6 +107,12 @@ public:
     return m_expiringEventId;
   }
 
+  virtual std::string
+  getData() const = 0;
+
+  virtual bool
+  initializeFromContent(const std::string& content) = 0;
+
 protected:
   ndn::Name m_origRouter;
   uint32_t m_lsSeqNo;
@@ -168,7 +175,7 @@ public:
     2\>|...|\<prefix n\>|
    */
   std::string
-  getData();
+  getData() const override;
 
   /*! \brief Initializes this LSA object with content's data.
 
@@ -179,7 +186,7 @@ public:
     getData(); getData() returns data of this format, in other words.
    */
   bool
-  initializeFromContent(const std::string& content);
+  initializeFromContent(const std::string& content) override;
 
   bool
   isEqualContent(const NameLsa& other) const;
@@ -239,7 +246,7 @@ public:
     n\>|\<cost n\>|
    */
   std::string
-  getData();
+  getData() const override;
 
   /*! \brief Initializes this adj. LSA from the supplied content.
 
@@ -247,7 +254,7 @@ public:
     according to getData().
    */
   bool
-  initializeFromContent(const std::string& content);
+  initializeFromContent(const std::string& content) override;
 
   uint32_t
   getNoLink()
@@ -317,7 +324,7 @@ public:
     router\>|coordinate|\<seq. no.\>|\<exp. time\>|\<radians\>|\<theta\>|
   */
   std::string
-  getData();
+  getData() const override;
 
   /*! \brief Initializes this coordinate LSA with the data in content.
 
@@ -328,7 +335,7 @@ public:
     same as for getData();
   */
   bool
-  initializeFromContent(const std::string& content);
+  initializeFromContent(const std::string& content) override;
 
   double
   getCorRadius() const

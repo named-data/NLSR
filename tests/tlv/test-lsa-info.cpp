@@ -20,8 +20,8 @@
  **/
 
 #include "tlv/lsa-info.hpp"
-
 #include "../boost-test.hpp"
+#include "tests/mocks/lsa.hpp"
 
 namespace nlsr {
 namespace tlv {
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(LsaInfoOutputStream)
 
 BOOST_AUTO_TEST_CASE(LsaInfoMake)
 {
-  Lsa lsa;
+  nlsr::test::MockLsa lsa;
   lsa.setOrigRouter("/test/lsa/info/tlv");
   lsa.setLsSeqNo(128);
   lsa.setExpirationTimePoint(ndn::time::system_clock::now());
