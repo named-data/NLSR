@@ -25,7 +25,7 @@ namespace nlsr {
 namespace test {
 
 std::string
-MockLsa::getData() const
+MockLsa::serialize() const
 {
   return "";
 }

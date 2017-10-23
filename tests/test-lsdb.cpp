@@ -180,11 +180,11 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
   ndn::Name prefix("/ndn/edu/memphis/netlab/research/nlsr/test/prefix/");
 
   int nPrefixes = 0;
-  while (lsa.getData().size() < ndn::MAX_NDN_PACKET_SIZE) {
+  while (lsa.serialize().size() < ndn::MAX_NDN_PACKET_SIZE) {
     lsa.addName(ndn::Name(prefix).appendNumber(++nPrefixes));
   }
 
-  std::string expectedDataContent = lsa.getData();
+  std::string expectedDataContent = lsa.serialize();
   lsdb.installNameLsa(lsa);
 
   ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/NAME/");
@@ -226,14 +226,14 @@ BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
   ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
 
-  const ndn::ConstBufferPtr bufferPtr = std::make_shared<ndn::Buffer>(lsa.getData().c_str(),
-                                                                 lsa.getData().size());
+  const ndn::ConstBufferPtr bufferPtr = std::make_shared<ndn::Buffer>(lsa.serialize().c_str(),
+                                                                 lsa.serialize().size());
   lsdb.afterFetchLsa(bufferPtr, interestName);
 
   NameLsa* foundLsa = lsdb.findNameLsa(lsa.getKey());
   BOOST_REQUIRE(foundLsa != nullptr);
 
-  BOOST_CHECK_EQUAL(foundLsa->getData(), lsa.getData());
+  BOOST_CHECK_EQUAL(foundLsa->serialize(), lsa.serialize());
 }
 
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)

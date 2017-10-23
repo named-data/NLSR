@@ -39,7 +39,7 @@ public:
   }
 
   std::string
-  getData() const override;
+  serialize() const override;
 
   bool
   initializeFromContent(const std::string& content) override;

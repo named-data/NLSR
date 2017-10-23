@@ -38,6 +38,15 @@ namespace nlsr {
 
 INIT_LOGGER("Lsa");
 
+std::string
+Lsa::getData() const
+{
+  std::ostringstream os;
+  os << m_origRouter << "|" << getType() << "|" << m_lsSeqNo << "|"
+     << ndn::time::toIsoString(m_expirationTimePoint) << "|";
+  return os.str();
+}
+
 const ndn::Name
 NameLsa::getKey() const
 {
@@ -59,11 +68,10 @@ NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
 }
 
 std::string
-NameLsa::getData() const
+NameLsa::serialize() const
 {
   std::ostringstream os;
-  os << m_origRouter << "|" << Lsa::Type::NAME << "|" << m_lsSeqNo << "|"
-     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_npl.size();
+  os << getData() << m_npl.size();
   for (const auto& name : m_npl.getNames()) {
     os << "|" << name;
   }
@@ -165,17 +173,13 @@ CoordinateLsa::isEqualContent(const CoordinateLsa& clsa)
 }
 
 std::string
-CoordinateLsa::getData() const
+CoordinateLsa::serialize() const
 {
   std::ostringstream os;
-  os << m_origRouter << "|" << Lsa::Type::COORDINATE << "|" << m_lsSeqNo << "|"
-     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_corRad << "|"
-     << m_angles.size() << "|";
-
+  os << getData() << m_corRad << "|" << m_angles.size() << "|";
   for (const auto& angle: m_angles) {
     os << angle << "|";
   }
-
   return os.str();
 }
 
@@ -258,11 +262,10 @@ AdjLsa::isEqualContent(AdjLsa& alsa)
 }
 
 std::string
-AdjLsa::getData() const
+AdjLsa::serialize() const
 {
   std::ostringstream os;
-  os << m_origRouter << "|" << Lsa::Type::ADJACENCY << "|" << m_lsSeqNo << "|"
-     << ndn::time::toIsoString(m_expirationTimePoint) << "|" << m_adl.size();
+  os << getData() << m_adl.size();
   for (const auto& adjacent : m_adl.getAdjList()) {
     os << "|" << adjacent.getName() << "|" << adjacent.getFaceUri()
        << "|" << adjacent.getLinkCost();

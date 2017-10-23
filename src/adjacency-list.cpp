@@ -109,7 +109,6 @@ AdjacencyList::operator==(AdjacencyList& adl) const
 
   for (size_t i = 0; i < ourList.size(); i++) {
     if (*(ourList[i]) != *(theirList[i])) {
-      std::cout << *ourList[i] << ":" << *theirList[i];
       return false;
     }
   }

@@ -296,8 +296,8 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   AdjLsa aLsa(routerName, seqNo, MAX_TIME, 1, nlsr.getAdjacencyList());
   lsdb.installAdjLsa(aLsa);
 
-  const ndn::ConstBufferPtr aBuffer = std::make_shared<ndn::Buffer>(aLsa.getData().c_str(),
-                                                                    aLsa.getData().size());
+  const ndn::ConstBufferPtr aBuffer = std::make_shared<ndn::Buffer>(aLsa.serialize().c_str(),
+                                                                    aLsa.serialize().size());
   lsdb.afterFetchLsa(aBuffer, adjInterest);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_ADJ_LSA_DATA), 1);
 
@@ -308,8 +308,8 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   CoordinateLsa cLsa(routerName, seqNo, MAX_TIME, 2.5, angles);
   lsdb.installCoordinateLsa(cLsa);
 
-  const ndn::ConstBufferPtr cBuffer = std::make_shared<ndn::Buffer>(cLsa.getData().c_str(),
-                                                                   cLsa.getData().size());
+  const ndn::ConstBufferPtr cBuffer = std::make_shared<ndn::Buffer>(cLsa.serialize().c_str(),
+                                                                   cLsa.serialize().size());
   lsdb.afterFetchLsa(cBuffer, coordInterest);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_COORD_LSA_DATA), 1);
 
@@ -319,8 +319,8 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   NameLsa nLsa(routerName, seqNo, MAX_TIME, nlsr.getNamePrefixList());
   lsdb.installNameLsa(nLsa);
 
-  const ndn::ConstBufferPtr nBuffer = std::make_shared<ndn::Buffer>(nLsa.getData().c_str(),
-                                                                   nLsa.getData().size());
+  const ndn::ConstBufferPtr nBuffer = std::make_shared<ndn::Buffer>(nLsa.serialize().c_str(),
+                                                                   nLsa.serialize().size());
   lsdb.afterFetchLsa(nBuffer, interestName);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_NAME_LSA_DATA), 1);
 

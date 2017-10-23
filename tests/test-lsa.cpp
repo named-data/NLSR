@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaConstructorAndGetters)
 
   BOOST_CHECK(clsa1.isEqualContent(clsa2));
 
-  BOOST_CHECK_EQUAL(clsa1.getData(), clsa2.getData());
+  BOOST_CHECK_EQUAL(clsa1.serialize(), clsa2.serialize());
 }
 
 BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   AdjLsa adjlsa1("router1", 1, testTimePoint, adjList.size(), adjList);
   AdjLsa adjlsa2;
 
-  BOOST_CHECK(adjlsa2.initializeFromContent(adjlsa1.getData()));
+  BOOST_CHECK(adjlsa2.initializeFromContent(adjlsa1.serialize()));
 
   BOOST_CHECK(adjlsa1.isEqualContent(adjlsa2));
 
@@ -195,18 +195,18 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   NameLsa nlsa1("router1", 1, testTimePoint, npl1);
   NameLsa nlsa2;
 
-  BOOST_CHECK(nlsa2.initializeFromContent(nlsa1.getData()));
+  BOOST_CHECK(nlsa2.initializeFromContent(nlsa1.serialize()));
 
-  BOOST_CHECK_EQUAL(nlsa1.getData(), nlsa2.getData());
+  BOOST_CHECK_EQUAL(nlsa1.serialize(), nlsa2.serialize());
 
   //Coordinate LSA
   std::vector<double> angles = {30, 40.0};
   CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, angles);
   CoordinateLsa clsa2;
 
-  BOOST_CHECK(clsa2.initializeFromContent(clsa1.getData()));
+  BOOST_CHECK(clsa2.initializeFromContent(clsa1.serialize()));
 
-  BOOST_CHECK_EQUAL(clsa1.getData(), clsa2.getData());
+  BOOST_CHECK_EQUAL(clsa1.serialize(), clsa2.serialize());
 }
 
 BOOST_AUTO_TEST_SUITE(TestNameLsa)

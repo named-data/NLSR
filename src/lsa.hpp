@@ -107,11 +107,22 @@ public:
     return m_expiringEventId;
   }
 
+  /*! \brief Return the data that this LSA represents.
+   */
   virtual std::string
-  getData() const = 0;
+  serialize() const = 0;
 
   virtual bool
   initializeFromContent(const std::string& content) = 0;
+
+protected:
+  /*! Get data common to all LSA types.
+
+    This method should be called by all LSA classes in their
+    serialize() method.
+   */
+  std::string
+  getData() const;
 
 protected:
   ndn::Name m_origRouter;
@@ -168,15 +179,6 @@ public:
   const ndn::Name
   getKey() const;
 
-  /*! \brief Returns the data that this name LSA has.
-
-    Format is: \<original router
-    prefix\>|name|\<seq. no.\>|\<exp. time\>|\<prefix 1\>|\<prefix
-    2\>|...|\<prefix n\>|
-   */
-  std::string
-  getData() const override;
-
   /*! \brief Initializes this LSA object with content's data.
 
     \param content The data (e.g. name prefixes) to initialize this LSA with.
@@ -193,6 +195,15 @@ public:
 
   void
   writeLog();
+
+  /*! \brief Returns the data that this name LSA has.
+
+    Format is: \<original router
+    prefix\>|name|\<seq. no.\>|\<exp. time\>|\<prefix 1\>|\<prefix
+    2\>|...|\<prefix n\>|
+   */
+  std::string
+  serialize() const override;
 
 private:
   NamePrefixList m_npl;
@@ -238,16 +249,6 @@ public:
   const ndn::Name
   getKey() const;
 
-  /*! \brief Returns the data this adjacency LSA has.
-
-    The format is: \<original
-    router\>|adjacency|\<seq. no.\>|\<exp. time\>|\<size\>|\<adjacency prefix
-    1\>|\<face uri 1\>|\<cost 1\>|...|\<adjacency prefix n\>|\<face uri
-    n\>|\<cost n\>|
-   */
-  std::string
-  getData() const override;
-
   /*! \brief Initializes this adj. LSA from the supplied content.
 
     \param content The content that this LSA is to have, formatted
@@ -279,7 +280,6 @@ public:
   void
   writeLog();
 
-public:
   const_iterator
   begin() const
   {
@@ -291,6 +291,16 @@ public:
   {
     return m_adl.end();
   }
+
+  /*! \brief Returns the data this adjacency LSA has.
+
+    The format is: \<original
+    router\>|adjacency|\<seq. no.\>|\<exp. time\>|\<size\>|\<adjacency prefix
+    1\>|\<face uri 1\>|\<cost 1\>|...|\<adjacency prefix n\>|\<face uri
+    n\>|\<cost n\>|
+   */
+  std::string
+  serialize() const override;
 
 private:
   uint32_t m_noLink;
@@ -317,14 +327,6 @@ public:
 
   const ndn::Name
   getKey() const;
-
-  /*! \brief Returns the data that this coordinate LSA represents.
-
-    The format is: \<original
-    router\>|coordinate|\<seq. no.\>|\<exp. time\>|\<radians\>|\<theta\>|
-  */
-  std::string
-  getData() const override;
 
   /*! \brief Initializes this coordinate LSA with the data in content.
 
@@ -366,6 +368,14 @@ public:
 
   void
   writeLog();
+
+  /*! \brief Returns the data that this coordinate LSA represents.
+
+    The format is: \<original
+    router\>|coordinate|\<seq. no.\>|\<exp. time\>|\<radians\>|\<theta\>|
+  */
+  std::string
+  serialize() const override;
 
 private:
   double m_corRad;

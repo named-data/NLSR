@@ -1097,7 +1097,7 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
   NameLsa*  nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
   if (nameLsa != 0) {
     if (nameLsa->getLsSeqNo() == seqNo) {
-      std::string content = nameLsa->getData();
+      std::string content = nameLsa->serialize();
       putLsaData(interest,content);
       // increment SENT_NAME_LSA_DATA
       lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_DATA);
@@ -1131,7 +1131,7 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
   AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
   if (adjLsa != 0) {
     if (adjLsa->getLsSeqNo() == seqNo) {
-      std::string content = adjLsa->getData();
+      std::string content = adjLsa->serialize();
       putLsaData(interest,content);
       // increment SENT_ADJ_LSA_DATA
       lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_DATA);
@@ -1165,7 +1165,7 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
   CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
   if (corLsa != 0) {
     if (corLsa->getLsSeqNo() == seqNo) {
-      std::string content = corLsa->getData();
+      std::string content = corLsa->serialize();
       putLsaData(interest,content);
       // increment SENT_COORD_LSA_DATA
       lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_DATA);
