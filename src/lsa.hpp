@@ -112,6 +112,13 @@ public:
   virtual std::string
   serialize() const = 0;
 
+  /*! \brief Gets the key for this LSA.
+
+    Format is: \<router name\>/\<LSA type>\
+   */
+  const ndn::Name
+  getKey() const;
+
   virtual bool
   initializeFromContent(const std::string& content) = 0;
 
@@ -171,13 +178,6 @@ public:
   {
     m_npl.remove(name);
   }
-
-  /*! \brief Gets the key for this LSA.
-
-    Format is: \<router name\>/\<LSA type>\
-   */
-  const ndn::Name
-  getKey() const;
 
   /*! \brief Initializes this LSA object with content's data.
 
@@ -245,9 +245,6 @@ public:
   {
     m_adl.insert(adj);
   }
-
-  const ndn::Name
-  getKey() const;
 
   /*! \brief Initializes this adj. LSA from the supplied content.
 
@@ -324,9 +321,6 @@ public:
   {
     return Lsa::Type::COORDINATE;
   }
-
-  const ndn::Name
-  getKey() const;
 
   /*! \brief Initializes this coordinate LSA with the data in content.
 

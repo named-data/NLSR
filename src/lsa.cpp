@@ -48,11 +48,9 @@ Lsa::getData() const
 }
 
 const ndn::Name
-NameLsa::getKey() const
+Lsa::getKey() const
 {
-  ndn::Name key = m_origRouter;
-  key.append(std::to_string(Lsa::Type::NAME));
-  return key;
+  return ndn::Name(m_origRouter).append(std::to_string(getType()));
 }
 
 NameLsa::NameLsa(const ndn::Name& origR, uint32_t lsn,
@@ -146,14 +144,6 @@ CoordinateLsa::CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
   m_angles = theta;
 }
 
-const ndn::Name
-CoordinateLsa::getKey() const
-{
-  ndn::Name key = m_origRouter;
-  key.append(std::to_string(Lsa::Type::COORDINATE));
-  return key;
-}
-
 bool
 CoordinateLsa::isEqualContent(const CoordinateLsa& clsa)
 {
@@ -245,14 +235,6 @@ AdjLsa::AdjLsa(const ndn::Name& origR, uint32_t lsn,
       addAdjacent((*it));
     }
   }
-}
-
-const ndn::Name
-AdjLsa::getKey() const
-{
-  ndn::Name key = m_origRouter;
-  key.append(std::to_string(Lsa::Type::ADJACENCY));
-  return key;
 }
 
 bool
