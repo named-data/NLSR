@@ -28,8 +28,8 @@ INIT_LOGGER("FibEntry");
 void
 FibEntry::writeLog()
 {
-  _LOG_DEBUG("Name Prefix: " << m_name);
-  _LOG_DEBUG("Seq No: " << m_seqNo);
+  NLSR_LOG_DEBUG("Name Prefix: " << m_name);
+  NLSR_LOG_DEBUG("Seq No: " << m_seqNo);
   m_nexthopList.writeLog();
 }
 

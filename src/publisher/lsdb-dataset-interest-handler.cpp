@@ -54,7 +54,7 @@ LsdbDatasetInterestHandler::LsdbDatasetInterestHandler(Lsdb& lsdb,
   , m_localhostDispatcher(localHostDispatcher)
   , m_routerNameDispatcher(routerNameDispatcher)
 {
-  _LOG_DEBUG("Setting dispatcher for lsdb status dataset:");
+  NLSR_LOG_DEBUG("Setting dispatcher for lsdb status dataset:");
   setDispatcher(m_localhostDispatcher);
   setDispatcher(m_routerNameDispatcher);
 }
@@ -80,7 +80,7 @@ void
 LsdbDatasetInterestHandler::publishAdjStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                              ndn::mgmt::StatusDatasetContext& context)
 {
-  _LOG_DEBUG("Received interest:  " << interest);
+  NLSR_LOG_DEBUG("Received interest:  " << interest);
 
   auto lsaRange = std::make_pair<std::list<AdjLsa>::const_iterator,
                                  std::list<AdjLsa>::const_iterator>(
@@ -111,7 +111,7 @@ LsdbDatasetInterestHandler::publishCoordinateStatus(const ndn::Name& topPrefix, 
                                  std::list<CoordinateLsa>::const_iterator>(
     m_lsdb.getCoordinateLsdb().cbegin(), m_lsdb.getCoordinateLsdb().cend());
 
-  _LOG_DEBUG("Received interest:  " << interest);
+  NLSR_LOG_DEBUG("Received interest:  " << interest);
   for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
     tlv::CoordinateLsa tlvLsa;
     std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
@@ -132,7 +132,7 @@ LsdbDatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const 
 {
   auto lsaRange = std::make_pair<std::list<NameLsa>::const_iterator, std::list<NameLsa>::const_iterator>(
     m_lsdb.getNameLsdb().cbegin(), m_lsdb.getNameLsdb().cend());
-  _LOG_DEBUG("Received interest:  " << interest);
+  NLSR_LOG_DEBUG("Received interest:  " << interest);
   for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
     tlv::NameLsa tlvLsa;
 
@@ -153,7 +153,7 @@ void
 LsdbDatasetInterestHandler::publishAllStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                              ndn::mgmt::StatusDatasetContext& context)
 {
-  _LOG_DEBUG("Received interest:  " << interest);
+  NLSR_LOG_DEBUG("Received interest:  " << interest);
   tlv::LsdbStatus lsdbStatus;
   for (const tlv::AdjacencyLsa& tlvLsa : getTlvLsas<tlv::AdjacencyLsa>(m_lsdb)) {
     lsdbStatus.addAdjacencyLsa(tlvLsa);

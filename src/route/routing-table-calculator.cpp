@@ -104,7 +104,7 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
           correctedCost = std::max(toCost, fromCost);
         }
 
-        _LOG_WARN("Cost between [" << row << "][" << col << "] and [" << col << "][" << row <<
+        NLSR_LOG_WARN("Cost between [" << row << "][" << col << "] and [" << col << "][" << row <<
                   "] are not the same (" << toCost << " != " << fromCost << "). " <<
                   "Correcting to cost: " << correctedCost);
 
@@ -124,7 +124,7 @@ RoutingTableCalculator::writeAdjMatrixLog()
       line += boost::lexical_cast<std::string>(adjMatrix[i][j]);
       line += " ";
     }
-    _LOG_DEBUG(line);
+    NLSR_LOG_DEBUG(line);
   }
 }
 
@@ -206,7 +206,7 @@ void
 LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
                                                RoutingTable& rt, Nlsr& pnlsr)
 {
-  _LOG_DEBUG("LinkStateRoutingTableCalculator::calculatePath Called");
+  NLSR_LOG_DEBUG("LinkStateRoutingTableCalculator::calculatePath Called");
   allocateAdjMatrix();
   initMatrix();
   makeAdjMatrix(pnlsr, pMap);
@@ -300,7 +300,7 @@ void
 LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, RoutingTable& rt,
                                                                 Map& pMap, uint32_t sourceRouter)
 {
-  _LOG_DEBUG("LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called");
+  NLSR_LOG_DEBUG("LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called");
 
   int nextHopRouter = 0;
 
@@ -407,7 +407,7 @@ void
 HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
                                             Lsdb& lsdb, AdjacencyList& adjacencies)
 {
-  _LOG_TRACE("Calculating hyperbolic paths");
+  NLSR_LOG_TRACE("Calculating hyperbolic paths");
 
   ndn::optional<int32_t> thisRouter = map.getMappingNoByRouterName(m_thisRouterName);
 
@@ -417,7 +417,7 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
 
     // Don't calculate nexthops using an inactive router
     if (adj->getStatus() == Adjacent::STATUS_INACTIVE) {
-      _LOG_TRACE(adj->getName() << " is inactive; not using it as a nexthop");
+      NLSR_LOG_TRACE(adj->getName() << " is inactive; not using it as a nexthop");
       continue;
     }
 
@@ -436,7 +436,7 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
     ndn::optional<int32_t> src = map.getMappingNoByRouterName(srcRouterName);
 
     if (!src) {
-      _LOG_WARN(adj->getName() << " does not exist in the router map!");
+      NLSR_LOG_WARN(adj->getName() << " does not exist in the router map!");
       continue;
     }
 
@@ -451,7 +451,7 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
 
           // Could not compute distance
           if (distance == UNKNOWN_DISTANCE) {
-            _LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName << " to " <<
+            NLSR_LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName << " to " <<
                       *destRouterName);
             continue;
           }
@@ -467,7 +467,7 @@ double
 HyperbolicRoutingCalculator::getHyperbolicDistance(Map& map, Lsdb& lsdb,
                                                    ndn::Name src, ndn::Name dest)
 {
-  _LOG_TRACE("Calculating hyperbolic distance from " << src << " to " << dest);
+  NLSR_LOG_TRACE("Calculating hyperbolic distance from " << src << " to " << dest);
 
   double distance = UNKNOWN_DISTANCE;
 
@@ -502,7 +502,7 @@ HyperbolicRoutingCalculator::getHyperbolicDistance(Map& map, Lsdb& lsdb,
   // double r_i, double r_j, double delta_theta, double zeta = 1 (default)
   distance = calculateHyperbolicDistance(srcRadius, destRadius, diffTheta);
 
-  _LOG_TRACE("Distance from " << src << " to " << dest << " is " << distance);
+  NLSR_LOG_TRACE("Distance from " << src << " to " << dest << " is " << distance);
 
   return distance;
 }
@@ -517,7 +517,7 @@ HyperbolicRoutingCalculator::calculateAngularDistance(std::vector<double> angleV
 
   // Check if two vector lengths are the same
   if (angleVectorI.size() != angleVectorJ.size()) {
-    _LOG_ERROR("Angle vector sizes do not match");
+    NLSR_LOG_ERROR("Angle vector sizes do not match");
     return UNKNOWN_DISTANCE;
   }
 
@@ -526,20 +526,20 @@ HyperbolicRoutingCalculator::calculateAngularDistance(std::vector<double> angleV
     for (unsigned int k = 0; k < angleVectorI.size() - 1; k++) {
       if ((angleVectorI[k] > M_PI && angleVectorI[k] < 0.0) ||
           (angleVectorJ[k] > M_PI && angleVectorJ[k] < 0.0)) {
-        _LOG_ERROR("Angle outside [0, PI]");
+        NLSR_LOG_ERROR("Angle outside [0, PI]");
         return UNKNOWN_DISTANCE;
       }
     }
   }
   if (angleVectorI[angleVectorI.size()-1] > 2.*M_PI ||
       angleVectorI[angleVectorI.size()-1] < 0.0) {
-    _LOG_ERROR("Angle not within [0, 2PI]");
+    NLSR_LOG_ERROR("Angle not within [0, 2PI]");
     return UNKNOWN_DISTANCE;
   }
 
   if (angleVectorI[angleVectorI.size()-1] > 2.*M_PI ||
       angleVectorI[angleVectorI.size()-1] < 0.0) {
-    _LOG_ERROR("Angle not within [0, 2PI]");
+    NLSR_LOG_ERROR("Angle not within [0, 2PI]");
     return UNKNOWN_DISTANCE;
   }
 
@@ -593,7 +593,7 @@ HyperbolicRoutingCalculator::calculateHyperbolicDistance(double rI, double rJ,
   double zeta = 1;
 
   if (deltaTheta <= 0.0 || rI <= 0.0 || rJ <= 0.0) {
-    _LOG_ERROR("Delta theta or rI or rJ is <= 0");
+    NLSR_LOG_ERROR("Delta theta or rI or rJ is <= 0");
     return UNKNOWN_DISTANCE;
   }
 
@@ -609,7 +609,7 @@ HyperbolicRoutingCalculator::addNextHop(ndn::Name dest, std::string faceUri,
   NextHop hop(faceUri, cost);
   hop.setHyperbolic(true);
 
-  _LOG_TRACE("Calculated " << hop << " for destination: " << dest);
+  NLSR_LOG_TRACE("Calculated " << hop << " for destination: " << dest);
 
   if (m_isDryRun) {
     rt.addNextHopToDryTable(dest, hop);

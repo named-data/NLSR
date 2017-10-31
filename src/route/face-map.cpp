@@ -20,12 +20,12 @@
  * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
  *
  **/
-#include <iostream>
-#include <utility>
-
+#include "face-map.hpp"
 #include "common.hpp"
 #include "logger.hpp"
-#include "face-map.hpp"
+
+#include <iostream>
+#include <utility>
 
 namespace nlsr {
 
@@ -34,9 +34,9 @@ INIT_LOGGER("FaceMap");
 void
 FaceMap::writeLog()
 {
-  _LOG_DEBUG("------- Face Map-----------");
+  NLSR_LOG_DEBUG("------- Face Map-----------");
   for (const auto& it : m_table) {
-    _LOG_DEBUG("Face Map Entry (FaceUri: " << (it.second).getFaceUri()
+    NLSR_LOG_DEBUG("Face Map Entry (FaceUri: " << (it.second).getFaceUri()
                << " Face Id: " << (it.second).getFaceId() << ")");
   }
 }

@@ -99,7 +99,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
   std::shared_ptr<NamePrefixTableEntry> npte;
   // Either we have to make a new NPT entry or there already was one.
   if (nameItr == m_table.end()) {
-    _LOG_DEBUG("Adding origin: " << rtpePtr->getDestination()
+    NLSR_LOG_DEBUG("Adding origin: " << rtpePtr->getDestination()
                << " to a new name prefix: " << name);
     npte = make_shared<NamePrefixTableEntry>(name);
     npte->addRoutingTableEntry(rtpePtr);
@@ -107,7 +107,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     m_table.push_back(npte);
     // If this entry has next hops, we need to inform the FIB
     if (npte->getNexthopList().size() > 0) {
-      _LOG_TRACE("Updating FIB with next hops for " << npte);
+      NLSR_LOG_TRACE("Updating FIB with next hops for " << npte);
       m_nlsr.getFib().update(name, npte->getNexthopList());
     }
     // The routing table may recalculate and add a routing table entry
@@ -117,23 +117,23 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     // remain in the Name Prefix Table as a future routing table
     // calculation may add next hops.
     else {
-      _LOG_TRACE(*npte << " has no next hops; removing from FIB");
+      NLSR_LOG_TRACE(*npte << " has no next hops; removing from FIB");
       m_nlsr.getFib().remove(name);
     }
   }
   else {
     npte = *nameItr;
-    _LOG_TRACE("Adding origin: " << rtpePtr->getDestination()
+    NLSR_LOG_TRACE("Adding origin: " << rtpePtr->getDestination()
                << " to existing prefix: " << *nameItr);
     (*nameItr)->addRoutingTableEntry(rtpePtr);
     (*nameItr)->generateNhlfromRteList();
 
     if ((*nameItr)->getNexthopList().size() > 0) {
-      _LOG_TRACE("Updating FIB with next hops for " << (*nameItr));
+      NLSR_LOG_TRACE("Updating FIB with next hops for " << (*nameItr));
       m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
     }
     else {
-      _LOG_TRACE((*nameItr) << " has no next hops; removing from FIB");
+      NLSR_LOG_TRACE((*nameItr) << " has no next hops; removing from FIB");
       m_nlsr.getFib().remove(name);
     }
   }
@@ -145,7 +145,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
 void
 NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
 {
-  _LOG_DEBUG("Removing origin: " << destRouter << " from " << name);
+  NLSR_LOG_DEBUG("Removing origin: " << destRouter << " from " << name);
 
   // Fetch an iterator to the appropriate pair object in the pool.
   RoutingTableEntryPool::iterator rtpeItr = m_rtpool.find(destRouter);
@@ -153,7 +153,7 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
   // Simple error checking to prevent any unusual behavior in the case
   // that we try to remove an entry that isn't there.
   if (rtpeItr == m_rtpool.end()) {
-    _LOG_DEBUG("No entry for origin: " << destRouter
+    NLSR_LOG_DEBUG("No entry for origin: " << destRouter
                << " found, so it cannot be removed from prefix: "
                << name);
     return;
@@ -167,7 +167,7 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
                    return entry->getNamePrefix() == name;
                  });
   if (nameItr != m_table.end()) {
-    _LOG_TRACE("Removing origin: " << rtpePtr->getDestination()
+    NLSR_LOG_TRACE("Removing origin: " << rtpePtr->getDestination()
                << " from prefix: " << **nameItr);
 
     // Rather than iterating through the whole list periodically, just
@@ -192,20 +192,20 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
     //   new entry for the prefix will be created.
     //
     if ((*nameItr)->getRteListSize() == 0) {
-      _LOG_TRACE(**nameItr << " has no routing table entries;"
+      NLSR_LOG_TRACE(**nameItr << " has no routing table entries;"
                  << " removing from table and FIB");
       m_table.erase(nameItr);
       m_nlsr.getFib().remove(name);
     }
     else {
-      _LOG_TRACE(**nameItr << " has other routing table entries;"
+      NLSR_LOG_TRACE(**nameItr << " has other routing table entries;"
                  << " updating FIB with next hops");
       (*nameItr)->generateNhlfromRteList();
       m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
     }
   }
   else {
-    _LOG_DEBUG("Attempted to remove origin: " << rtpePtr->getDestination()
+    NLSR_LOG_DEBUG("Attempted to remove origin: " << rtpePtr->getDestination()
                << " from non-existent prefix: " << name);
   }
 }
@@ -213,7 +213,7 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
 void
 NamePrefixTable::updateWithNewRoute(const std::list<RoutingTableEntry>& entries)
 {
-  _LOG_DEBUG("Updating table with newly calculated routes");
+  NLSR_LOG_DEBUG("Updating table with newly calculated routes");
 
   // Iterate over each pool entry we have
   for (auto&& poolEntryPair : m_rtpool) {
@@ -225,7 +225,7 @@ NamePrefixTable::updateWithNewRoute(const std::list<RoutingTableEntry>& entries)
     // If this pool entry has a corresponding entry in the routing table now
     if (sourceEntry != entries.end()
         && poolEntry->getNexthopList() != sourceEntry->getNexthopList()) {
-      _LOG_DEBUG("Routing entry: " << poolEntry->getDestination() << " has changed next-hops.");
+      NLSR_LOG_DEBUG("Routing entry: " << poolEntry->getDestination() << " has changed next-hops.");
       poolEntry->setNexthopList(sourceEntry->getNexthopList());
       for (const auto& nameEntry : poolEntry->namePrefixTableEntries) {
         auto nameEntryFullPtr = nameEntry.second.lock();
@@ -233,7 +233,7 @@ NamePrefixTable::updateWithNewRoute(const std::list<RoutingTableEntry>& entries)
       }
     }
     else if (sourceEntry == entries.end()) {
-      _LOG_DEBUG("Routing entry: " << poolEntry->getDestination() << " now has no next-hops.");
+      NLSR_LOG_DEBUG("Routing entry: " << poolEntry->getDestination() << " now has no next-hops.");
       poolEntry->getNexthopList().reset();
       for (const auto& nameEntry : poolEntry->namePrefixTableEntries) {
         auto nameEntryFullPtr = nameEntry.second.lock();
@@ -241,7 +241,7 @@ NamePrefixTable::updateWithNewRoute(const std::list<RoutingTableEntry>& entries)
       }
     }
     else {
-      _LOG_TRACE("No change in routing entry:" << poolEntry->getDestination()
+      NLSR_LOG_TRACE("No change in routing entry:" << poolEntry->getDestination()
                  << ", no action necessary.");
     }
   }
@@ -271,7 +271,7 @@ void
 NamePrefixTable::deleteRtpeFromPool(std::shared_ptr<RoutingTablePoolEntry> rtpePtr)
 {
   if (m_rtpool.erase(rtpePtr->getDestination()) != 1) {
-    _LOG_DEBUG("Attempted to delete non-existent origin: "
+    NLSR_LOG_DEBUG("Attempted to delete non-existent origin: "
                << rtpePtr->getDestination()
                << " from NPT routing table entry storage pool.");
   }
@@ -280,7 +280,7 @@ NamePrefixTable::deleteRtpeFromPool(std::shared_ptr<RoutingTablePoolEntry> rtpeP
 void
 NamePrefixTable::writeLog()
 {
-  _LOG_DEBUG(*this);
+  NLSR_LOG_DEBUG(*this);
 }
 
 std::ostream&

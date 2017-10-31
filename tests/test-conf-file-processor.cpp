@@ -326,12 +326,12 @@ BOOST_AUTO_TEST_CASE(Log4cxxTestCase)
 
   INIT_LOGGER("DefaultConfig");
 
-  _LOG_TRACE("trace-message-JHGFDSR^1");
-  _LOG_DEBUG("debug-message-IGg2474fdksd-fo-" << 15 << 16 << 17);
-  _LOG_INFO("info-message-Jjxjshj13");
-  _LOG_WARN("warning-message-XXXhdhd11" << 1 <<"x");
-  _LOG_ERROR("error-message-!#$&^%$#@");
-  _LOG_FATAL("fatal-message-JJSjaamcng");
+  NLSR_LOG_TRACE("trace-message-JHGFDSR^1");
+  NLSR_LOG_DEBUG("debug-message-IGg2474fdksd-fo-" << 15 << 16 << 17);
+  NLSR_LOG_INFO("info-message-Jjxjshj13");
+  NLSR_LOG_WARN("warning-message-XXXhdhd11" << 1 <<"x");
+  NLSR_LOG_ERROR("error-message-!#$&^%$#@");
+  NLSR_LOG_FATAL("fatal-message-JJSjaamcng");
 
   const std::string EXPECTED[] =
     {

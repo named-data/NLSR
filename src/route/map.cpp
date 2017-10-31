@@ -83,10 +83,10 @@ Map::reset()
 void
 Map::writeLog()
 {
-  _LOG_DEBUG("---------------Map----------------------");
+  NLSR_LOG_DEBUG("---------------Map----------------------");
   auto&& routerNameView = m_entries.get<detail::byRouterName>();
   for (auto entry = routerNameView.begin(); entry != routerNameView.end(); entry++) {
-    _LOG_DEBUG("MapEntry: ( Router: " << entry->getRouter() << " Mapping No: "
+    NLSR_LOG_DEBUG("MapEntry: ( Router: " << entry->getRouter() << " Mapping No: "
                << entry->getMappingNumber() << " )");
   }
 }

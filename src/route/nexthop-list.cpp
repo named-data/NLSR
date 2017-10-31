@@ -113,7 +113,7 @@ NexthopList::writeLog()
 
   for (std::set<NextHop, NextHopComparator>::iterator it = m_nexthopList.begin();
        it != m_nexthopList.end() ; it++, i++) {
-    _LOG_DEBUG("Nexthop " << i << ": " << (*it).getConnectingFaceUri()
+    NLSR_LOG_DEBUG("Nexthop " << i << ": " << (*it).getConnectingFaceUri()
                << " Route Cost: " << (*it).getRouteCost());
   }
 }

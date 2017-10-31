@@ -89,14 +89,14 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
 void
 Nlsr::registrationFailed(const ndn::Name& name)
 {
-  _LOG_ERROR("ERROR: Failed to register prefix in local hub's daemon");
+  NLSR_LOG_ERROR("ERROR: Failed to register prefix in local hub's daemon");
   BOOST_THROW_EXCEPTION(Error("Error: Prefix registration failed"));
 }
 
 void
 Nlsr::onRegistrationSuccess(const ndn::Name& name)
 {
-  _LOG_DEBUG("Successfully registered prefix: " << name);
+  NLSR_LOG_DEBUG("Successfully registered prefix: " << name);
 
   if (name.equals(m_confParam.getRouterPrefix())) {
     // the top-level prefixes are added.
@@ -104,7 +104,7 @@ Nlsr::onRegistrationSuccess(const ndn::Name& name)
       m_routerNameDispatcher.addTopPrefix(m_confParam.getRouterPrefix(), false, m_signingInfo);
     }
     catch (const std::exception& e) {
-      _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
+      NLSR_LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
     }
   }
 }
@@ -118,7 +118,7 @@ Nlsr::onLocalhostRegistrationSuccess(const ndn::Name& name)
     m_localhostDispatcher.addTopPrefix(LOCALHOST_PREFIX, false, m_signingInfo);
   }
   catch (const std::exception& e) {
-    _LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
+    NLSR_LOG_ERROR("Error setting top-level prefix in dispatcher: " << e.what() << "\n");
   }
 }
 
@@ -126,7 +126,7 @@ void
 Nlsr::setInfoInterestFilter()
 {
   ndn::Name name(m_confParam.getRouterPrefix());
-  _LOG_DEBUG("Setting interest filter for name: " << name);
+  NLSR_LOG_DEBUG("Setting interest filter for name: " << name);
   getNlsrFace().setInterestFilter(name,
                                   std::bind(&HelloProtocol::processInterest,
                                             &m_helloProtocol, _1, _2),
@@ -142,7 +142,7 @@ Nlsr::setLsaInterestFilter()
   ndn::Name name = m_confParam.getLsaPrefix();
   name.append(m_confParam.getSiteName());
   name.append(m_confParam.getRouterName());
-  _LOG_DEBUG("Setting interest filter for LsaPrefix: " << name);
+  NLSR_LOG_DEBUG("Setting interest filter for LsaPrefix: " << name);
   getNlsrFace().setInterestFilter(name,
                                   std::bind(&Lsdb::processInterest,
                                             &m_nlsrLsdb, _1, _2),
@@ -176,7 +176,7 @@ Nlsr::daemonize()
     BOOST_THROW_EXCEPTION(Error("Error: Daemonization process- fork failed!"));
   }
   if (process_id > 0) {
-    _LOG_DEBUG("Process daemonized. Process id: " << process_id);
+    NLSR_LOG_DEBUG("Process daemonized. Process id: " << process_id);
     exit(0);
   }
 
@@ -209,13 +209,13 @@ Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
   if (currentNeighbor != m_adjacencyList.getAdjList().end()) {
     ndn::util::FaceUri uri(currentNeighbor->getFaceUri());
     uri.canonize([this, then, currentNeighbor] (ndn::util::FaceUri canonicalUri) {
-        _LOG_DEBUG("Canonized URI: " << currentNeighbor->getFaceUri()
+        NLSR_LOG_DEBUG("Canonized URI: " << currentNeighbor->getFaceUri()
                    << " to: " << canonicalUri);
         currentNeighbor->setFaceUri(canonicalUri);
         then(std::next(currentNeighbor));
       },
       [this, then, currentNeighbor] (const std::string& reason) {
-        _LOG_ERROR("Could not canonize URI: " << currentNeighbor->getFaceUri()
+        NLSR_LOG_ERROR("Could not canonize URI: " << currentNeighbor->getFaceUri()
                    << " because: " << reason);
         then(std::next(currentNeighbor));
       },
@@ -231,7 +231,7 @@ Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
 void
 Nlsr::initialize()
 {
-  _LOG_DEBUG("Initializing Nlsr");
+  NLSR_LOG_DEBUG("Initializing Nlsr");
   m_confParam.buildRouterPrefix();
   m_lsdbDatasetHandler.setRouterNameCommandPrefix(m_confParam.getRouterPrefix());
   m_nlsrLsdb.setLsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()));
@@ -246,11 +246,11 @@ Nlsr::initialize()
   // Logging start
   m_confParam.writeLog();
   m_adjacencyList.writeLog();
-  _LOG_DEBUG(m_namePrefixList);
+  NLSR_LOG_DEBUG(m_namePrefixList);
   // Logging end
   initializeKey();
   setStrategies();
-  _LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
+  NLSR_LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
   setInfoInterestFilter();
   setLsaInterestFilter();
 
@@ -355,7 +355,7 @@ Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
     }
   else if (certName[-1].toUri() != "ID-CERT")
     {
-      _LOG_DEBUG("certName for interest " << interest << " is malformed,"
+      NLSR_LOG_DEBUG("certName for interest " << interest << " is malformed,"
                  << " contains incorrect namespace syntax");
       return;
     }
@@ -364,7 +364,7 @@ Nlsr::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
 
   if (!static_cast<bool>(cert))
     {
-      _LOG_DEBUG("cert is not found for " << interest);
+      NLSR_LOG_DEBUG("cert is not found for " << interest);
       return; // cert is not found
     }
 
@@ -384,7 +384,7 @@ Nlsr::onKeyPrefixRegSuccess(const ndn::Name& name)
 void
 Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification)
 {
-  _LOG_TRACE("Nlsr::onFaceEventNotification called");
+  NLSR_LOG_TRACE("Nlsr::onFaceEventNotification called");
 
   switch (faceEventNotification.getKind()) {
     case ndn::nfd::FACE_EVENT_DESTROYED: {
@@ -393,7 +393,7 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
       auto adjacent = m_adjacencyList.findAdjacent(faceId);
 
       if (adjacent != m_adjacencyList.end()) {
-        _LOG_DEBUG("Face to " << adjacent->getName() << " with face id: " << faceId << " destroyed");
+        NLSR_LOG_DEBUG("Face to " << adjacent->getName() << " with face id: " << faceId << " destroyed");
 
         adjacent->setFaceId(0);
 
@@ -436,7 +436,7 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
       // If we have a neighbor by that FaceUri and it has no FaceId, we
       // have a match.
       if (adjacent != m_adjacencyList.end()) {
-        _LOG_DEBUG("Face creation event matches neighbor: " << adjacent->getName()
+        NLSR_LOG_DEBUG("Face creation event matches neighbor: " << adjacent->getName()
                    << ". New Face ID: " << faceEventNotification.getFaceId()
                    << ". Registering prefixes.");
         adjacent->setFaceId(faceEventNotification.getFaceId());
@@ -461,7 +461,7 @@ void
 Nlsr::initializeFaces(const FetchDatasetCallback& onFetchSuccess,
                       const FetchDatasetTimeoutCallback& onFetchFailure)
 {
-  _LOG_TRACE("Initializing Faces...");
+  NLSR_LOG_TRACE("Initializing Faces...");
 
   m_faceDatasetController.fetch<ndn::nfd::FaceDataset>(onFetchSuccess, onFetchFailure);
 
@@ -470,7 +470,7 @@ Nlsr::initializeFaces(const FetchDatasetCallback& onFetchSuccess,
 void
 Nlsr::processFaceDataset(const std::vector<ndn::nfd::FaceStatus>& faces)
 {
-  _LOG_DEBUG("Processing face dataset");
+  NLSR_LOG_DEBUG("Processing face dataset");
 
   // Iterate over each neighbor listed in nlsr.conf
   for (auto& adjacent : m_adjacencyList.getAdjList()) {
@@ -481,7 +481,7 @@ Nlsr::processFaceDataset(const std::vector<ndn::nfd::FaceStatus>& faces)
       // Set the adjacency FaceID if we find a URI match and it was
       // previously unset. Change the boolean to true.
       if (adjacent.getFaceId() == 0 && faceUriString == faceStatus.getRemoteUri()) {
-        _LOG_DEBUG("FaceUri: " << faceStatus.getRemoteUri() <<
+        NLSR_LOG_DEBUG("FaceUri: " << faceStatus.getRemoteUri() <<
                    " FaceId: "<< faceStatus.getFaceId());
         adjacent.setFaceId(faceStatus.getFaceId());
         // Register the prefixes for each neighbor
@@ -493,7 +493,7 @@ Nlsr::processFaceDataset(const std::vector<ndn::nfd::FaceStatus>& faces)
     // Face wasn't ready yet, or 2. NFD is configured
     // incorrectly and this Face isn't available.
     if (adjacent.getFaceId() == 0) {
-      _LOG_WARN("The adjacency " << adjacent.getName() <<
+      NLSR_LOG_WARN("The adjacency " << adjacent.getName() <<
                 " has no Face information in this dataset.");
     }
   }
@@ -531,17 +531,17 @@ Nlsr::onFaceDatasetFetchTimeout(uint32_t code,
                                 const std::string& msg,
                                 uint32_t nRetriesSoFar)
 {
-  _LOG_DEBUG("onFaceDatasetFetchTimeout");
+  NLSR_LOG_DEBUG("onFaceDatasetFetchTimeout");
   // If we have exceeded the maximum attempt count, do not try again.
   if (nRetriesSoFar++ < m_confParam.getFaceDatasetFetchTries()) {
-    _LOG_DEBUG("Failed to fetch dataset: " << msg << ". Attempting retry #" << nRetriesSoFar);
+    NLSR_LOG_DEBUG("Failed to fetch dataset: " << msg << ". Attempting retry #" << nRetriesSoFar);
     m_faceDatasetController.fetch<ndn::nfd::FaceDataset>(std::bind(&Nlsr::processFaceDataset,
                                                         this, _1),
                                               std::bind(&Nlsr::onFaceDatasetFetchTimeout,
                                                         this, _1, _2, nRetriesSoFar));
   }
   else {
-    _LOG_ERROR("Failed to fetch dataset: " << msg << ". Exceeded limit of " <<
+    NLSR_LOG_ERROR("Failed to fetch dataset: " << msg << ". Exceeded limit of " <<
                m_confParam.getFaceDatasetFetchTries() << ", so not trying again this time.");
     // If we fail to fetch it, just do nothing until the next
     // interval.  Since this is a backup mechanism, we aren't as
@@ -553,7 +553,7 @@ Nlsr::onFaceDatasetFetchTimeout(uint32_t code,
 void
 Nlsr::scheduleDatasetFetch()
 {
-  _LOG_DEBUG("Scheduling Dataset Fetch in " << m_confParam.getFaceDatasetFetchInterval()
+  NLSR_LOG_DEBUG("Scheduling Dataset Fetch in " << m_confParam.getFaceDatasetFetchInterval()
              << " seconds");
   m_scheduler.scheduleEvent(m_confParam.getFaceDatasetFetchInterval(),
     [this] {

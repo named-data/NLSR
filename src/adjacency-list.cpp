@@ -291,7 +291,7 @@ AdjacencyList::getFaceId(const ndn::util::FaceUri& faceUri)
 void
 AdjacencyList::writeLog()
 {
-  _LOG_DEBUG("-------Adjacency List--------");
+  NLSR_LOG_DEBUG("-------Adjacency List--------");
   for (std::list<Adjacent>::iterator it = m_adjList.begin();
        it != m_adjList.end(); it++) {
     (*it).writeLog();

@@ -61,7 +61,7 @@ CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
 
   // Only build a Name LSA if the added name is new
   if (m_namePrefixList.insert(castParams.getName())) {
-    _LOG_INFO("Advertising/Inserting name: " << castParams.getName() << "\n");
+    NLSR_LOG_INFO("Advertising/Inserting name: " << castParams.getName() << "\n");
     m_lsdb.buildAndInstallOwnNameLsa();
     return done(ndn::nfd::ControlResponse(200, "OK").setBody(parameters.wireEncode()));
   }
@@ -80,7 +80,7 @@ CommandManagerBase::withdrawAndRemovePrefix(const ndn::Name& prefix,
 
   // Only build a Name LSA if the added name is new
   if (m_namePrefixList.remove(castParams.getName())) {
-    _LOG_INFO("Withdrawing/Removing name: " << castParams.getName() << "\n");
+    NLSR_LOG_INFO("Withdrawing/Removing name: " << castParams.getName() << "\n");
     m_lsdb.buildAndInstallOwnNameLsa();
     return done(ndn::nfd::ControlResponse(200, "OK").setBody(parameters.wireEncode()));
   }

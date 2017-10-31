@@ -108,7 +108,7 @@ NameLsa::deserialize(const std::string& content)
     }
   }
   catch (const std::exception& e) {
-    _LOG_ERROR("Could not deserialize from content: " << e.what());
+    NLSR_LOG_ERROR("Could not deserialize from content: " << e.what());
     return false;
   }
   return true;
@@ -123,19 +123,19 @@ NameLsa::isEqualContent(const NameLsa& other) const
 void
 NameLsa::writeLog()
 {
-  _LOG_DEBUG("Name Lsa: ");
-  _LOG_DEBUG("  Origination Router: " << m_origRouter);
-  _LOG_DEBUG("  Ls Type: " << getType());
-  _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
-  _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
-  _LOG_DEBUG("  Names: ");
+  NLSR_LOG_DEBUG("Name Lsa: ");
+  NLSR_LOG_DEBUG("  Origination Router: " << m_origRouter);
+  NLSR_LOG_DEBUG("  Ls Type: " << getType());
+  NLSR_LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
+  NLSR_LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
+  NLSR_LOG_DEBUG("  Names: ");
   int i = 1;
   std::list<ndn::Name> nl = m_npl.getNames();
   for (std::list<ndn::Name>::iterator it = nl.begin(); it != nl.end(); it++)
   {
-    _LOG_DEBUG("    Name " << i << ": " << (*it));
+    NLSR_LOG_DEBUG("    Name " << i << ": " << (*it));
   }
-  _LOG_DEBUG("name_lsa_end");
+  NLSR_LOG_DEBUG("name_lsa_end");
 }
 
 CoordinateLsa::CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
@@ -196,7 +196,7 @@ CoordinateLsa::deserialize(const std::string& content)
     }
   }
   catch (const std::exception& e) {
-    _LOG_ERROR("Could not deserialize from content: " << e.what());
+    NLSR_LOG_ERROR("Could not deserialize from content: " << e.what());
     return false;
   }
   return true;
@@ -205,15 +205,15 @@ CoordinateLsa::deserialize(const std::string& content)
 void
 CoordinateLsa::writeLog()
 {
-  _LOG_DEBUG("Cor Lsa: ");
-  _LOG_DEBUG("  Origination Router: " << m_origRouter);
-  _LOG_DEBUG("  Ls Type: " << getType());
-  _LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
-  _LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
-  _LOG_DEBUG("    Hyperbolic Radius: " << m_corRad);
+  NLSR_LOG_DEBUG("Cor Lsa: ");
+  NLSR_LOG_DEBUG("  Origination Router: " << m_origRouter);
+  NLSR_LOG_DEBUG("  Ls Type: " << getType());
+  NLSR_LOG_DEBUG("  Ls Seq No: " << m_lsSeqNo);
+  NLSR_LOG_DEBUG("  Ls Lifetime: " << m_expirationTimePoint);
+  NLSR_LOG_DEBUG("    Hyperbolic Radius: " << m_corRad);
   int i = 0;
   for(auto const& value: m_angles) {
-    _LOG_DEBUG("    Hyperbolic Theta " << i++ << ": "<< value);
+    NLSR_LOG_DEBUG("    Hyperbolic Theta " << i++ << ": "<< value);
   }
 }
 
@@ -275,7 +275,7 @@ AdjLsa::deserialize(const std::string& content)
     }
   }
   catch (const std::exception& e) {
-    _LOG_ERROR("Could not deserialize from content: " << e.what());
+    NLSR_LOG_ERROR("Could not deserialize from content: " << e.what());
     return false;
   }
   return true;
@@ -304,7 +304,7 @@ AdjLsa::removeNptEntries(Nlsr& pnlsr)
 void
 AdjLsa::writeLog()
 {
-  _LOG_DEBUG(*this);
+  NLSR_LOG_DEBUG(*this);
 }
 
 std::ostream&

@@ -60,7 +60,7 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
   : CommandManagerBase(dispatcher, namePrefixList, lsdb, "prefix-update")
   , m_validator(face, broadcastPrefix, certificateCache, certStore)
 {
-  _LOG_DEBUG("Setting dispatcher to capture Interests for: "
+  NLSR_LOG_DEBUG("Setting dispatcher to capture Interests for: "
     << ndn::Name(Nlsr::LOCALHOST_PREFIX).append("prefix-update"));
 
   m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("advertise"),
@@ -88,12 +88,12 @@ PrefixUpdateProcessor::makeAuthorization()
 
         auto signer1 = getSignerFromTag(*request);
         std::string signer = signer1.value_or("*");
-        _LOG_DEBUG("accept " << request->getName() << " signer=" << signer);
+        NLSR_LOG_DEBUG("accept " << request->getName() << " signer=" << signer);
         accept(signer);
       },
       [reject] (const std::shared_ptr<const ndn::Interest>& request,
                 const std::string& failureInfo) {
-        _LOG_DEBUG("reject " << request->getName() << " signer=" <<
+        NLSR_LOG_DEBUG("reject " << request->getName() << " signer=" <<
                       getSignerFromTag(*request).value_or("?") << ' ' << failureInfo);
         reject(ndn::mgmt::RejectReply::STATUS403);
       });

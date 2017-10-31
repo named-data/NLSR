@@ -55,7 +55,7 @@ NamePrefixTableEntry::removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEn
     m_rteList.erase(iterator);
   }
   else {
-    _LOG_ERROR("Routing entry for: " << entryPtr->getDestination()
+    NLSR_LOG_ERROR("Routing entry for: " << entryPtr->getDestination()
                << " not found in NPT entry: " << getNamePrefix());
   }
   return entryPtr->getUseCount();
@@ -81,10 +81,10 @@ NamePrefixTableEntry::addRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry
 void
 NamePrefixTableEntry::writeLog()
 {
-  _LOG_DEBUG("Name: " << m_namePrefix);
+  NLSR_LOG_DEBUG("Name: " << m_namePrefix);
   for (auto it = m_rteList.begin(); it != m_rteList.end(); ++it) {
-    _LOG_DEBUG("Destination: " << (*it)->getDestination());
-    _LOG_DEBUG("Nexthops: ");
+    NLSR_LOG_DEBUG("Destination: " << (*it)->getDestination());
+    NLSR_LOG_DEBUG("Nexthops: ");
     (*it)->getNexthopList().writeLog();
   }
   m_nexthopList.writeLog();

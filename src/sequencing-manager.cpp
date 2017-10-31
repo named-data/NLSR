@@ -50,7 +50,7 @@ SequencingManager::writeSeqNoToFile() const
 void
 SequencingManager::initiateSeqNoFromFile(int hypState)
 {
-  _LOG_DEBUG("Seq File Name: " << m_seqFileNameWithPath);
+  NLSR_LOG_DEBUG("Seq File Name: " << m_seqFileNameWithPath);
   std::ifstream inputFile(m_seqFileNameWithPath.c_str());
 
   // Good checks that file is not (bad or eof or fail)
@@ -74,7 +74,7 @@ SequencingManager::initiateSeqNoFromFile(int hypState)
     // lsaOrCombinedSeqNo != CorLsaSeq
     if (m_nameLsaSeq == 0 && m_adjLsaSeq == 0 && m_corLsaSeq == 0 &&
         lsaOrCombinedSeqNo != "CorLsaSeq") {
-      _LOG_DEBUG("Old file had combined sequence number: " << lsaOrCombinedSeqNo);
+      NLSR_LOG_DEBUG("Old file had combined sequence number: " << lsaOrCombinedSeqNo);
       std::istringstream iss(lsaOrCombinedSeqNo);
       iss >> seqNo;
       m_adjLsaSeq = (seqNo & 0xFFFFF);
@@ -89,7 +89,7 @@ SequencingManager::initiateSeqNoFromFile(int hypState)
     // Increment the adjacency LSA seq. no. if link-state or dry HR is enabled
     if (hypState != HYPERBOLIC_STATE_ON) {
       if (m_corLsaSeq != 0) {
-        _LOG_WARN("This router was previously configured for hyperbolic"
+        NLSR_LOG_WARN("This router was previously configured for hyperbolic"
                    << " routing without clearing the seq. no. file.");
         m_corLsaSeq = 0;
       }
@@ -99,7 +99,7 @@ SequencingManager::initiateSeqNoFromFile(int hypState)
     // Similarly, increment the coordinate LSA seq. no only if link-state is disabled.
     if (hypState != HYPERBOLIC_STATE_OFF) {
       if (m_adjLsaSeq != 0) {
-        _LOG_WARN("This router was previously configured for link-state"
+        NLSR_LOG_WARN("This router was previously configured for link-state"
                   << " routing without clearing the seq. no. file.");
         m_adjLsaSeq = 0;
       }
@@ -127,10 +127,10 @@ SequencingManager::setSeqFileDirectory(std::string filePath)
 void
 SequencingManager::writeLog() const
 {
-  _LOG_DEBUG("----SequencingManager----");
-  _LOG_DEBUG("Adj LSA seq no: " << m_adjLsaSeq);
-  _LOG_DEBUG("Cor LSA Seq no: " << m_corLsaSeq);
-  _LOG_DEBUG("Name LSA Seq no: " << m_nameLsaSeq);
+  NLSR_LOG_DEBUG("----SequencingManager----");
+  NLSR_LOG_DEBUG("Adj LSA seq no: " << m_adjLsaSeq);
+  NLSR_LOG_DEBUG("Cor LSA Seq no: " << m_corLsaSeq);
+  NLSR_LOG_DEBUG("Name LSA Seq no: " << m_nameLsaSeq);
 }
 
 } // namespace nlsr

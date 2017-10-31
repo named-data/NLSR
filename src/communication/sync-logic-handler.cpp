@@ -55,7 +55,7 @@ void
 SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
 {
   if (m_syncSocket != nullptr) {
-    _LOG_WARN("Trying to create Sync socket, but Sync socket already exists");
+    NLSR_LOG_WARN("Trying to create Sync socket, but Sync socket already exists");
     return;
   }
 
@@ -64,7 +64,7 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
   // Build LSA sync update prefix
   buildUpdatePrefix();
 
-  _LOG_DEBUG("Creating Sync socket. Sync Prefix: " << m_syncPrefix);
+  NLSR_LOG_DEBUG("Creating Sync socket. Sync Prefix: " << m_syncPrefix);
 
   // The face's lifetime is managed in main.cpp; SyncSocket should not manage the memory
   // of the object
@@ -84,18 +84,18 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
 void
 SyncLogicHandler::onChronoSyncUpdate(const std::vector<chronosync::MissingDataInfo>& v)
 {
-  _LOG_DEBUG("Received ChronoSync update event");
+  NLSR_LOG_DEBUG("Received ChronoSync update event");
 
   for (size_t i = 0; i < v.size(); i++){
     ndn::Name updateName = v[i].session.getPrefix(-1);
 
-    _LOG_DEBUG("Update Name: " << updateName << " Seq no: " << v[i].high);
+    NLSR_LOG_DEBUG("Update Name: " << updateName << " Seq no: " << v[i].high);
 
     int32_t nlsrPosition = util::getNameComponentPosition(updateName, nlsr::NLSR_COMPONENT);
     int32_t lsaPosition = util::getNameComponentPosition(updateName, nlsr::LSA_COMPONENT);
 
     if (nlsrPosition < 0 || lsaPosition < 0) {
-      _LOG_WARN("Received malformed sync update");
+      NLSR_LOG_WARN("Received malformed sync update");
       return;
     }
 
@@ -113,7 +113,7 @@ void
 SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
                                         const ndn::Name& updateName, const uint64_t& seqNo)
 {
-  _LOG_DEBUG("Origin Router of update: " << originRouter);
+  NLSR_LOG_DEBUG("Origin Router of update: " << originRouter);
 
   // A router should not try to fetch its own LSA
   if (originRouter != m_confParam.getRouterPrefix()) {
@@ -121,20 +121,20 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
     Lsa::Type lsaType;
     std::istringstream(updateName.get(updateName.size()-1).toUri()) >> lsaType;
 
-    _LOG_DEBUG("Received sync update with higher " << lsaType
+    NLSR_LOG_DEBUG("Received sync update with higher " << lsaType
                << " sequence number than entry in LSDB");
 
     if (m_isLsaNew(originRouter, lsaType, seqNo)) {
       if (lsaType == Lsa::Type::ADJACENCY && seqNo != 0 &&
           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-        _LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing"
+        NLSR_LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing"
                    << " is enabled. Not going to fetch.");
         return;
       }
 
       if (lsaType == Lsa::Type::COORDINATE && seqNo != 0 &&
           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-        _LOG_ERROR("Got an update for coordinate LSA when link-state"
+        NLSR_LOG_ERROR("Got an update for coordinate LSA when link-state"
                    << " is enabled. Not going to fetch.");
         return;
       }
@@ -147,7 +147,7 @@ void
 SyncLogicHandler::publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo)
 {
   if (m_syncSocket == nullptr) {
-    _LOG_FATAL("Cannot publish routing update; SyncSocket does not exist");
+    NLSR_LOG_FATAL("Cannot publish routing update; SyncSocket does not exist");
 
     BOOST_THROW_EXCEPTION(SyncLogicHandler::Error("Cannot publish routing update; SyncSocket does not exist"));
   }
@@ -188,7 +188,7 @@ SyncLogicHandler::buildUpdatePrefix()
 void
 SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo)
 {
-  _LOG_DEBUG("Publishing Sync Update. Prefix: " << updatePrefix << " Seq No: " << seqNo);
+  NLSR_LOG_DEBUG("Publishing Sync Update. Prefix: " << updatePrefix << " Seq No: " << seqNo);
 
   ndn::Name updateName(updatePrefix);
   std::string data("NoData");

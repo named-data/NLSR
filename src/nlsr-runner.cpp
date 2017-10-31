@@ -74,7 +74,7 @@ NlsrRunner::run()
     m_nlsr.startEventLoop();
   }
   catch (const std::exception& e) {
-    _LOG_FATAL("ERROR: " << e.what());
+    NLSR_LOG_FATAL("ERROR: " << e.what());
     std::cerr << "ERROR: " << e.what() << std::endl;
 
     m_nlsr.getFib().clean();

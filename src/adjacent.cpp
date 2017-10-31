@@ -91,7 +91,7 @@ operator<<(std::ostream& os, const Adjacent& adjacent)
 void
 Adjacent::writeLog()
 {
-  _LOG_DEBUG(*this);
+  NLSR_LOG_DEBUG(*this);
 }
 
 } // namespace nlsr
