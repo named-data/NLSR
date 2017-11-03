@@ -90,7 +90,7 @@ NameLsa::serialize() const
 }
 
 bool
-NameLsa::deserialize(const std::string& content)
+NameLsa::deserialize(const std::string& content) noexcept
 {
   uint32_t numName = 0;
   boost::char_separator<char> sep("|");
@@ -167,7 +167,7 @@ CoordinateLsa::serialize() const
 }
 
 bool
-CoordinateLsa::deserialize(const std::string& content)
+CoordinateLsa::deserialize(const std::string& content) noexcept
 {
   boost::char_separator<char> sep("|");
   boost::tokenizer<boost::char_separator<char> >tokens(content, sep);
@@ -232,7 +232,7 @@ AdjLsa::serialize() const
 }
 
 bool
-AdjLsa::deserialize(const std::string& content)
+AdjLsa::deserialize(const std::string& content) noexcept
 {
   uint32_t numLink = 0;
   boost::char_separator<char> sep("|");

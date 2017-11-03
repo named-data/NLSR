@@ -42,7 +42,7 @@ public:
   serialize() const override;
 
   bool
-  deserialize(const std::string& content) override;
+  deserialize(const std::string& content) noexcept override;
 
   void
   writeLog() const override;

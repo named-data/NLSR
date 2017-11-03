@@ -120,8 +120,13 @@ public:
   const ndn::Name
   getKey() const;
 
+  /*! \brief Populate this LSA with content from the string "content".
+    \param content The string containing a valid serialization of LSA content.
+
+    This method populates "this" LSA with data from the string.
+   */
   virtual bool
-  deserialize(const std::string& content) = 0;
+  deserialize(const std::string& content) noexcept = 0;
 
   virtual void
   writeLog() const = 0;
@@ -200,7 +205,7 @@ public:
     getData(); getData() returns data of this format, in other words.
    */
   bool
-  deserialize(const std::string& content) override;
+  deserialize(const std::string& content) noexcept override;
 
   bool
   isEqualContent(const NameLsa& other) const;
@@ -267,7 +272,7 @@ public:
     according to getData().
    */
   bool
-  deserialize(const std::string& content) override;
+  deserialize(const std::string& content) noexcept override;
 
   uint32_t
   getNoLink()
@@ -349,7 +354,7 @@ public:
     same as for getData();
   */
   bool
-  deserialize(const std::string& content) override;
+  deserialize(const std::string& content) noexcept override;
 
   double
   getCorRadius() const

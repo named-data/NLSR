@@ -31,7 +31,7 @@ MockLsa::serialize() const
 }
 
 bool
-MockLsa::deserialize(const std::string& content)
+MockLsa::deserialize(const std::string& content) noexcept
 {
   boost::char_separator<char> sep("|");
   boost::tokenizer<boost::char_separator<char> >tokens(content, sep);
