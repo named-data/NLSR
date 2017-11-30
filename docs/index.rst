@@ -29,11 +29,12 @@ NLSR Documentation
    :hidden:
    :maxdepth: 3
 
-   RELEASE-NOTES
    GETTING-STARTED
    INSTALL
    ROUTER-CONFIG
    SECURITY-CONFIG
+   RELEASE-NOTES
+   releases
    manpages
 
 -  :doc:`GETTING-STARTED`
@@ -41,6 +42,7 @@ NLSR Documentation
 -  :doc:`ROUTER-CONFIG`
 -  :doc:`SECURITY-CONFIG`
 -  :doc:`RELEASE-NOTES`
+-  :doc:`releases`
 -  :doc:`manpages`
 
 Downloading

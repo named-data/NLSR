@@ -35,13 +35,6 @@ the following links:
 - [Getting Started with NLSR](http://named-data.net/doc/NLSR/current/GETTING-STARTED.html)
 - [GitHub NLSR repository](https://github.com/named-data/NLSR)
 
-Currently, NLSR is not using the latest version of the ndn-cxx library. Therefore, it is
-necessary to checkout the following versions of its dependencies:
-
-- ndn-cxx: b555b00c280b9c9ed46f24a1fbebc73b720601af
-- NFD: f4056d0242536f85b7d7b4de1b5ac50dad65c233
-- Chronosync: 097bb448f46b8bd9a5c1f431e824f8f6a169b650
-
 Additional information
 ----------------------
 

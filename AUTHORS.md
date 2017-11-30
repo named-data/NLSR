@@ -1,5 +1,5 @@
 NLSR Authors
-===========
+============
 
 NLSR is an open source project includes contributions from the members of the
 [NDN project team](http://named-data.net/project/participants/).

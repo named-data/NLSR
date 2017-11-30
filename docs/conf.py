@@ -12,6 +12,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
+import datetime
 import sys
 import os
 
@@ -30,7 +31,7 @@ sys.path.insert(0, os.path.abspath('.'))
 # ones.
 extensions = [
     'sphinx.ext.todo',
-    'redmine_issue',
+    'redmine_issue'
 ]
 
 def addExtensionIfExists(extension):
@@ -60,7 +61,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'NLSR - Named Data Link State Routing Protocol'
-copyright = u'2014-2015, Named Data Networking Project'
+copyright = u'2014-{}, Named Data Networking Project'.format(datetime.date.today().year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -251,4 +252,4 @@ if os.getenv('GOOGLE_ANALYTICS', None):
     googleanalytics_id = os.environ['GOOGLE_ANALYTICS']
     googleanalytics_enabled = True
 
-redmine_project_url = "http://redmine.named-data.net/"
+redmine_project_url = "https://redmine.named-data.net/"
