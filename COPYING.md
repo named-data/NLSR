@@ -1,16 +1,12 @@
 NLSR LICENSE
 ============
 
-NLSR is released under the GPL with the additional exemption that
-compiling, linking, and/or using OpenSSL is allowed.
+NLSR is released under the GPL.
 
 NLSR relies on third-party software and libraries, licensed under the following
 licenses:
 
 - Boost libraries are licensed under the conditions of
-  [Boost Software License 1.0](http://www.boost.org/users/license.html)
-
-- CryptoPP library is licensed under the conditions of
   [Boost Software License 1.0](http://www.boost.org/users/license.html)
 
 - log4cxx is licensed under the conditions of
@@ -19,21 +15,11 @@ licenses:
 - ndn-cxx is licensed under the conditions of
   [LGPL 3.0](https://github.com/named-data/ndn-cxx/blob/master/COPYING.md)
 
-- SQLite is in [public domain](http://www.sqlite.org/copyright.html)
+- ChronoSync is licensed under the conditions of
+  [GPL 3.0](https://github.com/named-data/ChronoSync/blob/master/COPYING.md)
 
 - waf build system is licensed under the conditions of
-  [BSD license](https://github.com/named-data/ndn-cxx/blob/master/waf)
-
-NLSR also relies on third-party libraries with non-GPL compatible licenses.
-These libraries fall into the category of "System Libraries" under GPL
-license definitions and are used in accordance with the GPL license exception
-for "System Libraries":
-
-- OpenSSL is licensed under an
-  [Apache-style licence](http://www.openssl.org/source/license.html)
-
-- (OS X platform only) OS X Security Framework is licensed under
-  [Apple Public Source License](http://www.opensource.apple.com/license/apsl/)
+  [BSD license](https://github.com/named-data/NLSR/blob/master/waf)
 
 The GPL license is provided below in this file.
 For more information, see http://www.gnu.org/licenses/
