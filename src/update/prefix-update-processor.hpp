@@ -44,7 +44,7 @@ class PrefixUpdateProcessor : public CommandManagerBase
 {
 public:
   PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
-                        ndn::Face& face,
+                        ndn::security::ValidatorConfig& validator,
                         NamePrefixList& namePrefixList,
                         Lsdb& lsdb, const std::string& configFileName);
 
@@ -95,7 +95,7 @@ private:
   makeAuthorization();
 
 private:
-  ndn::security::ValidatorConfig m_validator;
+  ndn::security::ValidatorConfig& m_validator;
   const std::string& m_configFileName;
 };
 

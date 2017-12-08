@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,12 +26,12 @@
 #include "routing-table-pool-entry.hpp"
 #include "signals.hpp"
 #include "test-access-control.hpp"
+#include "route/fib.hpp"
 
 #include <list>
 #include <unordered_map>
 
 namespace nlsr {
-class Nlsr;
 
 class NamePrefixTable
 {
@@ -41,7 +41,8 @@ public:
   using NptEntryList = std::list<std::shared_ptr<NamePrefixTableEntry>>;
   using const_iterator = NptEntryList::const_iterator;
 
-  NamePrefixTable(Nlsr& nlsr, std::unique_ptr<AfterRoutingChange>& afterRoutingChangeSignal);
+  NamePrefixTable(Fib& fib, RoutingTable& routingTable,
+                  std::unique_ptr<AfterRoutingChange>& afterRoutingChangeSignal);
 
   ~NamePrefixTable();
 
@@ -124,7 +125,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   NptEntryList m_table;
 
 private:
-  Nlsr& m_nlsr;
+  Fib& m_fib;
+  RoutingTable& m_routingTable;
   ndn::util::signal::Connection m_afterRoutingChangeConnection;
 };
 

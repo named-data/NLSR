@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -258,26 +258,6 @@ AdjLsa::deserialize(const std::string& content) noexcept
     return false;
   }
   return true;
-}
-
-void
-AdjLsa::addNptEntries(Nlsr& pnlsr)
-{
-  // Only add NPT entries if this is an adj LSA from another router.
-  if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix()) {
-    // Pass the originating router as both the name to register and
-    // where it came from.
-    pnlsr.getNamePrefixTable().addEntry(getOrigRouter(), getOrigRouter());
-  }
-}
-
-
-void
-AdjLsa::removeNptEntries(Nlsr& pnlsr)
-{
-  if (getOrigRouter() != pnlsr.getConfParameter().getRouterPrefix()) {
-    pnlsr.getNamePrefixTable().removeEntry(getOrigRouter(), getOrigRouter());
-  }
 }
 
 void

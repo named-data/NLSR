@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -76,11 +76,13 @@ public:
   void
   publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo);
 
-  /*! \brief Create and configure a Logic object to enable ChronoSync for this NLSR.
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  /*! \brief Create and configure a Logic object to enable Sync for this NLSR.
    *
    * In a typical situation this only needs to be called once, when NLSR starts.
-   * \param syncPrefix The sync prefix you want this ChronoSync to use
-   * \param syncInterestLifetime ChronoSync sends a periodic sync interest every \p syncInterestLifetime / 2 ms
+   * \param syncPrefix The sync prefix you want this Sync to use
+   * \param syncInterestLifetime ChronoSync/PSync sends a periodic sync interest every
+   *        \p syncInterestLifetime / 2 ms
    * \sa Nlsr::initialize
    */
   void
@@ -88,10 +90,15 @@ public:
                   const ndn::time::milliseconds& syncInterestLifetime =
                     ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT));
 
+  /*! \brief Callback from Sync protocol
+   *
+   * In a typical situation this only needs to be called once, when NLSR starts.
+   * \param updateName The prefix for which sync reports an update
+   * \param highSeq The latest sequence number of the update
+   */
   void
   processUpdate(const ndn::Name& updateName, uint64_t highSeq);
 
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Simple function to glue Name components together
    */
   void

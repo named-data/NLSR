@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,26 +22,21 @@
 #ifndef NLSR_SEQUENCING_MANAGER_HPP
 #define NLSR_SEQUENCING_MANAGER_HPP
 
-#include <list>
-#include <string>
-#include <boost/cstdint.hpp>
+#include "conf-parameter.hpp"
+#include "test-access-control.hpp"
 
 #include <ndn-cxx/face.hpp>
 
-#include "conf-parameter.hpp"
+#include <list>
+#include <string>
+#include <boost/cstdint.hpp>
 
 namespace nlsr {
 
 class SequencingManager
 {
 public:
-  SequencingManager()
-    : m_nameLsaSeq(0)
-    , m_adjLsaSeq(0)
-    , m_corLsaSeq(0)
-    , m_seqFileNameWithPath()
-  {
-  }
+  SequencingManager(std::string filePath, int hypState);
 
   uint64_t
   getNameLsaSeq() const
@@ -100,9 +95,11 @@ public:
   void
   writeSeqNoToFile() const;
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
-  initiateSeqNoFromFile(int hypState);
+  initiateSeqNoFromFile();
 
+private:
   /*! \brief Set the sequence file directory
 
     If the string is empty, home directory is set as sequence file directory
@@ -110,7 +107,7 @@ public:
   \param filePath The directory where sequence file will be stored
  */
   void
-  setSeqFileDirectory(std::string filePath);
+  setSeqFileDirectory(const std::string& filePath);
 
   void
   writeLog() const;
@@ -120,6 +117,9 @@ private:
   uint64_t m_adjLsaSeq;
   uint64_t m_corLsaSeq;
   std::string m_seqFileNameWithPath;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  int m_hyperbolicState;
 };
 
 } // namespace nlsr

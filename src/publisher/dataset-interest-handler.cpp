@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -36,13 +36,11 @@ const ndn::PartialName COORDINATES_DATASET = ndn::PartialName("lsdb/coordinates"
 const ndn::PartialName NAMES_DATASET = ndn::PartialName("lsdb/names");
 const ndn::PartialName RT_DATASET = ndn::PartialName("routing-table");
 
-DatasetInterestHandler::DatasetInterestHandler(const Lsdb& lsdb,
-                                               const RoutingTable& rt,
-                                               ndn::mgmt::Dispatcher& dispatcher,
-                                               const ndn::Face& face,
-                                               const ndn::KeyChain& keyChain)
-  : m_lsdb(lsdb)
-  , m_dispatcher(dispatcher)
+DatasetInterestHandler::DatasetInterestHandler(ndn::mgmt::Dispatcher& dispatcher,
+                                               const Lsdb& lsdb,
+                                               const RoutingTable& rt)
+  : m_dispatcher(dispatcher)
+  , m_lsdb(lsdb)
   , m_routingTableEntries(rt.getRoutingTableEntry())
   , m_dryRoutingTableEntries(rt.getDryRoutingTableEntry())
 {

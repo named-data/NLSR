@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,6 +23,8 @@
 #include "common.hpp"
 #include "adjacent.hpp"
 #include "conf-parameter.hpp"
+
+#include <ndn-cxx/util/dummy-client-face.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -85,7 +87,8 @@ BOOST_AUTO_TEST_CASE(AdjLsaIsBuildableWithOneNodeActive)
   adjacencies.insert(adjacencyA);
   adjacencies.insert(adjacencyB);
 
-  ConfParameter conf;
+  ndn::util::DummyClientFace face;
+  ConfParameter conf(face);
   BOOST_CHECK(adjacencies.isAdjLsaBuildable(conf.getInterestRetryNumber()));
 }
 
@@ -104,7 +107,8 @@ BOOST_AUTO_TEST_CASE(AdjLsaIsBuildableWithAllNodesTimedOut)
   adjacencies.insert(adjacencyA);
   adjacencies.insert(adjacencyB);
 
-  ConfParameter conf;
+  ndn::util::DummyClientFace face;
+  ConfParameter conf(face);
   conf.setInterestRetryNumber(HELLO_RETRIES_DEFAULT);
 
   BOOST_CHECK(adjacencies.isAdjLsaBuildable(conf.getInterestRetryNumber()));
@@ -125,7 +129,8 @@ BOOST_AUTO_TEST_CASE(AdjLsaIsNotBuildable)
   adjacencies.insert(adjacencyA);
   adjacencies.insert(adjacencyB);
 
-  ConfParameter conf;
+  ndn::util::DummyClientFace face;
+  ConfParameter conf(face);
   conf.setInterestRetryNumber(HELLO_RETRIES_DEFAULT);
 
   BOOST_CHECK(!adjacencies.isAdjLsaBuildable(conf.getInterestRetryNumber()));

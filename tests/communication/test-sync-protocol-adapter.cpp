@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,8 +20,8 @@
  **/
 
 #include "communication/sync-protocol-adapter.hpp"
-#include "test-common.hpp"
-#include "boost-test.hpp"
+#include "../test-common.hpp"
+#include "../boost-test.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 

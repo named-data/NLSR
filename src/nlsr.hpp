@@ -80,7 +80,7 @@ public:
     }
   };
 
-  Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::Face& face, ndn::KeyChain& keyChain);
+  Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam);
 
   void
   registrationFailed(const ndn::Name& name);
@@ -102,145 +102,10 @@ public:
   void
   addDispatcherTopPrefix(const ndn::Name& topPrefix);
 
-  void
-  startEventLoop();
-
-  std::string
-  getConfFileName() const
-  {
-    return m_configFileName;
-  }
-
-  void
-  setConfFileName(const std::string& fileName)
-  {
-    m_configFileName = fileName;
-  }
-
-  ConfParameter&
-  getConfParameter()
-  {
-    return m_confParam;
-  }
-
-  const ConfParameter&
-  getConfParameter() const
-  {
-    return m_confParam;
-  }
-
-  AdjacencyList&
-  getAdjacencyList()
-  {
-    return m_adjacencyList;
-  }
-
-  const AdjacencyList&
-  getAdjacencyList() const
-  {
-    return m_adjacencyList;
-  }
-
-  NamePrefixList&
-  getNamePrefixList()
-  {
-    return m_namePrefixList;
-  }
-
-  const NamePrefixList&
-  getNamePrefixList() const
-  {
-    return m_namePrefixList;
-  }
-
-  ndn::Face&
-  getNlsrFace()
-  {
-    return m_nlsrFace;
-  }
-
-  Lsdb&
-  getLsdb()
-  {
-    return m_nlsrLsdb;
-  }
-
-  RoutingTable&
-  getRoutingTable()
-  {
-    return m_routingTable;
-  }
-
-  NamePrefixTable&
-  getNamePrefixTable()
-  {
-    return m_namePrefixTable;
-  }
-
   Fib&
   getFib()
   {
     return m_fib;
-  }
-
-  long int
-  getAdjBuildCount()
-  {
-    return m_adjBuildCount;
-  }
-
-  void
-  incrementAdjBuildCount()
-  {
-    m_adjBuildCount++;
-  }
-
-  void
-  setAdjBuildCount(int64_t abc)
-  {
-    m_adjBuildCount = abc;
-  }
-
-  bool
-  getIsBuildAdjLsaSheduled()
-  {
-    return m_isBuildAdjLsaSheduled;
-  }
-
-  void
-  setIsBuildAdjLsaSheduled(bool iabls)
-  {
-    m_isBuildAdjLsaSheduled = iabls;
-  }
-
-  bool
-  getIsRoutingTableCalculating()
-  {
-    return m_isRoutingTableCalculating;
-  }
-
-  void
-  setIsRoutingTableCalculating(bool irtc)
-  {
-    m_isRoutingTableCalculating = irtc;
-  }
-
-  bool
-  getIsRouteCalculationScheduled()
-  {
-    return m_isRouteCalculationScheduled;
-  }
-
-  void
-  setIsRouteCalculationScheduled(bool ircs)
-  {
-    m_isRouteCalculationScheduled = ircs;
-  }
-
-  DatasetInterestHandler&
-  getDatasetHandler()
-  {
-    return m_datasetHandler;
   }
 
   void
@@ -298,9 +163,6 @@ public:
   void
   loadCertToPublish(const ndn::security::v2::Certificate& certificate);
 
-  void
-  connectToFetcher(ndn::util::SegmentFetcher& fetcher);
-
   /*! \brief Callback when SegmentFetcher retrieves a segment.
    */
   void
@@ -315,19 +177,6 @@ public:
 
   void
   initializeKey();
-
-  void
-  loadValidator(boost::property_tree::ptree section,
-                const std::string& filename)
-  {
-    m_validator.load(section, filename);
-  }
-
-  ndn::security::ValidatorConfig&
-  getValidator()
-  {
-    return m_validator;
-  }
 
   /*! \brief Find a certificate
    *
@@ -346,56 +195,8 @@ public:
     return cert;
   }
 
-  ndn::security::v2::KeyChain&
-  getKeyChain()
-  {
-    return m_keyChain;
-  }
-
-  const ndn::Name&
-  getDefaultCertName()
-  {
-    return m_defaultCertName;
-  }
-
-  const ndn::security::SigningInfo&
-  getSigningInfo()
-  {
-    return m_signingInfo;
-  }
-
-  update::PrefixUpdateProcessor&
-  getPrefixUpdateProcessor()
-  {
-    return m_prefixUpdateProcessor;
-  }
-
-  update::NfdRibCommandProcessor&
-  getNfdRibCommandProcessor()
-  {
-    return m_nfdRibCommandProcessor;
-  }
-
-  ndn::mgmt::Dispatcher&
-  getDispatcher()
-  {
-    return m_dispatcher;
-  }
-
   void
   setStrategies();
-
-  uint32_t
-  getFirstHelloInterval() const
-  {
-    return m_firstHelloInterval;
-  }
-
-  StatsCollector&
-  getStatsCollector()
-  {
-    return m_statsCollector;
-  }
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
@@ -437,12 +238,6 @@ private:
   onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification);
 
   void
-  setFirstHelloInterval(uint32_t interval)
-  {
-    m_firstHelloInterval = interval;
-  }
-
-  void
   scheduleDatasetFetch();
 
   /*! \brief Enables NextHopFaceId indication in NFD for incoming data packet.
@@ -465,48 +260,47 @@ public:
   static const ndn::Name LOCALHOST_PREFIX;
 
 private:
-  ndn::Face& m_nlsrFace;
-  ndn::Scheduler& m_scheduler;
+  ndn::Face& m_face;
+  ndn::Scheduler m_scheduler;
   ndn::security::v2::KeyChain& m_keyChain;
-  ConfParameter m_confParam;
-  AdjacencyList m_adjacencyList;
-  NamePrefixList m_namePrefixList;
-  std::string m_configFileName;
-  Lsdb m_nlsrLsdb;
-  int64_t m_adjBuildCount;
-  bool m_isBuildAdjLsaSheduled;
-  bool m_isRouteCalculationScheduled;
-  bool m_isRoutingTableCalculating;
-  RoutingTable m_routingTable;
-  Fib m_fib;
-  NamePrefixTable m_namePrefixTable;
-
-  ndn::mgmt::Dispatcher m_dispatcher;
-
-  DatasetInterestHandler m_datasetHandler;
+  ConfParameter& m_confParam;
+  AdjacencyList& m_adjacencyList;
+  NamePrefixList& m_namePrefixList;
+  bool m_isDaemonProcess;
+  ndn::security::ValidatorConfig& m_validator;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  HelloProtocol m_helloProtocol;
+  Fib m_fib;
+  RoutingTable m_routingTable;
+  NamePrefixTable m_namePrefixTable;
+  Lsdb m_lsdb;
 
-  ndn::security::ValidatorConfig m_validator;
+private:
+  ndn::util::signal::ScopedConnection m_afterSegmentValidatedConnection;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  ndn::mgmt::Dispatcher m_dispatcher;
+  DatasetInterestHandler m_datasetHandler;
+  HelloProtocol m_helloProtocol;
 
 private:
   /*! \brief Where NLSR stores certificates it claims to be
    * authoritative for. Usually the router certificate.
    */
-  security::CertificateStore m_certStore;
+  security::CertificateStore& m_certStore;
 
   ndn::nfd::Controller m_controller;
   ndn::nfd::Controller m_faceDatasetController;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::security::SigningInfo m_signingInfo;
-  ndn::Name m_defaultCertName;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
   update::NfdRibCommandProcessor m_nfdRibCommandProcessor;
+
   StatsCollector m_statsCollector;
 
+private:
   ndn::nfd::FaceMonitor m_faceMonitor;
-
-  uint32_t m_firstHelloInterval;
 
   friend class NlsrRunner;
 };

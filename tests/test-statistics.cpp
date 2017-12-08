@@ -1,6 +1,6 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+ /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -35,11 +35,11 @@ class StatisticsFixture : public UnitTestTimeFixture
 public:
   StatisticsFixture()
     : face(m_ioService, m_keyChain)
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , lsdb(nlsr.getLsdb())
+    , conf(face)
+    , nlsr(face, m_keyChain, conf)
+    , lsdb(nlsr.m_lsdb)
     , hello(nlsr.m_helloProtocol)
-    , conf(nlsr.getConfParameter())
-    , collector(nlsr.getStatsCollector())
+    , collector(nlsr.m_statsCollector)
   {
     conf.setNetwork("/ndn");
     conf.setSiteName("/site");
@@ -115,11 +115,11 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
+  ConfParameter conf;
   Nlsr nlsr;
 
   Lsdb& lsdb;
   HelloProtocol& hello;
-  ConfParameter& conf;
   StatsCollector& collector;
 };
 
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(SendHelloInterest)
   Adjacent other("/ndn/router/other", ndn::FaceUri("udp4://other"), 25, Adjacent::STATUS_INACTIVE, 0, 0);
 
   // This router's Adjacency LSA
-  nlsr.getAdjacencyList().insert(other);
+  conf.getAdjacencyList().insert(other);
 
   ndn::Name otherName(other.getName());
   otherName.append("NLSR");
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   // adjacency lsa
   ndn::Name adjInterest("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/ADJACENCY/");
   adjInterest.appendNumber(seqNo);
-  AdjLsa aLsa(routerName, seqNo, MAX_TIME, 1, nlsr.getAdjacencyList());
+  AdjLsa aLsa(routerName, seqNo, MAX_TIME, 1, conf.getAdjacencyList());
   lsdb.installAdjLsa(aLsa);
 
   ndn::Block block = ndn::encoding::makeStringBlock(ndn::tlv::Content, aLsa.serialize());
@@ -327,7 +327,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   // name lsa
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
-  NameLsa nLsa(routerName, seqNo, MAX_TIME, nlsr.getNamePrefixList());
+  NameLsa nLsa(routerName, seqNo, MAX_TIME, conf.getNamePrefixList());
   lsdb.installNameLsa(nLsa);
 
   block = ndn::encoding::makeStringBlock(ndn::tlv::Content, nLsa.serialize());

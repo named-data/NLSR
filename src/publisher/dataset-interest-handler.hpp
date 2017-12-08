@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -72,23 +72,9 @@ public:
     }
   };
 
-  DatasetInterestHandler(const Lsdb& lsdb,
-                         const RoutingTable& rt,
-                         ndn::mgmt::Dispatcher& dispatcher,
-                         const ndn::Face& face,
-                         const ndn::KeyChain& keyChain);
-
-  ndn::Name&
-  getRouterNameCommandPrefix()
-  {
-    return m_routerNamePrefix;
-  }
-
-  void
-  setRouterNameCommandPrefix(const ndn::Name& routerName) {
-    m_routerNamePrefix = routerName;
-    m_routerNamePrefix.append(Lsdb::NAME_COMPONENT);
-  }
+  DatasetInterestHandler(ndn::mgmt::Dispatcher& dispatcher,
+                         const Lsdb& lsdb,
+                         const RoutingTable& rt);
 
 private:
   /*! \brief set dispatcher for localhost or remote router
@@ -126,10 +112,8 @@ private:
                     ndn::mgmt::StatusDatasetContext& context);
 
 private:
-  const Lsdb& m_lsdb;
-  ndn::Name m_routerNamePrefix;
-
   ndn::mgmt::Dispatcher& m_dispatcher;
+  const Lsdb& m_lsdb;
 
   const std::list<RoutingTableEntry>& m_routingTableEntries;
   const std::list<RoutingTableEntry>& m_dryRoutingTableEntries;

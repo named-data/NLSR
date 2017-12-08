@@ -23,6 +23,8 @@
 #define NLSR_ROUTING_TABLE_CALCULATOR_HPP
 
 #include "common.hpp"
+#include "lsa.hpp"
+#include "conf-parameter.hpp"
 
 #include <list>
 #include <iostream>
@@ -34,7 +36,6 @@ namespace nlsr {
 
 class Map;
 class RoutingTable;
-class Nlsr;
 
 class RoutingTableCalculator
 {
@@ -56,12 +57,11 @@ protected:
   initMatrix();
 
   /*! \brief Constructs an adj. matrix to calculate with.
-    \param pnlsr The NLSR object that contains the LSAs that we need to iterate
-    over.
+    \param adjLsaList The Adjacency Lsa list.
     \param pMap The map to populate with the adj. data.
   */
   void
-  makeAdjMatrix(Nlsr& pnlsr, Map& pMap);
+  makeAdjMatrix(const std::list<AdjLsa>& adjLsaList, Map& pMap);
 
   void
   writeAdjMatrixLog(const Map& map) const;
@@ -137,7 +137,8 @@ public:
   }
 
   void
-  calculatePath(Map& pMap, RoutingTable& rt, Nlsr& pnlsr);
+  calculatePath(Map& pMap, RoutingTable& rt, ConfParameter& confParam,
+                const std::list<AdjLsa>& adjLsaList);
 
 private:
   /*! \brief Performs a Dijkstra's calculation over the adjacency matrix.
@@ -168,7 +169,7 @@ private:
   isNotExplored(int* Q, int u, int start, int element);
 
   void
-  addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, RoutingTable& rt,
+  addAllLsNextHopsToRoutingTable(AdjacencyList& adjacencies, RoutingTable& rt,
                                  Map& pMap, uint32_t sourceRouter);
 
   /*! \brief Determines a destination's next hop.

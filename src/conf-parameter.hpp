@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -25,10 +25,15 @@
 #include "common.hpp"
 #include "logger.hpp"
 #include "test-access-control.hpp"
+#include "adjacency-list.hpp"
+#include "name-prefix-list.hpp"
+#include "security/certificate-store.hpp"
 
 #include <iostream>
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/security/validator-config.hpp>
+#include <ndn-cxx/security/v2/certificate-fetcher-direct-fetch.hpp>
 #include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
@@ -133,23 +138,12 @@ class ConfParameter
 {
 
 public:
-  ConfParameter()
-    : m_lsaRefreshTime(LSA_REFRESH_TIME_DEFAULT)
-    , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
-    , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
-    , m_routingCalcInterval(ROUTING_CALC_INTERVAL_DEFAULT)
-    , m_faceDatasetFetchInterval(ndn::time::seconds(static_cast<int>(FACE_DATASET_FETCH_INTERVAL_DEFAULT)))
-    , m_lsaInterestLifetime(ndn::time::seconds(static_cast<int>(LSA_INTEREST_LIFETIME_DEFAULT)))
-    , m_routerDeadInterval(2 * LSA_REFRESH_TIME_DEFAULT)
-    , m_interestRetryNumber(HELLO_RETRIES_DEFAULT)
-    , m_interestResendTime(HELLO_TIMEOUT_DEFAULT)
-    , m_infoInterestInterval(HELLO_INTERVAL_DEFAULT)
-    , m_hyperbolicState(HYPERBOLIC_STATE_OFF)
-    , m_corR(0)
-    , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
-    , m_syncInterestLifetime(ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT))
-    , m_syncProtocol(SYNC_PROTOCOL_CHRONOSYNC)
+  ConfParameter(ndn::Face& face, const std::string& confFileName = "nlsr.conf");
+
+  const std::string&
+  getConfFileName()
   {
+    return m_confFileName;
   }
 
   void
@@ -199,11 +193,10 @@ public:
     return m_routerPrefix;
   }
 
-
   const ndn::Name&
-  getChronosyncPrefix() const
+  getSyncPrefix() const
   {
-    return m_chronosyncPrefix;
+    return m_syncPrefix;
   }
 
   const ndn::Name&
@@ -434,10 +427,43 @@ public:
     return m_syncInterestLifetime;
   }
 
+  AdjacencyList&
+  getAdjacencyList()
+  {
+    return m_adjl;
+  }
+
+  NamePrefixList&
+  getNamePrefixList()
+  {
+    return m_npl;
+  }
+
+  ndn::security::ValidatorConfig&
+  getValidator()
+  {
+    return m_validator;
+  }
+
+  ndn::security::ValidatorConfig&
+  getPrefixUpdateValidator()
+  {
+    return m_prefixUpdateValidator;
+  }
+
+  security::CertificateStore&
+  getCertStore()
+  {
+    return m_certStore;
+  }
+
+  /*! \brief Dump the current state of all attributes to the log.
+   */
   void
   writeLog();
 
 private:
+  std::string m_confFileName;
   ndn::Name m_routerName;
   ndn::Name m_siteName;
   ndn::Name m_network;
@@ -445,7 +471,7 @@ private:
   ndn::Name m_routerPrefix;
   ndn::Name m_lsaRouterPrefix;
 
-  ndn::Name m_chronosyncPrefix;
+  ndn::Name m_syncPrefix;
   ndn::Name m_lsaPrefix;
 
   uint32_t  m_lsaRefreshTime;
@@ -478,6 +504,12 @@ private:
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   static const uint64_t SYNC_VERSION;
+
+  AdjacencyList m_adjl;
+  NamePrefixList m_npl;
+  ndn::security::ValidatorConfig m_validator;
+  ndn::security::ValidatorConfig m_prefixUpdateValidator;
+  security::CertificateStore m_certStore;
 };
 
 } // namespace nlsr

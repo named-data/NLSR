@@ -24,7 +24,6 @@
 #include "../test-common.hpp"
 
 namespace nlsr {
-namespace update {
 namespace test {
 
 class AdvertiseCrashFixture : public nlsr::test::UnitTestTimeFixture
@@ -32,14 +31,15 @@ class AdvertiseCrashFixture : public nlsr::test::UnitTestTimeFixture
 public:
   AdvertiseCrashFixture()
     : face(m_ioService, m_keyChain, {true, true})
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , namePrefixList(nlsr.getNamePrefixList())
-    , updatePrefixUpdateProcessor(nlsr.getPrefixUpdateProcessor())
+    , conf(face)
+    , confProcessor(conf)
+    , nlsr(face, m_keyChain, conf)
+    , namePrefixList(conf.getNamePrefixList())
   {
     // Add an adjacency to nlsr
     Adjacent adj("/ndn/edu/test-site-2/%C1.Router/test",
                  ndn::FaceUri("udp://1.0.0.2"), 10, Adjacent::STATUS_INACTIVE, 0, 0);
-    nlsr.getAdjacencyList().insert(adj);
+    conf.getAdjacencyList().insert(adj);
 
     // Create a face dataset response with the face having the same uri as
     // the adjacent
@@ -49,11 +49,7 @@ public:
 
     std::vector<ndn::nfd::FaceStatus> faces{payload1};
 
-    // Set the network so the LSA prefix is constructed
-    nlsr.getConfParameter().setNetwork("/ndn");
-    nlsr.getConfParameter().setRouterName(ndn::Name("/This/router"));
-
-    addIdentity(ndn::Name("/ndn/This/router"));
+    addIdentity(conf.getRouterPrefix());
 
     // So that NLSR starts listening on prefixes
     nlsr.initialize();
@@ -70,10 +66,11 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
+  ConfParameter conf;
+  DummyConfFileProcessor confProcessor;
 
   Nlsr nlsr;
   NamePrefixList& namePrefixList;
-  PrefixUpdateProcessor& updatePrefixUpdateProcessor;
 };
 
 BOOST_FIXTURE_TEST_CASE(TestAdvertiseCrash, AdvertiseCrashFixture)
@@ -96,5 +93,4 @@ BOOST_FIXTURE_TEST_CASE(TestAdvertiseCrash, AdvertiseCrashFixture)
 }
 
 } // namespace test
-} // namespace update
 } // namespace nlsr

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,6 +24,7 @@
 
 #include "common.hpp"
 #include "identity-management-fixture.hpp"
+#include "conf-parameter.hpp"
 
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
@@ -164,6 +165,25 @@ public:
 
 public:
   ndn::util::DummyClientFace m_face;
+};
+
+class DummyConfFileProcessor
+{
+  typedef std::function<void(ConfParameter&)> AfterConfProcessing;
+
+public:
+  DummyConfFileProcessor(ConfParameter& conf,
+                         int32_t protocol = SYNC_PROTOCOL_PSYNC,
+                         int32_t hyperbolicState = HYPERBOLIC_STATE_OFF)
+  {
+    conf.setNetwork("/ndn");
+    conf.setSiteName("/site");
+    conf.setRouterName("/%C1.Router/this-router");
+    conf.buildRouterPrefix();
+
+    conf.setSyncProtocol(protocol);
+    conf.setHyperbolicState(HYPERBOLIC_STATE_OFF);
+  }
 };
 
 } // namespace test

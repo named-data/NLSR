@@ -25,6 +25,8 @@
 #include "conf-parameter.hpp"
 #include "routing-table-entry.hpp"
 #include "signals.hpp"
+#include "lsdb.hpp"
+#include "route/fib.hpp"
 
 #include <iostream>
 #include <utility>
@@ -34,22 +36,21 @@
 
 namespace nlsr {
 
-class Nlsr;
 class NextHop;
 
 class RoutingTable : boost::noncopyable
 {
 public:
   explicit
-  RoutingTable(ndn::Scheduler& scheduler);
+  RoutingTable(ndn::Scheduler& scheduler, Fib& fib, Lsdb& lsdb,
+               NamePrefixTable& namePrefixTable, ConfParameter& confParam);
 
   /*! \brief Calculates a list of next hops for each router in the network.
-   *  \param nlsr The NLSR object that contains the LSAs needed for adj. info.
    *
    *  Calculates the list of next hops to every other router in the network.
    */
   void
-  calculate(Nlsr& nlsr);
+  calculate();
 
   /*! \brief Adds a next hop to a routing table entry.
    *  \param destRouter The destination router whose RTE we want to modify.
@@ -70,10 +71,9 @@ public:
 
   /*! \brief Schedules a calculation event in the event scheduler only
    *  if one isn't already scheduled.
-   *  \param pnlsr The NLSR whose scheduling status is needed.
    */
   void
-  scheduleRoutingTableCalculation(Nlsr& pnlsr);
+  scheduleRoutingTableCalculation();
 
   int
   getNoNextHop()
@@ -114,11 +114,11 @@ public:
 private:
   /*! \brief Calculates a link-state routing table. */
   void
-  calculateLsRoutingTable(Nlsr& pnlsr);
+  calculateLsRoutingTable();
 
   /*! \brief Calculates a HR routing table. */
   void
-  calculateHypRoutingTable(Nlsr& pnlsr, bool isDryRun);
+  calculateHypRoutingTable(bool isDryRun);
 
   void
   clearRoutingTable();
@@ -127,7 +127,7 @@ private:
   clearDryRoutingTable();
 
   void
-  writeLog(int hyperbolicState);
+  writeLog();
 
 public:
   std::unique_ptr<AfterRoutingChange> afterRoutingChange;
@@ -137,12 +137,20 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
 private:
   ndn::Scheduler& m_scheduler;
+  Fib& m_fib;
+  Lsdb& m_lsdb;
+  NamePrefixTable& m_namePrefixTable;
 
   const int m_NO_NEXT_HOP;
 
   std::list<RoutingTableEntry> m_dryTable;
 
   ndn::time::seconds m_routingCalcInterval;
+
+  bool m_isRoutingTableCalculating;
+  bool m_isRouteCalculationScheduled;
+
+  ConfParameter& m_confParam;
 };
 
 } // namespace nlsr

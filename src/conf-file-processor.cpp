@@ -20,7 +20,6 @@
  **/
 
 #include "conf-file-processor.hpp"
-#include "conf-parameter.hpp"
 #include "adjacent.hpp"
 #include "utility/name-helper.hpp"
 #include "update/prefix-update-processor.hpp"
@@ -134,6 +133,12 @@ private:
   bool m_isRequired;
 };
 
+ConfFileProcessor::ConfFileProcessor(ConfParameter& confParam)
+  : m_confFileName(confParam.getConfFileName())
+  , m_confParam(confParam)
+{
+}
+
 bool
 ConfFileProcessor::processConfFile()
 {
@@ -220,7 +225,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     std::string router = section.get<std::string>("router");
     ndn::Name networkName(network);
     if (!networkName.empty()) {
-      m_nlsr.getConfParameter().setNetwork(networkName);
+      m_confParam.setNetwork(networkName);
     }
     else {
       std::cerr << " Network can not be null or empty or in bad URI format :(!" << std::endl;
@@ -228,7 +233,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     }
     ndn::Name siteName(site);
     if (!siteName.empty()) {
-      m_nlsr.getConfParameter().setSiteName(siteName);
+      m_confParam.setSiteName(siteName);
     }
     else {
       std::cerr << "Site can not be null or empty or in bad URI format:( !" << std::endl;
@@ -236,7 +241,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     }
     ndn::Name routerName(router);
     if (!routerName.empty()) {
-      m_nlsr.getConfParameter().setRouterName(routerName);
+      m_confParam.setRouterName(routerName);
     }
     else {
       std::cerr << " Router name can not be null or empty or in bad URI format:( !" << std::endl;
@@ -252,7 +257,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   uint32_t lsaRefreshTime = section.get<uint32_t>("lsa-refresh-time", LSA_REFRESH_TIME_DEFAULT);
 
   if (lsaRefreshTime >= LSA_REFRESH_TIME_MIN && lsaRefreshTime <= LSA_REFRESH_TIME_MAX) {
-    m_nlsr.getConfParameter().setLsaRefreshTime(lsaRefreshTime);
+    m_confParam.setLsaRefreshTime(lsaRefreshTime);
   }
   else {
     std::cerr << "Wrong value for lsa-refresh-time ";
@@ -265,8 +270,8 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   // router-dead-interval
   uint32_t routerDeadInterval = section.get<uint32_t>("router-dead-interval", (2*lsaRefreshTime));
 
-  if (routerDeadInterval > m_nlsr.getConfParameter().getLsaRefreshTime()) {
-    m_nlsr.getConfParameter().setRouterDeadInterval(routerDeadInterval);
+  if (routerDeadInterval > m_confParam.getLsaRefreshTime()) {
+    m_confParam.setRouterDeadInterval(routerDeadInterval);
   }
   else {
     std::cerr << "Value of router-dead-interval must be larger than lsa-refresh-time" << std::endl;
@@ -277,7 +282,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   int lifetime = section.get<int>("lsa-interest-lifetime", LSA_INTEREST_LIFETIME_DEFAULT);
 
   if (lifetime >= LSA_INTEREST_LIFETIME_MIN && lifetime <= LSA_INTEREST_LIFETIME_MAX) {
-    m_nlsr.getConfParameter().setLsaInterestLifetime(ndn::time::seconds(lifetime));
+    m_confParam.setLsaInterestLifetime(ndn::time::seconds(lifetime));
   }
   else {
     std::cerr << "Wrong value for lsa-interest-timeout. "
@@ -290,10 +295,10 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   // sync-protocol
   std::string syncProtocol = section.get<std::string>("sync-protocol", "chronosync");
   if (syncProtocol == "chronosync") {
-    m_nlsr.getConfParameter().setSyncProtocol(SYNC_PROTOCOL_CHRONOSYNC);
+    m_confParam.setSyncProtocol(SYNC_PROTOCOL_CHRONOSYNC);
   }
   else if (syncProtocol == "psync") {
-    m_nlsr.getConfParameter().setSyncProtocol(SYNC_PROTOCOL_PSYNC);
+    m_confParam.setSyncProtocol(SYNC_PROTOCOL_PSYNC);
   }
   else {
     std::cerr << "Sync protocol " << syncProtocol << " is not supported!"
@@ -302,10 +307,11 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   // sync-interest-lifetime
-  uint32_t syncInterestLifetime = section.get<uint32_t>("sync-interest-lifetime", SYNC_INTEREST_LIFETIME_DEFAULT);
+  uint32_t syncInterestLifetime = section.get<uint32_t>("sync-interest-lifetime",
+                                                        SYNC_INTEREST_LIFETIME_DEFAULT);
   if (syncInterestLifetime >= SYNC_INTEREST_LIFETIME_MIN &&
       syncInterestLifetime <= SYNC_INTEREST_LIFETIME_MAX) {
-    m_nlsr.getConfParameter().setSyncInterestLifetime(syncInterestLifetime);
+    m_confParam.setSyncInterestLifetime(syncInterestLifetime);
   }
   else {
     std::cerr << "Wrong value for sync-interest-lifetime. "
@@ -323,7 +329,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
         std::ofstream testOutFile;
         testOutFile.open(testFileName.c_str());
         if (testOutFile.is_open() && testOutFile.good()) {
-          m_nlsr.getConfParameter().setSeqFileDir(seqDir);
+          m_confParam.setSeqFileDir(seqDir);
         }
         else {
           std::cerr << "User does not have read and write permission on the directory";
@@ -359,7 +365,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   int retrials = section.get<int>("hello-retries", HELLO_RETRIES_DEFAULT);
 
   if (retrials >= HELLO_RETRIES_MIN && retrials <= HELLO_RETRIES_MAX) {
-    m_nlsr.getConfParameter().setInterestRetryNumber(retrials);
+    m_confParam.setInterestRetryNumber(retrials);
   }
   else {
     std::cerr << "Wrong value for hello-retries." << std::endl;
@@ -373,7 +379,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   uint32_t timeOut = section.get<uint32_t>("hello-timeout", HELLO_TIMEOUT_DEFAULT);
 
   if (timeOut >= HELLO_TIMEOUT_MIN && timeOut <= HELLO_TIMEOUT_MAX) {
-    m_nlsr.getConfParameter().setInterestResendTime(timeOut);
+    m_confParam.setInterestResendTime(timeOut);
   }
   else {
     std::cerr << "Wrong value for hello-timeout. ";
@@ -387,7 +393,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   uint32_t interval = section.get<uint32_t>("hello-interval", HELLO_INTERVAL_DEFAULT);
 
   if (interval >= HELLO_INTERVAL_MIN && interval <= HELLO_INTERVAL_MAX) {
-    m_nlsr.getConfParameter().setInfoInterestInterval(interval);
+    m_confParam.setInfoInterestInterval(interval);
   }
   else {
     std::cerr << "Wrong value for hello-interval. ";
@@ -401,7 +407,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   // adj-lsa-build-interval
   ConfigurationVariable<uint32_t> adjLsaBuildInterval("adj-lsa-build-interval",
                                                       std::bind(&ConfParameter::setAdjLsaBuildInterval,
-                                                      &m_nlsr.getConfParameter(), _1));
+                                                      &m_confParam, _1));
   adjLsaBuildInterval.setMinAndMaxValue(ADJ_LSA_BUILD_INTERVAL_MIN, ADJ_LSA_BUILD_INTERVAL_MAX);
   adjLsaBuildInterval.setOptional(ADJ_LSA_BUILD_INTERVAL_DEFAULT);
 
@@ -411,7 +417,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   // Set the retry count for fetching the FaceStatus dataset
   ConfigurationVariable<uint32_t> faceDatasetFetchTries("face-dataset-fetch-tries",
                                                         std::bind(&ConfParameter::setFaceDatasetFetchTries,
-                                                                  &m_nlsr.getConfParameter(),
+                                                                  &m_confParam,
                                                                   _1));
 
   faceDatasetFetchTries.setMinAndMaxValue(FACE_DATASET_FETCH_TRIES_MIN,
@@ -425,7 +431,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   // Set the interval between FaceStatus dataset fetch attempts.
   ConfigurationVariable<uint32_t> faceDatasetFetchInterval("face-dataset-fetch-interval",
                                                            bind(&ConfParameter::setFaceDatasetFetchInterval,
-                                                                &m_nlsr.getConfParameter(),
+                                                                &m_confParam,
                                                                 _1));
 
   faceDatasetFetchInterval.setMinAndMaxValue(FACE_DATASET_FETCH_INTERVAL_MIN,
@@ -439,7 +445,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   // first-hello-interval
   ConfigurationVariable<uint32_t> firstHelloInterval("first-hello-interval",
                                                      std::bind(&ConfParameter::setFirstHelloInterval,
-                                                     &m_nlsr.getConfParameter(), _1));
+                                                     &m_confParam, _1));
   firstHelloInterval.setMinAndMaxValue(FIRST_HELLO_INTERVAL_MIN, FIRST_HELLO_INTERVAL_MAX);
   firstHelloInterval.setOptional(FIRST_HELLO_INTERVAL_DEFAULT);
 
@@ -484,7 +490,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
         ndn::Name neighborName(name);
         if (!neighborName.empty()) {
           Adjacent adj(name, faceUri, linkCost, Adjacent::STATUS_INACTIVE, 0, 0);
-          m_nlsr.getAdjacencyList().insert(adj);
+          m_confParam.getAdjacencyList().insert(adj);
         }
         else {
           std::cerr << " Wrong command format ! [name /nbr/name/ \n face-uri /uri\n]";
@@ -507,13 +513,13 @@ ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
   std::string state = section.get<std::string>("state", "off");
 
   if (boost::iequals(state, "off")) {
-    m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_OFF);
+    m_confParam.setHyperbolicState(HYPERBOLIC_STATE_OFF);
   }
   else if (boost::iequals(state, "on")) {
-    m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_ON);
+    m_confParam.setHyperbolicState(HYPERBOLIC_STATE_ON);
   }
   else if (state == "dry-run") {
-    m_nlsr.getConfParameter().setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
+    m_confParam.setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
   }
   else {
     std::cerr << "Wrong format for hyperbolic state." << std::endl;
@@ -542,10 +548,10 @@ ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
       }
     }
 
-    if (!m_nlsr.getConfParameter().setCorR(radius)) {
+    if (!m_confParam.setCorR(radius)) {
       return false;
     }
-    m_nlsr.getConfParameter().setCorTheta(angles);
+    m_confParam.setCorTheta(angles);
   }
   catch (const std::exception& ex) {
     std::cerr << ex.what() << std::endl;
@@ -566,7 +572,7 @@ ConfFileProcessor::processConfSectionFib(const ConfigSection& section)
   if (maxFacesPerPrefix >= MAX_FACES_PER_PREFIX_MIN &&
       maxFacesPerPrefix <= MAX_FACES_PER_PREFIX_MAX)
   {
-    m_nlsr.getConfParameter().setMaxFacesPerPrefix(maxFacesPerPrefix);
+    m_confParam.setMaxFacesPerPrefix(maxFacesPerPrefix);
   }
   else {
     std::cerr << "Wrong value for max-faces-per-prefix. ";
@@ -578,7 +584,7 @@ ConfFileProcessor::processConfSectionFib(const ConfigSection& section)
   // routing-calc-interval
   ConfigurationVariable<uint32_t> routingCalcInterval("routing-calc-interval",
                                                       std::bind(&ConfParameter::setRoutingCalcInterval,
-                                                      &m_nlsr.getConfParameter(), _1));
+                                                      &m_confParam, _1));
   routingCalcInterval.setMinAndMaxValue(ROUTING_CALC_INTERVAL_MIN, ROUTING_CALC_INTERVAL_MAX);
   routingCalcInterval.setOptional(ROUTING_CALC_INTERVAL_DEFAULT);
 
@@ -599,7 +605,7 @@ ConfFileProcessor::processConfSectionAdvertising(const ConfigSection& section)
        std::string prefix = tn->second.data();
        ndn::Name namePrefix(prefix);
        if (!namePrefix.empty()) {
-         m_nlsr.getNamePrefixList().insert(namePrefix);
+         m_confParam.getNamePrefixList().insert(namePrefix);
        }
        else {
          std::cerr << " Wrong command format ! [prefix /name/prefix] or bad URI" << std::endl;
@@ -625,11 +631,11 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
     return false;
   }
 
-  m_nlsr.loadValidator(it->second, m_confFileName);
+  m_confParam.getValidator().load(it->second, m_confFileName);
 
   it++;
   if (it != section.end() && it->first == "prefix-update-validator") {
-    m_nlsr.getPrefixUpdateProcessor().loadValidator(it->second, m_confFileName);
+    m_confParam.getPrefixUpdateValidator().load(it->second, m_confFileName);
 
     it++;
     for (; it != section.end(); it++) {
@@ -650,7 +656,11 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
         return false;
       }
 
-      m_nlsr.loadCertToPublish(*idCert);
+      m_confParam.getCertStore().insert(*idCert);
+      m_confParam.getValidator().loadAnchor("Authoritative-Certificate",
+                                            ndn::security::v2::Certificate(*idCert));
+      m_confParam.getPrefixUpdateValidator().loadAnchor("Authoritative-Certificate",
+                                                        ndn::security::v2::Certificate(*idCert));
     }
   }
 

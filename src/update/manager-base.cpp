@@ -64,7 +64,7 @@ CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
     NLSR_LOG_INFO("Advertising name: " << castParams.getName() << "\n");
     m_lsdb.buildAndInstallOwnNameLsa();
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
-      NLSR_LOG_INFO("Saving name to the configuration file");
+      NLSR_LOG_INFO("Saving name to the configuration file ");
       if (afterAdvertise(castParams.getName()) == true) {
         return done(ndn::nfd::ControlResponse(205, "OK").setBody(parameters.wireEncode()));
       }

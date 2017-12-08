@@ -37,25 +37,34 @@ const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
 const ndn::time::steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE =
   ndn::time::steady_clock::TimePoint::min();
 
-Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
-  : m_nlsr(nlsr)
-  , m_scheduler(scheduler)
-  , m_sync(m_nlsr.getNlsrFace(),
+Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain,
+           ndn::security::SigningInfo& signingInfo, ConfParameter& confParam,
+           NamePrefixTable& namePrefixTable, RoutingTable& routingTable)
+  : m_face(face)
+  , m_scheduler(face.getIoService())
+  , m_signingInfo(signingInfo)
+  , m_confParam(confParam)
+  , m_namePrefixTable(namePrefixTable)
+  , m_routingTable(routingTable)
+  , m_sync(m_face,
            [this] (const ndn::Name& routerName, const Lsa::Type& lsaType,
                    const uint64_t& sequenceNumber) {
              return isLsaNew(routerName, lsaType, sequenceNumber);
-           }, m_nlsr.getConfParameter())
-  , m_lsaStorage(scheduler)
-  , m_lsaRefreshTime(0)
-  , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
-  , m_sequencingManager()
+           }, m_confParam)
+  , m_lsaStorage(m_scheduler)
+  , m_lsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()))
+  , m_thisRouterPrefix(m_confParam.getRouterPrefix().toUri())
+  , m_adjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval())
+  , m_sequencingManager(m_confParam.getSeqFileDir(), m_confParam.getHyperbolicState())
   , m_onNewLsaConnection(m_sync.onNewLsa->connect(
       [this] (const ndn::Name& updateName, uint64_t sequenceNumber) {
         ndn::Name lsaInterest{updateName};
         lsaInterest.appendNumber(sequenceNumber);
         expressInterest(lsaInterest, 0);
       }))
-  , m_segmentPublisher(m_nlsr.getNlsrFace(), m_nlsr.getKeyChain())
+  , m_segmentPublisher(m_face, keyChain)
+  , m_isBuildAdjLsaSheduled(false)
+  , m_adjBuildCount(0)
 {
 }
 
@@ -86,7 +95,7 @@ Lsdb::onFetchLsaError(uint32_t errorCode,
       // immediately since at the least the LSA Interest lifetime has elapsed.
       // Otherwise, it is necessary to delay the Interest re-expression to prevent
       // the potential for constant Interest flooding.
-      ndn::time::seconds delay = m_nlsr.getConfParameter().getLsaInterestLifetime();
+      ndn::time::seconds delay = m_confParam.getLsaInterestLifetime();
 
       if (errorCode == ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT) {
         delay = ndn::time::seconds(0);
@@ -143,10 +152,10 @@ nameLsaCompareByKey(const NameLsa& nlsa1, const ndn::Name& key)
 bool
 Lsdb::buildAndInstallOwnNameLsa()
 {
-  NameLsa nameLsa(m_nlsr.getConfParameter().getRouterPrefix(),
+  NameLsa nameLsa(m_confParam.getRouterPrefix(),
                   m_sequencingManager.getNameLsaSeq() + 1,
                   getLsaExpirationTimePoint(),
-                  m_nlsr.getNamePrefixList());
+                  m_confParam.getNamePrefixList());
   m_sequencingManager.increaseNameLsaSeq();
 
   m_sequencingManager.writeSeqNoToFile();
@@ -206,20 +215,20 @@ Lsdb::installNameLsa(NameLsa& nlsa)
     nlsa.writeLog();
 
     NLSR_LOG_TRACE("nlsa.getOrigRouter(): " << nlsa.getOrigRouter());
-    NLSR_LOG_TRACE("m_nlsr.getConfParameter().getRouterPrefix(): " << m_nlsr.getConfParameter().getRouterPrefix());
+    NLSR_LOG_TRACE("m_confParam.getRouterPrefix(): " << m_confParam.getRouterPrefix());
 
-    if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+    if (nlsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
       // If this name LSA is from another router, add the advertised
       // prefixes to the NPT.
-      m_nlsr.getNamePrefixTable().addEntry(nlsa.getOrigRouter(),
+      m_namePrefixTable.addEntry(nlsa.getOrigRouter(),
                                            nlsa.getOrigRouter());
       for (const auto& name : nlsa.getNpl().getNames()) {
-        if (name != m_nlsr.getConfParameter().getRouterPrefix()) {
-          m_nlsr.getNamePrefixTable().addEntry(name, nlsa.getOrigRouter());
+        if (name != m_confParam.getRouterPrefix()) {
+          m_namePrefixTable.addEntry(name, nlsa.getOrigRouter());
         }
       }
     }
-    if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+    if (nlsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
       ndn::time::system_clock::Duration duration = nlsa.getExpirationTimePoint() -
                                                    ndn::time::system_clock::now();
       timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
@@ -250,9 +259,9 @@ Lsdb::installNameLsa(NameLsa& nlsa)
                           std::inserter(namesToAdd, namesToAdd.begin()));
       for (const auto& name : namesToAdd) {
         chkNameLsa->addName(name);
-        if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-          if (name != m_nlsr.getConfParameter().getRouterPrefix()) {
-            m_nlsr.getNamePrefixTable().addEntry(name, nlsa.getOrigRouter());
+        if (nlsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
+          if (name != m_confParam.getRouterPrefix()) {
+            m_namePrefixTable.addEntry(name, nlsa.getOrigRouter());
           }
         }
       }
@@ -266,14 +275,14 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       for (const auto& name : namesToRemove) {
         NLSR_LOG_DEBUG("Removing name LSA no longer advertised: " << name);
         chkNameLsa->removeName(name);
-        if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-          if (name != m_nlsr.getConfParameter().getRouterPrefix()) {
-            m_nlsr.getNamePrefixTable().removeEntry(name, nlsa.getOrigRouter());
+        if (nlsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
+          if (name != m_confParam.getRouterPrefix()) {
+            m_namePrefixTable.removeEntry(name, nlsa.getOrigRouter());
           }
         }
       }
 
-      if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+      if (nlsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
         ndn::time::system_clock::Duration duration = nlsa.getExpirationTimePoint() -
                                                      ndn::time::system_clock::now();
         timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
@@ -314,13 +323,12 @@ Lsdb::removeNameLsa(const ndn::Name& key)
     (*it).writeLog();
     // If the requested name LSA is not ours, we also need to remove
     // its entries from the NPT.
-    if ((*it).getOrigRouter() !=
-        m_nlsr.getConfParameter().getRouterPrefix()) {
-      m_nlsr.getNamePrefixTable().removeEntry((*it).getOrigRouter(),
-                                              (*it).getOrigRouter());
+    if ((*it).getOrigRouter() != m_confParam.getRouterPrefix()) {
+      m_namePrefixTable.removeEntry((*it).getOrigRouter(), (*it).getOrigRouter());
+
       for (const auto& name : it->getNpl().getNames()) {
-        if (name != m_nlsr.getConfParameter().getRouterPrefix()) {
-          m_nlsr.getNamePrefixTable().removeEntry(name, it->getOrigRouter());
+        if (name != m_confParam.getRouterPrefix()) {
+          m_namePrefixTable.removeEntry(name, it->getOrigRouter());
         }
       }
     }
@@ -372,14 +380,14 @@ corLsaCompareByKey(const CoordinateLsa& clsa, const ndn::Name& key)
 bool
 Lsdb::buildAndInstallOwnCoordinateLsa()
 {
-  CoordinateLsa corLsa(m_nlsr.getConfParameter().getRouterPrefix(),
+  CoordinateLsa corLsa(m_confParam.getRouterPrefix(),
                        m_sequencingManager.getCorLsaSeq() + 1,
                        getLsaExpirationTimePoint(),
-                       m_nlsr.getConfParameter().getCorR(),
-                       m_nlsr.getConfParameter().getCorTheta());
+                       m_confParam.getCorR(),
+                       m_confParam.getCorTheta());
 
   // Sync coordinate LSAs if using HR or HR dry run.
-  if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+  if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
     m_sequencingManager.increaseCorLsaSeq();
     m_sequencingManager.writeSeqNoToFile();
     m_sync.publishRoutingUpdate(Lsa::Type::COORDINATE, m_sequencingManager.getCorLsaSeq());
@@ -445,15 +453,15 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
     addCoordinateLsa(clsa);
 
     // Register the LSA's origin router prefix
-    if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-      m_nlsr.getNamePrefixTable().addEntry(clsa.getOrigRouter(),
+    if (clsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
+      m_namePrefixTable.addEntry(clsa.getOrigRouter(),
                                            clsa.getOrigRouter());
     }
-    if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
-      m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
+    if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+      m_routingTable.scheduleRoutingTableCalculation();
     }
     // Set the expiration time for the new LSA.
-    if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+    if (clsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
       ndn::time::system_clock::Duration duration = clsa.getExpirationTimePoint() -
                                                    ndn::time::system_clock::now();
       timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
@@ -473,12 +481,12 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
       if (!chkCorLsa->isEqualContent(clsa)) {
         chkCorLsa->setCorRadius(clsa.getCorRadius());
         chkCorLsa->setCorTheta(clsa.getCorTheta());
-        if (m_nlsr.getConfParameter().getHyperbolicState() >= HYPERBOLIC_STATE_ON) {
-          m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
+        if (m_confParam.getHyperbolicState() >= HYPERBOLIC_STATE_ON) {
+          m_routingTable.scheduleRoutingTableCalculation();
         }
       }
       // If this is an LSA from another router, refresh its expiration time.
-      if (clsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+      if (clsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
         ndn::time::system_clock::Duration duration = clsa.getExpirationTimePoint() -
                                                      ndn::time::system_clock::now();
         timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
@@ -519,8 +527,8 @@ Lsdb::removeCoordinateLsa(const ndn::Name& key)
     NLSR_LOG_DEBUG("Deleting Coordinate Lsa");
     it->writeLog();
 
-    if (it->getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-      m_nlsr.getNamePrefixTable().removeEntry(it->getOrigRouter(), it->getOrigRouter());
+    if (it->getOrigRouter() != m_confParam.getRouterPrefix()) {
+      m_namePrefixTable.removeEntry(it->getOrigRouter(), it->getOrigRouter());
     }
 
     m_corLsdb.erase(it);
@@ -572,19 +580,19 @@ adjLsaCompareByKey(AdjLsa& alsa, const ndn::Name& key)
 void
 Lsdb::scheduleAdjLsaBuild()
 {
-  m_nlsr.incrementAdjBuildCount();
+  m_adjBuildCount++;
 
-  if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
     // Don't build adjacency LSAs in hyperbolic routing
     NLSR_LOG_DEBUG("Adjacency LSA not built. Currently in hyperbolic routing state.");
     return;
   }
 
-  if (m_nlsr.getIsBuildAdjLsaSheduled() == false) {
+  if (m_isBuildAdjLsaSheduled == false) {
     NLSR_LOG_DEBUG("Scheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
 
     m_scheduler.scheduleEvent(m_adjLsaBuildInterval, std::bind(&Lsdb::buildAdjLsa, this));
-    m_nlsr.setIsBuildAdjLsaSheduled(true);
+    m_isBuildAdjLsaSheduled = true;
   }
 }
 
@@ -593,15 +601,15 @@ Lsdb::buildAdjLsa()
 {
   NLSR_LOG_TRACE("Lsdb::buildAdjLsa called");
 
-  m_nlsr.setIsBuildAdjLsaSheduled(false);
+  m_isBuildAdjLsaSheduled = false;
 
-  if (m_nlsr.getAdjacencyList().isAdjLsaBuildable(m_nlsr.getConfParameter().getInterestRetryNumber())) {
+  if (m_confParam.getAdjacencyList().isAdjLsaBuildable(m_confParam.getInterestRetryNumber())) {
 
-    int adjBuildCount = m_nlsr.getAdjBuildCount();
+    int adjBuildCount = m_adjBuildCount;
     // Only do the adjLsa build if there's one scheduled
     if (adjBuildCount > 0) {
       // It only makes sense to do the adjLsa build if we have neighbors
-      if (m_nlsr.getAdjacencyList().getNumOfActiveNeighbor() > 0) {
+      if (m_confParam.getAdjacencyList().getNumOfActiveNeighbor() > 0) {
         NLSR_LOG_DEBUG("Building and installing own Adj LSA");
         buildAndInstallOwnAdjLsa();
       }
@@ -612,26 +620,26 @@ Lsdb::buildAdjLsa()
       else {
         NLSR_LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors");
         // Get this router's key
-        ndn::Name key = m_nlsr.getConfParameter().getRouterPrefix();
+        ndn::Name key = m_confParam.getRouterPrefix();
         key.append(std::to_string(Lsa::Type::ADJACENCY));
 
         removeAdjLsa(key);
         // Recompute routing table after removal
-        m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
+        m_routingTable.scheduleRoutingTableCalculation();
       }
       // In the case that during building the adj LSA, the FIB has to
       // wait on an Interest response, the number of scheduled adj LSA
       // builds could change, so we shouldn't just set it to 0.
-      m_nlsr.setAdjBuildCount(m_nlsr.getAdjBuildCount() - adjBuildCount);
+      m_adjBuildCount = m_adjBuildCount - adjBuildCount;
     }
   }
   // We are still waiting to know the adjacency status of some
   // neighbor, so schedule a build for later (when all that has
   // hopefully finished)
   else {
-    m_nlsr.setIsBuildAdjLsaSheduled(true);
-    int schedulingTime = m_nlsr.getConfParameter().getInterestRetryNumber() *
-                         m_nlsr.getConfParameter().getInterestResendTime();
+    m_isBuildAdjLsaSheduled = true;
+    int schedulingTime = m_confParam.getInterestRetryNumber() *
+                         m_confParam.getInterestResendTime();
     m_scheduler.scheduleEvent(ndn::time::seconds(schedulingTime),
                               std::bind(&Lsdb::buildAdjLsa, this));
   }
@@ -646,6 +654,13 @@ Lsdb::addAdjLsa(AdjLsa& alsa)
                                                      alsa.getKey()));
   if (it == m_adjLsdb.end()) {
     m_adjLsdb.push_back(alsa);
+    // Add any new name prefixes to the NPT
+    // Only add NPT entries if this is an adj LSA from another router.
+    if (alsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
+      // Pass the originating router as both the name to register and
+      // where it came from.
+      m_namePrefixTable.addEntry(alsa.getOrigRouter(), alsa.getOrigRouter());
+    }
     return true;
   }
   return false;
@@ -699,10 +714,9 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
     NLSR_LOG_DEBUG("Adding Adj Lsa");
     alsa.writeLog();
     addAdjLsa(alsa);
-    // Add any new name prefixes to the NPT
-    alsa.addNptEntries(m_nlsr);
-    m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
-    if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+
+    m_routingTable.scheduleRoutingTableCalculation();
+    if (alsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
       ndn::time::system_clock::Duration duration = alsa.getExpirationTimePoint() -
                                                    ndn::time::system_clock::now();
       timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
@@ -724,9 +738,9 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
       if (!chkAdjLsa->isEqualContent(alsa)) {
         chkAdjLsa->getAdl().reset();
         chkAdjLsa->getAdl().addAdjacents(alsa.getAdl());
-        m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
+        m_routingTable.scheduleRoutingTableCalculation();
       }
-      if (alsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
+      if (alsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
         ndn::time::system_clock::Duration duration = alsa.getExpirationTimePoint() -
                                                      ndn::time::system_clock::now();
         timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
@@ -745,14 +759,14 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
 bool
 Lsdb::buildAndInstallOwnAdjLsa()
 {
-  AdjLsa adjLsa(m_nlsr.getConfParameter().getRouterPrefix(),
+  AdjLsa adjLsa(m_confParam.getRouterPrefix(),
                 m_sequencingManager.getAdjLsaSeq() + 1,
                 getLsaExpirationTimePoint(),
-                m_nlsr.getAdjacencyList().getNumOfActiveNeighbor(),
-                m_nlsr.getAdjacencyList());
+                m_confParam.getAdjacencyList().getNumOfActiveNeighbor(),
+                m_confParam.getAdjacencyList());
 
   //Sync adjacency LSAs if link-state or dry-run HR is enabled.
-  if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_ON) {
+  if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_ON) {
     m_sequencingManager.increaseAdjLsaSeq();
     m_sequencingManager.writeSeqNoToFile();
     m_sync.publishRoutingUpdate(Lsa::Type::ADJACENCY, m_sequencingManager.getAdjLsaSeq());
@@ -769,8 +783,10 @@ Lsdb::removeAdjLsa(const ndn::Name& key)
                                                 std::bind(adjLsaCompareByKey, _1, key));
   if (it != m_adjLsdb.end()) {
     NLSR_LOG_DEBUG("Deleting Adj Lsa");
-    (*it).writeLog();
-    (*it).removeNptEntries(m_nlsr);
+    it->writeLog();
+    if (it->getOrigRouter() != m_confParam.getRouterPrefix()) {
+      m_namePrefixTable.removeEntry(it->getOrigRouter(), it->getOrigRouter());
+    }
     m_adjLsdb.erase(it);
     return true;
   }
@@ -793,18 +809,6 @@ const std::list<AdjLsa>&
 Lsdb::getAdjLsdb() const
 {
   return m_adjLsdb;
-}
-
-void
-Lsdb::setLsaRefreshTime(const ndn::time::seconds& lsaRefreshTime)
-{
-  m_lsaRefreshTime = lsaRefreshTime;
-}
-
-void
-Lsdb::setThisRouterPrefix(std::string trp)
-{
-  m_thisRouterPrefix = trp;
 }
 
   // This function determines whether a name LSA should be refreshed
@@ -892,7 +896,7 @@ Lsdb::expireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
       }
       // We have changed the contents of the LSDB, so we have to
       // schedule a routing calculation
-      m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
+      m_routingTable.scheduleRoutingTableCalculation();
     }
   }
 }
@@ -921,7 +925,7 @@ Lsdb::expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
         NLSR_LOG_DEBUG("Deleting Coordinate Lsa");
         chkCorLsa->writeLog();
         chkCorLsa->setLsSeqNo(chkCorLsa->getLsSeqNo() + 1);
-        if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+        if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
           m_sequencingManager.setCorLsaSeq(chkCorLsa->getLsSeqNo());
         }
 
@@ -934,7 +938,7 @@ Lsdb::expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                         chkCorLsa->getLsSeqNo(),
                                         m_lsaRefreshTime));
         // Only sync coordinate LSAs if link-state routing is disabled
-        if (m_nlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+        if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
           m_sequencingManager.writeSeqNoToFile();
           m_sync.publishRoutingUpdate(Lsa::Type::COORDINATE, m_sequencingManager.getCorLsaSeq());
         }
@@ -944,8 +948,8 @@ Lsdb::expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
         NLSR_LOG_DEBUG("Other's Cor LSA, so removing from LSDB");
         removeCoordinateLsa(lsaKey);
       }
-      if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-        m_nlsr.getRoutingTable().scheduleRoutingTableCalculation(m_nlsr);
+      if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+        m_routingTable.scheduleRoutingTableCalculation();
       }
     }
   }
@@ -981,11 +985,11 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
 
   ndn::Interest interest(interestName);
   ndn::util::SegmentFetcher::Options options;
-  options.interestLifetime = m_nlsr.getConfParameter().getLsaInterestLifetime();
+  options.interestLifetime = m_confParam.getLsaInterestLifetime();
 
   NLSR_LOG_DEBUG("Fetching Data for LSA: " << interestName << " Seq number: " << seqNo);
-  auto fetcher = ndn::util::SegmentFetcher::start(m_nlsr.getNlsrFace(),
-                                                  interest, m_nlsr.getValidator(), options);
+  auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest,
+                                                  m_confParam.getValidator(), options);
 
   auto it = m_fetchers.insert(fetcher).first;
 
@@ -1002,7 +1006,9 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                            });
 
   m_lsaStorage.connectToFetcher(*fetcher);
-  m_nlsr.connectToFetcher(*fetcher);
+  fetcher->afterSegmentValidated.connect([this] (const ndn::Data& data) {
+                                          afterSegmentValidatedSignal(data);
+                                         });
 
   // increment a specific SENT_LSA_INTEREST
   Lsa::Type lsaType;
@@ -1046,12 +1052,12 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
   int32_t lsaPosition = util::getNameComponentPosition(interestName, chkString);
 
   // Forms the name of the router that the Interest packet came from.
-  ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
+  ndn::Name originRouter = m_confParam.getNetwork();
   originRouter.append(interestName.getSubName(lsaPosition + 1,
                                               interestName.size() - lsaPosition - 3));
 
   // if the interest is for this router's LSA
-  if (originRouter == m_nlsr.getConfParameter().getRouterPrefix() && lsaPosition >= 0) {
+  if (originRouter == m_confParam.getRouterPrefix() && lsaPosition >= 0) {
     uint64_t seqNo = interestName[-1].toNumber();
     NLSR_LOG_DEBUG("LSA sequence number from interest: " << seqNo);
 
@@ -1077,7 +1083,7 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
     const ndn::Data* lsaSegment = m_lsaStorage.getLsaSegment(interest);
     if (lsaSegment != nullptr) {
       NLSR_LOG_TRACE("Found data in lsa storage. Sending the data for " << interest.getName());
-      m_nlsr.getNlsrFace().put(*lsaSegment);
+      m_face.put(*lsaSegment);
     }
     else {
       NLSR_LOG_TRACE(interest << " was not found in this lsa storage.");
@@ -1098,14 +1104,14 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
   // increment RCV_NAME_LSA_INTEREST
   lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_INTEREST);
   NLSR_LOG_DEBUG("nameLsa interest " << interest << " received");
-  NameLsa* nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
+  NameLsa* nameLsa = findNameLsa(lsaKey);
   if (nameLsa != nullptr) {
     NLSR_LOG_TRACE("Verifying SeqNo for NameLsa is same as requested.");
     if (nameLsa->getLsSeqNo() == seqNo) {
       std::string content = nameLsa->serialize();
       m_segmentPublisher.publish(interest.getName(), interest.getName(),
                                  ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
-                                 m_lsaRefreshTime, m_nlsr.getSigningInfo());
+                                 m_lsaRefreshTime, m_signingInfo);
 
       lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_DATA);
     }
@@ -1128,20 +1134,20 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
                                      const ndn::Name& lsaKey,
                                      uint64_t seqNo)
 {
-  if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
     NLSR_LOG_ERROR("Received interest for an adjacency LSA when hyperbolic routing is enabled");
   }
 
   lsaIncrementSignal(Statistics::PacketType::RCV_ADJ_LSA_INTEREST);
   NLSR_LOG_DEBUG("AdjLsa interest " << interest << " received");
-  AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
+  AdjLsa* adjLsa = findAdjLsa(lsaKey);
   if (adjLsa != nullptr) {
     NLSR_LOG_TRACE("Verifying SeqNo for AdjLsa is same as requested.");
     if (adjLsa->getLsSeqNo() == seqNo) {
       std::string content = adjLsa->serialize();
       m_segmentPublisher.publish(interest.getName(), interest.getName(),
                                  ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
-                                 m_lsaRefreshTime, m_nlsr.getSigningInfo());
+                                 m_lsaRefreshTime, m_signingInfo);
 
       lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_DATA);
     }
@@ -1164,20 +1170,20 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
                                       const ndn::Name& lsaKey,
                                       uint64_t seqNo)
 {
-  if (m_nlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
     NLSR_LOG_ERROR("Received Interest for a coordinate LSA when link-state routing is enabled");
   }
 
   lsaIncrementSignal(Statistics::PacketType::RCV_COORD_LSA_INTEREST);
   NLSR_LOG_DEBUG("CoordinateLsa interest " << interest << " received");
-  CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
+  CoordinateLsa* corLsa = findCoordinateLsa(lsaKey);
   if (corLsa != nullptr) {
     NLSR_LOG_TRACE("Verifying SeqNo for CoordinateLsa is same as requested.");
     if (corLsa->getLsSeqNo() == seqNo) {
       std::string content = corLsa->serialize();
       m_segmentPublisher.publish(interest.getName(), interest.getName(),
                                  ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
-                                 m_lsaRefreshTime, m_nlsr.getSigningInfo());
+                                 m_lsaRefreshTime, m_signingInfo);
 
       lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_DATA);
     }
@@ -1202,7 +1208,7 @@ Lsdb::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
   if (lsaPosition >= 0) {
 
     // Extracts the prefix of the originating router from the data.
-    ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
+    ndn::Name originRouter = m_confParam.getNetwork();
     originRouter.append(dataName.getSubName(lsaPosition + 1, dataName.size() - lsaPosition - 3));
 
     uint64_t seqNo = dataName[-1].toNumber();
@@ -1285,7 +1291,7 @@ Lsdb::getLsaExpirationTimePoint()
 {
   ndn::time::system_clock::TimePoint expirationTimePoint = ndn::time::system_clock::now();
   expirationTimePoint = expirationTimePoint +
-                        ndn::time::seconds(m_nlsr.getConfParameter().getRouterDeadInterval());
+                        ndn::time::seconds(m_confParam.getRouterDeadInterval());
   return expirationTimePoint;
 }
 

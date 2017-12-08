@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -34,6 +34,16 @@ namespace nlsr {
 
 INIT_LOGGER(SequencingManager);
 
+SequencingManager::SequencingManager(std::string filePath, int hypState)
+  : m_nameLsaSeq(0)
+  , m_adjLsaSeq(0)
+  , m_corLsaSeq(0)
+  , m_hyperbolicState(hypState)
+{
+  setSeqFileDirectory(filePath);
+  initiateSeqNoFromFile();
+}
+
 void
 SequencingManager::writeSeqNoToFile() const
 {
@@ -48,7 +58,7 @@ SequencingManager::writeSeqNoToFile() const
 }
 
 void
-SequencingManager::initiateSeqNoFromFile(int hypState)
+SequencingManager::initiateSeqNoFromFile()
 {
   NLSR_LOG_DEBUG("Seq File Name: " << m_seqFileNameWithPath);
   std::ifstream inputFile(m_seqFileNameWithPath.c_str());
@@ -87,7 +97,7 @@ SequencingManager::initiateSeqNoFromFile(int hypState)
     m_nameLsaSeq += 10;
 
     // Increment the adjacency LSA seq. no. if link-state or dry HR is enabled
-    if (hypState != HYPERBOLIC_STATE_ON) {
+    if (m_hyperbolicState != HYPERBOLIC_STATE_ON) {
       if (m_corLsaSeq != 0) {
         NLSR_LOG_WARN("This router was previously configured for hyperbolic"
                    << " routing without clearing the seq. no. file.");
@@ -97,7 +107,7 @@ SequencingManager::initiateSeqNoFromFile(int hypState)
     }
 
     // Similarly, increment the coordinate LSA seq. no only if link-state is disabled.
-    if (hypState != HYPERBOLIC_STATE_OFF) {
+    if (m_hyperbolicState != HYPERBOLIC_STATE_OFF) {
       if (m_adjLsaSeq != 0) {
         NLSR_LOG_WARN("This router was previously configured for link-state"
                   << " routing without clearing the seq. no. file.");
@@ -110,7 +120,7 @@ SequencingManager::initiateSeqNoFromFile(int hypState)
 }
 
 void
-SequencingManager::setSeqFileDirectory(std::string filePath)
+SequencingManager::setSeqFileDirectory(const std::string& filePath)
 {
   m_seqFileNameWithPath = filePath;
 

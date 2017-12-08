@@ -31,11 +31,12 @@
 #include <ndn-cxx/security/signing-helpers.hpp>
 
 #include <boost/filesystem.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/info_parser.hpp>
 
 using namespace ndn;
 
 namespace nlsr {
-namespace update {
 namespace test {
 
 class PrefixUpdateFixture : public nlsr::test::UnitTestTimeFixture
@@ -43,11 +44,12 @@ class PrefixUpdateFixture : public nlsr::test::UnitTestTimeFixture
 public:
   PrefixUpdateFixture()
     : face(m_ioService, m_keyChain, {true, true})
-    , siteIdentityName(ndn::Name("/edu/test-site"))
-    , opIdentityName(ndn::Name("/edu/test-site").append(ndn::Name("%C1.Operator")))
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , namePrefixList(nlsr.getNamePrefixList())
-    , updatePrefixUpdateProcessor(nlsr.getPrefixUpdateProcessor())
+    , siteIdentityName(ndn::Name("site"))
+    , opIdentityName(ndn::Name("site").append(ndn::Name("%C1.Operator")))
+    , conf(face)
+    , confProcessor(conf)
+    , nlsr(face, m_keyChain, conf)
+    , namePrefixList(conf.getNamePrefixList())
     , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
   {
     // Site cert
@@ -57,65 +59,28 @@ public:
     // Operator cert
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
 
-    const std::string CONFIG = R"CONF(
-        rule
-        {
-          id "NLSR ControlCommand Rule"
-          for interest
-          filter
-          {
-            type name
-            regex ^(<localhost><nlsr>)<prefix-update>[<advertise><withdraw>]<><><>$
-          }
-          checker
-          {
-            type customized
-            sig-type rsa-sha256
-            key-locator
-            {
-              type name
-              regex ^<>*<KEY><>$
-            }
-          }
-        }
-        rule
-        {
-          id "NLSR Hierarchy Rule"
-          for data
-          filter
-          {
-            type name
-            regex ^[^<KEY>]*<KEY><><><>$
-          }
-          checker
-          {
-            type hierarchical
-            sig-type rsa-sha256
-          }
-        }
-        trust-anchor
-        {
-         type file
-         file-name "site.cert"
-        }
-    )CONF";
+    std::ifstream inputFile;
+    inputFile.open(std::string("nlsr.conf"));
 
-    const boost::filesystem::path CONFIG_PATH =
-      (boost::filesystem::current_path() / std::string("unit-test.conf"));
+    BOOST_REQUIRE(inputFile.is_open());
 
-    updatePrefixUpdateProcessor.getValidator().load(CONFIG, CONFIG_PATH.native());
+    boost::property_tree::ptree pt;
+
+    boost::property_tree::read_info(inputFile, pt);
+    for (const auto& tn : pt) {
+      if (tn.first == "security") {
+        for (const auto& it : tn.second) {
+          if (it.first == "prefix-update-validator") {
+            conf.getPrefixUpdateValidator().load(it.second, std::string("nlsr.conf"));
+          }
+        }
+      }
+    }
+    inputFile.close();
 
     nlsr.loadCertToPublish(opIdentity.getDefaultKey().getDefaultCertificate());
 
-    // Set the network so the LSA prefix is constructed
-    nlsr.getConfParameter().setNetwork("/ndn");
-    nlsr.getConfParameter().setSiteName("/edu/test-site");
-    nlsr.getConfParameter().setRouterName("/%C1.Router/this-router");
-    nlsr.getConfParameter().buildRouterPrefix();
-    // Otherwise code coverage node fails with default 60 seconds lifetime
-    nlsr.getConfParameter().setSyncInterestLifetime(1000);
-
-    addIdentity(ndn::Name("/ndn/edu/test-site/%C1.Router/this-router"));
+    addIdentity(conf.getRouterPrefix());
 
     // Initialize NLSR so a sync socket is created
     nlsr.initialize();
@@ -130,12 +95,12 @@ public:
     // Need to send an interest now since ChronoSync
     // no longer does face->put(*data) in publishData.
     // Instead it does it in onInterest
-    ndn::Name lsaInterestName = nlsr.getConfParameter().getLsaPrefix();
-    lsaInterestName.append(nlsr.getConfParameter().getSiteName());
-    lsaInterestName.append(nlsr.getConfParameter().getRouterName());
+    ndn::Name lsaInterestName = conf.getLsaPrefix();
+    lsaInterestName.append(conf.getSiteName());
+    lsaInterestName.append(conf.getRouterName());
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
-    lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+    lsaInterestName.appendNumber(nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 
     auto lsaInterest = std::make_shared<Interest>(lsaInterestName);
     lsaInterest->setCanBePrefix(true);
@@ -148,7 +113,7 @@ public:
   {
     sendInterestForPublishedData();
 
-    const ndn::Name& lsaPrefix = nlsr.getConfParameter().getLsaPrefix();
+    const ndn::Name& lsaPrefix = conf.getLsaPrefix();
 
     const auto& it = std::find_if(face.sentData.begin(), face.sentData.end(),
       [lsaPrefix] (const ndn::Data& data) {
@@ -168,9 +133,10 @@ public:
   ndn::Name opIdentityName;
   ndn::security::pib::Identity opIdentity;
 
+  ConfParameter conf;
+  DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
   NamePrefixList& namePrefixList;
-  PrefixUpdateProcessor& updatePrefixUpdateProcessor;
 
   const boost::filesystem::path SITE_CERT_PATH;
 };
@@ -179,7 +145,7 @@ BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  uint64_t nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
+  uint64_t nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.getSequencingManager().getNameLsaSeq();
 
   ndn::nfd::ControlParameters parameters;
   parameters.setName("/prefix/to/advertise/");
@@ -205,16 +171,16 @@ BOOST_AUTO_TEST_CASE(Basic)
 
   this->advanceClocks(ndn::time::milliseconds(10));
 
-  NamePrefixList& namePrefixList = nlsr.getNamePrefixList();
+  NamePrefixList& namePrefixList = conf.getNamePrefixList();
 
   BOOST_REQUIRE_EQUAL(namePrefixList.size(), 1);
   BOOST_CHECK_EQUAL(namePrefixList.getNames().front(), parameters.getName());
 
   BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 
   face.sentData.clear();
-  nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
+  nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.getSequencingManager().getNameLsaSeq();
 
   //Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
@@ -230,11 +196,10 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(namePrefixList.size(), 0);
 
   BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test
-} // namespace update
 } // namespace nlsr

@@ -22,7 +22,6 @@
 #include "routing-table-calculator.hpp"
 #include "lsdb.hpp"
 #include "map.hpp"
-#include "lsa.hpp"
 #include "nexthop.hpp"
 #include "nlsr.hpp"
 #include "logger.hpp"
@@ -57,21 +56,17 @@ RoutingTableCalculator::initMatrix()
 }
 
 void
-RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map& pMap)
+RoutingTableCalculator::makeAdjMatrix(const std::list<AdjLsa>& adjLsaList, Map& pMap)
 {
-  std::list<AdjLsa> adjLsdb = pnlsr.getLsdb().getAdjLsdb();
   // For each LSA represented in the map
-  for (std::list<AdjLsa>::iterator it = adjLsdb.begin(); it != adjLsdb.end() ; it++) {
+  for (const auto& adjLsa : adjLsaList) {
+    ndn::optional<int32_t> row = pMap.getMappingNoByRouterName(adjLsa.getOrigRouter());
 
-
-    ndn::optional<int32_t> row = pMap.getMappingNoByRouterName((*it).getOrigRouter());
-
-    std::list<Adjacent> adl = (*it).getAdl().getAdjList();
+    std::list<Adjacent> adl = adjLsa.getAdl().getAdjList();
     // For each adjacency represented in the LSA
-    for (std::list<Adjacent>::iterator itAdl = adl.begin(); itAdl != adl.end() ; itAdl++) {
-
-      ndn::optional<int32_t> col = pMap.getMappingNoByRouterName((*itAdl).getName());
-      double cost = (*itAdl).getLinkCost();
+    for (const auto& adjacent : adl) {
+      ndn::optional<int32_t> col = pMap.getMappingNoByRouterName(adjacent.getName());
+      double cost = adjacent.getLinkCost();
 
       if (row && col && *row < static_cast<int32_t>(m_nRouters)
           && *col < static_cast<int32_t>(m_nRouters))
@@ -224,24 +219,25 @@ RoutingTableCalculator::freeLinksCosts()
 }
 
 void
-LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
-                                               RoutingTable& rt, Nlsr& pnlsr)
+LinkStateRoutingTableCalculator::calculatePath(Map& pMap, RoutingTable& rt,
+                                               ConfParameter& confParam,
+                                               const std::list<AdjLsa>& adjLsaList)
 {
   NLSR_LOG_DEBUG("LinkStateRoutingTableCalculator::calculatePath Called");
   allocateAdjMatrix();
   initMatrix();
-  makeAdjMatrix(pnlsr, pMap);
+  makeAdjMatrix(adjLsaList, pMap);
   writeAdjMatrixLog(pMap);
   ndn::optional<int32_t> sourceRouter =
-    pMap.getMappingNoByRouterName(pnlsr.getConfParameter().getRouterPrefix());
+    pMap.getMappingNoByRouterName(confParam.getRouterPrefix());
   allocateParent(); // These two matrices are used in Dijkstra's algorithm.
   allocateDistance(); //
   // We only bother to do the calculation if we have a router by that name.
-  if (sourceRouter && pnlsr.getConfParameter().getMaxFacesPerPrefix() == 1) {
+  if (sourceRouter && confParam.getMaxFacesPerPrefix() == 1) {
     // In the single path case we can simply run Dijkstra's algorithm.
     doDijkstraPathCalculation(*sourceRouter);
     // Inform the routing table of the new next hops.
-    addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, *sourceRouter);
+    addAllLsNextHopsToRoutingTable(confParam.getAdjacencyList(), rt, pMap, *sourceRouter);
   }
   else {
     // Multi Path
@@ -257,7 +253,7 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
       // Do Dijkstra's algorithm using the current neighbor as your start.
       doDijkstraPathCalculation(*sourceRouter);
       // Update the routing table with the calculations.
-      addAllLsNextHopsToRoutingTable(pnlsr, rt, pMap, *sourceRouter);
+      addAllLsNextHopsToRoutingTable(confParam.getAdjacencyList(), rt, pMap, *sourceRouter);
     }
     freeLinks();
     freeLinksCosts();
@@ -318,8 +314,9 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
 }
 
 void
-LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, RoutingTable& rt,
-                                                                Map& pMap, uint32_t sourceRouter)
+LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(AdjacencyList& adjacencies,
+                                                                RoutingTable& rt, Map& pMap,
+                                                                uint32_t sourceRouter)
 {
   NLSR_LOG_DEBUG("LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called");
 
@@ -341,7 +338,7 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(Nlsr& pnlsr, Rou
         ndn::optional<ndn::Name> nextHopRouterName= pMap.getRouterNameByMappingNo(nextHopRouter);
         if (nextHopRouterName) {
           std::string nextHopFace =
-            pnlsr.getAdjacencyList().getAdjacent(*nextHopRouterName).getFaceUri().toString();
+            adjacencies.getAdjacent(*nextHopRouterName).getFaceUri().toString();
           // Add next hop to routing table
           NextHop nh(nextHopFace, routeCost);
           rt.addNextHop(*(pMap.getRouterNameByMappingNo(i)), nh);

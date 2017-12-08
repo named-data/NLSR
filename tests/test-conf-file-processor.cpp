@@ -21,7 +21,6 @@
 
 #include "conf-file-processor.hpp"
 #include "test-common.hpp"
-#include "nlsr.hpp"
 
 #include <fstream>
 
@@ -109,6 +108,8 @@ const std::string SECTION_ADVERTISING =
   "  prefix /ndn/edu/memphis/sports/basketball\n"
   "}\n";
 
+// NEED TO TEST SECURITY SECTION SUCH AS LOADING CERTIFICATE
+
 const std::string CONFIG_LINK_STATE = SECTION_GENERAL + SECTION_NEIGHBORS +
                                       SECTION_HYPERBOLIC_OFF + SECTION_FIB + SECTION_ADVERTISING;
 
@@ -124,8 +125,7 @@ class ConfFileProcessorFixture : public BaseFixture
 public:
   ConfFileProcessorFixture()
     : face(m_ioService, m_keyChain)
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , CONFIG_FILE("unit-test-nlsr.conf")
+    , conf(face, "unit-test-nlsr.conf")
   {
   }
 
@@ -142,7 +142,7 @@ public:
     config << confString;
     config.close();
 
-    ConfFileProcessor processor(nlsr, CONFIG_FILE);
+    ConfFileProcessor processor(conf);
     return processor.processConfFile();
   }
 
@@ -154,10 +154,7 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
-  Nlsr nlsr;
-
-private:
-  const std::string CONFIG_FILE;
+  ConfParameter conf;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, ConfFileProcessorFixture)
@@ -165,7 +162,6 @@ BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, ConfFileProcessorFixture)
 BOOST_AUTO_TEST_CASE(LinkState)
 {
   processConfigurationString(CONFIG_LINK_STATE);
-  ConfParameter& conf = nlsr.getConfParameter();
   conf.buildRouterPrefix();
 
   // General
@@ -173,7 +169,7 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getSiteName(), "/memphis.edu/");
   BOOST_CHECK_EQUAL(conf.getRouterName(), "/cs/pollux/");
   BOOST_CHECK_EQUAL(conf.getRouterPrefix(), "/ndn/memphis.edu/cs/pollux/");
-  BOOST_CHECK_EQUAL(conf.getChronosyncPrefix(), ndn::Name("/localhop/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION));
+  BOOST_CHECK_EQUAL(conf.getSyncPrefix(), ndn::Name("/localhop/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION));
   BOOST_CHECK_EQUAL(conf.getLsaPrefix(), "/localhop/ndn/nlsr/LSA");
   BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), 1800);
   BOOST_CHECK_EQUAL(conf.getSyncProtocol(), SYNC_PROTOCOL_PSYNC);
@@ -190,16 +186,16 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getAdjLsaBuildInterval(), 3);
   BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(), 6);
 
-  BOOST_CHECK(nlsr.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/mira"));
-  BOOST_CHECK(nlsr.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/castor"));
-  BOOST_CHECK(!nlsr.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/fail"));
+  BOOST_CHECK(conf.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/mira"));
+  BOOST_CHECK(conf.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/castor"));
+  BOOST_CHECK(!conf.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/fail"));
 
-  Adjacent mira = nlsr.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/mira");
+  Adjacent mira = conf.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/mira");
   BOOST_CHECK_EQUAL(mira.getName(), "/ndn/memphis.edu/cs/mira");
   BOOST_CHECK_EQUAL(mira.getLinkCost(), 30);
   BOOST_CHECK_EQUAL(mira.getFaceUri().toString(), "udp4://10.0.0.2:6363");
 
-  Adjacent castor = nlsr.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/castor");
+  Adjacent castor = conf.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/castor");
   BOOST_CHECK_EQUAL(castor.getName(), "/ndn/memphis.edu/cs/castor");
   BOOST_CHECK_EQUAL(castor.getLinkCost(), 20);
   BOOST_CHECK_EQUAL(castor.getFaceUri().toString(), "udp4://10.0.0.1:6363");
@@ -212,7 +208,7 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getRoutingCalcInterval(), 9);
 
   // Advertising
-  BOOST_CHECK_EQUAL(nlsr.getNamePrefixList().size(), 2);
+  BOOST_CHECK_EQUAL(conf.getNamePrefixList().size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(MalformedUri)
@@ -240,7 +236,6 @@ BOOST_AUTO_TEST_CASE(Hyperbolic)
 {
   processConfigurationString(CONFIG_HYPERBOLIC);
 
-  ConfParameter& conf = nlsr.getConfParameter();
   BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
   BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
   std::vector<double> angles;
@@ -252,7 +247,6 @@ BOOST_AUTO_TEST_CASE(Hyperbolic2)
 {
   processConfigurationString(CONFIG_HYPERBOLIC_ANGLES);
 
-  ConfParameter& conf = nlsr.getConfParameter();
   BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
   BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
   std::vector<double> angles;
@@ -270,8 +264,6 @@ BOOST_AUTO_TEST_CASE(DefaultValuesGeneral)
   commentOut("router-dead-interval", config);
 
   BOOST_CHECK_EQUAL(processConfigurationString(config), true);
-
-  ConfParameter& conf = nlsr.getConfParameter();
 
   BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), static_cast<uint32_t>(LSA_REFRESH_TIME_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(),
@@ -291,8 +283,6 @@ BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)
 
   BOOST_CHECK_EQUAL(processConfigurationString(config), true);
 
-  ConfParameter& conf = nlsr.getConfParameter();
-
   BOOST_CHECK_EQUAL(conf.getInterestRetryNumber(), static_cast<uint32_t>(HELLO_RETRIES_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getInterestResendTime(), static_cast<uint32_t>(HELLO_TIMEOUT_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getInfoInterestInterval(), static_cast<uint32_t>(HELLO_INTERVAL_DEFAULT));
@@ -311,8 +301,6 @@ BOOST_AUTO_TEST_CASE(DefaultValuesFib)
 
   BOOST_CHECK_EQUAL(processConfigurationString(config), true);
 
-  ConfParameter& conf = nlsr.getConfParameter();
-
   BOOST_CHECK_EQUAL(conf.getMaxFacesPerPrefix(),
                     static_cast<uint32_t>(MAX_FACES_PER_PREFIX_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getRoutingCalcInterval(),
@@ -326,8 +314,6 @@ BOOST_AUTO_TEST_CASE(DefaultValuesHyperbolic)
   commentOut("state", config);
 
   BOOST_CHECK_EQUAL(processConfigurationString(config), true);
-
-  ConfParameter& conf = nlsr.getConfParameter();
 
   BOOST_CHECK_EQUAL(conf.getHyperbolicState(), static_cast<int32_t>(HYPERBOLIC_STATE_DEFAULT));
 }
@@ -391,8 +377,7 @@ BOOST_AUTO_TEST_CASE(LoadCertToPublish)
   BOOST_CHECK(processConfigurationString(SECTION_SECURITY));
 
   // Certificate should now be in the CertificateStore
-  security::CertificateStore& certStore = nlsr.getCertificateStore();
-  BOOST_CHECK(certStore.find(identity.getDefaultKey().getName()) != nullptr);
+  BOOST_CHECK(conf.getCertStore().find(identity.getDefaultKey().getName()) != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(PrefixUpdateValidatorOptional) // Bug #2814

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -46,14 +46,13 @@ class PublisherFixture : public BaseFixture
 public:
   PublisherFixture()
     : face(m_ioService, m_keyChain, {true, true})
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , lsdb(nlsr.getLsdb())
-    , rt1(nlsr.getRoutingTable())
+    , conf(face)
+    , confProcessor(conf)
+    , nlsr(face, m_keyChain, conf)
+    , lsdb(nlsr.m_lsdb)
+    , rt1(nlsr.m_routingTable)
   {
-    nlsr.getConfParameter().setNetwork("/ndn");
-    nlsr.getConfParameter().setRouterName("/This/Router");
-
-    routerId = addIdentity("/ndn/This/Router");
+    routerId = addIdentity(conf.getRouterPrefix());
 
     nlsr.initialize();
     face.processEvents(ndn::time::milliseconds(100));
@@ -178,7 +177,8 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
-
+  ConfParameter conf;
+  DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
   Lsdb& lsdb;
 

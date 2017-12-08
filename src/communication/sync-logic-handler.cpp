@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -50,6 +50,7 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
   , m_isLsaNew(isLsaNew)
   , m_confParam(conf)
 {
+  createSyncLogic(conf.getSyncPrefix());
 }
 
 void
@@ -122,21 +123,21 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
     Lsa::Type lsaType;
     std::istringstream(updateName.get(updateName.size()-1).toUri()) >> lsaType;
 
-    NLSR_LOG_DEBUG("Received sync update with higher " << lsaType
-               << " sequence number than entry in LSDB");
+    NLSR_LOG_DEBUG("Received sync update with higher " << lsaType <<
+                   " sequence number than entry in LSDB");
 
     if (m_isLsaNew(originRouter, lsaType, seqNo)) {
       if (lsaType == Lsa::Type::ADJACENCY && seqNo != 0 &&
           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-        NLSR_LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing"
-                   << " is enabled. Not going to fetch.");
+        NLSR_LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing " <<
+                       "is enabled. Not going to fetch.");
         return;
       }
 
       if (lsaType == Lsa::Type::COORDINATE && seqNo != 0 &&
           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-        NLSR_LOG_ERROR("Got an update for coordinate LSA when link-state"
-                   << " is enabled. Not going to fetch.");
+        NLSR_LOG_ERROR("Got an update for coordinate LSA when link-state " <<
+                       "is enabled. Not going to fetch.");
         return;
       }
       (*onNewLsa)(updateName, seqNo);

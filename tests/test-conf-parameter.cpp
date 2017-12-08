@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -21,6 +21,9 @@
  *
  **/
 #include "conf-parameter.hpp"
+
+#include <ndn-cxx/util/dummy-client-face.hpp>
+
 #include <boost/test/unit_test.hpp>
 
 namespace nlsr {
@@ -33,7 +36,8 @@ BOOST_AUTO_TEST_SUITE(TestConfParameter)
 
 BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 {
-  ConfParameter cp1;
+  ndn::util::DummyClientFace face;
+  ConfParameter cp1(face);
 
   const string NAME = "router1";
   const string SITE = "memphis";

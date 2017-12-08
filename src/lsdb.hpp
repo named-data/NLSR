@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -29,6 +29,7 @@
 #include "test-access-control.hpp"
 #include "communication/sync-logic-handler.hpp"
 #include "statistics.hpp"
+#include "route/name-prefix-table.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/signal.hpp>
@@ -42,12 +43,12 @@
 
 namespace nlsr {
 
-class Nlsr;
-
 class Lsdb
 {
 public:
-  Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler);
+  Lsdb(ndn::Face& face, ndn::KeyChain& keyChain,
+       ndn::security::SigningInfo& signingInfo, ConfParameter& confParam,
+       NamePrefixTable& namePrefixTable, RoutingTable& routingTable);
 
   ~Lsdb();
 
@@ -202,20 +203,8 @@ public:
     return m_sequencingManager;
   }
 
-  LsaSegmentStorage&
-  getLsaStorage()
-  {
-    return m_lsaStorage;
-  }
-
   void
   writeAdjLsdbLog();
-
-  void
-  setLsaRefreshTime(const ndn::time::seconds& lsaRefreshTime);
-
-  void
-  setThisRouterPrefix(std::string trp);
 
   void
   expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
@@ -229,6 +218,12 @@ public:
   */
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
+
+  bool
+  getIsBuildAdjLsaSheduled()
+  {
+    return m_isBuildAdjLsaSheduled;
+  }
 
 private:
   /* \brief Add a name LSA to the LSDB if it isn't already there.
@@ -392,13 +387,22 @@ public:
   static const ndn::Name::Component NAME_COMPONENT;
 
   ndn::util::signal::Signal<Lsdb, Statistics::PacketType> lsaIncrementSignal;
+  ndn::util::signal::Signal<Lsdb, const ndn::Data&> afterSegmentValidatedSignal;
 
 private:
-  Nlsr& m_nlsr;
-  ndn::Scheduler& m_scheduler;
+  ndn::Face& m_face;
+  ndn::Scheduler m_scheduler;
+  ndn::security::SigningInfo& m_signingInfo;
+
+  ConfParameter& m_confParam;
+  NamePrefixTable& m_namePrefixTable;
+  RoutingTable& m_routingTable;
   SyncLogicHandler m_sync;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   LsaSegmentStorage m_lsaStorage;
 
+private:
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
   std::list<CoordinateLsa> m_corLsdb;
@@ -423,6 +427,9 @@ private:
 
   std::set<std::shared_ptr<ndn::util::SegmentFetcher>> m_fetchers;
   psync::SegmentPublisher m_segmentPublisher;
+
+  bool m_isBuildAdjLsaSheduled;
+  int64_t m_adjBuildCount;
 };
 
 } // namespace nlsr

@@ -20,31 +20,23 @@
  **/
 
 #include "nlsr-runner.hpp"
-#include "conf-file-processor.hpp"
 
 namespace nlsr {
 
-NlsrRunner::NlsrRunner(const std::string& configFileName)
-  : m_scheduler(m_ioService)
-  , m_face(m_ioService)
-  , m_nlsr(m_ioService, m_scheduler, m_face, m_keyChain)
+NlsrRunner::NlsrRunner(ndn::Face& face, ConfParameter& confParam)
+  : m_face(face)
+  , m_confParam(confParam)
+  , m_nlsr(m_face, m_keyChain, m_confParam)
 {
-  m_nlsr.setConfFileName(configFileName);
 }
 
 void
 NlsrRunner::run()
 {
-  ConfFileProcessor configProcessor(m_nlsr, m_nlsr.getConfFileName());
-
-  if (!configProcessor.processConfFile()) {
-    BOOST_THROW_EXCEPTION(ConfFileError("Error in configuration file processing"));
-  }
-
   m_nlsr.initialize();
 
   try {
-    m_nlsr.startEventLoop();
+    m_face.processEvents();
   }
   catch (...) {
     m_nlsr.getFib().clean();

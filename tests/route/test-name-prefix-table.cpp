@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,7 +21,7 @@
 
 #include "route/name-prefix-table.hpp"
 #include "nlsr.hpp"
-#include "test-common.hpp"
+#include "../test-common.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
@@ -33,14 +33,16 @@ class NamePrefixTableFixture : public UnitTestTimeFixture
 public:
   NamePrefixTableFixture()
     : face(m_ioService, m_keyChain)
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , lsdb(nlsr.getLsdb())
-    , npt(nlsr.getNamePrefixTable())
+    , conf(face)
+    , nlsr(face, m_keyChain, conf)
+    , lsdb(nlsr.m_lsdb)
+    , npt(nlsr.m_namePrefixTable)
   {
   }
 
 public:
   ndn::util::DummyClientFace face;
+  ConfParameter conf;
   Nlsr nlsr;
 
   Lsdb& lsdb;
@@ -51,16 +53,13 @@ BOOST_AUTO_TEST_SUITE(TestNamePrefixTable)
 
 BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
 {
-  ConfParameter& conf = nlsr.getConfParameter();
   conf.setNetwork("/ndn");
   conf.setSiteName("/router");
   conf.setRouterName("/a");
   conf.buildRouterPrefix();
 
-  RoutingTable& routingTable = nlsr.getRoutingTable();
+  RoutingTable& routingTable = nlsr.m_routingTable;
   routingTable.setRoutingCalcInterval(0);
-
-  NamePrefixTable& npt = nlsr.getNamePrefixTable();
 
   Adjacent thisRouter(conf.getRouterPrefix(), ndn::FaceUri("udp4://10.0.0.1"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
@@ -68,11 +67,11 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   Adjacent bupt(buptRouterName, ndn::FaceUri("udp4://10.0.0.2"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
   // This router's Adjacency LSA
-  nlsr.getAdjacencyList().insert(bupt);
+  conf.getAdjacencyList().insert(bupt);
   AdjLsa thisRouterAdjLsa(thisRouter.getName(), 1,
                           ndn::time::system_clock::now() + ndn::time::seconds::max(),
                           2,
-                          nlsr.getAdjacencyList());
+                          conf.getAdjacencyList());
 
   lsdb.installAdjLsa(thisRouterAdjLsa);
 
@@ -133,7 +132,6 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(AddEntryToPool, NamePrefixTableFixture)
 {
-  NamePrefixTable& npt = nlsr.getNamePrefixTable();
   RoutingTablePoolEntry rtpe1("router1");
 
   npt.addRtpeToPool(rtpe1);
@@ -144,7 +142,6 @@ BOOST_FIXTURE_TEST_CASE(AddEntryToPool, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(RemoveEntryFromPool, NamePrefixTableFixture)
 {
-  NamePrefixTable& npt = nlsr.getNamePrefixTable();
   RoutingTablePoolEntry rtpe1("router1", 0);
   std::shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
 
@@ -158,7 +155,6 @@ BOOST_FIXTURE_TEST_CASE(RemoveEntryFromPool, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(AddRoutingEntryToNptEntry, NamePrefixTableFixture)
 {
-  NamePrefixTable& npt = nlsr.getNamePrefixTable();
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr1", 0);
   std::shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
   NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
@@ -182,7 +178,6 @@ BOOST_FIXTURE_TEST_CASE(AddRoutingEntryToNptEntry, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
 {
-  NamePrefixTable& npt = nlsr.getNamePrefixTable();
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr1", 0);
 
   NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
@@ -208,7 +203,6 @@ BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(AddNptEntryPtrToRoutingEntry, NamePrefixTableFixture)
 {
-  NamePrefixTable& npt = nlsr.getNamePrefixTable();
   NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
   npt.m_table.push_back(make_shared<NamePrefixTableEntry>(npte1));
 
@@ -235,7 +229,6 @@ BOOST_FIXTURE_TEST_CASE(AddNptEntryPtrToRoutingEntry, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(RemoveNptEntryPtrFromRoutingEntry, NamePrefixTableFixture)
 {
-  NamePrefixTable& npt = nlsr.getNamePrefixTable();
   NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
   NamePrefixTableEntry npte2("/ndn/memphis/rtr2");
   RoutingTableEntry rte1("/ndn/memphis/destination1");
@@ -272,44 +265,43 @@ BOOST_FIXTURE_TEST_CASE(RemoveNptEntryPtrFromRoutingEntry, NamePrefixTableFixtur
 
 BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
 {
-  NamePrefixTable& namePrefixTable = nlsr.getNamePrefixTable();
-  RoutingTable& routingTable = nlsr.getRoutingTable();
+  RoutingTable& routingTable = nlsr.m_routingTable;
   const ndn::Name destination = ndn::Name{"/ndn/destination1"};
   NextHop hop1{"upd4://10.0.0.1", 0};
   NextHop hop2{"udp4://10.0.0.2", 1};
   NextHop hop3{"udp4://10.0.0.3", 2};
   const NamePrefixTableEntry entry1{"/ndn/router1"};
-  namePrefixTable.addEntry(entry1.getNamePrefix(), destination);
+  npt.addEntry(entry1.getNamePrefix(), destination);
 
   routingTable.addNextHop(destination, hop1);
   routingTable.addNextHop(destination, hop2);
 
-  namePrefixTable.updateWithNewRoute(routingTable.m_rTable);
+  npt.updateWithNewRoute(routingTable.m_rTable);
 
   // At this point the NamePrefixTableEntry should have two NextHops.
-  auto nameIterator = std::find_if(namePrefixTable.begin(), namePrefixTable.end(),
+  auto nameIterator = std::find_if(npt.begin(), npt.end(),
                                    [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
                                      return entry1.getNamePrefix() == entry->getNamePrefix();
                                    });
-  BOOST_REQUIRE(nameIterator != namePrefixTable.end());
+  BOOST_REQUIRE(nameIterator != npt.end());
 
-  auto iterator = namePrefixTable.m_rtpool.find(destination);
-  BOOST_REQUIRE(iterator != namePrefixTable.m_rtpool.end());
+  auto iterator = npt.m_rtpool.find(destination);
+  BOOST_REQUIRE(iterator != npt.m_rtpool.end());
   auto nextHops = (iterator->second)->getNexthopList();
   BOOST_CHECK_EQUAL(nextHops.size(), 2);
 
   // Add the other NextHop
   routingTable.addNextHop(destination, hop3);
-  namePrefixTable.updateWithNewRoute(routingTable.m_rTable);
+  npt.updateWithNewRoute(routingTable.m_rTable);
 
   // At this point the NamePrefixTableEntry should have three NextHops.
-  nameIterator = std::find_if(namePrefixTable.begin(), namePrefixTable.end(),
+  nameIterator = std::find_if(npt.begin(), npt.end(),
                               [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
                                 return entry1.getNamePrefix() == entry->getNamePrefix();
                               });
-  BOOST_REQUIRE(nameIterator != namePrefixTable.end());
-  iterator = namePrefixTable.m_rtpool.find(destination);
-  BOOST_REQUIRE(iterator != namePrefixTable.m_rtpool.end());
+  BOOST_REQUIRE(nameIterator != npt.end());
+  iterator = npt.m_rtpool.find(destination);
+  BOOST_REQUIRE(iterator != npt.m_rtpool.end());
   nextHops = (iterator->second)->getNexthopList();
   BOOST_CHECK_EQUAL(nextHops.size(), 3);
 }

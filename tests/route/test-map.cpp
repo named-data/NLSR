@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -20,30 +20,26 @@
  * \author Ashlesh Gawande <agawande@memphis.edu>
  *
  **/
-
-#include "route/routing-table.hpp"
-#include "test-common.hpp"
-#include "route/routing-table-entry.hpp"
-#include "route/nexthop.hpp"
+#include "route/map.hpp"
 #include <boost/test/unit_test.hpp>
 
 namespace nlsr {
+
 namespace test {
 
-BOOST_FIXTURE_TEST_SUITE(TestRoutingTable, BaseFixture)
+BOOST_AUTO_TEST_SUITE(TestMap)
 
-BOOST_AUTO_TEST_CASE(RoutingTableAddNextHop)
+BOOST_AUTO_TEST_CASE(MapAddElementAndSize)
 {
-  RoutingTable rt1(m_scheduler);
+  Map map1;
 
-  NextHop nh1;
+  std::string router1 = "r1";
+  std::string router2 = "r2";
 
-  const std::string DEST_ROUTER = "destRouter";
+  map1.addEntry(router1);
+  map1.addEntry(router2);
 
-  rt1.addNextHop("destRouter", nh1);
-
-  BOOST_CHECK_EQUAL(rt1.findRoutingTableEntry(DEST_ROUTER)->getDestination(),
-                    "destRouter");
+  BOOST_CHECK_EQUAL(map1.getMapSize(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

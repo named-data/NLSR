@@ -35,39 +35,44 @@ namespace nlsr {
 
 INIT_LOGGER(route.RoutingTable);
 
-RoutingTable::RoutingTable(ndn::Scheduler& scheduler)
+RoutingTable::RoutingTable(ndn::Scheduler& scheduler, Fib& fib, Lsdb& lsdb,
+                           NamePrefixTable& namePrefixTable, ConfParameter& confParam)
   : afterRoutingChange{std::make_unique<AfterRoutingChange>()}
   , m_scheduler(scheduler)
+  , m_fib(fib)
+  , m_lsdb(lsdb)
+  , m_namePrefixTable(namePrefixTable)
   , m_NO_NEXT_HOP{-12345}
-  , m_routingCalcInterval{static_cast<uint32_t>(ROUTING_CALC_INTERVAL_DEFAULT)}
+  , m_routingCalcInterval{confParam.getRoutingCalcInterval()}
+  , m_isRoutingTableCalculating(false)
+  , m_isRouteCalculationScheduled(false)
+  , m_confParam(confParam)
 {
 }
 
 void
-RoutingTable::calculate(Nlsr& pnlsr)
+RoutingTable::calculate()
 {
-  pnlsr.getLsdb().writeCorLsdbLog();
-  pnlsr.getLsdb().writeNameLsdbLog();
-  pnlsr.getLsdb().writeAdjLsdbLog();
-  pnlsr.getNamePrefixTable().writeLog();
-  if (pnlsr.getIsRoutingTableCalculating() == false) {
-    //setting routing table calculation
-    pnlsr.setIsRoutingTableCalculating(true);
+  m_lsdb.writeCorLsdbLog();
+  m_lsdb.writeNameLsdbLog();
+  m_lsdb.writeAdjLsdbLog();
+  m_namePrefixTable.writeLog();
+  if (m_isRoutingTableCalculating == false) {
+    // setting routing table calculation
+    m_isRoutingTableCalculating = true;
 
-    bool isHrEnabled = pnlsr.getConfParameter().getHyperbolicState() != HYPERBOLIC_STATE_OFF;
+    bool isHrEnabled = m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF;
 
-    if ((!isHrEnabled
-         &&
-         pnlsr.getLsdb()
-         .doesLsaExist(ndn::Name{pnlsr.getConfParameter().getRouterPrefix()}
+    if ((!isHrEnabled &&
+         m_lsdb
+         .doesLsaExist(ndn::Name{m_confParam.getRouterPrefix()}
                        .append(std::to_string(Lsa::Type::ADJACENCY)), Lsa::Type::ADJACENCY))
         ||
-        (isHrEnabled
-         &&
-         pnlsr.getLsdb()
-         .doesLsaExist(ndn::Name{pnlsr.getConfParameter().getRouterPrefix()}
+        (isHrEnabled &&
+         m_lsdb
+         .doesLsaExist(ndn::Name{m_confParam.getRouterPrefix()}
                        .append(std::to_string(Lsa::Type::COORDINATE)), Lsa::Type::COORDINATE))) {
-      if (pnlsr.getIsBuildAdjLsaSheduled() != 1) {
+      if (m_lsdb.getIsBuildAdjLsaSheduled() != 1) {
         NLSR_LOG_TRACE("Clearing old routing table");
         clearRoutingTable();
         // for dry run options
@@ -76,24 +81,24 @@ RoutingTable::calculate(Nlsr& pnlsr)
         NLSR_LOG_DEBUG("Calculating routing table");
 
         // calculate Link State routing
-        if ((pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_OFF)
-            || (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN)) {
-          calculateLsRoutingTable(pnlsr);
+        if ((m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF)
+            || (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN)) {
+          calculateLsRoutingTable();
         }
-        // calculate hyperbolic
-        if (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-          calculateHypRoutingTable(pnlsr, false);
+        // calculate hyperbolic routing
+        if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+          calculateHypRoutingTable(false);
         }
-        //calculate dry hyperbolic routing
-        if (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
-          calculateHypRoutingTable(pnlsr, true);
+        // calculate dry hyperbolic routing
+        if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
+          calculateHypRoutingTable(true);
         }
         // Inform the NPT that updates have been made
         NLSR_LOG_DEBUG("Calling Update NPT With new Route");
         (*afterRoutingChange)(m_rTable);
-        writeLog(pnlsr.getConfParameter().getHyperbolicState());
-        pnlsr.getNamePrefixTable().writeLog();
-        pnlsr.getFib().writeLog();
+        writeLog();
+        m_namePrefixTable.writeLog();
+        m_fib.writeLog();
       }
       else {
         NLSR_LOG_DEBUG("Adjacency building is scheduled, so"
@@ -108,61 +113,60 @@ RoutingTable::calculate(Nlsr& pnlsr)
       // need to update NPT here
       NLSR_LOG_DEBUG("Calling Update NPT With new Route");
       (*afterRoutingChange)(m_rTable);
-      writeLog(pnlsr.getConfParameter().getHyperbolicState());
-      pnlsr.getNamePrefixTable().writeLog();
-      pnlsr.getFib().writeLog();
-      //debugging purpose end
+      writeLog();
+      m_namePrefixTable.writeLog();
+      m_fib.writeLog();
+      // debugging purpose end
     }
-    pnlsr.setIsRouteCalculationScheduled(false); //clear scheduled flag
-    pnlsr.setIsRoutingTableCalculating(false); //unsetting routing table calculation
+    m_isRouteCalculationScheduled = false; // clear scheduled flag
+    m_isRoutingTableCalculating = false; // unsetting routing table calculation
   }
   else {
-    scheduleRoutingTableCalculation(pnlsr);
+    scheduleRoutingTableCalculation();
   }
 }
 
 void
-RoutingTable::calculateLsRoutingTable(Nlsr& nlsr)
+RoutingTable::calculateLsRoutingTable()
 {
   NLSR_LOG_DEBUG("RoutingTable::calculateLsRoutingTable Called");
 
   Map map;
-  map.createFromAdjLsdb(nlsr.getLsdb().getAdjLsdb().begin(), nlsr.getLsdb().getAdjLsdb().end());
+  map.createFromAdjLsdb(m_lsdb.getAdjLsdb().begin(), m_lsdb.getAdjLsdb().end());
   map.writeLog();
 
   size_t nRouters = map.getMapSize();
 
   LinkStateRoutingTableCalculator calculator(nRouters);
 
-  calculator.calculatePath(map, *this, nlsr);
+  calculator.calculatePath(map, *this, m_confParam, m_lsdb.getAdjLsdb());
 }
 
 void
-RoutingTable::calculateHypRoutingTable(Nlsr& nlsr, bool isDryRun)
+RoutingTable::calculateHypRoutingTable(bool isDryRun)
 {
   Map map;
-  map.createFromCoordinateLsdb(nlsr.getLsdb().getCoordinateLsdb().begin(),
-                               nlsr.getLsdb().getCoordinateLsdb().end());
+  map.createFromCoordinateLsdb(m_lsdb.getCoordinateLsdb().begin(),
+                               m_lsdb.getCoordinateLsdb().end());
   map.writeLog();
 
   size_t nRouters = map.getMapSize();
 
-  HyperbolicRoutingCalculator calculator(nRouters, isDryRun,
-                                         nlsr.getConfParameter().getRouterPrefix());
+  HyperbolicRoutingCalculator calculator(nRouters, isDryRun, m_confParam.getRouterPrefix());
 
-  calculator.calculatePath(map, *this, nlsr.getLsdb(), nlsr.getAdjacencyList());
+  calculator.calculatePath(map, *this, m_lsdb, m_confParam.getAdjacencyList());
 }
 
 void
-RoutingTable::scheduleRoutingTableCalculation(Nlsr& pnlsr)
+RoutingTable::scheduleRoutingTableCalculation()
 {
-  if (pnlsr.getIsRouteCalculationScheduled() != true) {
+  if (m_isRouteCalculationScheduled != true) {
     NLSR_LOG_DEBUG("Scheduling routing table calculation in " << m_routingCalcInterval);
 
     m_scheduler.scheduleEvent(m_routingCalcInterval,
-                              std::bind(&RoutingTable::calculate, this, std::ref(pnlsr)));
+                              std::bind(&RoutingTable::calculate, this));
 
-    pnlsr.setIsRouteCalculationScheduled(true);
+    m_isRouteCalculationScheduled = true;
   }
 }
 
@@ -202,23 +206,21 @@ RoutingTable::findRoutingTableEntry(const ndn::Name& destRouter)
 }
 
 void
-RoutingTable::writeLog(int hyperbolicState)
+RoutingTable::writeLog()
 {
   NLSR_LOG_DEBUG("---------------Routing Table------------------");
-  for (std::list<RoutingTableEntry>::iterator it = m_rTable.begin() ;
-       it != m_rTable.end(); ++it) {
-    NLSR_LOG_DEBUG("Destination: " << (*it).getDestination());
+  for (const auto& rte : m_rTable) {
+    NLSR_LOG_DEBUG("Destination: " << rte.getDestination());
     NLSR_LOG_DEBUG("Nexthops: ");
-    (*it).getNexthopList().writeLog();
+    rte.getNexthopList().writeLog();
   }
 
-  if (hyperbolicState == HYPERBOLIC_STATE_DRY_RUN) {
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
     NLSR_LOG_DEBUG("--------Hyperbolic Routing Table(Dry)---------");
-    for (std::list<RoutingTableEntry>::iterator it = m_dryTable.begin() ;
-        it != m_dryTable.end(); ++it) {
-      NLSR_LOG_DEBUG("Destination: " << (*it).getDestination());
+    for (const auto& rte : m_dryTable) {
+      NLSR_LOG_DEBUG("Destination: " << rte.getDestination());
       NLSR_LOG_DEBUG("Nexthops: ");
-      (*it).getNexthopList().writeLog();
+      rte.getNexthopList().writeLog();
     }
   }
 }

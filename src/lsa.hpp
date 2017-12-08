@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -32,8 +32,6 @@
 #include <boost/tokenizer.hpp>
 
 namespace nlsr {
-
-class Nlsr;
 
 class Lsa
 {
@@ -285,17 +283,6 @@ public:
 
   bool
   isEqualContent(const AdjLsa& alsa) const;
-
-  /*! \brief Installs this LSA's name prefixes into the NPT.
-
-    \param pnlsr The NLSR top-level whose NPT you want to install the
-    entries into.
-   */
-  void
-  addNptEntries(Nlsr& pnlsr);
-
-  void
-  removeNptEntries(Nlsr& pnlsr);
 
   void
   writeLog() const override;

@@ -46,10 +46,11 @@ class HyperbolicCalculatorFixture : public BaseFixture
 public:
   HyperbolicCalculatorFixture()
     : face(m_ioService, m_keyChain)
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , routingTable(nlsr.getRoutingTable())
-    , adjacencies(nlsr.getAdjacencyList())
-    , lsdb(nlsr.getLsdb())
+    , conf(face)
+    , nlsr(face, m_keyChain, conf)
+    , routingTable(nlsr.m_routingTable)
+    , adjacencies(conf.getAdjacencyList())
+    , lsdb(nlsr.m_lsdb)
   {
   }
 
@@ -148,6 +149,7 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
+  ConfParameter conf;
   Nlsr nlsr;
   Map map;
 

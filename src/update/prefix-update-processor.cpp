@@ -51,11 +51,11 @@ getSignerFromTag(const ndn::Interest& interest)
 }
 
 PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
-                                             ndn::Face& face,
+                                             ndn::security::ValidatorConfig& validator,
                                              NamePrefixList& namePrefixList,
                                              Lsdb& lsdb, const std::string& configFileName)
   : CommandManagerBase(dispatcher, namePrefixList, lsdb, "prefix-update")
-  , m_validator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
+  , m_validator(validator)
   , m_configFileName(configFileName)
 {
   NLSR_LOG_DEBUG("Setting dispatcher to capture Interests for: "
@@ -178,14 +178,14 @@ PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix
 }
 
 ndn::optional<bool>
-PrefixUpdateProcessor::afterAdvertise(const ndn::Name& prefix) {
-
+PrefixUpdateProcessor::afterAdvertise(const ndn::Name& prefix)
+{
   return addOrDeletePrefix(prefix, true);
 }
 
 ndn::optional<bool>
-PrefixUpdateProcessor::afterWithdraw(const ndn::Name& prefix) {
-
+PrefixUpdateProcessor::afterWithdraw(const ndn::Name& prefix)
+{
   return addOrDeletePrefix(prefix, false);
 }
 

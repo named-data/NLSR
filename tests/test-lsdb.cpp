@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -35,28 +35,25 @@
 namespace nlsr {
 namespace test {
 
-using std::shared_ptr;
+using namespace ndn::time_literals;
 
 class LsdbFixture : public UnitTestTimeFixture
 {
 public:
   LsdbFixture()
     : face(m_ioService, m_keyChain, {true, true})
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , lsdb(nlsr.getLsdb())
-    , conf(nlsr.getConfParameter())
+    , conf(face)
+    , confProcessor(conf)
+    , nlsr(face, m_keyChain, conf)
+    , lsdb(nlsr.m_lsdb)
     , REGISTER_COMMAND_PREFIX("/localhost/nfd/rib")
     , REGISTER_VERB("register")
   {
-    conf.setNetwork("/ndn");
-    conf.setSiteName("/site");
-    conf.setRouterName("/%C1.Router/this-router");
-
     addIdentity("/ndn/site/%C1.Router/this-router");
 
     nlsr.initialize();
 
-    advanceClocks(ndn::time::milliseconds(1), 10);
+    advanceClocks(10_ms);
     face.sentInterests.clear();
   }
 
@@ -93,9 +90,10 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
+  ConfParameter conf;
+  DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
   Lsdb& lsdb;
-  ConfParameter& conf;
 
   ndn::Name REGISTER_COMMAND_PREFIX;
   ndn::Name::Component REGISTER_VERB;
@@ -112,7 +110,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   oldInterestName.appendNumber(oldSeqNo);
 
   lsdb.expressInterest(oldInterestName, 0);
-  advanceClocks(ndn::time::milliseconds(1), 10);
+  advanceClocks(10_ms);
 
   std::vector<ndn::Interest>& interests = face.sentInterests;
 
@@ -132,7 +130,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   // Simulate an LSA interest timeout
   lsdb.onFetchLsaError(ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
                        oldInterestName, 0, deadline, interestName, oldSeqNo);
-  advanceClocks(ndn::time::milliseconds(1), 10);
+  advanceClocks(10_ms);
 
   BOOST_REQUIRE(interests.size() > 0);
 
@@ -150,7 +148,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   newInterestName.appendNumber(newSeqNo);
 
   lsdb.expressInterest(newInterestName, 0);
-  advanceClocks(ndn::time::milliseconds(1), 10);
+  advanceClocks(10_ms);
 
   BOOST_REQUIRE(interests.size() > 0);
 
@@ -166,7 +164,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   // Simulate an LSA interest timeout where the sequence number is outdated
   lsdb.onFetchLsaError(ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
                        oldInterestName, 0, deadline, interestName, oldSeqNo);
-  advanceClocks(ndn::time::milliseconds(1), 10);
+  advanceClocks(10_ms);
 
   // Interest should not be expressed for outdated sequence number
   BOOST_CHECK_EQUAL(interests.size(), 0);
@@ -191,16 +189,17 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
   // Create another Lsdb and expressInterest
   ndn::util::DummyClientFace face2(m_ioService, m_keyChain, {true, true});
   face.linkTo(face2);
-  Nlsr nlsr2(m_ioService, m_scheduler, face2, m_keyChain);
+  ConfParameter conf2(face2);
+  Nlsr nlsr2(face2, m_keyChain, conf2);
   std::string config = R"CONF(
               trust-anchor
                 {
                   type any
                 }
             )CONF";
-  nlsr2.getValidator().load(config, "config-file-from-string");
+  conf2.getValidator().load(config, "config-file-from-string");
 
-  Lsdb& lsdb2(nlsr2.getLsdb());
+  Lsdb& lsdb2(nlsr2.m_lsdb);
 
   advanceClocks(ndn::time::milliseconds(1), 10);
 
@@ -286,12 +285,12 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   npl1.insert(s1);
   npl1.insert(s2);
 
-  //For NameLsa lsType is name.
-  //12 is seqNo, randomly generated.
-  //1800 is the default life time.
+  // For NameLsa lsType is name.
+  // 12 is seqNo, randomly generated.
+  // 1800 seconds is the default life time.
   NameLsa nlsa1(ndn::Name("/router1/1"), 12, testTimePoint, npl1);
 
-  Lsdb lsdb1(nlsr, m_scheduler);
+  Lsdb& lsdb1(nlsr.m_lsdb);
 
   lsdb1.installNameLsa(nlsa1);
   lsdb1.writeNameLsdbLog();

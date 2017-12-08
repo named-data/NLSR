@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,6 +24,9 @@
 
 #include "statistics.hpp"
 #include "test-access-control.hpp"
+#include "conf-parameter.hpp"
+#include "lsdb.hpp"
+#include "route/routing-table.hpp"
 
 #include <ndn-cxx/util/signal.hpp>
 #include <ndn-cxx/face.hpp>
@@ -31,15 +34,16 @@
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/security/v2/validation-error.hpp>
+#include <ndn-cxx/security/validator-config.hpp>
 
 namespace nlsr {
-
-class Nlsr;
 
 class HelloProtocol
 {
 public:
-  HelloProtocol(Nlsr& nlsr, ndn::Scheduler& scheduler);
+  HelloProtocol(ndn::Face& face, ndn::KeyChain& keyChain,
+                ndn::security::SigningInfo& signingInfo,
+                ConfParameter& confParam, RoutingTable& routingTable, Lsdb& lsdb);
 
   /*! \brief Schedules a Hello Interest event.
    *
@@ -69,18 +73,16 @@ public:
 
   /*! \brief Sends Hello Interests to all neighbors
    *
-   * \param seconds (ignored)
-   *
    * This function is called as part of a schedule to regularly
    * determine the adjacency status of neighbors. This function
    * creates and sends a Hello Interest to each neighbor in
    * Nlsr::m_adjacencyList. If the neighbor has not been contacted
-   * before and curerntly has no Face in NFD, this method will call a
+   * before and currently has no Face in NFD, this method will call a
    * different pipeline that creates the Face first, then registers
    * prefixes.
    */
   void
-  sendScheduledInterest(uint32_t seconds);
+  sendScheduledInterest();
 
   /*! \brief Processes a Hello Interest from a neighbor.
    *
@@ -172,8 +174,13 @@ private:
   registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
                    double linkCost, const ndn::time::milliseconds& timeout);
 private:
-  Nlsr& m_nlsr;
-  ndn::Scheduler& m_scheduler;
+  ndn::Face& m_face;
+  ndn::Scheduler m_scheduler;
+  ndn::security::v2::KeyChain& m_keyChain;
+  ndn::security::SigningInfo& m_signingInfo;
+  ConfParameter& m_confParam;
+  RoutingTable& m_routingTable;
+  Lsdb& m_lsdb;
 
   static const std::string INFO_COMPONENT;
   static const std::string NLSR_COMPONENT;

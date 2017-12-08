@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -42,9 +42,11 @@ class LinkStateCalculatorFixture : public BaseFixture
 public:
   LinkStateCalculatorFixture()
     : face(m_ioService, m_keyChain)
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , routingTable(nlsr.getRoutingTable())
-    , lsdb(nlsr.getLsdb())
+    , conf(face)
+    , confProcessor(conf)
+    , nlsr(face, m_keyChain, conf)
+    , routingTable(nlsr.m_routingTable)
+    , lsdb(nlsr.m_lsdb)
   {
     setUpTopology();
   }
@@ -52,12 +54,6 @@ public:
   // Triangle topology with routers A, B, C connected
   void setUpTopology()
   {
-    ConfParameter& conf = nlsr.getConfParameter();
-    conf.setNetwork("/ndn");
-    conf.setSiteName("/router");
-    conf.setRouterName("/a");
-    conf.buildRouterPrefix();
-
     Adjacent a(ROUTER_A_NAME, ndn::FaceUri(ROUTER_A_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
     Adjacent b(ROUTER_B_NAME, ndn::FaceUri(ROUTER_B_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
     Adjacent c(ROUTER_C_NAME, ndn::FaceUri(ROUTER_C_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
@@ -66,7 +62,7 @@ public:
     b.setLinkCost(LINK_AB_COST);
     c.setLinkCost(LINK_AC_COST);
 
-    AdjacencyList& adjacencyListA = nlsr.getAdjacencyList();
+    AdjacencyList& adjacencyListA = conf.getAdjacencyList();
     adjacencyListA.insert(b);
     adjacencyListA.insert(c);
 
@@ -100,6 +96,8 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
+  ConfParameter conf;
+  DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
   Map map;
 
@@ -119,9 +117,9 @@ public:
   static const double LINK_BC_COST;
 };
 
-const ndn::Name LinkStateCalculatorFixture::ROUTER_A_NAME = "/ndn/router/a";
-const ndn::Name LinkStateCalculatorFixture::ROUTER_B_NAME = "/ndn/router/b";
-const ndn::Name LinkStateCalculatorFixture::ROUTER_C_NAME = "/ndn/router/c";
+const ndn::Name LinkStateCalculatorFixture::ROUTER_A_NAME = "/ndn/site/%C1.Router/this-router";
+const ndn::Name LinkStateCalculatorFixture::ROUTER_B_NAME = "/ndn/site/%C1.Router/b";
+const ndn::Name LinkStateCalculatorFixture::ROUTER_C_NAME = "/ndn/site/%C1.Router/c";
 
 const std::string LinkStateCalculatorFixture::ROUTER_A_FACE = "udp4://10.0.0.1";
 const std::string LinkStateCalculatorFixture::ROUTER_B_FACE = "udp4://10.0.0.2";
@@ -136,7 +134,7 @@ BOOST_FIXTURE_TEST_SUITE(TestLinkStateRoutingCalculator, LinkStateCalculatorFixt
 BOOST_AUTO_TEST_CASE(Basic)
 {
   LinkStateRoutingTableCalculator calculator(map.getMapSize());
-  calculator.calculatePath(map, routingTable, nlsr);
+  calculator.calculatePath(map, routingTable, conf, lsdb.getAdjLsdb());
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
   BOOST_REQUIRE(entryB != nullptr);
@@ -174,18 +172,18 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
 {
   // Asymmetric link cost between B and C
   ndn::Name key = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
-  AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
+  AdjLsa* lsa = nlsr.m_lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
   auto c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
-  BOOST_REQUIRE(c != nlsr.getAdjacencyList().end());
+  BOOST_REQUIRE(c != conf.getAdjacencyList().end());
 
   double higherLinkCost = LINK_BC_COST + 1;
   c->setLinkCost(higherLinkCost);
 
   // Calculation should consider the link between B and C as having cost = higherLinkCost
   LinkStateRoutingTableCalculator calculator(map.getMapSize());
-  calculator.calculatePath(map, routingTable, nlsr);
+  calculator.calculatePath(map, routingTable, conf, lsdb.getAdjLsdb());
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
   BOOST_REQUIRE(entryB != nullptr);
@@ -223,17 +221,17 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCost)
 {
   // Asymmetric link cost between B and C
   ndn::Name key = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
-  AdjLsa* lsa = nlsr.getLsdb().findAdjLsa(key);
+  AdjLsa* lsa = nlsr.m_lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
   auto c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
-  BOOST_REQUIRE(c != nlsr.getAdjacencyList().end());
+  BOOST_REQUIRE(c != conf.getAdjacencyList().end());
 
   c->setLinkCost(0);
 
   // Calculation should consider the link between B and C as down
   LinkStateRoutingTableCalculator calculator(map.getMapSize());
-  calculator.calculatePath(map, routingTable, nlsr);
+  calculator.calculatePath(map, routingTable, conf, lsdb.getAdjLsdb());
 
   // Router A should be able to get to B through B but not through C
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);

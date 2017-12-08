@@ -28,7 +28,6 @@
 #include "../control-commands.hpp"
 
 namespace nlsr {
-namespace update {
 namespace test {
 
 class NfdRibCommandProcessorFixture : public nlsr::test::UnitTestTimeFixture
@@ -36,15 +35,13 @@ class NfdRibCommandProcessorFixture : public nlsr::test::UnitTestTimeFixture
 public:
   NfdRibCommandProcessorFixture()
     : face(m_ioService, m_keyChain, {true, true})
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , namePrefixes(nlsr.getNamePrefixList())
-    , processor(nlsr.getNfdRibCommandProcessor())
+    , conf(face)
+    , confProcessor(conf)
+    , nlsr(face, m_keyChain, conf)
+    , namePrefixes(conf.getNamePrefixList())
+    , processor(nlsr.m_nfdRibCommandProcessor)
   {
-    // Set the network so the LSA prefix is constructed
-    nlsr.getConfParameter().setNetwork("/ndn");
-    nlsr.getConfParameter().setRouterName(ndn::Name("/This/router"));
-
-    addIdentity(ndn::Name("/ndn/This/router"));
+    addIdentity(conf.getRouterPrefix());
 
     // Initialize NLSR so a sync socket is created
     nlsr.initialize();
@@ -52,7 +49,7 @@ public:
     this->advanceClocks(ndn::time::milliseconds(10), 10);
     face.sentInterests.clear();
 
-    nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
+    nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.getSequencingManager().getNameLsaSeq();
   }
 
   void
@@ -64,19 +61,15 @@ public:
     this->advanceClocks(ndn::time::milliseconds(10), 10);
   }
 
-  void
-  sendInterestForPublishedData()
+  void sendInterestForPublishedData()
   {
-    // Need to send an interest now since ChronoSync
-    // no longer does face->put(*data) in publishData.
-    // Instead it does it in onInterest
-    ndn::Name lsaInterestName("/localhop/ndn/nlsr/LSA/This/router");
+    ndn::Name lsaInterestName = conf.getLsaPrefix();
+    lsaInterestName.append(conf.getSiteName());
+    lsaInterestName.append(conf.getRouterName());
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
+    lsaInterestName.appendNumber(nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 
-    lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
-    auto lsaInterest = make_shared<ndn::Interest>(lsaInterestName);
-    lsaInterest->setCanBePrefix(true);
-    face.receive(*lsaInterest);
+    face.receive(ndn::Interest(lsaInterestName).setCanBePrefix(true));
     this->advanceClocks(ndn::time::milliseconds(10), 10);
   }
 
@@ -85,7 +78,7 @@ public:
   {
     sendInterestForPublishedData();
 
-    const ndn::Name& lsaPrefix = nlsr.getConfParameter().getLsaPrefix();
+    const ndn::Name& lsaPrefix = conf.getLsaPrefix();
 
     const auto& it = std::find_if(face.sentData.begin(), face.sentData.end(),
       [&] (const ndn::Data& data) {
@@ -97,14 +90,17 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
+  ConfParameter conf;
+  DummyConfFileProcessor confProcessor;
 
   Nlsr nlsr;
   NamePrefixList& namePrefixes;
-  NfdRibCommandProcessor& processor;
+  update::NfdRibCommandProcessor& processor;
   uint64_t nameLsaSeqNoBeforeInterest;
 };
 
-typedef boost::mpl::vector<NfdRibRegisterCommand, NfdRibUnregisterCommand> Commands;
+typedef boost::mpl::vector<update::NfdRibRegisterCommand,
+                           update::NfdRibUnregisterCommand> Commands;
 
 BOOST_FIXTURE_TEST_SUITE(TestNfdRibCommandProcessor, NfdRibCommandProcessorFixture)
 
@@ -148,7 +144,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestRegisterCommand)
   }
   BOOST_CHECK_EQUAL((*itr), prefixName);
   BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
@@ -164,7 +160,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
 
   BOOST_CHECK_EQUAL(namePrefixes.getNames().size(), 0);
   BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_CASE(onReceiveInterestInvalidPrefix)
@@ -180,11 +176,10 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestInvalidPrefix)
 
   // Cannot use routingUpdatePublish test now since in
   // initialize nlsr calls buildOwnNameLsa which publishes the routing update
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest == nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest == nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test
-} // namespace update
 } // namespace nlsr

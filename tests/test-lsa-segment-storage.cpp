@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  Regents of the University of California,
+ * Copyright (c) 2014-2019,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -39,9 +39,10 @@ class LsaSegmentStorageFixture : public UnitTestTimeFixture
 public:
   LsaSegmentStorageFixture()
     : face(m_ioService, m_keyChain)
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
-    , lsdb(nlsr.getLsdb())
-    , lsaStorage(lsdb.getLsaStorage())
+    , conf(face)
+    , nlsr(face, m_keyChain, conf)
+    , lsdb(nlsr.m_lsdb)
+    , lsaStorage(lsdb.m_lsaStorage)
   {
   }
 
@@ -88,6 +89,7 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
+  ConfParameter conf;
   Nlsr nlsr;
   Lsdb& lsdb;
   LsaSegmentStorage& lsaStorage;

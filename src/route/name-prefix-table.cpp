@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -33,9 +33,10 @@ namespace nlsr {
 
 INIT_LOGGER(route.NamePrefixTable);
 
-NamePrefixTable::NamePrefixTable(Nlsr& nlsr,
+NamePrefixTable::NamePrefixTable(Fib& fib, RoutingTable& routingTable,
                                  std::unique_ptr<AfterRoutingChange>& afterRoutingChangeSignal)
-  : m_nlsr(nlsr)
+  : m_fib(fib)
+  , m_routingTable(routingTable)
 {
   m_afterRoutingChangeConnection = afterRoutingChangeSignal->connect(
     [this] (const std::list<RoutingTableEntry>& entries) {
@@ -70,8 +71,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
   // There isn't currently a routing table entry in the pool for this name
   if (rtpeItr == m_rtpool.end()) {
     // See if there is a routing table entry available we could use
-    RoutingTableEntry* routeEntryPtr = m_nlsr.getRoutingTable()
-                                        .findRoutingTableEntry(destRouter);
+    RoutingTableEntry* routeEntryPtr = m_routingTable.findRoutingTableEntry(destRouter);
 
     // We have to create a new routing table entry
     if (routeEntryPtr == nullptr) {
@@ -102,7 +102,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     // If this entry has next hops, we need to inform the FIB
     if (npte->getNexthopList().size() > 0) {
       NLSR_LOG_TRACE("Updating FIB with next hops for " << npte->getNamePrefix());
-      m_nlsr.getFib().update(name, npte->getNexthopList());
+      m_fib.update(name, npte->getNexthopList());
     }
     // The routing table may recalculate and add a routing table entry
     // with no next hops to replace an existing routing table entry. In
@@ -112,7 +112,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     // calculation may add next hops.
     else {
       NLSR_LOG_TRACE(npte->getNamePrefix() << " has no next hops; removing from FIB");
-      m_nlsr.getFib().remove(name);
+      m_fib.remove(name);
     }
   }
   else {
@@ -124,11 +124,11 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
 
     if ((*nameItr)->getNexthopList().size() > 0) {
       NLSR_LOG_TRACE("Updating FIB with next hops for " << (**nameItr));
-      m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
+      m_fib.update(name, (*nameItr)->getNexthopList());
     }
     else {
       NLSR_LOG_TRACE(npte->getNamePrefix() << " has no next hops; removing from FIB");
-      m_nlsr.getFib().remove(name);
+      m_fib.remove(name);
     }
   }
   // Add the reference to this NPT to the RTPE.
@@ -189,13 +189,13 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
       NLSR_LOG_TRACE(**nameItr << " has no routing table entries;"
                  << " removing from table and FIB");
       m_table.erase(nameItr);
-      m_nlsr.getFib().remove(name);
+      m_fib.remove(name);
     }
     else {
       NLSR_LOG_TRACE(**nameItr << " has other routing table entries;"
                  << " updating FIB with next hops");
       (*nameItr)->generateNhlfromRteList();
-      m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
+      m_fib.update(name, (*nameItr)->getNexthopList());
     }
   }
   else {

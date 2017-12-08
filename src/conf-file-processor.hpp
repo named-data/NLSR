@@ -22,7 +22,7 @@
 #define NLSR_CONF_FILE_PROCESSOR_HPP
 
 #include "common.hpp"
-#include "nlsr.hpp"
+#include "conf-parameter.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/info_parser.hpp>
@@ -46,11 +46,7 @@ namespace nlsr {
 class ConfFileProcessor
 {
 public:
-  ConfFileProcessor(Nlsr& nlsr, const std::string& cfile)
-    : m_confFileName(cfile)
-    , m_nlsr(nlsr)
-  {
-  }
+  ConfFileProcessor(ConfParameter& confParam);
 
   /*! \brief Load and parse the configuration file, then populate NLSR.
    *
@@ -125,8 +121,8 @@ private:
 private:
   /*! m_confFileName The full path of the configuration file to parse. */
   std::string m_confFileName;
-  /*! m_nlsr The NLSR object to configure upon successful parsing. */
-  Nlsr& m_nlsr;
+  /*! m_confParam The ConfFileProcessor object to configure as parsing is done. */
+  ConfParameter& m_confParam;
   /*! m_io For canonization of faceUri. */
   boost::asio::io_service m_io;
 };

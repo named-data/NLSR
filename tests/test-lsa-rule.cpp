@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -46,7 +46,9 @@ public:
     , siteIdentityName("/ndn/edu/test-site")
     , opIdentityName("/ndn/edu/test-site/%C1.Operator/op1")
     , routerIdName("/ndn/edu/test-site/%C1.Router/router1")
-    , nlsr(m_ioService, m_scheduler, face, m_keyChain)
+    , confParam(face)
+    , confProcessor(confParam)
+    , nlsr(face, m_keyChain, confParam)
     , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))
   {
     rootId = addIdentity(rootIdName);
@@ -75,23 +77,15 @@ public:
 
     boost::property_tree::read_info(inputFile, pt);
 
-    //Loads section and file name
-    for (auto tn = pt.begin(); tn != pt.end(); ++tn) {
-      if (tn->first == "security") {
-        auto it = tn->second.begin();
-        nlsr.loadValidator(it->second, std::string("nlsr.conf"));
+    // Loads section and file name
+    for (const auto& tn : pt) {
+      if (tn.first == "security") {
+        auto it = tn.second.begin();
+        confParam.getValidator().load(it->second, std::string("nlsr.conf"));
         break;
       }
     }
     inputFile.close();
-
-    // Set the network so the LSA prefix is constructed
-    // Set all so that buildRouterPrefix is set
-    nlsr.getConfParameter().setNetwork("/ndn");
-    nlsr.getConfParameter().setSiteName("/edu/test-site");
-    nlsr.getConfParameter().setRouterName("/%C1.Router/router1");
-    // Otherwise code coverage node fails with default 60 seconds lifetime
-    nlsr.getConfParameter().setSyncInterestLifetime(1000);
 
     // Initialize NLSR to initialize the keyChain
     nlsr.initialize();
@@ -107,26 +101,26 @@ public:
   ndn::Name rootIdName, siteIdentityName, opIdentityName, routerIdName;
   ndn::security::pib::Identity rootId, siteIdentity, opIdentity, routerId;
 
+  ConfParameter confParam;
+  DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
 
   const boost::filesystem::path ROOT_CERT_PATH;
-
-  //std::function<void(const ndn::Interest& interest)> processInterest;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestLsaDataValidation, LsaRuleFixture)
 
 BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
 {
-  ndn::Name lsaDataName = nlsr.getConfParameter().getLsaPrefix();
-  lsaDataName.append(nlsr.getConfParameter().getSiteName());
-  lsaDataName.append(nlsr.getConfParameter().getRouterName());
+  ndn::Name lsaDataName = confParam.getLsaPrefix();
+  lsaDataName.append(confParam.getSiteName());
+  lsaDataName.append(confParam.getRouterName());
 
   // Append LSA type
   lsaDataName.append(std::to_string(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
-  lsaDataName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  lsaDataName.appendNumber(nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 
   // Append version, segmentNo
   lsaDataName.appendNumber(1).appendNumber(1);
@@ -135,28 +129,28 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   data.setFreshnessPeriod(ndn::time::seconds(10));
 
   // Sign data with NLSR's key
-  nlsr.getKeyChain().sign(data, nlsr.getSigningInfo());
+  m_keyChain.sign(data, nlsr.m_signingInfo);
 
   // Make NLSR validate data signed by its own key
-  nlsr.getValidator().validate(data,
-                               [] (const Data&) { BOOST_CHECK(true); },
-                               [] (const Data&, const ndn::security::v2::ValidationError&) {
-                                 BOOST_CHECK(false);
-                               });
+  confParam.getValidator().validate(data,
+                                    [] (const Data&) { BOOST_CHECK(true); },
+                                    [] (const Data&, const ndn::security::v2::ValidationError&) {
+                                      BOOST_CHECK(false);
+                                    });
 }
 
 BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
 {
   // getSubName removes the /localhop compnonent from /localhop/ndn/NLSR/LSA
-  ndn::Name lsaDataName = nlsr.getConfParameter().getLsaPrefix().getSubName(1);
-  lsaDataName.append(nlsr.getConfParameter().getSiteName());
-  lsaDataName.append(nlsr.getConfParameter().getRouterName());
+  ndn::Name lsaDataName = confParam.getLsaPrefix().getSubName(1);
+  lsaDataName.append(confParam.getSiteName());
+  lsaDataName.append(confParam.getRouterName());
 
   // Append LSA type
   lsaDataName.append(std::to_string(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
-  lsaDataName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
+  lsaDataName.appendNumber(nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
 
   // Append version, segmentNo
   lsaDataName.appendNumber(1).appendNumber(1);
@@ -165,11 +159,11 @@ BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
   data.setFreshnessPeriod(ndn::time::seconds(10));
 
   // Make NLSR validate data signed by its own key
-  nlsr.getValidator().validate(data,
-                               [] (const Data&) { BOOST_CHECK(false); },
-                               [] (const Data&, const ndn::security::v2::ValidationError&) {
-                                 BOOST_CHECK(true);
-                               });
+  confParam.getValidator().validate(data,
+                                    [] (const Data&) { BOOST_CHECK(false); },
+                                    [] (const Data&, const ndn::security::v2::ValidationError&) {
+                                      BOOST_CHECK(true);
+                                    });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

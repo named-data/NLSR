@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -38,7 +38,7 @@ const uint64_t Fib::GRACE_PERIOD = 10;
 Fib::Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList,
          ConfParameter& conf, ndn::security::v2::KeyChain& keyChain)
   : m_scheduler(scheduler)
-  , m_refreshTime(0)
+  , m_refreshTime(2 * conf.getLsaRefreshTime())
   , m_controller(face, keyChain)
   , m_adjacencyList(adjacencyList)
   , m_confParameter(conf)

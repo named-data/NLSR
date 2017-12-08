@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -31,6 +31,30 @@ INIT_LOGGER(ConfParameter);
 // To be changed when breaking changes are made to sync
 const uint64_t ConfParameter::SYNC_VERSION = 6;
 
+ConfParameter::ConfParameter(ndn::Face& face, const std::string& confFileName)
+  : m_confFileName(confFileName)
+  , m_lsaRefreshTime(LSA_REFRESH_TIME_DEFAULT)
+  , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
+  , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
+  , m_routingCalcInterval(ROUTING_CALC_INTERVAL_DEFAULT)
+  , m_faceDatasetFetchInterval(ndn::time::seconds(static_cast<int>(FACE_DATASET_FETCH_INTERVAL_DEFAULT)))
+  , m_lsaInterestLifetime(ndn::time::seconds(static_cast<int>(LSA_INTEREST_LIFETIME_DEFAULT)))
+  , m_routerDeadInterval(2 * LSA_REFRESH_TIME_DEFAULT)
+  , m_interestRetryNumber(HELLO_RETRIES_DEFAULT)
+  , m_interestResendTime(HELLO_TIMEOUT_DEFAULT)
+  , m_infoInterestInterval(HELLO_INTERVAL_DEFAULT)
+  , m_hyperbolicState(HYPERBOLIC_STATE_OFF)
+  , m_corR(0)
+  , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
+  , m_syncInterestLifetime(ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT))
+  , m_syncProtocol(SYNC_PROTOCOL_CHRONOSYNC)
+  , m_adjl()
+  , m_npl()
+  , m_validator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
+  , m_prefixUpdateValidator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
+  {
+  }
+
 void
 ConfParameter::writeLog()
 {
@@ -38,8 +62,8 @@ ConfParameter::writeLog()
   NLSR_LOG_INFO("Site Name: " << m_siteName);
   NLSR_LOG_INFO("Network: " << m_network);
   NLSR_LOG_INFO("Router Prefix: " << m_routerPrefix);
-  NLSR_LOG_INFO("ChronoSync sync Prefix: " << m_chronosyncPrefix);
-  NLSR_LOG_INFO("ChronoSync LSA prefix: " << m_lsaPrefix);
+  NLSR_LOG_INFO("Sync Prefix: " << m_syncPrefix);
+  NLSR_LOG_INFO("Sync LSA prefix: " << m_lsaPrefix);
   NLSR_LOG_INFO("Hello Interest retry number: " << m_interestRetryNumber);
   NLSR_LOG_INFO("Hello Interest resend second: " << m_interestResendTime);
   NLSR_LOG_INFO("Info Interest interval: " << m_infoInterestInterval);
@@ -67,11 +91,11 @@ ConfParameter::setNetwork(const ndn::Name& networkName)
 {
   m_network = networkName;
 
-  m_chronosyncPrefix.append("localhop");
-  m_chronosyncPrefix.append(m_network);
-  m_chronosyncPrefix.append("nlsr");
-  m_chronosyncPrefix.append("sync");
-  m_chronosyncPrefix.appendVersion(SYNC_VERSION);
+  m_syncPrefix.append("localhop");
+  m_syncPrefix.append(m_network);
+  m_syncPrefix.append("nlsr");
+  m_syncPrefix.append("sync");
+  m_syncPrefix.appendVersion(SYNC_VERSION);
 
   m_lsaPrefix.append("localhop");
   m_lsaPrefix.append(m_network);

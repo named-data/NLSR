@@ -23,12 +23,10 @@
 #define NLSR_NLSR_RUNNER_HPP
 
 #include "nlsr.hpp"
+#include "conf-parameter.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
-
-// boost needs to be included after ndn-cxx, otherwise there will be conflict with _1, _2, ...
-#include <boost/asio/io_service.hpp>
 
 namespace nlsr {
 
@@ -43,14 +41,8 @@ namespace nlsr {
 class NlsrRunner
 {
 public:
-  class ConfFileError : public std::invalid_argument
-  {
-  public:
-    using std::invalid_argument::invalid_argument;
-  };
-
   explicit
-  NlsrRunner(const std::string& configFileName);
+  NlsrRunner(ndn::Face& face, ConfParameter& confParam);
 
   /*! \brief Instantiate, configure, and start the NLSR process.
    *
@@ -67,10 +59,9 @@ public:
   run();
 
 private:
-  boost::asio::io_service m_ioService;
-  ndn::Scheduler m_scheduler;
-  ndn::Face m_face;
+  ndn::Face& m_face;
   ndn::KeyChain m_keyChain;
+  ConfParameter& m_confParam;
   Nlsr m_nlsr;
 };
 

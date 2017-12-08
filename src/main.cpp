@@ -19,6 +19,7 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include "conf-file-processor.hpp"
 #include "nlsr-runner.hpp"
 #include "version.hpp"
 
@@ -82,14 +83,24 @@ main(int argc, char** argv)
     }
   }
 
-  nlsr::NlsrRunner runner(configFileName);
+  boost::asio::io_service ioService;
+  ndn::Face face(ioService);
+
+  nlsr::ConfParameter confParam(face, configFileName);
+  nlsr::ConfFileProcessor configProcessor(confParam);
+
+  if (!configProcessor.processConfFile()) {
+    std::cerr << "Error in configuration file processing" << std::endl;
+    return 2;
+  }
+
+  confParam.buildRouterPrefix();
+  confParam.writeLog();
+
+  nlsr::NlsrRunner runner(face, confParam);
 
   try {
     runner.run();
-  }
-  catch (const nlsr::NlsrRunner::ConfFileError& e) {
-    std::cerr << e.what() << std::endl;
-    return 2;
   }
   catch (const std::exception& e) {
     std::cerr << "FATAL: " << getExtendedErrorMessage(e) << std::endl;
