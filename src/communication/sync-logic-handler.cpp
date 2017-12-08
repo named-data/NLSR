@@ -76,7 +76,11 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
     m_syncSocket->addSyncNode(m_adjLsaUserPrefix);
   }
+  else if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+    m_syncSocket->addSyncNode(m_coorLsaUserPrefix);
+  }
   else {
+    m_syncSocket->addSyncNode(m_adjLsaUserPrefix);
     m_syncSocket->addSyncNode(m_coorLsaUserPrefix);
   }
 }
