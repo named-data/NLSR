@@ -4,6 +4,9 @@ NLSR - Named Data Link State Routing Protocol
 For complete documentation and more extensive information,
 please visit the [NLSR homepage](http://named-data.net/doc/NLSR/current/).
 
+If you are new to the NDN community of software generally, read the
+[Contributor's Guide](https://github.com/named-data/NFD/blob/master/CONTRIBUTING.md).
+
 ## Overview
 
 NLSR is a routing protocol in NDN that populates NDN's Routing Information Base. NLSR
@@ -38,6 +41,7 @@ the following links:
 Additional information
 ----------------------
 
+- [Contributor's Guide](https://github.com/named-data/NFD/blob/master/CONTRIBUTING.md)
 - [NLSR Wiki](http://redmine.named-data.net/projects/nlsr/wiki/)
 - Feature requests and bug reports are welcome on our
   [NLSR on NDN Redmine](http://redmine.named-data.net/projects/nlsr)
