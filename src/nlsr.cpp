@@ -116,8 +116,6 @@ void
 Nlsr::setLsaInterestFilter()
 {
   ndn::Name name = m_confParam.getLsaPrefix();
-  name.append(m_confParam.getSiteName());
-  name.append(m_confParam.getRouterName());
 
   NLSR_LOG_DEBUG("Setting interest filter for LsaPrefix: " << name);
 
