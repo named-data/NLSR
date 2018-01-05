@@ -28,6 +28,7 @@
 #include <sstream>
 #include <cstdio>
 #include <unistd.h>
+#include <vector>
 
 #include <ndn-cxx/net/face-uri.hpp>
 #include <ndn-cxx/signature.hpp>
@@ -141,6 +142,7 @@ Nlsr::addDispatcherTopPrefix(const ndn::Name& topPrefix)
 void
 Nlsr::setStrategies()
 {
+  NLSR_LOG_TRACE("in setStrategies");
   const std::string strategy("ndn:/localhost/nfd/strategy/multicast");
 
   m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy, 0);
@@ -184,16 +186,65 @@ Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
   }
 }
 
-
 void
 Nlsr::loadCertToPublish(const ndn::security::v2::Certificate& certificate)
 {
+  NLSR_LOG_TRACE("Loading cert to publish.");
   m_certStore.insert(certificate);
   m_validator.loadAnchor("Authoritative-Certificate",
                           ndn::security::v2::Certificate(certificate));
   m_prefixUpdateProcessor.getValidator().
                           loadAnchor("Authoritative-Certificate",
                                       ndn::security::v2::Certificate(certificate));
+}
+
+void
+Nlsr::connectToFetcher(ndn::util::SegmentFetcher& fetcher)
+{
+  NLSR_LOG_TRACE("NLSR: Connect to SegmentFetcher.");
+
+  fetcher.afterSegmentValidated.connect(std::bind(&Nlsr::afterFetcherSignalEmitted,
+                                                  this, _1));
+}
+
+void
+Nlsr::afterFetcherSignalEmitted(const ndn::Data& lsaSegment)
+{
+  NLSR_LOG_TRACE("SegmentFetcher fetched a data segment. Start inserting cert to own cert store.");
+  ndn::Name keyName = lsaSegment.getSignature().getKeyLocator().getName();
+  if (getCertificate(keyName) == nullptr) {
+    publishCertFromCache(keyName);
+  }
+  else {
+    NLSR_LOG_TRACE("Certificate is already in the store: " << keyName);
+  }
+}
+
+void
+Nlsr::publishCertFromCache(const ndn::Name& keyName)
+{
+  const ndn::security::v2::Certificate* cert = m_validator.getUnverifiedCertCache()
+                                                          .find(keyName);
+  if (cert != nullptr) {
+    m_certStore.insert(*cert);
+    NLSR_LOG_TRACE(*cert);
+    NLSR_LOG_TRACE("Setting interest filter for: "
+                   << ndn::security::v2::extractKeyNameFromCertName(cert->getName()));
+    m_nlsrFace.setInterestFilter(ndn::security::v2::extractKeyNameFromCertName(cert->getName()),
+                                 std::bind(&Nlsr::onKeyInterest,
+                                           this, _1, _2),
+                                 std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
+                                 std::bind(&Nlsr::registrationFailed, this, _1),
+                                 m_signingInfo,
+                                 ndn::nfd::ROUTE_FLAG_CAPTURE);
+
+    if (!cert->getKeyName().equals(cert->getSignature().getKeyLocator().getName())) {
+      publishCertFromCache(cert->getSignature().getKeyLocator().getName());
+    }
+  }
+  else {
+    NLSR_LOG_TRACE("Cert for " << keyName << " was not found in the Validator's cache. ");
+  }
 }
 
 void
@@ -308,7 +359,7 @@ Nlsr::initializeKey()
                   << "NLSR is running without security."
                   << " If security is enabled NLSR will not converge.");
 
-    std::cerr << "Router's " << e.what() << "NLSR is running without security "
+    std::cerr << "Router's " << e.what() << ". NLSR is running without security "
               << "(Only for testing, should not be used in production.)"
               << " If security is enabled NLSR will not converge." << std::endl;
   }

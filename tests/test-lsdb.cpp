@@ -20,6 +20,7 @@
  **/
 
 #include "lsdb.hpp"
+
 #include "test-common.hpp"
 #include "nlsr.hpp"
 #include "lsa.hpp"
@@ -173,23 +174,22 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
 
 BOOST_AUTO_TEST_CASE(SegmentLsaData)
 {
-  ndn::Name router("/ndn/cs/%C1.Router/router1");
-  uint64_t seqNo = 12;
-  NamePrefixList prefixList;
+  ndn::Name lsaKey("/ndn/site/%C1.Router/this-router/NAME");
 
-  NameLsa lsa(router, seqNo, ndn::time::system_clock::now(), prefixList);
+  NameLsa* lsa = lsdb.findNameLsa(lsaKey);
+  uint64_t seqNo = lsa->getLsSeqNo();
 
   ndn::Name prefix("/ndn/edu/memphis/netlab/research/nlsr/test/prefix/");
 
   int nPrefixes = 0;
-  while (lsa.serialize().size() < ndn::MAX_NDN_PACKET_SIZE) {
-    lsa.addName(ndn::Name(prefix).appendNumber(++nPrefixes));
+  while (lsa->serialize().size() < ndn::MAX_NDN_PACKET_SIZE) {
+    lsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
   }
+  lsdb.installNameLsa(*lsa);
 
-  std::string expectedDataContent = lsa.serialize();
-  lsdb.installNameLsa(lsa);
+  std::string expectedDataContent = lsa->serialize();
 
-  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/NAME/");
+  ndn::Name interestName("/ndn/NLSR/LSA/site/%C1.Router/this-router/NAME/");
   interestName.appendNumber(seqNo);
 
   ndn::Interest interest(interestName);

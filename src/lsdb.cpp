@@ -22,6 +22,7 @@
 #include "lsdb.hpp"
 
 #include "logger.hpp"
+#include "lsa-segment-storage.hpp"
 #include "nlsr.hpp"
 #include "publisher/segment-publisher.hpp"
 #include "utility/name-helper.hpp"
@@ -71,6 +72,8 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
                    const uint64_t& sequenceNumber) {
              return isLsaNew(routerName, lsaType, sequenceNumber);
            }, m_nlsr.getConfParameter())
+  , m_lsaStorage(scheduler,
+                 ndn::time::seconds(m_nlsr.getConfParameter().getLsaRefreshTime()))
   , m_lsaRefreshTime(0)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
   , m_sequencingManager()
@@ -212,6 +215,7 @@ Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
 bool
 Lsdb::installNameLsa(NameLsa& nlsa)
 {
+  NLSR_LOG_TRACE("installNameLsa");
   ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   NameLsa* chkNameLsa = findNameLsa(nlsa.getKey());
   // Determines if the name LSA is new or not.
@@ -220,6 +224,9 @@ Lsdb::installNameLsa(NameLsa& nlsa)
     NLSR_LOG_DEBUG("New Name LSA");
     NLSR_LOG_DEBUG("Adding Name Lsa");
     nlsa.writeLog();
+
+    NLSR_LOG_TRACE("nlsa.getOrigRouter(): " << nlsa.getOrigRouter());
+    NLSR_LOG_TRACE("m_nlsr.getConfParameter().getRouterPrefix(): " << m_nlsr.getConfParameter().getRouterPrefix());
 
     if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
       // If this name LSA is from another router, add the advertised
@@ -245,6 +252,9 @@ Lsdb::installNameLsa(NameLsa& nlsa)
   }
   // Else this is a known name LSA, so we are updating it.
   else {
+    NLSR_LOG_TRACE("Known name lsa");
+    NLSR_LOG_TRACE("chkNameLsa->getLsSeqNo(): " << chkNameLsa->getLsSeqNo());
+    NLSR_LOG_TRACE("nlsa.getLsSeqNo(): " << nlsa.getLsSeqNo());
     if (chkNameLsa->getLsSeqNo() < nlsa.getLsSeqNo()) {
       NLSR_LOG_DEBUG("Updated Name LSA. Updating LSDB");
       NLSR_LOG_DEBUG("Deleting Name Lsa");
@@ -999,11 +1009,16 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
   interest.setInterestLifetime(m_nlsr.getConfParameter().getLsaInterestLifetime());
 
   NLSR_LOG_DEBUG("Fetching Data for LSA: " << interestName << " Seq number: " << seqNo);
-  ndn::util::SegmentFetcher::fetch(m_nlsr.getNlsrFace(), interest,
-                                   m_nlsr.getValidator(),
-                                   std::bind(&Lsdb::afterFetchLsa, this, _1, interestName),
-                                   std::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
-                                             timeoutCount, deadline, lsaName, seqNo));
+  shared_ptr<ndn::util::SegmentFetcher> fetcher =
+    ndn::util::SegmentFetcher::fetch(m_nlsr.getNlsrFace(), interest,
+                                     m_nlsr.getValidator(),
+                                     std::bind(&Lsdb::afterFetchLsa, this, _1, interestName),
+                                     std::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
+                                               timeoutCount, deadline, lsaName, seqNo));
+
+  m_lsaStorage.connectToFetcher(*fetcher);
+  m_nlsr.connectToFetcher(*fetcher);
+
   // increment a specific SENT_LSA_INTEREST
   Lsa::Type lsaType;
   std::istringstream(interestName[-2].toUri()) >> lsaType;
@@ -1034,35 +1049,49 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
   std::string chkString("LSA");
   int32_t lsaPosition = util::getNameComponentPosition(interest.getName(), chkString);
 
-  if (lsaPosition >= 0) {
+  // Forms the name of the router that the Interest packet came from.
+  ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
+  originRouter.append(interestName.getSubName(lsaPosition + 1,
+                                              interest.getName().size() - lsaPosition - 3));
 
-    // Forms the name of the router that the Interest packet came from.
-    ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
-    originRouter.append(interestName.getSubName(lsaPosition + 1,
-                                                interest.getName().size() - lsaPosition - 3));
+  // if the interest is for this router's LSA
+  if (originRouter == m_nlsr.getConfParameter().getRouterPrefix()) {
 
-    uint64_t seqNo = interestName[-1].toNumber();
-    NLSR_LOG_DEBUG("LSA sequence number from interest: " << seqNo);
+    if (lsaPosition >= 0) {
 
-    Lsa::Type interestedLsType;
-    std::istringstream(interestName[-2].toUri()) >> interestedLsType;
+      uint64_t seqNo = interestName[-1].toNumber();
+      NLSR_LOG_DEBUG("LSA sequence number from interest: " << seqNo);
 
-    if (interestedLsType == Lsa::Type::NAME) {
-      processInterestForNameLsa(interest, originRouter.append(std::to_string(interestedLsType)),
-                                seqNo);
+      Lsa::Type interestedLsType;
+      std::istringstream(interestName[-2].toUri()) >> interestedLsType;
+
+      if (interestedLsType == Lsa::Type::NAME) {
+        processInterestForNameLsa(interest, originRouter.append(std::to_string(interestedLsType)),
+                                  seqNo);
+      }
+      else if (interestedLsType == Lsa::Type::ADJACENCY) {
+        processInterestForAdjacencyLsa(interest, originRouter.append(std::to_string(interestedLsType)),
+                                       seqNo);
+      }
+      else if (interestedLsType == Lsa::Type::COORDINATE) {
+        processInterestForCoordinateLsa(interest, originRouter.append(std::to_string(interestedLsType)),
+                                        seqNo);
+      }
+      else {
+        NLSR_LOG_WARN("Received unrecognized LSA type: " << interestedLsType);
+      }
+      lsaIncrementSignal(Statistics::PacketType::SENT_LSA_DATA);
     }
-    else if (interestedLsType == Lsa::Type::ADJACENCY) {
-      processInterestForAdjacencyLsa(interest, originRouter.append(std::to_string(interestedLsType)),
-                                     seqNo);
-    }
-    else if (interestedLsType == Lsa::Type::COORDINATE) {
-      processInterestForCoordinateLsa(interest, originRouter.append(std::to_string(interestedLsType)),
-                                      seqNo);
+  }
+  else { // else the interest is for other router's lsa, serve from LsaSegmentStorage
+    const ndn::Data* lsaSegment = m_lsaStorage.getLsaSegment(interest);
+    if (lsaSegment != nullptr) {
+      NLSR_LOG_TRACE("Found data in lsa storage. Sending the data for " << interest.getName());
+      m_nlsr.getNlsrFace().put(*lsaSegment);
     }
     else {
-      NLSR_LOG_WARN("Received unrecognized LSA type: " << interestedLsType);
+      NLSR_LOG_TRACE(interest << "  was not found in this lsa storage.");
     }
-    lsaIncrementSignal(Statistics::PacketType::SENT_LSA_DATA);
   }
 }
 
@@ -1099,8 +1128,12 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
   if (nameLsa != nullptr) {
     NLSR_LOG_TRACE("Verifying SeqNo for NameLsa is same as requested.");
     if (nameLsa->getLsSeqNo() == seqNo) {
+      // if requested lsa belongs to this router then sign it and serve it
       std::string content = nameLsa->serialize();
       putLsaData(interest,content);
+      // else the requested belongs to neighboring routers, so serve the
+      // original data packet corresponding to the lsa
+
       // increment SENT_NAME_LSA_DATA
       lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_DATA);
     }

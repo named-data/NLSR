@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,6 +24,7 @@
 
 #include "conf-parameter.hpp"
 #include "lsa.hpp"
+#include "lsa-segment-storage.hpp"
 #include "sequencing-manager.hpp"
 #include "test-access-control.hpp"
 #include "communication/sync-logic-handler.hpp"
@@ -193,6 +194,11 @@ public:
   getSequencingManager()
   {
     return m_sequencingManager;
+  }
+
+  LsaSegmentStorage&
+  getLsaStorage() {
+    return m_lsaStorage;
   }
 
   void
@@ -381,6 +387,7 @@ private:
   Nlsr& m_nlsr;
   ndn::Scheduler& m_scheduler;
   SyncLogicHandler m_sync;
+  LsaSegmentStorage m_lsaStorage;
 
   std::list<NameLsa> m_nameLsdb;
   std::list<AdjLsa> m_adjLsdb;
@@ -403,7 +410,6 @@ private:
   SequencingManager m_sequencingManager;
 
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
-
 };
 
 } // namespace nlsr

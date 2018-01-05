@@ -299,6 +299,21 @@ public:
   loadCertToPublish(const ndn::security::v2::Certificate& certificate);
 
   void
+  connectToFetcher(ndn::util::SegmentFetcher& fetcher);
+
+  /*! \brief Callback when SegmentFetcher retrieves a segment.
+   */
+  void
+  afterFetcherSignalEmitted(const ndn::Data& lsaSegment);
+
+  /*! \brief Retrieves the chain of certificates from Validator's cache and
+   *   store them in Nlsr's own CertificateStore.
+   * \param keyName Name of the first key in the certificate chain.
+   */
+  void
+  publishCertFromCache(const ndn::Name& keyName);
+
+  void
   initializeKey();
 
   void
