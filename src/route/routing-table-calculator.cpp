@@ -29,6 +29,7 @@
 
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
+#include <ndn-cxx/util/logger.hpp>
 #include <cmath>
 
 namespace nlsr {
@@ -56,7 +57,7 @@ RoutingTableCalculator::initMatrix()
 }
 
 void
-RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
+RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map& pMap)
 {
   std::list<AdjLsa> adjLsdb = pnlsr.getLsdb().getAdjLsdb();
   // For each LSA represented in the map
@@ -116,14 +117,34 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map pMap)
 }
 
 void
-RoutingTableCalculator::writeAdjMatrixLog()
+RoutingTableCalculator::writeAdjMatrixLog(const Map& map) const
 {
+  if (!getNdnCxxLogger().isLevelEnabled(ndn::util::LogLevel::DEBUG)) {
+    return;
+  }
+
+  NLSR_LOG_DEBUG("-----------Legend (routerName -> index)------");
+  std::string routerIndex;
+  std::string indexToNameMapping;
+  std::string lengthOfDash = "--";
+
   for (size_t i = 0; i < m_nRouters; i++) {
-    std::string line="";
+      routerIndex += boost::lexical_cast<std::string>(i);
+      routerIndex += " ";
+      lengthOfDash += "--";
+      NLSR_LOG_DEBUG("Router:" + map.getRouterNameByMappingNo(i)->toUri() +
+                     "Index:" + boost::lexical_cast<std::string>(i));
+  }
+  NLSR_LOG_DEBUG(" |" + routerIndex);
+  NLSR_LOG_DEBUG(lengthOfDash);
+
+  for (size_t i = 0; i < m_nRouters; i++) {
+    std::string line;
     for (size_t j = 0; j < m_nRouters; j++) {
       line += boost::lexical_cast<std::string>(adjMatrix[i][j]);
       line += " ";
     }
+    line = boost::lexical_cast<std::string>(i) + "|" + line;
     NLSR_LOG_DEBUG(line);
   }
 }
@@ -210,7 +231,7 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
   allocateAdjMatrix();
   initMatrix();
   makeAdjMatrix(pnlsr, pMap);
-  writeAdjMatrixLog();
+  writeAdjMatrixLog(pMap);
   ndn::optional<int32_t> sourceRouter =
     pMap.getMappingNoByRouterName(pnlsr.getConfParameter().getRouterPrefix());
   allocateParent(); // These two matrices are used in Dijkstra's algorithm.
@@ -232,7 +253,7 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap,
     for (int i = 0 ; i < vNoLink; i++) {
       // Simulate that only the current neighbor is accessible
       adjustAdMatrix(*sourceRouter, links[i], linkCosts[i]);
-      writeAdjMatrixLog();
+      writeAdjMatrixLog(pMap);
       // Do Dijkstra's algorithm using the current neighbor as your start.
       doDijkstraPathCalculation(*sourceRouter);
       // Update the routing table with the calculations.

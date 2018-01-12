@@ -45,7 +45,7 @@ Map::addEntry(MapEntry& mpe)
 }
 
 ndn::optional<ndn::Name>
-Map::getRouterNameByMappingNo(int32_t mn)
+Map::getRouterNameByMappingNo(int32_t mn) const
 {
   auto&& mappingNumberView = m_entries.get<detail::byMappingNumber>();
   auto iterator = mappingNumberView.find(mn);
