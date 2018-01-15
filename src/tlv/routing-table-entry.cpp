@@ -85,13 +85,7 @@ RoutingTable::wireEncode(ndn::EncodingImpl<TAG>& block) const
   return totalLength;
 }
 
-NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(RoutingTable);
-
-template size_t
-RoutingTable::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& encoder) const;
-
-template size_t
-RoutingTable::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& encoder) const;
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(RoutingTable);
 
 const ndn::Block&
 RoutingTable::wireEncode() const
@@ -155,16 +149,14 @@ RoutingTable::wireDecode(const ndn::Block& wire)
 std::ostream&
 operator<<(std::ostream& os, const RoutingTable& routingtable)
 {
-  os << "Routing Table: " << std::endl;
   os << routingtable.getDestination() << std::endl;
-  os << "Nexthops: NexthopList(" << std::endl;
+  os << "NexthopList(" << std::endl;
 
   for (const auto& rtentry : routingtable) {
-    os << rtentry << std::endl;
+    os << rtentry;
   }
 
   os << ")";
-
   return os;
 }
 

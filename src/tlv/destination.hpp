@@ -91,6 +91,8 @@ private:
   mutable ndn::Block m_wire;
 };
 
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(Destination);
+
 std::ostream&
 operator<<(std::ostream& os, const Destination& destination);
 

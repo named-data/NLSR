@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(Localhost)
   face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/routing-table")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) {
-      return block.type() == ndn::tlv::nlsr::RouteTableEntry; });
+      return block.type() == ndn::tlv::nlsr::RoutingTable; });
 }
 
 
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(Routername)
   face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/routing-table")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) {
-      return block.type() == ndn::tlv::nlsr::RouteTableEntry; });
+      return block.type() == ndn::tlv::nlsr::RoutingTable; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

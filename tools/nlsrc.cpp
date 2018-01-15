@@ -240,8 +240,8 @@ Nlsrc::fetchNameLsas()
 void
 Nlsrc::fetchRtables()
 {
-  fetchFromRt<nlsr::tlv::RoutingTable>(
-    [this] (const nlsr::tlv::RoutingTable& rts) {
+  fetchFromRt<nlsr::tlv::RoutingTableStatus>(
+    [this] (const nlsr::tlv::RoutingTableStatus& rts) {
       recordRtable(rts);
     });
 }
@@ -322,15 +322,6 @@ Nlsrc::getLsaInfoString(const nlsr::tlv::LsaInfo& info)
   return os.str();
 }
 
-std::string
-Nlsrc::getDesString(const nlsr::tlv::Destination& des)
-{
-  std::ostringstream os;
-  os << "    " << des;
-
-  return os.str();
-}
-
 void
 Nlsrc::recordAdjacencyLsa(const nlsr::tlv::AdjacencyLsa& lsa)
 {
@@ -385,20 +376,13 @@ Nlsrc::recordNameLsa(const nlsr::tlv::NameLsa& lsa)
 }
 
 void
-Nlsrc::recordRtable(const nlsr::tlv::RoutingTable& rt)
+Nlsrc::recordRtable(const nlsr::tlv::RoutingTableStatus& rts)
 {
-  Router& router = getRouterRT(rt.getDestination());
-
   std::ostringstream os;
-
-  os << getDesString(rt.getDestination()) << std::endl;
-
-  os << "    NextHopList: " <<std::endl;
-  for (const auto& nhs : rt.getNextHops()) {
-    os << "      " << nhs;
+  for (const auto& rt : rts.getRoutingtable()) {
+    os << rt << std::endl;
   }
-
-  router.rtString = os.str();
+  m_rtString = os.str();
 }
 
 void
@@ -429,15 +413,12 @@ Nlsrc::printLsdb()
 void
 Nlsrc::printRT()
 {
-  std::cout << "Routing Table Status:" << std::endl;
-
-  for (const auto& item : m_routers) {
-
-    const Router& router = item.second;
-
-    if (!router.rtString.empty()) {
-      std::cout << router.rtString << std::endl;
-    }
+  if (!m_rtString.empty()) {
+    std::cout << "Routing Table" << std::endl;
+    std::cout << m_rtString << std::endl;
+  }
+  else {
+    std::cout << "Routing Table is not calculated yet" << std::endl;
   }
 }
 
@@ -456,17 +437,6 @@ Nlsrc::getRouterLsdb(const nlsr::tlv::LsaInfo& info)
 
   const auto& pair =
     m_routers.insert(std::make_pair(originRouterName, Router()));
-
-  return pair.first->second;
-}
-
-Nlsrc::Router&
-Nlsrc::getRouterRT(const nlsr::tlv::Destination& des)
-{
-  const ndn::Name& desName = des.getName();
-
-  const auto& pair =
-    m_routers.insert(std::make_pair(desName, Router()));
 
   return pair.first->second;
 }

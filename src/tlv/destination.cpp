@@ -54,13 +54,7 @@ Destination::wireEncode(ndn::EncodingImpl<TAG>& encoder) const
   return totalLength;
 }
 
-NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(Destination);
-
-template size_t
-Destination::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
-
-template size_t
-Destination::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& block) const;
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(Destination);
 
 const ndn::Block&
 Destination::wireEncode() const

@@ -103,6 +103,8 @@ private:
   mutable ndn::Block m_wire;
 };
 
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(NextHop);
+
 std::ostream&
 operator<<(std::ostream& os, const NextHop& nexthop);
 

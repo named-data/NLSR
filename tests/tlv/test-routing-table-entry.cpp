@@ -178,11 +178,11 @@ BOOST_AUTO_TEST_CASE(RoutingTableEntryOutputStream)
   std::ostringstream os;
   os << rt;
 
-  BOOST_CHECK_EQUAL(os.str(), "Routing Table: \n"
-                                  "Destination: /dest1\n"
-                                  "Nexthops: NexthopList(\n"
-                                  "NextHop(Uri: nexthop1, Cost: 99)\n"
-                                  "\n)");
+  BOOST_CHECK_EQUAL(os.str(),
+                    "Destination: /dest1\n"
+                    "NexthopList(\n"
+                    "NextHop(Uri: nexthop1, Cost: 99)\n"
+                    ")");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

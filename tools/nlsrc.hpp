@@ -123,9 +123,6 @@ private:
   std::string
   getLsaInfoString(const nlsr::tlv::LsaInfo& info);
 
-  std::string
-  getDesString(const nlsr::tlv::Destination& des);
-
   void
   recordAdjacencyLsa(const nlsr::tlv::AdjacencyLsa& lsa);
 
@@ -136,7 +133,7 @@ private:
   recordNameLsa(const nlsr::tlv::NameLsa& lsa);
 
   void
-  recordRtable(const nlsr::tlv::RoutingTable& rts);
+  recordRtable(const nlsr::tlv::RoutingTableStatus& rts);
 
   void
   printLsdb();
@@ -160,14 +157,10 @@ private:
     std::string adjacencyLsaString;
     std::string coordinateLsaString;
     std::string nameLsaString;
-    std::string rtString;
   };
 
   Router&
   getRouterLsdb(const nlsr::tlv::LsaInfo& info);
-
-  Router&
-  getRouterRT(const nlsr::tlv::Destination& des);
 
   typedef std::map<const ndn::Name, Router> RouterMap;
   RouterMap m_routers;
@@ -177,6 +170,7 @@ private:
   ndn::Face& m_face;
   ndn::security::ValidatorNull m_validator;
   std::string commandString;
+  std::string m_rtString;
 
   std::deque<std::function<void()>> m_fetchSteps;
 

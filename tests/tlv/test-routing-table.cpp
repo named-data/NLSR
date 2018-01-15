@@ -155,11 +155,10 @@ BOOST_AUTO_TEST_CASE(RoutingTableOutputStream)
   os << rtStatus;
 
   BOOST_CHECK_EQUAL(os.str(), "Routing Table Status: \n"
-                                "Routing Table: \n"
                                   "Destination: /dest1\n"
-                                  "Nexthops: NexthopList(\n"
+                                  "NexthopList(\n"
                                   "NextHop(Uri: nexthop, Cost: 99)\n"
-                                  "\n)");
+                                  ")");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

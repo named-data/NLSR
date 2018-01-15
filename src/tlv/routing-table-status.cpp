@@ -31,7 +31,7 @@ namespace tlv {
 BOOST_CONCEPT_ASSERT((ndn::WireEncodable<RoutingTableStatus>));
 BOOST_CONCEPT_ASSERT((ndn::WireDecodable<RoutingTableStatus>));
 static_assert(std::is_base_of<ndn::tlv::Error, RoutingTableStatus::Error>::value,
-              "RTStatus::Error must inherit from tlv::Error");
+              "RoutingTableStatus::Error must inherit from tlv::Error");
 
 RoutingTableStatus::RoutingTableStatus()
   : m_hasRoutingtable(false)
@@ -83,13 +83,7 @@ RoutingTableStatus::wireEncode(ndn::EncodingImpl<TAG>& block) const
   return totalLength;
 }
 
-NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(RoutingTableStatus);
-
-template size_t
-RoutingTableStatus::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
-
-template size_t
-RoutingTableStatus::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& block) const;
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(RoutingTableStatus);
 
 const ndn::Block&
 RoutingTableStatus::wireEncode() const

@@ -139,43 +139,51 @@ DatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const ndn:
   context.end();
 }
 
-void
-DatasetInterestHandler::publishRtStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                                        ndn::mgmt::StatusDatasetContext& context)
-{
-  NLSR_LOG_DEBUG("Received interest for routing table:  " << interest);
-  tlv::RoutingTable tlvRoutingTable;
 
+std::vector<tlv::RoutingTable>
+DatasetInterestHandler::getTlvRTEntries()
+{
+  std::vector<tlv::RoutingTable> rtable;
   for (const auto& rte : m_routingTableEntries) {
+    tlv::RoutingTable tlvRoutingTable;
     std::shared_ptr<tlv::Destination> tlvDes = tlv::makeDes(rte);
     tlvRoutingTable.setDestination(*tlvDes);
-
     for (const auto& nh : rte.getNexthopList().getNextHops()) {
       tlv::NextHop tlvNexthop;
       tlvNexthop.setUri(nh.getConnectingFaceUri());
       tlvNexthop.setCost(nh.getRouteCost());
       tlvRoutingTable.addNexthops(tlvNexthop);
     }
-
-    const ndn::Block& wire = tlvRoutingTable.wireEncode();
-    context.append(wire);
+    rtable.push_back(tlvRoutingTable);
   }
   if (!m_dryRoutingTableEntries.empty()) {
-    for (const auto& dry_rte : m_dryRoutingTableEntries ) {
-        std::shared_ptr<tlv::Destination> tlvDes = tlv::makeDes(dry_rte);
-        tlvRoutingTable.setDestination(*tlvDes);
-
-        for (const auto& nh : dry_rte.getNexthopList().getNextHops()) {
-          tlv::NextHop tlvNexthop;
-          tlvNexthop.setUri(nh.getConnectingFaceUri());
-          tlvNexthop.setCost(nh.getRouteCost());
-          tlvRoutingTable.addNexthops(tlvNexthop);
-        }
-        const ndn::Block& wire = tlvRoutingTable.wireEncode();
-        context.append(wire);
+    for (const auto& dryRte : m_dryRoutingTableEntries) {
+      tlv::RoutingTable tlvRoutingTable;
+      std::shared_ptr<tlv::Destination> tlvDes = tlv::makeDes(dryRte);
+      tlvRoutingTable.setDestination(*tlvDes);
+      for (const auto& nh : dryRte.getNexthopList().getNextHops()) {
+        tlv::NextHop tlvNexthop;
+        tlvNexthop.setUri(nh.getConnectingFaceUri());
+        tlvNexthop.setCost(nh.getRouteCost());
+        tlvRoutingTable.addNexthops(tlvNexthop);
       }
+      rtable.push_back(tlvRoutingTable);
+    }
   }
+  return rtable;
+}
 
+void
+DatasetInterestHandler::publishRtStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+                                        ndn::mgmt::StatusDatasetContext& context)
+{
+  NLSR_LOG_DEBUG("Received interest:  " << interest);
+  tlv::RoutingTableStatus rtStatus;
+  for (const tlv::RoutingTable& rt : getTlvRTEntries()) {
+    rtStatus.addRoutingTable(rt);
+  }
+  const ndn::Block& wire = rtStatus.wireEncode();
+  context.append(wire);
   context.end();
 }
 
@@ -200,7 +208,6 @@ getTlvLsas<tlv::AdjacencyLsa>(const Lsdb& lsdb)
       tlvAdj.setCost(adj.getLinkCost());
       tlvLsa.addAdjacency(tlvAdj);
     }
-
     lsas.push_back(tlvLsa);
   }
 

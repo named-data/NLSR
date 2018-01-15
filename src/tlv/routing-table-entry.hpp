@@ -133,6 +133,8 @@ private:
   mutable ndn::Block m_wire;
 };
 
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(RoutingTable);
+
 inline RoutingTable::const_iterator
 RoutingTable::begin() const
 {

@@ -96,6 +96,11 @@ private:
   void
   setDispatcher(ndn::mgmt::Dispatcher& dispatcher);
 
+  /*! \brief generate a TLV-format of routing table entry
+   */
+  std::vector<tlv::RoutingTable>
+  getTlvRTEntries();
+
   /*! \brief provide routing-table dataset
   */
   void
