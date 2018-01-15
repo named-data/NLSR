@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -994,7 +994,7 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                                 m_fetchers.erase(it);
                               });
 
-  fetcher->onError.connect([this, interestName, timeoutCount, deadline, lsaName, seqNo, &fetcher, it]
+  fetcher->onError.connect([this, interestName, timeoutCount, deadline, lsaName, seqNo, it]
                            (uint32_t errorCode, const std::string& msg) {
                              onFetchLsaError(errorCode, msg, interestName,
                                              timeoutCount, deadline, lsaName, seqNo);

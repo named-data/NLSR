@@ -406,9 +406,21 @@ void
 Nlsrc::recordRtable(const nlsr::tlv::RoutingTableStatus& rts)
 {
   std::ostringstream os;
+
+  ndn::Name firstDes;
   for (const auto& rt : rts.getRoutingtable()) {
+    if (firstDes.empty()) {
+      firstDes = rt.getDestination().getName();
+      os << rt << std::endl;
+      continue;
+    }
+
+    if (firstDes == rt.getDestination().getName()) {
+      os << "\n------Dry-run Hyperbolic Routing Tables:------- \n " << std::endl;
+    }
     os << rt << std::endl;
   }
+
   m_rtString = os.str();
 }
 
