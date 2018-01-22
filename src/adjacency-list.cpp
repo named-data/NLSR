@@ -85,7 +85,7 @@ AdjacencyList::getAdjacent(const ndn::Name& adjName)
 }
 
 bool
-AdjacencyList::operator==(AdjacencyList& adl) const
+AdjacencyList::operator==(const AdjacencyList& adl) const
 {
   if (size() != adl.size()) {
     return false;
@@ -127,9 +127,9 @@ AdjacencyList::updateAdjacentLinkCost(const ndn::Name& adjName, double lc)
 }
 
 bool
-AdjacencyList::isNeighbor(const ndn::Name& adjName)
+AdjacencyList::isNeighbor(const ndn::Name& adjName) const
 {
-  std::list<Adjacent>::iterator it = find(adjName);
+  std::list<Adjacent>::const_iterator it = find(adjName);
   if (it == m_adjList.end())
   {
     return false;
@@ -158,9 +158,9 @@ AdjacencyList::setTimedOutInterestCount(const ndn::Name& neighbor,
 }
 
 int32_t
-AdjacencyList::getTimedOutInterestCount(const ndn::Name& neighbor)
+AdjacencyList::getTimedOutInterestCount(const ndn::Name& neighbor) const
 {
-  std::list<Adjacent>::iterator it = find(neighbor);
+  std::list<Adjacent>::const_iterator it = find(neighbor);
   if (it == m_adjList.end()) {
     return -1;
   }
@@ -168,9 +168,9 @@ AdjacencyList::getTimedOutInterestCount(const ndn::Name& neighbor)
 }
 
 Adjacent::Status
-AdjacencyList::getStatusOfNeighbor(const ndn::Name& neighbor)
+AdjacencyList::getStatusOfNeighbor(const ndn::Name& neighbor) const
 {
-  std::list<Adjacent>::iterator it = find(neighbor);
+  std::list<Adjacent>::const_iterator it = find(neighbor);
 
   if (it == m_adjList.end()) {
     return Adjacent::STATUS_UNKNOWN;
@@ -225,10 +225,10 @@ AdjacencyList::isAdjLsaBuildable(const uint32_t interestRetryNo) const
 }
 
 int32_t
-AdjacencyList::getNumOfActiveNeighbor()
+AdjacencyList::getNumOfActiveNeighbor() const
 {
   int32_t actNbrCount = 0;
-  for (std::list<Adjacent>::iterator it = m_adjList.begin(); it != m_adjList.end(); it++) {
+  for (std::list<Adjacent>::const_iterator it = m_adjList.begin(); it != m_adjList.end(); it++) {
 
     if (it->getStatus() == Adjacent::STATUS_ACTIVE) {
       actNbrCount++;
@@ -246,6 +246,17 @@ AdjacencyList::find(const ndn::Name& adjName)
                                                             _1, std::cref(adjName)));
   return it;
 }
+
+std::list<Adjacent>::const_iterator
+AdjacencyList::find(const ndn::Name& adjName) const
+{
+  std::list<Adjacent>::const_iterator it = std::find_if(m_adjList.cbegin(),
+                                                        m_adjList.cend(),
+                                                        std::bind(&Adjacent::compare,
+                                                                  _1, std::cref(adjName)));
+  return it;
+}
+
 
 AdjacencyList::iterator
 AdjacencyList::findAdjacent(const ndn::Name& adjName)

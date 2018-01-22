@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -74,16 +74,16 @@ public:
   getAdjList() const;
 
   bool
-  isNeighbor(const ndn::Name& adjName);
+  isNeighbor(const ndn::Name& adjName) const;
 
   void
   incrementTimedOutInterestCount(const ndn::Name& neighbor);
 
   int32_t
-  getTimedOutInterestCount(const ndn::Name& neighbor);
+  getTimedOutInterestCount(const ndn::Name& neighbor) const;
 
   Adjacent::Status
-  getStatusOfNeighbor(const ndn::Name& neighbor);
+  getStatusOfNeighbor(const ndn::Name& neighbor) const;
 
   void
   setStatusOfNeighbor(const ndn::Name& neighbor, Adjacent::Status status);
@@ -120,13 +120,13 @@ public:
   isAdjLsaBuildable(const uint32_t interestRetryNo) const;
 
   int32_t
-  getNumOfActiveNeighbor();
+  getNumOfActiveNeighbor() const;
 
   Adjacent
   getAdjacent(const ndn::Name& adjName);
 
   bool
-  operator==(AdjacencyList& adl) const;
+  operator==(const AdjacencyList& adl) const;
 
   size_t
   size() const
@@ -186,6 +186,9 @@ public:
 private:
   iterator
   find(const ndn::Name& adjName);
+
+  const_iterator
+  find(const ndn::Name& adjName) const;
 
 private:
   std::list<Adjacent> m_adjList;

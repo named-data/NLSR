@@ -123,14 +123,32 @@ public:
     return m_confParam;
   }
 
+  const ConfParameter&
+  getConfParameter() const
+  {
+    return m_confParam;
+  }
+
   AdjacencyList&
   getAdjacencyList()
   {
     return m_adjacencyList;
   }
 
+  const AdjacencyList&
+  getAdjacencyList() const
+  {
+    return m_adjacencyList;
+  }
+
   NamePrefixList&
   getNamePrefixList()
+  {
+    return m_namePrefixList;
+  }
+
+  const NamePrefixList&
+  getNamePrefixList() const
   {
     return m_namePrefixList;
   }
