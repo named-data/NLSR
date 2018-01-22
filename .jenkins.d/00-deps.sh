@@ -7,7 +7,7 @@ source "$JDIR"/util.sh
 set -x
 
 if has OSX $NODE_LABELS; then
-    FORMULAE=(boost pkg-config log4cxx openssl)
+    FORMULAE=(boost pkg-config openssl)
     brew update
     if [[ -n $TRAVIS ]]; then
         # travis images come with a large number of brew packages
@@ -19,14 +19,13 @@ if has OSX $NODE_LABELS; then
         brew upgrade
     fi
     brew install "${FORMULAE[@]}"
-    brew link --force log4cxx
     brew cleanup
 fi
 
 if has Ubuntu $NODE_LABELS; then
     sudo apt-get -qq update
     sudo apt-get -qy install build-essential pkg-config libboost-all-dev \
-                             libsqlite3-dev libssl-dev liblog4cxx10-dev
+                             libsqlite3-dev libssl-dev
 
     if [[ $JOB_NAME == *"code-coverage" ]]; then
         sudo apt-get -qy install lcov libgd-perl python-setuptools
