@@ -25,8 +25,6 @@
 #include <ndn-cxx/util/concepts.hpp>
 #include <ndn-cxx/encoding/block-helpers.hpp>
 
-#include <iostream>
-
 namespace nlsr {
 namespace tlv {
 

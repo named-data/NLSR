@@ -119,18 +119,6 @@ private:
   const std::list<RoutingTableEntry>& m_dryRoutingTableEntries;
 };
 
-template<typename T> std::list<T>
-getTlvLsas(const Lsdb& lsdb);
-
-template<> std::list<tlv::AdjacencyLsa>
-getTlvLsas<tlv::AdjacencyLsa>(const Lsdb& lsdb);
-
-template<> std::list<tlv::CoordinateLsa>
-getTlvLsas<tlv::CoordinateLsa>(const Lsdb& lsdb);
-
-template<> std::list<tlv::NameLsa>
-getTlvLsas<tlv::NameLsa>(const Lsdb& lsdb);
-
 } // namespace nlsr
 
 #endif // NLSR_PUBLISHER_DATASET_INTEREST_HANDLER_HPP
