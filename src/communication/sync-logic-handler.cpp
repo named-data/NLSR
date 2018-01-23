@@ -43,7 +43,8 @@ public:
   }
 };
 
-SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew, ConfParameter& conf)
+SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
+                                   const ConfParameter& conf)
   : onNewLsa(ndn::make_unique<OnNewLsa>())
   , m_syncFace(face)
   , m_isLsaNew(isLsaNew)
@@ -155,7 +156,6 @@ SyncLogicHandler::publishRoutingUpdate(const Lsa::Type& type, const uint64_t& se
 
     BOOST_THROW_EXCEPTION(SyncLogicHandler::Error("Cannot publish routing update; SyncSocket does not exist"));
   }
-
 
   switch (type) {
   case Lsa::Type::ADJACENCY:
