@@ -288,7 +288,7 @@ Nlsr::initializeKey()
 
   // set metainfo
   certificate.setContentType(ndn::tlv::ContentType_Key);
-  certificate.setFreshnessPeriod(ndn::time::days(7300));
+  certificate.setFreshnessPeriod(ndn::time::days(365));
 
   // set content
   certificate.setContent(nlsrInstanceKey.getPublicKey().data(), nlsrInstanceKey.getPublicKey().size());
@@ -297,7 +297,7 @@ Nlsr::initializeKey()
   ndn::SignatureInfo signatureInfo;
   signatureInfo.setValidityPeriod(ndn::security::ValidityPeriod(ndn::time::system_clock::TimePoint(),
                                                                 ndn::time::system_clock::now()
-                                                                + ndn::time::days(20 * 365)));
+                                                                + ndn::time::days(365)));
   try {
     m_keyChain.sign(certificate,
                     ndn::security::SigningInfo(m_keyChain.getPib().getIdentity(m_confParam.getRouterPrefix()))
@@ -456,8 +456,16 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
     }
     case ndn::nfd::FACE_EVENT_CREATED: {
       // Find the neighbor in our adjacency list
-      auto adjacent = m_adjacencyList.findAdjacent(
-        ndn::FaceUri(faceEventNotification.getRemoteUri()));
+      ndn::FaceUri faceUri;
+      try {
+        faceUri = ndn::FaceUri(faceEventNotification.getRemoteUri());
+      }
+      catch (const std::exception& e) {
+        NLSR_LOG_WARN(e.what());
+        return;
+      }
+      auto adjacent = m_adjacencyList.findAdjacent(faceUri);
+
       // If we have a neighbor by that FaceUri and it has no FaceId, we
       // have a match.
       if (adjacent != m_adjacencyList.end()) {
