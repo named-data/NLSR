@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,15 +24,11 @@
 
 #include "manager-base.hpp"
 #include "prefix-update-commands.hpp"
-#include "test-access-control.hpp"
-
 #include <ndn-cxx/util/io.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/v2/certificate-storage.hpp>
 #include <ndn-cxx/util/io.hpp>
-
 #include <boost/property_tree/ptree.hpp>
-#include <memory>
+#include <boost/property_tree/info_parser.hpp>
 
 namespace nlsr {
 
@@ -50,7 +46,7 @@ public:
   PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
                         ndn::Face& face,
                         NamePrefixList& namePrefixList,
-                        Lsdb& lsdb);
+                        Lsdb& lsdb, const std::string& configFileName);
 
   /*! \brief Load the validator's configuration from a section of a
    * configuration file.
@@ -65,6 +61,22 @@ public:
    */
   void
   loadValidator(ConfigSection section, const std::string& filename);
+
+  /*! \brief Add or delete an advertise or withdrawn prefix to the nlsr
+   * configuration file
+   */
+  bool
+  addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix);
+
+  ndn::optional<bool>
+  afterAdvertise(const ndn::Name& prefix);
+
+  ndn::optional<bool>
+  afterWithdraw(const ndn::Name& prefix);
+
+  /*! \brief Check if a prefix exists in the nlsr configuration file */
+  bool
+  checkForPrefixInFile(const std::string prefix);
 
   ndn::security::ValidatorConfig&
   getValidator()
@@ -84,6 +96,7 @@ private:
 
 private:
   ndn::security::ValidatorConfig m_validator;
+  const std::string& m_configFileName;
 };
 
 } // namespace update

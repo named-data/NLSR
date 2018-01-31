@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -81,7 +81,8 @@ private:
   void
   sendNamePrefixUpdate(const ndn::Name& name,
                        const ndn::Name::Component& verb,
-                       const std::string& info);
+                       const std::string& info,
+                       bool saveFlag);
 
   void
   onControlResponse(const std::string& info, const ndn::Data& data);
@@ -182,6 +183,8 @@ private:
 
   static const uint32_t ERROR_CODE_TIMEOUT;
   static const uint32_t RESPONSE_CODE_SUCCESS;
+  static const uint32_t RESPONSE_CODE_SAVE_OR_DELETE;
+
 };
 
 } // namespace nlsrc

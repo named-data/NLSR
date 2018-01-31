@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -29,6 +29,9 @@ WithdrawPrefixCommand::WithdrawPrefixCommand()
 {
   m_requestValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
   m_responseValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
+
+  m_requestValidator.optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
+  m_responseValidator.optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
 }
 
 AdvertisePrefixCommand::AdvertisePrefixCommand()
@@ -36,6 +39,10 @@ AdvertisePrefixCommand::AdvertisePrefixCommand()
 {
   m_requestValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
   m_responseValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
+
+  m_requestValidator.optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
+  m_responseValidator.optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
+
 }
 
 } // namespace update

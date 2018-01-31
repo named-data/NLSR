@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -43,6 +43,8 @@ namespace nlsr {
 class Lsdb;
 
 namespace update {
+
+enum { PREFIX_FLAG = 1 };
 
 class ManagerBase : boost::noncopyable
 {
@@ -107,6 +109,8 @@ public:
                      Lsdb& lsdb,
                      const std::string& module);
 
+  virtual ~CommandManagerBase() {}
+
   /*! \brief add desired name prefix to the advertised name prefix list
    *         or insert a prefix into the FIB if parameters is valid.
    */
@@ -124,6 +128,18 @@ public:
                           const ndn::Interest& interest,
                           const ndn::mgmt::ControlParameters& parameters,
                           const ndn::mgmt::CommandContinuation& done);
+
+  /*! \brief save an advertised prefix to the nlsr configuration file
+   *         returns bool from the overridden function while nullopt here
+   */
+  virtual ndn::optional<bool>
+  afterAdvertise(const ndn::Name& prefix) { return ndn::nullopt; }
+
+  /*! \brief save an advertised prefix to the nlsr configuration file
+   *         returns bool from the overridden function while nullopt here
+   */
+  virtual ndn::optional<bool>
+  afterWithdraw(const ndn::Name& prefix) { return ndn::nullopt; }
 
 protected:
   NamePrefixList& m_namePrefixList;

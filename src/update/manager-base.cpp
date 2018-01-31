@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -61,12 +61,35 @@ CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
 
   // Only build a Name LSA if the added name is new
   if (m_namePrefixList.insert(castParams.getName())) {
-    NLSR_LOG_INFO("Advertising/Inserting name: " << castParams.getName() << "\n");
+    NLSR_LOG_INFO("Advertising name: " << castParams.getName() << "\n");
     m_lsdb.buildAndInstallOwnNameLsa();
+    if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
+      NLSR_LOG_INFO("Saving name to the configuration file");
+      if (afterAdvertise(castParams.getName()) == true) {
+        return done(ndn::nfd::ControlResponse(205, "OK").setBody(parameters.wireEncode()));
+      }
+      else {
+        return done(ndn::nfd::ControlResponse(406, "Failed to open configuration file.")
+                    .setBody(parameters.wireEncode()));
+      }
+    }
     return done(ndn::nfd::ControlResponse(200, "OK").setBody(parameters.wireEncode()));
   }
-
-  return done(ndn::nfd::ControlResponse(204, "Prefix is already advetised/inserted.").setBody(parameters.wireEncode()));
+  else {
+    if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
+      // Save an already advertised prefix
+      NLSR_LOG_INFO("Saving an already advertised name: " << castParams.getName() << "\n");
+      if (afterAdvertise(castParams.getName()) == true) {
+        return done(ndn::nfd::ControlResponse(205, "OK").setBody(parameters.wireEncode()));
+      }
+      else {
+        return done(ndn::nfd::ControlResponse(406, "Prefix is already Saved/Failed to open configuration file.")
+                    .setBody(parameters.wireEncode()));
+      }
+    }
+    return done(ndn::nfd::ControlResponse(204, "Prefix is already advertised/inserted.")
+                .setBody(parameters.wireEncode()));
+  }
 }
 
 void
@@ -82,10 +105,32 @@ CommandManagerBase::withdrawAndRemovePrefix(const ndn::Name& prefix,
   if (m_namePrefixList.remove(castParams.getName())) {
     NLSR_LOG_INFO("Withdrawing/Removing name: " << castParams.getName() << "\n");
     m_lsdb.buildAndInstallOwnNameLsa();
+    if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
+      if (afterWithdraw(castParams.getName()) == true) {
+        return done(ndn::nfd::ControlResponse(205, "OK").setBody(parameters.wireEncode()));
+      }
+      else {
+        return done(ndn::nfd::ControlResponse(406, "Failed to open configuration file.")
+                    .setBody(parameters.wireEncode()));
+      }
+    }
     return done(ndn::nfd::ControlResponse(200, "OK").setBody(parameters.wireEncode()));
   }
-
-  return done(ndn::nfd::ControlResponse(204, "Prefix is already withdrawn/removed.").setBody(parameters.wireEncode()));
+  else {
+    if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
+      // Delete an already withdrawn prefix
+      NLSR_LOG_INFO("Deleting an already withdrawn name: " << castParams.getName() << "\n");
+      if (afterWithdraw(castParams.getName()) == true) {
+        return done(ndn::nfd::ControlResponse(205, "OK").setBody(parameters.wireEncode()));
+      }
+      else {
+        return done(ndn::nfd::ControlResponse(406, "Prefix is already deleted/Failed to open configuration file.")
+                    .setBody(parameters.wireEncode()));
+      }
+    }
+    return done(ndn::nfd::ControlResponse(204, "Prefix is already withdrawn/removed.")
+                .setBody(parameters.wireEncode()));
+  }
 }
 
 } // namespace update

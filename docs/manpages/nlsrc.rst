@@ -43,6 +43,11 @@ Options
       ``name``
         The Name prefix to be advertised
 
+    ``advertise <name> save``
+
+      ``save``
+        Advertise a prefix and also save it to the nlsr.conf file for the next start of NLSR
+
   ``withdraw``
     Remove a Name prefix advertised through NLSR
 
@@ -50,6 +55,11 @@ Options
 
       ``name``
         The Name prefix to be withdrawn
+
+    ``withdraw <name> delete``
+
+      ``delete``
+        Withdraw a prefix and also delete it from the nlsr.conf file
 
 Notes
 -----

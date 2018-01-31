@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,8 +23,9 @@
 #include "lsdb.hpp"
 #include "nlsr.hpp"
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
-#include <ndn-cxx/tag.hpp>
 #include <ndn-cxx/face.hpp>
+#include <boost/algorithm/string.hpp>
+#include <algorithm>
 
 namespace nlsr {
 namespace update {
@@ -52,9 +53,10 @@ getSignerFromTag(const ndn::Interest& interest)
 PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
                                              ndn::Face& face,
                                              NamePrefixList& namePrefixList,
-                                             Lsdb& lsdb)
+                                             Lsdb& lsdb, const std::string& configFileName)
   : CommandManagerBase(dispatcher, namePrefixList, lsdb, "prefix-update")
   , m_validator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
+  , m_configFileName(configFileName)
 {
   NLSR_LOG_DEBUG("Setting dispatcher to capture Interests for: "
     << ndn::Name(Nlsr::LOCALHOST_PREFIX).append("prefix-update"));
@@ -100,6 +102,91 @@ PrefixUpdateProcessor::loadValidator(boost::property_tree::ptree section,
                                      const std::string& filename)
 {
   m_validator.load(section, filename);
+}
+
+bool
+PrefixUpdateProcessor::checkForPrefixInFile(const std::string prefix)
+{
+  std::string line;
+  std::fstream fp(m_configFileName);
+  if (!fp.good() || !fp.is_open()) {
+    NLSR_LOG_ERROR("Failed to open configuration file for parsing");
+    return true;
+  }
+  while (!fp.eof()) {
+    getline(fp, line);
+    if (line == prefix) {
+      return true;
+    }
+  }
+  fp.close();
+  return false;
+}
+
+bool
+PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix)
+{
+  std::string value = " prefix " + prefix.toUri();;
+  std::string fileString;
+  std::string line;
+  std::string trimedLine;
+  std::fstream input(m_configFileName, input.in);
+  if (!input.good() || !input.is_open()) {
+    NLSR_LOG_ERROR("Failed to open configuration file for parsing");
+    return false;
+  }
+
+  if (addPrefix) {
+    //check if prefix already exist in the nlsr configuration file
+    if (checkForPrefixInFile(value)) {
+      NLSR_LOG_ERROR("Prefix already exists in the configuration file");
+      return false;
+    }
+    while (!input.eof()) {
+      getline(input, line);
+      if (!line.empty()) {
+        fileString.append(line + "\n");
+        if (line == "advertising") {
+          getline(input, line);
+          fileString.append(line + "\n" + value + "\n");
+        }
+      }
+    }
+  }
+  else {
+    if (!checkForPrefixInFile(value)) {
+      NLSR_LOG_ERROR("Prefix doesn't exists in the configuration file");
+      return false;
+    }
+    boost::trim(value);
+    while (!input.eof()) {
+      getline(input, line);
+      if (!line.empty()) {
+        std::string trimLine = line;
+        boost::trim(trimLine);
+        if (trimLine != value) {
+          fileString.append(line + "\n");
+        }
+      }
+    }
+  }
+  input.close();
+  std::ofstream output(m_configFileName);
+  output << fileString;
+  output.close();
+  return true;
+}
+
+ndn::optional<bool>
+PrefixUpdateProcessor::afterAdvertise(const ndn::Name& prefix) {
+
+  return addOrDeletePrefix(prefix, true);
+}
+
+ndn::optional<bool>
+PrefixUpdateProcessor::afterWithdraw(const ndn::Name& prefix) {
+
+  return addOrDeletePrefix(prefix, false);
 }
 
 } // namespace update

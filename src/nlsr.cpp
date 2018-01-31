@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -68,7 +68,8 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
   , m_prefixUpdateProcessor(m_dispatcher,
                             m_nlsrFace,
                             m_namePrefixList,
-                            m_nlsrLsdb)
+                            m_nlsrLsdb,
+                            m_configFileName)
   , m_nfdRibCommandProcessor(m_dispatcher,
                              m_namePrefixList,
                              m_nlsrLsdb)

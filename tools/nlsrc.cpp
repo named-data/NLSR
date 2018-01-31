@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -46,6 +46,7 @@ const ndn::Name Nlsrc::RT_PREFIX = ndn::Name(Nlsrc::LOCALHOST_PREFIX).append("ro
 
 const uint32_t Nlsrc::ERROR_CODE_TIMEOUT = 10060;
 const uint32_t Nlsrc::RESPONSE_CODE_SUCCESS = 200;
+const uint32_t Nlsrc::RESPONSE_CODE_SAVE_OR_DELETE = 205;
 
 Nlsrc::Nlsrc(ndn::Face& face)
   : m_face(face)
@@ -68,8 +69,12 @@ Nlsrc::printUsage()
     "           display all NLSR status (lsdb & routingtable)\n"
     "       advertise name\n"
     "           advertise a name prefix through NLSR\n"
+    "       advertise name save\n"
+    "           advertise and save the name prefix to the conf file\n"
     "       withdraw name\n"
-    "           remove a name prefix advertised through NLSR"
+    "           remove a name prefix advertised through NLSR\n"
+    "       withdraw name delete\n"
+    "           withdraw and delete the name prefix from the conf file"
     << std::endl;
 }
 
@@ -100,23 +105,35 @@ bool
 Nlsrc::dispatch(const std::string& command)
 {
   if (command == "advertise") {
-    if (nOptions != 1) {
+    if (nOptions < 0) {
       return false;
+    }
+    else if (nOptions == 1) {
+      std::string saveFlag = commandLineArguments[0];
+      if (saveFlag != "save") {
+        return false;
+      }
     }
 
     advertiseName();
     return true;
   }
   else if (command == "withdraw") {
-    if (nOptions != 1) {
+    if (nOptions < 0) {
       return false;
+    }
+    else if (nOptions == 1) {
+      std::string saveFlag = commandLineArguments[0];
+      if (saveFlag != "delete") {
+        return false;
+      }
     }
 
     withdrawName();
     return true;
   }
-  else if ((command == "lsdb")|| (command == "routing")||(command == "status")) {
-    if (nOptions != 0) {
+  else if ((command == "lsdb") || (command == "routing") || (command == "status")) {
+    if (nOptions != -1) {
       return false;
     }
     commandString = command;
@@ -144,30 +161,44 @@ Nlsrc::runNextStep()
 void
 Nlsrc::advertiseName()
 {
-  ndn::Name name = commandLineArguments[0];
-  ndn::Name::Component verb("advertise");
-  std::string info = "(Advertise: " + name.toUri() + ")";
+  ndn::Name name = commandLineArguments[-1];
 
-  sendNamePrefixUpdate(name, verb, info);
+  bool saveFlag = false;
+  std::string info = "(Advertise: " + name.toUri() + ")";
+  if (commandLineArguments[0]) {
+    saveFlag = true;
+    info = "(Save: " + name.toUri() + ")";
+  }
+  ndn::Name::Component verb("advertise");
+  sendNamePrefixUpdate(name, verb, info, saveFlag);
 }
 
 void
 Nlsrc::withdrawName()
 {
-  ndn::Name name = commandLineArguments[0];
-  ndn::Name::Component verb("withdraw");
-  std::string info = "(Withdraw: " + name.toUri() + ")";
+  ndn::Name name = commandLineArguments[-1];
 
-  sendNamePrefixUpdate(name, verb, info);
+  bool deleteFlag = false;
+  std::string info = "(Withdraw: " + name.toUri() + ")";
+  if (commandLineArguments[0]) {
+    deleteFlag = true;
+    info = "(Delete: " + name.toUri() + ")";
+  }
+  ndn::Name::Component verb("withdraw");
+  sendNamePrefixUpdate(name, verb, info, deleteFlag);
 }
 
 void
 Nlsrc::sendNamePrefixUpdate(const ndn::Name& name,
                             const ndn::Name::Component& verb,
-                            const std::string& info)
+                            const std::string& info,
+                            bool flag)
 {
   ndn::nfd::ControlParameters parameters;
   parameters.setName(name);
+  if (flag) {
+    parameters.setFlags(1);
+  }
 
   ndn::Name commandName = NAME_UPDATE_PREFIX;
   commandName.append(verb);
@@ -208,7 +239,9 @@ Nlsrc::onControlResponse(const std::string& info, const ndn::Data& data)
 
   uint32_t code = response.getCode();
 
-  if (code != RESPONSE_CODE_SUCCESS) {
+  if (code != RESPONSE_CODE_SUCCESS && code != RESPONSE_CODE_SAVE_OR_DELETE) {
+
+    std::cerr << response.getText() << std::endl;
     std::cerr << "Name prefix update error (code: " << code << ")" << std::endl;
     return;
   }
@@ -474,7 +507,7 @@ main(int argc, char** argv)
   }
 
   try {
-    ::optind = 2; // Set ::optind to the command's index
+    ::optind = 3; // Set ::optind to the command's index
 
     nlsrc.commandLineArguments = argv + ::optind;
     nlsrc.nOptions = argc - ::optind;
