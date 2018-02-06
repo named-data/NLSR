@@ -287,6 +287,19 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     return false;
   }
 
+  uint32_t syncInterestLifetime = section.get<uint32_t>("sync-interest-lifetime", SYNC_INTEREST_LIFETIME_DEFAULT);
+  if (syncInterestLifetime >= SYNC_INTEREST_LIFETIME_MIN &&
+      syncInterestLifetime <= SYNC_INTEREST_LIFETIME_MAX) {
+    m_nlsr.getConfParameter().setSyncInterestLifetime(syncInterestLifetime);
+  }
+  else {
+    std::cerr << "Wrong value for sync-interest-lifetime. "
+              << "Allowed value:" << SYNC_INTEREST_LIFETIME_MIN << "-"
+              << SYNC_INTEREST_LIFETIME_MAX << std::endl;
+
+    return false;
+  }
+
   try {
     std::string seqDir = section.get<std::string>("seq-dir");
     if (boost::filesystem::exists(seqDir)) {

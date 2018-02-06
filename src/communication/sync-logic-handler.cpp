@@ -53,7 +53,7 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
 }
 
 void
-SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
+SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix, const ndn::time::milliseconds& syncInterestLifetime)
 {
   if (m_syncSocket != nullptr) {
     NLSR_LOG_WARN("Trying to create Sync socket, but Sync socket already exists");
@@ -72,7 +72,9 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix)
   std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
   m_syncSocket = std::make_shared<chronosync::Socket>(m_syncPrefix, m_nameLsaUserPrefix, *facePtr,
-                                                      std::bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1));
+                                                      std::bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1),
+                                                      chronosync::Socket::DEFAULT_NAME, chronosync::Socket::DEFAULT_VALIDATOR,
+                                                      syncInterestLifetime);
 
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
     m_syncSocket->addSyncNode(m_adjLsaUserPrefix);

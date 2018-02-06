@@ -106,6 +106,12 @@ enum HyperbolicState {
   HYPERBOLIC_STATE_DEFAULT = 0
 };
 
+enum {
+  SYNC_INTEREST_LIFETIME_MIN = 1000,
+  SYNC_INTEREST_LIFETIME_DEFAULT = 60000,
+  SYNC_INTEREST_LIFETIME_MAX = 120000,
+};
+
 /*! \brief A class to house all the configuration parameters for NLSR.
  *
  * This class is conceptually a singleton (but not mechanically) which
@@ -421,6 +427,18 @@ public:
   }
 
   void
+  setSyncInterestLifetime(uint32_t syncInterestLifetime)
+  {
+    m_syncInterestLifetime = ndn::time::milliseconds(syncInterestLifetime);
+  }
+
+  const ndn::time::milliseconds&
+  getSyncInterestLifetime() const
+  {
+    return m_syncInterestLifetime;
+  }
+
+  void
   writeLog();
 
 private:
@@ -459,7 +477,7 @@ private:
   uint32_t m_maxFacesPerPrefix;
 
   std::string m_seqFileDir;
-
+  ndn::time::milliseconds m_syncInterestLifetime;
 };
 
 } // namespace nlsr

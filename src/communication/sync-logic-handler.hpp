@@ -22,6 +22,7 @@
 #ifndef NLSR_SYNC_LOGIC_HANDLER_HPP
 #define NLSR_SYNC_LOGIC_HANDLER_HPP
 
+#include "conf-parameter.hpp"
 #include "test-access-control.hpp"
 #include "signals.hpp"
 #include "lsa.hpp"
@@ -90,10 +91,13 @@ public:
    *
    * In a typical situation this only needs to be called once, when NLSR starts.
    * \param syncPrefix The sync prefix you want this ChronoSync to use
+   * \param syncInterestLifetime ChronoSync sends a periodic sync interest every \p syncInterestLifetime / 2 ms
    * \sa Nlsr::initialize
    */
   void
-  createSyncSocket(const ndn::Name& syncPrefix);
+  createSyncSocket(const ndn::Name& syncPrefix,
+                   const ndn::time::milliseconds& syncInterestLifetime =
+                     ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT));
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Simple function to glue Name components together

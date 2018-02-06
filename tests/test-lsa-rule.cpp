@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -90,6 +90,8 @@ public:
     nlsr.getConfParameter().setNetwork("/ndn");
     nlsr.getConfParameter().setSiteName("/edu/test-site");
     nlsr.getConfParameter().setRouterName("/%C1.Router/router1");
+    // Otherwise code coverage node fails with default 60 seconds lifetime
+    nlsr.getConfParameter().setSyncInterestLifetime(1000);
 
     // Initialize NLSR to initialize the keyChain
     nlsr.initialize();

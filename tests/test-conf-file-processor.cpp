@@ -44,6 +44,7 @@ const std::string SECTION_GENERAL =
   "  lsa-refresh-time 1800\n"
   "  lsa-interest-lifetime 3\n"
   "  router-dead-interval 86400\n"
+  "  sync-interest-lifetime 10000\n"
   "  seq-dir /tmp\n"
   "}\n\n";
 
@@ -176,6 +177,7 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), 1800);
   BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(), ndn::time::seconds(3));
   BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), 86400);
+  BOOST_CHECK_EQUAL(conf.getSyncInterestLifetime(), ndn::time::milliseconds(10000));
   BOOST_CHECK_EQUAL(conf.getSeqFileDir(), "/tmp");
 
   // Neighbors

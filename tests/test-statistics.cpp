@@ -45,6 +45,8 @@ public:
     conf.setSiteName("/site");
     conf.setRouterName("/%C1.Router/this-router");
     conf.buildRouterPrefix();
+    // Otherwise code coverage node fails with default 60 seconds lifetime
+    conf.setSyncInterestLifetime(1000);
 
     addIdentity(conf.getRouterPrefix());
 
