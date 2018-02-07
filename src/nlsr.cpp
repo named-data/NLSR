@@ -142,7 +142,6 @@ Nlsr::addDispatcherTopPrefix(const ndn::Name& topPrefix)
 void
 Nlsr::setStrategies()
 {
-  NLSR_LOG_TRACE("in setStrategies");
   const std::string strategy("ndn:/localhost/nfd/strategy/multicast");
 
   m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy, 0);

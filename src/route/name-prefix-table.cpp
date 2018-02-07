@@ -48,12 +48,6 @@ NamePrefixTable::~NamePrefixTable()
   m_afterRoutingChangeConnection.disconnect();
 }
 
-bool
-npteCompare(std::shared_ptr<NamePrefixTableEntry>& npte, const ndn::Name& name)
-{
-  return npte->getNamePrefix() == name;
-}
-
 void
 NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
 {

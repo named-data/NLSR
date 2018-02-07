@@ -51,20 +51,6 @@ public:
   const ndn::Data*
   getLsaSegment(const ndn::Interest& interest);
 
-  /*! \brief Inserts an LSA segment into LsaSegmentStorage
-   * \param segmentKey Name of data without the version number.
-   * The format of the key is /router-prefix/LS type/sequence no./segment no.
-   * \param segmentValue The actual data packet.
-   */
-  void
-  insertSegment(const ndn::Name& segmentKey, const ndn::Data& segmentValue);
-
-  /*! \brief Given the key remove the corresponding data packet from LsaSegmentStorage.
-   * \param segmentKey Key of the Data packet that will be deleted.
-   */
-  void
-  deleteSegment(const ndn::Name& segmentKey);
-
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Callback when SegmentFetcher retrieves a segment.
    */

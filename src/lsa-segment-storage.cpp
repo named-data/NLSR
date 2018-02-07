@@ -47,7 +47,7 @@ LsaSegmentStorage::getLsaSegment(const ndn::Interest& interest)
 {
   ndn::Name lsaSegmentsKey = interest.getName();
 
-  // If this the first interest then it does not contain the segment number,
+  // If this is the first interest then it does not contain the segment number,
   // so need to append zero segment component at the end to match with the data
   if (lsaSegmentsKey.size() > 0) {
     if (!lsaSegmentsKey.get(-1).isSegment()) {
@@ -140,19 +140,6 @@ LsaSegmentStorage::scheduleLsaSegmentDeletion(const ndn::Name& lsaSegmentsKey)
                             [&, this] {
                               m_lsaSegments.erase(lsaSegmentsKey);
                             });
-}
-
-void
-LsaSegmentStorage::insertSegment(const ndn::Name& segmentKey,
-                                 const ndn::Data& segmentValue)
-{
-  m_lsaSegments[segmentKey] = segmentValue;
-}
-
-void
-LsaSegmentStorage::deleteSegment(const ndn::Name& segmentKey)
-{
-  m_lsaSegments.erase(segmentKey);
 }
 
 } // namespace nlsr

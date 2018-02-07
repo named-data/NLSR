@@ -303,18 +303,6 @@ public:
   }
 
   void
-  setLogLevel(const std::string& logLevel)
-  {
-    m_logLevel = logLevel;
-  }
-
-  const std::string&
-  getLogLevel() const
-  {
-    return m_logLevel;
-  }
-
-  void
   setInterestRetryNumber(uint32_t irn)
   {
     m_interestRetryNumber = irn;

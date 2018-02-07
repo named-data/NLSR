@@ -59,20 +59,6 @@ AdjacencyList::addAdjacents(AdjacencyList& adl)
   }
 }
 
-bool
-AdjacencyList::updateAdjacentStatus(const ndn::Name& adjName, Adjacent::Status s)
-{
-  std::list<Adjacent>::iterator it = find(adjName);
-
-  if (it == m_adjList.end()) {
-    return false;
-  }
-  else {
-    it->setStatus(s);
-    return true;
-  }
-}
-
 Adjacent
 AdjacencyList::getAdjacent(const ndn::Name& adjName)
 {
@@ -95,17 +81,6 @@ AdjacencyList::operator==(const AdjacencyList& adl) const
   std::set<Adjacent> theirList(adl.getAdjList().cbegin(), adl.getAdjList().cend());
 
   return ourList == theirList;
-}
-
-int32_t
-AdjacencyList::updateAdjacentLinkCost(const ndn::Name& adjName, double lc)
-{
-  std::list<Adjacent>::iterator it = find(adjName);
-  if (it == m_adjList.end()) {
-    return -1;
-  }
-  (*it).setLinkCost(lc);
-  return 0;
 }
 
 bool

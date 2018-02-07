@@ -170,20 +170,6 @@ public:
     return (it != face.sentData.end());
   }
 
-  void
-  checkResponseCode(const Name& commandPrefix, uint64_t expectedCode)
-  {
-    std::vector<Data>::iterator it = std::find_if(face.sentData.begin(),
-                                                  face.sentData.end(),
-                                                  [commandPrefix] (const Data& data) {
-                                                    return commandPrefix.isPrefixOf(data.getName());
-                                                  });
-    BOOST_REQUIRE(it != face.sentData.end());
-
-    ndn::nfd::ControlResponse response(it->getContent().blockFromValue());
-    BOOST_CHECK_EQUAL(response.getCode(), expectedCode);
-  }
-
 public:
   ndn::util::DummyClientFace face;
 

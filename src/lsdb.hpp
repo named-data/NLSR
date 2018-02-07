@@ -197,7 +197,8 @@ public:
   }
 
   LsaSegmentStorage&
-  getLsaStorage() {
+  getLsaStorage()
+  {
     return m_lsaStorage;
   }
 

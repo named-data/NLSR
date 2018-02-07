@@ -52,21 +52,6 @@ public:
   int32_t
   insert(Adjacent& adjacent);
 
-  /*! \brief Sets the status of an adjacency.
-
-    \param adjName The adjacency in this list you want to change the status of.
-
-    \param s The status to change to.
-
-    \return A boolean indicating whether an adjacency was
-    updated. This is false if s is not in the list.
-   */
-  bool
-  updateAdjacentStatus(const ndn::Name& adjName, Adjacent::Status s);
-
-  int32_t
-  updateAdjacentLinkCost(const ndn::Name& adjName, double lc);
-
   std::list<Adjacent>&
   getAdjList();
 
