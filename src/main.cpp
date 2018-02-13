@@ -22,6 +22,30 @@
 #include "nlsr-runner.hpp"
 #include "version.hpp"
 
+#include <boost/exception/get_error_info.hpp>
+#include <sstream>
+
+template<typename E>
+std::string
+getExtendedErrorMessage(const E& exception)
+{
+  std::ostringstream errorMessage;
+  errorMessage << exception.what();
+
+  const char* const* file = boost::get_error_info<boost::throw_file>(exception);
+  const int* line = boost::get_error_info<boost::throw_line>(exception);
+  const char* const* func = boost::get_error_info<boost::throw_function>(exception);
+  if (file && line) {
+    errorMessage << " [from " << *file << ":" << *line;
+    if (func) {
+      errorMessage << " in " << *func;
+    }
+    errorMessage << "]";
+  }
+
+  return errorMessage.str();
+}
+
 int
 main(int32_t argc, char** argv)
 {
@@ -54,7 +78,7 @@ main(int32_t argc, char** argv)
     runner.run();
   }
   catch (const std::exception& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << getExtendedErrorMessage(e) << std::endl;
     return EXIT_FAILURE;
   }
 
