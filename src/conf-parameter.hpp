@@ -24,6 +24,7 @@
 
 #include "common.hpp"
 #include "logger.hpp"
+#include "test-access-control.hpp"
 
 #include <iostream>
 #include <boost/cstdint.hpp>
@@ -146,20 +147,7 @@ public:
   }
 
   void
-  setNetwork(const ndn::Name& networkName)
-  {
-    m_network = networkName;
-
-    m_chronosyncPrefix.append("localhop");
-    m_chronosyncPrefix.append(m_network);
-    m_chronosyncPrefix.append("NLSR");
-    m_chronosyncPrefix.append("sync");
-
-    m_lsaPrefix.append("localhop");
-    m_lsaPrefix.append(m_network);
-    m_lsaPrefix.append("NLSR");
-    m_lsaPrefix.append("LSA");
-  }
+  setNetwork(const ndn::Name& networkName);
 
   const ndn::Name&
   getNetwork() const
@@ -478,6 +466,9 @@ private:
 
   std::string m_seqFileDir;
   ndn::time::milliseconds m_syncInterestLifetime;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  static const uint64_t SYNC_VERSION;
 };
 
 } // namespace nlsr

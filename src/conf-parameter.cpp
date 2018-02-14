@@ -28,6 +28,9 @@ namespace nlsr {
 
 INIT_LOGGER(ConfParameter);
 
+// To be changed when breaking changes are made to sync
+const uint64_t ConfParameter::SYNC_VERSION = 4;
+
 void
 ConfParameter::writeLog()
 {
@@ -57,6 +60,23 @@ ConfParameter::writeLog()
   NLSR_LOG_INFO("Adjacency LSA build interval:  " << m_adjLsaBuildInterval);
   NLSR_LOG_INFO("First Hello Interest interval: " << m_firstHelloInterval);
   NLSR_LOG_INFO("Routing calculation interval:  " << m_routingCalcInterval);
+}
+
+void
+ConfParameter::setNetwork(const ndn::Name& networkName)
+{
+  m_network = networkName;
+
+  m_chronosyncPrefix.append("localhop");
+  m_chronosyncPrefix.append(m_network);
+  m_chronosyncPrefix.append("NLSR");
+  m_chronosyncPrefix.append("sync");
+  m_chronosyncPrefix.appendVersion(SYNC_VERSION);
+
+  m_lsaPrefix.append("localhop");
+  m_lsaPrefix.append(m_network);
+  m_lsaPrefix.append("NLSR");
+  m_lsaPrefix.append("LSA");
 }
 
 } // namespace nlsr
