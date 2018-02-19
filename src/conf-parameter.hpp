@@ -143,6 +143,7 @@ public:
     , m_hyperbolicState(HYPERBOLIC_STATE_OFF)
     , m_corR(0)
     , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
+    , m_syncInterestLifetime(ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT))
   {
   }
 

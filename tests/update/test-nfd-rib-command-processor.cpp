@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -53,10 +53,6 @@ public:
     // Initialize NLSR so a sync socket is created
     nlsr.initialize();
 
-    // Saving clock::now before any advanceClocks so that it will
-    // be the same value as what ChronoSync uses in setting the sessionName
-    sessionTime.appendNumber(ndn::time::toUnixTimestamp(ndn::time::system_clock::now()).count());
-
     this->advanceClocks(ndn::time::milliseconds(10), 10);
     face.sentInterests.clear();
 
@@ -80,8 +76,6 @@ public:
     ndn::Name lsaInterestName("/localhop/ndn/NLSR/LSA/This/router");
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
-    // The part after LSA is Chronosync getSession
-    lsaInterestName.append(sessionTime);
     lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
     shared_ptr<ndn::Interest> lsaInterest = make_shared<ndn::Interest>(lsaInterestName);
 
@@ -110,7 +104,6 @@ public:
   Nlsr nlsr;
   NamePrefixList& namePrefixes;
   NfdRibCommandProcessor& processor;
-  ndn::Name sessionTime;
   uint64_t nameLsaSeqNoBeforeInterest;
 };
 

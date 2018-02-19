@@ -125,10 +125,6 @@ public:
     // Initialize NLSR so a sync socket is created
     nlsr.initialize();
 
-    // Saving clock::now before any advanceClocks so that it will
-    // be the same value as what ChronoSync uses in setting the sessionName
-    sessionTime.appendNumber(ndn::time::toUnixTimestamp(ndn::time::system_clock::now()).count());
-
     this->advanceClocks(ndn::time::milliseconds(10));
 
     face.sentInterests.clear();
@@ -144,8 +140,6 @@ public:
     lsaInterestName.append(nlsr.getConfParameter().getRouterName());
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
-    // The part after LSA is Chronosync getSession
-    lsaInterestName.append(sessionTime);
     lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 
     std::shared_ptr<Interest> lsaInterest = std::make_shared<Interest>(lsaInterestName);
@@ -184,7 +178,6 @@ public:
   PrefixUpdateProcessor& updatePrefixUpdateProcessor;
 
   const boost::filesystem::path SITE_CERT_PATH;
-  ndn::Name sessionTime;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)

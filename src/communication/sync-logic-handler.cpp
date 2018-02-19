@@ -71,20 +71,21 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix, const ndn::time:
   // of the object
   std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
+  const auto fixedSession = ndn::name::Component::fromNumber(0);
   m_syncSocket = std::make_shared<chronosync::Socket>(m_syncPrefix, m_nameLsaUserPrefix, *facePtr,
                                                       std::bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1),
                                                       chronosync::Socket::DEFAULT_NAME, chronosync::Socket::DEFAULT_VALIDATOR,
-                                                      syncInterestLifetime);
+                                                      syncInterestLifetime, fixedSession);
 
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-    m_syncSocket->addSyncNode(m_adjLsaUserPrefix);
+    m_syncSocket->addSyncNode(m_adjLsaUserPrefix, chronosync::Socket::DEFAULT_NAME, fixedSession);
   }
   else if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-    m_syncSocket->addSyncNode(m_coorLsaUserPrefix);
+    m_syncSocket->addSyncNode(m_coorLsaUserPrefix, chronosync::Socket::DEFAULT_NAME, fixedSession);
   }
   else {
-    m_syncSocket->addSyncNode(m_adjLsaUserPrefix);
-    m_syncSocket->addSyncNode(m_coorLsaUserPrefix);
+    m_syncSocket->addSyncNode(m_adjLsaUserPrefix, chronosync::Socket::DEFAULT_NAME, fixedSession);
+    m_syncSocket->addSyncNode(m_coorLsaUserPrefix, chronosync::Socket::DEFAULT_NAME, fixedSession);
   }
 }
 
