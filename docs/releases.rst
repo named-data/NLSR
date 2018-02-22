@@ -5,6 +5,7 @@ NLSR Versions
    :hidden:
    :maxdepth: 1
 
+   release-notes/release-notes-0.4.1
    release-notes/release-notes-0.4.0
    release-notes/release-notes-0.3.2
    release-notes/release-notes-0.3.1
@@ -13,6 +14,12 @@ NLSR Versions
    release-notes/release-notes-0.2.1
    release-notes/release-notes-0.2.0
    release-notes/release-notes-0.1.0
+
+* **NLSR version 0.4.1**
+  (:doc:`Release Notes <release-notes/release-notes-0.4.1>`, `Documentation <https://named-data.net/doc/NLSR/0.4.1/>`__)
+
+  `src (git) <https://github.com/named-data/NLSR/releases/tag/NLSR-0.4.1>`__,
+  `src (tarball) <https://named-data.net/downloads/nlsr-0.4.1.tar.bz2>`__ (`checksum <https://named-data.net/downloads/nlsr-0.4.1.tar.bz2.sha256>`__)
 
 * **NLSR version 0.4.0**
   (:doc:`Release Notes <release-notes/release-notes-0.4.0>`, `Documentation <https://named-data.net/doc/NLSR/0.4.0/>`__)

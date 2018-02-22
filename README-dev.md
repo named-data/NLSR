@@ -28,10 +28,13 @@ Include the following header in all `.hpp` and `.cpp` files:
 
 If you are affiliated with an NSF-supported NDN project institution,
 please use the [NDN Team License Boilerplate]
-(http://redmine.named-data.net/projects/nlsr/wiki/NDN_Team_License_Boilerplate_(NLSR)).
+(https://redmine.named-data.net/projects/nlsr/wiki/NDN_Team_License_Boilerplate_(NLSR)).
 
 Recommendations
 ---------------
 
-NSLR code is subject to the code style, defined here:
-http://redmine.named-data.net/projects/nfd/wiki/CodeStyle
+NLSR code is subject to the code style, defined here:
+https://redmine.named-data.net/projects/nfd/wiki/CodeStyle
+
+NLSR Developer's guide can be found here:
+https://github.com/named-data/NLSR/blob/developers-guide/NLSR-Developers-Guide.pdf

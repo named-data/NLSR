@@ -34,6 +34,7 @@ NLSR is an open source project includes contributions from the members of the
     * Nicholas Gordon      <nmgordon@memphis.edu>
     * Laqin Fan            <lfan1@memphis.edu>
     * Damian Coomes        <dmcoomes@memphis.edu>
+    * Saurab Dulal         <sdulal@memphis.edu>
 
 * University of California, Los Angeles
 

@@ -16,10 +16,10 @@ NLSR is an open and free software package licensed under the GPL 3.0 license and
 Internet users and developers.  For more information about the licensing details and
 limitations, refer to [COPYING.md](https://github.com/named-data/NLSR/blob/master/COPYING.md).
 
-NLSR is developed by the members of the [NSF-sponsored NDN project team](http://named-data.net/project/participants/).
+NLSR is developed by the members of the [NSF-sponsored NDN project team](https://named-data.net/project/participants/).
 For more details, please refer to [AUTHORS.md](https://github.com/named-data/NLSR/blob/master/AUTHORS.md).
 Bug reports and feedback are highly appreciated and can be made through the
-[Redmine site](http://redmine.named-data.net/projects/nlsr).
+[Redmine site](https://redmine.named-data.net/projects/nlsr).
 
 The main design goal of NLSR is to provide a routing protocol to populate NDN's FIB.
 NLSR calculates the routing table using link-state or hyperbolic routing and produces
@@ -34,17 +34,17 @@ Source releases
 The source code and source-code installation instructions are always available at
 the following links:
 
-- [Installation](http://named-data.net/doc/NLSR/current/INSTALL.html)
-- [Getting Started with NLSR](http://named-data.net/doc/NLSR/current/GETTING-STARTED.html)
+- [Installation](https://named-data.net/doc/NLSR/current/INSTALL.html)
+- [Getting Started with NLSR](https://named-data.net/doc/NLSR/current/GETTING-STARTED.html)
 - [GitHub NLSR repository](https://github.com/named-data/NLSR)
 
 Additional information
 ----------------------
 
 - [Contributor's Guide](https://github.com/named-data/NFD/blob/master/CONTRIBUTING.md)
-- [NLSR Wiki](http://redmine.named-data.net/projects/nlsr/wiki/)
+- [NLSR Wiki](https://redmine.named-data.net/projects/nlsr/wiki/)
 - Feature requests and bug reports are welcome on our
-  [NLSR on NDN Redmine](http://redmine.named-data.net/projects/nlsr)
+  [NLSR on NDN Redmine](https://redmine.named-data.net/projects/nlsr)
 - [NLSR Mailing List Sign Up](https://listserv.memphis.edu/scripts/wa.exe?GETPW1)
 - [NLSR Mailing List](https://listserv.memphis.edu/scripts/wa.exe?SUBED1=NLSR-HELP-L&A=1)
 - [NLSR Mailing List Archives](https://listserv.memphis.edu/scripts/wa.exe?A0=NLSR-HELP-L)

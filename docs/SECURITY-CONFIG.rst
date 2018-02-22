@@ -20,7 +20,7 @@ The trust model of NLSR is semi-hierarchical. An example certificate signing hie
            router1     router2  router3    router4  router5     router6  router7
               |           |        |          |        |           |        |
               +           +        +          +        +           +        +
-            NLSR        NSLR     NSLR       NSLR     NSLR        NSLR     NSLR
+            NLSR        NLSR     NLSR       NLSR     NLSR        NLSR     NLSR
 
 Each entity's name and corresponding certificate name follow the
 convention below:
@@ -28,11 +28,11 @@ convention below:
 ========  ===================================================== =================================  ===============================================
 Entity    Identity Name                                         Example                            Certificate Name Example
 --------  ----------------------------------------------------- ---------------------------------  -----------------------------------------------
-root      /\<network\>                                          /ndn                               /ndn/KEY/ksk-1/ID-CERT/%01
-site      /\<network\>/\<site\>                                 /ndn/edu/ucla                      /ndn/edu/ucla/KEY/ksk-2/ID-CERT/%01
-operator  /\<network\>/\<site\>/%C1.Operator/\<operator-name\>  /ndn/edu/ucla/%C1.Operator/op1     /ndn/edu/ucla/%C1.Operator/op1/KEY/ksk-3/ID-CERT/%01
-router    /\<network\>/\<site\>/%C1.Router/\<router-name\>      /ndn/edu/ucla/%C1.Router/rt1       /ndn/edu/ucla/%C1.Router/rt1/KEY/ksk-4/ID-CERT/%01
-NLSR      /\<network\>/\<site\>/%C1.Router/\<router-name\>/NLSR /ndn/edu/ucla/%C1.Router/rt1/NLSR  /ndn/edu/ucla/%C1.Router/rt1/NLSR/KEY/ksk-5/ID-CERT/%01
+root      /\<network\>                                          /ndn                               /ndn/KEY/1/%00/%01
+site      /\<network\>/\<site\>                                 /ndn/edu/ucla                      /ndn/edu/ucla/KEY/2/%00/%01
+operator  /\<network\>/\<site\>/%C1.Operator/\<operator-name\>  /ndn/edu/ucla/%C1.Operator/op1     /ndn/edu/ucla/%C1.Operator/op1/KEY/3/%00/%01
+router    /\<network\>/\<site\>/%C1.Router/\<router-name\>      /ndn/edu/ucla/%C1.Router/rt1       /ndn/edu/ucla/%C1.Router/rt1/KEY/4/%00/%01
+NLSR      /\<network\>/\<site\>/%C1.Router/\<router-name\>/NLSR /ndn/edu/ucla/%C1.Router/rt1/NLSR  /ndn/edu/ucla/%C1.Router/rt1/NLSR/KEY/5/%00/%01
 ========  ===================================================== =================================  ===============================================
 
 Users should create keys according to the naming and signing hierarchies above.

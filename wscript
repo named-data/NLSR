@@ -1,7 +1,7 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 
 """
-Copyright (c) 2014-2017,  The University of Memphis,
+Copyright (c) 2014-2018,  The University of Memphis,
                           Regents of the University of California,
                           Arizona Board of Regents.
 
@@ -20,7 +20,7 @@ You should have received a copy of the GNU General Public License along with
 NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-VERSION = "0.4.0"
+VERSION = "0.4.1"
 APPNAME = "nlsr"
 BUGREPORT = "https://redmine.named-data.net/projects/nlsr"
 URL = "https://named-data.net/doc/NLSR/"
@@ -60,12 +60,13 @@ def configure(conf):
 
     conf.check_boost(lib=boost_libs, mt=True)
 
-    if conf.env.BOOST_VERSION_NUMBER < 104800:
-        Logs.error("Minimum required boost version is 1.48.0")
-        Logs.error("Please upgrade your distribution or install custom boost libraries")
+    if conf.env.BOOST_VERSION_NUMBER < 105400:
+        Logs.error("Minimum required boost version is 1.54.0")
+        Logs.error("Please upgrade your distribution or install custom boost libraries" +
+                   " (https://redmine.named-data.net/projects/nfd/wiki/Boost_FAQ)")
         return
 
-    conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.3', '--cflags', '--libs'],
+    conf.check_cfg(package='ChronoSync', args=['--cflags', '--libs'],
                    uselib_store='SYNC', mandatory=True)
 
     conf.load('coverage')
