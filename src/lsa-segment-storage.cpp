@@ -23,15 +23,14 @@
 #include "logger.hpp"
 #include "lsa.hpp"
 #include "utility/name-helper.hpp"
+#include "conf-parameter.hpp"
 
 namespace nlsr {
 
 INIT_LOGGER(LsaSegmentStorage);
 
-LsaSegmentStorage::LsaSegmentStorage(ndn::Scheduler& scheduler,
-                                     const ndn::time::seconds lsaDeletionTimepoint)
+LsaSegmentStorage::LsaSegmentStorage(ndn::Scheduler& scheduler)
   : m_scheduler(scheduler)
-  , m_lsaDeletionTimepoint(lsaDeletionTimepoint)
 {
 }
 
@@ -98,8 +97,23 @@ LsaSegmentStorage::afterFetcherSignalEmitted(const ndn::Data& lsaSegment)
       NLSR_LOG_TRACE("The received segment is already in the storage.");
     }
 
+    std::string content(reinterpret_cast<const char*>(lsaSegment.getContent().value()),
+                        lsaSegment.getContent().value_size());
+
+    ndn::time::seconds expirationTime(LSA_REFRESH_TIME_DEFAULT);
+
+    std::vector<std::string> options;
+    boost::split(options, content, boost::is_any_of("|"));
+
+    try {
+      expirationTime = ndn::time::duration_cast<ndn::time::seconds>
+                       (ndn::time::system_clock::now() - ndn::time::fromIsoString(options.at(3)));
+    } catch (const std::exception& e) {
+      NLSR_LOG_ERROR("Cannot extract expiration time from LSA content: " << e.what());
+    }
+
     // schedule the segment deletion
-    scheduleLsaSegmentDeletion(lsaSegmentsKey);
+    scheduleLsaSegmentDeletion(lsaSegmentsKey, expirationTime);
   }
   else {
     NLSR_LOG_ERROR("The received LSA segment has empty name.");
@@ -114,7 +128,7 @@ LsaSegmentStorage::deleteOldLsas(const ndn::Name& newLsaName)
 
   std::vector<decltype(m_lsaSegments)::key_type> lsaToDelete;
 
-  for (auto& segment : m_lsaSegments) {
+  for (const auto& segment : m_lsaSegments) {
     ndn::Name segmentKey = segment.first;
     auto oldSeqNo = segmentKey.get(-2).toNumber();
     auto existingLsaKey = segmentKey.getPrefix(segmentKey.size() - 2);
@@ -128,16 +142,19 @@ LsaSegmentStorage::deleteOldLsas(const ndn::Name& newLsaName)
     }
   }
 
-  for (auto& segmentKey : lsaToDelete) {
+  for (const auto& segmentKey : lsaToDelete) {
     m_lsaSegments.erase(segmentKey);
   }
 }
 
 void
-LsaSegmentStorage::scheduleLsaSegmentDeletion(const ndn::Name& lsaSegmentsKey)
+LsaSegmentStorage::scheduleLsaSegmentDeletion(const ndn::Name& lsaSegmentsKey,
+                                              ndn::time::seconds expirationTime)
 {
-  m_scheduler.scheduleEvent(m_lsaDeletionTimepoint,
-                            [&, this] {
+  NLSR_LOG_TRACE("Scheduling LSA segment deletion for "
+                 << lsaSegmentsKey << " in: " << expirationTime);
+  m_scheduler.scheduleEvent(expirationTime,
+                            [lsaSegmentsKey, this] {
                               m_lsaSegments.erase(lsaSegmentsKey);
                             });
 }

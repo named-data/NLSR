@@ -27,6 +27,7 @@
 #include "test-common.hpp"
 #include "nlsr.hpp"
 #include "name-prefix-list.hpp"
+#include "lsa.hpp"
 
 #include <boost/test/unit_test.hpp>
 
@@ -41,18 +42,29 @@ public:
     , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , lsdb(nlsr.getLsdb())
     , lsaStorage(lsdb.getLsaStorage())
+    , lsaGeneratedBeforeNow(180)
   {
   }
 
-  static shared_ptr<ndn::Data>
+  std::string
+  makeLsaContent()
+  {
+    ndn::Name s1{"name1"};
+    ndn::Name s2{"name2"};
+    NamePrefixList npl1{s1, s2};
+    NameLsa nameLsa("/ndn/other-site/%C1.Router/other-router", 12,
+                    ndn::time::system_clock::now() - lsaGeneratedBeforeNow, npl1);
+    return nameLsa.serialize();
+  }
+
+  shared_ptr<ndn::Data>
   makeLsaSegment(const ndn::Name& baseName, uint64_t segmentNo, bool isFinal)
   {
-    const uint8_t buffer[] = "Hello, world!";
-
     ndn::Name lsaDataName(baseName);
     lsaDataName.appendSegment(segmentNo);
     auto lsaSegment = make_shared<ndn::Data>(ndn::Name(lsaDataName));
-    lsaSegment->setContent(buffer, sizeof(buffer));
+    std::string content = makeLsaContent();
+    lsaSegment->setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
     if (isFinal) {
       lsaSegment->setFinalBlockId(lsaSegment->getName()[-1]);
     }
@@ -80,6 +92,7 @@ public:
   Nlsr nlsr;
   Lsdb& lsdb;
   LsaSegmentStorage& lsaStorage;
+  ndn::time::seconds lsaGeneratedBeforeNow;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestLsaSegmentStorage, LsaSegmentStorageFixture)
@@ -146,6 +159,24 @@ BOOST_AUTO_TEST_CASE(DeleteOldLsa)
   advanceClocks(ndn::time::milliseconds(1), 10);
 
   BOOST_CHECK_EQUAL(face.sentData.size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(ScheduledDeletion)
+{
+  ndn::Name lsaInterestName("/ndn/NLSR/LSA/other-site/%C1.Router/other-router/NAME");
+  lsaInterestName.appendNumber(12);
+
+  ndn::Name lsaDataName(lsaInterestName);
+  lsaDataName.appendVersion();
+
+  auto lsaData = makeLsaSegment(lsaDataName, 0, true);
+  lsaStorage.afterFetcherSignalEmitted(*lsaData);
+
+  BOOST_CHECK(lsaStorage.getLsaSegment(ndn::Interest(lsaInterestName)) != nullptr);
+
+  advanceClocks(ndn::time::milliseconds(lsaGeneratedBeforeNow), 10);
+
+  BOOST_CHECK(lsaStorage.getLsaSegment(ndn::Interest(lsaInterestName)) == nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // TestLsaSegmentStorage

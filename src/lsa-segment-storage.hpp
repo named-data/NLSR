@@ -36,8 +36,7 @@ namespace nlsr {
 class LsaSegmentStorage
 {
 public:
-  LsaSegmentStorage(ndn::Scheduler& scheduler,
-                    const ndn::time::seconds lsaDeletionTimepoint);
+  LsaSegmentStorage(ndn::Scheduler& scheduler);
 
   /*! \brief Get connected to the signal emitted by SegmentFetcher
    * \param fetcher The SegmentFetcher to whose signal LsaSegmentStorage will subscribe to.
@@ -69,7 +68,7 @@ private:
   /*! \brief Schedules the deletion of a LSA data given the segmentKey
    */
   void
-  scheduleLsaSegmentDeletion(const ndn::Name& segmentKey);
+  scheduleLsaSegmentDeletion(const ndn::Name& segmentKey, ndn::time::seconds expirationTime);
 
 
 private:
@@ -79,8 +78,6 @@ private:
   // Value: corresponding LSA data packet
   //        Data name: /<router-prefix>/<LS type>/<sequence no.>/<version no.>/<segment no.>
   std::unordered_map<ndn::Name, ndn::Data> m_lsaSegments;
-
-  const ndn::time::seconds m_lsaDeletionTimepoint;
 };
 
 } // namespace nlsr

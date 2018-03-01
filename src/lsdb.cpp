@@ -72,8 +72,7 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
                    const uint64_t& sequenceNumber) {
              return isLsaNew(routerName, lsaType, sequenceNumber);
            }, m_nlsr.getConfParameter())
-  , m_lsaStorage(scheduler,
-                 ndn::time::seconds(m_nlsr.getConfParameter().getLsaRefreshTime()))
+  , m_lsaStorage(scheduler)
   , m_lsaRefreshTime(0)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
   , m_sequencingManager()
