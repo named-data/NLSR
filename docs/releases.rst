@@ -5,6 +5,7 @@ NLSR Versions
    :hidden:
    :maxdepth: 1
 
+   release-notes/release-notes-0.4.2
    release-notes/release-notes-0.4.1
    release-notes/release-notes-0.4.0
    release-notes/release-notes-0.3.2
