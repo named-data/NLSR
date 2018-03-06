@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,8 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
+ */
 
 #ifndef NLSR_ROUTE_FIB_HPP
 #define NLSR_ROUTE_FIB_HPP
@@ -63,6 +62,9 @@ public:
     , m_confParameter(conf)
   {
   }
+
+  VIRTUAL_WITH_TESTS
+  ~Fib() = default;
 
   /*! \brief Completely remove a name prefix from the FIB.
    *

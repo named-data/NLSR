@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_TLV_LSDB_STATUS_HPP
 #define NLSR_TLV_LSDB_STATUS_HPP
@@ -164,6 +164,8 @@ private:
 
   mutable ndn::Block m_wire;
 };
+
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(LsdbStatus);
 
 std::ostream&
 operator<<(std::ostream& os, const LsdbStatus& lsdbStatus);

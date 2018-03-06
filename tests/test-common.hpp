@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
- *                           Regents of the University of California
+/*
+ * Copyright (c) 2014-2018,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,8 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
+ */
 
 #ifndef NLSR_TEST_COMMON_HPP
 #define NLSR_TEST_COMMON_HPP
@@ -91,6 +91,9 @@ class MockNfdMgmtFixture : public UnitTestTimeFixture
 {
 public:
   MockNfdMgmtFixture();
+
+  virtual
+  ~MockNfdMgmtFixture() = default;
 
   /** \brief send one WireEncodable in reply to StatusDataset request
    *  \param prefix dataset prefix without version and segment

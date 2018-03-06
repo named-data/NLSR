@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "adjacency-lsa.hpp"
 #include "tlv-nlsr.hpp"
@@ -26,7 +26,7 @@
 #include <ndn-cxx/encoding/block-helpers.hpp>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
 BOOST_CONCEPT_ASSERT((ndn::WireEncodable<AdjacencyLsa>));
 BOOST_CONCEPT_ASSERT((ndn::WireDecodable<AdjacencyLsa>));
@@ -62,11 +62,7 @@ AdjacencyLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
   return totalLength;
 }
 
-template size_t
-AdjacencyLsa::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& encoder) const;
-
-template size_t
-AdjacencyLsa::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& encoder) const;
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(AdjacencyLsa);
 
 const ndn::Block&
 AdjacencyLsa::wireEncode() const
@@ -95,10 +91,8 @@ AdjacencyLsa::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::AdjacencyLsa) {
-    std::stringstream error;
-    error << "Expected AdjacencyLsa Block, but Block is of a different type: #"
-          << m_wire.type();
-    throw Error(error.str());
+    BOOST_THROW_EXCEPTION(Error("Expected AdjacencyLsa Block, but Block is of a different type: #" +
+                                ndn::to_string(m_wire.type())));
   }
 
   m_wire.parse();
@@ -110,7 +104,7 @@ AdjacencyLsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    throw Error("Missing required LsaInfo field");
+    BOOST_THROW_EXCEPTION(Error("Missing required LsaInfo field"));
   }
 
   for (; val != m_wire.elements_end(); ++val) {
@@ -119,10 +113,8 @@ AdjacencyLsa::wireDecode(const ndn::Block& wire)
       m_hasAdjacencies = true;
     }
     else {
-      std::stringstream error;
-      error << "Expected Adjacency Block, but Block is of a different type: #"
-            << m_wire.type();
-      throw Error(error.str());
+      BOOST_THROW_EXCEPTION(Error("Expected Adjacency Block, but Block is of a different type: #" +
+                                  ndn::to_string(m_wire.type())));
     }
   }
 }

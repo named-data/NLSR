@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "adjacency.hpp"
 #include "tlv-nlsr.hpp"
@@ -26,7 +26,7 @@
 #include <ndn-cxx/encoding/block-helpers.hpp>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
 BOOST_CONCEPT_ASSERT((ndn::WireEncodable<Adjacency>));
 BOOST_CONCEPT_ASSERT((ndn::WireDecodable<Adjacency>));
@@ -62,11 +62,7 @@ Adjacency::wireEncode(ndn::EncodingImpl<TAG>& encoder) const
   return totalLength;
 }
 
-template size_t
-Adjacency::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
-
-template size_t
-Adjacency::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& block) const;
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(Adjacency);
 
 const ndn::Block&
 Adjacency::wireEncode() const
@@ -96,10 +92,8 @@ Adjacency::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::Adjacency) {
-    std::stringstream error;
-    error << "Expected Adjacency Block, but Block is of a different type: #"
-          << m_wire.type();
-    throw Error(error.str());
+    BOOST_THROW_EXCEPTION(Error("Expected Adjacency Block, but Block is of a different type: #" +
+                                ndn::to_string(m_wire.type())));
   }
 
   m_wire.parse();
@@ -111,7 +105,7 @@ Adjacency::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    throw Error("Missing required Name field");
+    BOOST_THROW_EXCEPTION(Error("Missing required Name field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Uri) {
@@ -119,7 +113,7 @@ Adjacency::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    throw Error("Missing required Uri field");
+    BOOST_THROW_EXCEPTION(Error("Missing required Uri field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Cost) {
@@ -127,7 +121,7 @@ Adjacency::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    throw Error("Missing required Cost field");
+    BOOST_THROW_EXCEPTION(Error("Missing required Cost field"));
   }
 }
 

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "name-lsa.hpp"
 #include "tlv-nlsr.hpp"
@@ -26,7 +26,7 @@
 #include <ndn-cxx/encoding/block-helpers.hpp>
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 
 BOOST_CONCEPT_ASSERT((ndn::WireEncodable<NameLsa>));
 BOOST_CONCEPT_ASSERT((ndn::WireDecodable<NameLsa>));
@@ -62,11 +62,7 @@ NameLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
   return totalLength;
 }
 
-template size_t
-NameLsa::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
-
-template size_t
-NameLsa::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& block) const;
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(NameLsa);
 
 const ndn::Block&
 NameLsa::wireEncode() const
@@ -95,10 +91,8 @@ NameLsa::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::NameLsa) {
-    std::stringstream error;
-    error << "Expected NameLsa Block, but Block is of a different type: #"
-          << m_wire.type();
-    throw Error(error.str());
+    BOOST_THROW_EXCEPTION(Error("Expected NameLsa Block, but Block is of a different type: #" +
+                                ndn::to_string(m_wire.type())));
   }
 
   m_wire.parse();
@@ -110,7 +104,7 @@ NameLsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    throw Error("Missing required LsaInfo field");
+    BOOST_THROW_EXCEPTION(Error("Missing required LsaInfo field"));
   }
 
   for (; val != m_wire.elements_end(); ++val) {
@@ -119,10 +113,8 @@ NameLsa::wireDecode(const ndn::Block& wire)
       m_hasNames = true;
     }
     else {
-      std::stringstream error;
-      error << "Expected Name Block, but Block is of a different type: #"
-            << m_wire.type();
-      throw Error(error.str());
+      BOOST_THROW_EXCEPTION(Error("Expected Name Block, but Block is of a different type: #" +
+                                  ndn::to_string(m_wire.type())));
     }
   }
 }

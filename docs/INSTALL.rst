@@ -7,9 +7,9 @@ NLSR Installation Instructions
 Prerequisites
 -------------
 
--  `NFD <http://named-data.net/doc/NFD/current/>`_ and its requirements:
+-  `NFD <https://named-data.net/doc/NFD/>`_ and its requirements:
 
-Refer to `Getting started with NFD <http://named-data.net/doc/NFD/current/INSTALL.html>`_
+Refer to `Getting started with NFD <https://named-data.net/doc/NFD/current/INSTALL.html>`_
 for detailed installation and running instruction.
 
 -  ChronoSync library

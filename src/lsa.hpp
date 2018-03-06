@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_LSA_HPP
 #define NLSR_LSA_HPP
@@ -53,6 +53,9 @@ public:
     , m_expiringEventId()
   {
   }
+
+  virtual
+  ~Lsa() = default;
 
   virtual Type
   getType() const
@@ -155,7 +158,7 @@ protected:
   ndn::EventId m_expiringEventId;
 };
 
-class NameLsa: public Lsa
+class NameLsa : public Lsa
 {
 public:
   NameLsa()
@@ -229,7 +232,7 @@ private:
   operator<<(std::ostream& os, const NameLsa& lsa);
 };
 
-class AdjLsa: public Lsa
+class AdjLsa : public Lsa
 {
 public:
   typedef AdjacencyList::const_iterator const_iterator;
@@ -327,7 +330,7 @@ private:
   operator<<(std::ostream& os, const AdjLsa& lsa);
 };
 
-class CoordinateLsa: public Lsa
+class CoordinateLsa : public Lsa
 {
 public:
   CoordinateLsa()

@@ -4,7 +4,7 @@ NLSR version 0.1.0 (initial release)
 Release date: August 25, 2014
 
 The main design goal of NLSR is to provide a routing protocol to populate `NFD's
-<http://named-data.net/doc/NFD/current/>`_ RIB.  NLSR calculates the routing table using
+<https://named-data.net/doc/NFD/>`_ RIB.  NLSR calculates the routing table using
 link-state or hyperbolic routing and produces multiple faces for each reachable name
 prefix in a single authoritative domain.
 

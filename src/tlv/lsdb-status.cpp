@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "lsdb-status.hpp"
 #include "tlv-nlsr.hpp"
@@ -123,13 +123,7 @@ LsdbStatus::wireEncode(ndn::EncodingImpl<TAG>& block) const
   return totalLength;
 }
 
-NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(LsdbStatus);
-
-template size_t
-LsdbStatus::wireEncode<ndn::encoding::EncoderTag>(ndn::EncodingImpl<ndn::encoding::EncoderTag>& block) const;
-
-template size_t
-LsdbStatus::wireEncode<ndn::encoding::EstimatorTag>(ndn::EncodingImpl<ndn::encoding::EstimatorTag>& block) const;
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(LsdbStatus);
 
 const ndn::Block&
 LsdbStatus::wireEncode() const

@@ -12,7 +12,7 @@
         <div class="row">
              <div class="three columns">
                   <div id="logo">
-                        <a href="http://named-data.net" title="A Future Internet Architecture"><img src="http://named-data.net/wp-content/uploads/cropped-20130722_Logo2.png" alt="" /></a>
+                        <a href="https://named-data.net" title="A Future Internet Architecture"><img src="https://named-data.net/wp-content/uploads/cropped-20130722_Logo2.png" alt="" /></a>
                   </div><!--logo end-->
              </div>
 
@@ -38,12 +38,14 @@
           <h3>{{ _('Table Of Contents') }}</h3>
           {{ toctree(includehidden=True) }}
 
-          <h3>{{ _('Additional documenation') }}</h3>
+          <h3>{{ _('Developer documentation') }}</h3>
           <ul>
-            <li class="toctree-l1"><a class="reference external" href="http://redmine.named-data.net/projects/nlsr/wiki">NLSR Wiki</a></li>
+            <li class="toctree-l1"><a class="reference external" href="https://redmine.named-data.net/projects/nlsr/wiki">NLSR Wiki</a></li>
             <li class="toctree-l1"><a class="reference internal" href="doxygen/annotated.html">API documentation (doxygen)</a></li>
+            <li class="toctree-l1"><a class="reference internal" href="code-style.html">ndn-cxx Code Style and Coding Guidelines</a></li>
           </ul>
           {%- endblock %}
+
           {%- block sidebarsearch %}
           <h3 style="margin-top: 1.5em;">{{ _('Search') }}</h3>
           <form class="search" action="{{ pathto('search') }}" method="get">
@@ -74,22 +76,11 @@
         <div class="row">
             <div class="twelve columns">
 
-                <div id="copyright">This research is partially supported by NSF (Award <a href="http://www.nsf.gov/awardsearch/showAward?AWD_ID=1040868" target="_blank>">CNS-1040868</a>)<br/><br/><a rel="license" href="http://creativecommons.org/licenses/by/3.0/deed.en_US" target="_blank">Creative Commons Attribution 3.0 Unported License</a> except where noted.</div>
+                <div id="copyright">This research is partially supported by NSF (Award <a href="https://www.nsf.gov/awardsearch/showAward?AWD_ID=1040868" target="_blank>">CNS-1040868</a>)<br/><br/><a rel="license" href="https://creativecommons.org/licenses/by/3.0/deed.en_US" target="_blank">Creative Commons Attribution 3.0 Unported License</a> except where noted.</div>
 
             </div>
         </div>
     </div><!--footer info end-->
-
-    <script type="text/javascript">
-    var _gaq = _gaq || [];
-    _gaq.push(['_setAccount', 'UA-22320603-1']);
-    _gaq.push(['_trackPageview']);
-    (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-    })();
-    </script>
 {% endblock %}
 
 {% block relbar1 %}{% endblock %}
