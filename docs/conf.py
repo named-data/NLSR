@@ -44,8 +44,9 @@ def addExtensionIfExists(extension):
         sys.stderr.write("To install, use \n"
                          "  sudo pip install %s\n" % extension.replace('.', '-'))
 
-if os.getenv('GOOGLE_ANALYTICS', None):
-    addExtensionIfExists('sphinxcontrib.googleanalytics')
+# sphinxcontrib.googleanalytics is currently not working with the latest version of sphinx
+# if os.getenv('GOOGLE_ANALYTICS', None):
+#     addExtensionIfExists('sphinxcontrib.googleanalytics')
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
