@@ -60,6 +60,23 @@ public:
   }
 
   void
+  checkPrefixRegistered(const Name& prefix)
+  {
+    bool registerCommandEmitted = false;
+    for (const auto& interest : face.sentInterests) {
+      if (interest.getName().size() > 4 && interest.getName().get(3) == name::Component("register")) {
+        name::Component test = interest.getName().get(4);
+        ndn::nfd::ControlParameters params(test.blockFromValue());
+        if (params.getName() == prefix) {
+          registerCommandEmitted = true;
+          break;
+        }
+      }
+    }
+    BOOST_CHECK(registerCommandEmitted);
+  }
+
+  void
   addAdjacency(AdjLsa& lsa, const std::string& name, const std::string& faceUri, double cost)
   {
     Adjacent adjacency(name, ndn::FaceUri(faceUri), cost, Adjacent::STATUS_ACTIVE, 0, 0);

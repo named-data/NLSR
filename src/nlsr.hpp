@@ -436,6 +436,11 @@ private:
   void
   registerLocalhostPrefix();
 
+  /*! \brief Registers the <router-prefix>/nlsr so that NLSR can respond to status requests from remote routers.
+   */
+  void
+  registerRouterPrefix();
+
   /*! \brief Attempts to satisfy an Interest for a certificate, and send it back.
    */
   void

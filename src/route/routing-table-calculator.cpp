@@ -119,7 +119,7 @@ RoutingTableCalculator::makeAdjMatrix(Nlsr& pnlsr, Map& pMap)
 void
 RoutingTableCalculator::writeAdjMatrixLog(const Map& map) const
 {
-  if (!getNdnCxxLogger().isLevelEnabled(ndn::util::LogLevel::DEBUG)) {
+  if (!ndn_cxx_getLogger().isLevelEnabled(ndn::util::LogLevel::DEBUG)) {
     return;
   }
 
@@ -133,7 +133,7 @@ RoutingTableCalculator::writeAdjMatrixLog(const Map& map) const
       routerIndex += " ";
       lengthOfDash += "--";
       NLSR_LOG_DEBUG("Router:" + map.getRouterNameByMappingNo(i)->toUri() +
-                     "Index:" + boost::lexical_cast<std::string>(i));
+                     " Index:" + boost::lexical_cast<std::string>(i));
   }
   NLSR_LOG_DEBUG(" |" + routerIndex);
   NLSR_LOG_DEBUG(lengthOfDash);

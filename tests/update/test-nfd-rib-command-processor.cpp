@@ -73,7 +73,7 @@ public:
     // Need to send an interest now since ChronoSync
     // no longer does face->put(*data) in publishData.
     // Instead it does it in onInterest
-    ndn::Name lsaInterestName("/localhop/ndn/NLSR/LSA/This/router");
+    ndn::Name lsaInterestName("/localhop/ndn/nlsr/LSA/This/router");
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
     lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());

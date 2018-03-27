@@ -30,7 +30,7 @@ namespace nlsr {
 
 INIT_LOGGER(SyncLogicHandler);
 
-const std::string NLSR_COMPONENT = "NLSR";
+const std::string NLSR_COMPONENT = "nlsr";
 const std::string LSA_COMPONENT = "LSA";
 
 template<class T>

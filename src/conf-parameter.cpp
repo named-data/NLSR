@@ -29,7 +29,7 @@ namespace nlsr {
 INIT_LOGGER(ConfParameter);
 
 // To be changed when breaking changes are made to sync
-const uint64_t ConfParameter::SYNC_VERSION = 4;
+const uint64_t ConfParameter::SYNC_VERSION = 5;
 
 void
 ConfParameter::writeLog()
@@ -69,13 +69,13 @@ ConfParameter::setNetwork(const ndn::Name& networkName)
 
   m_chronosyncPrefix.append("localhop");
   m_chronosyncPrefix.append(m_network);
-  m_chronosyncPrefix.append("NLSR");
+  m_chronosyncPrefix.append("nlsr");
   m_chronosyncPrefix.append("sync");
   m_chronosyncPrefix.appendVersion(SYNC_VERSION);
 
   m_lsaPrefix.append("localhop");
   m_lsaPrefix.append(m_network);
-  m_lsaPrefix.append("NLSR");
+  m_lsaPrefix.append("nlsr");
   m_lsaPrefix.append("LSA");
 }
 

@@ -97,18 +97,18 @@ void
 Nlsr::setInfoInterestFilter()
 {
   ndn::Name name(m_confParam.getRouterPrefix());
-  name.append("NLSR");
+  name.append("nlsr");
   name.append("INFO");
 
   NLSR_LOG_DEBUG("Setting interest filter for Hello interest: " << name);
 
-  getNlsrFace().setInterestFilter(name,
-                                  std::bind(&HelloProtocol::processInterest,
-                                            &m_helloProtocol, _1, _2),
-                                  std::bind(&Nlsr::onRegistrationSuccess, this, _1),
-                                  std::bind(&Nlsr::registrationFailed, this, _1),
-                                  m_signingInfo,
-                                  ndn::nfd::ROUTE_FLAG_CAPTURE);
+  m_nlsrFace.setInterestFilter(name,
+                               std::bind(&HelloProtocol::processInterest,
+                                         &m_helloProtocol, _1, _2),
+                               std::bind(&Nlsr::onRegistrationSuccess, this, _1),
+                               std::bind(&Nlsr::registrationFailed, this, _1),
+                               m_signingInfo,
+                               ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
 void
@@ -118,13 +118,13 @@ Nlsr::setLsaInterestFilter()
 
   NLSR_LOG_DEBUG("Setting interest filter for LsaPrefix: " << name);
 
-  getNlsrFace().setInterestFilter(name,
-                                  std::bind(&Lsdb::processInterest,
-                                            &m_nlsrLsdb, _1, _2),
-                                  std::bind(&Nlsr::onRegistrationSuccess, this, _1),
-                                  std::bind(&Nlsr::registrationFailed, this, _1),
-                                  m_signingInfo,
-                                  ndn::nfd::ROUTE_FLAG_CAPTURE);
+  m_nlsrFace.setInterestFilter(name,
+                               std::bind(&Lsdb::processInterest,
+                                         &m_nlsrLsdb, _1, _2),
+                               std::bind(&Nlsr::onRegistrationSuccess, this, _1),
+                               std::bind(&Nlsr::registrationFailed, this, _1),
+                               m_signingInfo,
+                               ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
 
@@ -132,6 +132,7 @@ void
 Nlsr::addDispatcherTopPrefix(const ndn::Name& topPrefix)
 {
   try {
+    // false since we want to have control over the registration process
     m_dispatcher.addTopPrefix(topPrefix, false, m_signingInfo);
   }
   catch (const std::exception& e) {
@@ -277,7 +278,7 @@ Nlsr::initialize()
   setLsaInterestFilter();
 
   // add top-level prefixes: router and localhost prefix
-  addDispatcherTopPrefix(m_confParam.getRouterPrefix());
+  addDispatcherTopPrefix(ndn::Name(m_confParam.getRouterPrefix()).append("nlsr"));
   addDispatcherTopPrefix(LOCALHOST_PREFIX);
 
   initializeFaces(std::bind(&Nlsr::processFaceDataset, this, _1),
@@ -299,6 +300,7 @@ Nlsr::initialize()
 
   registerKeyPrefix();
   registerLocalhostPrefix();
+  registerRouterPrefix();
 
   m_helloProtocol.scheduleInterest(m_firstHelloInterval);
 
@@ -319,7 +321,7 @@ Nlsr::initializeKey()
   NLSR_LOG_DEBUG("Initializing Key ...");
 
   ndn::Name nlsrInstanceName = m_confParam.getRouterPrefix();
-  nlsrInstanceName.append("NLSR");
+  nlsrInstanceName.append("nlsr");
 
   try {
     m_keyChain.deleteIdentity(m_keyChain.getPib().getIdentity(nlsrInstanceName));
@@ -377,7 +379,7 @@ Nlsr::registerKeyPrefix()
 {
   // Start listening for the interest of this router's NLSR certificate
   ndn::Name nlsrKeyPrefix = getConfParameter().getRouterPrefix();
-  nlsrKeyPrefix.append("NLSR");
+  nlsrKeyPrefix.append("nlsr");
   nlsrKeyPrefix.append("KEY");
 
   m_nlsrFace.setInterestFilter(nlsrKeyPrefix,
@@ -431,6 +433,14 @@ void
 Nlsr::registerLocalhostPrefix()
 {
   m_nlsrFace.registerPrefix(LOCALHOST_PREFIX,
+                            std::bind(&Nlsr::onRegistrationSuccess, this, _1),
+                            std::bind(&Nlsr::registrationFailed, this, _1));
+}
+
+void
+Nlsr::registerRouterPrefix()
+{
+  m_nlsrFace.registerPrefix(ndn::Name(m_confParam.getRouterPrefix()).append("nlsr"),
                             std::bind(&Nlsr::onRegistrationSuccess, this, _1),
                             std::bind(&Nlsr::registrationFailed, this, _1));
 }

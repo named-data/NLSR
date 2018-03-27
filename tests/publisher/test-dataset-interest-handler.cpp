@@ -57,6 +57,8 @@ BOOST_FIXTURE_TEST_SUITE(PublisherTestLsdbDatasetInterestHandler, PublisherFixtu
 
 BOOST_AUTO_TEST_CASE(Localhost)
 {
+  checkPrefixRegistered(Nlsr::LOCALHOST_PREFIX);
+
   // Install adjacency LSA
   AdjLsa adjLsa;
   adjLsa.setOrigRouter("/RouterA");
@@ -108,6 +110,13 @@ BOOST_AUTO_TEST_CASE(Localhost)
 
 BOOST_AUTO_TEST_CASE(Routername)
 {
+  ndn::Name regRouterPrefix(nlsr.getConfParameter().getRouterPrefix());
+  regRouterPrefix.append("nlsr");
+  // Should already be added to dispatcher
+  BOOST_CHECK_THROW(nlsr.getDispatcher().addTopPrefix(regRouterPrefix), std::out_of_range);
+
+  checkPrefixRegistered(regRouterPrefix);
+
   //Install adjacencies LSA
   AdjLsa adjLsa;
   adjLsa.setOrigRouter("/RouterA");
@@ -129,22 +138,22 @@ BOOST_AUTO_TEST_CASE(Routername)
   rt1.addNextHop(DEST_ROUTER, nh);
 
   // Request adjacency LSAs
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("adjacencies")));
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/nlsr/lsdb").append("adjacencies")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
 
   // Request coordinate LSAs
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("coordinates")));
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/nlsr/lsdb").append("coordinates")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
 
   // Request Name LSAs
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/lsdb").append("names")));
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/nlsr/lsdb").append("names")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
 
   // Request Routing Table
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/routing-table")));
+  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/nlsr/routing-table")));
   processDatasetInterest(face,
     [] (const ndn::Block& block) {
       return block.type() == ndn::tlv::nlsr::RoutingTable; });

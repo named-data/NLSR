@@ -30,7 +30,7 @@ namespace nlsr {
 INIT_LOGGER(HelloProtocol);
 
 const std::string HelloProtocol::INFO_COMPONENT = "INFO";
-const std::string HelloProtocol::NLSR_COMPONENT = "NLSR";
+const std::string HelloProtocol::NLSR_COMPONENT = "nlsr";
 
 HelloProtocol::HelloProtocol(Nlsr& nlsr, ndn::Scheduler& scheduler)
   : m_nlsr(nlsr)
