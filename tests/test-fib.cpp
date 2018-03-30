@@ -308,8 +308,8 @@ BOOST_FIXTURE_TEST_CASE(ScheduleFibEntryRefresh, FibFixture)
   int origSeqNo = fe.getSeqNo();
 
   fib->scheduleEntryRefresh(fe,
-                            [&, this] (FibEntry& entry) {
-                              BOOST_CHECK_EQUAL(origSeqNo+1, entry.getSeqNo());
+                            [&] (FibEntry& entry) {
+                              BOOST_CHECK_EQUAL(origSeqNo + 1, entry.getSeqNo());
                             });
   this->advanceClocks(ndn::time::milliseconds(10), 1);
 }

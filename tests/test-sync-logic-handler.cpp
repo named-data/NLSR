@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
 
     // Actual testing done here -- signal function callback
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
-      [&, this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
@@ -139,7 +139,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
       + OTHER_ROUTER_NAME + std::to_string(lsaType);
 
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
-      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
       + OTHER_ROUTER_NAME + std::to_string(lsaType);
 
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
-      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
     updateName.append(CONFIG_SITE).append(CONFIG_ROUTER_NAME).append(std::to_string(lsaType));
 
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
-      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
         BOOST_FAIL("Updates for self should not be emitted!");
       });
 
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
     updateName.append(CONFIG_ROUTER_NAME).append(std::to_string(lsaType));
 
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
-      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
         BOOST_FAIL("Malformed updates should not be emitted!");
       });
 
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(LsaNotNew)
   SyncLogicHandler sync{face, testLsaAlwaysFalse, conf};
   sync.createSyncSocket(conf.getChronosyncPrefix());
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
-      [& ,this] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
         BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
       });
 

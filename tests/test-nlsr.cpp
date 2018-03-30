@@ -452,8 +452,7 @@ BOOST_AUTO_TEST_CASE(CanonizeUris)
       nlsr.canonizeNeighborUris(iterator, thenCallback, finallyCallback);
   };
   nlsr.canonizeNeighborUris(nlsr.getAdjacencyList().getAdjList().begin(),
-                            [&thenCallback, &finallyCallback]
-                            (std::list<Adjacent>::iterator iterator) {
+                            [&] (std::list<Adjacent>::iterator iterator) {
                               thenCallback(iterator);
                             },
                             finallyCallback);

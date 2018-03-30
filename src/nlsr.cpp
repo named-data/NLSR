@@ -165,13 +165,13 @@ Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
 {
   if (currentNeighbor != m_adjacencyList.getAdjList().end()) {
     ndn::FaceUri uri(currentNeighbor->getFaceUri());
-    uri.canonize([this, then, currentNeighbor] (ndn::FaceUri canonicalUri) {
+    uri.canonize([then, currentNeighbor] (ndn::FaceUri canonicalUri) {
         NLSR_LOG_DEBUG("Canonized URI: " << currentNeighbor->getFaceUri()
                    << " to: " << canonicalUri);
         currentNeighbor->setFaceUri(canonicalUri);
         then(std::next(currentNeighbor));
       },
-      [this, then, currentNeighbor] (const std::string& reason) {
+      [then, currentNeighbor] (const std::string& reason) {
         NLSR_LOG_ERROR("Could not canonize URI: " << currentNeighbor->getFaceUri()
                    << " because: " << reason);
         then(std::next(currentNeighbor));
