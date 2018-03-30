@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  Regents of the University of California,
+ * Copyright (c) 2014-2018,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -110,8 +110,8 @@ public:
     m_buffer.appendByteArray(payload.value(), payload.value_size());
 
     // uint64_t segmentNo = data.getName()[-1].toSegment();
-    if (data.getFinalBlockId() != data.getName()[-1]) {
-        return;
+    if (data.getFinalBlock().value_or(ndn::name::Component("")) != data.getName()[-1]) {
+      return;
     }
 
     // wrap data in a single Content TLV for easy parsing

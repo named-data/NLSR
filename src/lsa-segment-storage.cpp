@@ -107,7 +107,7 @@ LsaSegmentStorage::afterFetcherSignalEmitted(const ndn::Data& lsaSegment)
 
     try {
       expirationTime = ndn::time::duration_cast<ndn::time::seconds>
-                       (ndn::time::system_clock::now() - ndn::time::fromIsoString(options.at(3)));
+                       (ndn::time::fromIsoString(options.at(3)) - ndn::time::system_clock::now());
     } catch (const std::exception& e) {
       NLSR_LOG_ERROR("Cannot extract expiration time from LSA content: " << e.what());
     }

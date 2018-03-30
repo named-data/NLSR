@@ -153,7 +153,7 @@ public:
     }
 
     auto data = make_shared<ndn::Data>(name);
-    data->setFinalBlockId(name[-1]);
+    data->setFinalBlock(name[-1]);
     data->setContent(std::forward<ContentArgs>(contentArgs)...);
     this->signDatasetReply(*data);
     m_face.receive(*data);

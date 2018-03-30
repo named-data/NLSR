@@ -42,7 +42,6 @@ public:
     , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , lsdb(nlsr.getLsdb())
     , lsaStorage(lsdb.getLsaStorage())
-    , lsaGeneratedBeforeNow(180)
   {
   }
 
@@ -53,7 +52,7 @@ public:
     ndn::Name s2{"name2"};
     NamePrefixList npl1{s1, s2};
     NameLsa nameLsa("/ndn/other-site/%C1.Router/other-router", 12,
-                    ndn::time::system_clock::now() - lsaGeneratedBeforeNow, npl1);
+                    ndn::time::system_clock::now() + ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT), npl1);
     return nameLsa.serialize();
   }
 
@@ -66,7 +65,7 @@ public:
     std::string content = makeLsaContent();
     lsaSegment->setContent(reinterpret_cast<const uint8_t*>(content.c_str()), content.length());
     if (isFinal) {
-      lsaSegment->setFinalBlockId(lsaSegment->getName()[-1]);
+      lsaSegment->setFinalBlock(lsaSegment->getName()[-1]);
     }
 
     return signData(lsaSegment);
@@ -92,7 +91,6 @@ public:
   Nlsr nlsr;
   Lsdb& lsdb;
   LsaSegmentStorage& lsaStorage;
-  ndn::time::seconds lsaGeneratedBeforeNow;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestLsaSegmentStorage, LsaSegmentStorageFixture)
@@ -174,7 +172,11 @@ BOOST_AUTO_TEST_CASE(ScheduledDeletion)
 
   BOOST_CHECK(lsaStorage.getLsaSegment(ndn::Interest(lsaInterestName)) != nullptr);
 
-  advanceClocks(ndn::time::milliseconds(lsaGeneratedBeforeNow), 10);
+  // Make sure it was not deleted earlier somehow
+  advanceClocks(ndn::time::seconds(100), 10);
+  BOOST_CHECK(lsaStorage.getLsaSegment(ndn::Interest(lsaInterestName)) != nullptr);
+
+  advanceClocks(ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT), 10);
 
   BOOST_CHECK(lsaStorage.getLsaSegment(ndn::Interest(lsaInterestName)) == nullptr);
 }
