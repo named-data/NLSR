@@ -21,6 +21,7 @@
 
 #include "nexthop.hpp"
 #include "tlv-nlsr.hpp"
+#include "coordinate-lsa.hpp"
 
 #include <ndn-cxx/util/concepts.hpp>
 #include <ndn-cxx/encoding/block-helpers.hpp>
@@ -49,8 +50,7 @@ NextHop::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
-  const uint8_t* doubleBytes = reinterpret_cast<const uint8_t*>(&m_cost);
-  totalLength += block.prependByteArrayBlock(ndn::tlv::nlsr::Double, doubleBytes, 8);
+  totalLength += prependDouble(block, ndn::tlv::nlsr::Double, m_cost);
 
   totalLength += block.prependByteArrayBlock(
     ndn::tlv::nlsr::Uri, reinterpret_cast<const uint8_t*>(m_uri.c_str()), m_uri.size());
@@ -108,13 +108,7 @@ NextHop::wireDecode(const ndn::Block& wire)
     BOOST_THROW_EXCEPTION(Error("Missing required Uri field"));
   }
 
-  if (val != val->elements_end() && val->type() == ndn::tlv::nlsr::Double) {
-    m_cost = *reinterpret_cast<const double*>(val->value());
-    ++val;
-  }
-  else {
-    BOOST_THROW_EXCEPTION(Error("HyperbolicCost: Missing required Double field"));
-  }
+  m_cost = ndn::tlv::nlsr::readDouble(*val);
 }
 
 std::ostream&

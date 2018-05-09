@@ -19,58 +19,35 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "tlv/nexthop.hpp"
+#include "tlv/tlv-nlsr.hpp"
 
 #include "../boost-test.hpp"
+
+#include <ndn-cxx/encoding/estimator.hpp>
+#include <ndn-cxx/encoding/encoding-buffer.hpp>
+#include <ndn-cxx/encoding/block-helpers.hpp>
 
 namespace nlsr {
 namespace tlv {
 namespace test {
 
-BOOST_AUTO_TEST_SUITE(TlvTestNexthops)
+BOOST_AUTO_TEST_SUITE(TlvTestNlsr)
 
-const uint8_t NexthopData[] =
+BOOST_AUTO_TEST_CASE(TestDouble)
 {
-  // Header
-  0x8f, 0x1f,
-  // Uri
-  0x8d, 0x11, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x2f, 0x6e, 0x65, 0x78, 0x74, 0x68, 0x6f, 0x70, 0x2f, 0x74, 0x6c, 0x76,
-  // Cost
-  0x86, 0x0a, 0x86, 0x08, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66, 0xfa, 0x3f
-};
+  ndn::Block block = ndn::encoding::makeNonNegativeIntegerBlock(0x01, 1);
+  BOOST_CHECK_THROW(ndn::tlv::nlsr::readDouble(block), ndn::tlv::Error);
 
-BOOST_AUTO_TEST_CASE(NexthopEncode)
-{
-  NextHop nexthops1;
-  nexthops1.setUri("/test/nexthop/tlv");
-  nexthops1.setCost(1.65);
+  double value = 1.65;
+  uint32_t type = 0x251;
 
-  const ndn::Block& wire = nexthops1.wireEncode();
+  ndn::encoding::EncodingEstimator estimator;
+  size_t totalLength = ndn::tlv::nlsr::prependDouble(estimator, type, value);
 
-  BOOST_REQUIRE_EQUAL_COLLECTIONS(NexthopData,
-                                  NexthopData + sizeof(NexthopData),
-                                  wire.begin(), wire.end());
-}
+  ndn::encoding::EncodingBuffer encoder(totalLength, 0);
+  ndn::tlv::nlsr::prependDouble(encoder, type, value);
 
-BOOST_AUTO_TEST_CASE(NexthopDecode)
-{
-  NextHop nexthops1;
-
-  nexthops1.wireDecode(ndn::Block(NexthopData, sizeof(NexthopData)));
-
-  BOOST_REQUIRE_EQUAL(nexthops1.getUri(), "/test/nexthop/tlv");
-  BOOST_REQUIRE_EQUAL(nexthops1.getCost(), 1.65);
-}
-
-BOOST_AUTO_TEST_CASE(AdjacencyOutputStream)
-{
-  NextHop nexthops1;
-  nexthops1.setUri("/test/nexthop/tlv");
-  nexthops1.setCost(99);
-
-  std::ostringstream os;
-  os << nexthops1;
-  BOOST_CHECK_EQUAL(os.str(), "NextHop(Uri: /test/nexthop/tlv, Cost: 99)\n");
+  BOOST_CHECK_CLOSE(value, ndn::tlv::nlsr::readDouble(encoder.block()), 0.001);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

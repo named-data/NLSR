@@ -23,6 +23,7 @@
 #define NLSR_TLV_NLSR_HPP
 
 #include <ndn-cxx/encoding/tlv.hpp>
+#include <ndn-cxx/encoding/block-helpers.hpp>
 
 namespace ndn {
 namespace tlv {
@@ -53,6 +54,45 @@ enum {
   RoutingTable     = 144,
   RouteTableEntry  = 145
 };
+
+/*! \brief Read a double from a TLV element
+ *  \param block the TLV element
+ *  \throw ndn::tlv::Error block does not contain a double
+ *  \sa prependDouble
+ */
+inline double
+readDouble(const ndn::Block& block)
+{
+  block.parse();
+  auto it = block.elements_begin();
+
+  double doubleFromBlock = 0.0;
+  if (it == it->elements_end() || it->type() != ndn::tlv::nlsr::Double ||
+      it->value_size() != sizeof(doubleFromBlock)) {
+    BOOST_THROW_EXCEPTION(ndn::tlv::Error("Block does not contain a double"));
+  }
+  memcpy(&doubleFromBlock, it->value(), sizeof(doubleFromBlock));
+  return doubleFromBlock;
+}
+
+/*! \brief Prepend a TLV element containing a double.
+ *  \param encoder an EncodingBuffer or EncodingEstimator
+ *  \param type TLV-TYPE number
+ *  \param value double value
+ */
+template<ndn::encoding::Tag TAG>
+inline size_t
+prependDouble(ndn::EncodingImpl<TAG>& encoder, uint32_t type, double value)
+{
+  size_t totalLength = 0;
+
+  const uint8_t* doubleBytes = reinterpret_cast<const uint8_t*>(&value);
+  totalLength = encoder.prependByteArrayBlock(ndn::tlv::nlsr::Double, doubleBytes, 8);
+  totalLength += encoder.prependVarNumber(totalLength);
+  totalLength += encoder.prependVarNumber(type);
+
+  return totalLength;
+}
 
 } // namespace nlsr
 } // namespace tlv
