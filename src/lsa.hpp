@@ -284,7 +284,7 @@ public:
   }
 
   bool
-  isEqualContent(AdjLsa& alsa);
+  isEqualContent(const AdjLsa& alsa) const;
 
   /*! \brief Installs this LSA's name prefixes into the NPT.
 
@@ -384,7 +384,7 @@ public:
   }
 
   bool
-  isEqualContent(const CoordinateLsa& clsa);
+  isEqualContent(const CoordinateLsa& clsa) const;
 
   void
   writeLog() const override;

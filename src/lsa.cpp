@@ -138,7 +138,7 @@ CoordinateLsa::CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
 }
 
 bool
-CoordinateLsa::isEqualContent(const CoordinateLsa& clsa)
+CoordinateLsa::isEqualContent(const CoordinateLsa& clsa) const
 {
   if (clsa.getCorTheta().size() != m_angles.size()) {
     return false;
@@ -213,7 +213,7 @@ AdjLsa::AdjLsa(const ndn::Name& origR, uint32_t lsn,
 }
 
 bool
-AdjLsa::isEqualContent(AdjLsa& alsa)
+AdjLsa::isEqualContent(const AdjLsa& alsa) const
 {
   return m_adl == alsa.getAdl();
 }
