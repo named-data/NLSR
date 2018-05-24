@@ -45,7 +45,7 @@ public:
 
 SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
                                    const ConfParameter& conf)
-  : onNewLsa(ndn::make_unique<OnNewLsa>())
+  : onNewLsa(std::make_unique<OnNewLsa>())
   , m_syncFace(face)
   , m_isLsaNew(isLsaNew)
   , m_confParam(conf)

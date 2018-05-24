@@ -17,6 +17,7 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
+
 #include "routing-table.hpp"
 #include "nlsr.hpp"
 #include "map.hpp"
@@ -35,7 +36,7 @@ namespace nlsr {
 INIT_LOGGER(route.RoutingTable);
 
 RoutingTable::RoutingTable(ndn::Scheduler& scheduler)
-  : afterRoutingChange{ndn::make_unique<AfterRoutingChange>()}
+  : afterRoutingChange{std::make_unique<AfterRoutingChange>()}
   , m_scheduler(scheduler)
   , m_NO_NEXT_HOP{-12345}
   , m_routingCalcInterval{static_cast<uint32_t>(ROUTING_CALC_INTERVAL_DEFAULT)}

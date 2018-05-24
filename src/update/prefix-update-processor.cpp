@@ -54,8 +54,7 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
                                              NamePrefixList& namePrefixList,
                                              Lsdb& lsdb)
   : CommandManagerBase(dispatcher, namePrefixList, lsdb, "prefix-update")
-
-  , m_validator(ndn::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
+  , m_validator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
 {
   NLSR_LOG_DEBUG("Setting dispatcher to capture Interests for: "
     << ndn::Name(Nlsr::LOCALHOST_PREFIX).append("prefix-update"));

@@ -62,7 +62,7 @@ Nlsr::Nlsr(boost::asio::io_service& ioService, ndn::Scheduler& scheduler, ndn::F
                      m_nlsrFace,
                      m_keyChain)
   , m_helloProtocol(*this, scheduler)
-  , m_validator(ndn::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(m_nlsrFace))
+  , m_validator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(m_nlsrFace))
   , m_controller(m_nlsrFace, m_keyChain)
   , m_faceDatasetController(m_nlsrFace, m_keyChain)
   , m_prefixUpdateProcessor(m_dispatcher,
