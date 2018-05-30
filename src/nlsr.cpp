@@ -260,8 +260,8 @@ Nlsr::initialize()
   m_nlsrLsdb.getSequencingManager().setSeqFileDirectory(m_confParam.getSeqFileDir());
   m_nlsrLsdb.getSequencingManager().initiateSeqNoFromFile(m_confParam.getHyperbolicState());
 
-  m_nlsrLsdb.getSyncLogicHandler().createSyncSocket(m_confParam.getChronosyncPrefix(),
-                                                    m_confParam.getSyncInterestLifetime());
+  m_nlsrLsdb.getSyncLogicHandler().createSyncLogic(m_confParam.getChronosyncPrefix(),
+                                                   m_confParam.getSyncInterestLifetime());
 
   // Logging start
   m_confParam.writeLog();

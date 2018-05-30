@@ -29,7 +29,7 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/util/signal.hpp>
-#include <ChronoSync/socket.hpp>
+#include <ChronoSync/logic.hpp>
 #include <boost/throw_exception.hpp>
 
 class InterestManager;
@@ -87,7 +87,7 @@ public:
   void
   publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo);
 
-  /*! \brief Create and configure a socket to enable ChronoSync for this NLSR.
+  /*! \brief Create and configure a Logic object to enable ChronoSync for this NLSR.
    *
    * In a typical situation this only needs to be called once, when NLSR starts.
    * \param syncPrefix The sync prefix you want this ChronoSync to use
@@ -95,9 +95,9 @@ public:
    * \sa Nlsr::initialize
    */
   void
-  createSyncSocket(const ndn::Name& syncPrefix,
-                   const ndn::time::milliseconds& syncInterestLifetime =
-                     ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT));
+  createSyncLogic(const ndn::Name& syncPrefix,
+                  const ndn::time::milliseconds& syncInterestLifetime =
+                    ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT));
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Simple function to glue Name components together
@@ -118,21 +118,12 @@ private:
   processUpdateFromSync(const ndn::Name& originRouter,
                         const ndn::Name& updateName, const uint64_t& seqNo);
 
-  /*! \brief Instruct ChronoSync, via the sync socket, to publish an update.
-   *
-   * Each ChronoSync instance maintains its own PIT for sync
-   * updates. This function creates a data that satisfies that update,
-   * so that the interested routers will know new data is available.
-   */
-  void
-  publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo);
-
 public:
   std::unique_ptr<OnNewLsa> onNewLsa;
 
 private:
   ndn::Face& m_syncFace;
-  std::shared_ptr<chronosync::Socket> m_syncSocket;
+  std::shared_ptr<chronosync::Logic> m_syncLogic;
   ndn::Name m_syncPrefix;
   IsLsaNew m_isLsaNew;
   const ConfParameter& m_confParam;

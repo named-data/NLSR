@@ -53,10 +53,10 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
 }
 
 void
-SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix, const ndn::time::milliseconds& syncInterestLifetime)
+SyncLogicHandler::createSyncLogic(const ndn::Name& syncPrefix, const ndn::time::milliseconds& syncInterestLifetime)
 {
-  if (m_syncSocket != nullptr) {
-    NLSR_LOG_WARN("Trying to create Sync socket, but Sync socket already exists");
+  if (m_syncLogic != nullptr) {
+    NLSR_LOG_WARN("Trying to create Sync Logic object, but Sync Logic object already exists");
     return;
   }
 
@@ -65,27 +65,34 @@ SyncLogicHandler::createSyncSocket(const ndn::Name& syncPrefix, const ndn::time:
   // Build LSA sync update prefix
   buildUpdatePrefix();
 
-  NLSR_LOG_DEBUG("Creating Sync socket. Sync Prefix: " << m_syncPrefix);
+  NLSR_LOG_DEBUG("Creating Sync Logic object. Sync Prefix: " << m_syncPrefix);
 
-  // The face's lifetime is managed in main.cpp; SyncSocket should not manage the memory
+  // The face's lifetime is managed in main.cpp; Logic should not manage the memory
   // of the object
   std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
   const auto fixedSession = ndn::name::Component::fromNumber(0);
-  m_syncSocket = std::make_shared<chronosync::Socket>(m_syncPrefix, m_nameLsaUserPrefix, *facePtr,
-                                                      std::bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1),
-                                                      chronosync::Socket::DEFAULT_NAME, chronosync::Socket::DEFAULT_VALIDATOR,
-                                                      syncInterestLifetime, fixedSession);
+  m_syncLogic = std::make_shared<chronosync::Logic>(*facePtr, m_syncPrefix, m_nameLsaUserPrefix,
+                                                     std::bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1),
+                                                     chronosync::Logic::DEFAULT_NAME,
+                                                     chronosync::Logic::DEFAULT_VALIDATOR,
+                                                     chronosync::Logic::DEFAULT_RESET_TIMER,
+                                                     chronosync::Logic::DEFAULT_CANCEL_RESET_TIMER,
+                                                     chronosync::Logic::DEFAULT_RESET_INTEREST_LIFETIME,
+                                                     syncInterestLifetime,
+                                                     chronosync::Logic::DEFAULT_SYNC_REPLY_FRESHNESS,
+                                                     chronosync::Logic::DEFAULT_RECOVERY_INTEREST_LIFETIME,
+                                                     fixedSession);
 
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-    m_syncSocket->addSyncNode(m_adjLsaUserPrefix, chronosync::Socket::DEFAULT_NAME, fixedSession);
+    m_syncLogic->addUserNode(m_adjLsaUserPrefix, chronosync::Logic::DEFAULT_NAME, fixedSession);
   }
   else if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-    m_syncSocket->addSyncNode(m_coorLsaUserPrefix, chronosync::Socket::DEFAULT_NAME, fixedSession);
+    m_syncLogic->addUserNode(m_coorLsaUserPrefix, chronosync::Logic::DEFAULT_NAME, fixedSession);
   }
   else {
-    m_syncSocket->addSyncNode(m_adjLsaUserPrefix, chronosync::Socket::DEFAULT_NAME, fixedSession);
-    m_syncSocket->addSyncNode(m_coorLsaUserPrefix, chronosync::Socket::DEFAULT_NAME, fixedSession);
+    m_syncLogic->addUserNode(m_adjLsaUserPrefix, chronosync::Logic::DEFAULT_NAME, fixedSession);
+    m_syncLogic->addUserNode(m_coorLsaUserPrefix, chronosync::Logic::DEFAULT_NAME, fixedSession);
   }
 }
 
@@ -154,21 +161,21 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
 void
 SyncLogicHandler::publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo)
 {
-  if (m_syncSocket == nullptr) {
-    NLSR_LOG_FATAL("Cannot publish routing update; SyncSocket does not exist");
+  if (m_syncLogic == nullptr) {
+    NLSR_LOG_FATAL("Cannot publish routing update; SyncLogic does not exist");
 
-    BOOST_THROW_EXCEPTION(SyncLogicHandler::Error("Cannot publish routing update; SyncSocket does not exist"));
+    BOOST_THROW_EXCEPTION(SyncLogicHandler::Error("Cannot publish routing update; SyncLogic does not exist"));
   }
 
   switch (type) {
   case Lsa::Type::ADJACENCY:
-    publishSyncUpdate(m_adjLsaUserPrefix, seqNo);
+    m_syncLogic->updateSeqNo(seqNo, m_adjLsaUserPrefix);
     break;
   case Lsa::Type::COORDINATE:
-    publishSyncUpdate(m_coorLsaUserPrefix, seqNo);
+    m_syncLogic->updateSeqNo(seqNo, m_coorLsaUserPrefix);
     break;
   case Lsa::Type::NAME:
-    publishSyncUpdate(m_nameLsaUserPrefix, seqNo);
+    m_syncLogic->updateSeqNo(seqNo, m_nameLsaUserPrefix);
     break;
   default:
     break;
@@ -190,18 +197,6 @@ SyncLogicHandler::buildUpdatePrefix()
 
   m_coorLsaUserPrefix = updatePrefix;
   m_coorLsaUserPrefix.append(std::to_string(Lsa::Type::COORDINATE));
-}
-
-void
-SyncLogicHandler::publishSyncUpdate(const ndn::Name& updatePrefix, uint64_t seqNo)
-{
-  NLSR_LOG_DEBUG("Publishing Sync Update. Prefix: " << updatePrefix << " Seq No: " << seqNo);
-
-  ndn::Name updateName(updatePrefix);
-  std::string data("NoData");
-
-  m_syncSocket->publishData(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(),
-                            ndn::time::milliseconds(1000), seqNo, updateName);
 }
 
 } // namespace nlsr

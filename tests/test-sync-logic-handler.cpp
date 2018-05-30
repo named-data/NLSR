@@ -99,7 +99,7 @@ BOOST_FIXTURE_TEST_SUITE(TestSyncLogicHandler, SyncLogicFixture)
 BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
 {
   SyncLogicHandler sync{face, testIsLsaNew, conf};
-  sync.createSyncSocket(conf.getChronosyncPrefix());
+  sync.createSyncLogic(conf.getChronosyncPrefix());
 
   std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME, Lsa::Type::ADJACENCY};
 
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
   conf.setHyperbolicState(HYPERBOLIC_STATE_ON);
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
-  sync.createSyncSocket(conf.getChronosyncPrefix());
+  sync.createSyncLogic(conf.getChronosyncPrefix());
 
   uint64_t syncSeqNo = 1;
   std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME, Lsa::Type::COORDINATE};
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
   conf.setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
-  sync.createSyncSocket(conf.getChronosyncPrefix());
+  sync.createSyncLogic(conf.getChronosyncPrefix());
 
   for (const Lsa::Type& lsaType : lsaTypes) {
     uint64_t syncSeqNo = 1;
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
   const uint64_t sequenceNumber = 1;
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
-  sync.createSyncSocket(conf.getChronosyncPrefix());
+  sync.createSyncLogic(conf.getChronosyncPrefix());
 
   for (const Lsa::Type& lsaType : lsaTypes) {
     // To ensure that we get correctly-separated components, create
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
   const uint64_t sequenceNumber = 1;
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
-  sync.createSyncSocket(conf.getChronosyncPrefix());
+  sync.createSyncLogic(conf.getChronosyncPrefix());
 
   for (const Lsa::Type& lsaType : lsaTypes) {
     ndn::Name updateName{CONFIG_SITE};
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(LsaNotNew)
 
   const uint64_t sequenceNumber = 1;
   SyncLogicHandler sync{face, testLsaAlwaysFalse, conf};
-  sync.createSyncSocket(conf.getChronosyncPrefix());
+  sync.createSyncLogic(conf.getChronosyncPrefix());
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
       [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
         BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE(UpdatePrefix)
    NB: This test is as much an Nlsr class test as a
    SyncLogicHandler class test, but it rides the line and ends up here.
  */
-BOOST_AUTO_TEST_CASE(CreateSyncSocketOnInitialization) // Bug #2649
+BOOST_AUTO_TEST_CASE(createSyncLogicOnInitialization) // Bug #2649
 {
   nlsr.initialize();
 
