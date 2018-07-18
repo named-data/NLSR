@@ -26,10 +26,10 @@
 #include "test-access-control.hpp"
 #include "signals.hpp"
 #include "lsa.hpp"
+#include "sync-protocol-adapter.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/util/signal.hpp>
-#include <ChronoSync/logic.hpp>
 #include <boost/throw_exception.hpp>
 
 class InterestManager;
@@ -64,17 +64,6 @@ public:
 
   SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew, const ConfParameter& conf);
 
-  /*! \brief Hook function to call whenever sync detects new data.
-   *
-   * This function packages the sync information into discrete updates
-   * and passes those off to another function, processUpdateFromSync.
-   * \sa processUpdateFromSync
-   *
-   * \param v A container with the new information sync has received
-   */
-  void
-  onChronoSyncUpdate(const std::vector<chronosync::MissingDataInfo>& v);
-
   /*! \brief Instruct ChronoSync to publish an update.
    *
    * This function instructs sync to push an update into the network,
@@ -99,13 +88,15 @@ public:
                   const ndn::time::milliseconds& syncInterestLifetime =
                     ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT));
 
+  void
+  processUpdate(const ndn::Name& updateName, uint64_t highSeq);
+
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Simple function to glue Name components together
    */
   void
   buildUpdatePrefix();
 
-private:
   /*! \brief Determine which kind of LSA was updated and fetch it.
    *
    * Checks that the received update is not from us, which can happen,
@@ -116,15 +107,16 @@ private:
    */
   void
   processUpdateFromSync(const ndn::Name& originRouter,
-                        const ndn::Name& updateName, const uint64_t& seqNo);
+                        const ndn::Name& updateName, uint64_t seqNo);
 
 public:
   std::unique_ptr<OnNewLsa> onNewLsa;
 
 private:
   ndn::Face& m_syncFace;
-  std::shared_ptr<chronosync::Logic> m_syncLogic;
-  ndn::Name m_syncPrefix;
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  std::shared_ptr<SyncProtocolAdapter> m_syncLogic;
+private:
   IsLsaNew m_isLsaNew;
   const ConfParameter& m_confParam;
 
@@ -136,7 +128,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 private:
   static const std::string NLSR_COMPONENT;
   static const std::string LSA_COMPONENT;
-
 };
 
 } // namespace nlsr

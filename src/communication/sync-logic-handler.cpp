@@ -23,15 +23,15 @@
 #include "common.hpp"
 #include "conf-parameter.hpp"
 #include "lsa.hpp"
-#include "utility/name-helper.hpp"
 #include "logger.hpp"
+#include "utility/name-helper.hpp"
 
 namespace nlsr {
 
-INIT_LOGGER(SyncLogicHandler);
-
 const std::string NLSR_COMPONENT = "nlsr";
 const std::string LSA_COMPONENT = "LSA";
+
+INIT_LOGGER(SyncLogicHandler);
 
 template<class T>
 class NullDeleter
@@ -60,73 +60,59 @@ SyncLogicHandler::createSyncLogic(const ndn::Name& syncPrefix, const ndn::time::
     return;
   }
 
-  m_syncPrefix = syncPrefix;
-
   // Build LSA sync update prefix
   buildUpdatePrefix();
 
-  NLSR_LOG_DEBUG("Creating Sync Logic object. Sync Prefix: " << m_syncPrefix);
+  NLSR_LOG_DEBUG("Creating Sync Logic object. Sync Prefix: " << syncPrefix);
 
   // The face's lifetime is managed in main.cpp; Logic should not manage the memory
   // of the object
   std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
 
-  const auto fixedSession = ndn::name::Component::fromNumber(0);
-  m_syncLogic = std::make_shared<chronosync::Logic>(*facePtr, m_syncPrefix, m_nameLsaUserPrefix,
-                                                     std::bind(&SyncLogicHandler::onChronoSyncUpdate, this, _1),
-                                                     chronosync::Logic::DEFAULT_NAME,
-                                                     chronosync::Logic::DEFAULT_VALIDATOR,
-                                                     chronosync::Logic::DEFAULT_RESET_TIMER,
-                                                     chronosync::Logic::DEFAULT_CANCEL_RESET_TIMER,
-                                                     chronosync::Logic::DEFAULT_RESET_INTEREST_LIFETIME,
-                                                     syncInterestLifetime,
-                                                     chronosync::Logic::DEFAULT_SYNC_REPLY_FRESHNESS,
-                                                     chronosync::Logic::DEFAULT_RECOVERY_INTEREST_LIFETIME,
-                                                     fixedSession);
+  m_syncLogic = std::make_shared<SyncProtocolAdapter>(*facePtr,
+                  m_confParam.getSyncProtocol(),
+                  syncPrefix,
+                  m_nameLsaUserPrefix,
+                  syncInterestLifetime,
+                  std::bind(&SyncLogicHandler::processUpdate, this, _1, _2));
 
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-    m_syncLogic->addUserNode(m_adjLsaUserPrefix, chronosync::Logic::DEFAULT_NAME, fixedSession);
+    m_syncLogic->addUserNode(m_adjLsaUserPrefix);
   }
   else if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-    m_syncLogic->addUserNode(m_coorLsaUserPrefix, chronosync::Logic::DEFAULT_NAME, fixedSession);
+    m_syncLogic->addUserNode(m_coorLsaUserPrefix);
   }
   else {
-    m_syncLogic->addUserNode(m_adjLsaUserPrefix, chronosync::Logic::DEFAULT_NAME, fixedSession);
-    m_syncLogic->addUserNode(m_coorLsaUserPrefix, chronosync::Logic::DEFAULT_NAME, fixedSession);
+    m_syncLogic->addUserNode(m_adjLsaUserPrefix);
+    m_syncLogic->addUserNode(m_coorLsaUserPrefix);
   }
 }
 
 void
-SyncLogicHandler::onChronoSyncUpdate(const std::vector<chronosync::MissingDataInfo>& v)
+SyncLogicHandler::processUpdate(const ndn::Name& updateName, uint64_t highSeq)
 {
-  NLSR_LOG_DEBUG("Received ChronoSync update event");
+  NLSR_LOG_DEBUG("Update Name: " << updateName << " Seq no: " << highSeq);
 
-  for (size_t i = 0; i < v.size(); i++){
-    ndn::Name updateName = v[i].session.getPrefix(-1);
+  int32_t nlsrPosition = util::getNameComponentPosition(updateName, nlsr::NLSR_COMPONENT);
+  int32_t lsaPosition = util::getNameComponentPosition(updateName, nlsr::LSA_COMPONENT);
 
-    NLSR_LOG_DEBUG("Update Name: " << updateName << " Seq no: " << v[i].high);
-
-    int32_t nlsrPosition = util::getNameComponentPosition(updateName, nlsr::NLSR_COMPONENT);
-    int32_t lsaPosition = util::getNameComponentPosition(updateName, nlsr::LSA_COMPONENT);
-
-    if (nlsrPosition < 0 || lsaPosition < 0) {
-      NLSR_LOG_WARN("Received malformed sync update");
-      return;
-    }
-
-    ndn::Name networkName = updateName.getSubName(1, nlsrPosition-1);
-    ndn::Name routerName = updateName.getSubName(lsaPosition + 1).getPrefix(-1);
-
-    ndn::Name originRouter = networkName;
-    originRouter.append(routerName);
-
-    processUpdateFromSync(originRouter, updateName, v[i].high);
+  if (nlsrPosition < 0 || lsaPosition < 0) {
+    NLSR_LOG_WARN("Received malformed sync update");
+    return;
   }
+
+  ndn::Name networkName = updateName.getSubName(1, nlsrPosition-1);
+  ndn::Name routerName = updateName.getSubName(lsaPosition + 1).getPrefix(-1);
+
+  ndn::Name originRouter = networkName;
+  originRouter.append(routerName);
+
+  processUpdateFromSync(originRouter, updateName, highSeq);
 }
 
 void
 SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
-                                        const ndn::Name& updateName, const uint64_t& seqNo)
+                                        const ndn::Name& updateName, uint64_t seqNo)
 {
   NLSR_LOG_DEBUG("Origin Router of update: " << originRouter);
 
@@ -169,13 +155,13 @@ SyncLogicHandler::publishRoutingUpdate(const Lsa::Type& type, const uint64_t& se
 
   switch (type) {
   case Lsa::Type::ADJACENCY:
-    m_syncLogic->updateSeqNo(seqNo, m_adjLsaUserPrefix);
+    m_syncLogic->publishUpdate(m_adjLsaUserPrefix, seqNo);
     break;
   case Lsa::Type::COORDINATE:
-    m_syncLogic->updateSeqNo(seqNo, m_coorLsaUserPrefix);
+    m_syncLogic->publishUpdate(m_coorLsaUserPrefix, seqNo);
     break;
   case Lsa::Type::NAME:
-    m_syncLogic->updateSeqNo(seqNo, m_nameLsaUserPrefix);
+    m_syncLogic->publishUpdate(m_nameLsaUserPrefix, seqNo);
     break;
   default:
     break;

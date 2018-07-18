@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -53,6 +53,8 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   cp1.setLsaInterestLifetime(ndn::time::seconds(1));
 
+  cp1.setSyncProtocol(SYNC_PROTOCOL_PSYNC);
+
   cp1.setRouterDeadInterval(10);
 
   cp1.setMaxFacesPerPrefix(50);
@@ -84,6 +86,8 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
   BOOST_CHECK_EQUAL(cp1.getLsaRefreshTime(), 1500);
 
   BOOST_CHECK_EQUAL(cp1.getLsaInterestLifetime(), ndn::time::seconds(1));
+
+  BOOST_CHECK_EQUAL(cp1.getSyncProtocol(), SYNC_PROTOCOL_PSYNC);
 
   BOOST_CHECK_EQUAL(cp1.getRouterDeadInterval(), 10);
 

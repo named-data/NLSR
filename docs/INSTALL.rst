@@ -21,6 +21,15 @@ address:
 
        https://github.com/named-data/ChronoSync#build
 
+-  PSync library:
+
+Download the PSync library and build it according to the instructions at the following
+address:
+
+   ::
+
+       https://github.com/named-data/PSync#build
+
 Build
 -----
 

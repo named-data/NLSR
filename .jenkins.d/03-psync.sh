@@ -10,34 +10,34 @@ pushd "${CACHE_DIR:-/tmp}" >/dev/null
 
 INSTALLED_VERSION=
 NDN_CXX=$(ndnsec version)
-OLD_NDN_CXX=$(cat ndn_cxx_chrono.txt || :)
+OLD_NDN_CXX=$(cat ndn_cxx_psync.txt || :)
 if [[ $OLD_NDN_CXX != $NDN_CXX ]]; then
-    echo "$NDN_CXX" > ndn_cxx_chrono.txt
+    echo "$NDN_CXX" > ndn_cxx_psync.txt
     INSTALLED_VERSION=NONE
 fi
 
 if [[ -z $INSTALLED_VERSION ]]; then
-    INSTALLED_VERSION=$(git -C ChronoSync rev-parse HEAD 2>/dev/null || echo NONE)
+    INSTALLED_VERSION=$(git -C PSync rev-parse HEAD 2>/dev/null || echo NONE)
 fi
 
-sudo rm -Rf ChronoSync-latest
+sudo rm -Rf PSync-latest
 
-git clone --depth 1 git://github.com/named-data/ChronoSync ChronoSync-latest
+git clone --depth 1 git://github.com/named-data/PSync PSync-latest
 
-LATEST_VERSION=$(git -C ChronoSync-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
+LATEST_VERSION=$(git -C PSync-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
 
 if [[ $INSTALLED_VERSION != $LATEST_VERSION ]]; then
-    sudo rm -Rf ChronoSync
-    mv ChronoSync-latest ChronoSync
+    sudo rm -Rf PSync
+    mv PSync-latest PSync
 else
-    sudo rm -Rf ChronoSync-latest
+    sudo rm -Rf PSync-latest
 fi
 
-sudo rm -fr /usr/local/include/ChronoSync
-sudo rm -f /usr/local/lib/libChronoSync*
-sudo rm -f /usr/local/lib/pkgconfig/ChronoSync*
+sudo rm -fr /usr/local/include/PSync
+sudo rm -f /usr/local/lib/libPSync*
+sudo rm -f /usr/local/lib/pkgconfig/PSync*
 
-pushd ChronoSync >/dev/null
+pushd PSync >/dev/null
 
 if has FreeBSD10 $NODE_LABELS; then
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/

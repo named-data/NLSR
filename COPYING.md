@@ -15,6 +15,9 @@ licenses:
 - ChronoSync is licensed under the conditions of
   [GPL 3.0](https://github.com/named-data/ChronoSync/blob/master/COPYING.md)
 
+- PSync is licensed under the conditions of
+  [LGPL 3.0](https://github.com/named-data/PSync/blob/master/COPYING.md)
+
 - waf build system is licensed under the conditions of
   [BSD license](https://github.com/named-data/NLSR/blob/master/waf)
 

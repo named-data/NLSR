@@ -40,6 +40,11 @@ enum {
 };
 
 enum {
+  SYNC_PROTOCOL_CHRONOSYNC = 0,
+  SYNC_PROTOCOL_PSYNC = 1
+};
+
+enum {
   LSA_INTEREST_LIFETIME_MIN = 1,
   LSA_INTEREST_LIFETIME_DEFAULT = 4,
   LSA_INTEREST_LIFETIME_MAX = 60
@@ -136,7 +141,6 @@ public:
     , m_faceDatasetFetchInterval(ndn::time::seconds(static_cast<int>(FACE_DATASET_FETCH_INTERVAL_DEFAULT)))
     , m_lsaInterestLifetime(ndn::time::seconds(static_cast<int>(LSA_INTEREST_LIFETIME_DEFAULT)))
     , m_routerDeadInterval(2 * LSA_REFRESH_TIME_DEFAULT)
-    , m_logLevel("INFO")
     , m_interestRetryNumber(HELLO_RETRIES_DEFAULT)
     , m_interestResendTime(HELLO_TIMEOUT_DEFAULT)
     , m_infoInterestInterval(HELLO_INTERVAL_DEFAULT)
@@ -144,6 +148,7 @@ public:
     , m_corR(0)
     , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
     , m_syncInterestLifetime(ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT))
+    , m_syncProtocol(SYNC_PROTOCOL_CHRONOSYNC)
   {
   }
 
@@ -211,6 +216,20 @@ public:
   setLsaRefreshTime(uint32_t lrt)
   {
     m_lsaRefreshTime = lrt;
+  }
+
+  uint32_t
+  getSyncProtocol() const
+  {
+    return m_syncProtocol;
+  }
+
+  void
+  setSyncProtocol(int32_t syncProtocol)
+  {
+    if (syncProtocol == SYNC_PROTOCOL_CHRONOSYNC || syncProtocol == SYNC_PROTOCOL_PSYNC) {
+      m_syncProtocol = syncProtocol;
+    }
   }
 
   uint32_t
@@ -440,7 +459,6 @@ private:
 
   ndn::time::seconds m_lsaInterestLifetime;
   uint32_t  m_routerDeadInterval;
-  std::string m_logLevel;
 
   uint32_t m_interestRetryNumber;
   uint32_t m_interestResendTime;
@@ -455,6 +473,8 @@ private:
 
   std::string m_seqFileDir;
   ndn::time::milliseconds m_syncInterestLifetime;
+
+  int32_t m_syncProtocol;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   static const uint64_t SYNC_VERSION;

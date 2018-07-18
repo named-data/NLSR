@@ -60,18 +60,31 @@ public:
     addIdentity(conf.getRouterPrefix());
   }
 
+  template <int32_t N>
+  void
+  setSyncProtocol()
+  {
+    nlsr.getConfParameter().setSyncProtocol(N);
+    conf.setSyncProtocol(N);
+  }
+
+  template <int32_t N>
   void
   receiveUpdate(std::string prefix, uint64_t seqNo, SyncLogicHandler& p_sync)
   {
-    chronosync::MissingDataInfo info = {ndn::Name(prefix).appendNumber(1), 0, seqNo};
-
-    std::vector<chronosync::MissingDataInfo> updates;
-    updates.push_back(info);
-
     this->advanceClocks(ndn::time::milliseconds(1), 10);
     face.sentInterests.clear();
 
-    p_sync.onChronoSyncUpdate(updates);
+    if (N == SYNC_PROTOCOL_CHRONOSYNC) {
+      std::vector<chronosync::MissingDataInfo> updates;
+      updates.push_back({ndn::Name(prefix).appendNumber(1), 0, seqNo});
+      p_sync.m_syncLogic->onChronoSyncUpdate(updates);
+    }
+    else {
+      std::vector<psync::MissingDataInfo> updates;
+      updates.push_back({ndn::Name(prefix), 0, seqNo});
+     p_sync.m_syncLogic->onPSyncUpdate(updates);
+    }
 
     this->advanceClocks(ndn::time::milliseconds(1), 10);
   }
@@ -90,14 +103,19 @@ public:
                                              Lsa::Type::COORDINATE};
 };
 
+using boost::mpl::int_;
+using Protocols = boost::mpl::vector<int_<SYNC_PROTOCOL_CHRONOSYNC>, int_<SYNC_PROTOCOL_PSYNC>>;
+
 BOOST_FIXTURE_TEST_SUITE(TestSyncLogicHandler, SyncLogicFixture)
 
 /* Tests that when SyncLogicHandler receives an LSA of either Name or
    Adjacency type that appears to be newer, it will emit to its signal
    with those LSA details.
  */
-BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
+BOOST_AUTO_TEST_CASE_TEMPLATE(UpdateForOtherLS, SyncProtocol, Protocols)
 {
+  setSyncProtocol<SyncProtocol::value>();
+
   SyncLogicHandler sync{face, testIsLsaNew, conf};
   sync.createSyncLogic(conf.getChronosyncPrefix());
 
@@ -116,7 +134,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
 
-    receiveUpdate(updateName, syncSeqNo, sync);
+    receiveUpdate<SyncProtocol::value>(updateName, syncSeqNo, sync);
   }
 }
 
@@ -124,8 +142,10 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
    either Coordinate or Name type that appears to be newer, it will
    emit to its signal with those LSA details.
  */
-BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
+BOOST_AUTO_TEST_CASE_TEMPLATE(UpdateForOtherHR, SyncProtocol, Protocols)
 {
+  setSyncProtocol<SyncProtocol::value>();
+
   conf.setHyperbolicState(HYPERBOLIC_STATE_ON);
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
@@ -144,7 +164,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
 
-    receiveUpdate(updateName, syncSeqNo, sync);
+    receiveUpdate<SyncProtocol::value>(updateName, syncSeqNo, sync);
   }
 }
 
@@ -152,8 +172,10 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
    any type that appears to be newer, it will emit to its signal with
    those LSA details.
  */
-BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
+BOOST_AUTO_TEST_CASE_TEMPLATE(UpdateForOtherHRDry, SyncProtocol, Protocols)
 {
+  setSyncProtocol<SyncProtocol::value>();
+
   conf.setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
@@ -171,7 +193,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
 
-    receiveUpdate(updateName, syncSeqNo, sync);
+    receiveUpdate<SyncProtocol::value>(updateName, syncSeqNo, sync);
   }
 }
 
@@ -179,8 +201,10 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
    details matching this router's details, it will *not* emit to its
    signal those LSA details.
  */
-BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
+BOOST_AUTO_TEST_CASE_TEMPLATE(NoUpdateForSelf, SyncProtocol, Protocols)
 {
+  setSyncProtocol<SyncProtocol::value>();
+
   const uint64_t sequenceNumber = 1;
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
@@ -197,7 +221,7 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
         BOOST_FAIL("Updates for self should not be emitted!");
       });
 
-    receiveUpdate(updateName.toUri(), sequenceNumber, sync);
+    receiveUpdate<SyncProtocol::value>(updateName.toUri(), sequenceNumber, sync);
   }
 }
 
@@ -205,8 +229,10 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
    details that do not match the expected format, it will *not* emit
    to its signal those LSA details.
  */
-BOOST_AUTO_TEST_CASE(MalformedUpdate)
+BOOST_AUTO_TEST_CASE_TEMPLATE(MalformedUpdate, SyncProtocol, Protocols)
 {
+  setSyncProtocol<SyncProtocol::value>();
+
   const uint64_t sequenceNumber = 1;
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
@@ -221,7 +247,7 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
         BOOST_FAIL("Malformed updates should not be emitted!");
       });
 
-    receiveUpdate(updateName.toUri(), sequenceNumber, sync);
+    receiveUpdate<SyncProtocol::value>(updateName.toUri(), sequenceNumber, sync);
   }
 }
 
@@ -229,8 +255,10 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
    details that do not appear to be new, it will *not* emit to its
    signal those LSA details.
  */
-BOOST_AUTO_TEST_CASE(LsaNotNew)
+BOOST_AUTO_TEST_CASE_TEMPLATE(LsaNotNew, SyncProtocol, Protocols)
 {
+  setSyncProtocol<SyncProtocol::value>();
+
   auto testLsaAlwaysFalse = [] (const ndn::Name& routerName, const Lsa::Type& lsaType,
                            const uint64_t& sequenceNumber) {
     return false;
@@ -248,15 +276,16 @@ BOOST_AUTO_TEST_CASE(LsaNotNew)
                            CONFIG_SITE + "/%C1.Router/other-router/" +
                            std::to_string(Lsa::Type::NAME);
 
-  receiveUpdate(updateName, sequenceNumber, sync);
+  receiveUpdate<SyncProtocol::value>(updateName, sequenceNumber, sync);
 }
 
 /* Tests that SyncLogicHandler successfully concatenates configured
    variables together to form the necessary prefixes to advertise
    through ChronoSync.
  */
-BOOST_AUTO_TEST_CASE(UpdatePrefix)
+BOOST_AUTO_TEST_CASE_TEMPLATE(UpdatePrefix, SyncProtocol, Protocols)
 {
+  setSyncProtocol<SyncProtocol::value>();
 
   SyncLogicHandler sync{face, testIsLsaNew, conf};
 
@@ -281,8 +310,9 @@ BOOST_AUTO_TEST_CASE(UpdatePrefix)
    NB: This test is as much an Nlsr class test as a
    SyncLogicHandler class test, but it rides the line and ends up here.
  */
-BOOST_AUTO_TEST_CASE(createSyncLogicOnInitialization) // Bug #2649
+BOOST_AUTO_TEST_CASE_TEMPLATE(createSyncLogicOnInitialization, SyncProtocol, Protocols) // Bug #2649
 {
+  setSyncProtocol<SyncProtocol::value>();
   nlsr.initialize();
 
   // Make sure an adjacency LSA has not been built yet

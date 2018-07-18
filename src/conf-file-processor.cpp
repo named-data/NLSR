@@ -287,6 +287,21 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     return false;
   }
 
+  // sync-protocol
+  std::string syncProtocol = section.get<std::string>("sync-protocol", "chronosync");
+  if (syncProtocol == "chronosync") {
+    m_nlsr.getConfParameter().setSyncProtocol(SYNC_PROTOCOL_CHRONOSYNC);
+  }
+  else if (syncProtocol == "psync") {
+    m_nlsr.getConfParameter().setSyncProtocol(SYNC_PROTOCOL_PSYNC);
+  }
+  else {
+    std::cerr << "Sync protocol " << syncProtocol << " is not supported!"
+              << "Use chronosync or psync" << std::endl;
+    return false;
+  }
+
+  // sync-interest-lifetime
   uint32_t syncInterestLifetime = section.get<uint32_t>("sync-interest-lifetime", SYNC_INTEREST_LIFETIME_DEFAULT);
   if (syncInterestLifetime >= SYNC_INTEREST_LIFETIME_MIN &&
       syncInterestLifetime <= SYNC_INTEREST_LIFETIME_MAX) {

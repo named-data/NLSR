@@ -64,6 +64,9 @@ def configure(conf):
     conf.check_cfg(package='ChronoSync', args=['--cflags', '--libs'],
                    uselib_store='SYNC', mandatory=True)
 
+    conf.check_cfg(package='PSync', args=['--cflags', '--libs'],
+                   uselib_store='PSYNC', mandatory=True)
+
     conf.check_compiler_flags()
 
     conf.load('coverage')
@@ -96,7 +99,7 @@ def build(bld):
         target='nlsr-objects',
         source=bld.path.ant_glob(['src/**/*.cpp'],
                                  excl=['src/main.cpp']),
-        use='NDN_CXX BOOST SYNC',
+        use='NDN_CXX BOOST SYNC PSYNC',
         includes='. src',
         export_includes='. src')
 

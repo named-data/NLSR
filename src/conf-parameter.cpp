@@ -29,7 +29,7 @@ namespace nlsr {
 INIT_LOGGER(ConfParameter);
 
 // To be changed when breaking changes are made to sync
-const uint64_t ConfParameter::SYNC_VERSION = 5;
+const uint64_t ConfParameter::SYNC_VERSION = 6;
 
 void
 ConfParameter::writeLog()
