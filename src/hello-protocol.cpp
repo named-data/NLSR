@@ -45,6 +45,7 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
   ndn::Interest i(interestName);
   i.setInterestLifetime(ndn::time::seconds(seconds));
   i.setMustBeFresh(true);
+  i.setCanBePrefix(true);
   m_nlsr.getNlsrFace().expressInterest(i,
                                        std::bind(&HelloProtocol::onContent,
                                                  this,
