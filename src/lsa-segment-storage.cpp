@@ -85,8 +85,8 @@ LsaSegmentStorage::afterFetcherSignalEmitted(const ndn::Data& lsaSegment)
 
     // No need to store same LSA multiple time
     if (m_lsaSegments.find(lsaSegmentsKey) == m_lsaSegments.end()) {
-      NLSR_LOG_TRACE("Received LSA segment is new. Storing it in the storage.\n"
-                      << "                  LSA data name: " << lsaSegmentName);
+      NLSR_LOG_TRACE("Received LSA segment is new. Storing it in the storage.");
+      NLSR_LOG_TRACE("LSA data segment's name: " << lsaSegmentName);
 
       // Delete the same LSA with lower sequence number
       deleteOldLsas(lsaSegmentName);

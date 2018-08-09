@@ -101,7 +101,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     m_table.push_back(npte);
     // If this entry has next hops, we need to inform the FIB
     if (npte->getNexthopList().size() > 0) {
-      NLSR_LOG_TRACE("Updating FIB with next hops for " << npte);
+      NLSR_LOG_TRACE("Updating FIB with next hops for " << npte->getNamePrefix());
       m_nlsr.getFib().update(name, npte->getNexthopList());
     }
     // The routing table may recalculate and add a routing table entry
@@ -111,7 +111,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     // remain in the Name Prefix Table as a future routing table
     // calculation may add next hops.
     else {
-      NLSR_LOG_TRACE(*npte << " has no next hops; removing from FIB");
+      NLSR_LOG_TRACE(npte->getNamePrefix() << " has no next hops; removing from FIB");
       m_nlsr.getFib().remove(name);
     }
   }
@@ -127,7 +127,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
       m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
     }
     else {
-      NLSR_LOG_TRACE((*nameItr) << " has no next hops; removing from FIB");
+      NLSR_LOG_TRACE(npte->getNamePrefix() << " has no next hops; removing from FIB");
       m_nlsr.getFib().remove(name);
     }
   }

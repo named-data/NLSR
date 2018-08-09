@@ -75,8 +75,9 @@ Adjacent::operator==(const Adjacent& adjacent) const
 bool
 Adjacent::operator<(const Adjacent& adjacent) const
 {
-  return (m_name < adjacent.getName()) ||
-         (m_linkCost < adjacent.getLinkCost());
+  auto linkCost = adjacent.getLinkCost();
+  return std::tie(m_name, m_linkCost) <
+         std::tie(adjacent.getName(), linkCost);
 }
 
 std::ostream&

@@ -615,6 +615,7 @@ HyperbolicRoutingCalculator::calculateHyperbolicDistance(double rI, double rJ,
 
   if (deltaTheta <= 0.0 || rI <= 0.0 || rJ <= 0.0) {
     NLSR_LOG_ERROR("Delta theta or rI or rJ is <= 0");
+    NLSR_LOG_ERROR("Please make sure that no two nodes have the exact same HR coordinates");
     return UNKNOWN_DISTANCE;
   }
 

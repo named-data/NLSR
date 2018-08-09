@@ -73,14 +73,15 @@ AdjacencyList::getAdjacent(const ndn::Name& adjName)
 bool
 AdjacencyList::operator==(const AdjacencyList& adl) const
 {
-  if (m_adjList.size() != adl.getAdjList().size()) {
+  auto theirList = adl.getAdjList();
+  if (m_adjList.size() != theirList.size()) {
     return false;
   }
 
-  std::set<Adjacent> ourList(m_adjList.cbegin(), m_adjList.cend());
-  std::set<Adjacent> theirList(adl.getAdjList().cbegin(), adl.getAdjList().cend());
+  std::set<Adjacent> ourSet(m_adjList.cbegin(), m_adjList.cend());
+  std::set<Adjacent> theirSet(theirList.cbegin(), theirList.cend());
 
-  return ourList == theirList;
+  return ourSet == theirSet;
 }
 
 bool

@@ -56,11 +56,11 @@ Fib::remove(const ndn::Name& name)
 }
 
 void
-Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
+Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, const NexthopList& hopsToAdd)
 {
   const ndn::Name& name = entry.getName();
 
-  for (NexthopList::iterator it = hopsToAdd.begin(); it != hopsToAdd.end(); ++it)
+  for (NexthopList::iterator it = hopsToAdd.cbegin(); it != hopsToAdd.cend(); ++it)
   {
     // Add nexthop to FIB entry
     entry.getNexthopList().addNextHop(*it);
@@ -76,7 +76,7 @@ Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd)
 }
 
 void
-Fib::update(const ndn::Name& name, NexthopList& allHops)
+Fib::update(const ndn::Name& name, const NexthopList& allHops)
 {
   NLSR_LOG_DEBUG("Fib::update called");
 
@@ -88,7 +88,7 @@ Fib::update(const ndn::Name& name, NexthopList& allHops)
   unsigned int nFaces = 0;
 
   // Create a list of next hops to be installed with length == maxFaces
-  for (NexthopList::iterator it = allHops.begin(); it != allHops.end() && nFaces < maxFaces;
+  for (NexthopList::iterator it = allHops.cbegin(); it != allHops.cend() && nFaces < maxFaces;
        ++it, ++nFaces) {
     hopsToAdd.addNextHop(*it);
   }
@@ -172,7 +172,7 @@ Fib::clean()
 }
 
 unsigned int
-Fib::getNumberOfFacesForName(NexthopList& nextHopList)
+Fib::getNumberOfFacesForName(const NexthopList& nextHopList)
 {
   uint32_t nNextHops = static_cast<uint32_t>(nextHopList.getNextHops().size());
   uint32_t nMaxFaces = m_confParameter.getMaxFacesPerPrefix();

@@ -581,8 +581,6 @@ BOOST_AUTO_TEST_CASE(FaceDatasetPeriodicFetch)
   this->advanceClocks(ndn::time::seconds(fetchInterval));
   // Elapse the default timeout on the interest.
   this->advanceClocks(defaultTimeout);
-  // Plus a little more to let the events process.
-  this->advanceClocks(ndn::time::seconds(1));
 
   // Check that we now have two interests
   nNameMatches = 0;

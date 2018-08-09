@@ -89,7 +89,7 @@ public:
    * \param allHops A complete list of next-hops to associate with name.
    */
   VIRTUAL_WITH_TESTS void
-  update(const ndn::Name& name, NexthopList& allHops);
+  update(const ndn::Name& name, const NexthopList& allHops);
 
   /*! \brief Remove all entries from the FIB.
    *
@@ -160,10 +160,10 @@ private:
    * \sa Fib::removeOldNextHopsFromFibEntryAndNfd
    */
   void
-  addNextHopsToFibEntryAndNfd(FibEntry& entry, NexthopList& hopsToAdd);
+  addNextHopsToFibEntryAndNfd(FibEntry& entry, const NexthopList& hopsToAdd);
 
   unsigned int
-  getNumberOfFacesForName(NexthopList& nextHopList);
+  getNumberOfFacesForName(const NexthopList& nextHopList);
 
   /*! \brief Unregisters a prefix from NFD's RIB.
    *

@@ -232,11 +232,9 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       // prefixes to the NPT.
       m_nlsr.getNamePrefixTable().addEntry(nlsa.getOrigRouter(),
                                            nlsa.getOrigRouter());
-      std::list<ndn::Name> nameList = nlsa.getNpl().getNames();
-      for (std::list<ndn::Name>::iterator it = nameList.begin(); it != nameList.end();
-           it++) {
-        if ((*it) != m_nlsr.getConfParameter().getRouterPrefix()) {
-          m_nlsr.getNamePrefixTable().addEntry((*it), nlsa.getOrigRouter());
+      for (const auto& name : nlsa.getNpl().getNames()) {
+        if (name != m_nlsr.getConfParameter().getRouterPrefix()) {
+          m_nlsr.getNamePrefixTable().addEntry(name, nlsa.getOrigRouter());
         }
       }
     }
@@ -269,12 +267,11 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       std::list<ndn::Name> namesToAdd;
       std::set_difference(newNames.begin(), newNames.end(), oldNames.begin(), oldNames.end(),
                           std::inserter(namesToAdd, namesToAdd.begin()));
-      for (std::list<ndn::Name>::iterator it = namesToAdd.begin();
-           it != namesToAdd.end(); ++it) {
-        chkNameLsa->addName((*it));
+      for (const auto& name : namesToAdd) {
+        chkNameLsa->addName(name);
         if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-          if ((*it) != m_nlsr.getConfParameter().getRouterPrefix()) {
-            m_nlsr.getNamePrefixTable().addEntry((*it), nlsa.getOrigRouter());
+          if (name != m_nlsr.getConfParameter().getRouterPrefix()) {
+            m_nlsr.getNamePrefixTable().addEntry(name, nlsa.getOrigRouter());
           }
         }
       }
@@ -285,13 +282,12 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       std::list<ndn::Name> namesToRemove;
       std::set_difference(oldNames.begin(), oldNames.end(), newNames.begin(), newNames.end(),
                           std::inserter(namesToRemove, namesToRemove.begin()));
-      for (std::list<ndn::Name>::iterator it = namesToRemove.begin();
-           it != namesToRemove.end(); ++it) {
-        NLSR_LOG_DEBUG("Removing name LSA no longer advertised: " << (*it).toUri());
-        chkNameLsa->removeName((*it));
+      for (const auto& name : namesToRemove) {
+        NLSR_LOG_DEBUG("Removing name LSA no longer advertised: " << name);
+        chkNameLsa->removeName(name);
         if (nlsa.getOrigRouter() != m_nlsr.getConfParameter().getRouterPrefix()) {
-          if ((*it) != m_nlsr.getConfParameter().getRouterPrefix()) {
-            m_nlsr.getNamePrefixTable().removeEntry((*it), nlsa.getOrigRouter());
+          if (name != m_nlsr.getConfParameter().getRouterPrefix()) {
+            m_nlsr.getNamePrefixTable().removeEntry(name, nlsa.getOrigRouter());
           }
         }
       }
@@ -369,9 +365,8 @@ void
 Lsdb::writeNameLsdbLog()
 {
   NLSR_LOG_DEBUG("---------------Name LSDB-------------------");
-  for (std::list<NameLsa>::iterator it = m_nameLsdb.begin();
-       it != m_nameLsdb.end() ; it++) {
-    (*it).writeLog();
+  for (const auto& nlsa : m_nameLsdb) {
+    nlsa.writeLog();
   }
 }
 
@@ -570,9 +565,8 @@ void
 Lsdb::writeCorLsdbLog()
 {
   NLSR_LOG_DEBUG("---------------Cor LSDB-------------------");
-  for (std::list<CoordinateLsa>::iterator it = m_corLsdb.begin();
-       it != m_corLsdb.end() ; it++) {
-    (*it).writeLog();
+  for (const auto& corLsa : m_corLsdb) {
+    corLsa.writeLog();
   }
 }
 
@@ -1322,9 +1316,8 @@ void
 Lsdb::writeAdjLsdbLog()
 {
   NLSR_LOG_DEBUG("---------------Adj LSDB-------------------");
-  for (std::list<AdjLsa>::iterator it = m_adjLsdb.begin();
-       it != m_adjLsdb.end() ; it++) {
-    (*it).writeLog();
+  for (const auto& adj : m_adjLsdb) {
+    adj.writeLog();
   }
 }
 
