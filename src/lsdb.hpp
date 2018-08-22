@@ -33,6 +33,8 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/signal.hpp>
 #include <ndn-cxx/util/time.hpp>
+#include <ndn-cxx/util/segment-fetcher.hpp>
+
 #include <utility>
 #include <boost/cstdint.hpp>
 
@@ -44,6 +46,8 @@ class Lsdb
 {
 public:
   Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler);
+
+  ~Lsdb();
 
   SyncLogicHandler&
   getSyncLogicHandler()
@@ -356,7 +360,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   onFetchLsaError(uint32_t errorCode,
                   const std::string& msg,
-                  ndn::Name& interestName,
+                  const ndn::Name& interestName,
                   uint32_t retransmitNo,
                   const ndn::time::steady_clock::TimePoint& deadline,
                   ndn::Name lsaName,
@@ -369,7 +373,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
             /<network>/NLSR/LSA/<site>/%C1.Router/<router>/<lsa-type>/<seqNo>
    */
   void
-  afterFetchLsa(const ndn::ConstBufferPtr& data, ndn::Name& interestName);
+  afterFetchLsa(const ndn::ConstBufferPtr& data, const ndn::Name& interestName);
 
 private:
   ndn::time::system_clock::TimePoint
@@ -411,6 +415,8 @@ private:
   SequencingManager m_sequencingManager;
 
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
+
+  std::set<std::shared_ptr<ndn::util::SegmentFetcher>> m_fetchers;
 };
 
 } // namespace nlsr

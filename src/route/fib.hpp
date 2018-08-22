@@ -63,9 +63,6 @@ public:
   {
   }
 
-  VIRTUAL_WITH_TESTS
-  ~Fib() = default;
-
   /*! \brief Completely remove a name prefix from the FIB.
    *
    * If a name prefix is found to no longer be reachable from this
@@ -74,7 +71,7 @@ public:
    *
    * \sa nlsr::NamePrefixTable::removeEntry
    */
-  VIRTUAL_WITH_TESTS void
+  void
   remove(const ndn::Name& name);
 
   /*! \brief Set the nexthop list of a name.
@@ -88,7 +85,7 @@ public:
    * \param name The name prefix that the next-hops apply to
    * \param allHops A complete list of next-hops to associate with name.
    */
-  VIRTUAL_WITH_TESTS void
+  void
   update(const ndn::Name& name, const NexthopList& allHops);
 
   /*! \brief Remove all entries from the FIB.

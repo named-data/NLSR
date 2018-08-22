@@ -28,7 +28,6 @@
 #include "utility/name-helper.hpp"
 
 #include <ndn-cxx/security/signing-helpers.hpp>
-#include <ndn-cxx/util/segment-fetcher.hpp>
 
 namespace nlsr {
 
@@ -85,10 +84,17 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
 {
 }
 
+Lsdb::~Lsdb()
+{
+  for (const auto& sp : m_fetchers) {
+    sp->stop();
+  }
+}
+
 void
 Lsdb::onFetchLsaError(uint32_t errorCode,
                       const std::string& msg,
-                      ndn::Name& interestName,
+                      const ndn::Name& interestName,
                       uint32_t retransmitNo,
                       const ndn::time::steady_clock::TimePoint& deadline,
                       ndn::Name lsaName,
@@ -118,7 +124,7 @@ Lsdb::onFetchLsaError(uint32_t errorCode,
 }
 
 void
-Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, ndn::Name& interestName)
+Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& interestName)
 {
   std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(ndn::Name(interestName));
   data->setContent(bufferPtr);
@@ -999,15 +1005,26 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
   }
 
   ndn::Interest interest(interestName);
-  interest.setInterestLifetime(m_nlsr.getConfParameter().getLsaInterestLifetime());
+  ndn::util::SegmentFetcher::Options options;
+  options.interestLifetime = m_nlsr.getConfParameter().getLsaInterestLifetime();
 
   NLSR_LOG_DEBUG("Fetching Data for LSA: " << interestName << " Seq number: " << seqNo);
   auto fetcher = ndn::util::SegmentFetcher::start(m_nlsr.getNlsrFace(),
-                                                  interest, m_nlsr.getValidator());
+                                                  interest, m_nlsr.getValidator(), options);
 
-  fetcher->onComplete.connect(std::bind(&Lsdb::afterFetchLsa, this, _1, interestName));
-  fetcher->onError.connect(std::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
-                                     timeoutCount, deadline, lsaName, seqNo));
+  auto it = m_fetchers.insert(fetcher).first;
+
+  fetcher->onComplete.connect([this, interestName, it] (ndn::ConstBufferPtr bufferPtr) {
+                                afterFetchLsa(bufferPtr, interestName);
+                                m_fetchers.erase(it);
+                              });
+
+  fetcher->onError.connect([this, interestName, timeoutCount, deadline, lsaName, seqNo, &fetcher, it]
+                           (uint32_t errorCode, const std::string& msg) {
+                             onFetchLsaError(errorCode, msg, interestName,
+                                             timeoutCount, deadline, lsaName, seqNo);
+                             m_fetchers.erase(it);
+                           });
 
   m_lsaStorage.connectToFetcher(*fetcher);
   m_nlsr.connectToFetcher(*fetcher);
