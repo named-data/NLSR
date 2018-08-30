@@ -1002,12 +1002,12 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
   interest.setInterestLifetime(m_nlsr.getConfParameter().getLsaInterestLifetime());
 
   NLSR_LOG_DEBUG("Fetching Data for LSA: " << interestName << " Seq number: " << seqNo);
-  shared_ptr<ndn::util::SegmentFetcher> fetcher =
-    ndn::util::SegmentFetcher::fetch(m_nlsr.getNlsrFace(), interest,
-                                     m_nlsr.getValidator(),
-                                     std::bind(&Lsdb::afterFetchLsa, this, _1, interestName),
-                                     std::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
-                                               timeoutCount, deadline, lsaName, seqNo));
+  auto fetcher = ndn::util::SegmentFetcher::start(m_nlsr.getNlsrFace(),
+                                                  interest, m_nlsr.getValidator());
+
+  fetcher->onComplete.connect(std::bind(&Lsdb::afterFetchLsa, this, _1, interestName));
+  fetcher->onError.connect(std::bind(&Lsdb::onFetchLsaError, this, _1, _2, interestName,
+                                     timeoutCount, deadline, lsaName, seqNo));
 
   m_lsaStorage.connectToFetcher(*fetcher);
   m_nlsr.connectToFetcher(*fetcher);

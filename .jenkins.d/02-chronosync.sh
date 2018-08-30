@@ -18,6 +18,13 @@ if has OSX $NODE_LABELS; then
     fi
 fi
 
+NDN_CXX=$(ndnsec version)
+OLD_NDN_CXX=$(cat ndn_cxx_chrono.txt || :)
+if [[ $OLD_NDN_CXX != $NDN_CXX ]]; then
+    echo "$NDN_CXX" > ndn_cxx_chrono.txt
+    INSTALLED_VERSION=NONE
+fi
+
 if [[ -z $INSTALLED_VERSION ]]; then
     INSTALLED_VERSION=$(git -C ChronoSync rev-parse HEAD 2>/dev/null || echo NONE)
 fi

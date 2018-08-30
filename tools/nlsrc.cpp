@@ -256,12 +256,9 @@ Nlsrc::fetchFromLsdb(const ndn::Name::Component& datasetType,
 
   ndn::Interest interest(command);
 
-  ndn::util::SegmentFetcher::fetch(m_face,
-                                   interest,
-                                   m_validator,
-                                   std::bind(&Nlsrc::onFetchSuccess<T>,
-                                             this, _1, recordLsa),
-                                   std::bind(&Nlsrc::onTimeout, this, _1, _2));
+  auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest, m_validator);
+  fetcher->onComplete.connect(std::bind(&Nlsrc::onFetchSuccess<T>, this, _1, recordLsa));
+  fetcher->onError.connect(std::bind(&Nlsrc::onTimeout, this, _1, _2));
 }
 
 template <class T>
@@ -272,12 +269,9 @@ Nlsrc::fetchFromRt(const std::function<void(const T&)>& recordDataset)
 
   ndn::Interest interest(command);
 
-  ndn::util::SegmentFetcher::fetch(m_face,
-                                   interest,
-                                   m_validator,
-                                   std::bind(&Nlsrc::onFetchSuccess<T>,
-                                             this, _1, recordDataset),
-                                   std::bind(&Nlsrc::onTimeout, this, _1, _2));
+  auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest, m_validator);
+  fetcher->onComplete.connect(std::bind(&Nlsrc::onFetchSuccess<T>, this, _1, recordDataset));
+  fetcher->onError.connect(std::bind(&Nlsrc::onTimeout, this, _1, _2));
 }
 
 template <class T>
