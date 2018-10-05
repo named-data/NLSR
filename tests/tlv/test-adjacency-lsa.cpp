@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,7 +24,7 @@
 #include "../boost-test.hpp"
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 namespace test {
 
 BOOST_AUTO_TEST_SUITE(TlvTestAdjacencyLsa)
@@ -50,7 +50,7 @@ const uint8_t AdjacencyLsaWithoutAdjacenciesData[] =
   0x83, 0x13,
   // LsaInfo
   0x80, 0x11, 0x81, 0x08, 0x07, 0x06, 0x08, 0x04, 0x74, 0x65, 0x73, 0x74, 0x82, 0x01,
-  0x80, 0x8b, 0x02, 0x27, 0x10,
+  0x80, 0x8b, 0x02, 0x27, 0x10
 };
 
 BOOST_AUTO_TEST_CASE(AdjacencyLsaEncodeWithAdjacencies)

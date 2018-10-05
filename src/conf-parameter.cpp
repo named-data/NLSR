@@ -29,7 +29,7 @@ namespace nlsr {
 INIT_LOGGER(ConfParameter);
 
 // To be changed when breaking changes are made to sync
-const uint64_t ConfParameter::SYNC_VERSION = 6;
+const uint64_t ConfParameter::SYNC_VERSION = 7;
 
 static std::unique_ptr<ndn::security::v2::CertificateFetcherDirectFetch>
 makeCertificateFetcher(ndn::Face& face)

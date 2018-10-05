@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -52,10 +52,10 @@ CoordinateLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
   size_t totalLength = 0;
 
   for (auto it = m_hyperbolicAngle.rbegin(); it != m_hyperbolicAngle.rend(); ++it) {
-    totalLength += prependDouble(block, ndn::tlv::nlsr::HyperbolicAngle, *it);
+    totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::HyperbolicAngle, *it);
   }
 
-  totalLength += prependDouble(block, ndn::tlv::nlsr::HyperbolicRadius, m_hyperbolicRadius);
+  totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::HyperbolicRadius, m_hyperbolicRadius);
 
   totalLength += m_lsaInfo.wireEncode(block);
 
@@ -109,22 +109,20 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    std::cout << "Missing required LsaInfo field" << std::endl;
     BOOST_THROW_EXCEPTION(Error("Missing required LsaInfo field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::HyperbolicRadius) {
-    m_hyperbolicRadius = ndn::tlv::nlsr::readDouble(*val);
+    m_hyperbolicRadius = ndn::encoding::readDouble(*val);
     ++val;
   }
   else {
-    std::cout << "Missing required HyperbolicRadius field" << std::endl;
     BOOST_THROW_EXCEPTION(Error("Missing required HyperbolicRadius field"));
   }
 
   for (; val != m_wire.elements_end(); ++val) {
     if (val->type() == ndn::tlv::nlsr::HyperbolicAngle) {
-      m_hyperbolicAngle.push_back(ndn::tlv::nlsr::readDouble(*val));
+      m_hyperbolicAngle.push_back(ndn::encoding::readDouble(*val));
     }
   }
 }

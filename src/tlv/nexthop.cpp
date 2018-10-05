@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -50,7 +50,7 @@ NextHop::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
-  totalLength += prependDouble(block, ndn::tlv::nlsr::Double, m_cost);
+  totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::CostDouble, m_cost);
 
   totalLength += block.prependByteArrayBlock(
     ndn::tlv::nlsr::Uri, reinterpret_cast<const uint8_t*>(m_uri.c_str()), m_uri.size());
@@ -108,7 +108,7 @@ NextHop::wireDecode(const ndn::Block& wire)
     BOOST_THROW_EXCEPTION(Error("Missing required Uri field"));
   }
 
-  m_cost = ndn::tlv::nlsr::readDouble(*val);
+  m_cost = ndn::encoding::readDouble(*val);
 }
 
 std::ostream&

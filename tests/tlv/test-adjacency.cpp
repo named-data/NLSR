@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,7 +24,7 @@
 #include "../boost-test.hpp"
 
 namespace nlsr {
-namespace tlv  {
+namespace tlv {
 namespace test {
 
 BOOST_AUTO_TEST_SUITE(TlvTestAdjacency)
