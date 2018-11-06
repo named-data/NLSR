@@ -102,7 +102,7 @@ Nlsr::setInfoInterestFilter()
 
   NLSR_LOG_DEBUG("Setting interest filter for Hello interest: " << name);
 
-  m_nlsrFace.setInterestFilter(name,
+  m_nlsrFace.setInterestFilter(ndn::InterestFilter(name).allowLoopback(false),
                                std::bind(&HelloProtocol::processInterest,
                                          &m_helloProtocol, _1, _2),
                                std::bind(&Nlsr::onRegistrationSuccess, this, _1),
@@ -118,7 +118,7 @@ Nlsr::setLsaInterestFilter()
 
   NLSR_LOG_DEBUG("Setting interest filter for LsaPrefix: " << name);
 
-  m_nlsrFace.setInterestFilter(name,
+  m_nlsrFace.setInterestFilter(ndn::InterestFilter(name).allowLoopback(false),
                                std::bind(&Lsdb::processInterest,
                                          &m_nlsrLsdb, _1, _2),
                                std::bind(&Nlsr::onRegistrationSuccess, this, _1),
@@ -228,9 +228,9 @@ Nlsr::publishCertFromCache(const ndn::Name& keyName)
   if (cert != nullptr) {
     m_certStore.insert(*cert);
     NLSR_LOG_TRACE(*cert);
-    NLSR_LOG_TRACE("Setting interest filter for: "
-                   << ndn::security::v2::extractKeyNameFromCertName(cert->getName()));
-    m_nlsrFace.setInterestFilter(ndn::security::v2::extractKeyNameFromCertName(cert->getName()),
+    ndn::Name certName = ndn::security::v2::extractKeyNameFromCertName(cert->getName());
+    NLSR_LOG_TRACE("Setting interest filter for: " << certName);
+    m_nlsrFace.setInterestFilter(ndn::InterestFilter(certName).allowLoopback(false),
                                  std::bind(&Nlsr::onKeyInterest,
                                            this, _1, _2),
                                  std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
@@ -382,7 +382,7 @@ Nlsr::registerKeyPrefix()
   nlsrKeyPrefix.append("nlsr");
   nlsrKeyPrefix.append("KEY");
 
-  m_nlsrFace.setInterestFilter(nlsrKeyPrefix,
+  m_nlsrFace.setInterestFilter(ndn::InterestFilter(nlsrKeyPrefix).allowLoopback(false),
                                std::bind(&Nlsr::onKeyInterest,
                                          this, _1, _2),
                                std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
@@ -394,7 +394,7 @@ Nlsr::registerKeyPrefix()
   ndn::Name routerKeyPrefix = getConfParameter().getRouterPrefix();
   routerKeyPrefix.append("KEY");
 
-  m_nlsrFace.setInterestFilter(routerKeyPrefix,
+  m_nlsrFace.setInterestFilter(ndn::InterestFilter(routerKeyPrefix).allowLoopback(false),
                                  std::bind(&Nlsr::onKeyInterest,
                                            this, _1, _2),
                                  std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
@@ -407,7 +407,7 @@ Nlsr::registerKeyPrefix()
   operatorKeyPrefix.append(getConfParameter().getSiteName());
   operatorKeyPrefix.append(std::string("%C1.Operator"));
 
-  m_nlsrFace.setInterestFilter(operatorKeyPrefix,
+  m_nlsrFace.setInterestFilter(ndn::InterestFilter(operatorKeyPrefix).allowLoopback(false),
                                std::bind(&Nlsr::onKeyInterest,
                                          this, _1, _2),
                                std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
@@ -420,7 +420,7 @@ Nlsr::registerKeyPrefix()
   siteKeyPrefix.append(getConfParameter().getSiteName());
   siteKeyPrefix.append("KEY");
 
-  m_nlsrFace.setInterestFilter(siteKeyPrefix,
+  m_nlsrFace.setInterestFilter(ndn::InterestFilter(siteKeyPrefix).allowLoopback(false),
                                std::bind(&Nlsr::onKeyInterest,
                                           this, _1, _2),
                                std::bind(&Nlsr::onKeyPrefixRegSuccess, this, _1),
