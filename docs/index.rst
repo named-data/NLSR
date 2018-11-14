@@ -36,6 +36,7 @@ NLSR Documentation
    RELEASE-NOTES
    releases
    manpages
+   beginners-guide
 
 -  :doc:`GETTING-STARTED`
 -  :doc:`INSTALL`
@@ -44,6 +45,7 @@ NLSR Documentation
 -  :doc:`RELEASE-NOTES`
 -  :doc:`releases`
 -  :doc:`manpages`
+-  :doc:`beginners-guide`
 
 Downloading
 -----------
