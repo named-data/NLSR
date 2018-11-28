@@ -35,12 +35,15 @@ router    /\<network\>/\<site\>/%C1.Router/\<router-name\>      /ndn/edu/ucla/%C
 NLSR      /\<network\>/\<site\>/%C1.Router/\<router-name\>/NLSR /ndn/edu/ucla/%C1.Router/rt1/NLSR  /ndn/edu/ucla/%C1.Router/rt1/NLSR/KEY/5/%00/%01
 ========  ===================================================== =================================  ===============================================
 
-Users should create keys according to the naming and signing hierarchies above.
+Users should create keys according to the naming and signing hierarchies above. The
+``%C1.Operator`` and ``%C1.Router`` labels are NDN keywords that should not be modified
+by the user.
 
 
 .. note::
 
-    Detailed information about key setup is given in NLSR Developer's Guide.
+    Detailed information about key setup is given in NLSR Developer's Guide and the
+    :doc:`beginners-guide`.
 
 Certificate Publishing
 ----------------------

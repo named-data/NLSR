@@ -31,8 +31,8 @@ NLSR Documentation
 
    GETTING-STARTED
    INSTALL
-   ROUTER-CONFIG
    SECURITY-CONFIG
+   ROUTER-CONFIG
    RELEASE-NOTES
    releases
    manpages
@@ -40,8 +40,8 @@ NLSR Documentation
 
 -  :doc:`GETTING-STARTED`
 -  :doc:`INSTALL`
--  :doc:`ROUTER-CONFIG`
 -  :doc:`SECURITY-CONFIG`
+-  :doc:`ROUTER-CONFIG`
 -  :doc:`RELEASE-NOTES`
 -  :doc:`releases`
 -  :doc:`manpages`

@@ -35,6 +35,9 @@ The number represents the connecting face id. For example,
 We will walk through setting up the faces and creating the configuration file for
 ``/ndn/edu/memphis/%C1.Router/router1``.
 
+It is recommended to configure security as described at :doc:`SECURITY-CONFIG`, before
+starting router configuration.
+
 Step 1. Ensuring nfd is running
 -------------------------------
 
@@ -47,6 +50,15 @@ Type the following in the terminal:
 If you see ``error while connecting to the forwarder (No such file or directory)``,
 ``nfd`` is not running. Follow the instructions in `Getting started with NFD
 <http://named-data.net/doc/NFD/current/INSTALL.html>`_ to run nfd.
+
+Since v0.4.0, NLSR no longer creates Faces for the neighbors that are
+specified in ``nlsr.conf``. Instead, it relies on the pre-existence of
+the Faces in NFD. NLSR will obtain this information from NFD, and
+configure its neighbors using this information.
+
+To create faces it is now necessary to use the ``nfdc`` command. Its documentation can
+be found `here
+<https://named-data.net/doc/NFD/current/manpages/nfdc.html>`_
 
 Step 2. Determining FaceUri
 ---------------------------

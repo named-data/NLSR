@@ -12,7 +12,10 @@ Prerequisites
 Refer to `Getting started with NFD <https://named-data.net/doc/NFD/current/INSTALL.html>`_
 for detailed installation and running instruction.
 
--  ChronoSync library
+-  ChronoSync library:
+
+Download the ChronoSync library and build it according to the instructions at the following
+address:
 
    ::
 
