@@ -97,20 +97,7 @@ LsaSegmentStorage::afterFetcherSignalEmitted(const ndn::Data& lsaSegment)
       NLSR_LOG_TRACE("The received segment is already in the storage.");
     }
 
-    std::string content(reinterpret_cast<const char*>(lsaSegment.getContent().value()),
-                        lsaSegment.getContent().value_size());
-
     ndn::time::seconds expirationTime(LSA_REFRESH_TIME_DEFAULT);
-
-    std::vector<std::string> options;
-    boost::split(options, content, boost::is_any_of("|"));
-
-    try {
-      expirationTime = ndn::time::duration_cast<ndn::time::seconds>
-                       (ndn::time::fromIsoString(options.at(3)) - ndn::time::system_clock::now());
-    } catch (const std::exception& e) {
-      NLSR_LOG_ERROR("Cannot extract expiration time from LSA content: " << e.what());
-    }
 
     // schedule the segment deletion
     scheduleLsaSegmentDeletion(lsaSegmentsKey, expirationTime);

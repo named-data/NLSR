@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(SendHelloInterest)
  */
 BOOST_AUTO_TEST_CASE(LsdbSendLsaInterest)
 {
-  const std::string interestPrefix("/ndn/NLSR/LSA/site/%C1.Router/router/");
+  const std::string interestPrefix("/localhop/ndn/nlsr/LSA/site/%C1.Router/router/");
   uint32_t seqNo = 1;
 
   // Adjacency LSA
@@ -240,7 +240,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
 
   lsdb.installAdjLsa(*adjLsa);
 
-  const std::string interestPrefix("/ndn/NLSR/LSA/site/%C1.Router/this-router/");
+  const std::string interestPrefix("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/");
 
   // Receive Adjacency LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
@@ -302,37 +302,37 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   ndn::time::system_clock::TimePoint MAX_TIME = ndn::time::system_clock::TimePoint::max();
 
   // adjacency lsa
-  ndn::Name adjInterest("/ndn/NLSR/LSA/cs/%C1.Router/router1/ADJACENCY/");
+  ndn::Name adjInterest("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/ADJACENCY/");
   adjInterest.appendNumber(seqNo);
   AdjLsa aLsa(routerName, seqNo, MAX_TIME, 1, nlsr.getAdjacencyList());
   lsdb.installAdjLsa(aLsa);
 
-  const ndn::ConstBufferPtr aBuffer = std::make_shared<ndn::Buffer>(aLsa.serialize().c_str(),
-                                                                    aLsa.serialize().size());
-  lsdb.afterFetchLsa(aBuffer, adjInterest);
+  ndn::Block block = ndn::encoding::makeStringBlock(ndn::tlv::Content, aLsa.serialize());
+
+  lsdb.afterFetchLsa(block.getBuffer(), adjInterest);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_ADJ_LSA_DATA), 1);
 
   // coordinate lsa
-  ndn::Name coordInterest("/ndn/NLSR/LSA/cs/%C1.Router/router1/COORDINATE/");
+  ndn::Name coordInterest("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/COORDINATE/");
   coordInterest.appendNumber(seqNo);
   std::vector<double> angles = {20.0, 30.0};
   CoordinateLsa cLsa(routerName, seqNo, MAX_TIME, 2.5, angles);
   lsdb.installCoordinateLsa(cLsa);
 
-  const ndn::ConstBufferPtr cBuffer = std::make_shared<ndn::Buffer>(cLsa.serialize().c_str(),
-                                                                   cLsa.serialize().size());
-  lsdb.afterFetchLsa(cBuffer, coordInterest);
+  block = ndn::encoding::makeStringBlock(ndn::tlv::Content, cLsa.serialize());
+
+  lsdb.afterFetchLsa(block.getBuffer(), coordInterest);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_COORD_LSA_DATA), 1);
 
   // name lsa
-  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/NAME/");
+  ndn::Name interestName("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
   NameLsa nLsa(routerName, seqNo, MAX_TIME, nlsr.getNamePrefixList());
   lsdb.installNameLsa(nLsa);
 
-  const ndn::ConstBufferPtr nBuffer = std::make_shared<ndn::Buffer>(nLsa.serialize().c_str(),
-                                                                   nLsa.serialize().size());
-  lsdb.afterFetchLsa(nBuffer, interestName);
+  block = ndn::encoding::makeStringBlock(ndn::tlv::Content, nLsa.serialize());
+
+  lsdb.afterFetchLsa(block.getBuffer(), interestName);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_NAME_LSA_DATA), 1);
 
   // 3 lsa data types should be received

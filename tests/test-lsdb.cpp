@@ -41,7 +41,7 @@ class LsdbFixture : public UnitTestTimeFixture
 {
 public:
   LsdbFixture()
-    : face(m_ioService, m_keyChain)
+    : face(m_ioService, m_keyChain, {true, true})
     , nlsr(m_ioService, m_scheduler, face, m_keyChain)
     , lsdb(nlsr.getLsdb())
     , conf(nlsr.getConfParameter())
@@ -172,6 +172,48 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   BOOST_CHECK_EQUAL(interests.size(), 0);
 }
 
+BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
+{
+  // Add a lot of NameLSAs to exceed max packet size
+  ndn::Name lsaKey("/ndn/site/%C1.Router/this-router/NAME");
+
+  NameLsa* nameLsa = lsdb.findNameLsa(lsaKey);
+  uint64_t seqNo = nameLsa->getLsSeqNo();
+
+  ndn::Name prefix("/ndn/edu/memphis/netlab/research/nlsr/test/prefix/");
+
+  int nPrefixes = 0;
+  while (nameLsa->serialize().size() < ndn::MAX_NDN_PACKET_SIZE) {
+    nameLsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
+  }
+  lsdb.installNameLsa(*nameLsa);
+
+  // Create another Lsdb and expressInterest
+  ndn::util::DummyClientFace face2(m_ioService, m_keyChain, {true, true});
+  face.linkTo(face2);
+  Nlsr nlsr2(m_ioService, m_scheduler, face2, m_keyChain);
+  std::string config = R"CONF(
+              trust-anchor
+                {
+                  type any
+                }
+            )CONF";
+  nlsr2.getValidator().load(config, "config-file-from-string");
+
+  Lsdb& lsdb2(nlsr2.getLsdb());
+
+  advanceClocks(ndn::time::milliseconds(1), 10);
+
+  ndn::Name interestName("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/NAME");
+  interestName.appendNumber(seqNo);
+  // 0 == timeout count
+  lsdb2.expressInterest(interestName, 0);
+
+  advanceClocks(ndn::time::milliseconds(1), 10);
+
+  BOOST_CHECK_EQUAL(lsdb.getNameLsdb().front().getNpl(), lsdb2.getNameLsdb().front().getNpl());
+}
+
 BOOST_AUTO_TEST_CASE(SegmentLsaData)
 {
   ndn::Name lsaKey("/ndn/site/%C1.Router/this-router/NAME");
@@ -189,29 +231,21 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
 
   std::string expectedDataContent = lsa->serialize();
 
-  ndn::Name interestName("/ndn/NLSR/LSA/site/%C1.Router/this-router/NAME/");
+  ndn::Name interestName("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/NAME/");
   interestName.appendNumber(seqNo);
 
-  ndn::Interest interest(interestName);
-  lsdb.processInterest(ndn::Name(), interest);
-  advanceClocks(ndn::time::milliseconds(1), 10);
-  face.sentData.clear();
+  ndn::util::DummyClientFace face2(m_ioService, m_keyChain, {true, true});
+  face.linkTo(face2);
 
-  lsdb.processInterest(ndn::Name(), interest);
+  auto fetcher = ndn::util::SegmentFetcher::start(face2, ndn::Interest(interestName),
+                                                  ndn::security::v2::getAcceptAllValidator());
+  fetcher->onComplete.connect([&expectedDataContent] (ndn::ConstBufferPtr bufferPtr) {
+                                ndn::Block block(bufferPtr);
+                                BOOST_CHECK_EQUAL(expectedDataContent, readString(block));
+                              });
 
-  advanceClocks(ndn::time::milliseconds(1), 10);
-
-  std::string recvDataContent;
-  for (const ndn::Data& data : face.sentData)
-  {
-    const ndn::Block& nameBlock = data.getContent();
-    std::string nameBlockContent(reinterpret_cast<char const*>(nameBlock.value()),
-                                 nameBlock.value_size());
-
-    recvDataContent += nameBlockContent;
-  }
-
-  BOOST_CHECK_EQUAL(expectedDataContent, recvDataContent);
+  advanceClocks(ndn::time::milliseconds(1), 100);
+  fetcher->stop();
 }
 
 BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
@@ -228,12 +262,11 @@ BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
     lsa.addName(ndn::Name(prefix).appendNumber(nPrefixes));
   }
 
-  ndn::Name interestName("/ndn/NLSR/LSA/cs/%C1.Router/router1/NAME/");
+  ndn::Name interestName("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
 
-  const ndn::ConstBufferPtr bufferPtr = std::make_shared<ndn::Buffer>(lsa.serialize().c_str(),
-                                                                 lsa.serialize().size());
-  lsdb.afterFetchLsa(bufferPtr, interestName);
+  ndn::Block block = ndn::encoding::makeStringBlock(ndn::tlv::Content, lsa.serialize());
+  lsdb.afterFetchLsa(block.getBuffer(), interestName);
 
   NameLsa* foundLsa = lsdb.findNameLsa(lsa.getKey());
   BOOST_REQUIRE(foundLsa != nullptr);

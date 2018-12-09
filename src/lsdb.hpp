@@ -35,6 +35,8 @@
 #include <ndn-cxx/util/time.hpp>
 #include <ndn-cxx/util/segment-fetcher.hpp>
 
+#include <PSync/segment-publisher.hpp>
+
 #include <utility>
 #include <boost/cstdint.hpp>
 
@@ -219,6 +221,12 @@ public:
   expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
                   ndn::time::steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
 
+  /* \brief Process interest which can be either:
+   * 1) Discovery interest from segment fetcher:
+   *    /localhop/<network>/nlsr/LSA/<site>/<router>/<lsaType>/<seqNo>
+   * 2) Interest containing segment number:
+   *    /localhop/<network>/nlsr/LSA/<site>/<router>/<lsaType>/<seqNo>/<version>/<segmentNo>
+  */
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
 
@@ -309,9 +317,6 @@ private:
                                 uint64_t seqNo);
 
 private:
-
-  void
-  putLsaData(const ndn::Interest& interest, const std::string& content);
 
   void
   processInterestForNameLsa(const ndn::Interest& interest,
@@ -417,6 +422,7 @@ private:
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
 
   std::set<std::shared_ptr<ndn::util::SegmentFetcher>> m_fetchers;
+  psync::SegmentPublisher m_segmentPublisher;
 };
 
 } // namespace nlsr

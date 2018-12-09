@@ -24,7 +24,6 @@
 #include "logger.hpp"
 #include "lsa-segment-storage.hpp"
 #include "nlsr.hpp"
-#include "publisher/segment-publisher.hpp"
 #include "utility/name-helper.hpp"
 
 #include <ndn-cxx/security/signing-helpers.hpp>
@@ -32,31 +31,6 @@
 namespace nlsr {
 
 INIT_LOGGER(Lsdb);
-
-class LsaContentPublisher : public SegmentPublisher<ndn::Face>
-{
-public:
-  LsaContentPublisher(ndn::Face& face,
-                      ndn::KeyChain& keyChain,
-                      const ndn::security::SigningInfo& signingInfo,
-                      const ndn::time::milliseconds& freshnessPeriod,
-                      const std::string& content)
-    : SegmentPublisher(face, keyChain, signingInfo, freshnessPeriod)
-    , m_content(content)
-  {
-  }
-
-  virtual size_t
-  generate(ndn::EncodingBuffer& outBuffer) {
-    size_t totalLength = 0;
-    totalLength += outBuffer.prependByteArray(reinterpret_cast<const uint8_t*>(m_content.c_str()),
-                                              m_content.size());
-    return totalLength;
-  }
-
-private:
-  const std::string m_content;
-};
 
 const ndn::Name::Component Lsdb::NAME_COMPONENT = ndn::Name::Component("lsdb");
 const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
@@ -76,11 +50,12 @@ Lsdb::Lsdb(Nlsr& nlsr, ndn::Scheduler& scheduler)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
   , m_sequencingManager()
   , m_onNewLsaConnection(m_sync.onNewLsa->connect(
-      [this] (const ndn::Name& updateName, const uint64_t& sequenceNumber) {
+      [this] (const ndn::Name& updateName, uint64_t sequenceNumber) {
         ndn::Name lsaInterest{updateName};
         lsaInterest.appendNumber(sequenceNumber);
         expressInterest(lsaInterest, 0);
       }))
+  , m_segmentPublisher(m_nlsr.getNlsrFace(), m_nlsr.getKeyChain())
 {
 }
 
@@ -127,7 +102,7 @@ void
 Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& interestName)
 {
   std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(ndn::Name(interestName));
-  data->setContent(bufferPtr);
+  data->setContent(ndn::Block(bufferPtr));
 
   NLSR_LOG_DEBUG("Received data for LSA(name): " << data->getName());
 
@@ -1050,48 +1025,53 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
 void
 Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 {
+  ndn::Name interestName(interest.getName());
+  NLSR_LOG_DEBUG("Interest received for LSA: " << interestName);
+
+  if (interestName[-2].isVersion()) {
+    // Interest for particular segment
+    if (m_segmentPublisher.replyFromStore(interestName)) {
+      NLSR_LOG_TRACE("Reply from SegmentPublisher storage");
+      return;
+    }
+    // Remove version and segment
+    interestName = interestName.getSubName(0, interestName.size() - 2);
+    NLSR_LOG_TRACE("Interest w/o segment and version: " << interestName);
+  }
+
   // increment RCV_LSA_INTEREST
   lsaIncrementSignal(Statistics::PacketType::RCV_LSA_INTEREST);
 
-  const ndn::Name& interestName(interest.getName());
-  NLSR_LOG_DEBUG("Interest received for LSA: " << interestName);
-
   std::string chkString("LSA");
-  int32_t lsaPosition = util::getNameComponentPosition(interest.getName(), chkString);
+  int32_t lsaPosition = util::getNameComponentPosition(interestName, chkString);
 
   // Forms the name of the router that the Interest packet came from.
   ndn::Name originRouter = m_nlsr.getConfParameter().getNetwork();
   originRouter.append(interestName.getSubName(lsaPosition + 1,
-                                              interest.getName().size() - lsaPosition - 3));
+                                              interestName.size() - lsaPosition - 3));
 
   // if the interest is for this router's LSA
-  if (originRouter == m_nlsr.getConfParameter().getRouterPrefix()) {
+  if (originRouter == m_nlsr.getConfParameter().getRouterPrefix() && lsaPosition >= 0) {
+    uint64_t seqNo = interestName[-1].toNumber();
+    NLSR_LOG_DEBUG("LSA sequence number from interest: " << seqNo);
 
-    if (lsaPosition >= 0) {
+    std::string lsaType = interestName[-2].toUri();
+    Lsa::Type interestedLsType;
+    std::istringstream(lsaType) >> interestedLsType;
 
-      uint64_t seqNo = interestName[-1].toNumber();
-      NLSR_LOG_DEBUG("LSA sequence number from interest: " << seqNo);
-
-      Lsa::Type interestedLsType;
-      std::istringstream(interestName[-2].toUri()) >> interestedLsType;
-
-      if (interestedLsType == Lsa::Type::NAME) {
-        processInterestForNameLsa(interest, originRouter.append(std::to_string(interestedLsType)),
-                                  seqNo);
-      }
-      else if (interestedLsType == Lsa::Type::ADJACENCY) {
-        processInterestForAdjacencyLsa(interest, originRouter.append(std::to_string(interestedLsType)),
-                                       seqNo);
-      }
-      else if (interestedLsType == Lsa::Type::COORDINATE) {
-        processInterestForCoordinateLsa(interest, originRouter.append(std::to_string(interestedLsType)),
-                                        seqNo);
-      }
-      else {
-        NLSR_LOG_WARN("Received unrecognized LSA type: " << interestedLsType);
-      }
-      lsaIncrementSignal(Statistics::PacketType::SENT_LSA_DATA);
+    if (interestedLsType == Lsa::Type::NAME) {
+      processInterestForNameLsa(interest, originRouter.append(lsaType), seqNo);
     }
+    else if (interestedLsType == Lsa::Type::ADJACENCY) {
+      processInterestForAdjacencyLsa(interest, originRouter.append(lsaType), seqNo);
+    }
+    else if (interestedLsType == Lsa::Type::COORDINATE) {
+      processInterestForCoordinateLsa(interest, originRouter.append(lsaType), seqNo);
+    }
+    else {
+      NLSR_LOG_WARN("Received unrecognized LSA type: " << interestedLsType);
+    }
+    lsaIncrementSignal(Statistics::PacketType::SENT_LSA_DATA);
   }
   else { // else the interest is for other router's lsa, serve from LsaSegmentStorage
     const ndn::Data* lsaSegment = m_lsaStorage.getLsaSegment(interest);
@@ -1100,25 +1080,9 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
       m_nlsr.getNlsrFace().put(*lsaSegment);
     }
     else {
-      NLSR_LOG_TRACE(interest << "  was not found in this lsa storage.");
+      NLSR_LOG_TRACE(interest << " was not found in this lsa storage.");
     }
   }
-}
-
-  // \brief Sends LSA data.
-  // \param interest The Interest that warranted the data.
-  // \param content The data that the Interest was seeking.
-void
-Lsdb::putLsaData(const ndn::Interest& interest, const std::string& content)
-{
-  LsaContentPublisher publisher(m_nlsr.getNlsrFace(),
-                                m_nlsr.getKeyChain(),
-                                m_nlsr.getSigningInfo(),
-                                m_lsaRefreshTime,
-                                content);
-  NLSR_LOG_DEBUG("Sending requested data ( " << content << ")  for interest (" << interest
-             << ") to be published and added to face.");
-  publisher.publish(interest.getName());
 }
 
   // \brief Finds and sends a requested name LSA.
@@ -1134,17 +1098,15 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
   // increment RCV_NAME_LSA_INTEREST
   lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_INTEREST);
   NLSR_LOG_DEBUG("nameLsa interest " << interest << " received");
-  NameLsa*  nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
+  NameLsa* nameLsa = m_nlsr.getLsdb().findNameLsa(lsaKey);
   if (nameLsa != nullptr) {
     NLSR_LOG_TRACE("Verifying SeqNo for NameLsa is same as requested.");
     if (nameLsa->getLsSeqNo() == seqNo) {
-      // if requested lsa belongs to this router then sign it and serve it
       std::string content = nameLsa->serialize();
-      putLsaData(interest,content);
-      // else the requested belongs to neighboring routers, so serve the
-      // original data packet corresponding to the lsa
+      m_segmentPublisher.publish(interest.getName(), interest.getName(),
+                                 ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
+                                 m_lsaRefreshTime, m_nlsr.getSigningInfo());
 
-      // increment SENT_NAME_LSA_DATA
       lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_DATA);
     }
     else {
@@ -1170,7 +1132,6 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
     NLSR_LOG_ERROR("Received interest for an adjacency LSA when hyperbolic routing is enabled");
   }
 
-  // increment RCV_ADJ_LSA_INTEREST
   lsaIncrementSignal(Statistics::PacketType::RCV_ADJ_LSA_INTEREST);
   NLSR_LOG_DEBUG("AdjLsa interest " << interest << " received");
   AdjLsa* adjLsa = m_nlsr.getLsdb().findAdjLsa(lsaKey);
@@ -1178,8 +1139,10 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
     NLSR_LOG_TRACE("Verifying SeqNo for AdjLsa is same as requested.");
     if (adjLsa->getLsSeqNo() == seqNo) {
       std::string content = adjLsa->serialize();
-      putLsaData(interest,content);
-      // increment SENT_ADJ_LSA_DATA
+      m_segmentPublisher.publish(interest.getName(), interest.getName(),
+                                 ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
+                                 m_lsaRefreshTime, m_nlsr.getSigningInfo());
+
       lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_DATA);
     }
     else {
@@ -1205,7 +1168,6 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
     NLSR_LOG_ERROR("Received Interest for a coordinate LSA when link-state routing is enabled");
   }
 
-  // increment RCV_COORD_LSA_INTEREST
   lsaIncrementSignal(Statistics::PacketType::RCV_COORD_LSA_INTEREST);
   NLSR_LOG_DEBUG("CoordinateLsa interest " << interest << " received");
   CoordinateLsa* corLsa = m_nlsr.getLsdb().findCoordinateLsa(lsaKey);
@@ -1213,8 +1175,10 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
     NLSR_LOG_TRACE("Verifying SeqNo for CoordinateLsa is same as requested.");
     if (corLsa->getLsSeqNo() == seqNo) {
       std::string content = corLsa->serialize();
-      putLsaData(interest,content);
-      // increment SENT_COORD_LSA_DATA
+      m_segmentPublisher.publish(interest.getName(), interest.getName(),
+                                 ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
+                                 m_lsaRefreshTime, m_nlsr.getSigningInfo());
+
       lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_DATA);
     }
     else {
@@ -1264,7 +1228,6 @@ Lsdb::onContentValidated(const std::shared_ptr<const ndn::Data>& data)
       NLSR_LOG_WARN("Received unrecognized LSA Type: " << interestedLsType);
     }
 
-    // increment RCV_LSA_DATA
     lsaIncrementSignal(Statistics::PacketType::RCV_LSA_DATA);
   }
 }
@@ -1273,7 +1236,6 @@ void
 Lsdb::processContentNameLsa(const ndn::Name& lsaKey,
                             uint64_t lsSeqNo, std::string& dataContent)
 {
-  // increment RCV_NAME_LSA_DATA
   lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_DATA);
   if (isNameLsaNew(lsaKey, lsSeqNo)) {
     NameLsa nameLsa;
@@ -1290,7 +1252,6 @@ void
 Lsdb::processContentAdjacencyLsa(const ndn::Name& lsaKey,
                                  uint64_t lsSeqNo, std::string& dataContent)
 {
-  // increment RCV_ADJ_LSA_DATA
   lsaIncrementSignal(Statistics::PacketType::RCV_ADJ_LSA_DATA);
   if (isAdjLsaNew(lsaKey, lsSeqNo)) {
     AdjLsa adjLsa;
@@ -1307,7 +1268,6 @@ void
 Lsdb::processContentCoordinateLsa(const ndn::Name& lsaKey,
                                   uint64_t lsSeqNo, std::string& dataContent)
 {
-  // increment RCV_COORD_LSA_DATA
   lsaIncrementSignal(Statistics::PacketType::RCV_COORD_LSA_DATA);
   if (isCoordinateLsaNew(lsaKey, lsSeqNo)) {
     CoordinateLsa corLsa;
