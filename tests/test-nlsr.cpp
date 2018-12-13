@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
   const Lsdb& lsdb = nlsr2.m_lsdb;
   const RoutingTable& rt = nlsr2.m_routingTable;
 
-  BOOST_CHECK_EQUAL(lsdb.getAdjLsaBuildInterval(), ndn::time::seconds(3));
+  BOOST_CHECK_EQUAL(lsdb.m_adjLsaBuildInterval, ndn::time::seconds(3));
   BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(), 6);
   BOOST_CHECK_EQUAL(rt.getRoutingCalcInterval(), ndn::time::seconds(9));
 }
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
   BOOST_REQUIRE(lsa != nullptr);
 
   uint32_t lastAdjLsaSeqNo = lsa->getLsSeqNo();
-  nlsr.m_lsdb.getSequencingManager().setAdjLsaSeq(lastAdjLsaSeqNo);
+  nlsr.m_lsdb.m_sequencingManager.setAdjLsaSeq(lastAdjLsaSeqNo);
 
   this->advanceClocks(1500_ms, 10);
 

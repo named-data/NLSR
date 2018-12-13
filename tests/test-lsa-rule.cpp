@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   lsaDataName.append(std::to_string(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
-  lsaDataName.appendNumber(nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+  lsaDataName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 
   // Append version, segmentNo
   lsaDataName.appendNumber(1).appendNumber(1);
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
   lsaDataName.append(std::to_string(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
-  lsaDataName.appendNumber(nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+  lsaDataName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 
   // Append version, segmentNo
   lsaDataName.appendNumber(1).appendNumber(1);

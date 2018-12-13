@@ -100,7 +100,7 @@ public:
     lsaInterestName.append(conf.getRouterName());
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
-    lsaInterestName.appendNumber(nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+    lsaInterestName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 
     auto lsaInterest = std::make_shared<Interest>(lsaInterestName);
     lsaInterest->setCanBePrefix(true);
@@ -145,7 +145,7 @@ BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  uint64_t nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.getSequencingManager().getNameLsaSeq();
+  uint64_t nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq();
 
   ndn::nfd::ControlParameters parameters;
   parameters.setName("/prefix/to/advertise/");
@@ -177,10 +177,10 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(namePrefixList.getNames().front(), parameters.getName());
 
   BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 
   face.sentData.clear();
-  nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.getSequencingManager().getNameLsaSeq();
+  nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq();
 
   //Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(namePrefixList.size(), 0);
 
   BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

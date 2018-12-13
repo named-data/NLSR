@@ -268,8 +268,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(createSyncLogicOnInitialization, T, Protocols,
   BOOST_REQUIRE(lsa == nullptr);
 
   // Publish a routing update before an Adjacency LSA is built
-  BOOST_CHECK_NO_THROW(nlsr.m_lsdb.getSyncLogicHandler()
-                       .publishRoutingUpdate(Lsa::Type::ADJACENCY, 0));
+  BOOST_CHECK_NO_THROW(nlsr.m_lsdb.m_sync.publishRoutingUpdate(Lsa::Type::ADJACENCY, 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

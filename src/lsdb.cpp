@@ -22,7 +22,6 @@
 #include "lsdb.hpp"
 
 #include "logger.hpp"
-#include "lsa-segment-storage.hpp"
 #include "nlsr.hpp"
 #include "utility/name-helper.hpp"
 
@@ -51,7 +50,6 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain,
                    const uint64_t& sequenceNumber) {
              return isLsaNew(routerName, lsaType, sequenceNumber);
            }, m_confParam)
-  , m_lsaStorage(m_scheduler)
   , m_lsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()))
   , m_thisRouterPrefix(m_confParam.getRouterPrefix().toUri())
   , m_adjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval())
@@ -747,7 +745,6 @@ Lsdb::removeAdjLsa(const ndn::Name& key)
 {
   auto it = std::find_if(m_adjLsdb.begin(), m_adjLsdb.end(),
                          std::bind(adjLsaCompareByKey, _1, key));
-
   if (it != m_adjLsdb.end()) {
     NLSR_LOG_DEBUG("Deleting Adj Lsa");
     it->writeLog();
@@ -956,22 +953,29 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
 
   auto it = m_fetchers.insert(fetcher).first;
 
-  fetcher->onComplete.connect([this, interestName, it] (ndn::ConstBufferPtr bufferPtr) {
-                                afterFetchLsa(bufferPtr, interestName);
-                                m_fetchers.erase(it);
-                              });
-
-  fetcher->onError.connect([this, interestName, timeoutCount, deadline, lsaName, seqNo, it]
-                           (uint32_t errorCode, const std::string& msg) {
-                             onFetchLsaError(errorCode, msg, interestName,
-                                             timeoutCount, deadline, lsaName, seqNo);
-                             m_fetchers.erase(it);
-                           });
-
-  m_lsaStorage.connectToFetcher(*fetcher);
   fetcher->afterSegmentValidated.connect([this] (const ndn::Data& data) {
-                                          afterSegmentValidatedSignal(data);
-                                         });
+    // Nlsr class subscribes to this to fetch certificates
+    afterSegmentValidatedSignal(data);
+
+    // If we don't do this IMS throws: std::bad_weak_ptr: bad_weak_ptr
+    auto lsaSegment = std::make_shared<const ndn::Data>(data);
+    m_lsaStorage.insert(*lsaSegment);
+    const ndn::Name& segmentName = lsaSegment->getName();
+    // Schedule deletion of the segment
+    m_scheduler.schedule(ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT),
+                         [this, segmentName] { m_lsaStorage.erase(segmentName); });
+  });
+
+  fetcher->onComplete.connect([=] (const ndn::ConstBufferPtr& bufferPtr) {
+    m_lsaStorage.erase(ndn::Name(lsaName).appendNumber(seqNo - 1));
+    afterFetchLsa(bufferPtr, interestName);
+    m_fetchers.erase(it);
+  });
+
+  fetcher->onError.connect([=] (uint32_t errorCode, const std::string& msg) {
+    onFetchLsaError(errorCode, msg, interestName, timeoutCount, deadline, lsaName, seqNo);
+    m_fetchers.erase(it);
+  });
 
   // increment a specific SENT_LSA_INTEREST
   Lsa::Type lsaType;
@@ -1043,8 +1047,8 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
     lsaIncrementSignal(Statistics::PacketType::SENT_LSA_DATA);
   }
   else { // else the interest is for other router's lsa, serve from LsaSegmentStorage
-    const ndn::Data* lsaSegment = m_lsaStorage.getLsaSegment(interest);
-    if (lsaSegment != nullptr) {
+    std::shared_ptr<const ndn::Data> lsaSegment = m_lsaStorage.find(interest);
+    if (lsaSegment) {
       NLSR_LOG_TRACE("Found data in lsa storage. Sending the data for " << interest.getName());
       m_face.put(*lsaSegment);
     }

@@ -24,7 +24,6 @@
 
 #include "conf-parameter.hpp"
 #include "lsa.hpp"
-#include "lsa-segment-storage.hpp"
 #include "sequencing-manager.hpp"
 #include "test-access-control.hpp"
 #include "communication/sync-logic-handler.hpp"
@@ -35,6 +34,7 @@
 #include <ndn-cxx/util/signal.hpp>
 #include <ndn-cxx/util/time.hpp>
 #include <ndn-cxx/util/segment-fetcher.hpp>
+#include <ndn-cxx/ims/in-memory-storage-persistent.hpp>
 
 #include <PSync/segment-publisher.hpp>
 
@@ -51,12 +51,6 @@ public:
        NamePrefixTable& namePrefixTable, RoutingTable& routingTable);
 
   ~Lsdb();
-
-  SyncLogicHandler&
-  getSyncLogicHandler()
-  {
-    return m_sync;
-  }
 
   bool
   isLsaNew(const ndn::Name& routerName, const Lsa::Type& lsaType, const uint64_t& sequenceNumber);
@@ -191,18 +185,6 @@ public:
     m_adjLsaBuildInterval = ndn::time::seconds(interval);
   }
 
-  const ndn::time::seconds&
-  getAdjLsaBuildInterval() const
-  {
-    return m_adjLsaBuildInterval;
-  }
-
-  SequencingManager&
-  getSequencingManager()
-  {
-    return m_sequencingManager;
-  }
-
   void
   writeAdjLsdbLog();
 
@@ -326,6 +308,7 @@ private:
   processInterestForCoordinateLsa(const ndn::Interest& interest,
                                   const ndn::Name& lsaKey,
                                   uint64_t seqNo);
+
   void
   onContentValidated(const std::shared_ptr<const ndn::Data>& data);
 
@@ -392,10 +375,9 @@ private:
   ConfParameter& m_confParam;
   NamePrefixTable& m_namePrefixTable;
   RoutingTable& m_routingTable;
-  SyncLogicHandler m_sync;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  LsaSegmentStorage m_lsaStorage;
+  SyncLogicHandler m_sync;
 
 private:
   std::list<NameLsa> m_nameLsdb;
@@ -414,10 +396,12 @@ private:
   static const ndn::time::seconds GRACE_PERIOD;
   static const ndn::time::steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::time::seconds m_adjLsaBuildInterval;
 
   SequencingManager m_sequencingManager;
 
+private:
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
 
   std::set<std::shared_ptr<ndn::util::SegmentFetcher>> m_fetchers;
@@ -425,6 +409,9 @@ private:
 
   bool m_isBuildAdjLsaSheduled;
   int64_t m_adjBuildCount;
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  ndn::InMemoryStoragePersistent m_lsaStorage;
 };
 
 } // namespace nlsr

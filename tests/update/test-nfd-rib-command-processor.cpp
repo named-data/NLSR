@@ -49,7 +49,7 @@ public:
     this->advanceClocks(ndn::time::milliseconds(10), 10);
     face.sentInterests.clear();
 
-    nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.getSequencingManager().getNameLsaSeq();
+    nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq();
   }
 
   void
@@ -67,7 +67,7 @@ public:
     lsaInterestName.append(conf.getSiteName());
     lsaInterestName.append(conf.getRouterName());
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
-    lsaInterestName.appendNumber(nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+    lsaInterestName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 
     face.receive(ndn::Interest(lsaInterestName).setCanBePrefix(true));
     this->advanceClocks(ndn::time::milliseconds(10), 10);
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestRegisterCommand)
   }
   BOOST_CHECK_EQUAL((*itr), prefixName);
   BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
 
   BOOST_CHECK_EQUAL(namePrefixes.getNames().size(), 0);
   BOOST_CHECK(wasRoutingUpdatePublished());
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_CASE(onReceiveInterestInvalidPrefix)
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestInvalidPrefix)
 
   // Cannot use routingUpdatePublish test now since in
   // initialize nlsr calls buildOwnNameLsa which publishes the routing update
-  BOOST_CHECK(nameLsaSeqNoBeforeInterest == nlsr.m_lsdb.getSequencingManager().getNameLsaSeq());
+  BOOST_CHECK(nameLsaSeqNoBeforeInterest == nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
