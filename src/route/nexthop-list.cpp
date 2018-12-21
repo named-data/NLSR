@@ -107,14 +107,13 @@ NexthopList::removeNextHop(const NextHop& nh)
 }
 
 void
-NexthopList::writeLog()
+NexthopList::writeLog() const
 {
   int i = 1;
 
-  for (std::set<NextHop, NextHopComparator>::iterator it = m_nexthopList.begin();
-       it != m_nexthopList.end() ; it++, i++) {
-    NLSR_LOG_DEBUG("Nexthop " << i << ": " << (*it).getConnectingFaceUri()
-               << " Route Cost: " << (*it).getRouteCost());
+  for (const auto& nexthop : m_nexthopList) {
+    NLSR_LOG_DEBUG("Nexthop " << i++ << ": " << nexthop.getConnectingFaceUri() <<
+                   " Route Cost: " << nexthop.getRouteCost());
   }
 }
 

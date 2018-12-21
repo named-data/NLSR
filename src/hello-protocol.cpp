@@ -47,11 +47,15 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
   i.setMustBeFresh(true);
   i.setCanBePrefix(true);
   m_nlsr.getNlsrFace().expressInterest(i,
-                                       std::bind(&HelloProtocol::onContent,
-                                                 this,
-                                                 _1, _2),
-                                       std::bind(&HelloProtocol::processInterestTimedOut, // Nack
-                                                 this, _1),
+                                       std::bind(&HelloProtocol::onContent, this, _1, _2),
+                                       [this] (const ndn::Interest& interest,
+                                               const ndn::lp::Nack& nack)
+                                       {
+                                         NDN_LOG_TRACE("Received Nack with reason " <<
+                                                        nack.getReason());
+                                         NDN_LOG_TRACE("Treating as timeout");
+                                         processInterestTimedOut(interest);
+                                       },
                                        std::bind(&HelloProtocol::processInterestTimedOut,
                                                  this, _1));
 

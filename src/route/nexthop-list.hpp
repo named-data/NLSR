@@ -121,7 +121,7 @@ public:
   }
 
   void
-  writeLog();
+  writeLog() const;
 
 private:
   std::set<NextHop, NextHopComparator> m_nexthopList;

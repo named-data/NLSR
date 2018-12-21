@@ -26,7 +26,7 @@ namespace nlsr {
 INIT_LOGGER(route.FibEntry);
 
 void
-FibEntry::writeLog()
+FibEntry::writeLog() const
 {
   NLSR_LOG_DEBUG("Name Prefix: " << m_name);
   NLSR_LOG_DEBUG("Seq No: " << m_seqNo);

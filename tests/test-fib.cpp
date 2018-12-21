@@ -36,7 +36,7 @@ class FibFixture : public UnitTestTimeFixture
 {
 public:
   FibFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>(m_keyChain))
+    : face(std::make_shared<ndn::util::DummyClientFace>(m_ioService, m_keyChain))
     , interests(face->sentInterests)
   {
     Adjacent neighbor1(router1Name, ndn::FaceUri(router1FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
@@ -51,6 +51,7 @@ public:
     conf.setMaxFacesPerPrefix(2);
 
     fib = std::make_shared<Fib>(*face, m_scheduler, adjacencies, conf, m_keyChain);
+    fib->setEntryRefreshTime(1);
 
     fib->m_faceMap.update(router1FaceUri, router1FaceId);
     fib->m_faceMap.update(router2FaceUri, router2FaceId);
@@ -312,6 +313,22 @@ BOOST_FIXTURE_TEST_CASE(ScheduleFibEntryRefresh, FibFixture)
                               BOOST_CHECK_EQUAL(origSeqNo + 1, entry.getSeqNo());
                             });
   this->advanceClocks(ndn::time::milliseconds(10), 1);
+}
+
+BOOST_AUTO_TEST_CASE(ShouldNotRefreshNeighborRoute) // #4799
+{
+  NextHop hop1;
+  hop1.setConnectingFaceUri(router1FaceUri);
+
+  NexthopList hops;
+  hops.addNextHop(hop1);
+
+  // Simulate update for this neighbor from name prefix table
+  fib->update(router1Name, hops);
+  this->advanceClocks(ndn::time::seconds(1));
+
+  // Should not send the register interest
+  BOOST_CHECK_EQUAL(face->sentInterests.size(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

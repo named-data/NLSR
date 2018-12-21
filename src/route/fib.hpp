@@ -53,15 +53,8 @@ class FibEntry;
 class Fib
 {
 public:
-  Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList, ConfParameter& conf,
-      ndn::security::v2::KeyChain& keyChain)
-    : m_scheduler(scheduler)
-    , m_refreshTime(0)
-    , m_controller(face, keyChain)
-    , m_adjacencyList(adjacencyList)
-    , m_confParameter(conf)
-  {
-  }
+  Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList,
+      ConfParameter& conf, ndn::security::v2::KeyChain& keyChain);
 
   /*! \brief Completely remove a name prefix from the FIB.
    *
@@ -148,7 +141,7 @@ private:
    * \return Whether the name is NOT associated with a direct neighbor
    */
   bool
-  isPrefixUpdatable(const ndn::Name& name);
+  isNotNeighbor(const ndn::Name& name);
 
   /*! \brief Does one half of the updating of a FibEntry with new next-hops.
    *

@@ -117,13 +117,13 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
   }
   else {
     npte = *nameItr;
-    NLSR_LOG_TRACE("Adding origin: " << rtpePtr->getDestination()
-               << " to existing prefix: " << *nameItr);
+    NLSR_LOG_TRACE("Adding origin: " << rtpePtr->getDestination() <<
+                   " to existing prefix: " << **nameItr);
     (*nameItr)->addRoutingTableEntry(rtpePtr);
     (*nameItr)->generateNhlfromRteList();
 
     if ((*nameItr)->getNexthopList().size() > 0) {
-      NLSR_LOG_TRACE("Updating FIB with next hops for " << (*nameItr));
+      NLSR_LOG_TRACE("Updating FIB with next hops for " << (**nameItr));
       m_nlsr.getFib().update(name, (*nameItr)->getNexthopList());
     }
     else {

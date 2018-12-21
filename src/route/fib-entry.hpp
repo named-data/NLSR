@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2018,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -21,9 +21,9 @@
 #ifndef NLSR_FIB_ENTRY_HPP
 #define NLSR_FIB_ENTRY_HPP
 
-#include <ndn-cxx/util/scheduler.hpp>
-
 #include "nexthop-list.hpp"
+
+#include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {
 
@@ -81,7 +81,7 @@ public:
   }
 
   void
-  writeLog();
+  writeLog() const;
 
   typedef NexthopList::const_iterator const_iterator;
 
