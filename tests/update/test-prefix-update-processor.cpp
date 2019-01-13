@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,20 +20,15 @@
  **/
 
 #include "update/prefix-update-processor.hpp"
+#include "nlsr.hpp"
 
 #include "../control-commands.hpp"
 #include "../test-common.hpp"
-#include "nlsr.hpp"
 
-#include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/command-interest-signer.hpp>
 #include <ndn-cxx/security/pib/identity.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
-#include <ndn-cxx/security/command-interest-signer.hpp>
-#include <ndn-cxx/util/dummy-client-face.hpp>
-#include <ndn-cxx/lp/tags.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -142,8 +137,8 @@ public:
 
     lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
 
-    std::shared_ptr<Interest> lsaInterest = std::make_shared<Interest>(lsaInterestName);
-
+    auto lsaInterest = std::make_shared<Interest>(lsaInterestName);
+    lsaInterest->setCanBePrefix(true);
     face.receive(*lsaInterest);
     this->advanceClocks(ndn::time::milliseconds(100));
   }

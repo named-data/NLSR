@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,16 +20,12 @@
  **/
 
 #include "update/nfd-rib-command-processor.hpp"
+#include "adjacency-list.hpp"
+#include "conf-parameter.hpp"
+#include "nlsr.hpp"
 
 #include "../test-common.hpp"
 #include "../control-commands.hpp"
-#include "conf-parameter.hpp"
-#include "adjacency-list.hpp"
-#include "nlsr.hpp"
-
-#include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/util/dummy-client-face.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
 
 namespace nlsr {
 namespace update {
@@ -59,17 +55,18 @@ public:
     nameLsaSeqNoBeforeInterest = nlsr.getLsdb().getSequencingManager().getNameLsaSeq();
   }
 
-  std::shared_ptr<ndn::Interest>
-  makeInterest(const ndn::Name& name, uint32_t nonce)
+  void
+  sendCommand(ndn::Name prefix, const ndn::nfd::ControlParameters& parameters)
   {
-    auto interest = std::make_shared<ndn::Interest>(name);
-    if (nonce != 0) {
-      interest->setNonce(nonce);
-    }
-    return interest;
+    ndn::Interest interest(prefix.append(parameters.wireEncode()));
+    interest.setCanBePrefix(false);
+    face.receive(interest);
+    this->advanceClocks(ndn::time::milliseconds(10), 10);
   }
 
-  void sendInterestForPublishedData() {
+  void
+  sendInterestForPublishedData()
+  {
     // Need to send an interest now since ChronoSync
     // no longer does face->put(*data) in publishData.
     // Instead it does it in onInterest
@@ -77,8 +74,8 @@ public:
     lsaInterestName.append(std::to_string(Lsa::Type::NAME));
 
     lsaInterestName.appendNumber(nlsr.getLsdb().getSequencingManager().getNameLsaSeq());
-    shared_ptr<ndn::Interest> lsaInterest = make_shared<ndn::Interest>(lsaInterestName);
-
+    auto lsaInterest = make_shared<ndn::Interest>(lsaInterestName);
+    lsaInterest->setCanBePrefix(true);
     face.receive(*lsaInterest);
     this->advanceClocks(ndn::time::milliseconds(10), 10);
   }
@@ -139,12 +136,9 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestRegisterCommand)
   ndn::Name name("/localhost/nlsr/rib/register");
   ndn::Name prefixName("/test/prefixA");
   ndn::nfd::ControlParameters parameters;
+  parameters.setName(prefixName);
 
-  shared_ptr<ndn::Interest> command = makeInterest(name.append(parameters.setName(prefixName)
-    .wireEncode()), 0);
-
-  face.receive(*command);
-  this->advanceClocks(ndn::time::milliseconds(10), 10);
+  sendCommand(name, parameters);
 
   BOOST_CHECK_EQUAL(namePrefixes.getNames().size(), 1);
   std::list<ndn::Name> names = namePrefixes.getNames();
@@ -162,14 +156,11 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
   ndn::Name name("/localhost/nlsr/rib/unregister");
   ndn::Name prefixName("/test/prefixA");
   ndn::nfd::ControlParameters parameters;
+  parameters.setName(prefixName);
 
   namePrefixes.insert(prefixName);
 
-  shared_ptr<ndn::Interest> command = makeInterest(name.append(parameters.setName(prefixName)
-    .wireEncode()), 0);
-
-  face.receive(ndn::Interest(name));
-  this->advanceClocks(ndn::time::milliseconds(10), 10);
+  sendCommand(name, parameters);
 
   BOOST_CHECK_EQUAL(namePrefixes.getNames().size(), 0);
   BOOST_CHECK(wasRoutingUpdatePublished());
@@ -181,12 +172,9 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestInvalidPrefix)
   ndn::Name name("/localhost/invalid/rib/register");
   ndn::Name prefixName("/test/prefixA");
   ndn::nfd::ControlParameters parameters;
+  parameters.setName(prefixName);
 
-  shared_ptr<ndn::Interest> command = makeInterest(name.append(parameters.setName(prefixName)
-    .wireEncode()), 0);
-
-  face.receive(ndn::Interest(name));
-  this->advanceClocks(ndn::time::milliseconds(10), 10);
+  sendCommand(name, parameters);
 
   BOOST_CHECK_EQUAL(namePrefixes.getNames().size(), 0);
 

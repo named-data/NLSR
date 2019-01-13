@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -19,8 +19,9 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "../test-common.hpp"
 #include "nlsr.hpp"
+
+#include "../test-common.hpp"
 
 namespace nlsr {
 namespace update {
@@ -84,12 +85,12 @@ BOOST_FIXTURE_TEST_CASE(TestAdvertiseCrash, AdvertiseCrashFixture)
 
   // Advertise
   ndn::nfd::ControlParameters parameters;
-  parameters.setName("/prefix/to/advertise/");
+  parameters.setName("/prefix/to/advertise");
   ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
   advertiseCommand.append(parameters.wireEncode());
 
-  std::shared_ptr<ndn::Interest> advertiseInterest = std::make_shared<ndn::Interest>(advertiseCommand);
-
+  auto advertiseInterest = std::make_shared<ndn::Interest>(advertiseCommand);
+  advertiseInterest->setCanBePrefix(false);
   face.receive(*advertiseInterest);
   this->advanceClocks(ndn::time::milliseconds(10), 10);
 }

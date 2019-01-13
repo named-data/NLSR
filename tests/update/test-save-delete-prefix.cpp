@@ -20,18 +20,16 @@
  **/
 
 #include "update/prefix-update-processor.hpp"
-#include "../control-commands.hpp"
-#include "../test-common.hpp"
 #include "nlsr.hpp"
 
-#include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
+#include "../control-commands.hpp"
+#include "../test-common.hpp"
+
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/command-interest-signer.hpp>
 #include <ndn-cxx/security/pib/identity.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
-#include <ndn-cxx/security/command-interest-signer.hpp>
-#include <ndn-cxx/util/dummy-client-face.hpp>
+
 #include <boost/filesystem.hpp>
 
 namespace nlsr {
@@ -146,20 +144,16 @@ public:
     }
     ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
     ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
-    ndn:: Interest interestName;
     ndn::security::CommandInterestSigner cis(m_keyChain);
     // type true for advertise, else withdraw
     if (type == "advertise") {
       advertiseCommand.append(parameters.wireEncode());
-      interestName = cis.makeCommandInterest(advertiseCommand,
-                                             ndn::security::signingByIdentity(opIdentity));
+      return cis.makeCommandInterest(advertiseCommand, ndn::security::signingByIdentity(opIdentity));
     }
     else {
       withdrawCommand.append(parameters.wireEncode());
-      interestName = cis.makeCommandInterest(withdrawCommand,
-                                             ndn::security::signingByIdentity(opIdentity));
+      return cis.makeCommandInterest(withdrawCommand, ndn::security::signingByIdentity(opIdentity));
     }
-    return interestName;
   }
 
 public:

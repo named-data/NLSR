@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -33,11 +33,11 @@
 namespace nlsr {
 namespace test {
 
-void
+static void
 processDatasetInterest(ndn::util::DummyClientFace& face,
                        std::function<bool(const ndn::Block&)> isSameType)
 {
-  face.processEvents(ndn::time::milliseconds(30));
+  face.processEvents(30_ms);
 
   BOOST_REQUIRE_EQUAL(face.sentData.size(), 1);
 
@@ -86,22 +86,22 @@ BOOST_AUTO_TEST_CASE(Localhost)
   rt1.addNextHop(DEST_ROUTER, nh);
 
   // Request adjacency LSAs
-  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("adjacencies")));
+  face.receive(ndn::Interest("/localhost/nlsr/lsdb/adjacencies").setCanBePrefix(true));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
 
   // Request coordinate LSAs
-  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("coordinates")));
+  face.receive(ndn::Interest("/localhost/nlsr/lsdb/coordinates").setCanBePrefix(true));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
 
   // Request Name LSAs
-  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/lsdb").append("names")));
+  face.receive(ndn::Interest("/localhost/nlsr/lsdb/names").setCanBePrefix(true));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
 
   // Request Routing Table
-  face.receive(ndn::Interest(ndn::Name("/localhost/nlsr/routing-table")));
+  face.receive(ndn::Interest("/localhost/nlsr/routing-table").setCanBePrefix(true));
   processDatasetInterest(face,
     [] (const ndn::Block& block) {
       return block.type() == ndn::tlv::nlsr::RoutingTable; });
@@ -138,22 +138,22 @@ BOOST_AUTO_TEST_CASE(Routername)
   rt1.addNextHop(DEST_ROUTER, nh);
 
   // Request adjacency LSAs
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/nlsr/lsdb").append("adjacencies")));
+  face.receive(ndn::Interest("/ndn/This/Router/nlsr/lsdb/adjacencies").setCanBePrefix(true));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
 
   // Request coordinate LSAs
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/nlsr/lsdb").append("coordinates")));
+  face.receive(ndn::Interest("/ndn/This/Router/nlsr/lsdb/coordinates").setCanBePrefix(true));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
 
   // Request Name LSAs
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/nlsr/lsdb").append("names")));
+  face.receive(ndn::Interest("/ndn/This/Router/nlsr/lsdb/names").setCanBePrefix(true));
   processDatasetInterest(face,
     [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
 
   // Request Routing Table
-  face.receive(ndn::Interest(ndn::Name("/ndn/This/Router/nlsr/routing-table")));
+  face.receive(ndn::Interest("/ndn/This/Router/nlsr/routing-table").setCanBePrefix(true));
   processDatasetInterest(face,
     [] (const ndn::Block& block) {
       return block.type() == ndn::tlv::nlsr::RoutingTable; });
