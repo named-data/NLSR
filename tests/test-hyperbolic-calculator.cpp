@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -106,7 +106,7 @@ public:
   void runTest(const double& expectedCost)
   {
     HyperbolicRoutingCalculator calculator(map.getMapSize(), false, ROUTER_A_NAME);
-    calculator.calculatePaths(map, routingTable, lsdb, adjacencies);
+    calculator.calculatePath(map, routingTable, lsdb, adjacencies);
 
     RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
 

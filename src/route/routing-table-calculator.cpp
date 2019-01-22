@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -425,8 +425,8 @@ const double HyperbolicRoutingCalculator::UNKNOWN_DISTANCE = -1.0;
 const double HyperbolicRoutingCalculator::UNKNOWN_RADIUS   = -1.0;
 
 void
-HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
-                                            Lsdb& lsdb, AdjacencyList& adjacencies)
+HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
+                                           Lsdb& lsdb, AdjacencyList& adjacencies)
 {
   NLSR_LOG_TRACE("Calculating hyperbolic paths");
 
@@ -468,12 +468,12 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
 
         ndn::optional<ndn::Name> destRouterName = map.getRouterNameByMappingNo(dest);
         if (destRouterName) {
-          double distance = getHyperbolicDistance(map, lsdb, srcRouterName, *destRouterName);
+          double distance = getHyperbolicDistance(lsdb, srcRouterName, *destRouterName);
 
           // Could not compute distance
           if (distance == UNKNOWN_DISTANCE) {
             NLSR_LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName << " to " <<
-                      *destRouterName);
+                          *destRouterName);
             continue;
           }
 
@@ -485,8 +485,7 @@ HyperbolicRoutingCalculator::calculatePaths(Map& map, RoutingTable& rt,
 }
 
 double
-HyperbolicRoutingCalculator::getHyperbolicDistance(Map& map, Lsdb& lsdb,
-                                                   ndn::Name src, ndn::Name dest)
+HyperbolicRoutingCalculator::getHyperbolicDistance(Lsdb& lsdb, ndn::Name src, ndn::Name dest)
 {
   NLSR_LOG_TRACE("Calculating hyperbolic distance from " << src << " to " << dest);
 

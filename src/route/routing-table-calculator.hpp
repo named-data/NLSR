@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -215,11 +215,11 @@ public:
   }
 
   void
-  calculatePaths(Map& map, RoutingTable& rt, Lsdb& lsdb, AdjacencyList& adjacencies);
+  calculatePath(Map& map, RoutingTable& rt, Lsdb& lsdb, AdjacencyList& adjacencies);
 
 private:
   double
-  getHyperbolicDistance(Map& map, Lsdb& lsdb, ndn::Name src, ndn::Name dest);
+  getHyperbolicDistance(Lsdb& lsdb, ndn::Name src, ndn::Name dest);
 
   void
   addNextHop(ndn::Name destinationRouter, std::string faceUri, double cost, RoutingTable& rt);

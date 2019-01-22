@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -80,13 +80,13 @@ RoutingTable::calculate(Nlsr& pnlsr)
             || (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN)) {
           calculateLsRoutingTable(pnlsr);
         }
-        //calculate hyperbolic routing
+        // calculate hyperbolic
         if (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-          calculateHypRoutingTable(pnlsr);
+          calculateHypRoutingTable(pnlsr, false);
         }
         //calculate dry hyperbolic routing
         if (pnlsr.getConfParameter().getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
-          calculateHypDryRoutingTable(pnlsr);
+          calculateHypRoutingTable(pnlsr, true);
         }
         // Inform the NPT that updates have been made
         NLSR_LOG_DEBUG("Calling Update NPT With new Route");
@@ -134,11 +134,11 @@ RoutingTable::calculateLsRoutingTable(Nlsr& nlsr)
 
   LinkStateRoutingTableCalculator calculator(nRouters);
 
-  calculator.calculatePath(map, std::ref(*this), nlsr);
+  calculator.calculatePath(map, *this, nlsr);
 }
 
 void
-RoutingTable::calculateHypRoutingTable(Nlsr& nlsr)
+RoutingTable::calculateHypRoutingTable(Nlsr& nlsr, bool isDryRun)
 {
   Map map;
   map.createFromCoordinateLsdb(nlsr.getLsdb().getCoordinateLsdb().begin(),
@@ -147,27 +147,10 @@ RoutingTable::calculateHypRoutingTable(Nlsr& nlsr)
 
   size_t nRouters = map.getMapSize();
 
-  HyperbolicRoutingCalculator calculator(nRouters, false,
+  HyperbolicRoutingCalculator calculator(nRouters, isDryRun,
                                          nlsr.getConfParameter().getRouterPrefix());
 
-  calculator.calculatePaths(map, std::ref(*this),
-                            nlsr.getLsdb(), nlsr.getAdjacencyList());
-}
-
-void
-RoutingTable::calculateHypDryRoutingTable(Nlsr& nlsr)
-{
-  Map map;
-  map.createFromAdjLsdb(nlsr.getLsdb().getAdjLsdb().begin(), nlsr.getLsdb().getAdjLsdb().end());
-  map.writeLog();
-
-  size_t nRouters = map.getMapSize();
-
-  HyperbolicRoutingCalculator calculator(nRouters, true,
-                                         nlsr.getConfParameter().getRouterPrefix());
-
-  calculator.calculatePaths(map, std::ref(*this),
-                            nlsr.getLsdb(), nlsr.getAdjacencyList());
+  calculator.calculatePath(map, *this, nlsr.getLsdb(), nlsr.getAdjacencyList());
 }
 
 void

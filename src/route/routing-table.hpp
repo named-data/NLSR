@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -118,11 +118,7 @@ private:
 
   /*! \brief Calculates a HR routing table. */
   void
-  calculateHypRoutingTable(Nlsr& pnlsr);
-
-  /*! \brief Calculates a dry-run HR routing table. */
-  void
-  calculateHypDryRoutingTable(Nlsr& pnlsr);
+  calculateHypRoutingTable(Nlsr& pnlsr, bool isDryRun);
 
   void
   clearRoutingTable();
