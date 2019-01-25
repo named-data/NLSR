@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -458,7 +458,24 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
 
         ndn::FaceUri faceUri;
         if (! faceUri.parse(uriString)) {
-          std::cerr << "parsing failed!" << std::endl;
+          std::cerr << "Parsing failed!" << std::endl;
+          return false;
+        }
+
+        bool failedToCanonize = false;
+        faceUri.canonize([&faceUri] (ndn::FaceUri canonicalUri) {
+                           faceUri = canonicalUri;
+                         },
+                         [&faceUri, &failedToCanonize] (const std::string& reason) {
+                           failedToCanonize = true;
+                           std::cerr << "Could not canonize URI: " << faceUri
+                                     << "because: " << reason << std::endl;
+                         },
+                         m_io,
+                         TIME_ALLOWED_FOR_CANONIZATION);
+        m_io.run();
+
+        if (failedToCanonize) {
           return false;
         }
 

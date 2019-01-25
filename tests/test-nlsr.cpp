@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -427,44 +427,6 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   lsa = lsdb.findAdjLsa(lsaKey);
   BOOST_REQUIRE(lsa != nullptr);
   BOOST_CHECK_EQUAL(lsa->getAdl().size(), 2);
-}
-
-BOOST_AUTO_TEST_CASE(CanonizeUris)
-{
-  ndn::Name neighborAName("/ndn/site/%C1.Router/routerA");
-  ndn::FaceUri faceUriA("udp://10.0.0.1");
-  Adjacent neighborA(neighborAName, faceUriA, 0, Adjacent::STATUS_INACTIVE, 0, 0);
-  neighbors.insert(neighborA);
-
-  ndn::Name neighborBName("/ndn/site/%C1.Router/routerB");
-  ndn::FaceUri faceUriB("udp://10.0.0.2");
-  Adjacent neighborB(neighborBName, faceUriB, 0, Adjacent::STATUS_INACTIVE, 0, 0);
-  neighbors.insert(neighborB);
-
-  int nCanonizationsLeft = nlsr.getAdjacencyList().getAdjList().size();
-  std::function<void(void)> finallyCallback = [this] {
-    nlsr.initialize();
-  };
-  std::function<void(std::list<Adjacent>::iterator)> thenCallback =
-    [this, &thenCallback, &finallyCallback, &nCanonizationsLeft]
-    (std::list<Adjacent>::iterator iterator) {
-      nCanonizationsLeft--;
-      nlsr.canonizeNeighborUris(iterator, thenCallback, finallyCallback);
-  };
-  nlsr.canonizeNeighborUris(nlsr.getAdjacencyList().getAdjList().begin(),
-                            [&] (std::list<Adjacent>::iterator iterator) {
-                              thenCallback(iterator);
-                            },
-                            finallyCallback);
-  while (nCanonizationsLeft != 0) {
-    this->advanceClocks(ndn::time::milliseconds(1), 10);
-  }
-
-  BOOST_CHECK_EQUAL(nlsr.getAdjacencyList().getAdjacent(neighborAName).getFaceUri(),
-                    ndn::FaceUri("udp4://10.0.0.1:6363"));
-
-  BOOST_CHECK_EQUAL(nlsr.getAdjacencyList().getAdjacent(neighborBName).getFaceUri(),
-                    ndn::FaceUri("udp4://10.0.0.2:6363"));
 }
 
 BOOST_AUTO_TEST_CASE(FaceDatasetFetchSuccess)

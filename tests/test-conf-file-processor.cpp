@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -60,13 +60,13 @@ const std::string SECTION_NEIGHBORS =
   "  neighbor\n"
   "  {\n"
   "    name /ndn/memphis.edu/cs/castor\n"
-  "    face-uri  udp4://localhost\n"
+  "    face-uri  udp://10.0.0.1\n"
   "    link-cost 20\n"
   "  }\n\n"
   "  neighbor\n"
   "  {\n"
   "    name /ndn/memphis.edu/cs/mira\n"
-  "    face-uri  udp4://localhost\n"
+  "    face-uri  udp://10.0.0.2\n"
   "    link-cost 30\n"
   "  }\n"
   "}\n\n";
@@ -197,10 +197,12 @@ BOOST_AUTO_TEST_CASE(LinkState)
   Adjacent mira = nlsr.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/mira");
   BOOST_CHECK_EQUAL(mira.getName(), "/ndn/memphis.edu/cs/mira");
   BOOST_CHECK_EQUAL(mira.getLinkCost(), 30);
+  BOOST_CHECK_EQUAL(mira.getFaceUri().toString(), "udp4://10.0.0.2:6363");
 
   Adjacent castor = nlsr.getAdjacencyList().getAdjacent("/ndn/memphis.edu/cs/castor");
   BOOST_CHECK_EQUAL(castor.getName(), "/ndn/memphis.edu/cs/castor");
   BOOST_CHECK_EQUAL(castor.getLinkCost(), 20);
+  BOOST_CHECK_EQUAL(castor.getFaceUri().toString(), "udp4://10.0.0.1:6363");
 
   // Hyperbolic
   BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 0);

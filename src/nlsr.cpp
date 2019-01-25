@@ -151,43 +151,6 @@ Nlsr::setStrategies()
 }
 
 void
-Nlsr::canonizeContinuation(std::list<Adjacent>::iterator iterator,
-                           std::function<void(void)> finally)
-{
-  canonizeNeighborUris(iterator, [this, finally] (std::list<Adjacent>::iterator iterator) {
-      canonizeContinuation(iterator, finally);
-    },
-    finally);
-}
-
-void
-Nlsr::canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
-                           std::function<void(std::list<Adjacent>::iterator)> then,
-                           std::function<void(void)> finally)
-{
-  if (currentNeighbor != m_adjacencyList.getAdjList().end()) {
-    ndn::FaceUri uri(currentNeighbor->getFaceUri());
-    uri.canonize([then, currentNeighbor] (ndn::FaceUri canonicalUri) {
-        NLSR_LOG_DEBUG("Canonized URI: " << currentNeighbor->getFaceUri()
-                   << " to: " << canonicalUri);
-        currentNeighbor->setFaceUri(canonicalUri);
-        then(std::next(currentNeighbor));
-      },
-      [then, currentNeighbor] (const std::string& reason) {
-        NLSR_LOG_ERROR("Could not canonize URI: " << currentNeighbor->getFaceUri()
-                   << " because: " << reason);
-        then(std::next(currentNeighbor));
-      },
-      m_nlsrFace.getIoService(),
-      TIME_ALLOWED_FOR_CANONIZATION);
-  }
-  // We have finished canonizing all neighbors, so call finally()
-  else {
-    finally();
-  }
-}
-
-void
 Nlsr::loadCertToPublish(const ndn::security::v2::Certificate& certificate)
 {
   NLSR_LOG_TRACE("Loading cert to publish.");

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -391,26 +391,6 @@ public:
     return m_firstHelloInterval;
   }
 
-  /*! \brief Canonize the URI for this and all proceeding neighbors in a list.
-   *
-   * This function canonizes the URI of the Adjacent object pointed to
-   * by currentNeighbor. It then executes the then callback, providing
-   * the next iterator in the list to the callback. A standard
-   * invocation would be to pass the begin() iterator of NLSR's
-   * adjacency list, and to provide Nlsr::canonizeContinuation as the
-   * callback. Because every URI must be canonical before we begin
-   * operations, the canonize function provides a finally() function
-   * to resume whatever needs to occur.
-   *
-   * \sa Nlsr::canonizeContinuation
-   * \sa Nlsr::initialize
-   * \sa NlsrRunner::run
-   */
-  void
-  canonizeNeighborUris(std::list<Adjacent>::iterator currentNeighbor,
-                       std::function<void(std::list<Adjacent>::iterator)> then,
-                       std::function<void(void)> finally);
-
   StatsCollector&
   getStatsCollector()
   {
@@ -461,17 +441,6 @@ private:
   {
     m_firstHelloInterval = interval;
   }
-
-  /*! \brief Continues canonizing neighbor URIs.
-   *
-   * For testability reasons, we want what each instance of
-   * canonization does after completion to be controllable. The best
-   * way to do this is to control that by simply passing a
-   * continuation function.
-   */
-  void
-  canonizeContinuation(std::list<Adjacent>::iterator iterator,
-                       std::function<void(void)> finally);
 
   void
   scheduleDatasetFetch();

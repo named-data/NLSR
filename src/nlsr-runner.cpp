@@ -41,15 +41,7 @@ NlsrRunner::run()
     BOOST_THROW_EXCEPTION(ConfFileError("Error in configuration file processing"));
   }
 
-  // Because URI canonization needs to occur before initialization,
-  // we have to pass initialize as the finally() in neighbor canonization.
-  m_nlsr.canonizeNeighborUris(m_nlsr.getAdjacencyList().getAdjList().begin(),
-                              [this] (std::list<Adjacent>::iterator iterator) {
-                                m_nlsr.canonizeContinuation(iterator, [this] { m_nlsr.initialize(); });
-                              },
-                              [this] {
-                                m_nlsr.initialize();
-                              });
+  m_nlsr.initialize();
 
   try {
     m_nlsr.startEventLoop();
