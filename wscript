@@ -1,7 +1,6 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
-
 """
-Copyright (c) 2014-2018,  The University of Memphis,
+Copyright (c) 2014-2019,  The University of Memphis,
                           Regents of the University of California,
                           Arizona Board of Regents.
 
@@ -33,7 +32,7 @@ def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
     opt.load(['default-compiler-flags', 'coverage', 'sanitizers',
               'boost', 'doxygen', 'sphinx_build'],
-            tooldir=['.waf-tools'])
+             tooldir=['.waf-tools'])
 
     nlsropt = opt.add_option_group('NLSR Options')
     nlsropt.add_option('--with-tests', action='store_true', default=False, help='build unit tests')
@@ -56,8 +55,8 @@ def configure(conf):
         boost_libs += ' unit_test_framework'
 
     conf.check_boost(lib=boost_libs, mt=True)
-    if conf.env.BOOST_VERSION_NUMBER < 105400:
-        conf.fatal('Minimum required Boost version is 1.54.0\n'
+    if conf.env.BOOST_VERSION_NUMBER < 105800:
+        conf.fatal('Minimum required Boost version is 1.58.0\n'
                    'Please upgrade your distribution or manually install a newer version of Boost'
                    ' (https://redmine.named-data.net/projects/nfd/wiki/Boost_FAQ)')
 
@@ -69,6 +68,7 @@ def configure(conf):
 
     conf.check_compiler_flags()
 
+    # Loading "late" to prevent tests from being compiled with profiling flags
     conf.load('coverage')
 
     conf.load('sanitizers')
@@ -77,15 +77,13 @@ def configure(conf):
 
     conf.write_config_header('config.hpp')
 
-
 def build(bld):
     version(bld)
 
-    bld(features="subst",
+    bld(features='subst',
         name='version.hpp',
         source='src/version.hpp.in',
         target='src/version.hpp',
-        install_path=None,
         VERSION_STRING=VERSION_BASE,
         VERSION_BUILD=VERSION,
         VERSION=int(VERSION_SPLIT[0]) * 1000000 +
@@ -97,7 +95,7 @@ def build(bld):
 
     bld.objects(
         target='nlsr-objects',
-        source=bld.path.ant_glob(['src/**/*.cpp'],
+        source=bld.path.ant_glob('src/**/*.cpp',
                                  excl=['src/main.cpp']),
         use='NDN_CXX BOOST SYNC PSYNC',
         includes='. src',
@@ -113,7 +111,7 @@ def build(bld):
         target='bin/nlsrc',
         name='nlsrc',
         source='tools/nlsrc.cpp',
-        use='nlsr-objects BOOST')
+        use='nlsr-objects')
 
     bld.install_as('${SYSCONFDIR}/ndn/nlsr.conf.sample', 'nlsr.conf')
 
