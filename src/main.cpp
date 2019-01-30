@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,7 +26,7 @@
 #include <sstream>
 
 template<typename E>
-std::string
+static std::string
 getExtendedErrorMessage(const E& exception)
 {
   std::ostringstream errorMessage;
@@ -46,41 +46,55 @@ getExtendedErrorMessage(const E& exception)
   return errorMessage.str();
 }
 
-int
-main(int32_t argc, char** argv)
+static void
+printUsage(std::ostream& os, const std::string& programName)
 {
-  using namespace nlsr;
+  os << "Usage: " << programName << " [OPTIONS...]\n"
+     << "\n"
+     << "Options:\n"
+     << "    -f <FILE>   Path to configuration file\n"
+     << "    -h          Display this help message\n"
+     << "    -V          Display version information\n"
+     << std::endl;
+}
 
+int
+main(int argc, char** argv)
+{
   std::string programName(argv[0]);
+  std::string configFileName("nlsr.conf");
 
-  std::string configFileName = "nlsr.conf";
-
-  int32_t opt;
-  while ((opt = getopt(argc, argv, "df:hV")) != -1) {
+  int opt;
+  while ((opt = getopt(argc, argv, "hf:V")) != -1) {
     switch (opt) {
-      case 'f':
-        configFileName = optarg;
-        break;
-      case 'V':
-        std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
-        return EXIT_SUCCESS;
-        break;
-      case 'h':
-      default:
-        NlsrRunner::printUsage(programName);
-        return EXIT_FAILURE;
+    case 'h':
+      printUsage(std::cout, programName);
+      return 0;
+    case 'f':
+      configFileName = optarg;
+      break;
+    case 'V':
+      std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
+      return 0;
+    default:
+      printUsage(std::cerr, programName);
+      return 2;
     }
   }
 
-  NlsrRunner runner(configFileName);
+  nlsr::NlsrRunner runner(configFileName);
 
   try {
     runner.run();
   }
+  catch (const nlsr::NlsrRunner::ConfFileError& e) {
+    std::cerr << e.what() << std::endl;
+    return 2;
+  }
   catch (const std::exception& e) {
-    std::cerr << getExtendedErrorMessage(e) << std::endl;
-    return EXIT_FAILURE;
+    std::cerr << "FATAL: " << getExtendedErrorMessage(e) << std::endl;
+    return 1;
   }
 
-  return EXIT_SUCCESS;
+  return 0;
 }

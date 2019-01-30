@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -28,7 +28,7 @@
 #include <ndn-cxx/util/scheduler.hpp>
 
 // boost needs to be included after ndn-cxx, otherwise there will be conflict with _1, _2, ...
-#include <boost/asio.hpp>
+#include <boost/asio/io_service.hpp>
 
 namespace nlsr {
 
@@ -40,22 +40,17 @@ namespace nlsr {
  * This class only exists to provide this functionality, and there is
  * no special reliance of NLSR on this class.
  */
-
 class NlsrRunner
 {
 public:
-  class Error : public std::runtime_error
+  class ConfFileError : public std::invalid_argument
   {
   public:
-    explicit
-    Error(const std::string& what)
-      : std::runtime_error(what)
-    {
-    }
+    using std::invalid_argument::invalid_argument;
   };
 
   explicit
-  NlsrRunner(std::string& configFileName);
+  NlsrRunner(const std::string& configFileName);
 
   /*! \brief Instantiate, configure, and start the NLSR process.
    *
@@ -64,16 +59,12 @@ public:
    * relationship. If one wants to create multiple NLSR classes,
    * multiple NLSR runners need to be created, too.
    *
-   * \throws Error If the configuration file cannot be processed. NLSR
-   * is not started.
-   *
+   * \throws ConfFileError The configuration file cannot be processed.
+   *                       NLSR is not started.
    * \sa Nlsr::canonizeNeighborUris
    */
   void
   run();
-
-  static void
-  printUsage(const std::string& programName);
 
 private:
   boost::asio::io_service m_ioService;

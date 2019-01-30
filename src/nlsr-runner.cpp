@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,13 +21,10 @@
 
 #include "nlsr-runner.hpp"
 #include "conf-file-processor.hpp"
-#include "logger.hpp"
 
 namespace nlsr {
 
-INIT_LOGGER(NlsrRunner);
-
-NlsrRunner::NlsrRunner(std::string& configFileName)
+NlsrRunner::NlsrRunner(const std::string& configFileName)
   : m_scheduler(m_ioService)
   , m_face(m_ioService)
   , m_nlsr(m_ioService, m_scheduler, m_face, m_keyChain)
@@ -41,41 +38,26 @@ NlsrRunner::run()
   ConfFileProcessor configProcessor(m_nlsr, m_nlsr.getConfFileName());
 
   if (!configProcessor.processConfFile()) {
-    BOOST_THROW_EXCEPTION(Error("Error in configuration file processing! Exiting from NLSR"));
+    BOOST_THROW_EXCEPTION(ConfFileError("Error in configuration file processing"));
   }
 
-  /** Because URI canonization needs to occur before initialization,
-      we have to pass initialize as the finally() in neighbor
-      canonization.
-  */
+  // Because URI canonization needs to occur before initialization,
+  // we have to pass initialize as the finally() in neighbor canonization.
   m_nlsr.canonizeNeighborUris(m_nlsr.getAdjacencyList().getAdjList().begin(),
                               [this] (std::list<Adjacent>::iterator iterator) {
-                                m_nlsr.canonizeContinuation(iterator, [this] {
-                                    m_nlsr.initialize();
-                                  });
+                                m_nlsr.canonizeContinuation(iterator, [this] { m_nlsr.initialize(); });
                               },
                               [this] {
                                 m_nlsr.initialize();
                               });
+
   try {
     m_nlsr.startEventLoop();
   }
-  catch (const std::exception& e) {
-    NLSR_LOG_FATAL("ERROR: " << e.what());
-    std::cerr << "ERROR: " << e.what() << std::endl;
-
+  catch (...) {
     m_nlsr.getFib().clean();
+    throw;
   }
-}
-
-void
-NlsrRunner::printUsage(const std::string& programName)
-{
-  std::cout << "Usage: " << programName << " [OPTIONS...]" << std::endl;
-  std::cout << "   NDN routing...." << std::endl;
-  std::cout << "       -f <FILE>   Specify configuration file name" << std::endl;
-  std::cout << "       -V          Display version information" << std::endl;
-  std::cout << "       -h          Display this help message" << std::endl;
 }
 
 } // namespace nlsr
