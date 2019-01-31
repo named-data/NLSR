@@ -73,8 +73,6 @@ def configure(conf):
 
     conf.load('sanitizers')
 
-    conf.define('DEFAULT_CONFIG_FILE', '%s/ndn/nlsr.conf' % conf.env['SYSCONFDIR'])
-
     conf.write_config_header('config.hpp')
 
 def build(bld):
@@ -113,17 +111,23 @@ def build(bld):
         source='tools/nlsrc.cpp',
         use='nlsr-objects')
 
-    bld.install_as('${SYSCONFDIR}/ndn/nlsr.conf.sample', 'nlsr.conf')
-
     if bld.env.WITH_TESTS:
         bld.recurse('tests')
+
+    bld.install_as('${SYSCONFDIR}/ndn/nlsr.conf.sample', 'nlsr.conf')
+
+    if Utils.unversioned_sys_platform() == 'linux':
+        bld(features='subst',
+            name='nlsr.service',
+            source='systemd/nlsr.service.in',
+            target='systemd/nlsr.service')
 
     if bld.env.SPHINX_BUILD:
         bld(features='sphinx',
             name='manpages',
             builder='man',
-            outdir='docs/manpages',
             config='docs/conf.py',
+            outdir='docs/manpages',
             source=bld.path.ant_glob('docs/manpages/**/*.rst'),
             install_path='${MANDIR}',
             VERSION=VERSION)
