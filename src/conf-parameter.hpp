@@ -404,15 +404,26 @@ public:
   }
 
   void
-  setSeqFileDir(const std::string& ssfd)
+  setStateFileDir(const std::string& ssfd)
   {
-    m_seqFileDir = ssfd;
+    m_stateFileDir = ssfd;
   }
 
   const std::string&
-  getSeqFileDir() const
+  getStateFileDir() const
   {
-    return m_seqFileDir;
+    return m_stateFileDir;
+  }
+
+  void setConfFileNameDynamic(const std::string& confFileDynamic)
+  {
+    m_confFileNameDynamic = confFileDynamic;
+  }
+
+  const std::string&
+  getConfFileNameDynamic() const
+  {
+    return m_confFileNameDynamic;
   }
 
   void
@@ -497,10 +508,13 @@ private:
 
   uint32_t m_maxFacesPerPrefix;
 
-  std::string m_seqFileDir;
+  std::string m_stateFileDir;
+
   ndn::time::milliseconds m_syncInterestLifetime;
 
   int32_t m_syncProtocol;
+
+  std::string m_confFileNameDynamic;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   static const uint64_t SYNC_VERSION;

@@ -78,7 +78,7 @@ ConfParameter::writeLog()
   for (auto const& value: m_corTheta) {
     NLSR_LOG_INFO("Hyp Angle " << i++ << ": "<< value);
   }
-  NLSR_LOG_INFO("Seq Directory: " << m_seqFileDir);
+  NLSR_LOG_INFO("State Directory: " << m_stateFileDir);
 
   // Event Intervals
   NLSR_LOG_INFO("Adjacency LSA build interval:  " << m_adjLsaBuildInterval);

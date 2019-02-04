@@ -64,7 +64,7 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
                             m_confParam.getPrefixUpdateValidator(),
                             m_namePrefixList,
                             m_lsdb,
-                            m_confParam.getConfFileName())
+                            m_confParam.getConfFileNameDynamic())
   , m_nfdRibCommandProcessor(m_dispatcher,
                              m_namePrefixList,
                              m_lsdb)

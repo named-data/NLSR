@@ -95,7 +95,7 @@ configuration commands follows:
         ; InterestLifetime (in seconds) for LSA fetching
         lsa-interest-lifetime 4    ; default value 4. Valid values 1-60
 
-        seq-dir /var/lib/nlsr/
+        state-dir /var/lib/nlsr/ ; state directory to store all dynamic changes to NLSR
     }
 
     ; the neighbors section contains the configuration for router's neighbors and hello's behavior
@@ -209,7 +209,7 @@ To avoid this, the directory can be set in a user-owned directory. For example:
     {
       ...
 
-      seq-dir /home/username/nlsr/log  ; path for sequence directory (Absolute path)
+      state-dir /home/username/nlsr/log  ; path for sequence directory and other dynamic changes (Absolute path)
 
     }
     ...

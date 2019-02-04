@@ -46,7 +46,7 @@ Options
     ``advertise <name> save``
 
       ``save``
-        Advertise a prefix and also save it to the nlsr.conf file for the next start of NLSR
+        Advertise a prefix and also save it to the nlsr.conf file residing in the state-dir for the next start of NLSR that operator may copy and use for the next start of NLSR
 
   ``withdraw``
     Remove a Name prefix advertised through NLSR
@@ -59,7 +59,7 @@ Options
     ``withdraw <name> delete``
 
       ``delete``
-        Withdraw a prefix and also delete it from the nlsr.conf file
+        Withdraw a prefix and also delete it from the nlsr.conf file residing in the state-dir
 
 Notes
 -----

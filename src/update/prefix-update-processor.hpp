@@ -96,7 +96,7 @@ private:
 
 private:
   ndn::security::ValidatorConfig& m_validator;
-  const std::string& m_configFileName;
+  const std::string& m_confFileNameDynamic;
 };
 
 } // namespace update

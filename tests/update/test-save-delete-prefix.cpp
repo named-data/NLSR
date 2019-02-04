@@ -24,6 +24,7 @@
 
 #include "../control-commands.hpp"
 #include "../test-common.hpp"
+#include "conf-parameter.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/security/command-interest-signer.hpp>
@@ -58,6 +59,7 @@ public:
     source.close();
     destination.close();
 
+    conf.setConfFileNameDynamic(testConfFile);
     siteIdentity = addIdentity(siteIdentityName);
     saveCertificate(siteIdentity, SITE_CERT_PATH.string());
 
@@ -80,6 +82,7 @@ public:
         }
       }
     }
+
     inputFile.close();
 
     // Site cert
@@ -172,7 +175,7 @@ BOOST_FIXTURE_TEST_SUITE(TestAdvertiseWithdrawPrefix, PrefixSaveDeleteFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  // only advertise
+
   face.receive(advertiseWithdraw("/prefix/to/save", "advertise", false));
   this->advanceClocks(ndn::time::milliseconds(10));
   BOOST_CHECK_EQUAL(checkPrefix("/prefix/to/save"), false);
@@ -208,7 +211,7 @@ BOOST_AUTO_TEST_CASE(PrefixStillSavedAfterJustWithdrawn)
   BOOST_CHECK_EQUAL(checkPrefix("/prefix/to/save"), true);
 
   // trying to advertise same name prefix
-  /*face.receive(advertiseWithdraw("/prefix/to/save", "advertise", true));
+  face.receive(advertiseWithdraw("/prefix/to/save", "advertise", true));
   this->advanceClocks(ndn::time::milliseconds(10));
   BOOST_REQUIRE(counter == 1);
   BOOST_CHECK_EQUAL(getResponseCode(), 406);
@@ -226,7 +229,7 @@ BOOST_AUTO_TEST_CASE(PrefixStillSavedAfterJustWithdrawn)
   this->advanceClocks(ndn::time::milliseconds(10));
   // after withdrawn delete prefix should be deleted from the file
   BOOST_CHECK_EQUAL(getResponseCode(), 205);
-  BOOST_CHECK_EQUAL(checkPrefix("/prefix/to/save"), false);*/
+  BOOST_CHECK_EQUAL(checkPrefix("/prefix/to/save"), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

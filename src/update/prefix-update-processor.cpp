@@ -56,7 +56,7 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
                                              Lsdb& lsdb, const std::string& configFileName)
   : CommandManagerBase(dispatcher, namePrefixList, lsdb, "prefix-update")
   , m_validator(validator)
-  , m_configFileName(configFileName)
+  , m_confFileNameDynamic(configFileName)
 {
   NLSR_LOG_DEBUG("Setting dispatcher to capture Interests for: "
     << ndn::Name(Nlsr::LOCALHOST_PREFIX).append("prefix-update"));
@@ -108,7 +108,7 @@ bool
 PrefixUpdateProcessor::checkForPrefixInFile(const std::string prefix)
 {
   std::string line;
-  std::fstream fp(m_configFileName);
+  std::fstream fp(m_confFileNameDynamic);
   if (!fp.good() || !fp.is_open()) {
     NLSR_LOG_ERROR("Failed to open configuration file for parsing");
     return true;
@@ -130,7 +130,7 @@ PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix
   std::string fileString;
   std::string line;
   std::string trimedLine;
-  std::fstream input(m_configFileName, input.in);
+  std::fstream input(m_confFileNameDynamic, input.in);
   if (!input.good() || !input.is_open()) {
     NLSR_LOG_ERROR("Failed to open configuration file for parsing");
     return false;
@@ -171,7 +171,7 @@ PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix
     }
   }
   input.close();
-  std::ofstream output(m_configFileName);
+  std::ofstream output(m_confFileNameDynamic);
   output << fileString;
   output.close();
   return true;

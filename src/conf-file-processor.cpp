@@ -322,17 +322,26 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   try {
-    std::string seqDir = section.get<std::string>("seq-dir");
-    if (boost::filesystem::exists(seqDir)) {
-      if (boost::filesystem::is_directory(seqDir)) {
-        std::string testFileName=seqDir+"/test.seq";
-        std::ofstream testOutFile;
-        testOutFile.open(testFileName.c_str());
-        if (testOutFile.is_open() && testOutFile.good()) {
-          m_confParam.setSeqFileDir(seqDir);
+    std::string stateDir = section.get<std::string>("state-dir");
+    if (boost::filesystem::exists(stateDir)) {
+      if (boost::filesystem::is_directory(stateDir)) {
+
+        // copying nlsr.conf file to a user define directory for possible modification
+        std::string conFileDynamic = (boost::filesystem::path(stateDir) / "nlsr.conf").c_str();
+        m_confParam.setConfFileNameDynamic(conFileDynamic);
+        try {
+          copy_file(m_confFileName, conFileDynamic, boost::filesystem::copy_option::overwrite_if_exists);
+        }
+        catch (const boost::filesystem::filesystem_error& e) {
+          std::cerr << "Error copying conf file to the state directory: " << e.what() << std::endl;
+        }
+        std::string testFileName = (boost::filesystem::path(stateDir) / "test.seq").c_str();
+        std::ofstream testOutFile(testFileName);
+        if (testOutFile) {
+          m_confParam.setStateFileDir(stateDir);
         }
         else {
-          std::cerr << "User does not have read and write permission on the directory";
+          std::cerr << "User does not have read and write permission on the state directory";
           std::cerr << std::endl;
           return false;
         }
@@ -340,17 +349,17 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
         remove(testFileName.c_str());
       }
       else {
-        std::cerr << "Provided path is not a directory" << std::endl;
+        std::cerr << "Provided: " << stateDir << "is not a directory" << std::endl;
         return false;
       }
     }
     else {
-      std::cerr << "Provided sequence directory <" << seqDir << "> does not exist" << std::endl;
+      std::cerr << "Provided state directory <" << stateDir << "> does not exist" << std::endl;
       return false;
     }
   }
   catch (const std::exception& ex) {
-    std::cerr << "You must configure sequence directory" << std::endl;
+    std::cerr << "You must configure state directory" << std::endl;
     std::cerr << ex.what() << std::endl;
     return false;
   }
