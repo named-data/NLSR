@@ -4,7 +4,8 @@ NLSR Versions
 .. toctree::
    :hidden:
    :maxdepth: 1
-
+ 
+   release-notes/release-notes-0.5.0
    release-notes/release-notes-0.4.3
    release-notes/release-notes-0.4.2
    release-notes/release-notes-0.4.1

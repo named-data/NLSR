@@ -43,15 +43,16 @@ NLSR is an open source project includes contributions from the members of the
     * Spyridon Mastorakis <http://cs.ucla.edu/~mastorakis/>
     * Jiewen Tan          <https://www.linkedin.com/in/jiewentan>
 
-* University of Arizona
+* Universidad Autónoma de San Luis Potosí (UASLP)
+
+    * Pedro David Arjona Villicaña <david.arjona@uaslp.mx>
+
+* Individual Contributor(s)
 
     * Junxiao Shi         <https://www.linkedin.com/in/shijunxiao>
-
-* University Pierre & Marie Curie, Sorbonne University
-
     * Davide Pesavento    <https://www.linkedin.com/in/davidepesavento>
 
 ## Queries about NLSR
 
-Any question related to NLSR should be directed to Ashlesh Gawande (agawande@memphis.edu),
-Muktadir R Chowdhury (mrchwdhr@memphis.edu), and Nicholas Gordon (nmgordon@memphis.edu).
+Any question related to NLSR should be directed to Ashlesh Gawande (agawande@memphis.edu), Saurab Dulal (sdulal@memphis.edu),
+Muktadir R Chowdhury (mrchwdhr@memphis.edu).
