@@ -7,12 +7,13 @@ NLSR is an open source project includes contributions from the members of the
 ## Project co-leads:
 
 * Ashlesh Gawande  <https://www.linkedin.com/in/agawande>
-* Nicholas Gordon  <nmgordon@memphis.edu>
+* Saurab Dulal <https://dulalsaurab.github.io>
 
 ## Past project leads:
 
 * A K M Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
 * Vince Lehman <http://vslehman.com>
+* Nicholas Gordon <nmgordon@memphis.edu>
 
 ## Technical advisors:
 
