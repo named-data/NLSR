@@ -292,6 +292,32 @@ BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)
                     static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT));
 }
 
+BOOST_AUTO_TEST_CASE(CanonizeNeighbors)
+{
+  std::string config = std::string(R"INFO(neighbors
+    {
+      neighbor
+      {
+        name /ndn/edu/arizona/%C1.Router/hobo
+        face-uri  udp4://hobo.cs.arizona.edu
+        link-cost 20
+      }
+      neighbor
+      {
+        name /ndn/edu/umich/%C1.Router/ndn0
+        face-uri  udp4://michigan.testbed.named-data.net
+        link-cost 30
+      }
+    })INFO");
+
+  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+
+  BOOST_CHECK_EQUAL(conf.m_adjl.getAdjacent("/ndn/edu/arizona/%C1.Router/hobo").getFaceUri().toString(),
+                    "udp4://128.196.203.36:6363");
+  BOOST_CHECK_EQUAL(conf.m_adjl.getAdjacent("/ndn/edu/umich/%C1.Router/ndn0").getFaceUri().toString(),
+                    "udp4://198.111.224.197:6363");
+}
+
 BOOST_AUTO_TEST_CASE(DefaultValuesFib)
 {
   std::string config = SECTION_FIB;

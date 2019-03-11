@@ -489,6 +489,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
                          m_io,
                          TIME_ALLOWED_FOR_CANONIZATION);
         m_io.run();
+        m_io.reset();
 
         if (failedToCanonize) {
           return false;
