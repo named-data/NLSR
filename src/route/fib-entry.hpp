@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -30,18 +30,11 @@ namespace nlsr {
 class FibEntry
 {
 public:
-  FibEntry()
-    : m_name()
-    , m_seqNo(1)
-    , m_nexthopList()
-  {
-  }
+  FibEntry() = default;
 
   FibEntry(const ndn::Name& name)
-    : m_seqNo(1)
-    , m_nexthopList()
+    : m_name(name)
   {
-    m_name = name;
   }
 
   const ndn::Name&
@@ -57,12 +50,12 @@ public:
   }
 
   void
-  setRefreshEventId(ndn::EventId id)
+  setRefreshEventId(ndn::scheduler::EventId id)
   {
-    m_refreshEventId = id;
+    m_refreshEventId = std::move(id);
   }
 
-  ndn::EventId
+  ndn::scheduler::EventId
   getRefreshEventId() const
   {
     return m_refreshEventId;
@@ -93,8 +86,8 @@ public:
 
 private:
   ndn::Name m_name;
-  ndn::EventId m_refreshEventId;
-  int32_t m_seqNo;
+  ndn::scheduler::EventId m_refreshEventId;
+  int32_t m_seqNo = 1;
   NexthopList m_nexthopList;
 };
 

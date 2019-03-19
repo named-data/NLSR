@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -17,7 +17,6 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
-#include "hello-protocol.hpp"
 
 #include "hello-protocol.hpp"
 #include "nlsr.hpp"
@@ -91,10 +90,7 @@ HelloProtocol::scheduleInterest(uint32_t seconds)
 {
   NLSR_LOG_DEBUG("Scheduling HELLO Interests in " << ndn::time::seconds(seconds));
 
-  m_scheduler.scheduleEvent(ndn::time::seconds(seconds),
-                            [this] {
-                              sendScheduledInterest();
-                            });
+  m_scheduler.schedule(ndn::time::seconds(seconds), [this] { sendScheduledInterest(); });
 }
 
 void

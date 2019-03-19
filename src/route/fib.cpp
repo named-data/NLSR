@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -49,7 +49,7 @@ void
 Fib::remove(const ndn::Name& name)
 {
   NLSR_LOG_DEBUG("Fib::remove called");
-  std::map<ndn::Name, FibEntry>::iterator it = m_table.find(name);
+  auto it = m_table.find(name);
 
   // Only unregister the prefix if it ISN'T a neighbor.
   if (it != m_table.end() && isNotNeighbor((it->second).getName())) {
@@ -96,12 +96,11 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
   unsigned int nFaces = 0;
 
   // Create a list of next hops to be installed with length == maxFaces
-  for (NexthopList::iterator it = allHops.cbegin(); it != allHops.cend() && nFaces < maxFaces;
-       ++it, ++nFaces) {
+  for (auto it = allHops.cbegin(); it != allHops.cend() && nFaces < maxFaces; ++it, ++nFaces) {
     hopsToAdd.addNextHop(*it);
   }
 
-  std::map<ndn::Name, FibEntry>::iterator entryIt = m_table.find(name);
+  auto entryIt = m_table.find(name);
 
   // New FIB entry that has nextHops
   if (entryIt == m_table.end() && hopsToAdd.size() != 0) {
@@ -236,7 +235,7 @@ Fib::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResu
   NLSR_LOG_DEBUG(message << ": " << commandSuccessResult.getName() <<
                  " Face Uri: " << faceUri << " faceId: " << commandSuccessResult.getFaceId());
 
-  AdjacencyList::iterator adjacent = m_adjacencyList.findAdjacent(faceUri);
+  auto adjacent = m_adjacencyList.findAdjacent(faceUri);
   if (adjacent != m_adjacencyList.end()) {
     adjacent->setFaceId(commandSuccessResult.getFaceId());
   }
@@ -311,29 +310,24 @@ Fib::setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t co
     .setStrategy(strategy);
 
   m_controller.start<ndn::nfd::StrategyChoiceSetCommand>(parameters,
-                                                         std::bind(&Fib::onSetStrategySuccess, this, _1,
-                                                              "Successfully set strategy choice"),
+                                                         std::bind(&Fib::onSetStrategySuccess, this, _1),
                                                          std::bind(&Fib::onSetStrategyFailure, this, _1,
-                                                              parameters,
-                                                              count,
-                                                              "Failed to set strategy choice"));
+                                                                   parameters, count));
 }
 
 void
-Fib::onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                         const std::string& message)
+Fib::onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResult)
 {
-  NLSR_LOG_DEBUG(message << ": " << commandSuccessResult.getStrategy() <<
+  NLSR_LOG_DEBUG("Successfully set strategy choice: " << commandSuccessResult.getStrategy() <<
                  " for name: " << commandSuccessResult.getName());
 }
 
 void
 Fib::onSetStrategyFailure(const ndn::nfd::ControlResponse& response,
                           const ndn::nfd::ControlParameters& parameters,
-                          uint32_t count,
-                          const std::string& message)
+                          uint32_t count)
 {
-  NLSR_LOG_DEBUG(message << ": " << parameters.getStrategy() <<
+  NLSR_LOG_DEBUG("Failed to set strategy choice: " << parameters.getStrategy() <<
                  " for name: " << parameters.getName());
   if (count < 3) {
     setStrategy(parameters.getName(), parameters.getStrategy().toUri(), count + 1);
@@ -347,9 +341,9 @@ Fib::scheduleEntryRefresh(FibEntry& entry, const afterRefreshCallback& refreshCa
                  " Seq Num: " << entry.getSeqNo() <<
                  " in " << m_refreshTime << " seconds");
 
-  entry.setRefreshEventId(m_scheduler.scheduleEvent(ndn::time::seconds(m_refreshTime),
-                                                    std::bind(&Fib::refreshEntry, this,
-                                                              entry.getName(), refreshCallback)));
+  entry.setRefreshEventId(m_scheduler.schedule(ndn::time::seconds(m_refreshTime),
+                                               std::bind(&Fib::refreshEntry, this,
+                                                         entry.getName(), refreshCallback)));
 }
 
 void
@@ -362,16 +356,13 @@ void
 Fib::cancelEntryRefresh(const FibEntry& entry)
 {
   NLSR_LOG_DEBUG("Canceling refresh for " << entry.getName() << " Seq Num: " << entry.getSeqNo());
-
-  m_scheduler.cancelEvent(entry.getRefreshEventId());
-  entry.getRefreshEventId().reset();
+  entry.getRefreshEventId().cancel();
 }
 
 void
 Fib::refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb)
 {
-  std::map<ndn::Name, FibEntry>::iterator it = m_table.find(name);
-
+  auto it = m_table.find(name);
   if (it == m_table.end()) {
     return;
   }

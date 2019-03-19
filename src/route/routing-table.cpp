@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -160,12 +160,9 @@ RoutingTable::calculateHypRoutingTable(bool isDryRun)
 void
 RoutingTable::scheduleRoutingTableCalculation()
 {
-  if (m_isRouteCalculationScheduled != true) {
+  if (!m_isRouteCalculationScheduled) {
     NLSR_LOG_DEBUG("Scheduling routing table calculation in " << m_routingCalcInterval);
-
-    m_scheduler.scheduleEvent(m_routingCalcInterval,
-                              std::bind(&RoutingTable::calculate, this));
-
+    m_scheduler.schedule(m_routingCalcInterval, [this] { calculate(); });
     m_isRouteCalculationScheduled = true;
   }
 }
@@ -182,7 +179,7 @@ RoutingTable::addNextHop(const ndn::Name& destRouter, NextHop& nh)
   NLSR_LOG_DEBUG("Adding " << nh << " for destination: " << destRouter);
 
   RoutingTableEntry* rteChk = findRoutingTableEntry(destRouter);
-  if (rteChk == 0) {
+  if (rteChk == nullptr) {
     RoutingTableEntry rte(destRouter);
     rte.getNexthopList().addNextHop(nh);
     m_rTable.push_back(rte);
@@ -195,14 +192,12 @@ RoutingTable::addNextHop(const ndn::Name& destRouter, NextHop& nh)
 RoutingTableEntry*
 RoutingTable::findRoutingTableEntry(const ndn::Name& destRouter)
 {
-  std::list<RoutingTableEntry>::iterator it = std::find_if(m_rTable.begin(),
-                                                           m_rTable.end(),
-                                                           std::bind(&routingTableEntryCompare,
-                                                                     _1, destRouter));
+  auto it = std::find_if(m_rTable.begin(), m_rTable.end(),
+                         std::bind(&routingTableEntryCompare, _1, destRouter));
   if (it != m_rTable.end()) {
     return &(*it);
   }
-  return 0;
+  return nullptr;
 }
 
 void
@@ -230,17 +225,15 @@ RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
 {
   NLSR_LOG_DEBUG("Adding " << nh << " to dry table for destination: " << destRouter);
 
-  std::list<RoutingTableEntry>::iterator it = std::find_if(m_dryTable.begin(),
-                                                           m_dryTable.end(),
-                                                           std::bind(&routingTableEntryCompare,
-                                                                     _1, destRouter));
+  auto it = std::find_if(m_dryTable.begin(), m_dryTable.end(),
+                         std::bind(&routingTableEntryCompare, _1, destRouter));
   if (it == m_dryTable.end()) {
     RoutingTableEntry rte(destRouter);
     rte.getNexthopList().addNextHop(nh);
     m_dryTable.push_back(rte);
   }
   else {
-    (*it).getNexthopList().addNextHop(nh);
+    it->getNexthopList().addNextHop(nh);
   }
 }
 

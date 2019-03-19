@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -140,10 +140,8 @@ LsaSegmentStorage::scheduleLsaSegmentDeletion(const ndn::Name& lsaSegmentsKey,
 {
   NLSR_LOG_TRACE("Scheduling LSA segment deletion for "
                  << lsaSegmentsKey << " in: " << expirationTime);
-  m_scheduler.scheduleEvent(expirationTime,
-                            [lsaSegmentsKey, this] {
-                              m_lsaSegments.erase(lsaSegmentsKey);
-                            });
+  m_scheduler.schedule(expirationTime,
+                       [lsaSegmentsKey, this] { m_lsaSegments.erase(lsaSegmentsKey); });
 }
 
 } // namespace nlsr

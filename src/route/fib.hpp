@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -191,16 +191,14 @@ private:
   /*! \brief Log a successful strategy setting.
    */
   void
-  onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                       const std::string& message);
+  onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResult);
 
   /*! \brief Retry a strategy setting up to three (3) times.
    */
   void
   onSetStrategyFailure(const ndn::nfd::ControlResponse& response,
                        const ndn::nfd::ControlParameters& parameters,
-                       uint32_t count,
-                       const std::string& message);
+                       uint32_t count);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Schedule a refresh event for an entry.

@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -85,11 +85,10 @@ Lsdb::onFetchLsaError(uint32_t errorCode,
                       uint64_t seqNo)
 {
   NLSR_LOG_DEBUG("Failed to fetch LSA: " << lsaName << ", Error code: " << errorCode
-                                                << ", Message: " << msg);
+                 << ", Message: " << msg);
 
   if (ndn::time::steady_clock::now() < deadline) {
-    SequenceNumberMap::const_iterator it = m_highestSeqNo.find(lsaName);
-
+    auto it = m_highestSeqNo.find(lsaName);
     if (it != m_highestSeqNo.end() && it->second == seqNo) {
       // If the SegmentFetcher failed due to an Interest timeout, it is safe to re-express
       // immediately since at the least the LSA Interest lifetime has elapsed.
@@ -101,8 +100,8 @@ Lsdb::onFetchLsaError(uint32_t errorCode,
         delay = ndn::time::seconds(0);
       }
 
-      m_scheduler.scheduleEvent(delay, std::bind(&Lsdb::expressInterest, this,
-                                                 interestName, retransmitNo + 1, deadline));
+      m_scheduler.schedule(delay, std::bind(&Lsdb::expressInterest, this,
+                                            interestName, retransmitNo + 1, deadline));
     }
   }
 }
@@ -130,12 +129,6 @@ Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& inter
   }
 
   onContentValidated(data);
-}
-
-void
-Lsdb::cancelScheduleLsaExpiringEvent(ndn::EventId eid)
-{
-  m_scheduler.cancelEvent(eid);
 }
 
   /*! \brief Compares if a name LSA is the same as the one specified by key
@@ -167,13 +160,12 @@ Lsdb::buildAndInstallOwnNameLsa()
 NameLsa*
 Lsdb::findNameLsa(const ndn::Name& key)
 {
-  std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
-                                                 m_nameLsdb.end(),
-                                                 std::bind(nameLsaCompareByKey, _1, key));
+  auto it = std::find_if(m_nameLsdb.begin(), m_nameLsdb.end(),
+                         std::bind(nameLsaCompareByKey, _1, key));
   if (it != m_nameLsdb.end()) {
-    return &(*it);
+    return &*it;
   }
-  return 0;
+  return nullptr;
 }
 
 bool
@@ -181,7 +173,7 @@ Lsdb::isNameLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
   NameLsa* nameLsaCheck = findNameLsa(key);
   // Is the name in the LSDB
-  if (nameLsaCheck != 0) {
+  if (nameLsaCheck != nullptr) {
     // And the supplied seq no is the highest so far
     if (nameLsaCheck->getLsSeqNo() < seqNo) {
       return true;
@@ -193,12 +185,12 @@ Lsdb::isNameLsaNew(const ndn::Name& key, uint64_t seqNo)
   return true;
 }
 
-ndn::EventId
+ndn::scheduler::EventId
 Lsdb::scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
                                 const ndn::time::seconds& expTime)
 {
-  return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   std::bind(&Lsdb::expireOrRefreshNameLsa, this, key, seqNo));
+  return m_scheduler.schedule(expTime + GRACE_PERIOD,
+                              std::bind(&Lsdb::expireOrRefreshNameLsa, this, key, seqNo));
 }
 
 bool
@@ -208,7 +200,7 @@ Lsdb::installNameLsa(NameLsa& nlsa)
   ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   NameLsa* chkNameLsa = findNameLsa(nlsa.getKey());
   // Determines if the name LSA is new or not.
-  if (chkNameLsa == 0) {
+  if (chkNameLsa == nullptr) {
     addNameLsa(nlsa);
     NLSR_LOG_DEBUG("New Name LSA");
     NLSR_LOG_DEBUG("Adding Name Lsa");
@@ -283,11 +275,10 @@ Lsdb::installNameLsa(NameLsa& nlsa)
       }
 
       if (nlsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
-        ndn::time::system_clock::Duration duration = nlsa.getExpirationTimePoint() -
-                                                     ndn::time::system_clock::now();
+        auto duration = nlsa.getExpirationTimePoint() - ndn::time::system_clock::now();
         timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
       }
-      cancelScheduleLsaExpiringEvent(chkNameLsa->getExpiringEventId());
+      chkNameLsa->getExpiringEventId().cancel();
       chkNameLsa->setExpiringEventId(scheduleNameLsaExpiration(nlsa.getKey(),
                                                                nlsa.getLsSeqNo(),
                                                                timeToExpire));
@@ -301,10 +292,8 @@ Lsdb::installNameLsa(NameLsa& nlsa)
 bool
 Lsdb::addNameLsa(NameLsa& nlsa)
 {
-  std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
-                                                 m_nameLsdb.end(),
-                                                 std::bind(nameLsaCompareByKey, _1,
-                                                      nlsa.getKey()));
+  auto it = std::find_if(m_nameLsdb.begin(), m_nameLsdb.end(),
+                         std::bind(nameLsaCompareByKey, _1, nlsa.getKey()));
   if (it == m_nameLsdb.end()) {
     m_nameLsdb.push_back(nlsa);
     return true;
@@ -315,16 +304,15 @@ Lsdb::addNameLsa(NameLsa& nlsa)
 bool
 Lsdb::removeNameLsa(const ndn::Name& key)
 {
-  std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
-                                                 m_nameLsdb.end(),
-                                                 std::bind(nameLsaCompareByKey, _1, key));
+  auto it = std::find_if(m_nameLsdb.begin(), m_nameLsdb.end(),
+                         std::bind(nameLsaCompareByKey, _1, key));
   if (it != m_nameLsdb.end()) {
     NLSR_LOG_DEBUG("Deleting Name Lsa");
-    (*it).writeLog();
+    it->writeLog();
     // If the requested name LSA is not ours, we also need to remove
     // its entries from the NPT.
-    if ((*it).getOrigRouter() != m_confParam.getRouterPrefix()) {
-      m_namePrefixTable.removeEntry((*it).getOrigRouter(), (*it).getOrigRouter());
+    if (it->getOrigRouter() != m_confParam.getRouterPrefix()) {
+      m_namePrefixTable.removeEntry(it->getOrigRouter(), it->getOrigRouter());
 
       for (const auto& name : it->getNpl().getNames()) {
         if (name != m_confParam.getRouterPrefix()) {
@@ -341,13 +329,9 @@ Lsdb::removeNameLsa(const ndn::Name& key)
 bool
 Lsdb::doesNameLsaExist(const ndn::Name& key)
 {
-  std::list<NameLsa>::iterator it = std::find_if(m_nameLsdb.begin(),
-                                                 m_nameLsdb.end(),
-                                                 std::bind(nameLsaCompareByKey, _1, key));
-  if (it == m_nameLsdb.end()) {
-    return false;
-  }
-  return true;
+  auto it = std::find_if(m_nameLsdb.begin(), m_nameLsdb.end(),
+                         std::bind(nameLsaCompareByKey, _1, key));
+  return it != m_nameLsdb.end();
 }
 
 void
@@ -401,13 +385,12 @@ Lsdb::buildAndInstallOwnCoordinateLsa()
 CoordinateLsa*
 Lsdb::findCoordinateLsa(const ndn::Name& key)
 {
-  std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
-                                                       m_corLsdb.end(),
-                                                       std::bind(corLsaCompareByKey, _1, key));
+  auto it = std::find_if(m_corLsdb.begin(), m_corLsdb.end(),
+                         std::bind(corLsaCompareByKey, _1, key));
   if (it != m_corLsdb.end()) {
-    return &(*it);
+    return &*it;
   }
-  return 0;
+  return nullptr;
 }
 
 bool
@@ -415,7 +398,7 @@ Lsdb::isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
   CoordinateLsa* clsa = findCoordinateLsa(key);
   // Is the coordinate LSA in the LSDB already
-  if (clsa != 0) {
+  if (clsa != nullptr) {
     // And the seq no is newer (higher) than the current one
     if (clsa->getLsSeqNo() < seqNo) {
       return true;
@@ -431,13 +414,12 @@ Lsdb::isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo)
   // \param key The name of the router that published the LSA.
   // \param seqNo the seq. no. associated with the LSA to check.
   // \param expTime How long to wait before triggering the event.
-ndn::EventId
+ndn::scheduler::EventId
 Lsdb::scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                       const ndn::time::seconds& expTime)
 {
-  return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   std::bind(&Lsdb::expireOrRefreshCoordinateLsa,
-                                             this, key, seqNo));
+  return m_scheduler.schedule(expTime + GRACE_PERIOD,
+                              std::bind(&Lsdb::expireOrRefreshCoordinateLsa, this, key, seqNo));
 }
 
 bool
@@ -446,7 +428,7 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
   ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   CoordinateLsa* chkCorLsa = findCoordinateLsa(clsa.getKey());
   // Checking whether the LSA is new or not.
-  if (chkCorLsa == 0) {
+  if (chkCorLsa == nullptr) {
     NLSR_LOG_DEBUG("New Coordinate LSA. Adding to LSDB");
     NLSR_LOG_DEBUG("Adding Coordinate Lsa");
     clsa.writeLog();
@@ -487,11 +469,10 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
       }
       // If this is an LSA from another router, refresh its expiration time.
       if (clsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
-        ndn::time::system_clock::Duration duration = clsa.getExpirationTimePoint() -
-                                                     ndn::time::system_clock::now();
+        auto duration = clsa.getExpirationTimePoint() - ndn::time::system_clock::now();
         timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
       }
-      cancelScheduleLsaExpiringEvent(chkCorLsa->getExpiringEventId());
+      chkCorLsa->getExpiringEventId().cancel();
       chkCorLsa->setExpiringEventId(scheduleCoordinateLsaExpiration(clsa.getKey(),
                                                                     clsa.getLsSeqNo(),
                                                                     timeToExpire));
@@ -505,10 +486,8 @@ Lsdb::installCoordinateLsa(CoordinateLsa& clsa)
 bool
 Lsdb::addCoordinateLsa(CoordinateLsa& clsa)
 {
-  std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
-                                                       m_corLsdb.end(),
-                                                       std::bind(corLsaCompareByKey, _1,
-                                                                 clsa.getKey()));
+  auto it = std::find_if(m_corLsdb.begin(), m_corLsdb.end(),
+                         std::bind(corLsaCompareByKey, _1, clsa.getKey()));
   if (it == m_corLsdb.end()) {
     m_corLsdb.push_back(clsa);
     return true;
@@ -519,10 +498,9 @@ Lsdb::addCoordinateLsa(CoordinateLsa& clsa)
 bool
 Lsdb::removeCoordinateLsa(const ndn::Name& key)
 {
-  std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
-                                                       m_corLsdb.end(),
-                                                       std::bind(corLsaCompareByKey,
-                                                                 _1, key));
+  auto it = std::find_if(m_corLsdb.begin(), m_corLsdb.end(),
+                         std::bind(corLsaCompareByKey, _1, key));
+
   if (it != m_corLsdb.end()) {
     NLSR_LOG_DEBUG("Deleting Coordinate Lsa");
     it->writeLog();
@@ -540,14 +518,9 @@ Lsdb::removeCoordinateLsa(const ndn::Name& key)
 bool
 Lsdb::doesCoordinateLsaExist(const ndn::Name& key)
 {
-  std::list<CoordinateLsa>::iterator it = std::find_if(m_corLsdb.begin(),
-                                                       m_corLsdb.end(),
-                                                       std::bind(corLsaCompareByKey,
-                                                                 _1, key));
-  if (it == m_corLsdb.end()) {
-    return false;
-  }
-  return true;
+  auto it = std::find_if(m_corLsdb.begin(), m_corLsdb.end(),
+                         std::bind(corLsaCompareByKey, _1, key));
+  return it != m_corLsdb.end();
 }
 
 void
@@ -591,7 +564,7 @@ Lsdb::scheduleAdjLsaBuild()
   if (m_isBuildAdjLsaSheduled == false) {
     NLSR_LOG_DEBUG("Scheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
 
-    m_scheduler.scheduleEvent(m_adjLsaBuildInterval, std::bind(&Lsdb::buildAdjLsa, this));
+    m_scheduler.schedule(m_adjLsaBuildInterval, [this] { buildAdjLsa(); });
     m_isBuildAdjLsaSheduled = true;
   }
 }
@@ -640,18 +613,15 @@ Lsdb::buildAdjLsa()
     m_isBuildAdjLsaSheduled = true;
     int schedulingTime = m_confParam.getInterestRetryNumber() *
                          m_confParam.getInterestResendTime();
-    m_scheduler.scheduleEvent(ndn::time::seconds(schedulingTime),
-                              std::bind(&Lsdb::buildAdjLsa, this));
+    m_scheduler.schedule(ndn::time::seconds(schedulingTime), [this] { buildAdjLsa(); });
   }
 }
 
 bool
 Lsdb::addAdjLsa(AdjLsa& alsa)
 {
-  std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
-                                                m_adjLsdb.end(),
-                                                std::bind(adjLsaCompareByKey, _1,
-                                                     alsa.getKey()));
+  auto it = std::find_if(m_adjLsdb.begin(), m_adjLsdb.end(),
+                         std::bind(adjLsaCompareByKey, _1, alsa.getKey()));
   if (it == m_adjLsdb.end()) {
     m_adjLsdb.push_back(alsa);
     // Add any new name prefixes to the NPT
@@ -669,21 +639,20 @@ Lsdb::addAdjLsa(AdjLsa& alsa)
 AdjLsa*
 Lsdb::findAdjLsa(const ndn::Name& key)
 {
-  std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
-                                                m_adjLsdb.end(),
-                                                std::bind(adjLsaCompareByKey, _1, key));
+  auto it = std::find_if(m_adjLsdb.begin(), m_adjLsdb.end(),
+                         std::bind(adjLsaCompareByKey, _1, key));
   if (it != m_adjLsdb.end()) {
-    return &(*it);
+    return &*it;
   }
-  return 0;
+  return nullptr;
 }
 
 bool
 Lsdb::isAdjLsaNew(const ndn::Name& key, uint64_t seqNo)
 {
-  AdjLsa*  adjLsaCheck = findAdjLsa(key);
+  AdjLsa* adjLsaCheck = findAdjLsa(key);
   // If it is in the LSDB
-  if (adjLsaCheck != 0) {
+  if (adjLsaCheck != nullptr) {
     // And the supplied seq no is newer (higher) than the current one.
     if (adjLsaCheck->getLsSeqNo() < seqNo) {
       return true;
@@ -695,12 +664,12 @@ Lsdb::isAdjLsaNew(const ndn::Name& key, uint64_t seqNo)
   return true;
 }
 
-ndn::EventId
+ndn::scheduler::EventId
 Lsdb::scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
                                const ndn::time::seconds& expTime)
 {
-  return m_scheduler.scheduleEvent(expTime + GRACE_PERIOD,
-                                   std::bind(&Lsdb::expireOrRefreshAdjLsa, this, key, seqNo));
+  return m_scheduler.schedule(expTime + GRACE_PERIOD,
+                              std::bind(&Lsdb::expireOrRefreshAdjLsa, this, key, seqNo));
 }
 
 bool
@@ -709,7 +678,7 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
   ndn::time::seconds timeToExpire = m_lsaRefreshTime;
   AdjLsa* chkAdjLsa = findAdjLsa(alsa.getKey());
   // If this adj. LSA is not in the LSDB already
-  if (chkAdjLsa == 0) {
+  if (chkAdjLsa == nullptr) {
     NLSR_LOG_DEBUG("New Adj LSA. Adding to LSDB");
     NLSR_LOG_DEBUG("Adding Adj Lsa");
     alsa.writeLog();
@@ -721,8 +690,7 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
                                                    ndn::time::system_clock::now();
       timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
     }
-    scheduleAdjLsaExpiration(alsa.getKey(),
-                             alsa.getLsSeqNo(), timeToExpire);
+    scheduleAdjLsaExpiration(alsa.getKey(), alsa.getLsSeqNo(), timeToExpire);
   }
   else {
     if (chkAdjLsa->getLsSeqNo() < alsa.getLsSeqNo()) {
@@ -741,11 +709,10 @@ Lsdb::installAdjLsa(AdjLsa& alsa)
         m_routingTable.scheduleRoutingTableCalculation();
       }
       if (alsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
-        ndn::time::system_clock::Duration duration = alsa.getExpirationTimePoint() -
-                                                     ndn::time::system_clock::now();
+        auto duration = alsa.getExpirationTimePoint() - ndn::time::system_clock::now();
         timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
       }
-      cancelScheduleLsaExpiringEvent(chkAdjLsa->getExpiringEventId());
+      chkAdjLsa->getExpiringEventId().cancel();
       chkAdjLsa->setExpiringEventId(scheduleAdjLsaExpiration(alsa.getKey(),
                                                              alsa.getLsSeqNo(),
                                                              timeToExpire));
@@ -778,9 +745,9 @@ Lsdb::buildAndInstallOwnAdjLsa()
 bool
 Lsdb::removeAdjLsa(const ndn::Name& key)
 {
-  std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
-                                                m_adjLsdb.end(),
-                                                std::bind(adjLsaCompareByKey, _1, key));
+  auto it = std::find_if(m_adjLsdb.begin(), m_adjLsdb.end(),
+                         std::bind(adjLsaCompareByKey, _1, key));
+
   if (it != m_adjLsdb.end()) {
     NLSR_LOG_DEBUG("Deleting Adj Lsa");
     it->writeLog();
@@ -796,13 +763,9 @@ Lsdb::removeAdjLsa(const ndn::Name& key)
 bool
 Lsdb::doesAdjLsaExist(const ndn::Name& key)
 {
-  std::list<AdjLsa>::iterator it = std::find_if(m_adjLsdb.begin(),
-                                                m_adjLsdb.end(),
-                                                std::bind(adjLsaCompareByKey, _1, key));
-  if (it == m_adjLsdb.end()) {
-    return false;
-  }
-  return true;
+  auto it = std::find_if(m_adjLsdb.begin(), m_adjLsdb.end(),
+                         std::bind(adjLsaCompareByKey, _1, key));
+  return it != m_adjLsdb.end();
 }
 
 const std::list<AdjLsa>&
@@ -825,7 +788,7 @@ Lsdb::expireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo)
   NLSR_LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   NameLsa* chkNameLsa = findNameLsa(lsaKey);
   // If this name LSA exists in the LSDB
-  if (chkNameLsa != 0) {
+  if (chkNameLsa != nullptr) {
     NLSR_LOG_DEBUG("LSA Exists with seq no: " << chkNameLsa->getLsSeqNo());
     // If its seq no is the one we are expecting.
     if (chkNameLsa->getLsSeqNo() == seqNo) {
@@ -868,7 +831,7 @@ Lsdb::expireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo)
   NLSR_LOG_DEBUG("LSA Key: " << lsaKey << " Seq No: " << seqNo);
   AdjLsa* chkAdjLsa = findAdjLsa(lsaKey);
   // If this is a valid LSA
-  if (chkAdjLsa != 0) {
+  if (chkAdjLsa != nullptr) {
     NLSR_LOG_DEBUG("LSA Exists with seq no: " << chkAdjLsa->getLsSeqNo());
     // And if it hasn't been updated for some other reason
     if (chkAdjLsa->getLsSeqNo() == seqNo) {
@@ -916,7 +879,7 @@ Lsdb::expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
   NLSR_LOG_DEBUG("LSA Key : " << lsaKey << " Seq No: " << seqNo);
   CoordinateLsa* chkCorLsa = findCoordinateLsa(lsaKey);
   // Whether the LSA is in the LSDB or not.
-  if (chkCorLsa != 0) {
+  if (chkCorLsa != nullptr) {
     NLSR_LOG_DEBUG("LSA Exists with seq no: " << chkCorLsa->getLsSeqNo());
     // Whether the LSA has been updated without our knowledge.
     if (chkCorLsa->getLsSeqNo() == seqNo) {

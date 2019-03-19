@@ -26,7 +26,6 @@
 #include "adjacent.hpp"
 #include "adjacency-list.hpp"
 
-#include <boost/cstdint.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/util/time.hpp>
 #include <boost/tokenizer.hpp>
@@ -43,14 +42,6 @@ public:
     BASE,
     MOCK
   };
-
-  Lsa()
-    : m_origRouter()
-    , m_lsSeqNo()
-    , m_expirationTimePoint()
-    , m_expiringEventId()
-  {
-  }
 
   virtual
   ~Lsa() = default;
@@ -98,12 +89,12 @@ public:
   }
 
   void
-  setExpiringEventId(const ndn::EventId leei)
+  setExpiringEventId(ndn::scheduler::EventId eid)
   {
-    m_expiringEventId = leei;
+    m_expiringEventId = std::move(eid);
   }
 
-  ndn::EventId
+  ndn::scheduler::EventId
   getExpiringEventId() const
   {
     return m_expiringEventId;
@@ -151,17 +142,15 @@ protected:
 
 protected:
   ndn::Name m_origRouter;
-  uint32_t m_lsSeqNo;
+  uint32_t m_lsSeqNo = 0;
   ndn::time::system_clock::TimePoint m_expirationTimePoint;
-  ndn::EventId m_expiringEventId;
+  ndn::scheduler::EventId m_expiringEventId;
 };
 
 class NameLsa : public Lsa
 {
 public:
-  NameLsa()
-  {
-  }
+  NameLsa() = default;
 
   NameLsa(const ndn::Name& origR, uint32_t lsn,
           const ndn::time::system_clock::TimePoint& lt,
@@ -235,9 +224,7 @@ class AdjLsa : public Lsa
 public:
   typedef AdjacencyList::const_iterator const_iterator;
 
-  AdjLsa()
-  {
-  }
+  AdjLsa() = default;
 
   AdjLsa(const ndn::Name& origR, uint32_t lsn,
          const ndn::time::system_clock::TimePoint& lt,
@@ -320,10 +307,7 @@ private:
 class CoordinateLsa : public Lsa
 {
 public:
-  CoordinateLsa()
-    : m_corRad(0)
-  {
-  }
+  CoordinateLsa() = default;
 
   CoordinateLsa(const ndn::Name& origR, uint32_t lsn,
                 const ndn::time::system_clock::TimePoint& lt,
@@ -349,13 +333,13 @@ public:
   double
   getCorRadius() const
   {
-      return m_corRad;
+    return m_corRad;
   }
 
   void
   setCorRadius(double cr)
   {
-      m_corRad = cr;
+    m_corRad = cr;
   }
 
   const std::vector<double>
@@ -385,7 +369,7 @@ public:
   serialize() const override;
 
 private:
-  double m_corRad;
+  double m_corRad = 0.0;
   std::vector<double> m_angles;
 
   friend std::ostream&
@@ -410,8 +394,8 @@ operator>>(std::istream& is, Lsa::Type& type);
 } // namespace nlsr
 
 namespace std {
-  std::string
-  to_string(const nlsr::Lsa::Type& type);
+std::string
+to_string(const nlsr::Lsa::Type& type);
 } // namespace std
 
 #endif // NLSR_LSA_HPP

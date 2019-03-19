@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -561,7 +561,7 @@ Nlsr::scheduleDatasetFetch()
 {
   NLSR_LOG_DEBUG("Scheduling Dataset Fetch in " << m_confParam.getFaceDatasetFetchInterval());
 
-  m_scheduler.scheduleEvent(m_confParam.getFaceDatasetFetchInterval(),
+  m_scheduler.schedule(m_confParam.getFaceDatasetFetchInterval(),
     [this] {
       this->initializeFaces(
         [this] (const std::vector<ndn::nfd::FaceStatus>& faces) {

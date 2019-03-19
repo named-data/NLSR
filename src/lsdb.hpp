@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -277,7 +277,7 @@ private:
     \param seqNo The seq. no. associated with the LSA.
     \param expTime How many seconds to wait before triggering the event.
    */
-  ndn::EventId
+  ndn::scheduler::EventId
   scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
                             const ndn::time::seconds& expTime);
 
@@ -294,22 +294,21 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     \param seqNo The sequence number of the LSA to check.
     \param expTime The number of seconds to wait before triggering the event.
   */
-  ndn::EventId
+  ndn::scheduler::EventId
   scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
                            const ndn::time::seconds& expTime);
 
 private:
-
   void
   expireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo);
 
-  ndn::EventId
+  ndn::scheduler::EventId
   scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
                                   const ndn::time::seconds& expTime);
 
   void
   expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
-                                uint64_t seqNo);
+                               uint64_t seqNo);
 
 private:
 
@@ -378,10 +377,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 private:
   ndn::time::system_clock::TimePoint
   getLsaExpirationTimePoint();
-
-  /*! \brief Cancels an event in the event scheduler. */
-  void
-  cancelScheduleLsaExpiringEvent(ndn::EventId eid);
 
 public:
   static const ndn::Name::Component NAME_COMPONENT;
