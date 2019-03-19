@@ -34,8 +34,8 @@ else
 fi
 
 sudo rm -fr /usr/local/include/PSync
-sudo rm -f /usr/local/lib/libPSync*
-sudo rm -f /usr/local/lib/pkgconfig/PSync*
+sudo rm -f /usr/local/lib{,64}/libPSync*
+sudo rm -f /usr/local/lib{,64}/pkgconfig/PSync.pc
 
 pushd PSync >/dev/null
 
@@ -45,7 +45,7 @@ fi
 
 ./waf configure --color=yes
 ./waf build --color=yes -j${WAF_JOBS:-1}
-sudo env "PATH=$PATH" ./waf install --color=yes
+sudo_preserve_env PATH -- ./waf install --color=yes
 
 popd >/dev/null
 popd >/dev/null

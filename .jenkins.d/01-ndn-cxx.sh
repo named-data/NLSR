@@ -37,14 +37,14 @@ fi
 
 sudo rm -f /usr/local/bin/ndnsec*
 sudo rm -fr /usr/local/include/ndn-cxx
-sudo rm -f /usr/local/lib/libndn-cxx*
-sudo rm -f /usr/local/lib/pkgconfig/libndn-cxx.pc
+sudo rm -f /usr/local/lib{,64}/libndn-cxx*
+sudo rm -f /usr/local/lib{,64}/pkgconfig/libndn-cxx.pc
 
 pushd ndn-cxx >/dev/null
 
 ./waf configure --color=yes --enable-shared --disable-static --without-osx-keychain
 ./waf build --color=yes -j${WAF_JOBS:-1}
-sudo env "PATH=$PATH" ./waf install --color=yes
+sudo_preserve_env PATH -- ./waf install --color=yes
 
 popd >/dev/null
 popd >/dev/null

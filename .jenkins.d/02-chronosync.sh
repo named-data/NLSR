@@ -34,8 +34,8 @@ else
 fi
 
 sudo rm -fr /usr/local/include/ChronoSync
-sudo rm -f /usr/local/lib/libChronoSync*
-sudo rm -f /usr/local/lib/pkgconfig/ChronoSync*
+sudo rm -f /usr/local/lib{,64}/libChronoSync*
+sudo rm -f /usr/local/lib{,64}/pkgconfig/ChronoSync.pc
 
 pushd ChronoSync >/dev/null
 
@@ -45,7 +45,7 @@ fi
 
 ./waf configure --color=yes
 ./waf build --color=yes -j${WAF_JOBS:-1}
-sudo env "PATH=$PATH" ./waf install --color=yes
+sudo_preserve_env PATH -- ./waf install --color=yes
 
 popd >/dev/null
 popd >/dev/null
