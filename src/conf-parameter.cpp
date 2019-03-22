@@ -31,6 +31,14 @@ INIT_LOGGER(ConfParameter);
 // To be changed when breaking changes are made to sync
 const uint64_t ConfParameter::SYNC_VERSION = 6;
 
+static std::unique_ptr<ndn::security::v2::CertificateFetcherDirectFetch>
+makeCertificateFetcher(ndn::Face& face)
+{
+  auto fetcher = std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face);
+  fetcher->setSendDirectInterestOnly(true);
+  return fetcher;
+}
+
 ConfParameter::ConfParameter(ndn::Face& face, const std::string& confFileName)
   : m_confFileName(confFileName)
   , m_lsaRefreshTime(LSA_REFRESH_TIME_DEFAULT)
@@ -50,10 +58,10 @@ ConfParameter::ConfParameter(ndn::Face& face, const std::string& confFileName)
   , m_syncProtocol(SYNC_PROTOCOL_CHRONOSYNC)
   , m_adjl()
   , m_npl()
-  , m_validator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
+  , m_validator(makeCertificateFetcher(face))
   , m_prefixUpdateValidator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
-  {
-  }
+{
+}
 
 void
 ConfParameter::writeLog()
