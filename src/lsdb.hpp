@@ -207,6 +207,11 @@ public:
     return m_isBuildAdjLsaSheduled;
   }
 
+  const SyncLogicHandler&
+  getSync() {
+    return m_sync;
+  }
+
 private:
   /* \brief Add a name LSA to the LSDB if it isn't already there.
      \param nlsa The candidade name LSA.
@@ -291,8 +296,6 @@ private:
   void
   expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
                                uint64_t seqNo);
-
-private:
 
   void
   processInterestForNameLsa(const ndn::Interest& interest,

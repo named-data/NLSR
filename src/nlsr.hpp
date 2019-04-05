@@ -83,6 +83,9 @@ public:
   Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam);
 
   void
+  registerStrategyForCerts(const ndn::Name& originRouter);
+
+  void
   registrationFailed(const ndn::Name& name);
 
   void
@@ -268,6 +271,7 @@ private:
   NamePrefixList& m_namePrefixList;
   bool m_isDaemonProcess;
   ndn::security::ValidatorConfig& m_validator;
+  std::vector<ndn::Name> m_strategySetOnRouters;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   Fib m_fib;
@@ -277,6 +281,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
 private:
   ndn::util::signal::ScopedConnection m_afterSegmentValidatedConnection;
+  ndn::util::signal::ScopedConnection m_onNewLsaConnection;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::mgmt::Dispatcher m_dispatcher;

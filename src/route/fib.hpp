@@ -237,6 +237,10 @@ private:
   void
   refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb);
 
+public:
+  static const std::string MULTICAST_STRATEGY;
+  static const std::string BEST_ROUTE_V2_STRATEGY;
+
 private:
   ndn::Scheduler& m_scheduler;
   int32_t m_refreshTime;

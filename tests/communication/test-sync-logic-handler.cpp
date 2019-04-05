@@ -105,7 +105,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherLS, T, Protocols, SyncLogicFixtur
 
     // Actual testing done here -- signal function callback
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
-      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
+           const ndn::Name& originRouter) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
@@ -129,7 +130,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherHR, T, Protocols, SyncLogicFixtur
     std::string updateName = this->updateNamePrefix + std::to_string(lsaType);
 
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
-      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
+           const ndn::Name& originRouter) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
@@ -152,7 +154,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherHRDry, T, Protocols, SyncLogicFix
     std::string updateName = this->updateNamePrefix + std::to_string(lsaType);
 
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
-      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
+           const ndn::Name& originRouter) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
       });
@@ -178,7 +181,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(NoUpdateForSelf, T, Protocols, SyncLogicFixture
               .append(std::to_string(lsaType));
 
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
-      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
+           const ndn::Name& originRouter) {
         BOOST_FAIL("Updates for self should not be emitted!");
       });
 
@@ -199,7 +203,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(MalformedUpdate, T, Protocols, SyncLogicFixture
     updateName.append(this->conf.getRouterName()).append(std::to_string(lsaType));
 
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
-      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
+           const ndn::Name& originRouter) {
         BOOST_FAIL("Malformed updates should not be emitted!");
       });
 
@@ -221,7 +226,8 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(LsaNotNew, T, Protocols, SyncLogicFixture<T::va
   const uint64_t sequenceNumber = 1;
   SyncLogicHandler sync{this->face, testLsaAlwaysFalse, this->conf};
     ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
-      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber) {
+      [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
+           const ndn::Name& originRouter) {
         BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
       });
 

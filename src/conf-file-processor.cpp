@@ -261,7 +261,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
   else {
     std::cerr << "Wrong value for lsa-refresh-time ";
-    std::cerr << "Allowed value: " << LSA_REFRESH_TIME_MIN << "-";;
+    std::cerr << "Allowed value: " << LSA_REFRESH_TIME_MIN << "-";
     std::cerr << LSA_REFRESH_TIME_MAX << std::endl;
 
     return false;

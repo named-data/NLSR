@@ -76,7 +76,7 @@ SequencingManager::initiateSeqNoFromFile()
     inputFile >> lsaOrCombinedSeqNo >> seqNo;
     m_adjLsaSeq = seqNo;
 
-    inputFile >> lsaOrCombinedSeqNo >> seqNo;;
+    inputFile >> lsaOrCombinedSeqNo >> seqNo;
     m_corLsaSeq = seqNo;
 
     // File was in old format and had a combined sequence number

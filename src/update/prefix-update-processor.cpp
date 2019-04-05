@@ -126,7 +126,7 @@ PrefixUpdateProcessor::checkForPrefixInFile(const std::string prefix)
 bool
 PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix)
 {
-  std::string value = " prefix " + prefix.toUri();;
+  std::string value = " prefix " + prefix.toUri();
   std::string fileString;
   std::string line;
   std::string trimedLine;

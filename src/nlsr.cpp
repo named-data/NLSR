@@ -54,6 +54,11 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
            m_confParam, m_namePrefixTable, m_routingTable)
   , m_afterSegmentValidatedConnection(m_lsdb.afterSegmentValidatedSignal.connect(
                                       std::bind(&Nlsr::afterFetcherSignalEmitted, this, _1)))
+  , m_onNewLsaConnection(m_lsdb.getSync().onNewLsa->connect(
+                          [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
+                                  const ndn::Name& originRouter) {
+                            registerStrategyForCerts(originRouter);
+                          }))
   , m_dispatcher(m_face, m_keyChain)
   , m_datasetHandler(m_dispatcher, m_lsdb, m_routingTable)
   , m_helloProtocol(m_face, m_keyChain, m_signingInfo, confParam, m_routingTable, m_lsdb)
@@ -75,6 +80,41 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   m_faceMonitor.start();
 
   setStrategies();
+}
+
+void
+Nlsr::registerStrategyForCerts(const ndn::Name& originRouter)
+{
+  for (const ndn::Name& router : m_strategySetOnRouters) {
+    if (router == originRouter) {
+      // Have already set strategy for this router's certs once
+      return;
+    }
+  }
+
+  m_strategySetOnRouters.push_back(originRouter);
+
+  ndn::Name routerKey(originRouter);
+  routerKey.append("KEY");
+  ndn::Name instanceKey(originRouter);
+  instanceKey.append("nlsr").append("KEY");
+
+  m_fib.setStrategy(routerKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
+  m_fib.setStrategy(instanceKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
+
+  ndn::Name siteKey;
+  for (size_t i = 0; i < originRouter.size(); ++i) {
+    if (originRouter[i].toUri() == "%C1.Router") {
+      break;
+    }
+    siteKey.append(originRouter[i]);
+  }
+  ndn::Name opPrefix(siteKey);
+  siteKey.append("KEY");
+  m_fib.setStrategy(siteKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
+
+  opPrefix.append(std::string("%C1.Operator"));
+  m_fib.setStrategy(opPrefix, Fib::BEST_ROUTE_V2_STRATEGY, 0);
 }
 
 void
@@ -135,10 +175,8 @@ Nlsr::addDispatcherTopPrefix(const ndn::Name& topPrefix)
 void
 Nlsr::setStrategies()
 {
-  const std::string strategy("ndn:/localhost/nfd/strategy/multicast");
-
-  m_fib.setStrategy(m_confParam.getLsaPrefix(), strategy, 0);
-  m_fib.setStrategy(m_confParam.getSyncPrefix(), strategy, 0);
+  m_fib.setStrategy(m_confParam.getLsaPrefix(), Fib::MULTICAST_STRATEGY, 0);
+  m_fib.setStrategy(m_confParam.getSyncPrefix(), Fib::MULTICAST_STRATEGY, 0);
 }
 
 void
@@ -156,9 +194,9 @@ Nlsr::loadCertToPublish(const ndn::security::v2::Certificate& certificate)
 void
 Nlsr::afterFetcherSignalEmitted(const ndn::Data& lsaSegment)
 {
-  NLSR_LOG_TRACE("SegmentFetcher fetched a data segment. Start inserting cert to own cert store.");
   ndn::Name keyName = lsaSegment.getSignature().getKeyLocator().getName();
   if (getCertificate(keyName) == nullptr) {
+    NLSR_LOG_TRACE("Publishing certificate for: " << keyName);
     publishCertFromCache(keyName);
   }
   else {
@@ -171,6 +209,7 @@ Nlsr::publishCertFromCache(const ndn::Name& keyName)
 {
   const ndn::security::v2::Certificate* cert = m_validator.getUnverifiedCertCache()
                                                           .find(keyName);
+
   if (cert != nullptr) {
     m_certStore.insert(*cert);
     NLSR_LOG_TRACE(*cert);
@@ -187,6 +226,7 @@ Nlsr::publishCertFromCache(const ndn::Name& keyName)
     }
   }
   else {
+    // Happens for root cert
     NLSR_LOG_TRACE("Cert for " << keyName << " was not found in the Validator's cache. ");
   }
 }

@@ -55,7 +55,8 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain,
   , m_adjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval())
   , m_sequencingManager(m_confParam.getStateFileDir(), m_confParam.getHyperbolicState())
   , m_onNewLsaConnection(m_sync.onNewLsa->connect(
-      [this] (const ndn::Name& updateName, uint64_t sequenceNumber) {
+      [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
+              const ndn::Name& originRouter) {
         ndn::Name lsaInterest{updateName};
         lsaInterest.appendNumber(sequenceNumber);
         expressInterest(lsaInterest, 0);

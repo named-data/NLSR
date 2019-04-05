@@ -34,6 +34,8 @@ namespace nlsr {
 INIT_LOGGER(route.Fib);
 
 const uint64_t Fib::GRACE_PERIOD = 10;
+const std::string Fib::MULTICAST_STRATEGY("ndn:/localhost/nfd/strategy/multicast");
+const std::string Fib::BEST_ROUTE_V2_STRATEGY("ndn:/localhost/nfd/strategy/best-route");
 
 Fib::Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList,
          ConfParameter& conf, ndn::security::v2::KeyChain& keyChain)

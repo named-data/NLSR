@@ -140,7 +140,7 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
                        "is enabled. Not going to fetch.");
         return;
       }
-      (*onNewLsa)(updateName, seqNo);
+      (*onNewLsa)(updateName, seqNo, originRouter);
     }
   }
 }

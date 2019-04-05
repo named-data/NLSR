@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -33,7 +33,7 @@ class RoutingTableEntry;
 class SyncLogicHandler;
 
 using AfterRoutingChange = ndn::util::Signal<RoutingTable, const std::list<RoutingTableEntry>&>;
-using OnNewLsa = ndn::util::Signal<SyncLogicHandler, const ndn::Name&, const uint64_t&>;
+using OnNewLsa = ndn::util::Signal<SyncLogicHandler, const ndn::Name&, const uint64_t&, const ndn::Name&>;
 
 } // namespace nlsr
 

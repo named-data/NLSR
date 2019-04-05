@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -139,7 +139,7 @@ RoutingTableStatus::wireDecode(const ndn::Block& wire)
 std::ostream&
 operator<<(std::ostream& os, const RoutingTableStatus& rtStatus)
 {
-  os << "Routing Table Status: " << std::endl;;
+  os << "Routing Table Status: " << std::endl;
 
   bool isFirst = true;
 
