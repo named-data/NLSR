@@ -29,16 +29,17 @@
 #include <boost/asio.hpp>
 #include <boost/test/unit_test.hpp>
 
-#include <ndn-cxx/util/scheduler.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/util/time-unit-test-clock.hpp>
-
-#include <ndn-cxx/security/signature-sha256-with-rsa.hpp>
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/signature-sha256-with-rsa.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/util/time-unit-test-clock.hpp>
 
 namespace nlsr {
 namespace test {
+
+using namespace ndn::time_literals;
 
 ndn::Data&
 signData(ndn::Data& data);
@@ -154,6 +155,7 @@ public:
     }
 
     auto data = make_shared<ndn::Data>(name);
+    data->setFreshnessPeriod(1_s);
     data->setFinalBlock(name[-1]);
     data->setContent(std::forward<ContentArgs>(contentArgs)...);
     this->signDatasetReply(*data);

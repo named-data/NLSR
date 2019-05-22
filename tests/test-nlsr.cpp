@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "nlsr.hpp"
 #include "test-common.hpp"
@@ -153,6 +153,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEvent)
     .setRemoteUri(faceUri)
     .setFaceId(faceId);
   auto data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
   m_face.receive(*data);
@@ -185,6 +186,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventNoMatch)
     .setRemoteUri(eventUri)
     .setFaceId(faceId);
   auto data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
   m_face.receive(*data);
@@ -215,6 +217,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
     .setRemoteUri(faceUri)
     .setFaceId(eventFaceId);
   std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
   m_face.receive(*data);
@@ -303,6 +306,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
        .setFaceId(destroyFaceId);
 
   std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
 
