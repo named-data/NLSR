@@ -218,12 +218,10 @@ Lsdb::installNameLsa(NameLsa& nlsa)
           m_namePrefixTable.addEntry(name, nlsa.getOrigRouter());
         }
       }
-    }
-    if (nlsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
-      ndn::time::system_clock::Duration duration = nlsa.getExpirationTimePoint() -
-                                                   ndn::time::system_clock::now();
+      auto duration = nlsa.getExpirationTimePoint() - ndn::time::system_clock::now();
       timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
     }
+
     nlsa.setExpiringEventId(scheduleNameLsaExpiration(nlsa.getKey(),
                                                       nlsa.getLsSeqNo(),
                                                       timeToExpire));

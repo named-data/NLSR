@@ -40,19 +40,18 @@ class RoutingTable;
 class RoutingTableCalculator
 {
 public:
-  RoutingTableCalculator()
-  {
-  }
   RoutingTableCalculator(size_t nRouters)
   {
     m_nRouters = nRouters;
   }
+
 protected:
   /*! \brief Allocate the space needed for the adj. matrix. */
   void
   allocateAdjMatrix();
 
-  /*! \brief Zero every cell of the matrix to ensure that the memory is safe. */
+  /*! \brief set NON_ADJACENT_COST i.e. -12345 to every cell of the matrix to
+    ensure that the memory is safe. This is also to incorporate zero cost links */
   void
   initMatrix();
 
@@ -63,6 +62,9 @@ protected:
   void
   makeAdjMatrix(const std::list<AdjLsa>& adjLsaList, Map& pMap);
 
+  /*! \brief Writes a formated adjacent matrix to DEBUG log
+    \param map The map containing adjacent matrix data
+  */
   void
   writeAdjMatrixLog(const Map& map) const;
 
@@ -90,8 +92,8 @@ protected:
     Obtains a sparse list of adjacencies and link costs for some
     router. Since this is sparse, that means while generating these
     arrays, if there is no adjacency at i in the matrix, these
-    temporary variables will not contain a 0 at i, but rather will
-    contain the values for the next valid adjacency.
+    temporary variables will not contain a NON_ADJACENT_COST (-12345) at i,
+    but rather will contain the values for the next valid adjacency.
   */
   void
   getLinksFromAdjMatrix(int* links, double* linkCosts, int source);
@@ -122,6 +124,7 @@ protected:
   int vNoLink;
   int* links;
   double* linkCosts;
+
 };
 
 class LinkStateRoutingTableCalculator: public RoutingTableCalculator
@@ -129,10 +132,6 @@ class LinkStateRoutingTableCalculator: public RoutingTableCalculator
 public:
   LinkStateRoutingTableCalculator(size_t nRouters)
     : RoutingTableCalculator(nRouters)
-    , EMPTY_PARENT(-12345)
-    , INF_DISTANCE(2147483647)
-    , NO_MAPPING_NUM(-1)
-    , NO_NEXT_HOP(-12345)
   {
   }
 
@@ -155,6 +154,9 @@ private:
 
     Sorts the list based on distance. The distances are indexed by
     their mappingNo in dist. Currently uses an insertion sort.
+
+    The cost between two nodes can be zero or greater than zero.
+
   */
   void
   sortQueueByDistance(int* Q, double* dist, int start, int element);
@@ -195,10 +197,10 @@ private:
   int* m_parent;
   double* m_distance;
 
-  const int EMPTY_PARENT;
-  const double INF_DISTANCE;
-  const int NO_MAPPING_NUM;
-  const int NO_NEXT_HOP;
+  static const int EMPTY_PARENT;
+  static const double INF_DISTANCE;
+  static const int NO_MAPPING_NUM;
+  static const int NO_NEXT_HOP;
 
 };
 

@@ -415,7 +415,8 @@ public:
     return m_stateFileDir;
   }
 
-  void setConfFileNameDynamic(const std::string& confFileDynamic)
+  void
+  setConfFileNameDynamic(const std::string& confFileDynamic)
   {
     m_confFileNameDynamic = confFileDynamic;
   }

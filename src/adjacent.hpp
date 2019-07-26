@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -77,18 +77,14 @@ public:
     m_faceUri = faceUri;
   }
 
-  uint64_t
+  double
   getLinkCost() const
   {
-    uint64_t linkCost = static_cast<uint64_t>(ceil(m_linkCost));
-    return linkCost;
+    return ceil(m_linkCost);
   }
 
   void
-  setLinkCost(double lc)
-  {
-    m_linkCost = lc;
-  }
+  setLinkCost(double lc);
 
   Status
   getStatus() const
@@ -161,7 +157,8 @@ public:
   writeLog();
 
 public:
-  static const float DEFAULT_LINK_COST;
+  static const double DEFAULT_LINK_COST;
+  static const double NON_ADJACENT_COST;
 
 private:
   /*! m_name The NLSR-configured router name of the neighbor */

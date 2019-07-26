@@ -25,6 +25,7 @@
 #include "nexthop.hpp"
 #include "nlsr.hpp"
 #include "logger.hpp"
+#include "adjacent.hpp"
 
 #include <iostream>
 #include <boost/math/constants/constants.hpp>
@@ -34,6 +35,11 @@
 namespace nlsr {
 
 INIT_LOGGER(route.RoutingTableCalculator);
+
+const int LinkStateRoutingTableCalculator::EMPTY_PARENT = -12345;
+const double LinkStateRoutingTableCalculator::INF_DISTANCE = 2147483647;
+const int LinkStateRoutingTableCalculator::NO_MAPPING_NUM = -1;
+const int LinkStateRoutingTableCalculator::NO_NEXT_HOP = -12345;
 
 void
 RoutingTableCalculator::allocateAdjMatrix()
@@ -50,7 +56,7 @@ RoutingTableCalculator::initMatrix()
 {
   for (size_t i = 0; i < m_nRouters; i++) {
     for (size_t j = 0; j < m_nRouters; j++) {
-      adjMatrix[i][j] = 0;
+      adjMatrix[i][j] = Adjacent::NON_ADJACENT_COST;
     }
   }
 }
@@ -79,8 +85,8 @@ RoutingTableCalculator::makeAdjMatrix(const std::list<AdjLsa>& adjLsaList, Map& 
   // Links that do not have the same cost for both directions should
   // have their costs corrected:
   //
-  //   If the cost of one side of the link is 0, both sides of the
-  //   link should have their cost corrected to 0.
+  //   If the cost of one side of the link is NON_ADJACENT_COST (i.e. broken) or negative,
+  //   both direction of the link should have their cost corrected to NON_ADJACENT_COST.
   //
   //   Otherwise, both sides of the link should use the larger of the two costs.
   //
@@ -93,10 +99,10 @@ RoutingTableCalculator::makeAdjMatrix(const std::list<AdjLsa>& adjLsaList, Map& 
       double fromCost = adjMatrix[col][row];
 
       if (fromCost != toCost) {
-        double correctedCost = 0.0;
+        double correctedCost = Adjacent::NON_ADJACENT_COST;
 
-        if (toCost != 0 && fromCost != 0) {
-          // If both sides of the link are up, use the larger cost
+        if (toCost >= 0 && fromCost >= 0) {
+          // If both sides of the link are up, use the larger cost else break the link
           correctedCost = std::max(toCost, fromCost);
         }
 
@@ -152,7 +158,8 @@ RoutingTableCalculator::adjustAdMatrix(int source, int link, double linkCost)
       adjMatrix[source][i] = linkCost;
     }
     else {
-      adjMatrix[source][i] = 0;
+      // if "i" is not a link to the source, set it's cost to a non adjacent value.
+      adjMatrix[source][i] = Adjacent::NON_ADJACENT_COST;
     }
   }
 }
@@ -163,7 +170,7 @@ RoutingTableCalculator::getNumOfLinkfromAdjMatrix(int sRouter)
   int noLink = 0;
 
   for (size_t i = 0; i < m_nRouters; i++) {
-    if (adjMatrix[sRouter][i] > 0) {
+    if (adjMatrix[sRouter][i] >= 0 && i != static_cast<size_t>(sRouter)) { // make sure "i" is not self
       noLink++;
     }
   }
@@ -177,7 +184,7 @@ RoutingTableCalculator::getLinksFromAdjMatrix(int* links,
   int j = 0;
 
   for (size_t i = 0; i < m_nRouters; i++) {
-    if (adjMatrix[source][i] > 0) {
+    if (adjMatrix[source][i] >= 0 && i != static_cast<size_t>(source)) {// make sure "i" is not self
       links[j] = i;
       linkCosts[j] = adjMatrix[source][i];
       j++;
@@ -290,7 +297,7 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
       // Iterate over the adjacent nodes to u.
       for (v = 0 ; v < static_cast<int>(m_nRouters); v++) {
         // If the current node is accessible.
-        if (adjMatrix[u][v] > 0) {
+        if (adjMatrix[u][v] >= 0) {
           // And we haven't visited it yet.
           if (isNotExplored(Q, v, head + 1, m_nRouters)) {
             // And if the distance to this node + from this node to v
@@ -328,7 +335,6 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(AdjacencyList& a
 
       // Obtain the next hop that was determined by the algorithm
       nextHopRouter = getLsNextHop(i, sourceRouter);
-
       // If this router is accessible at all
       if (nextHopRouter != NO_NEXT_HOP) {
 
@@ -469,11 +475,10 @@ HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
 
           // Could not compute distance
           if (distance == UNKNOWN_DISTANCE) {
-            NLSR_LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName << " to " <<
-                          *destRouterName);
+            NLSR_LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName
+                           << " to " << *destRouterName);
             continue;
           }
-
           addNextHop(*destRouterName, srcFaceUri, distance, rt);
         }
       }

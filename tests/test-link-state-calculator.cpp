@@ -28,6 +28,7 @@
 #include "test-common.hpp"
 #include "route/map.hpp"
 #include "route/routing-table.hpp"
+#include "adjacent.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
@@ -217,17 +218,18 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
   }
 }
 
-BOOST_AUTO_TEST_CASE(AsymmetricZeroCost)
+BOOST_AUTO_TEST_CASE(NonAdjacentCost)
 {
   // Asymmetric link cost between B and C
   ndn::Name key = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
-  AdjLsa* lsa = nlsr.m_lsdb.findAdjLsa(key);
+  auto lsa = nlsr.m_lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
   auto c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
   BOOST_REQUIRE(c != conf.getAdjacencyList().end());
 
-  c->setLinkCost(0);
+  // Break the link between B - C by setting it to a NON_ADJACENT_COST.
+  c->setLinkCost(Adjacent::NON_ADJACENT_COST);
 
   // Calculation should consider the link between B and C as down
   LinkStateRoutingTableCalculator calculator(map.getMapSize());
@@ -237,25 +239,83 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCost)
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
   BOOST_REQUIRE(entryB != nullptr);
 
-  NexthopList& bHopList = entryB->getNexthopList();
+  auto bHopList = entryB->getNexthopList();
   BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 1);
 
-  const NextHop& nextHopForB = *(bHopList.getNextHops().begin());
+  const auto nextHopForB = bHopList.getNextHops().begin();
 
-  BOOST_CHECK(nextHopForB.getConnectingFaceUri() == ROUTER_B_FACE &&
-              nextHopForB.getRouteCostAsAdjustedInteger() == LINK_AB_COST);
+  BOOST_CHECK(nextHopForB->getConnectingFaceUri() == ROUTER_B_FACE &&
+              nextHopForB->getRouteCostAsAdjustedInteger() == LINK_AB_COST);
 
   // Router A should be able to get to C through C but not through B
-  RoutingTableEntry* entryC = routingTable.findRoutingTableEntry(ROUTER_C_NAME);
+  auto entryC = routingTable.findRoutingTableEntry(ROUTER_C_NAME);
   BOOST_REQUIRE(entryC != nullptr);
 
   NexthopList& cHopList = entryC->getNexthopList();
   BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 1);
 
-  const NextHop& nextHopForC = *(cHopList.getNextHops().begin());
+  const auto nextHopForC = cHopList.getNextHops().begin();
 
-  BOOST_CHECK(nextHopForC.getConnectingFaceUri() == ROUTER_C_FACE &&
-              nextHopForC.getRouteCostAsAdjustedInteger() == LINK_AC_COST);
+  BOOST_CHECK(nextHopForC->getConnectingFaceUri() == ROUTER_C_FACE &&
+              nextHopForC->getRouteCostAsAdjustedInteger() == LINK_AC_COST);
+}
+
+BOOST_AUTO_TEST_CASE(AsymmetricZeroCostLink)
+{
+  // Asymmetric and zero link cost between B - C, and B - A.
+  ndn::Name keyB = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
+  auto lsaB = nlsr.m_lsdb.findAdjLsa(keyB);
+  BOOST_REQUIRE(lsaB != nullptr);
+
+  auto c = lsaB->getAdl().findAdjacent(ROUTER_C_NAME);
+  BOOST_REQUIRE(c != conf.getAdjacencyList().end());
+  // Re-adjust link cost to 0 from B-C. However, this should not set B-C cost 0 because C-B
+  // cost is greater that 0 i.e. 17
+  c->setLinkCost(0);
+
+  auto a = lsaB->getAdl().findAdjacent(ROUTER_A_NAME);
+  BOOST_REQUIRE(a != conf.getAdjacencyList().end());
+
+  ndn::Name keyA = ndn::Name(ROUTER_A_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
+  auto lsaA = nlsr.m_lsdb.findAdjLsa(keyA);
+  BOOST_REQUIRE(lsaA != nullptr);
+
+  auto b = lsaA->getAdl().findAdjacent(ROUTER_B_NAME);
+  BOOST_REQUIRE(b != conf.getAdjacencyList().end());
+
+  // Re-adjust link cost to 0 from both the direction i.e B-A and A-B
+  a->setLinkCost(0);
+  b->setLinkCost(0);
+
+  // Calculation should consider 0 link-cost between B and C
+  LinkStateRoutingTableCalculator calculator(map.getMapSize());
+  calculator.calculatePath(map, routingTable, conf, lsdb.getAdjLsdb());
+
+  // Router A should be able to get to B through B and C
+  RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
+  BOOST_REQUIRE(entryB != nullptr);
+
+  // Node can have neighbors with zero cost, so the nexthop count should be 2
+  NexthopList& bHopList = entryB->getNexthopList();
+  BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 2);
+
+  const auto nextHopForB = bHopList.getNextHops().begin();
+  // Check if the next hop via B is through A or not after the cost adjustment
+  BOOST_CHECK(nextHopForB->getConnectingFaceUri() == ROUTER_B_FACE &&
+              nextHopForB->getRouteCostAsAdjustedInteger() == 0);
+
+  // Router A should be able to get to C through C and B
+  auto entryC = routingTable.findRoutingTableEntry(ROUTER_C_NAME);
+  BOOST_REQUIRE(entryC != nullptr);
+
+  NexthopList& cHopList = entryC->getNexthopList();
+  BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 2);
+
+  const auto nextHopForC = cHopList.getNextHops().begin();
+  // Check if the nextHop from C is via A or not
+  BOOST_CHECK(nextHopForC->getConnectingFaceUri() == ROUTER_C_FACE &&
+              nextHopForC->getRouteCostAsAdjustedInteger() == LINK_AC_COST);
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

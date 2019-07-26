@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -30,7 +30,8 @@ namespace nlsr {
 
 INIT_LOGGER(Adjacent);
 
-const float Adjacent::DEFAULT_LINK_COST = 10.0;
+const double Adjacent::DEFAULT_LINK_COST = 10.0;
+const double Adjacent::NON_ADJACENT_COST = -12345;
 
 Adjacent::Adjacent()
     : m_name()
@@ -56,12 +57,26 @@ Adjacent::Adjacent(const ndn::Name& an, const ndn::FaceUri& faceUri,  double lc,
                    Status s, uint32_t iton, uint64_t faceId)
     : m_name(an)
     , m_faceUri(faceUri)
-    , m_linkCost(lc)
     , m_status(s)
     , m_interestTimedOutNo(iton)
     , m_faceId(faceId)
   {
+    this->setLinkCost(lc);
   }
+
+void
+Adjacent::setLinkCost(double lc)
+{
+  // NON_ADJACENT_COST is a negative value and is used for nodes that aren't direct neighbors.
+  // But for direct/active neighbors, the cost cannot be negative.
+  if (lc < 0 && lc != NON_ADJACENT_COST)
+  {
+    NLSR_LOG_ERROR(" Neighbor's link-cost cannot be negative");
+    BOOST_THROW_EXCEPTION(ndn::tlv::Error("Neighbor's link-cost cannot be negative"));
+  }
+
+  m_linkCost = lc;
+}
 
 bool
 Adjacent::operator==(const Adjacent& adjacent) const
