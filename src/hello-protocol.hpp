@@ -167,12 +167,6 @@ private:
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                         const ndn::Name& neighbor, const ndn::time::milliseconds& timeout);
 
-  /*! \brief Create a Face for an adjacency
-   * \sa HelloProtocol::onRegistrationSuccess
-   */
-  void
-  registerPrefixes(const ndn::Name& adjName, const std::string& faceUri,
-                   double linkCost, const ndn::time::milliseconds& timeout);
 private:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;

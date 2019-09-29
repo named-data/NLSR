@@ -202,20 +202,24 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventNoMatch)
 
 BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
 {
-  // Setting constants for the unit test
-  const uint32_t eventFaceId = 1;
-  const uint32_t neighborFaceId = 2;
+  // So if NLSR gets the notification and registers prefixes it
+  // will change the Id to 1 and our tests will fail
+  // Need to disable registrationReply in dummy face and have own registration reply in the future
+  const uint32_t neighborFaceId = 1;
   const std::string faceUri = "udp4://10.0.0.1:6363";
 
   Adjacent neighbor("/ndn/neighborA", ndn::FaceUri(faceUri), 10,
-                    Adjacent::STATUS_ACTIVE, 0, neighborFaceId);
+                    Adjacent::STATUS_ACTIVE, 0, 0);
   conf.getAdjacencyList().insert(neighbor);
+
+  // Let NLSR start the face monitor
+  this->advanceClocks(10_ms);
 
   // Build, sign, and send the Face Event
   ndn::nfd::FaceEventNotification event;
   event.setKind(ndn::nfd::FACE_EVENT_CREATED)
     .setRemoteUri(faceUri)
-    .setFaceId(eventFaceId);
+    .setFaceId(neighborFaceId); // Does not matter what we set here, dummy face always returns 1
   std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
   data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
@@ -225,10 +229,24 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
   // Move the clocks forward so that the Face processes the event.
   this->advanceClocks(10_ms);
 
-  // Since the neighbor was already configured, this (simply erroneous) event should have no effect.
+  // Check that the neighbor is configured with the face id of 1
   auto iterator = conf.getAdjacencyList().findAdjacent(ndn::FaceUri(faceUri));
   BOOST_REQUIRE(iterator != conf.getAdjacencyList().end());
   BOOST_CHECK_EQUAL(iterator->getFaceId(), neighborFaceId);
+
+  // Resend same event notification again
+  m_face.sentInterests.clear();
+  data->setName("/localhost/nfd/faces/events/%FE%01");
+  m_keyChain.sign(*data);
+  m_face.receive(*data);
+  this->advanceClocks(10_ms);
+
+  for (const auto& interest : m_face.sentInterests) {
+    // Should not re-register prefix since this is the same event notification
+    if (ndn::Name("/localhost/nfd/rib/register").isPrefixOf(interest.getName())) {
+      BOOST_CHECK(false);
+    }
+  }
 }
 
 BOOST_AUTO_TEST_CASE(FaceDestroyEvent)

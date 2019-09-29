@@ -483,14 +483,16 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
         return;
       }
       auto adjacent = m_adjacencyList.findAdjacent(faceUri);
+      uint64_t faceId = faceEventNotification.getFaceId();
 
-      // If we have a neighbor by that FaceUri and it has no FaceId, we
-      // have a match.
-      if (adjacent != m_adjacencyList.end()) {
+      // If we have a neighbor by that FaceUri and it has no FaceId or
+      // the FaceId is different from ours, we have a match.
+      if (adjacent != m_adjacencyList.end() &&
+          (adjacent->getFaceId() == 0 || adjacent->getFaceId() != faceId))
+      {
         NLSR_LOG_DEBUG("Face creation event matches neighbor: " << adjacent->getName()
-                   << ". New Face ID: " << faceEventNotification.getFaceId()
-                   << ". Registering prefixes.");
-        adjacent->setFaceId(faceEventNotification.getFaceId());
+                        << ". New Face ID: " << faceId << ". Registering prefixes.");
+        adjacent->setFaceId(faceId);
 
         registerAdjacencyPrefixes(*adjacent, ndn::time::milliseconds::max());
 

@@ -199,8 +199,7 @@ Fib::isNotNeighbor(const ndn::Name& name)
 
 void
 Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri,
-                    uint64_t faceCost,
-                    const ndn::time::milliseconds& timeout,
+                    uint64_t faceCost, const ndn::time::milliseconds& timeout,
                     uint64_t flags, uint8_t times)
 {
   uint64_t faceId = m_adjacencyList.getFaceId(ndn::FaceUri(faceUri));
