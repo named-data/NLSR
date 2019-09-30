@@ -207,7 +207,7 @@ public:
     return m_isBuildAdjLsaSheduled;
   }
 
-  const SyncLogicHandler&
+  SyncLogicHandler&
   getSync() {
     return m_sync;
   }
@@ -412,6 +412,7 @@ private:
 
   bool m_isBuildAdjLsaSheduled;
   int64_t m_adjBuildCount;
+  ndn::scheduler::ScopedEventId m_scheduledAdjLsaBuild;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::InMemoryStoragePersistent m_lsaStorage;

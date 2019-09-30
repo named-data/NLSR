@@ -183,14 +183,15 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
   int nPrefixes = 0;
   while (nameLsa->serialize().size() < ndn::MAX_NDN_PACKET_SIZE) {
     nameLsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
+    break;
   }
   lsdb.installNameLsa(*nameLsa);
 
   // Create another Lsdb and expressInterest
   ndn::util::DummyClientFace face2(m_ioService, m_keyChain, {true, true});
   face.linkTo(face2);
+
   ConfParameter conf2(face2);
-  Nlsr nlsr2(face2, m_keyChain, conf2);
   std::string config = R"CONF(
               trust-anchor
                 {
@@ -198,19 +199,19 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
                 }
             )CONF";
   conf2.getValidator().load(config, "config-file-from-string");
+  Nlsr nlsr2(face2, m_keyChain, conf2);
 
   Lsdb& lsdb2(nlsr2.m_lsdb);
 
-  advanceClocks(ndn::time::milliseconds(1), 10);
+  advanceClocks(ndn::time::milliseconds(10), 10);
 
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/NAME");
   interestName.appendNumber(seqNo);
-  // 0 == timeout count
-  lsdb2.expressInterest(interestName, 0);
+  lsdb2.expressInterest(interestName, 0/*= timeout count*/);
 
-  advanceClocks(ndn::time::milliseconds(1), 10);
+  advanceClocks(ndn::time::milliseconds(200), 20);
 
-  BOOST_CHECK_EQUAL(lsdb.getNameLsdb().front().getNpl(), lsdb2.getNameLsdb().front().getNpl());
+  BOOST_CHECK_EQUAL(lsdb.getNameLsdb().front().getNpl(), lsdb2.getNameLsdb().back().getNpl());
 }
 
 BOOST_AUTO_TEST_CASE(SegmentLsaData)

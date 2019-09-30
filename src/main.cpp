@@ -20,7 +20,7 @@
  **/
 
 #include "conf-file-processor.hpp"
-#include "nlsr-runner.hpp"
+#include "nlsr.hpp"
 #include "version.hpp"
 
 #include <boost/exception/get_error_info.hpp>
@@ -85,6 +85,7 @@ main(int argc, char** argv)
 
   boost::asio::io_service ioService;
   ndn::Face face(ioService);
+  ndn::KeyChain keyChain;
 
   nlsr::ConfParameter confParam(face, configFileName);
   nlsr::ConfFileProcessor configProcessor(confParam);
@@ -94,15 +95,16 @@ main(int argc, char** argv)
     return 2;
   }
 
-  confParam.buildRouterPrefix();
+  confParam.buildRouterAndSyncUserPrefix();
   confParam.writeLog();
 
-  nlsr::NlsrRunner runner(face, confParam);
+  nlsr::Nlsr nlsr(face, keyChain, confParam);
 
   try {
-    runner.run();
+    face.processEvents();
   }
   catch (const std::exception& e) {
+    nlsr.getFib().clean();
     std::cerr << "FATAL: " << getExtendedErrorMessage(e) << std::endl;
     return 1;
   }

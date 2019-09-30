@@ -77,19 +77,6 @@ public:
   publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  /*! \brief Create and configure a Logic object to enable Sync for this NLSR.
-   *
-   * In a typical situation this only needs to be called once, when NLSR starts.
-   * \param syncPrefix The sync prefix you want this Sync to use
-   * \param syncInterestLifetime ChronoSync/PSync sends a periodic sync interest every
-   *        \p syncInterestLifetime / 2 ms
-   * \sa Nlsr::initialize
-   */
-  void
-  createSyncLogic(const ndn::Name& syncPrefix,
-                  const ndn::time::milliseconds& syncInterestLifetime =
-                    ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT));
-
   /*! \brief Callback from Sync protocol
    *
    * In a typical situation this only needs to be called once, when NLSR starts.
@@ -98,11 +85,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
    */
   void
   processUpdate(const ndn::Name& updateName, uint64_t highSeq);
-
-  /*! \brief Simple function to glue Name components together
-   */
-  void
-  buildUpdatePrefix();
 
   /*! \brief Determine which kind of LSA was updated and fetch it.
    *
@@ -121,9 +103,6 @@ public:
 
 private:
   ndn::Face& m_syncFace;
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  std::shared_ptr<SyncProtocolAdapter> m_syncLogic;
-private:
   IsLsaNew m_isLsaNew;
   const ConfParameter& m_confParam;
 
@@ -131,6 +110,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Name m_nameLsaUserPrefix;
   ndn::Name m_adjLsaUserPrefix;
   ndn::Name m_coorLsaUserPrefix;
+
+  SyncProtocolAdapter m_syncLogic;
 
 private:
   static const std::string NLSR_COMPONENT;

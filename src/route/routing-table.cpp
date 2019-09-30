@@ -27,7 +27,6 @@
 #include "name-prefix-table.hpp"
 #include "logger.hpp"
 
-#include <iostream>
 #include <list>
 #include <string>
 
@@ -42,7 +41,6 @@ RoutingTable::RoutingTable(ndn::Scheduler& scheduler, Fib& fib, Lsdb& lsdb,
   , m_fib(fib)
   , m_lsdb(lsdb)
   , m_namePrefixTable(namePrefixTable)
-  , m_NO_NEXT_HOP{-12345}
   , m_routingCalcInterval{confParam.getRoutingCalcInterval()}
   , m_isRoutingTableCalculating(false)
   , m_isRouteCalculationScheduled(false)

@@ -43,7 +43,6 @@ ConfParameter::ConfParameter(ndn::Face& face, const std::string& confFileName)
   : m_confFileName(confFileName)
   , m_lsaRefreshTime(LSA_REFRESH_TIME_DEFAULT)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
-  , m_firstHelloInterval(FIRST_HELLO_INTERVAL_DEFAULT)
   , m_routingCalcInterval(ROUTING_CALC_INTERVAL_DEFAULT)
   , m_faceDatasetFetchInterval(ndn::time::seconds(static_cast<int>(FACE_DATASET_FETCH_INTERVAL_DEFAULT)))
   , m_lsaInterestLifetime(ndn::time::seconds(static_cast<int>(LSA_INTEREST_LIFETIME_DEFAULT)))
@@ -80,17 +79,18 @@ ConfParameter::writeLog()
   NLSR_LOG_INFO("LSA Interest lifetime: " << getLsaInterestLifetime());
   NLSR_LOG_INFO("Router dead interval: " << getRouterDeadInterval());
   NLSR_LOG_INFO("Max Faces Per Prefix: " << m_maxFacesPerPrefix);
-  NLSR_LOG_INFO("Hyperbolic Routing: " << m_hyperbolicState);
-  NLSR_LOG_INFO("Hyp R: " << m_corR);
-  int i=0;
-  for (auto const& value: m_corTheta) {
-    NLSR_LOG_INFO("Hyp Angle " << i++ << ": "<< value);
+  if (m_hyperbolicState == HYPERBOLIC_STATE_ON || m_hyperbolicState == HYPERBOLIC_STATE_DRY_RUN) {
+    NLSR_LOG_INFO("Hyperbolic Routing: " << m_hyperbolicState);
+    NLSR_LOG_INFO("Hyp R: " << m_corR);
+    int i=0;
+    for (auto const& value: m_corTheta) {
+      NLSR_LOG_INFO("Hyp Angle " << i++ << ": "<< value);
+    }
   }
   NLSR_LOG_INFO("State Directory: " << m_stateFileDir);
 
   // Event Intervals
   NLSR_LOG_INFO("Adjacency LSA build interval:  " << m_adjLsaBuildInterval);
-  NLSR_LOG_INFO("First Hello Interest interval: " << m_firstHelloInterval);
   NLSR_LOG_INFO("Routing calculation interval:  " << m_routingCalcInterval);
 }
 

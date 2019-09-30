@@ -53,10 +53,6 @@ public:
 
     fib = std::make_shared<Fib>(*face, m_scheduler, adjacencies, conf, m_keyChain);
     fib->setEntryRefreshTime(1);
-
-    fib->m_faceMap.update(router1FaceUri, router1FaceId);
-    fib->m_faceMap.update(router2FaceUri, router2FaceId);
-    fib->m_faceMap.update(router3FaceUri, router3FaceId);
   }
 
 public:

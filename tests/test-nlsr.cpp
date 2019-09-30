@@ -65,6 +65,7 @@ public:
   AdjacencyList& neighbors;
   uint32_t nSuccessCallbacks;
   uint32_t nFailureCallbacks;
+  ndn::util::signal::ScopedConnection connection;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestNlsr, NlsrFixture)
@@ -121,7 +122,6 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
 {
   // Simulate loading configuration file
   conf.setAdjLsaBuildInterval(3);
-  conf.setFirstHelloInterval(6);
   conf.setRoutingCalcInterval(9);
 
   Nlsr nlsr2(m_face, m_keyChain, conf);
@@ -130,7 +130,6 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
   const RoutingTable& rt = nlsr2.m_routingTable;
 
   BOOST_CHECK_EQUAL(lsdb.m_adjLsaBuildInterval, ndn::time::seconds(3));
-  BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(), 6);
   BOOST_CHECK_EQUAL(rt.getRoutingCalcInterval(), ndn::time::seconds(9));
 }
 
@@ -265,6 +264,9 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
                           10, Adjacent::STATUS_ACTIVE, 0, 256);
   neighbors.insert(otherNeighbor);
 
+  // Set HelloInterest lifetime as 10 seconds so that neighbors are not marked INACTIVE
+  // upon timeout before this test ends
+  conf.setInterestResendTime(10);
   nlsr.initialize();
 
   // Simulate successful HELLO responses
@@ -530,9 +532,6 @@ BOOST_AUTO_TEST_CASE(FaceDatasetPeriodicFetch)
   int fetchInterval(1);
   conf.setFaceDatasetFetchInterval(fetchInterval);
   conf.setFaceDatasetFetchTries(0);
-
-  nlsr.initializeFaces(std::bind(&Nlsr::processFaceDataset, &nlsr, _1),
-                       std::bind(&Nlsr::onFaceDatasetFetchTimeout, &nlsr, _1, _2, 0));
 
   // Elapse the default timeout time of the interest.
   this->advanceClocks(defaultTimeout);

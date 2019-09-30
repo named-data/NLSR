@@ -56,7 +56,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   conf.setNetwork("/ndn");
   conf.setSiteName("/router");
   conf.setRouterName("/a");
-  conf.buildRouterPrefix();
+  conf.buildRouterAndSyncUserPrefix();
 
   RoutingTable& routingTable = nlsr.m_routingTable;
   routingTable.setRoutingCalcInterval(0);

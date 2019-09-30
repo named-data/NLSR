@@ -75,12 +75,6 @@ public:
   void
   scheduleRoutingTableCalculation();
 
-  int
-  getNoNextHop()
-  {
-    return m_NO_NEXT_HOP;
-  }
-
   void
   setRoutingCalcInterval(uint32_t interval)
   {
@@ -140,8 +134,6 @@ private:
   Fib& m_fib;
   Lsdb& m_lsdb;
   NamePrefixTable& m_namePrefixTable;
-
-  const int m_NO_NEXT_HOP;
 
   std::list<RoutingTableEntry> m_dryTable;
 

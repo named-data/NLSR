@@ -181,10 +181,10 @@ public:
     conf.setNetwork("/ndn");
     conf.setSiteName("/site");
     conf.setRouterName("/%C1.Router/this-router");
-    conf.buildRouterPrefix();
+    conf.buildRouterAndSyncUserPrefix();
 
     conf.setSyncProtocol(protocol);
-    conf.setHyperbolicState(HYPERBOLIC_STATE_OFF);
+    conf.setHyperbolicState(hyperbolicState);
   }
 };
 

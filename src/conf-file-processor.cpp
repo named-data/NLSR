@@ -451,17 +451,6 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
     return false;
   }
 
-  // first-hello-interval
-  ConfigurationVariable<uint32_t> firstHelloInterval("first-hello-interval",
-                                                     std::bind(&ConfParameter::setFirstHelloInterval,
-                                                     &m_confParam, _1));
-  firstHelloInterval.setMinAndMaxValue(FIRST_HELLO_INTERVAL_MIN, FIRST_HELLO_INTERVAL_MAX);
-  firstHelloInterval.setOptional(FIRST_HELLO_INTERVAL_DEFAULT);
-
-  if (!firstHelloInterval.parseFromConfigSection(section)) {
-    return false;
-  }
-
   for (ConfigSection::const_iterator tn =
            section.begin(); tn != section.end(); ++tn) {
 

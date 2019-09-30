@@ -50,36 +50,77 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   , m_fib(m_face, m_scheduler, m_adjacencyList, m_confParam, m_keyChain)
   , m_routingTable(m_scheduler, m_fib, m_lsdb, m_namePrefixTable, m_confParam)
   , m_namePrefixTable(m_fib, m_routingTable, m_routingTable.afterRoutingChange)
-  , m_lsdb(m_face, m_keyChain, m_signingInfo,
-           m_confParam, m_namePrefixTable, m_routingTable)
+  , m_lsdb(m_face, m_keyChain, m_signingInfo, m_confParam, m_namePrefixTable, m_routingTable)
+  , m_helloProtocol(m_face, m_keyChain, m_signingInfo, confParam, m_routingTable, m_lsdb)
   , m_afterSegmentValidatedConnection(m_lsdb.afterSegmentValidatedSignal.connect(
                                       std::bind(&Nlsr::afterFetcherSignalEmitted, this, _1)))
   , m_onNewLsaConnection(m_lsdb.getSync().onNewLsa->connect(
-                          [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
-                                  const ndn::Name& originRouter) {
-                            registerStrategyForCerts(originRouter);
-                          }))
+      [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
+              const ndn::Name& originRouter) {
+        registerStrategyForCerts(originRouter);
+      }))
+  , m_onPrefixRegistrationSuccess(m_fib.onPrefixRegistrationSuccess.connect(
+      [this] (const ndn::Name& name) {
+        m_helloProtocol.sendHelloInterest(name);
+      }))
+  , m_onHelloDataValidated(m_helloProtocol.onHelloDataValidated.connect(
+      [this] (const ndn::Name& neighbor) {
+        auto it = m_adjacencyList.findAdjacent(neighbor);
+        if (it != m_adjacencyList.end()) {
+          m_fib.registerPrefix(m_confParam.getSyncPrefix(), it->getFaceUri(), it->getLinkCost(),
+                               ndn::time::milliseconds::max(), ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+        }
+      }))
   , m_dispatcher(m_face, m_keyChain)
   , m_datasetHandler(m_dispatcher, m_lsdb, m_routingTable)
-  , m_helloProtocol(m_face, m_keyChain, m_signingInfo, confParam, m_routingTable, m_lsdb)
   , m_certStore(m_confParam.getCertStore())
   , m_controller(m_face, m_keyChain)
   , m_faceDatasetController(m_face, m_keyChain)
   , m_prefixUpdateProcessor(m_dispatcher,
-                            m_confParam.getPrefixUpdateValidator(),
-                            m_namePrefixList,
-                            m_lsdb,
-                            m_confParam.getConfFileNameDynamic())
+      m_confParam.getPrefixUpdateValidator(),
+      m_namePrefixList,
+      m_lsdb,
+      m_confParam.getConfFileNameDynamic())
   , m_nfdRibCommandProcessor(m_dispatcher,
-                             m_namePrefixList,
-                             m_lsdb)
+      m_namePrefixList,
+      m_lsdb)
   , m_statsCollector(m_lsdb, m_helloProtocol)
   , m_faceMonitor(m_face)
 {
+  NLSR_LOG_DEBUG("Initializing Nlsr");
+
   m_faceMonitor.onNotification.connect(std::bind(&Nlsr::onFaceEventNotification, this, _1));
   m_faceMonitor.start();
 
+  // Do key initialization and registrations first, then initialize faces
+  // which will create routes to neighbor
+
   setStrategies();
+
+  initializeKey();
+
+  NLSR_LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
+
+  // Can be moved to HelloProtocol and Lsdb ctor if initializeKey is set
+  // earlier in the Nlsr constructor so as to set m_signingInfo
+  setInfoInterestFilter();
+  setLsaInterestFilter();
+
+  // add top-level prefixes: router and localhost prefix
+  addDispatcherTopPrefix(ndn::Name(m_confParam.getRouterPrefix()).append("nlsr"));
+  addDispatcherTopPrefix(LOCALHOST_PREFIX);
+
+  enableIncomingFaceIdIndication();
+
+  registerKeyPrefix();
+  registerLocalhostPrefix();
+  registerRouterPrefix();
+
+  initializeFaces(std::bind(&Nlsr::processFaceDataset, this, _1),
+                  std::bind(&Nlsr::onFaceDatasetFetchTimeout, this, _1, _2, 0));
+
+  // Could be moved into ctor, but unit tests need to be modified
+  initialize();
 }
 
 void
@@ -120,7 +161,7 @@ Nlsr::registerStrategyForCerts(const ndn::Name& originRouter)
 void
 Nlsr::registrationFailed(const ndn::Name& name)
 {
-  NLSR_LOG_ERROR("ERROR: Failed to register prefix in local hub's daemon");
+  NLSR_LOG_ERROR("ERROR: Failed to register prefix " << name << " in local hub's daemon");
   BOOST_THROW_EXCEPTION(Error("Error: Prefix registration failed"));
 }
 
@@ -234,29 +275,9 @@ Nlsr::publishCertFromCache(const ndn::Name& keyName)
 void
 Nlsr::initialize()
 {
-  NLSR_LOG_DEBUG("Initializing Nlsr");
-
   // Logging start
   m_adjacencyList.writeLog();
   NLSR_LOG_DEBUG(m_namePrefixList);
-
-  initializeKey();
-
-  NLSR_LOG_DEBUG("Default NLSR identity: " << m_signingInfo.getSignerName());
-
-  // Can be moved to HelloProtocol and Lsdb ctor if initializeKey is set
-  // earlier in the Nlsr constructor so as to set m_signingInfo
-  setInfoInterestFilter();
-  setLsaInterestFilter();
-
-  // add top-level prefixes: router and localhost prefix
-  addDispatcherTopPrefix(ndn::Name(m_confParam.getRouterPrefix()).append("nlsr"));
-  addDispatcherTopPrefix(LOCALHOST_PREFIX);
-
-  initializeFaces(std::bind(&Nlsr::processFaceDataset, this, _1),
-                  std::bind(&Nlsr::onFaceDatasetFetchTimeout, this, _1, _2, 0));
-
-  enableIncomingFaceIdIndication();
 
   m_lsdb.buildAndInstallOwnNameLsa();
 
@@ -265,19 +286,10 @@ Nlsr::initialize()
     m_lsdb.buildAndInstallOwnCoordinateLsa();
   }
 
-  registerKeyPrefix();
-  registerLocalhostPrefix();
-  registerRouterPrefix();
-
-  m_helloProtocol.scheduleInterest(m_confParam.getFirstHelloInterval());
-
   // Need to set direct neighbors' costs to 0 for hyperbolic routing
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-
-    std::list<Adjacent>& neighbors = m_adjacencyList.getAdjList();
-
-    for (std::list<Adjacent>::iterator it = neighbors.begin(); it != neighbors.end(); ++it) {
-      it->setLinkCost(0);
+    for (auto&& neighbor : m_adjacencyList.getAdjList()) {
+      neighbor.setLinkCost(0);
     }
   }
 }
@@ -302,8 +314,9 @@ Nlsr::initializeKey()
     nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName);
   }
   catch (const std::exception& e) {
+    NLSR_LOG_ERROR(e.what());
     NLSR_LOG_ERROR("Unable to create identity, NLSR will run without security!");
-    NLSR_LOG_DEBUG("Can be ignored if running in non-production environments.");
+    NLSR_LOG_ERROR("Can be ignored if running in non-production environments.");
     return;
   }
   auto nlsrInstanceKey = nlsrInstanceIdentity.getDefaultKey();
@@ -333,13 +346,8 @@ Nlsr::initializeKey()
                                                .setSignatureInfo(signatureInfo));
   }
   catch (const std::exception& e) {
-    NLSR_LOG_WARN("ERROR: Router's " << e.what()
-                  << "NLSR is running without security."
-                  << " If security is enabled NLSR will not converge.");
-
-    std::cerr << "Router's " << e.what() << ". NLSR is running without security "
-              << "(Only for testing, should not be used in production.)"
-              << " If security is enabled NLSR will not converge." << std::endl;
+    NLSR_LOG_ERROR("Router's " << e.what() << "NLSR is running without security." <<
+                   " If security is enabled NLSR will not converge.");
   }
 
   m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
@@ -535,11 +543,11 @@ Nlsr::processFaceDataset(const std::vector<ndn::nfd::FaceStatus>& faces)
   NLSR_LOG_DEBUG("Processing face dataset");
 
   // Iterate over each neighbor listed in nlsr.conf
-  for (auto& adjacent : m_adjacencyList.getAdjList()) {
+  for (auto&& adjacent : m_adjacencyList.getAdjList()) {
 
-    const std::string faceUriString = adjacent.getFaceUri().toString();
+    const std::string& faceUriString = adjacent.getFaceUri().toString();
     // Check the list of FaceStatus objects we got for a match
-    for (const ndn::nfd::FaceStatus& faceStatus : faces) {
+    for (const auto& faceStatus : faces) {
       // Set the adjacency FaceID if we find a URI match and it was
       // previously unset. Change the boolean to true.
       if (adjacent.getFaceId() == 0 && faceUriString == faceStatus.getRemoteUri()) {
@@ -573,10 +581,6 @@ Nlsr::registerAdjacencyPrefixes(const Adjacent& adj,
 
   m_fib.registerPrefix(adjName, faceUri, linkCost,
                        timeout, ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
-
-  m_fib.registerPrefix(m_confParam.getSyncPrefix(),
-                       faceUri, linkCost, timeout,
-                       ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
 
   m_fib.registerPrefix(m_confParam.getLsaPrefix(),
                        faceUri, linkCost, timeout,

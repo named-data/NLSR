@@ -272,21 +272,24 @@ private:
   bool m_isDaemonProcess;
   ndn::security::ValidatorConfig& m_validator;
   std::vector<ndn::Name> m_strategySetOnRouters;
+  uint16_t m_numSyncPrefixRegistered = 0;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   Fib m_fib;
   RoutingTable m_routingTable;
   NamePrefixTable m_namePrefixTable;
   Lsdb m_lsdb;
+  HelloProtocol m_helloProtocol;
 
 private:
   ndn::util::signal::ScopedConnection m_afterSegmentValidatedConnection;
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
+  ndn::util::signal::ScopedConnection m_onPrefixRegistrationSuccess;
+  ndn::util::signal::ScopedConnection m_onHelloDataValidated;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::mgmt::Dispatcher m_dispatcher;
   DatasetInterestHandler m_datasetHandler;
-  HelloProtocol m_helloProtocol;
 
 private:
   /*! \brief Where NLSR stores certificates it claims to be

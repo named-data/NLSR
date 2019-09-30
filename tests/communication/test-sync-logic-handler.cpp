@@ -61,12 +61,12 @@ public:
     if (Protocol == SYNC_PROTOCOL_CHRONOSYNC) {
       std::vector<chronosync::MissingDataInfo> updates;
       updates.push_back({ndn::Name(prefix).appendNumber(1), 0, seqNo});
-      sync.m_syncLogic->onChronoSyncUpdate(updates);
+      sync.m_syncLogic.onChronoSyncUpdate(updates);
     }
     else {
       std::vector<psync::MissingDataInfo> updates;
       updates.push_back({ndn::Name(prefix), 0, seqNo});
-      sync.m_syncLogic->onPSyncUpdate(updates);
+      sync.m_syncLogic.onPSyncUpdate(updates);
     }
 
     this->advanceClocks(ndn::time::milliseconds(1), 10);
@@ -246,35 +246,12 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdatePrefix, T, Protocols, SyncLogicFixture<T:
   expectedPrefix.append(this->conf.getSiteName());
   expectedPrefix.append(this->conf.getRouterName());
 
-  this->sync.buildUpdatePrefix();
-
   BOOST_CHECK_EQUAL(this->sync.m_nameLsaUserPrefix,
                     ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::NAME)));
   BOOST_CHECK_EQUAL(this->sync.m_adjLsaUserPrefix,
                     ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::ADJACENCY)));
   BOOST_CHECK_EQUAL(this->sync.m_coorLsaUserPrefix,
                     ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::COORDINATE)));
-}
-
-/* Tests that SyncLogicHandler's socket will be created when
-   Nlsr is initialized, preventing use of sync before the
-   socket is created.
-
-   NB: This test is as much an Nlsr class test as a
-   SyncLogicHandler class test, but it rides the line and ends up here.
- */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(createSyncLogicOnInitialization, T, Protocols,
-                                 SyncLogicFixture<T::value>) // Bug #2649
-{
-  Nlsr nlsr(this->face, this->m_keyChain, this->conf);
-
-  // Make sure an adjacency LSA has not been built yet
-  ndn::Name key = ndn::Name(this->conf.getRouterPrefix()).append(std::to_string(Lsa::Type::ADJACENCY));
-  AdjLsa* lsa = nlsr.m_lsdb.findAdjLsa(key);
-  BOOST_REQUIRE(lsa == nullptr);
-
-  // Publish a routing update before an Adjacency LSA is built
-  BOOST_CHECK_NO_THROW(nlsr.m_lsdb.m_sync.publishRoutingUpdate(Lsa::Type::ADJACENCY, 0));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

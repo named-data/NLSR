@@ -36,15 +36,12 @@ public:
   StatisticsFixture()
     : face(m_ioService, m_keyChain)
     , conf(face)
+    , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , lsdb(nlsr.m_lsdb)
     , hello(nlsr.m_helloProtocol)
     , collector(nlsr.m_statsCollector)
   {
-    conf.setNetwork("/ndn");
-    conf.setSiteName("/site");
-    conf.setRouterName("/%C1.Router/this-router");
-    conf.buildRouterPrefix();
     // Otherwise code coverage node fails with default 60 seconds lifetime
     conf.setSyncInterestLifetime(1000);
 
@@ -116,6 +113,7 @@ public:
 public:
   ndn::util::DummyClientFace face;
   ConfParameter conf;
+  DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
 
   Lsdb& lsdb;
@@ -254,6 +252,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
   nameLsaKey.append(std::to_string(Lsa::Type::NAME));
 
   NameLsa* nameLsa = lsdb.findNameLsa(nameLsaKey);
+  BOOST_ASSERT(nameLsa != nullptr);
 
   seqNo = nameLsa->getLsSeqNo();
 

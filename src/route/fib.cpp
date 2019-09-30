@@ -202,9 +202,9 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri,
                     uint64_t faceCost, const ndn::time::milliseconds& timeout,
                     uint64_t flags, uint8_t times)
 {
-  uint64_t faceId = m_adjacencyList.getFaceId(ndn::FaceUri(faceUri));
+  uint64_t faceId = m_adjacencyList.getFaceId(faceUri);
 
-  if (faceId != 0) {
+  if (faceId > 0) {
     ndn::nfd::ControlParameters faceParameters;
     faceParameters
      .setName(namePrefix)
@@ -216,13 +216,9 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri,
 
     NLSR_LOG_DEBUG("Registering prefix: " << faceParameters.getName() << " faceUri: " << faceUri);
     m_controller.start<ndn::nfd::RibRegisterCommand>(faceParameters,
-                                                     std::bind(&Fib::onRegistrationSuccess, this, _1,
-                                                               "Successful in name registration",
-                                                               faceUri),
-                                                     std::bind(&Fib::onRegistrationFailure, this, _1,
-                                                               "Failed in name registration",
-                                                               faceParameters,
-                                                               faceUri, times));
+      std::bind(&Fib::onRegistrationSuccess, this, _1, faceUri),
+      std::bind(&Fib::onRegistrationFailure, this, _1,
+                faceParameters, faceUri, times));
   }
   else {
     NLSR_LOG_WARN("Error: No Face Id for face uri: " << faceUri);
@@ -230,31 +226,28 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri,
 }
 
 void
-Fib::onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                           const std::string& message, const ndn::FaceUri& faceUri)
+Fib::onRegistrationSuccess(const ndn::nfd::ControlParameters& param,
+                           const ndn::FaceUri& faceUri)
 {
-  NLSR_LOG_DEBUG(message << ": " << commandSuccessResult.getName() <<
-                 " Face Uri: " << faceUri << " faceId: " << commandSuccessResult.getFaceId());
+  NLSR_LOG_DEBUG("Successful in name registration: " << param.getName() <<
+                 " Face Uri: " << faceUri << " faceId: " << param.getFaceId());
 
   auto adjacent = m_adjacencyList.findAdjacent(faceUri);
   if (adjacent != m_adjacencyList.end()) {
-    adjacent->setFaceId(commandSuccessResult.getFaceId());
+    adjacent->setFaceId(param.getFaceId());
   }
-
-  // Update the fast-access FaceMap with the new Face ID, too
-  m_faceMap.update(faceUri.toString(), commandSuccessResult.getFaceId());
-  m_faceMap.writeLog();
+  onPrefixRegistrationSuccess(param.getName());
 }
 
 void
 Fib::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
-                           const std::string& message,
                            const ndn::nfd::ControlParameters& parameters,
                            const ndn::FaceUri& faceUri,
                            uint8_t times)
 {
-  NLSR_LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
-  NLSR_LOG_DEBUG("Prefix: " << parameters.getName() << " failed for: " << times);
+  NLSR_LOG_DEBUG("Failed in name registration: " << response.getText() <<
+                 " (code: " << response.getCode() << ")");
+  NLSR_LOG_DEBUG("Prefix: " << parameters.getName() << " failed for: " << +times);
   if (times < 3) {
     NLSR_LOG_DEBUG("Trying to register again...");
     registerPrefix(parameters.getName(), faceUri,
@@ -270,7 +263,12 @@ Fib::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
 void
 Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
 {
-  uint32_t faceId = m_faceMap.getFaceId(faceUri);
+  uint64_t faceId = 0;
+  auto adjacent = m_adjacencyList.findAdjacent(ndn::FaceUri(faceUri));
+  if (adjacent != m_adjacencyList.end()) {
+    faceId = adjacent->getFaceId();
+  }
+
   NLSR_LOG_DEBUG("Unregister prefix: " << namePrefix << " Face Uri: " << faceUri);
   if (faceId > 0) {
     ndn::nfd::ControlParameters controlParameters;
@@ -278,28 +276,17 @@ Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
       .setName(namePrefix)
       .setFaceId(faceId)
       .setOrigin(ndn::nfd::ROUTE_ORIGIN_NLSR);
+
     m_controller.start<ndn::nfd::RibUnregisterCommand>(controlParameters,
-                                                       std::bind(&Fib::onUnregistrationSuccess, this, _1,
-                                                                 "Successful in unregistering name"),
-                                                       std::bind(&Fib::onUnregistrationFailure,
-                                                                 this, _1,
-                                                                 "Failed in unregistering name"));
+      [] (const ndn::nfd::ControlParameters& commandSuccessResult) {
+        NLSR_LOG_DEBUG("Unregister successful Prefix: " << commandSuccessResult.getName() <<
+                       " Face Id: " << commandSuccessResult.getFaceId());
+      },
+      [] (const ndn::nfd::ControlResponse& response) {
+        NLSR_LOG_DEBUG("Failed in unregistering name" << ": " << response.getText() <<
+                 " (code: " << response.getCode() << ")");
+      });
   }
-}
-
-void
-Fib::onUnregistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                             const std::string& message)
-{
-  NLSR_LOG_DEBUG("Unregister successful Prefix: " << commandSuccessResult.getName() <<
-                 " Face Id: " << commandSuccessResult.getFaceId());
-}
-
-void
-Fib::onUnregistrationFailure(const ndn::nfd::ControlResponse& response,
-                             const std::string& message)
-{
-  NLSR_LOG_DEBUG(message << ": " << response.getText() << " (code: " << response.getCode() << ")");
 }
 
 void

@@ -54,8 +54,7 @@ const std::string SECTION_NEIGHBORS =
   "  hello-retries 3\n"
   "  hello-timeout 1\n"
   "  hello-interval  60\n\n"
-  "  adj-lsa-build-interval 3\n"
-  "  first-hello-interval  6\n"
+  "  adj-lsa-build-interval 10\n"
   "  neighbor\n"
   "  {\n"
   "    name /ndn/memphis.edu/cs/castor\n"
@@ -162,7 +161,7 @@ BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, ConfFileProcessorFixture)
 BOOST_AUTO_TEST_CASE(LinkState)
 {
   processConfigurationString(CONFIG_LINK_STATE);
-  conf.buildRouterPrefix();
+  conf.buildRouterAndSyncUserPrefix();
 
   // General
   BOOST_CHECK_EQUAL(conf.getNetwork(), "/ndn/");
@@ -183,8 +182,7 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getInterestResendTime(), 1);
   BOOST_CHECK_EQUAL(conf.getInfoInterestInterval(), 60);
 
-  BOOST_CHECK_EQUAL(conf.getAdjLsaBuildInterval(), 3);
-  BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(), 6);
+  BOOST_CHECK_EQUAL(conf.getAdjLsaBuildInterval(), 10);
 
   BOOST_CHECK(conf.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/mira"));
   BOOST_CHECK(conf.getAdjacencyList().isNeighbor("/ndn/memphis.edu/cs/castor"));
@@ -219,8 +217,7 @@ BOOST_AUTO_TEST_CASE(MalformedUri)
     "  hello-retries 3\n"
     "  hello-timeout 1\n"
     "  hello-interval  60\n\n"
-    "  adj-lsa-build-interval 3\n"
-    "  first-hello-interval  6\n"
+    "  adj-lsa-build-interval 10\n"
     "  neighbor\n"
     "  {\n"
     "    name /ndn/memphis.edu/cs/castor\n"
@@ -286,8 +283,6 @@ BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)
   BOOST_CHECK_EQUAL(conf.getInterestRetryNumber(), static_cast<uint32_t>(HELLO_RETRIES_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getInterestResendTime(), static_cast<uint32_t>(HELLO_TIMEOUT_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getInfoInterestInterval(), static_cast<uint32_t>(HELLO_INTERVAL_DEFAULT));
-  BOOST_CHECK_EQUAL(conf.getFirstHelloInterval(),
-                    static_cast<uint32_t>(FIRST_HELLO_INTERVAL_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getAdjLsaBuildInterval(),
                     static_cast<uint32_t>(ADJ_LSA_BUILD_INTERVAL_DEFAULT));
 }

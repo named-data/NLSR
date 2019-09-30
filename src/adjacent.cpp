@@ -104,10 +104,4 @@ operator<<(std::ostream& os, const Adjacent& adjacent)
   return os;
 }
 
-void
-Adjacent::writeLog()
-{
-  NLSR_LOG_DEBUG(*this);
-}
-
 } // namespace nlsr

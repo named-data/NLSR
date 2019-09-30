@@ -45,18 +45,6 @@ public:
                 ndn::security::SigningInfo& signingInfo,
                 ConfParameter& confParam, RoutingTable& routingTable, Lsdb& lsdb);
 
-  /*! \brief Schedules a Hello Interest event.
-   *
-   * This function serves as the Hello Interest loop, and must be
-   * explicitly called to start the Hello cycle. This is done at
-   * NLSR's initialization.
-   *
-   * \sa Nlsr::initialize
-   * \param seconds The number of seconds to wait before calling the event.
-   */
-  void
-  scheduleInterest(uint32_t seconds);
-
   /*! \brief Sends a Hello Interest packet.
    *
    * \param interestNamePrefix The name of the router that has published the
@@ -75,14 +63,12 @@ public:
    *
    * This function is called as part of a schedule to regularly
    * determine the adjacency status of neighbors. This function
-   * creates and sends a Hello Interest to each neighbor in
-   * Nlsr::m_adjacencyList. If the neighbor has not been contacted
-   * before and currently has no Face in NFD, this method will call a
-   * different pipeline that creates the Face first, then registers
-   * prefixes.
+   * creates and sends a Hello Interest to the given adjacent.
+   *
+   * \param neighbor the name of the neighbor
    */
   void
-  sendScheduledInterest();
+  sendHelloInterest(const ndn::Name& neighbor);
 
   /*! \brief Processes a Hello Interest from a neighbor.
    *
@@ -167,6 +153,9 @@ private:
   onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
                         const ndn::Name& neighbor, const ndn::time::milliseconds& timeout);
 
+public:
+  ndn::util::Signal<HelloProtocol, const ndn::Name&> onHelloDataValidated;
+
 private:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
@@ -175,6 +164,7 @@ private:
   ConfParameter& m_confParam;
   RoutingTable& m_routingTable;
   Lsdb& m_lsdb;
+  AdjacencyList& m_adjacencyList;
 
   static const std::string INFO_COMPONENT;
   static const std::string NLSR_COMPONENT;

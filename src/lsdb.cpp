@@ -211,8 +211,8 @@ Lsdb::installNameLsa(NameLsa& nlsa)
     if (nlsa.getOrigRouter() != m_confParam.getRouterPrefix()) {
       // If this name LSA is from another router, add the advertised
       // prefixes to the NPT.
-      m_namePrefixTable.addEntry(nlsa.getOrigRouter(),
-                                           nlsa.getOrigRouter());
+      m_namePrefixTable.addEntry(nlsa.getOrigRouter(), nlsa.getOrigRouter());
+
       for (const auto& name : nlsa.getNpl().getNames()) {
         if (name != m_confParam.getRouterPrefix()) {
           m_namePrefixTable.addEntry(name, nlsa.getOrigRouter());
@@ -523,6 +523,10 @@ Lsdb::doesCoordinateLsaExist(const ndn::Name& key)
 void
 Lsdb::writeCorLsdbLog()
 {
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+    return;
+  }
+
   NLSR_LOG_DEBUG("---------------Cor LSDB-------------------");
   for (const auto& corLsa : m_corLsdb) {
     corLsa.writeLog();
@@ -558,12 +562,14 @@ Lsdb::scheduleAdjLsaBuild()
     return;
   }
 
-  if (m_isBuildAdjLsaSheduled == false) {
+  if (m_isBuildAdjLsaSheduled) {
+    NLSR_LOG_DEBUG("Rescheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
+  }
+  else {
     NLSR_LOG_DEBUG("Scheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
-
-    m_scheduler.schedule(m_adjLsaBuildInterval, [this] { buildAdjLsa(); });
     m_isBuildAdjLsaSheduled = true;
   }
+  m_scheduledAdjLsaBuild = m_scheduler.schedule(m_adjLsaBuildInterval, [this] { buildAdjLsa(); });
 }
 
 void
@@ -608,9 +614,9 @@ Lsdb::buildAdjLsa()
   // hopefully finished)
   else {
     m_isBuildAdjLsaSheduled = true;
-    int schedulingTime = m_confParam.getInterestRetryNumber() *
-                         m_confParam.getInterestResendTime();
-    m_scheduler.schedule(ndn::time::seconds(schedulingTime), [this] { buildAdjLsa(); });
+    auto schedulingTime = ndn::time::seconds(m_confParam.getInterestRetryNumber() *
+                                             m_confParam.getInterestResendTime());
+    m_scheduledAdjLsaBuild = m_scheduler.schedule(schedulingTime, [this] { buildAdjLsa(); });
   }
 }
 
@@ -1264,6 +1270,10 @@ Lsdb::getLsaExpirationTimePoint()
 void
 Lsdb::writeAdjLsdbLog()
 {
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+    return;
+  }
+
   NLSR_LOG_DEBUG("---------------Adj LSDB-------------------");
   for (const auto& adj : m_adjLsdb) {
     adj.writeLog();

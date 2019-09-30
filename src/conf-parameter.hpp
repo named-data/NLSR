@@ -56,15 +56,9 @@ enum {
 };
 
 enum {
-  ADJ_LSA_BUILD_INTERVAL_MIN = 0,
-  ADJ_LSA_BUILD_INTERVAL_DEFAULT = 5,
-  ADJ_LSA_BUILD_INTERVAL_MAX = 5
-};
-
-enum {
-  FIRST_HELLO_INTERVAL_MIN = 0,
-  FIRST_HELLO_INTERVAL_DEFAULT = 10,
-  FIRST_HELLO_INTERVAL_MAX = 10
+  ADJ_LSA_BUILD_INTERVAL_MIN = 5,
+  ADJ_LSA_BUILD_INTERVAL_DEFAULT = 10,
+  ADJ_LSA_BUILD_INTERVAL_MAX = 30
 };
 
 enum {
@@ -94,7 +88,7 @@ enum {
 
 enum {
   HELLO_TIMEOUT_MIN = 1,
-  HELLO_TIMEOUT_DEFAULT = 3,
+  HELLO_TIMEOUT_DEFAULT = 1,
   HELLO_TIMEOUT_MAX = 15
 };
 
@@ -180,17 +174,27 @@ public:
   }
 
   void
-  buildRouterPrefix()
+  buildRouterAndSyncUserPrefix()
   {
     m_routerPrefix = m_network;
     m_routerPrefix.append(m_siteName);
     m_routerPrefix.append(m_routerName);
+
+    m_syncUserPrefix = m_lsaPrefix;
+    m_syncUserPrefix.append(m_siteName);
+    m_syncUserPrefix.append(m_routerName);
   }
 
   const ndn::Name&
   getRouterPrefix() const
   {
     return m_routerPrefix;
+  }
+
+  const ndn::Name&
+  getSyncUserPrefix() const
+  {
+    return m_syncUserPrefix;
   }
 
   const ndn::Name&
@@ -253,18 +257,6 @@ public:
   getAdjLsaBuildInterval() const
   {
     return m_adjLsaBuildInterval;
-  }
-
-  void
-  setFirstHelloInterval(uint32_t interval)
-  {
-    m_firstHelloInterval = interval;
-  }
-
-  uint32_t
-  getFirstHelloInterval() const
-  {
-    return m_firstHelloInterval;
   }
 
   void
@@ -481,7 +473,7 @@ private:
   ndn::Name m_network;
 
   ndn::Name m_routerPrefix;
-  ndn::Name m_lsaRouterPrefix;
+  ndn::Name m_syncUserPrefix;
 
   ndn::Name m_syncPrefix;
   ndn::Name m_lsaPrefix;
@@ -489,7 +481,6 @@ private:
   uint32_t  m_lsaRefreshTime;
 
   uint32_t m_adjLsaBuildInterval;
-  uint32_t m_firstHelloInterval;
   uint32_t m_routingCalcInterval;
 
   uint32_t m_faceDatasetFetchTries;

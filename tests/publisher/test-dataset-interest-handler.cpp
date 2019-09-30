@@ -45,9 +45,7 @@ processDatasetInterest(ndn::util::DummyClientFace& face,
   parser.parse();
 
   ndn::Block::element_const_iterator it = parser.elements_begin();
-  BOOST_CHECK_EQUAL(isSameType(*it), true);
-  ++it;
-
+  BOOST_CHECK_EQUAL(isSameType(*it++), true);
   BOOST_CHECK(it == parser.elements_end());
 
   face.sentData.clear();

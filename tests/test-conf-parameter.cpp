@@ -79,9 +79,11 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   BOOST_CHECK_EQUAL(cp1.getNetwork(), "ATT");
 
-  cp1.buildRouterPrefix();
+  cp1.buildRouterAndSyncUserPrefix();
 
   BOOST_CHECK_EQUAL(cp1.getRouterPrefix(), "/ATT/memphis/router1");
+
+  BOOST_CHECK_EQUAL(cp1.getSyncUserPrefix(), "/localhop/ATT/nlsr/LSA/memphis/router1");
 
   BOOST_CHECK_EQUAL(cp1.getInterestRetryNumber(), 2);
 

@@ -42,55 +42,55 @@ HelloProtocol::HelloProtocol(ndn::Face& face, ndn::KeyChain& keyChain,
   , m_confParam(confParam)
   , m_routingTable(routingTable)
   , m_lsdb(lsdb)
+  , m_adjacencyList(m_confParam.getAdjacencyList())
 {
 }
 
 void
 HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
 {
-  NLSR_LOG_DEBUG("Expressing Interest :" << interestName);
+  NLSR_LOG_DEBUG("Expressing Interest: " << interestName);
   ndn::Interest interest(interestName);
   interest.setInterestLifetime(ndn::time::seconds(seconds));
   interest.setMustBeFresh(true);
   interest.setCanBePrefix(true);
   m_face.expressInterest(interest,
-                         std::bind(&HelloProtocol::onContent, this, _1, _2),
-                         [this] (const ndn::Interest& interest, const ndn::lp::Nack& nack)
-                         {
-                           NDN_LOG_TRACE("Received Nack with reason " << nack.getReason());
-                           NDN_LOG_TRACE("Treating as timeout");
-                           processInterestTimedOut(interest);
-                         },
-                         std::bind(&HelloProtocol::processInterestTimedOut, this, _1));
+    std::bind(&HelloProtocol::onContent, this, _1, _2),
+    [this, seconds] (const ndn::Interest& interest, const ndn::lp::Nack& nack)
+    {
+      NDN_LOG_TRACE("Received Nack with reason: " << nack.getReason());
+      NDN_LOG_TRACE("Will treat as timeout in " << 2 * seconds << " seconds");
+      m_scheduler.schedule(ndn::time::seconds(2 * seconds),
+        [this, interest] { processInterestTimedOut(interest); });
+    },
+    std::bind(&HelloProtocol::processInterestTimedOut, this, _1));
 
   // increment SENT_HELLO_INTEREST
   hpIncrementSignal(Statistics::PacketType::SENT_HELLO_INTEREST);
 }
 
 void
-HelloProtocol::sendScheduledInterest()
+HelloProtocol::sendHelloInterest(const ndn::Name& neighbor)
 {
-  for (const auto& adjacent : m_confParam.getAdjacencyList().getAdjList()) {
-    // If this adjacency has a Face, just proceed as usual.
-    if(adjacent.getFaceId() != 0) {
-      // interest name: /<neighbor>/NLSR/INFO/<router>
-      ndn::Name interestName = adjacent.getName() ;
-      interestName.append(NLSR_COMPONENT);
-      interestName.append(INFO_COMPONENT);
-      interestName.append(m_confParam.getRouterPrefix().wireEncode());
-      expressInterest(interestName, m_confParam.getInterestResendTime());
-      NLSR_LOG_DEBUG("Sending scheduled interest: " << interestName);
-    }
+  auto adjacent = m_adjacencyList.findAdjacent(neighbor);
+
+  if (adjacent == m_adjacencyList.end()) {
+    return;
   }
-  scheduleInterest(m_confParam.getInfoInterestInterval());
-}
 
-void
-HelloProtocol::scheduleInterest(uint32_t seconds)
-{
-  NLSR_LOG_DEBUG("Scheduling HELLO Interests in " << ndn::time::seconds(seconds));
+  // If this adjacency has a Face, just proceed as usual.
+  if(adjacent->getFaceId() != 0) {
+    // interest name: /<neighbor>/NLSR/INFO/<router>
+    ndn::Name interestName = adjacent->getName() ;
+    interestName.append(NLSR_COMPONENT);
+    interestName.append(INFO_COMPONENT);
+    interestName.append(m_confParam.getRouterPrefix().wireEncode());
+    expressInterest(interestName, m_confParam.getInterestResendTime());
+    NLSR_LOG_DEBUG("Sending HELLO interest: " << interestName);
+  }
 
-  m_scheduler.schedule(ndn::time::seconds(seconds), [this] { sendScheduledInterest(); });
+  m_scheduler.schedule(ndn::time::seconds(m_confParam.getInfoInterestInterval()),
+                       [this, neighbor] { sendHelloInterest(neighbor); });
 }
 
 void
@@ -113,7 +113,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
   ndn::Name neighbor;
   neighbor.wireDecode(interestName.get(-1).blockFromValue());
   NLSR_LOG_DEBUG("Neighbor: " << neighbor);
-  if (m_confParam.getAdjacencyList().isNeighbor(neighbor)) {
+  if (m_adjacencyList.isNeighbor(neighbor)) {
     std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
     data->setName(ndn::Name(interest.getName()).appendVersion());
     data->setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
@@ -128,7 +128,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
     // increment SENT_HELLO_DATA
     hpIncrementSignal(Statistics::PacketType::SENT_HELLO_DATA);
 
-    auto adjacent = m_confParam.getAdjacencyList().findAdjacent(neighbor);
+    auto adjacent = m_adjacencyList.findAdjacent(neighbor);
     // If this neighbor was previously inactive, send our own hello interest, too
     if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
       // We can only do that if the neighbor currently has a face.
@@ -155,15 +155,14 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   }
   ndn::Name neighbor = interestName.getPrefix(-3);
   NLSR_LOG_DEBUG("Neighbor: " << neighbor);
-  m_confParam.getAdjacencyList().incrementTimedOutInterestCount(neighbor);
+  m_adjacencyList.incrementTimedOutInterestCount(neighbor);
 
-  Adjacent::Status status = m_confParam.getAdjacencyList().getStatusOfNeighbor(neighbor);
+  Adjacent::Status status = m_adjacencyList.getStatusOfNeighbor(neighbor);
 
-  uint32_t infoIntTimedOutCount =
-    m_confParam.getAdjacencyList().getTimedOutInterestCount(neighbor);
+  uint32_t infoIntTimedOutCount = m_adjacencyList.getTimedOutInterestCount(neighbor);
   NLSR_LOG_DEBUG("Status: " << status);
   NLSR_LOG_DEBUG("Info Interest Timed out: " << infoIntTimedOutCount);
-  if (infoIntTimedOutCount < m_confParam.getInterestRetryNumber()) {
+  if (infoIntTimedOutCount <= m_confParam.getInterestRetryNumber()) {
     // interest name: /<neighbor>/NLSR/INFO/<router>
     ndn::Name interestName(neighbor);
     interestName.append(NLSR_COMPONENT);
@@ -174,7 +173,7 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   }
   else if ((status == Adjacent::STATUS_ACTIVE) &&
            (infoIntTimedOutCount == m_confParam.getInterestRetryNumber())) {
-    m_confParam.getAdjacencyList().setStatusOfNeighbor(neighbor, Adjacent::STATUS_INACTIVE);
+    m_adjacencyList.setStatusOfNeighbor(neighbor, Adjacent::STATUS_INACTIVE);
 
     NLSR_LOG_DEBUG("Neighbor: " << neighbor << " status changed to INACTIVE");
 
@@ -189,10 +188,9 @@ void
 HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
 {
   NLSR_LOG_DEBUG("Received data for INFO(name): " << data.getName());
-  if (data.getSignature().hasKeyLocator()) {
-    if (data.getSignature().getKeyLocator().getType() == ndn::KeyLocator::KeyLocator_Name) {
-      NLSR_LOG_DEBUG("Data signed with: " << data.getSignature().getKeyLocator().getName());
-    }
+  if (data.getSignature().hasKeyLocator() &&
+      data.getSignature().getKeyLocator().getType() == ndn::tlv::Name) {
+    NLSR_LOG_DEBUG("Data signed with: " << data.getSignature().getKeyLocator().getName());
   }
   m_confParam.getValidator().validate(data,
                                       std::bind(&HelloProtocol::onContentValidated, this, _1),
@@ -210,10 +208,10 @@ HelloProtocol::onContentValidated(const ndn::Data& data)
   if (dataName.get(-3).toUri() == INFO_COMPONENT) {
     ndn::Name neighbor = dataName.getPrefix(-4);
 
-    Adjacent::Status oldStatus = m_confParam.getAdjacencyList().getStatusOfNeighbor(neighbor);
-    m_confParam.getAdjacencyList().setStatusOfNeighbor(neighbor, Adjacent::STATUS_ACTIVE);
-    m_confParam.getAdjacencyList().setTimedOutInterestCount(neighbor, 0);
-    Adjacent::Status newStatus = m_confParam.getAdjacencyList().getStatusOfNeighbor(neighbor);
+    Adjacent::Status oldStatus = m_adjacencyList.getStatusOfNeighbor(neighbor);
+    m_adjacencyList.setStatusOfNeighbor(neighbor, Adjacent::STATUS_ACTIVE);
+    m_adjacencyList.setTimedOutInterestCount(neighbor, 0);
+    Adjacent::Status newStatus = m_adjacencyList.getStatusOfNeighbor(neighbor);
 
     NLSR_LOG_DEBUG("Neighbor : " << neighbor);
     NLSR_LOG_DEBUG("Old Status: " << oldStatus << " New Status: " << newStatus);
@@ -226,6 +224,8 @@ HelloProtocol::onContentValidated(const ndn::Data& data)
         m_lsdb.scheduleAdjLsaBuild();
       }
     }
+
+    onHelloDataValidated(neighbor);
   }
   // increment RCV_HELLO_DATA
   hpIncrementSignal(Statistics::PacketType::RCV_HELLO_DATA);

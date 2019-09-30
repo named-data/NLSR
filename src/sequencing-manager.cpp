@@ -138,8 +138,14 @@ void
 SequencingManager::writeLog() const
 {
   NLSR_LOG_DEBUG("----SequencingManager----");
-  NLSR_LOG_DEBUG("Adj LSA seq no: " << m_adjLsaSeq);
-  NLSR_LOG_DEBUG("Cor LSA Seq no: " << m_corLsaSeq);
+  if (m_hyperbolicState == HYPERBOLIC_STATE_OFF ||
+      m_hyperbolicState == HYPERBOLIC_STATE_DRY_RUN) {
+    NLSR_LOG_DEBUG("Adj LSA seq no: " << m_adjLsaSeq);
+  }
+  if (m_hyperbolicState == HYPERBOLIC_STATE_ON ||
+      m_hyperbolicState == HYPERBOLIC_STATE_DRY_RUN) {
+    NLSR_LOG_DEBUG("Cor LSA Seq no: " << m_corLsaSeq);
+  }
   NLSR_LOG_DEBUG("Name LSA Seq no: " << m_nameLsaSeq);
 }
 

@@ -142,8 +142,13 @@ RoutingTableCalculator::writeAdjMatrixLog(const Map& map) const
   for (size_t i = 0; i < m_nRouters; i++) {
     std::string line;
     for (size_t j = 0; j < m_nRouters; j++) {
-      line += boost::lexical_cast<std::string>(adjMatrix[i][j]);
-      line += " ";
+      if (adjMatrix[i][j] == LinkStateRoutingTableCalculator::NO_NEXT_HOP) {
+        line += "0 ";
+      }
+      else {
+        line += boost::lexical_cast<std::string>(adjMatrix[i][j]);
+        line += " ";
+      }
     }
     line = boost::lexical_cast<std::string>(i) + "|" + line;
     NLSR_LOG_DEBUG(line);

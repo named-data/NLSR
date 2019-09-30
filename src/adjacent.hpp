@@ -153,9 +153,6 @@ public:
     return m_faceUri == faceUri;
   }
 
-  void
-  writeLog();
-
 public:
   static const double DEFAULT_LINK_COST;
   static const double NON_ADJACENT_COST;

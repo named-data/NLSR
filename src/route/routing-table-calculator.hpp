@@ -200,6 +200,7 @@ private:
   static const int EMPTY_PARENT;
   static const double INF_DISTANCE;
   static const int NO_MAPPING_NUM;
+public:
   static const int NO_NEXT_HOP;
 
 };

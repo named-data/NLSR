@@ -33,59 +33,29 @@ const std::string LSA_COMPONENT = "LSA";
 
 INIT_LOGGER(SyncLogicHandler);
 
-template<class T>
-class NullDeleter
-{
-public:
-  void
-  operator()(T*)
-  {
-  }
-};
-
 SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
                                    const ConfParameter& conf)
   : onNewLsa(std::make_unique<OnNewLsa>())
   , m_syncFace(face)
   , m_isLsaNew(isLsaNew)
   , m_confParam(conf)
+  , m_nameLsaUserPrefix(ndn::Name(m_confParam.getSyncUserPrefix()).append(std::to_string(Lsa::Type::NAME)))
+  , m_syncLogic(m_syncFace, m_confParam.getSyncProtocol(), m_confParam.getSyncPrefix(),
+                m_nameLsaUserPrefix, m_confParam.getSyncInterestLifetime(),
+                std::bind(&SyncLogicHandler::processUpdate, this, _1, _2))
 {
-  createSyncLogic(conf.getSyncPrefix());
-}
+  m_adjLsaUserPrefix = ndn::Name(m_confParam.getSyncUserPrefix())
+                         .append(std::to_string(Lsa::Type::ADJACENCY));
+  m_coorLsaUserPrefix = ndn::Name(m_confParam.getSyncUserPrefix())
+                         .append(std::to_string(Lsa::Type::COORDINATE));
 
-void
-SyncLogicHandler::createSyncLogic(const ndn::Name& syncPrefix, const ndn::time::milliseconds& syncInterestLifetime)
-{
-  if (m_syncLogic != nullptr) {
-    NLSR_LOG_WARN("Trying to create Sync Logic object, but Sync Logic object already exists");
-    return;
+  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF ||
+      m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
+    m_syncLogic.addUserNode(m_adjLsaUserPrefix);
   }
-
-  // Build LSA sync update prefix
-  buildUpdatePrefix();
-
-  NLSR_LOG_DEBUG("Creating Sync Logic object. Sync Prefix: " << syncPrefix);
-
-  // The face's lifetime is managed in main.cpp; Logic should not manage the memory
-  // of the object
-  std::shared_ptr<ndn::Face> facePtr(&m_syncFace, NullDeleter<ndn::Face>());
-
-  m_syncLogic = std::make_shared<SyncProtocolAdapter>(*facePtr,
-                  m_confParam.getSyncProtocol(),
-                  syncPrefix,
-                  m_nameLsaUserPrefix,
-                  syncInterestLifetime,
-                  std::bind(&SyncLogicHandler::processUpdate, this, _1, _2));
-
-  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-    m_syncLogic->addUserNode(m_adjLsaUserPrefix);
-  }
-  else if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-    m_syncLogic->addUserNode(m_coorLsaUserPrefix);
-  }
-  else {
-    m_syncLogic->addUserNode(m_adjLsaUserPrefix);
-    m_syncLogic->addUserNode(m_coorLsaUserPrefix);
+  else if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON ||
+           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
+    m_syncLogic.addUserNode(m_coorLsaUserPrefix);
   }
 }
 
@@ -148,42 +118,19 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
 void
 SyncLogicHandler::publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo)
 {
-  if (m_syncLogic == nullptr) {
-    NLSR_LOG_FATAL("Cannot publish routing update; SyncLogic does not exist");
-
-    BOOST_THROW_EXCEPTION(SyncLogicHandler::Error("Cannot publish routing update; SyncLogic does not exist"));
-  }
-
   switch (type) {
   case Lsa::Type::ADJACENCY:
-    m_syncLogic->publishUpdate(m_adjLsaUserPrefix, seqNo);
+    m_syncLogic.publishUpdate(m_adjLsaUserPrefix, seqNo);
     break;
   case Lsa::Type::COORDINATE:
-    m_syncLogic->publishUpdate(m_coorLsaUserPrefix, seqNo);
+    m_syncLogic.publishUpdate(m_coorLsaUserPrefix, seqNo);
     break;
   case Lsa::Type::NAME:
-    m_syncLogic->publishUpdate(m_nameLsaUserPrefix, seqNo);
+    m_syncLogic.publishUpdate(m_nameLsaUserPrefix, seqNo);
     break;
   default:
     break;
   }
-}
-
-void
-SyncLogicHandler::buildUpdatePrefix()
-{
-  ndn::Name updatePrefix = m_confParam.getLsaPrefix();
-  updatePrefix.append(m_confParam.getSiteName());
-  updatePrefix.append(m_confParam.getRouterName());
-
-  m_nameLsaUserPrefix = updatePrefix;
-  m_nameLsaUserPrefix.append(std::to_string(Lsa::Type::NAME));
-
-  m_adjLsaUserPrefix = updatePrefix;
-  m_adjLsaUserPrefix.append(std::to_string(Lsa::Type::ADJACENCY));
-
-  m_coorLsaUserPrefix = updatePrefix;
-  m_coorLsaUserPrefix.append(std::to_string(Lsa::Type::COORDINATE));
 }
 
 } // namespace nlsr

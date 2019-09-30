@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -186,9 +186,8 @@ int32_t
 AdjacencyList::getNumOfActiveNeighbor() const
 {
   int32_t actNbrCount = 0;
-  for (std::list<Adjacent>::const_iterator it = m_adjList.begin(); it != m_adjList.end(); it++) {
-
-    if (it->getStatus() == Adjacent::STATUS_ACTIVE) {
+  for (const auto& adjacent: m_adjList) {
+    if (adjacent.getStatus() == Adjacent::STATUS_ACTIVE) {
       actNbrCount++;
     }
   }
@@ -198,23 +197,18 @@ AdjacencyList::getNumOfActiveNeighbor() const
 std::list<Adjacent>::iterator
 AdjacencyList::find(const ndn::Name& adjName)
 {
-  std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
-                                                  m_adjList.end(),
-                                                  std::bind(&Adjacent::compare,
-                                                            _1, std::cref(adjName)));
-  return it;
+  return std::find_if(m_adjList.begin(),
+                      m_adjList.end(),
+                      std::bind(&Adjacent::compare, _1, std::cref(adjName)));
 }
 
 std::list<Adjacent>::const_iterator
 AdjacencyList::find(const ndn::Name& adjName) const
 {
-  std::list<Adjacent>::const_iterator it = std::find_if(m_adjList.cbegin(),
-                                                        m_adjList.cend(),
-                                                        std::bind(&Adjacent::compare,
-                                                                  _1, std::cref(adjName)));
-  return it;
+  return std::find_if(m_adjList.cbegin(),
+                      m_adjList.cend(),
+                      std::bind(&Adjacent::compare, _1, std::cref(adjName)));
 }
-
 
 AdjacencyList::iterator
 AdjacencyList::findAdjacent(const ndn::Name& adjName)
@@ -250,20 +244,16 @@ AdjacencyList::getFaceId(const ndn::FaceUri& faceUri)
                                                   m_adjList.end(),
                                                   std::bind(&Adjacent::compareFaceUri,
                                                             _1, faceUri));
-  if (it != m_adjList.end()) {
-    return it->getFaceId();
-  }
 
-  return 0;
+  return it != m_adjList.end() ? it->getFaceId() : 0;
 }
 
 void
 AdjacencyList::writeLog()
 {
   NLSR_LOG_DEBUG("-------Adjacency List--------");
-  for (std::list<Adjacent>::iterator it = m_adjList.begin();
-       it != m_adjList.end(); it++) {
-    (*it).writeLog();
+  for (const auto& adjacent : m_adjList) {
+    NLSR_LOG_DEBUG(adjacent);
   }
 }
 

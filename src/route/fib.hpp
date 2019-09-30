@@ -22,7 +22,6 @@
 #ifndef NLSR_ROUTE_FIB_HPP
 #define NLSR_ROUTE_FIB_HPP
 
-#include "face-map.hpp"
 #include "fib-entry.hpp"
 #include "test-access-control.hpp"
 
@@ -164,29 +163,16 @@ private:
   /*! \brief Log registration success, and update the Face ID associated with a URI.
    */
   void
-  onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                        const std::string& message, const ndn::FaceUri& faceUri);
+  onRegistrationSuccess(const ndn::nfd::ControlParameters& param,
+                        const ndn::FaceUri& faceUri);
 
   /*! \brief Retry a prefix (next-hop) registration up to three (3) times.
    */
   void
   onRegistrationFailure(const ndn::nfd::ControlResponse& response,
-                        const std::string& message,
                         const ndn::nfd::ControlParameters& parameters,
                         const ndn::FaceUri& faceUri,
                         uint8_t times);
-
-  /*! \brief Log a successful unregistration.
-   */
-  void
-  onUnregistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                          const std::string& message);
-
-  /*! \brief Log an unregistration failure. Does not retry.
-   */
-  void
-  onUnregistrationFailure(const ndn::nfd::ControlResponse& response,
-                               const std::string& message);
 
   /*! \brief Log a successful strategy setting.
    */
@@ -240,6 +226,7 @@ private:
 public:
   static const std::string MULTICAST_STRATEGY;
   static const std::string BEST_ROUTE_V2_STRATEGY;
+  ndn::util::Signal<Fib, const ndn::Name&> onPrefixRegistrationSuccess;
 
 private:
   ndn::Scheduler& m_scheduler;
@@ -247,7 +234,6 @@ private:
   ndn::nfd::Controller m_controller;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  FaceMap m_faceMap;
   std::map<ndn::Name, FibEntry> m_table;
 
 private:
