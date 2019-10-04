@@ -292,11 +292,20 @@ Nlsr::initializeKey()
 
   try {
     m_keyChain.deleteIdentity(m_keyChain.getPib().getIdentity(nlsrInstanceName));
-  } catch (const std::exception& e) {
+  }
+  catch (const std::exception& e) {
     NLSR_LOG_WARN(e.what());
   }
 
-  auto nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName);
+  ndn::security::Identity nlsrInstanceIdentity;
+  try {
+    nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName);
+  }
+  catch (const std::exception& e) {
+    NLSR_LOG_ERROR("Unable to create identity, NLSR will run without security!");
+    NLSR_LOG_DEBUG("Can be ignored if running in non-production environments.");
+    return;
+  }
   auto nlsrInstanceKey = nlsrInstanceIdentity.getDefaultKey();
 
   ndn::security::v2::Certificate certificate;
