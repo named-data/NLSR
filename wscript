@@ -19,14 +19,14 @@ You should have received a copy of the GNU General Public License along with
 NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+from waflib import Context, Logs, Utils
+import os, subprocess
+
 VERSION = "0.5.1"
 APPNAME = "nlsr"
 BUGREPORT = "https://redmine.named-data.net/projects/nlsr"
 URL = "https://named-data.net/doc/NLSR/"
 GIT_TAG_PREFIX = "NLSR-"
-
-from waflib import Logs, Utils, Context
-import os, subprocess
 
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
@@ -34,25 +34,24 @@ def options(opt):
               'boost', 'doxygen', 'sphinx_build'],
              tooldir=['.waf-tools'])
 
-    nlsropt = opt.add_option_group('NLSR Options')
-    nlsropt.add_option('--with-tests', action='store_true', default=False, help='build unit tests')
+    optgrp = opt.add_option_group('NLSR Options')
+    optgrp.add_option('--with-tests', action='store_true', default=False,
+                      help='Build unit tests')
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
                'default-compiler-flags', 'boost',
                'doxygen', 'sphinx_build'])
 
-    if 'PKG_CONFIG_PATH' not in os.environ:
-        os.environ['PKG_CONFIG_PATH'] = Utils.subst_vars('${LIBDIR}/pkgconfig', conf.env)
+    conf.env.WITH_TESTS = conf.options.with_tests
 
-    conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'],
-                   uselib_store='NDN_CXX', mandatory=True)
+    pkg_config_path = os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR)
+    conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'], uselib_store='NDN_CXX',
+                   pkg_config_path=pkg_config_path)
 
-    boost_libs = 'system chrono program_options iostreams thread regex filesystem log log_setup'
-    if conf.options.with_tests:
-        conf.env['WITH_TESTS'] = True
-        conf.define('WITH_TESTS', 1)
-        boost_libs += ' unit_test_framework'
+    boost_libs = ['system', 'iostreams', 'filesystem', 'regex']
+    if conf.env.WITH_TESTS:
+        boost_libs += ['program_options', 'unit_test_framework']
 
     conf.check_boost(lib=boost_libs, mt=True)
     if conf.env.BOOST_VERSION_NUMBER < 105800:
@@ -60,19 +59,23 @@ def configure(conf):
                    'Please upgrade your distribution or manually install a newer version of Boost'
                    ' (https://redmine.named-data.net/projects/nfd/wiki/Boost_FAQ)')
 
-    conf.check_cfg(package='ChronoSync', args=['--cflags', '--libs'],
-                   uselib_store='SYNC', mandatory=True)
+    conf.check_cfg(package='ChronoSync', args=['--cflags', '--libs'], uselib_store='SYNC',
+                   pkg_config_path=pkg_config_path)
 
-    conf.check_cfg(package='PSync', args=['--cflags', '--libs'],
-                   uselib_store='PSYNC', mandatory=True)
+    conf.check_cfg(package='PSync', args=['--cflags', '--libs'], uselib_store='PSYNC',
+                   pkg_config_path=pkg_config_path)
 
     conf.check_compiler_flags()
 
     # Loading "late" to prevent tests from being compiled with profiling flags
     conf.load('coverage')
-
     conf.load('sanitizers')
 
+    conf.define_cond('WITH_TESTS', conf.env.WITH_TESTS)
+    # The config header will contain all defines that were added using conf.define()
+    # or conf.define_cond().  Everything that was added directly to conf.env.DEFINES
+    # will not appear in the config header, but will instead be passed directly to the
+    # compiler on the command line.
     conf.write_config_header('config.hpp')
 
 def build(bld):
@@ -128,9 +131,10 @@ def build(bld):
             builder='man',
             config='docs/conf.py',
             outdir='docs/manpages',
-            source=bld.path.ant_glob('docs/manpages/**/*.rst'),
+            source=bld.path.ant_glob('docs/manpages/*.rst'),
             install_path='${MANDIR}',
-            VERSION=VERSION)
+            version=VERSION_BASE,
+            release=VERSION)
 
 def docs(bld):
     from waflib import Options
@@ -168,7 +172,8 @@ def sphinx(bld):
         config='docs/conf.py',
         outdir='docs',
         source=bld.path.ant_glob('docs/**/*.rst'),
-        VERSION=VERSION)
+        version=VERSION_BASE,
+        release=VERSION)
 
 def version(ctx):
     # don't execute more than once
