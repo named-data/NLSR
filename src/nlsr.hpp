@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -33,7 +33,6 @@
 #include "route/fib.hpp"
 #include "route/name-prefix-table.hpp"
 #include "route/routing-table.hpp"
-#include "security/certificate-store.hpp"
 #include "update/prefix-update-processor.hpp"
 #include "update/nfd-rib-command-processor.hpp"
 #include "utility/name-helper.hpp"
@@ -105,6 +104,12 @@ public:
   void
   addDispatcherTopPrefix(const ndn::Name& topPrefix);
 
+  Lsdb&
+  getLsdb()
+  {
+    return m_lsdb;
+  }
+
   Fib&
   getFib()
   {
@@ -159,62 +164,10 @@ public:
   registerAdjacencyPrefixes(const Adjacent& adj,
                             const ndn::time::milliseconds& timeout);
 
-  /*! \brief Add a certificate NLSR claims to be authoritative for to the certificate store.
-   *
-   * \sa CertificateStore
-   */
-  void
-  loadCertToPublish(const ndn::security::v2::Certificate& certificate);
-
-  /*! \brief Callback when SegmentFetcher retrieves a segment.
-   */
-  void
-  afterFetcherSignalEmitted(const ndn::Data& lsaSegment);
-
-  /*! \brief Retrieves the chain of certificates from Validator's cache and
-   *   store them in Nlsr's own CertificateStore.
-   * \param keyName Name of the first key in the certificate chain.
-   */
-  void
-  publishCertFromCache(const ndn::Name& keyName);
-
-  void
-  initializeKey();
-
-  /*! \brief Find a certificate
-   *
-   * Find a certificate that NLSR has. First it checks against the
-   * certificates this NLSR claims to be authoritative for, usually
-   * something like this specific router's certificate, and then
-   * checks the cache of certficates it has already fetched. If none
-   * can be found, it will return an empty pointer.
-   */
-  const ndn::security::v2::Certificate*
-  getCertificate(const ndn::Name& certificateKeyName)
-  {
-    const ndn::security::v2::Certificate* cert =
-      m_certStore.find(certificateKeyName);
-
-    return cert;
-  }
-
   void
   setStrategies();
 
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-
-  security::CertificateStore&
-  getCertificateStore()
-  {
-    return m_certStore;
-  }
-
 private:
-  /*! \brief Registers the prefix that NLSR will use for key/certificate interests.
-   */
-  void
-  registerKeyPrefix();
-
   /*! \brief Registers the prefix that NLSR will consider to be the machine-local, secure prefix.
    */
   void
@@ -224,16 +177,6 @@ private:
    */
   void
   registerRouterPrefix();
-
-  /*! \brief Attempts to satisfy an Interest for a certificate, and send it back.
-   */
-  void
-  onKeyInterest(const ndn::Name& name, const ndn::Interest& interest);
-
-  /*! \brief Do nothing.
-   */
-  void
-  onKeyPrefixRegSuccess(const ndn::Name& name);
 
   /*! \brief Do nothing.
    */
@@ -272,7 +215,6 @@ private:
   bool m_isDaemonProcess;
   ndn::security::ValidatorConfig& m_validator;
   std::vector<ndn::Name> m_strategySetOnRouters;
-  uint16_t m_numSyncPrefixRegistered = 0;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   Fib m_fib;
@@ -282,7 +224,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   HelloProtocol m_helloProtocol;
 
 private:
-  ndn::util::signal::ScopedConnection m_afterSegmentValidatedConnection;
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
   ndn::util::signal::ScopedConnection m_onPrefixRegistrationSuccess;
   ndn::util::signal::ScopedConnection m_onHelloDataValidated;
@@ -295,13 +236,11 @@ private:
   /*! \brief Where NLSR stores certificates it claims to be
    * authoritative for. Usually the router certificate.
    */
-  security::CertificateStore& m_certStore;
 
   ndn::nfd::Controller m_controller;
   ndn::nfd::Controller m_faceDatasetController;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  ndn::security::SigningInfo m_signingInfo;
   update::PrefixUpdateProcessor m_prefixUpdateProcessor;
   update::NfdRibCommandProcessor m_nfdRibCommandProcessor;
 

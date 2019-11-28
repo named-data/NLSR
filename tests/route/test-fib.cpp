@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -37,7 +37,7 @@ class FibFixture : public UnitTestTimeFixture
 public:
   FibFixture()
     : face(std::make_shared<ndn::util::DummyClientFace>(m_ioService, m_keyChain))
-    , conf(*face)
+    , conf(*face, m_keyChain)
     , interests(face->sentInterests)
   {
     Adjacent neighbor1(router1Name, ndn::FaceUri(router1FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);

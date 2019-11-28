@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -41,9 +41,8 @@ namespace nlsr {
 class HelloProtocol
 {
 public:
-  HelloProtocol(ndn::Face& face, ndn::KeyChain& keyChain,
-                ndn::security::SigningInfo& signingInfo,
-                ConfParameter& confParam, RoutingTable& routingTable, Lsdb& lsdb);
+  HelloProtocol(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam,
+                RoutingTable& routingTable, Lsdb& lsdb);
 
   /*! \brief Sends a Hello Interest packet.
    *
@@ -160,7 +159,7 @@ private:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
   ndn::security::v2::KeyChain& m_keyChain;
-  ndn::security::SigningInfo& m_signingInfo;
+  const ndn::security::SigningInfo& m_signingInfo;
   ConfParameter& m_confParam;
   RoutingTable& m_routingTable;
   Lsdb& m_lsdb;

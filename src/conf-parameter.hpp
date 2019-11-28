@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -27,9 +27,7 @@
 #include "test-access-control.hpp"
 #include "adjacency-list.hpp"
 #include "name-prefix-list.hpp"
-#include "security/certificate-store.hpp"
 
-#include <iostream>
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
@@ -132,7 +130,8 @@ class ConfParameter
 {
 
 public:
-  ConfParameter(ndn::Face& face, const std::string& confFileName = "nlsr.conf");
+  ConfParameter(ndn::Face& face,  ndn::KeyChain& keyChain,
+                const std::string& confFileName = "nlsr.conf");
 
   const std::string&
   getConfFileName()
@@ -455,11 +454,35 @@ public:
     return m_prefixUpdateValidator;
   }
 
-  security::CertificateStore&
-  getCertStore()
+  const ndn::security::SigningInfo&
+  getSigningInfo() const
   {
-    return m_certStore;
+    return m_signingInfo;
   }
+
+  void
+  addCertPath(const std::string& certPath)
+  {
+    m_certs.insert(certPath);
+  }
+
+  const std::unordered_set<std::string>&
+  getIdCerts() const
+  {
+    return m_certs;
+  }
+
+  const ndn::KeyChain&
+  getKeyChain() const
+  {
+    return m_keyChain;
+  }
+
+  shared_ptr<ndn::security::v2::Certificate>
+  initializeKey();
+
+  void
+  loadCertToValidator(const ndn::security::v2::Certificate& cert);
 
   /*! \brief Dump the current state of all attributes to the log.
    */
@@ -515,7 +538,9 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   NamePrefixList m_npl;
   ndn::security::ValidatorConfig m_validator;
   ndn::security::ValidatorConfig m_prefixUpdateValidator;
-  security::CertificateStore m_certStore;
+  ndn::security::SigningInfo m_signingInfo;
+  std::unordered_set<std::string> m_certs;
+  ndn::KeyChain& m_keyChain;
 };
 
 } // namespace nlsr

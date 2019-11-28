@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -43,7 +43,7 @@ class LinkStateCalculatorFixture : public BaseFixture
 public:
   LinkStateCalculatorFixture()
     : face(m_ioService, m_keyChain)
-    , conf(face)
+    , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , routingTable(nlsr.m_routingTable)

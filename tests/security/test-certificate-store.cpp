@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,49 +21,202 @@
 
 #include "security/certificate-store.hpp"
 
-#include "../test-common.hpp"
+#include "tests/test-common.hpp"
+#include "nlsr.hpp"
+#include "lsdb.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
 
 namespace nlsr {
-namespace security {
 namespace test {
 
 using std::shared_ptr;
 using namespace nlsr::test;
 
-class CertificateStoreFixture : public BaseFixture
+class CertificateStoreFixture : public UnitTestTimeFixture
 {
 public:
   CertificateStoreFixture()
+    : face(m_ioService, m_keyChain, {true, true})
+    , conf(face, m_keyChain, "unit-test-nlsr.conf")
+    , confProcessor(conf, SYNC_PROTOCOL_PSYNC, HYPERBOLIC_STATE_OFF,
+                    "/ndn/", "/site", "/%C1.Router/router1")
+    , rootIdName(conf.getNetwork())
+    , siteIdentityName(ndn::Name(conf.getNetwork()).append(conf.getSiteName()))
+    , opIdentityName(ndn::Name(conf.getNetwork())
+                     .append(ndn::Name(conf.getSiteName()))
+                     .append(ndn::Name("%C1.Operator")))
+    , routerIdName(conf.getRouterPrefix())
+    , nlsr(face, m_keyChain, conf)
+    , lsdb(nlsr.getLsdb())
+    , certStore(face, conf, lsdb)
+    , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))
+
   {
-    auto identity = addIdentity("/TestNLSR/identity");
-    certificateKey = identity.getDefaultKey().getName();
-    certificate = identity.getDefaultKey().getDefaultCertificate();
+    rootId = addIdentity(rootIdName);
+    siteIdentity = addSubCertificate(siteIdentityName, rootId);
+    opIdentity = addSubCertificate(opIdentityName, siteIdentity);
+    routerId = addSubCertificate(routerIdName, opIdentity);
+
+    auto certificate = conf.initializeKey();
+    if (certificate) {
+      certStore.insert(*certificate);
+    };
+
+    // Create certificate and load it to the validator
+    // previously this was done by in nlsr ctor
+    conf.loadCertToValidator(rootId.getDefaultKey().getDefaultCertificate());
+    conf.loadCertToValidator(siteIdentity.getDefaultKey().getDefaultCertificate());
+    conf.loadCertToValidator(opIdentity.getDefaultKey().getDefaultCertificate());
+    conf.loadCertToValidator(routerId.getDefaultKey().getDefaultCertificate());
+
+    std::ifstream inputFile;
+    inputFile.open(std::string("nlsr.conf"));
+
+    BOOST_REQUIRE(inputFile.is_open());
+
+    boost::property_tree::ptree pt;
+
+    boost::property_tree::read_info(inputFile, pt);
+
+    // Load security section and file name
+    for (const auto& tn : pt) {
+      if (tn.first == "security") {
+        auto it = tn.second.begin();
+        conf.getValidator().load(it->second, std::string("nlsr.conf"));
+        break;
+      }
+    }
+    inputFile.close();
+
+    this->advanceClocks(ndn::time::milliseconds(20));
   }
 
 public:
+  void
+  checkForInterest(ndn::Name& interstName)
+  {
+    std::vector<ndn::Interest>& interests = face.sentInterests;
+    BOOST_REQUIRE(interests.size() > 0);
+
+    bool didFindInterest = false;
+    for (const auto& interest : interests) {
+      didFindInterest = didFindInterest || interest.getName() == interstName;
+    }
+    BOOST_CHECK(didFindInterest);
+  }
+
+  ndn::util::DummyClientFace face;
+
+  ConfParameter conf;
+  DummyConfFileProcessor confProcessor;
+
+  ndn::Name rootIdName, siteIdentityName, opIdentityName, routerIdName;
+  ndn::security::pib::Identity rootId, siteIdentity, opIdentity, routerId;
+
+  Nlsr nlsr;
+  Lsdb& lsdb;
   ndn::security::v2::Certificate certificate;
   ndn::Name certificateKey;
+  security::CertificateStore certStore;
+  const boost::filesystem::path ROOT_CERT_PATH;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestSecurityCertificateStore, CertificateStoreFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  CertificateStore store;
+  ndn::Name identityName("/TestNLSR/identity");
+  identityName.appendVersion();
 
-  BOOST_REQUIRE(store.find(certificateKey) == nullptr);
-  store.insert(certificate);
+  auto identity = m_keyChain.createIdentity(identityName);
+  auto certificate = identity.getDefaultKey().getDefaultCertificate();
 
-  BOOST_CHECK(*store.find(certificateKey) == certificate);
+  ndn::Name certKey = certificate.getKeyName();
 
-  store.clear();
-  BOOST_REQUIRE(store.find(certificateKey) == nullptr);
+  BOOST_CHECK(certStore.find(certKey) == nullptr);
+
+  // Certificate should be retrievable from the CertificateStore
+  certStore.insert(certificate);
+  conf.loadCertToValidator(certificate);
+
+  BOOST_CHECK(certStore.find(certKey) != nullptr);
+
+  lsdb.expressInterest(certKey, 0);
+
+  advanceClocks(10_ms);
+  checkForInterest(certKey);
+}
+
+BOOST_AUTO_TEST_CASE(TestKeyPrefixRegistration)
+{
+  // check if nlsrKeyPrefix is registered
+  ndn::Name nlsrKeyPrefix = conf.getRouterPrefix();
+  nlsrKeyPrefix.append("nlsr");
+  nlsrKeyPrefix.append("KEY");
+  checkPrefixRegistered(face, nlsrKeyPrefix);
+
+  // check if routerPrefix is registered
+  ndn::Name routerKeyPrefix = conf.getRouterPrefix();
+  routerKeyPrefix.append("KEY");
+  checkPrefixRegistered(face, routerKeyPrefix);
+
+  // check if operatorKeyPrefix is registered
+  ndn::Name operatorKeyPrefix = conf.getNetwork();
+  operatorKeyPrefix.append(conf.getSiteName());
+  operatorKeyPrefix.append(std::string("%C1.Operator"));
+  checkPrefixRegistered(face, operatorKeyPrefix);
+}
+
+BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
+{
+  ndn::Name lsaInterestName("/localhop");
+  lsaInterestName.append(conf.getLsaPrefix().getSubName(1));
+  lsaInterestName.append(conf.getSiteName());
+  lsaInterestName.append(conf.getRouterName());
+  lsaInterestName.append(std::to_string(Lsa::Type::NAME));
+  lsaInterestName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq() + 1);
+
+  lsdb.expressInterest(lsaInterestName, 0);
+  advanceClocks(10_ms);
+
+  checkForInterest(lsaInterestName);
+
+  ndn::Name lsaDataName(lsaInterestName);
+  lsaDataName.appendVersion();
+  lsaDataName.appendSegment(0);
+
+  ndn::Data data(lsaDataName);
+  data.setFreshnessPeriod(ndn::time::seconds(10));
+  ndn::Data dummyData;
+  data.setContent(dummyData.getContent());
+  data.setFinalBlock(lsaDataName[-1]);
+
+  // Sign data with this NLSR's key (in real it would be different NLSR)
+  m_keyChain.sign(data, conf.m_signingInfo);
+  face.put(data);
+
+  this->advanceClocks(ndn::time::milliseconds(1));
+
+  // Make NLSR validate data signed by its own key
+  conf.getValidator().validate(data,
+                               [] (const ndn::Data&) { BOOST_CHECK(true); },
+                               [] (const ndn::Data&, const ndn::security::v2::ValidationError&) {
+                                 BOOST_CHECK(false);
+                               });
+
+  lsdb.emitSegmentValidatedSignal(data);
+  const auto keyName = data.getSignature().getKeyLocator().getName();
+  BOOST_CHECK(certStore.find(keyName) != nullptr);
+
+  // testing a callback after segment validation signal from lsdb
+  ndn::util::signal::ScopedConnection connection = lsdb.afterSegmentValidatedSignal.connect(
+  [&] (const ndn::Data& lsaSegment) {
+    BOOST_CHECK_EQUAL(lsaSegment.getName(), data.getName());
+  });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test
-} // namespace security
 } // namespace nlsr

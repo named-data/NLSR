@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,13 +22,17 @@
 #ifndef NLSR_CERTIFICATE_STORE_HPP
 #define NLSR_CERTIFICATE_STORE_HPP
 
-#include "../common.hpp"
-#include "../test-access-control.hpp"
+#include "common.hpp"
+#include "test-access-control.hpp"
+#include "lsdb.hpp"
 
 #include <ndn-cxx/interest.hpp>
+#include <ndn-cxx/mgmt/nfd/controller.hpp>
 #include <ndn-cxx/security/v2/certificate.hpp>
+#include <ndn-cxx/security/validator-config.hpp>
 
 namespace nlsr {
+class ConfParameter;
 namespace security {
 
 /*! \brief Store certificates for names
@@ -40,35 +44,61 @@ namespace security {
  */
 class CertificateStore
 {
+
 public:
+  CertificateStore(ndn::Face& face, ConfParameter& confParam, Lsdb& lsdb);
+
   void
-  insert(const ndn::security::v2::Certificate& certificate)
-  {
-    m_certificates[certificate.getKeyName()] = certificate;
-  }
+  insert(const ndn::security::v2::Certificate& certificate);
 
+  /*! \brief Find a certificate
+   *
+   * Find a certificate that NLSR has. First it checks against the
+   * certificates this NLSR claims to be authoritative for, usually
+   * something like this specific router's certificate, and then
+   * checks the cache of certificates it has already fetched. If none
+   * can be found, it will return an null pointer.
+ */
   const ndn::security::v2::Certificate*
-  find(const ndn::Name keyName)
-  {
-    CertMap::iterator it = m_certificates.find(keyName);
+  find(const ndn::Name& keyName) const;
 
-    if (it != m_certificates.end()) {
-      return &it->second;
-    }
+  /*! \brief Retrieves the chain of certificates from Validator's cache and
+   *   store them in Nlsr's own CertificateStore.
+   * \param keyName Name of the first key in the certificate chain.
+  */
+  void
+  publishCertFromCache(const ndn::Name& keyName);
 
-    return nullptr;
-  }
+  void
+  afterFetcherSignalEmitted(const ndn::Data& lsaSegment);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
-  clear()
-  {
-    m_certificates.clear();
-  }
+  clear();
+
+  void
+  setInterestFilter(const ndn::Name& prefix, const bool loopback = false);
+
+  void
+  registerKeyPrefixes();
+
+  void
+  onKeyInterest(const ndn::Name& name, const ndn::Interest& interest);
+
+  void
+  onKeyPrefixRegSuccess(const ndn::Name& name);
+
+  void
+  registrationFailed(const ndn::Name& name);
 
 private:
   typedef std::map<ndn::Name, ndn::security::v2::Certificate> CertMap;
   CertMap m_certificates;
+  ndn::Face& m_face;
+  ConfParameter& m_confParam;
+  Lsdb& m_lsdb;
+  ndn::security::ValidatorConfig& m_validator;
+  ndn::util::signal::ScopedConnection m_afterSegmentValidatedConnection;
 };
 
 } // namespace security

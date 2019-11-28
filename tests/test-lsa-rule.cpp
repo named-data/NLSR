@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,6 +21,7 @@
 
 #include "test-common.hpp"
 #include "nlsr.hpp"
+#include "security/certificate-store.hpp"
 
 #include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
@@ -46,8 +47,9 @@ public:
     , siteIdentityName("/ndn/edu/test-site")
     , opIdentityName("/ndn/edu/test-site/%C1.Operator/op1")
     , routerIdName("/ndn/edu/test-site/%C1.Router/router1")
-    , confParam(face)
-    , confProcessor(confParam)
+    , confParam(face, m_keyChain)
+    , confProcessor(confParam, SYNC_PROTOCOL_PSYNC, HYPERBOLIC_STATE_OFF,
+                    "/ndn/", "/edu/test-site", "/%C1.Router/router1")
     , nlsr(face, m_keyChain, confParam)
     , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))
   {
@@ -56,15 +58,16 @@ public:
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
     routerId = addSubCertificate(routerIdName, opIdentity);
 
+    // Create certificate and load it to the validator
+    // previously this was done by in nlsr ctor
+    confParam.initializeKey();
+
     saveCertificate(rootId, ROOT_CERT_PATH.string());
 
-    auto load = [this] (const ndn::security::Identity& id) {
-      nlsr.loadCertToPublish(id.getDefaultKey().getDefaultCertificate());
-    };
-    load(rootId);
-    load(siteIdentity);
-    load(opIdentity);
-    load(routerId);
+    confParam.loadCertToValidator(rootId.getDefaultKey().getDefaultCertificate());
+    confParam.loadCertToValidator(siteIdentity.getDefaultKey().getDefaultCertificate());
+    confParam.loadCertToValidator(opIdentity.getDefaultKey().getDefaultCertificate());
+    confParam.loadCertToValidator(routerId.getDefaultKey().getDefaultCertificate());
 
     // Loading the security section's validator part into the validator
     // See conf file processor for more details
@@ -100,7 +103,6 @@ public:
 
   ndn::Name rootIdName, siteIdentityName, opIdentityName, routerIdName;
   ndn::security::pib::Identity rootId, siteIdentity, opIdentity, routerId;
-
   ConfParameter confParam;
   DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
@@ -129,7 +131,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   data.setFreshnessPeriod(ndn::time::seconds(10));
 
   // Sign data with NLSR's key
-  m_keyChain.sign(data, nlsr.m_signingInfo);
+  m_keyChain.sign(data, confParam.getSigningInfo());
 
   // Make NLSR validate data signed by its own key
   confParam.getValidator().validate(data,

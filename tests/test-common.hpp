@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,9 +24,10 @@
 
 #include "common.hpp"
 #include "conf-parameter.hpp"
+#include "identity-management-fixture.hpp"
 
 #include "boost-test.hpp"
-#include "identity-management-fixture.hpp"
+#include "route/fib.hpp"
 
 #include <boost/asio.hpp>
 
@@ -44,6 +45,9 @@ using namespace ndn::time_literals;
 
 ndn::Data&
 signData(ndn::Data& data);
+
+void
+checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& prefix);
 
 /** \brief add a fake signature to Data
  */
@@ -177,11 +181,13 @@ class DummyConfFileProcessor
 public:
   DummyConfFileProcessor(ConfParameter& conf,
                          int32_t protocol = SYNC_PROTOCOL_PSYNC,
-                         int32_t hyperbolicState = HYPERBOLIC_STATE_OFF)
+                         int32_t hyperbolicState = HYPERBOLIC_STATE_OFF,
+                         ndn::Name networkName = "/ndn", ndn::Name siteName = "/site",
+                         ndn::Name routerName = "/%C1.Router/this-router")
   {
-    conf.setNetwork("/ndn");
-    conf.setSiteName("/site");
-    conf.setRouterName("/%C1.Router/this-router");
+    conf.setNetwork(networkName);
+    conf.setSiteName(siteName);
+    conf.setRouterName(routerName);
     conf.buildRouterAndSyncUserPrefix();
 
     conf.setSyncProtocol(protocol);

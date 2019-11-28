@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -36,12 +36,10 @@ const ndn::time::seconds Lsdb::GRACE_PERIOD = ndn::time::seconds(10);
 const ndn::time::steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE =
   ndn::time::steady_clock::TimePoint::min();
 
-Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain,
-           ndn::security::SigningInfo& signingInfo, ConfParameter& confParam,
+Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam,
            NamePrefixTable& namePrefixTable, RoutingTable& routingTable)
   : m_face(face)
   , m_scheduler(face.getIoService())
-  , m_signingInfo(signingInfo)
   , m_confParam(confParam)
   , m_namePrefixTable(namePrefixTable)
   , m_routingTable(routingTable)
@@ -108,8 +106,14 @@ Lsdb::onFetchLsaError(uint32_t errorCode,
 void
 Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& interestName)
 {
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>(ndn::Name(interestName));
-  data->setContent(ndn::Block(bufferPtr));
+  auto data = std::make_shared<ndn::Data>(ndn::Name(interestName));
+  try {
+    data->setContent(ndn::Block(bufferPtr));
+  }
+  catch (const std::exception& e) {
+    NDN_LOG_ERROR("LSA content not recognized: " << e.what());
+    return;
+  }
 
   NLSR_LOG_DEBUG("Received data for LSA(name): " << data->getName());
 
@@ -1083,7 +1087,7 @@ Lsdb::processInterestForNameLsa(const ndn::Interest& interest,
       std::string content = nameLsa->serialize();
       m_segmentPublisher.publish(interest.getName(), interest.getName(),
                                  ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
-                                 m_lsaRefreshTime, m_signingInfo);
+                                 m_lsaRefreshTime, m_confParam.getSigningInfo());
 
       lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_DATA);
     }
@@ -1119,7 +1123,7 @@ Lsdb::processInterestForAdjacencyLsa(const ndn::Interest& interest,
       std::string content = adjLsa->serialize();
       m_segmentPublisher.publish(interest.getName(), interest.getName(),
                                  ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
-                                 m_lsaRefreshTime, m_signingInfo);
+                                 m_lsaRefreshTime, m_confParam.getSigningInfo());
 
       lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_DATA);
     }
@@ -1155,7 +1159,7 @@ Lsdb::processInterestForCoordinateLsa(const ndn::Interest& interest,
       std::string content = corLsa->serialize();
       m_segmentPublisher.publish(interest.getName(), interest.getName(),
                                  ndn::encoding::makeStringBlock(ndn::tlv::Content, content),
-                                 m_lsaRefreshTime, m_signingInfo);
+                                 m_lsaRefreshTime, m_confParam.getSigningInfo());
 
       lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_DATA);
     }

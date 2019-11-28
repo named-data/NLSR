@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -45,7 +45,7 @@ class PublisherFixture : public BaseFixture
 public:
   PublisherFixture()
     : face(m_ioService, m_keyChain, {true, true})
-    , conf(face)
+    , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , lsdb(nlsr.m_lsdb)
@@ -55,23 +55,6 @@ public:
 
     nlsr.initialize();
     face.processEvents(ndn::time::milliseconds(100));
-  }
-
-  void
-  checkPrefixRegistered(const Name& prefix)
-  {
-    bool registerCommandEmitted = false;
-    for (const auto& interest : face.sentInterests) {
-      if (interest.getName().size() > 4 && interest.getName().get(3) == name::Component("register")) {
-        name::Component test = interest.getName().get(4);
-        ndn::nfd::ControlParameters params(test.blockFromValue());
-        if (params.getName() == prefix) {
-          registerCommandEmitted = true;
-          break;
-        }
-      }
-    }
-    BOOST_CHECK(registerCommandEmitted);
   }
 
   void

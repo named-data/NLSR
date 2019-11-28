@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -16,9 +16,6 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
  **/
 
 #include "conf-parameter.hpp"
@@ -28,8 +25,10 @@ namespace nlsr {
 
 INIT_LOGGER(ConfParameter);
 
+using namespace ndn::time_literals;
+
 // To be changed when breaking changes are made to sync
-const uint64_t ConfParameter::SYNC_VERSION = 7;
+const uint64_t ConfParameter::SYNC_VERSION = 8;
 
 static std::unique_ptr<ndn::security::v2::CertificateFetcherDirectFetch>
 makeCertificateFetcher(ndn::Face& face)
@@ -39,7 +38,8 @@ makeCertificateFetcher(ndn::Face& face)
   return fetcher;
 }
 
-ConfParameter::ConfParameter(ndn::Face& face, const std::string& confFileName)
+ConfParameter::ConfParameter(ndn::Face& face, ndn::KeyChain& keyChain,
+                             const std::string& confFileName)
   : m_confFileName(confFileName)
   , m_lsaRefreshTime(LSA_REFRESH_TIME_DEFAULT)
   , m_adjLsaBuildInterval(ADJ_LSA_BUILD_INTERVAL_DEFAULT)
@@ -59,6 +59,7 @@ ConfParameter::ConfParameter(ndn::Face& face, const std::string& confFileName)
   , m_npl()
   , m_validator(makeCertificateFetcher(face))
   , m_prefixUpdateValidator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
+  , m_keyChain(keyChain)
 {
 }
 
@@ -109,6 +110,80 @@ ConfParameter::setNetwork(const ndn::Name& networkName)
   m_lsaPrefix.append(m_network);
   m_lsaPrefix.append("nlsr");
   m_lsaPrefix.append("LSA");
+}
+
+void
+ConfParameter::loadCertToValidator(const ndn::security::v2::Certificate& cert)
+{
+  NLSR_LOG_TRACE("Loading Certificate Name: " << cert.getName());
+  m_validator.loadAnchor("Authoritative-Certificate", ndn::security::v2::Certificate(cert));
+  m_prefixUpdateValidator.loadAnchor("Authoritative-Certificate", ndn::security::v2::Certificate(cert));
+}
+
+shared_ptr<ndn::security::v2::Certificate>
+ConfParameter::initializeKey()
+{
+  NLSR_LOG_DEBUG("Initializing Key ...");
+
+  ndn::Name nlsrInstanceName(m_routerPrefix);
+  nlsrInstanceName.append("nlsr");
+
+  try {
+    m_keyChain.deleteIdentity(m_keyChain.getPib().getIdentity(nlsrInstanceName));
+  }
+  catch (const std::exception& e) {
+    NLSR_LOG_WARN(e.what());
+  }
+
+  ndn::security::Identity nlsrInstanceIdentity;
+  try {
+    nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName);
+  }
+  catch (const std::exception& e) {
+    NLSR_LOG_ERROR(e.what());
+    NLSR_LOG_ERROR("Unable to create identity, NLSR will run without security!");
+    NLSR_LOG_ERROR("Can be ignored if running in non-production environments.");
+    return nullptr;
+  }
+  auto certificate = std::make_shared<ndn::security::v2::Certificate>();
+  auto nlsrInstanceKey = nlsrInstanceIdentity.getDefaultKey();
+  ndn::Name certificateName = nlsrInstanceKey.getName();
+  certificateName.append("NA");
+  certificateName.appendVersion();
+
+  certificate->setName(certificateName);
+
+  // set metainfo
+  certificate->setContentType(ndn::tlv::ContentType_Key);
+  certificate->setFreshnessPeriod(365_days);
+
+  // set content
+  certificate->setContent(nlsrInstanceKey.getPublicKey().data(),
+                          nlsrInstanceKey.getPublicKey().size());
+
+  // set signature-info
+  ndn::SignatureInfo signatureInfo;
+  signatureInfo.setValidityPeriod(ndn::security::ValidityPeriod(ndn::time::system_clock::TimePoint(),
+                                                                ndn::time::system_clock::now()
+                                                                + 365_days));
+
+  try {
+    m_keyChain.sign(*certificate,
+                    ndn::security::SigningInfo(m_keyChain.getPib().getIdentity(m_routerPrefix))
+                                               .setSignatureInfo(signatureInfo));
+  }
+  catch (const std::exception& e) {
+    NLSR_LOG_ERROR("Router's " << e.what() << ", NLSR is running without security. " <<
+                   "If security is enabled in the configuration, NLSR will not converge.");
+
+  }
+
+  m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
+                                             nlsrInstanceName);
+
+  loadCertToValidator(*certificate);
+
+  return certificate;
 }
 
 } // namespace nlsr

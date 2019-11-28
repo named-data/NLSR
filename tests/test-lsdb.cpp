@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -41,7 +41,7 @@ class LsdbFixture : public UnitTestTimeFixture
 public:
   LsdbFixture()
     : face(m_ioService, m_keyChain, {true, true})
-    , conf(face)
+    , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , lsdb(nlsr.m_lsdb)
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
   ndn::util::DummyClientFace face2(m_ioService, m_keyChain, {true, true});
   face.linkTo(face2);
 
-  ConfParameter conf2(face2);
+  ConfParameter conf2(face2, m_keyChain);
   std::string config = R"CONF(
               trust-anchor
                 {

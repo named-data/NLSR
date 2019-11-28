@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -152,6 +152,12 @@ ConfFileProcessor::processConfFile()
   }
   ret = load(inputFile);
   inputFile.close();
+
+  if (ret) {
+    m_confParam.buildRouterAndSyncUserPrefix();
+    m_confParam.writeLog();
+  }
+
   return ret;
 }
 
@@ -656,12 +662,8 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
         std::cerr << "Error: Cannot load cert-to-publish: " << file << "!" << std::endl;
         return false;
       }
-
-      m_confParam.getCertStore().insert(*idCert);
-      m_confParam.getValidator().loadAnchor("Authoritative-Certificate",
-                                            ndn::security::v2::Certificate(*idCert));
-      m_confParam.getPrefixUpdateValidator().loadAnchor("Authoritative-Certificate",
-                                                        ndn::security::v2::Certificate(*idCert));
+      m_confParam.addCertPath(certfilePath.string());
+      m_confParam.loadCertToValidator(*idCert);
     }
   }
 

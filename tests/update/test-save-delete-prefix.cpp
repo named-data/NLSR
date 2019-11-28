@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,8 +22,8 @@
 #include "update/prefix-update-processor.hpp"
 #include "nlsr.hpp"
 
-#include "../control-commands.hpp"
-#include "../test-common.hpp"
+#include "tests/control-commands.hpp"
+#include "tests/test-common.hpp"
 #include "conf-parameter.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
@@ -47,7 +47,7 @@ public:
     , siteIdentityName(ndn::Name("/edu/test-site"))
     , opIdentityName(ndn::Name("/edu/test-site").append(ndn::Name("%C1.Operator")))
     , testConfFile("/tmp/nlsr.conf.test")
-    , conf(face, testConfFile)
+    , conf(face, m_keyChain, testConfFile)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
@@ -91,7 +91,11 @@ public:
 
     // Operator cert
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
-    nlsr.loadCertToPublish(opIdentity.getDefaultKey().getDefaultCertificate());
+
+    // Create certificate and load it to the validator
+    conf.initializeKey();
+    conf.loadCertToValidator(siteIdentity.getDefaultKey().getDefaultCertificate());
+    conf.loadCertToValidator(opIdentity.getDefaultKey().getDefaultCertificate());
 
     // Set the network so the LSA prefix is constructed
     addIdentity(conf.getRouterPrefix());
@@ -156,8 +160,8 @@ public:
 
 public:
   ndn::util::DummyClientFace face;
-  ndn::Name siteIdentityName;
-  ndn::security::pib::Identity siteIdentity;
+  ndn::Name siteIdentityName, routerIdName;
+  ndn::security::pib::Identity siteIdentity, routerId;
 
   ndn::Name opIdentityName;
   ndn::security::pib::Identity opIdentity;

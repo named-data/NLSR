@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -35,8 +35,8 @@ BOOST_FIXTURE_TEST_SUITE(TestRoutingTable, BaseFixture)
 BOOST_AUTO_TEST_CASE(RoutingTableAddNextHop)
 {
   ndn::util::DummyClientFace face;
-  ConfParameter conf(face);
   ndn::KeyChain keyChain;
+  ConfParameter conf(face, keyChain);
   Nlsr nlsr(face, keyChain, conf);
 
   RoutingTable rt1(m_scheduler, nlsr.m_fib, nlsr.m_lsdb,

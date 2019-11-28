@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,8 +22,8 @@
 #include "update/prefix-update-processor.hpp"
 #include "nlsr.hpp"
 
-#include "../control-commands.hpp"
-#include "../test-common.hpp"
+#include "tests/control-commands.hpp"
+#include "tests/test-common.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/security/command-interest-signer.hpp>
@@ -46,7 +46,7 @@ public:
     : face(m_ioService, m_keyChain, {true, true})
     , siteIdentityName(ndn::Name("site"))
     , opIdentityName(ndn::Name("site").append(ndn::Name("%C1.Operator")))
-    , conf(face)
+    , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , namePrefixList(conf.getNamePrefixList())
@@ -58,6 +58,12 @@ public:
 
     // Operator cert
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
+
+    // Create certificate and load it to the validator
+    conf.initializeKey();
+
+    conf.loadCertToValidator(siteIdentity.getDefaultKey().getDefaultCertificate());
+    conf.loadCertToValidator(opIdentity.getDefaultKey().getDefaultCertificate());
 
     std::ifstream inputFile;
     inputFile.open(std::string("nlsr.conf"));
@@ -77,8 +83,6 @@ public:
       }
     }
     inputFile.close();
-
-    nlsr.loadCertToPublish(opIdentity.getDefaultKey().getDefaultCertificate());
 
     addIdentity(conf.getRouterPrefix());
 
@@ -131,7 +135,9 @@ public:
   ndn::security::pib::Identity siteIdentity;
 
   ndn::Name opIdentityName;
+  ndn::Name routerIdName;
   ndn::security::pib::Identity opIdentity;
+  ndn::security::pib::Identity routerId;
 
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
@@ -175,7 +181,6 @@ BOOST_AUTO_TEST_CASE(Basic)
 
   BOOST_REQUIRE_EQUAL(namePrefixList.size(), 1);
   BOOST_CHECK_EQUAL(namePrefixList.getNames().front(), parameters.getName());
-
   BOOST_CHECK(wasRoutingUpdatePublished());
   BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 

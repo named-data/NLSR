@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -123,7 +123,7 @@ class ConfFileProcessorFixture : public BaseFixture
 public:
   ConfFileProcessorFixture()
     : face(m_ioService, m_keyChain)
-    , conf(face, "unit-test-nlsr.conf")
+    , conf(face, m_keyChain, "unit-test-nlsr.conf")
   {
   }
 
@@ -401,8 +401,6 @@ BOOST_AUTO_TEST_CASE(LoadCertToPublish)
 
   BOOST_CHECK(processConfigurationString(SECTION_SECURITY));
 
-  // Certificate should now be in the CertificateStore
-  BOOST_CHECK(conf.getCertStore().find(identity.getDefaultKey().getName()) != nullptr);
 }
 
 BOOST_AUTO_TEST_CASE(PrefixUpdateValidatorOptional) // Bug #2814

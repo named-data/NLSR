@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -32,6 +32,24 @@ signData(ndn::Data& data)
   data.wireEncode();
 
   return data;
+}
+
+void
+checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& prefix)
+{
+  bool registerCommandEmitted = false;
+  for (const auto& interest : face.sentInterests) {
+    if (interest.getName().size() > 4 &&
+        interest.getName().get(3) == ndn::name::Component("register")) {
+      ndn::name::Component test = interest.getName().get(4);
+      ndn::nfd::ControlParameters params(test.blockFromValue());
+      if (params.getName() == prefix) {
+        registerCommandEmitted = true;
+        break;
+      }
+    }
+  }
+  BOOST_CHECK(registerCommandEmitted);
 }
 
 MockNfdMgmtFixture::MockNfdMgmtFixture()

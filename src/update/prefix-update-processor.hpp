@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -31,11 +31,6 @@
 #include <boost/property_tree/info_parser.hpp>
 
 namespace nlsr {
-
-namespace security {
-  class CertificateStore;
-} // namespace security
-
 namespace update {
 
 typedef boost::property_tree::ptree ConfigSection;

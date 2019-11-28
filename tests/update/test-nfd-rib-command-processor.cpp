@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -35,7 +35,7 @@ class NfdRibCommandProcessorFixture : public nlsr::test::UnitTestTimeFixture
 public:
   NfdRibCommandProcessorFixture()
     : face(m_ioService, m_keyChain, {true, true})
-    , conf(face)
+    , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , namePrefixes(conf.getNamePrefixList())

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -35,7 +35,7 @@ class NlsrFixture : public MockNfdMgmtFixture
 {
 public:
   NlsrFixture()
-    : conf(m_face)
+    : conf(m_face, m_keyChain)
     , confProcessor(conf)
     , nlsr(m_face, m_keyChain, conf)
     , lsdb(nlsr.m_lsdb)
@@ -352,29 +352,6 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
   // Make sure the routing table was recalculated
   rtEntry = nlsr.m_routingTable.findRoutingTableEntry(failNeighbor.getName());
   BOOST_CHECK(rtEntry == nullptr);
-}
-
-BOOST_AUTO_TEST_CASE(GetCertificate)
-{
-  // Create certificate
-  ndn::Name identityName("/TestNLSR/identity");
-  identityName.appendVersion();
-
-  ndn::security::pib::Identity identity = m_keyChain.createIdentity(identityName);
-
-  ndn::security::v2::Certificate certificate =
-    identity.getDefaultKey().getDefaultCertificate();
-
-  const ndn::Name certKey = certificate.getKeyName();
-
-  BOOST_CHECK(nlsr.getCertificate(certKey) == nullptr);
-
-  // Certificate should be retrievable from the CertificateStore
-  nlsr.loadCertToPublish(certificate);
-
-  BOOST_CHECK(nlsr.getCertificate(certKey) != nullptr);
-
-  nlsr.getCertificateStore().clear();
 }
 
 BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)

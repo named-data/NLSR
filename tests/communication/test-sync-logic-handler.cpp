@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,7 +20,7 @@
  **/
 
 #include "communication/sync-logic-handler.hpp"
-#include "../test-common.hpp"
+#include "tests/test-common.hpp"
 #include "common.hpp"
 #include "nlsr.hpp"
 #include "lsa.hpp"
@@ -38,7 +38,7 @@ class SyncLogicFixture : public UnitTestTimeFixture
 public:
   SyncLogicFixture()
     : face(m_ioService, m_keyChain)
-    , conf(face)
+    , conf(face, m_keyChain)
     , confProcessor(conf, Protocol)
     , testIsLsaNew([] (const ndn::Name& name, const Lsa::Type& lsaType,
                        const uint64_t sequenceNumber) {

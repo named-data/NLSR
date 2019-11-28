@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,6 +20,7 @@
  **/
 
 #include "conf-file-processor.hpp"
+#include "security/certificate-store.hpp"
 #include "nlsr.hpp"
 #include "version.hpp"
 
@@ -87,18 +88,24 @@ main(int argc, char** argv)
   ndn::Face face(ioService);
   ndn::KeyChain keyChain;
 
-  nlsr::ConfParameter confParam(face, configFileName);
+  nlsr::ConfParameter confParam(face, keyChain, configFileName);
   nlsr::ConfFileProcessor configProcessor(confParam);
 
   if (!configProcessor.processConfFile()) {
     std::cerr << "Error in configuration file processing" << std::endl;
     return 2;
   }
-
-  confParam.buildRouterAndSyncUserPrefix();
-  confParam.writeLog();
+  // Since confParam is already populated, key is initialized here before
+  // and independent of the NLSR class
+  auto certificate = confParam.initializeKey();
 
   nlsr::Nlsr nlsr(face, keyChain, confParam);
+
+  nlsr::security::CertificateStore certStore(face, confParam, nlsr.getLsdb());
+
+  if (certificate) {
+    certStore.insert(*certificate);
+  }
 
   try {
     face.processEvents();

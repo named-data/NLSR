@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -46,8 +46,7 @@ namespace nlsr {
 class Lsdb
 {
 public:
-  Lsdb(ndn::Face& face, ndn::KeyChain& keyChain,
-       ndn::security::SigningInfo& signingInfo, ConfParameter& confParam,
+  Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam,
        NamePrefixTable& namePrefixTable, RoutingTable& routingTable);
 
   ~Lsdb();
@@ -360,6 +359,12 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   afterFetchLsa(const ndn::ConstBufferPtr& data, const ndn::Name& interestName);
 
+  void
+  emitSegmentValidatedSignal(const ndn::Data& data)
+  {
+    afterSegmentValidatedSignal(data);
+  }
+
 private:
   ndn::time::system_clock::TimePoint
   getLsaExpirationTimePoint();
@@ -373,7 +378,6 @@ public:
 private:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
-  ndn::security::SigningInfo& m_signingInfo;
 
   ConfParameter& m_confParam;
   NamePrefixTable& m_namePrefixTable;

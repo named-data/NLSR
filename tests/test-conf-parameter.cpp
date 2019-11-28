@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -35,7 +35,8 @@ BOOST_AUTO_TEST_SUITE(TestConfParameter)
 BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 {
   ndn::util::DummyClientFace face;
-  ConfParameter cp1(face);
+  ndn::KeyChain keyChain;
+  ConfParameter cp1(face, keyChain);
 
   const string NAME = "router1";
   const string SITE = "memphis";
