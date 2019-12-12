@@ -466,8 +466,10 @@ public:
   void
   writeLog();
 
-private:
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::string m_confFileName;
+  std::string m_confFileNameDynamic;
+private:
   ndn::Name m_routerName;
   ndn::Name m_siteName;
   ndn::Name m_network;
@@ -505,8 +507,6 @@ private:
   ndn::time::milliseconds m_syncInterestLifetime;
 
   int32_t m_syncProtocol;
-
-  std::string m_confFileNameDynamic;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   static const uint64_t SYNC_VERSION;

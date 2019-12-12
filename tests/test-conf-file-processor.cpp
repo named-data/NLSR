@@ -260,12 +260,17 @@ BOOST_AUTO_TEST_CASE(DefaultValuesGeneral)
   commentOut("lsa-interest-lifetime", config);
   commentOut("router-dead-interval", config);
 
-  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+  BOOST_CHECK(processConfigurationString(config));
 
   BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), static_cast<uint32_t>(LSA_REFRESH_TIME_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(),
                     static_cast<ndn::time::seconds>(LSA_INTEREST_LIFETIME_DEFAULT));
-  BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), (2*conf.getLsaRefreshTime()));
+  BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), (2 * conf.getLsaRefreshTime()));
+
+  BOOST_CHECK(conf.m_confFileName != conf.getConfFileNameDynamic());
+  conf.m_confFileName = "/tmp/nlsr.conf";
+  BOOST_CHECK(conf.m_confFileName == conf.getConfFileNameDynamic());
+  BOOST_CHECK(!processConfigurationString(config));
 }
 
 BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)

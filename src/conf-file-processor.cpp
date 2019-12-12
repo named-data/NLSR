@@ -39,7 +39,6 @@ class ConfigurationVariable
 {
 public:
   typedef std::function<void(T)> ConfParameterCallback;
-  typedef boost::property_tree::ptree ConfigSection;
 
   ConfigurationVariable(const std::string& key, const ConfParameterCallback& setter)
     : m_key(key)
@@ -160,7 +159,6 @@ bool
 ConfFileProcessor::load(std::istream& input)
 {
   ConfigSection pt;
-  bool ret = true;
   try {
     boost::property_tree::read_info(input, pt);
   }
@@ -171,14 +169,12 @@ ConfFileProcessor::load(std::istream& input)
     return false;
   }
 
-  for (ConfigSection::const_iterator tn = pt.begin();
-       tn != pt.end(); ++tn) {
-    ret = processSection(tn->first, tn->second);
-    if (ret == false) {
-      break;
+  for (const auto& tn : pt) {
+    if (!processSection(tn.first, tn.second)) {
+      return false;
     }
   }
-  return ret;
+  return true;
 }
 
 bool
@@ -323,19 +319,31 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
 
   try {
     std::string stateDir = section.get<std::string>("state-dir");
-    if (boost::filesystem::exists(stateDir)) {
-      if (boost::filesystem::is_directory(stateDir)) {
+    if (bf::exists(stateDir)) {
+      if (bf::is_directory(stateDir)) {
 
         // copying nlsr.conf file to a user define directory for possible modification
-        std::string conFileDynamic = (boost::filesystem::path(stateDir) / "nlsr.conf").c_str();
+        std::string conFileDynamic = (bf::path(stateDir) / "nlsr.conf").c_str();
+
+        if (m_confFileName == conFileDynamic) {
+          std::cerr << "Please use nlsr.conf stored at another location "
+                    << "or change the state-dir in the configuration." << std::endl;
+          std::cerr << "The file at " << conFileDynamic <<
+                       " is used as dynamic file for saving NLSR runtime changes." << std::endl;
+          std::cerr << "The dynamic file can be used for next run "
+                    << "after copying to another location." << std::endl;
+          return false;
+        }
+
         m_confParam.setConfFileNameDynamic(conFileDynamic);
         try {
-          copy_file(m_confFileName, conFileDynamic, boost::filesystem::copy_option::overwrite_if_exists);
+          bf::copy_file(m_confFileName, conFileDynamic, bf::copy_option::overwrite_if_exists);
         }
-        catch (const boost::filesystem::filesystem_error& e) {
+        catch (const bf::filesystem_error& e) {
           std::cerr << "Error copying conf file to the state directory: " << e.what() << std::endl;
         }
-        std::string testFileName = (boost::filesystem::path(stateDir) / "test.seq").c_str();
+
+        std::string testFileName = (bf::path(stateDir) / "test.seq").c_str();
         std::ofstream testOutFile(testFileName);
         if (testOutFile) {
           m_confParam.setStateFileDir(stateDir);
@@ -451,12 +459,10 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
     return false;
   }
 
-  for (ConfigSection::const_iterator tn =
-           section.begin(); tn != section.end(); ++tn) {
-
-    if (tn->first == "neighbor") {
+  for (const auto& tn : section) {
+    if (tn.first == "neighbor") {
       try {
-        ConfigSection CommandAttriTree = tn->second;
+        ConfigSection CommandAttriTree = tn.second;
         std::string name = CommandAttriTree.get<std::string>("name");
         std::string uriString = CommandAttriTree.get<std::string>("face-uri");
 
@@ -597,12 +603,10 @@ ConfFileProcessor::processConfSectionFib(const ConfigSection& section)
 bool
 ConfFileProcessor::processConfSectionAdvertising(const ConfigSection& section)
 {
-  for (ConfigSection::const_iterator tn =
-         section.begin(); tn != section.end(); ++tn) {
-   if (tn->first == "prefix") {
+  for (const auto& tn : section) {
+   if (tn.first == "prefix") {
      try {
-       std::string prefix = tn->second.data();
-       ndn::Name namePrefix(prefix);
+       ndn::Name namePrefix(tn.second.data());
        if (!namePrefix.empty()) {
          m_confParam.getNamePrefixList().insert(namePrefix);
        }
@@ -638,7 +642,6 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 
     it++;
     for (; it != section.end(); it++) {
-      using namespace boost::filesystem;
 
       if (it->first != "cert-to-publish") {
         std::cerr << "Error: Expect cert-to-publish!" << std::endl;
@@ -646,9 +649,8 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
       }
 
       std::string file = it->second.data();
-      path certfilePath = absolute(file, path(m_confFileName).parent_path());
-      std::shared_ptr<ndn::security::v2::Certificate> idCert =
-        ndn::io::load<ndn::security::v2::Certificate>(certfilePath.string());
+      bf::path certfilePath = absolute(file, bf::path(m_confFileName).parent_path());
+      auto idCert = ndn::io::load<ndn::security::v2::Certificate>(certfilePath.string());
 
       if (idCert == nullptr) {
         std::cerr << "Error: Cannot load cert-to-publish: " << file << "!" << std::endl;

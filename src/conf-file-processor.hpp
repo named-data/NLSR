@@ -30,6 +30,9 @@
 
 namespace nlsr {
 
+namespace bf = boost::filesystem;
+using ConfigSection = boost::property_tree::ptree;
+
 /*! \brief A class containing methods to parse an NLSR configuration file
  *
  * This class contains methods to parse an NLSR configuration file and
@@ -59,8 +62,6 @@ public:
   processConfFile();
 
 private:
-  typedef boost::property_tree::ptree ConfigSection;
-
   /*! \brief Parse the configuration file into a tree and process the nodes.
    *
    * Reads the configuration file as a property tree, and then iterates
