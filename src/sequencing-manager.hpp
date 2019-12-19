@@ -36,7 +36,7 @@ namespace nlsr {
 class SequencingManager
 {
 public:
-  SequencingManager(std::string filePath, int hypState);
+  SequencingManager(const std::string& filePath, int hypState);
 
   uint64_t
   getNameLsaSeq() const
@@ -113,9 +113,9 @@ private:
   writeLog() const;
 
 private:
-  uint64_t m_nameLsaSeq;
-  uint64_t m_adjLsaSeq;
-  uint64_t m_corLsaSeq;
+  uint64_t m_nameLsaSeq = 0;
+  uint64_t m_adjLsaSeq = 0;
+  uint64_t m_corLsaSeq = 0;
   std::string m_seqFileNameWithPath;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:

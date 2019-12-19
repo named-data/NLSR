@@ -34,11 +34,8 @@ namespace nlsr {
 
 INIT_LOGGER(SequencingManager);
 
-SequencingManager::SequencingManager(std::string filePath, int hypState)
-  : m_nameLsaSeq(0)
-  , m_adjLsaSeq(0)
-  , m_corLsaSeq(0)
-  , m_hyperbolicState(hypState)
+SequencingManager::SequencingManager(const std::string& filePath, int hypState)
+  : m_hyperbolicState(hypState)
 {
   setSeqFileDirectory(filePath);
   initiateSeqNoFromFile();
@@ -63,44 +60,24 @@ SequencingManager::initiateSeqNoFromFile()
   NLSR_LOG_DEBUG("Seq File Name: " << m_seqFileNameWithPath);
   std::ifstream inputFile(m_seqFileNameWithPath.c_str());
 
+  std::string seqType;
   // Good checks that file is not (bad or eof or fail)
   if (inputFile.good()) {
-    std::string lsaOrCombinedSeqNo;
-    uint64_t seqNo = 0;
-
-    // If file has a combined seq number, lsaOrCombinedSeqNo would hold it
-    // and seqNo will be zero everytime
-    inputFile >> lsaOrCombinedSeqNo >> seqNo;
-    m_nameLsaSeq = seqNo;
-
-    inputFile >> lsaOrCombinedSeqNo >> seqNo;
-    m_adjLsaSeq = seqNo;
-
-    inputFile >> lsaOrCombinedSeqNo >> seqNo;
-    m_corLsaSeq = seqNo;
-
-    // File was in old format and had a combined sequence number
-    // if all of the seqNo should are still zero and
-    // lsaOrCombinedSeqNo != CorLsaSeq
-    if (m_nameLsaSeq == 0 && m_adjLsaSeq == 0 && m_corLsaSeq == 0 &&
-        lsaOrCombinedSeqNo != "CorLsaSeq") {
-      NLSR_LOG_DEBUG("Old file had combined sequence number: " << lsaOrCombinedSeqNo);
-      std::istringstream iss(lsaOrCombinedSeqNo);
-      iss >> seqNo;
-      m_adjLsaSeq = (seqNo & 0xFFFFF);
-      m_corLsaSeq = ((seqNo >> 20) & 0xFFFFF);
-      m_nameLsaSeq = ((seqNo >> 40) & 0xFFFFFF);
-    }
+    inputFile >> seqType >> m_nameLsaSeq;
+    inputFile >> seqType >> m_adjLsaSeq;
+    inputFile >> seqType >> m_corLsaSeq;
 
     inputFile.close();
 
+    // Increment by 10 in case last run of NLSR was not able to write to file
+    // before crashing
     m_nameLsaSeq += 10;
 
     // Increment the adjacency LSA seq. no. if link-state or dry HR is enabled
     if (m_hyperbolicState != HYPERBOLIC_STATE_ON) {
       if (m_corLsaSeq != 0) {
-        NLSR_LOG_WARN("This router was previously configured for hyperbolic"
-                   << " routing without clearing the seq. no. file.");
+        NLSR_LOG_WARN("This router was previously configured for hyperbolic " <<
+                      "routing without clearing the seq. no. file.");
         m_corLsaSeq = 0;
       }
       m_adjLsaSeq += 10;
@@ -109,8 +86,8 @@ SequencingManager::initiateSeqNoFromFile()
     // Similarly, increment the coordinate LSA seq. no only if link-state is disabled.
     if (m_hyperbolicState != HYPERBOLIC_STATE_OFF) {
       if (m_adjLsaSeq != 0) {
-        NLSR_LOG_WARN("This router was previously configured for link-state"
-                  << " routing without clearing the seq. no. file.");
+        NLSR_LOG_WARN("This router was previously configured for link-state " <<
+                      "routing without clearing the seq. no. file.");
         m_adjLsaSeq = 0;
       }
       m_corLsaSeq += 10;
@@ -137,7 +114,6 @@ SequencingManager::setSeqFileDirectory(const std::string& filePath)
 void
 SequencingManager::writeLog() const
 {
-  NLSR_LOG_DEBUG("----SequencingManager----");
   if (m_hyperbolicState == HYPERBOLIC_STATE_OFF ||
       m_hyperbolicState == HYPERBOLIC_STATE_DRY_RUN) {
     NLSR_LOG_DEBUG("Adj LSA seq no: " << m_adjLsaSeq);

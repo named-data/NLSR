@@ -46,23 +46,24 @@ public:
   }
 
   void
-  writeToFile(const std::string& testSeq) {
+  writeToFile(const std::string& testSeq)
+  {
     std::ofstream outputFile(seqFile, std::ofstream::trunc);
     outputFile << testSeq;
     outputFile.close();
   }
 
   void
-  initiateFromFile() {
+  initiateFromFile()
+  {
     m_seqManager.initiateSeqNoFromFile();
   }
 
   void
-  checkSeqNumbers(const uint64_t& name, const uint64_t& adj, const uint64_t& cor) {
+  checkSeqNumbers(const uint64_t& name, const uint64_t& adj, const uint64_t& cor)
+  {
     BOOST_CHECK_EQUAL(m_seqManager.getNameLsaSeq(), name);
-
     BOOST_CHECK_EQUAL(m_seqManager.getAdjLsaSeq(), adj);
-
     BOOST_CHECK_EQUAL(m_seqManager.getCorLsaSeq(), cor);
   }
 
@@ -73,36 +74,30 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(TestSequencingManager, SequencingManagerFixture)
 
-BOOST_AUTO_TEST_CASE(CombinedSeqNumber)
-{
-  // LS
-  writeToFile("27121653322350672");
-  m_seqManager.m_hyperbolicState = HYPERBOLIC_STATE_OFF;
-  initiateFromFile();
-  checkSeqNumbers(24667+10, 80+10, 0);
-
-  // HR
-  writeToFile("27121653322350672");
-  m_seqManager.m_hyperbolicState = HYPERBOLIC_STATE_ON;
-  initiateFromFile();
-  // AdjLsa is set to 0 since HR is on
-  checkSeqNumbers(24667+10, 0, 0+10);
-}
-
 BOOST_AUTO_TEST_CASE(SeparateSeqNumber)
 {
+  initiateFromFile();
+  checkSeqNumbers(0, 0, 0);
+
   // LS
   writeToFile("NameLsaSeq 100\nAdjLsaSeq 100\nCorLsaSeq 0");
   m_seqManager.m_hyperbolicState = HYPERBOLIC_STATE_OFF;
   initiateFromFile();
-  checkSeqNumbers(100+10, 100+10, 0);
+  checkSeqNumbers(100 + 10, 100 + 10, 0);
 
   // HR
   writeToFile("NameLsa 100\nAdjLsa 0\nCorLsa 100");
   m_seqManager.m_hyperbolicState = HYPERBOLIC_STATE_ON;
   initiateFromFile();
   // AdjLsa is set to 0 since HR is on
-  checkSeqNumbers(100+10, 0, 100+10);
+  checkSeqNumbers(100 + 10, 0, 100 + 10);
+}
+
+BOOST_AUTO_TEST_CASE(CorruptFile)
+{
+  writeToFile("NameLsaSeq");
+  initiateFromFile();
+  checkSeqNumbers(10, 10, 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
