@@ -21,10 +21,9 @@
 
 #include "route/nexthop-list.hpp"
 #include "route/nexthop.hpp"
-#include <boost/test/unit_test.hpp>
+#include "tests/boost-test.hpp"
 
 namespace nlsr {
-
 namespace test {
 
 BOOST_AUTO_TEST_SUITE(TestNhl)

@@ -23,11 +23,12 @@
 #define NLSR_TEST_COMMON_HPP
 
 #include "common.hpp"
-#include "identity-management-fixture.hpp"
 #include "conf-parameter.hpp"
 
+#include "boost-test.hpp"
+#include "identity-management-fixture.hpp"
+
 #include <boost/asio.hpp>
-#include <boost/test/unit_test.hpp>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>

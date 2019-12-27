@@ -21,7 +21,8 @@
 
 #include "tlv/lsdb-status.hpp"
 
-#include "../boost-test.hpp"
+#include "tests/boost-test.hpp"
+
 #include <boost/mpl/vector.hpp>
 #include <boost/lexical_cast.hpp>
 

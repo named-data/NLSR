@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2019,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,7 +20,8 @@
  **/
 
 #include "tlv/lsa-info.hpp"
-#include "../boost-test.hpp"
+
+#include "tests/boost-test.hpp"
 #include "tests/mocks/lsa.hpp"
 
 namespace nlsr {

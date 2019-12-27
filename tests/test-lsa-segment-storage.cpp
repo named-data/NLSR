@@ -28,8 +28,6 @@
 #include "name-prefix-list.hpp"
 #include "lsa.hpp"
 
-#include <boost/test/unit_test.hpp>
-
 namespace nlsr {
 namespace test {
 

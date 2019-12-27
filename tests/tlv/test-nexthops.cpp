@@ -21,7 +21,7 @@
 
 #include "tlv/nexthop.hpp"
 
-#include "../boost-test.hpp"
+#include "tests/boost-test.hpp"
 
 namespace nlsr {
 namespace tlv {

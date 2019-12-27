@@ -20,15 +20,12 @@
  **/
 
 #include "publisher/dataset-interest-handler.hpp"
-#include "tests/test-common.hpp"
 #include "tlv/tlv-nlsr.hpp"
 
+#include "tests/test-common.hpp"
 #include "publisher-fixture.hpp"
-#include "../boost-test.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
-
-#include <iostream>
 
 namespace nlsr {
 namespace test {

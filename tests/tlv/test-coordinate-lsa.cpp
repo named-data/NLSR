@@ -21,7 +21,7 @@
 
 #include "tlv/coordinate-lsa.hpp"
 
-#include "../boost-test.hpp"
+#include "tests/boost-test.hpp"
 
 namespace nlsr {
 namespace tlv {

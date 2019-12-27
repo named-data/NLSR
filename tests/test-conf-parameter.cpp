@@ -18,16 +18,14 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \author Ashlesh Gawande <agawande@memphis.edu>
- *
  **/
+
 #include "conf-parameter.hpp"
+#include "tests/boost-test.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
-#include <boost/test/unit_test.hpp>
-
 namespace nlsr {
-
 namespace test {
 
 using namespace std;

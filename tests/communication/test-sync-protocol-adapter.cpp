@@ -20,8 +20,7 @@
  **/
 
 #include "communication/sync-protocol-adapter.hpp"
-#include "../test-common.hpp"
-#include "../boost-test.hpp"
+#include "tests/test-common.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
@@ -41,7 +40,7 @@ public:
    , nameLsaUserPrefix("/localhop/ndn/nlsr/LSA/NAME")
    , syncInterestLifetime(time::seconds(60))
   {
-  	syncPrefix.appendVersion(4);
+    syncPrefix.appendVersion(4);
   }
 
   template <int32_t T>
@@ -53,7 +52,7 @@ public:
                                                               util::DummyClientFace::Options{true, true});
       userPrefixes[i] = Name(nameLsaUserPrefix).appendNumber(i);
       nodes[i] = std::make_shared<SyncProtocolAdapter>(*faces[i], T, syncPrefix,
-      	                                               userPrefixes[i],
+                                                       userPrefixes[i],
                                                        syncInterestLifetime,
                                                        [i, this] (const ndn::Name& updateName,
                                                                    uint64_t highSeq) {

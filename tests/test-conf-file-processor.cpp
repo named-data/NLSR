@@ -24,7 +24,6 @@
 
 #include <fstream>
 
-#include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>

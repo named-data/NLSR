@@ -24,9 +24,9 @@
 #include "adjacent.hpp"
 #include "conf-parameter.hpp"
 
-#include <ndn-cxx/util/dummy-client-face.hpp>
+#include "tests/boost-test.hpp"
 
-#include <boost/test/unit_test.hpp>
+#include <ndn-cxx/util/dummy-client-face.hpp>
 
 namespace nlsr {
 namespace test {

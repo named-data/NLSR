@@ -21,7 +21,7 @@
 
 #include "sequencing-manager.hpp"
 #include "test-common.hpp"
-#include <boost/test/unit_test.hpp>
+
 #include <boost/filesystem.hpp>
 #include <string>
 #include <iostream>
@@ -30,7 +30,6 @@
 using namespace ndn;
 
 namespace nlsr {
-
 namespace test {
 
 class SequencingManagerFixture : public BaseFixture

@@ -25,7 +25,6 @@
 #include "nlsr.hpp"
 #include "lsa.hpp"
 #include "name-prefix-list.hpp"
-#include <boost/test/unit_test.hpp>
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 #include <ndn-cxx/util/segment-fetcher.hpp>

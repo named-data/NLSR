@@ -25,8 +25,7 @@
 #include "publisher/dataset-interest-handler.hpp"
 #include "nlsr.hpp"
 
-#include "../boost-test.hpp"
-#include "../test-common.hpp"
+#include "tests/test-common.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>

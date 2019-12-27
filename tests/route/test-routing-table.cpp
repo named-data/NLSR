@@ -18,15 +18,14 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \author Ashlesh Gawande <agawande@memphis.edu>
- *
  **/
 
 #include "route/routing-table.hpp"
 #include "nlsr.hpp"
-#include "../test-common.hpp"
 #include "route/routing-table-entry.hpp"
 #include "route/nexthop.hpp"
-#include <boost/test/unit_test.hpp>
+
+#include "tests/test-common.hpp"
 
 namespace nlsr {
 namespace test {
