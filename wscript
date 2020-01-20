@@ -22,7 +22,7 @@ NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 from waflib import Context, Logs, Utils
 import os, subprocess
 
-VERSION = "0.5.1"
+VERSION = "0.5.2"
 APPNAME = "nlsr"
 BUGREPORT = "https://redmine.named-data.net/projects/nlsr"
 URL = "https://named-data.net/doc/NLSR/"
