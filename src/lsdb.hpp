@@ -23,7 +23,10 @@
 #define NLSR_LSDB_HPP
 
 #include "conf-parameter.hpp"
-#include "lsa.hpp"
+#include "lsa/lsa.hpp"
+#include "lsa/name-lsa.hpp"
+#include "lsa/coordinate-lsa.hpp"
+#include "lsa/adj-lsa.hpp"
 #include "sequencing-manager.hpp"
 #include "test-access-control.hpp"
 #include "communication/sync-logic-handler.hpp"
@@ -312,19 +315,16 @@ private:
                                   uint64_t seqNo);
 
   void
-  onContentValidated(const std::shared_ptr<const ndn::Data>& data);
-
-  void
   processContentNameLsa(const ndn::Name& lsaKey,
-                        uint64_t lsSeqNo, std::string& dataContent);
+                        uint64_t lsSeqNo, const ndn::Block& block);
 
   void
   processContentAdjacencyLsa(const ndn::Name& lsaKey,
-                             uint64_t lsSeqNo, std::string& dataContent);
+                             uint64_t lsSeqNo, const ndn::Block& block);
 
   void
   processContentCoordinateLsa(const ndn::Name& lsaKey,
-                              uint64_t lsSeqNo, std::string& dataContent);
+                              uint64_t lsSeqNo, const ndn::Block& block);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*!
@@ -357,7 +357,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
             /<network>/NLSR/LSA/<site>/%C1.Router/<router>/<lsa-type>/<seqNo>
    */
   void
-  afterFetchLsa(const ndn::ConstBufferPtr& data, const ndn::Name& interestName);
+  afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& interestName);
 
   void
   emitSegmentValidatedSignal(const ndn::Data& data)

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -31,32 +31,15 @@ namespace nlsr {
 
 INIT_LOGGER(AdjacencyList);
 
-AdjacencyList::AdjacencyList()
-{
-}
-
-AdjacencyList::~AdjacencyList()
-{
-}
-
-int32_t
+bool
 AdjacencyList::insert(Adjacent& adjacent)
 {
   std::list<Adjacent>::iterator it = find(adjacent.getName());
   if (it != m_adjList.end()) {
-    return -1;
+    return false;
   }
   m_adjList.push_back(adjacent);
-  return 0;
-}
-
-void
-AdjacencyList::addAdjacents(AdjacencyList& adl)
-{
-  for (std::list<Adjacent>::iterator it = adl.getAdjList().begin();
-       it != adl.getAdjList().end(); ++it) {
-    insert((*it));
-  }
+  return true;
 }
 
 Adjacent

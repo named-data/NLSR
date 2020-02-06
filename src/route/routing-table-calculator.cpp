@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -27,7 +27,6 @@
 #include "logger.hpp"
 #include "adjacent.hpp"
 
-#include <iostream>
 #include <boost/math/constants/constants.hpp>
 #include <ndn-cxx/util/logger.hpp>
 #include <cmath>
@@ -66,7 +65,7 @@ RoutingTableCalculator::makeAdjMatrix(const std::list<AdjLsa>& adjLsaList, Map& 
 {
   // For each LSA represented in the map
   for (const auto& adjLsa : adjLsaList) {
-    ndn::optional<int32_t> row = pMap.getMappingNoByRouterName(adjLsa.getOrigRouter());
+    ndn::optional<int32_t> row = pMap.getMappingNoByRouterName(adjLsa.getOriginRouter());
 
     std::list<Adjacent> adl = adjLsa.getAdl().getAdjList();
     // For each adjacency represented in the LSA
@@ -499,12 +498,12 @@ HyperbolicRoutingCalculator::getHyperbolicDistance(Lsdb& lsdb, ndn::Name src, nd
   double distance = UNKNOWN_DISTANCE;
 
   ndn::Name srcLsaKey = src;
-  srcLsaKey.append(std::to_string(Lsa::Type::COORDINATE));
+  srcLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
 
   CoordinateLsa* srcLsa = lsdb.findCoordinateLsa(srcLsaKey);
 
   ndn::Name destLsaKey = dest;
-  destLsaKey.append(std::to_string(Lsa::Type::COORDINATE));
+  destLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
 
   CoordinateLsa* destLsa = lsdb.findCoordinateLsa(destLsaKey);
 

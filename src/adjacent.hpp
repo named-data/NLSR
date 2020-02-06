@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -20,7 +20,6 @@
 
 #include <string>
 #include <cmath>
-#include <boost/cstdint.hpp>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/net/face-uri.hpp>
@@ -34,11 +33,28 @@ namespace nlsr {
  *
  * Represents another node that we expect to be running NLSR that we
  * should be able to reach over a direct Face connection.
+ *
+ * Data abstraction for Adjacent
+ *  Adjacent := ADJACENCY-TYPE TLV-LENGTH
+ *               Name
+ *               FaceUri
+ *               LinkCost
+ *               AdjacencyStatus
+ *               AdjacencyInterestTimedOutNo
  */
 class Adjacent
 {
-
 public:
+  class Error : public ndn::tlv::Error
+  {
+  public:
+    explicit
+    Error(const std::string& what)
+      : ndn::tlv::Error(what)
+    {
+    }
+  };
+
   enum Status
   {
     STATUS_UNKNOWN = -1,
@@ -47,6 +63,8 @@ public:
   };
 
   Adjacent();
+
+  Adjacent(const ndn::Block& block);
 
   Adjacent(const ndn::Name& an);
 
@@ -60,9 +78,10 @@ public:
   }
 
   void
-  setName(const ndn::Name& an)
+  setName(const ndn::Name& name)
   {
-    m_name = an;
+    m_wire.reset();
+    m_name = name;
   }
 
   const ndn::FaceUri&
@@ -74,6 +93,7 @@ public:
   void
   setFaceUri(const ndn::FaceUri& faceUri)
   {
+    m_wire.reset();
     m_faceUri = faceUri;
   }
 
@@ -95,6 +115,7 @@ public:
   void
   setStatus(Status s)
   {
+    m_wire.reset();
     m_status = s;
   }
 
@@ -107,6 +128,7 @@ public:
   void
   setInterestTimedOutNo(uint32_t iton)
   {
+    m_wire.reset();
     m_interestTimedOutNo = iton;
   }
 
@@ -153,6 +175,16 @@ public:
     return m_faceUri == faceUri;
   }
 
+  template<ndn::encoding::Tag TAG>
+  size_t
+  wireEncode(ndn::EncodingImpl<TAG>& block) const;
+
+  const ndn::Block&
+  wireEncode() const;
+
+  void
+  wireDecode(const ndn::Block& wire);
+
 public:
   static const double DEFAULT_LINK_COST;
   static const double NON_ADJACENT_COST;
@@ -165,16 +197,20 @@ private:
   /*! m_linkCost The semi-arbitrary cost to traverse the link. */
   double m_linkCost;
   /*! m_status Whether the neighbor is active or not */
-  Status m_status;
+  Status m_status = STATUS_UNKNOWN;
   /*! m_interestTimedOutNo How many failed Hello interests we have sent since the last reply */
-  uint32_t m_interestTimedOutNo;
+  uint32_t m_interestTimedOutNo = 0;
   /*! m_faceId The NFD-assigned ID for the neighbor, used to
    * determine whether a Face is available */
   uint64_t m_faceId;
 
+  mutable ndn::Block m_wire;
+
   friend std::ostream&
   operator<<(std::ostream& os, const Adjacent& adjacent);
 };
+
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(Adjacent);
 
 std::ostream&
 operator<<(std::ostream& os, const Adjacent& adjacent);

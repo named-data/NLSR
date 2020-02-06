@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2014-2018,  The University of Memphis,
+/**
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,44 +17,49 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- */
+ **/
 
-#include "adjacency-lsa.hpp"
-#include "tlv-nlsr.hpp"
-
-#include <ndn-cxx/util/concepts.hpp>
-#include <ndn-cxx/encoding/block-helpers.hpp>
+#include "adj-lsa.hpp"
+#include "tlv/tlv-nlsr.hpp"
 
 namespace nlsr {
-namespace tlv {
 
-BOOST_CONCEPT_ASSERT((ndn::WireEncodable<AdjacencyLsa>));
-BOOST_CONCEPT_ASSERT((ndn::WireDecodable<AdjacencyLsa>));
-static_assert(std::is_base_of<ndn::tlv::Error, AdjacencyLsa::Error>::value,
-              "AdjacencyLsa::Error must inherit from tlv::Error");
-
-AdjacencyLsa::AdjacencyLsa()
-  : m_hasAdjacencies(false)
+AdjLsa::AdjLsa(const ndn::Name& originRouter, uint32_t seqNo,
+               const ndn::time::system_clock::TimePoint& timepoint,
+               uint32_t noLink, AdjacencyList& adl)
+  : Lsa(originRouter, seqNo, timepoint)
+  , m_noLink(noLink)
 {
+  for (const auto& adjacent : adl.getAdjList()) {
+    if (adjacent.getStatus() == Adjacent::STATUS_ACTIVE) {
+      addAdjacent(adjacent);
+    }
+  }
 }
 
-AdjacencyLsa::AdjacencyLsa(const ndn::Block& block)
+AdjLsa::AdjLsa(const ndn::Block& block)
 {
   wireDecode(block);
 }
 
+bool
+AdjLsa::isEqualContent(const AdjLsa& alsa) const
+{
+  return m_adl == alsa.getAdl();
+}
+
 template<ndn::encoding::Tag TAG>
 size_t
-AdjacencyLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
+AdjLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
-  for (std::list<Adjacency>::const_reverse_iterator it = m_adjacencies.rbegin();
-       it != m_adjacencies.rend(); ++it) {
+  auto list = m_adl.getAdjList();
+  for (auto it = list.rbegin(); it != list.rend(); ++it) {
     totalLength += it->wireEncode(block);
   }
 
-  totalLength += m_lsaInfo.wireEncode(block);
+  totalLength += Lsa::wireEncode(block);
 
   totalLength += block.prependVarNumber(totalLength);
   totalLength += block.prependVarNumber(ndn::tlv::nlsr::AdjacencyLsa);
@@ -62,12 +67,12 @@ AdjacencyLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
   return totalLength;
 }
 
-NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(AdjacencyLsa);
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(AdjLsa);
 
 const ndn::Block&
-AdjacencyLsa::wireEncode() const
+AdjLsa::wireEncode() const
 {
-  if (m_wire.hasWire()) {
+  if (m_wire.hasWire() && m_baseWire.hasWire()) {
     return m_wire;
   }
 
@@ -83,11 +88,8 @@ AdjacencyLsa::wireEncode() const
 }
 
 void
-AdjacencyLsa::wireDecode(const ndn::Block& wire)
+AdjLsa::wireDecode(const ndn::Block& wire)
 {
-  m_hasAdjacencies = false;
-  m_adjacencies.clear();
-
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::AdjacencyLsa) {
@@ -99,40 +101,44 @@ AdjacencyLsa::wireDecode(const ndn::Block& wire)
 
   ndn::Block::element_const_iterator val = m_wire.elements_begin();
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::LsaInfo) {
-    m_lsaInfo.wireDecode(*val);
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
+    Lsa::wireDecode(*val);
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required LsaInfo field"));
+    BOOST_THROW_EXCEPTION(Error("Missing required Lsa field"));
   }
 
+  AdjacencyList adl;
   for (; val != m_wire.elements_end(); ++val) {
     if (val->type() == ndn::tlv::nlsr::Adjacency) {
-      m_adjacencies.push_back(Adjacency(*val));
-      m_hasAdjacencies = true;
+      Adjacent adj = Adjacent(*val);
+      adl.insert(adj);
     }
     else {
       BOOST_THROW_EXCEPTION(Error("Expected Adjacency Block, but Block is of a different type: #" +
                                   ndn::to_string(m_wire.type())));
     }
   }
+  m_adl = adl;
 }
 
 std::ostream&
-operator<<(std::ostream& os, const AdjacencyLsa& adjacencyLsa)
+operator<<(std::ostream& os, const AdjLsa& lsa)
 {
-  os << "AdjacencyLsa("
-     << adjacencyLsa.getLsaInfo();
+  os << lsa.toString();
+  os << "      Adjacents:\n";
 
-  for (const auto& adjacency : adjacencyLsa) {
-    os << ", " << adjacency;
+  int adjacencyIndex = 0;
+
+  for (const Adjacent& adjacency : lsa.getAdl()) {
+  os << "        Adjacent " << adjacencyIndex++
+     << ": (name=" << adjacency.getName()
+     << ", uri="   << adjacency.getFaceUri()
+     << ", cost="  << adjacency.getLinkCost() << ")\n";
   }
-
-  os << ")";
 
   return os;
 }
 
-} // namespace tlv
 } // namespace nlsr

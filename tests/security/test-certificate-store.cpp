@@ -174,7 +174,7 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
   lsaInterestName.append(conf.getLsaPrefix().getSubName(1));
   lsaInterestName.append(conf.getSiteName());
   lsaInterestName.append(conf.getRouterName());
-  lsaInterestName.append(std::to_string(Lsa::Type::NAME));
+  lsaInterestName.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
   lsaInterestName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq() + 1);
 
   lsdb.expressInterest(lsaInterestName, 0);
@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
 
   ndn::Data data(lsaDataName);
   data.setFreshnessPeriod(ndn::time::seconds(10));
-  ndn::Data dummyData;
-  data.setContent(dummyData.getContent());
+  NameLsa nameLsa;
+  data.setContent(nameLsa.wireEncode());
   data.setFinalBlock(lsaDataName[-1]);
 
   // Sign data with this NLSR's key (in real it would be different NLSR)
@@ -200,10 +200,10 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
 
   // Make NLSR validate data signed by its own key
   conf.getValidator().validate(data,
-                               [] (const ndn::Data&) { BOOST_CHECK(true); },
-                               [] (const ndn::Data&, const ndn::security::v2::ValidationError&) {
-                                 BOOST_CHECK(false);
-                               });
+                                 [] (const ndn::Data&) { BOOST_CHECK(true); },
+                                 [] (const ndn::Data&, const ndn::security::v2::ValidationError&) {
+                                   BOOST_CHECK(false);
+                                 });
 
   lsdb.emitSegmentValidatedSignal(data);
   const auto keyName = data.getSignature().getKeyLocator().getName();

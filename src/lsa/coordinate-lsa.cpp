@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2014-2019,  The University of Memphis,
+/**
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,24 +17,21 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- */
+ **/
 
 #include "coordinate-lsa.hpp"
-#include "tlv-nlsr.hpp"
+#include "tlv/tlv-nlsr.hpp"
 
-#include <ndn-cxx/util/concepts.hpp>
-#include <ndn-cxx/encoding/block-helpers.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace nlsr {
-namespace tlv {
 
-BOOST_CONCEPT_ASSERT((ndn::WireEncodable<CoordinateLsa>));
-BOOST_CONCEPT_ASSERT((ndn::WireDecodable<CoordinateLsa>));
-static_assert(std::is_base_of<ndn::tlv::Error, CoordinateLsa::Error>::value,
-              "CoordinateLsa::Error must inherit from tlv::Error");
-
-CoordinateLsa::CoordinateLsa()
-  : m_hyperbolicRadius(0.0)
+CoordinateLsa::CoordinateLsa(const ndn::Name& originRouter, uint32_t seqNo,
+                             const ndn::time::system_clock::TimePoint& timepoint,
+                             double radius, std::vector<double> angles)
+  : Lsa(originRouter, seqNo, timepoint)
+  , m_hyperbolicRadius(radius)
+  , m_hyperbolicAngles(angles)
 {
 }
 
@@ -43,19 +40,38 @@ CoordinateLsa::CoordinateLsa(const ndn::Block& block)
   wireDecode(block);
 }
 
+bool
+CoordinateLsa::isEqualContent(const CoordinateLsa& clsa) const
+{
+  if (clsa.getCorTheta().size() != m_hyperbolicAngles.size()) {
+    return false;
+  }
+
+  std::vector<double> m_angles2 = clsa.getCorTheta();
+  for (unsigned int i = 0; i < clsa.getCorTheta().size(); i++) {
+    if (std::abs(m_hyperbolicAngles[i] - m_angles2[i]) > std::numeric_limits<double>::epsilon()) {
+      return false;
+    }
+  }
+
+  return (std::abs(m_hyperbolicRadius - clsa.getCorRadius()) <
+          std::numeric_limits<double>::epsilon());
+}
+
 template<ndn::encoding::Tag TAG>
 size_t
 CoordinateLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
-  for (auto it = m_hyperbolicAngle.rbegin(); it != m_hyperbolicAngle.rend(); ++it) {
+  for (auto it = m_hyperbolicAngles.rbegin(); it != m_hyperbolicAngles.rend(); ++it) {
     totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::HyperbolicAngle, *it);
   }
 
-  totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::HyperbolicRadius, m_hyperbolicRadius);
+  totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::HyperbolicRadius,
+                                                   m_hyperbolicRadius);
 
-  totalLength += m_lsaInfo.wireEncode(block);
+  totalLength += Lsa::wireEncode(block);
 
   totalLength += block.prependVarNumber(totalLength);
   totalLength += block.prependVarNumber(ndn::tlv::nlsr::CoordinateLsa);
@@ -68,7 +84,7 @@ NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(CoordinateLsa);
 const ndn::Block&
 CoordinateLsa::wireEncode() const
 {
-  if (m_wire.hasWire()) {
+  if (m_wire.hasWire() && m_baseWire.hasWire()) {
     return m_wire;
   }
 
@@ -86,9 +102,6 @@ CoordinateLsa::wireEncode() const
 void
 CoordinateLsa::wireDecode(const ndn::Block& wire)
 {
-  m_hyperbolicRadius = 0.0;
-  m_hyperbolicAngle.clear();
-
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::CoordinateLsa) {
@@ -102,12 +115,12 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
 
   ndn::Block::element_const_iterator val = m_wire.elements_begin();
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::LsaInfo) {
-    m_lsaInfo.wireDecode(*val);
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
+    Lsa::wireDecode(*val);
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required LsaInfo field"));
+    BOOST_THROW_EXCEPTION(Error("Missing required Lsa field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::HyperbolicRadius) {
@@ -118,35 +131,29 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
     BOOST_THROW_EXCEPTION(Error("Missing required HyperbolicRadius field"));
   }
 
+  std::vector<double> angles;
   for (; val != m_wire.elements_end(); ++val) {
     if (val->type() == ndn::tlv::nlsr::HyperbolicAngle) {
-      m_hyperbolicAngle.push_back(ndn::encoding::readDouble(*val));
+      angles.push_back(ndn::encoding::readDouble(*val));
+    }
+    else {
+      BOOST_THROW_EXCEPTION(Error("Missing required HyperbolicAngle field"));
     }
   }
+  m_hyperbolicAngles = angles;
 }
 
 std::ostream&
-operator<<(std::ostream& os, const CoordinateLsa& coordinateLsa)
+operator<<(std::ostream& os, const CoordinateLsa& lsa)
 {
-  os << "CoordinateLsa("
-     << coordinateLsa.getLsaInfo() << ", "
-     << "HyperbolicRadius: " << coordinateLsa.getHyperbolicRadius() << ", ";
-
-  os << "HyperbolicAngles: ";
+  os << lsa.toString();
+  os << "      Hyperbolic Radius  : " << lsa.getCorRadius() << "\n";
   int i = 0;
-  for (const auto& value: coordinateLsa.getHyperbolicAngle()) {
-    if (i == 0) {
-      os << value;
-    }
-    else {
-      os << ", " << value;
-    }
-    ++i;
+  for (const auto& value : lsa.getCorTheta()) {
+    os << "      Hyperbolic Theta " << i++ << " : " << value << "\n";
   }
-  os << ")";
 
   return os;
 }
 
-} // namespace tlv
 } // namespace nlsr

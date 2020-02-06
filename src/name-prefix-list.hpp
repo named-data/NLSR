@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,13 +22,14 @@
 #ifndef NLSR_NAME_PREFIX_LIST_HPP
 #define NLSR_NAME_PREFIX_LIST_HPP
 
+#include "test-access-control.hpp"
+
 #include <list>
 #include <string>
-#include <boost/cstdint.hpp>
 #include <ndn-cxx/name.hpp>
 
-
 namespace nlsr {
+
 class NamePrefixList
 {
 public:
@@ -44,6 +45,7 @@ public:
 
   NamePrefixList(const std::initializer_list<NamePrefixList::NamePair>& namesAndSources);
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   template<class ContainerType>
   NamePrefixList(const ContainerType& names)
   {
@@ -52,6 +54,7 @@ public:
     }
   }
 
+public:
   ~NamePrefixList();
 
   /*! \brief inserts name into NamePrefixList
@@ -97,6 +100,12 @@ public:
    */
   const std::vector<std::string>
   getSources(const ndn::Name& name) const;
+
+  void
+  clear()
+  {
+    m_names.clear();
+  }
 
 private:
   /*! Obtain an iterator to the entry matching name.

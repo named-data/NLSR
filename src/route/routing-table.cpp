@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -64,12 +64,12 @@ RoutingTable::calculate()
     if ((!isHrEnabled &&
          m_lsdb
          .doesLsaExist(ndn::Name{m_confParam.getRouterPrefix()}
-                       .append(std::to_string(Lsa::Type::ADJACENCY)), Lsa::Type::ADJACENCY))
+                       .append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY)), Lsa::Type::ADJACENCY))
         ||
         (isHrEnabled &&
          m_lsdb
          .doesLsaExist(ndn::Name{m_confParam.getRouterPrefix()}
-                       .append(std::to_string(Lsa::Type::COORDINATE)), Lsa::Type::COORDINATE))) {
+                       .append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE)), Lsa::Type::COORDINATE))) {
       if (m_lsdb.getIsBuildAdjLsaSheduled() != 1) {
         NLSR_LOG_TRACE("Clearing old routing table");
         clearRoutingTable();

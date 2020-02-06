@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   lsaDataName.append(confParam.getRouterName());
 
   // Append LSA type
-  lsaDataName.append(std::to_string(Lsa::Type::NAME));
+  lsaDataName.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
   lsaDataName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
   lsaDataName.append(confParam.getRouterName());
 
   // Append LSA type
-  lsaDataName.append(std::to_string(Lsa::Type::NAME));
+  lsaDataName.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
   lsaDataName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/*
- * Copyright (c) 2014-2018,  The University of Memphis,
+/**
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,25 +17,21 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- */
+ **/
 
 #include "name-lsa.hpp"
-#include "tlv-nlsr.hpp"
-
-#include <ndn-cxx/util/concepts.hpp>
-#include <ndn-cxx/encoding/block-helpers.hpp>
+#include "tlv/tlv-nlsr.hpp"
 
 namespace nlsr {
-namespace tlv {
 
-BOOST_CONCEPT_ASSERT((ndn::WireEncodable<NameLsa>));
-BOOST_CONCEPT_ASSERT((ndn::WireDecodable<NameLsa>));
-static_assert(std::is_base_of<ndn::tlv::Error, NameLsa::Error>::value,
-              "NameLsa::Error must inherit from tlv::Error");
-
-NameLsa::NameLsa()
-  : m_hasNames(false)
+NameLsa::NameLsa(const ndn::Name& originRouter, uint32_t seqNo,
+                 const ndn::time::system_clock::TimePoint& timepoint,
+                 NamePrefixList& npl)
+  : Lsa(originRouter, seqNo, timepoint)
 {
+  for (const auto& name : npl.getNames()) {
+    addName(name);
+  }
 }
 
 NameLsa::NameLsa(const ndn::Block& block)
@@ -49,12 +45,13 @@ NameLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
-  for (std::list<ndn::Name>::const_reverse_iterator it = m_names.rbegin();
-       it != m_names.rend(); ++it) {
+  auto names = m_npl.getNames();
+
+  for (auto it = names.rbegin();  it != names.rend(); ++it) {
     totalLength += it->wireEncode(block);
   }
 
-  totalLength += m_lsaInfo.wireEncode(block);
+  totalLength += Lsa::wireEncode(block);
 
   totalLength += block.prependVarNumber(totalLength);
   totalLength += block.prependVarNumber(ndn::tlv::nlsr::NameLsa);
@@ -67,7 +64,7 @@ NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(NameLsa);
 const ndn::Block&
 NameLsa::wireEncode() const
 {
-  if (m_wire.hasWire()) {
+  if (m_wire.hasWire() && m_baseWire.hasWire()) {
     return m_wire;
   }
 
@@ -85,9 +82,6 @@ NameLsa::wireEncode() const
 void
 NameLsa::wireDecode(const ndn::Block& wire)
 {
-  m_hasNames = false;
-  m_names.clear();
-
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::NameLsa) {
@@ -99,40 +93,46 @@ NameLsa::wireDecode(const ndn::Block& wire)
 
   ndn::Block::element_const_iterator val = m_wire.elements_begin();
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::LsaInfo) {
-    m_lsaInfo.wireDecode(*val);
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
+    Lsa::wireDecode(*val);
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required LsaInfo field"));
+    BOOST_THROW_EXCEPTION(Error("Missing required Lsa field"));
   }
 
+  NamePrefixList npl;
   for (; val != m_wire.elements_end(); ++val) {
     if (val->type() == ndn::tlv::Name) {
-      m_names.push_back(ndn::Name(*val));
-      m_hasNames = true;
+      npl.insert(ndn::Name(*val));
     }
     else {
       BOOST_THROW_EXCEPTION(Error("Expected Name Block, but Block is of a different type: #" +
                                   ndn::to_string(m_wire.type())));
     }
   }
+
+  m_npl = npl;
+}
+
+bool
+NameLsa::isEqualContent(const NameLsa& other) const
+{
+  return m_npl == other.getNpl();
 }
 
 std::ostream&
-operator<<(std::ostream& os, const NameLsa& nameLsa)
+operator<<(std::ostream& os, const NameLsa& lsa)
 {
-  os << "NameLsa("
-     << nameLsa.getLsaInfo();
-
-  for (const auto& name : nameLsa) {
-    os << ", Name: " << name;
+  os << lsa.toString();
+  os << "      Names:\n";
+  int i = 0;
+  auto names = lsa.getNpl().getNames();
+  for (const auto& name : names) {
+    os << "        Name " << i++ << ": " << name << "\n";
   }
-
-  os << ")";
 
   return os;
 }
 
-} // namespace tlv
 } // namespace nlsr

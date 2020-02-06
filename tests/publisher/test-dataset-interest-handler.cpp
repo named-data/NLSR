@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Localhost)
 
   // Install adjacency LSA
   AdjLsa adjLsa;
-  adjLsa.setOrigRouter("/RouterA");
+  adjLsa.m_originRouter = "/RouterA";
   addAdjacency(adjLsa, "/RouterA/adjacency1", "udp://face-1", 10);
   lsdb.installAdjLsa(adjLsa);
 
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(Localhost)
 
   // Install Name LSA
   NameLsa nameLsa;
-  nameLsa.setOrigRouter("/RouterA");
+  nameLsa.m_originRouter = "/RouterA";
   nameLsa.addName("/RouterA/name1");
   lsdb.installNameLsa(nameLsa);
 
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(Routername)
 
   // Install adjacencies LSA
   AdjLsa adjLsa;
-  adjLsa.setOrigRouter("/RouterA");
+  adjLsa.m_originRouter = "/RouterA";
   addAdjacency(adjLsa, "/RouterA/adjacency1", "udp://face-1", 10);
   lsdb.installAdjLsa(adjLsa);
 

@@ -66,7 +66,7 @@ public:
     ndn::Name lsaInterestName = conf.getLsaPrefix();
     lsaInterestName.append(conf.getSiteName());
     lsaInterestName.append(conf.getRouterName());
-    lsaInterestName.append(std::to_string(Lsa::Type::NAME));
+    lsaInterestName.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
     lsaInterestName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 
     face.receive(ndn::Interest(lsaInterestName).setCanBePrefix(true));

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -24,10 +24,8 @@
 #include "nexthop.hpp"
 #include "adjacent.hpp"
 
-#include <set>
-#include <iostream>
-#include <boost/cstdint.hpp>
 #include <ndn-cxx/face.hpp>
+#include <set>
 
 namespace nlsr {
 

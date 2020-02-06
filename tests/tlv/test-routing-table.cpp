@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -107,7 +107,6 @@ BOOST_AUTO_TEST_CASE(RoutingTableDecode1)
 BOOST_AUTO_TEST_CASE(RoutingTableDecode2)
 {
   RoutingTableStatus rtStatus;
-
   rtStatus.wireDecode(ndn::Block(RoutingTableData2, sizeof(RoutingTableData2)));
 
   BOOST_CHECK_EQUAL(rtStatus.hasRoutingTable(), false);

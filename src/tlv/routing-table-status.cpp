@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -123,7 +123,7 @@ RoutingTableStatus::wireDecode(const ndn::Block& wire)
 
   ndn::Block::element_const_iterator val = m_wire.elements_begin();
 
-  for (; val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::RouteTableEntry; ++val) {
+  for (; val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::RoutingTableEntry; ++val) {
     m_routingtables.push_back(RoutingTable(*val));
     m_hasRoutingtable = true;
   }

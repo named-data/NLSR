@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -20,11 +20,7 @@
 
 #include "adjacent.hpp"
 #include "logger.hpp"
-
-#include <iostream>
-#include <string>
-#include <cmath>
-#include <limits>
+#include "tlv/tlv-nlsr.hpp"
 
 namespace nlsr {
 
@@ -41,6 +37,11 @@ Adjacent::Adjacent()
     , m_interestTimedOutNo(0)
     , m_faceId(0)
 {
+}
+
+Adjacent::Adjacent(const ndn::Block& block)
+{
+  wireDecode(block);
 }
 
 Adjacent::Adjacent(const ndn::Name& an)
@@ -78,6 +79,87 @@ Adjacent::setLinkCost(double lc)
   m_linkCost = lc;
 }
 
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(Adjacent);
+
+template<ndn::encoding::Tag TAG>
+size_t
+Adjacent::wireEncode(ndn::EncodingImpl<TAG>& encoder) const
+{
+  size_t totalLength = 0;
+
+  totalLength += prependDoubleBlock(encoder, ndn::tlv::nlsr::Cost, m_linkCost);
+
+  totalLength += prependStringBlock(encoder, ndn::tlv::nlsr::Uri, m_faceUri.toString());
+
+  totalLength += m_name.wireEncode(encoder);
+
+  totalLength += encoder.prependVarNumber(totalLength);
+  totalLength += encoder.prependVarNumber(ndn::tlv::nlsr::Adjacency);
+
+  return totalLength;
+}
+
+const ndn::Block&
+Adjacent::wireEncode() const
+{
+  if (m_wire.hasWire()) {
+    return m_wire;
+  }
+
+  ndn::EncodingEstimator estimator;
+  size_t estimatedSize = wireEncode(estimator);
+
+  ndn::EncodingBuffer buffer(estimatedSize, 0);
+  wireEncode(buffer);
+
+  m_wire = buffer.block();
+
+  return m_wire;
+}
+
+void
+Adjacent::wireDecode(const ndn::Block& wire)
+{
+  m_name.clear();
+  m_faceUri = ndn::FaceUri();
+  m_linkCost = 0;
+
+  m_wire = wire;
+
+  if (m_wire.type() != ndn::tlv::nlsr::Adjacency) {
+    BOOST_THROW_EXCEPTION(Error("Expected Adjacency Block, but Block is of a different type: #" +
+                                ndn::to_string(m_wire.type())));
+  }
+
+  m_wire.parse();
+
+  ndn::Block::element_const_iterator val = m_wire.elements_begin();
+
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::Name) {
+    m_name.wireDecode(*val);
+    ++val;
+  }
+  else {
+    BOOST_THROW_EXCEPTION(Error("Missing required Name field"));
+  }
+
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Uri) {
+    m_faceUri = ndn::FaceUri(readString(*val));
+    ++val;
+  }
+  else {
+    BOOST_THROW_EXCEPTION(Error("Missing required Uri field"));
+  }
+
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Cost) {
+    m_linkCost = ndn::encoding::readDouble(*val);
+    ++val;
+  }
+  else {
+    BOOST_THROW_EXCEPTION(Error("Missing required Cost field"));
+  }
+}
+
 bool
 Adjacent::operator==(const Adjacent& adjacent) const
 {
@@ -98,9 +180,11 @@ Adjacent::operator<(const Adjacent& adjacent) const
 std::ostream&
 operator<<(std::ostream& os, const Adjacent& adjacent)
 {
-  os << "Adjacent: " << adjacent.m_name << "\n Connecting FaceUri: " << adjacent.m_faceUri
-     << "\n Link cost: " << adjacent.m_linkCost << "\n Status: " << adjacent.m_status
-     << "\n Interest Timed Out: " << adjacent.m_interestTimedOutNo << std::endl;
+  os << "Adjacent: " << adjacent.m_name
+     << "\n\t\tConnecting FaceUri: " << adjacent.m_faceUri
+     << "\n\t\tLink cost: " << adjacent.m_linkCost
+     << "\n\t\tStatus: " << adjacent.m_status
+     << "\n\t\tInterest Timed Out: " << adjacent.m_interestTimedOutNo << std::endl;
   return os;
 }
 

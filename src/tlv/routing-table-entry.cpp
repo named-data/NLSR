@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -80,7 +80,7 @@ RoutingTable::wireEncode(ndn::EncodingImpl<TAG>& block) const
   totalLength += m_des.wireEncode(block);
 
   totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::RouteTableEntry);
+  totalLength += block.prependVarNumber(ndn::tlv::nlsr::RoutingTableEntry);
 
   return totalLength;
 }
@@ -113,7 +113,7 @@ RoutingTable::wireDecode(const ndn::Block& wire)
 
   m_wire = wire;
 
-  if (m_wire.type() != ndn::tlv::nlsr::RouteTableEntry) {
+  if (m_wire.type() != ndn::tlv::nlsr::RoutingTableEntry) {
     std::stringstream error;
     error << "Expected RoutingTable Block, but Block is of a different type: #"
           << m_wire.type();

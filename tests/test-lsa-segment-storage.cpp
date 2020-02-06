@@ -26,7 +26,7 @@
 #include "test-common.hpp"
 #include "nlsr.hpp"
 #include "name-prefix-list.hpp"
-#include "lsa.hpp"
+// #include "lsa.hpp"
 
 namespace nlsr {
 namespace test {
@@ -68,9 +68,9 @@ public:
       npl1.insert("name1-" + std::to_string(i));
     }
     NameLsa nameLsa("/ndn/other-site/%C1.Router/other-router", 12,
-                    ndn::time::system_clock::now() + ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT), npl1);
-    segmentPublisher.publish(interestName, interestName,
-                             ndn::encoding::makeStringBlock(ndn::tlv::Content, nameLsa.serialize()),
+                    ndn::time::system_clock::now() + ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT),
+                    npl1);
+    segmentPublisher.publish(interestName, interestName, nameLsa.wireEncode(),
                              ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT));
   }
 

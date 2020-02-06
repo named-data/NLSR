@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,7 +22,7 @@
 #include "sync-logic-handler.hpp"
 #include "common.hpp"
 #include "conf-parameter.hpp"
-#include "lsa.hpp"
+#include "lsa/lsa.hpp"
 #include "logger.hpp"
 #include "utility/name-helper.hpp"
 
@@ -39,15 +39,15 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
   , m_syncFace(face)
   , m_isLsaNew(isLsaNew)
   , m_confParam(conf)
-  , m_nameLsaUserPrefix(ndn::Name(m_confParam.getSyncUserPrefix()).append(std::to_string(Lsa::Type::NAME)))
+  , m_nameLsaUserPrefix(ndn::Name(m_confParam.getSyncUserPrefix()).append(boost::lexical_cast<std::string>(Lsa::Type::NAME)))
   , m_syncLogic(m_syncFace, m_confParam.getSyncProtocol(), m_confParam.getSyncPrefix(),
                 m_nameLsaUserPrefix, m_confParam.getSyncInterestLifetime(),
                 std::bind(&SyncLogicHandler::processUpdate, this, _1, _2))
 {
   m_adjLsaUserPrefix = ndn::Name(m_confParam.getSyncUserPrefix())
-                         .append(std::to_string(Lsa::Type::ADJACENCY));
+                         .append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
   m_coorLsaUserPrefix = ndn::Name(m_confParam.getSyncUserPrefix())
-                         .append(std::to_string(Lsa::Type::COORDINATE));
+                         .append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
 
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF ||
       m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {

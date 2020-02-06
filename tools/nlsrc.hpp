@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -19,11 +19,10 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
-#include "tlv/adjacency-lsa.hpp"
-#include "tlv/coordinate-lsa.hpp"
-#include "tlv/name-lsa.hpp"
+#include "lsa/adj-lsa.hpp"
+#include "lsa/coordinate-lsa.hpp"
+#include "lsa/name-lsa.hpp"
 #include "tlv/routing-table-status.hpp"
-
 
 #include <boost/noncopyable.hpp>
 #include <ndn-cxx/face.hpp>
@@ -120,18 +119,8 @@ private:
   void
   onTimeout(uint32_t errorCode, const std::string& error);
 
-private:
-  std::string
-  getLsaInfoString(const nlsr::tlv::LsaInfo& info);
-
   void
-  recordAdjacencyLsa(const nlsr::tlv::AdjacencyLsa& lsa);
-
-  void
-  recordCoordinateLsa(const nlsr::tlv::CoordinateLsa& lsa);
-
-  void
-  recordNameLsa(const nlsr::tlv::NameLsa& lsa);
+  recordLsa(const nlsr::Lsa& lsa);
 
   void
   recordRtable(const nlsr::tlv::RoutingTableStatus& rts);
@@ -144,6 +133,9 @@ private:
 
   void
   printAll();
+
+  std::string
+  getLsaInfo(const nlsr::Lsa& lsa);
 
 public:
   const char* programName;
@@ -160,11 +152,7 @@ private:
     std::string nameLsaString;
   };
 
-  Router&
-  getRouterLsdb(const nlsr::tlv::LsaInfo& info);
-
-  typedef std::map<const ndn::Name, Router> RouterMap;
-  RouterMap m_routers;
+  std::map<ndn::Name, Router> m_routers;
 
 private:
   ndn::KeyChain m_keyChain;
@@ -184,7 +172,6 @@ private:
   static const uint32_t ERROR_CODE_TIMEOUT;
   static const uint32_t RESPONSE_CODE_SUCCESS;
   static const uint32_t RESPONSE_CODE_SAVE_OR_DELETE;
-
 };
 
 } // namespace nlsrc

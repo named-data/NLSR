@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -36,20 +36,7 @@ public:
   typedef std::list<Adjacent>::const_iterator const_iterator;
   typedef std::list<Adjacent>::iterator iterator;
 
-  AdjacencyList();
-  ~AdjacencyList();
-
-  /*! \brief Inserts an adjacency into the list.
-
-    \param adjacent The adjacency that we want to add to this list.
-
-    \retval 0 Indicates success.
-    \retval 1 Indicates failure.
-
-    This function attempts to insert the supplied adjacency into this
-    object, which is an adjacency list.
-   */
-  int32_t
+  bool
   insert(Adjacent& adjacent);
 
   std::list<Adjacent>&
@@ -75,16 +62,6 @@ public:
 
   void
   setTimedOutInterestCount(const ndn::Name& neighbor, uint32_t count);
-
-  /*! \brief Copies the adjacencies in a list to this one.
-
-    \param adl The adjacency list, the entries of which we want to
-    copy into this object.
-
-    Copies the entries contained in one list into this object.
-   */
-  void
-  addAdjacents(AdjacencyList& adl);
 
   /*! \brief Determines whether this list can be used to build an adj. LSA.
     \param interestRetryNo The maximum number of hello-interest
@@ -122,9 +99,7 @@ public:
   void
   reset()
   {
-    if (m_adjList.size() > 0) {
-      m_adjList.clear();
-    }
+    m_adjList.clear();
   }
 
   AdjacencyList::iterator

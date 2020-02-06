@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -252,22 +252,22 @@ Nlsrc::onControlResponse(const std::string& info, const ndn::Data& data)
 void
 Nlsrc::fetchAdjacencyLsas()
 {
-  fetchFromLsdb<nlsr::tlv::AdjacencyLsa>(nlsr::dataset::ADJACENCY_COMPONENT,
-                                         std::bind(&Nlsrc::recordAdjacencyLsa, this, _1));
+  fetchFromLsdb<nlsr::AdjLsa>(nlsr::dataset::ADJACENCY_COMPONENT,
+                              std::bind(&Nlsrc::recordLsa, this, _1));
 }
 
 void
 Nlsrc::fetchCoordinateLsas()
 {
-  fetchFromLsdb<nlsr::tlv::CoordinateLsa>(nlsr::dataset::COORDINATE_COMPONENT,
-                                          std::bind(&Nlsrc::recordCoordinateLsa, this, _1));
+  fetchFromLsdb<nlsr::CoordinateLsa>(nlsr::dataset::COORDINATE_COMPONENT,
+                                     std::bind(&Nlsrc::recordLsa, this, _1));
 }
 
 void
 Nlsrc::fetchNameLsas()
 {
-  fetchFromLsdb<nlsr::tlv::NameLsa>(nlsr::dataset::NAME_COMPONENT,
-                                    std::bind(&Nlsrc::recordNameLsa, this, _1));
+  fetchFromLsdb<nlsr::NameLsa>(nlsr::dataset::NAME_COMPONENT,
+                               std::bind(&Nlsrc::recordLsa, this, _1));
 }
 
 void
@@ -340,66 +340,36 @@ Nlsrc::onTimeout(uint32_t errorCode, const std::string& error)
             << ", error: " << error << ")"  << std::endl;
 }
 
-std::string
-Nlsrc::getLsaInfoString(const nlsr::tlv::LsaInfo& info)
-{
-  std::ostringstream os;
-  os << "      info=" << info;
-
-  return os.str();
-}
-
 void
-Nlsrc::recordAdjacencyLsa(const nlsr::tlv::AdjacencyLsa& lsa)
+Nlsrc::recordLsa(const nlsr::Lsa& lsa)
 {
-  Router& router = getRouterLsdb(lsa.getLsaInfo());
+  const auto& pair = m_routers.emplace(lsa.getOriginRouter(), Router());
+  Router& router = pair.first->second;
 
   std::ostringstream os;
-  os << "    AdjacencyLsa:" << std::endl;
 
-  os << getLsaInfoString(lsa.getLsaInfo()) << std::endl;
-
-  for (const auto& adjacency : lsa.getAdjacencies()) {
-    os << "      adjacency=" << adjacency << std::endl;
+  switch (lsa.getType()) {
+    case nlsr::Lsa::Type::ADJACENCY: {
+      const nlsr::AdjLsa& adjLsa = static_cast<const nlsr::AdjLsa&>(lsa);
+      os << adjLsa;
+      router.adjacencyLsaString = os.str();
+      break;
+    }
+    case nlsr::Lsa::Type::COORDINATE: {
+      const nlsr::CoordinateLsa& coorLsa = static_cast<const nlsr::CoordinateLsa&>(lsa);
+      os << coorLsa;
+      router.coordinateLsaString = os.str();
+      break;
+    }
+    case nlsr::Lsa::Type::NAME: {
+      const nlsr::NameLsa& nameLsa = static_cast<const nlsr::NameLsa&>(lsa);
+      os << nameLsa;
+      router.nameLsaString = os.str();
+      break;
+    }
+    default:
+      break;
   }
-
-  router.adjacencyLsaString = os.str();
-}
-
-void
-Nlsrc::recordCoordinateLsa(const nlsr::tlv::CoordinateLsa& lsa)
-{
-  Router& router = getRouterLsdb(lsa.getLsaInfo());
-
-  std::ostringstream os;
-  os << "    Coordinate LSA:" << std::endl;
-
-  os << getLsaInfoString(lsa.getLsaInfo()) << std::endl;
-
-  int i = 0;
-  for (auto const& value: lsa.getHyperbolicAngle()) {
-    os << "    Hyp Angle " << i++ << ": "<< value << " ";
-  }
-  os << "\n   radius=" << lsa.getHyperbolicRadius() << std::endl;
-
-  router.coordinateLsaString = os.str();
-}
-
-void
-Nlsrc::recordNameLsa(const nlsr::tlv::NameLsa& lsa)
-{
-  Router& router = getRouterLsdb(lsa.getLsaInfo());
-
-  std::ostringstream os;
-  os << "    Name LSA:" << std::endl;
-
-  os << getLsaInfoString(lsa.getLsaInfo()) << std::endl;
-
-  for (const auto& name : lsa.getNames()) {
-    os << "      name=" << name << std::endl;
-  }
-
-  router.nameLsaString = os.str();
 }
 
 void
@@ -469,15 +439,19 @@ Nlsrc::printAll()
   printRT();
 }
 
-Nlsrc::Router&
-Nlsrc::getRouterLsdb(const nlsr::tlv::LsaInfo& info)
+std::string
+Nlsrc::getLsaInfo(const nlsr::Lsa& lsa)
 {
-  const ndn::Name& originRouterName = info.getOriginRouter();
+  auto duration = ndn::time::duration_cast<ndn::time::seconds>(lsa.getExpirationTimePoint() -
+                                                               ndn::time::system_clock::now());
+  std::ostringstream os;
+  os << "     LsaInfo("
+     << "OriginRouter: " << lsa.getOriginRouter() << ", "
+     << "SequenceNumber: " << lsa.getSeqNo() << ", "
+     << "ExpirationPeriod: " << duration;
+     os << ")\n\n";
 
-  const auto& pair =
-    m_routers.insert(std::make_pair(originRouterName, Router()));
-
-  return pair.first->second;
+  return os.str();
 }
 
 } // namespace nlsrc

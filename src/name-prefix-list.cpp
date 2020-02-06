@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,9 +21,6 @@
 
 #include "name-prefix-list.hpp"
 #include "common.hpp"
-
-#include <iostream>
-#include <algorithm>
 
 namespace nlsr {
 

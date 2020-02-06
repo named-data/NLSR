@@ -198,16 +198,16 @@ BOOST_AUTO_TEST_CASE(LsdbSendLsaInterest)
   uint32_t seqNo = 1;
 
   // Adjacency LSA
-  sendInterestAndCheckStats(interestPrefix, std::to_string(Lsa::Type::ADJACENCY), seqNo,
-                            Statistics::PacketType::SENT_ADJ_LSA_INTEREST);
+  sendInterestAndCheckStats(interestPrefix, boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY),
+                            seqNo, Statistics::PacketType::SENT_ADJ_LSA_INTEREST);
 
   // Coordinate LSA
-  sendInterestAndCheckStats(interestPrefix, std::to_string(Lsa::Type::COORDINATE), seqNo,
-                            Statistics::PacketType::SENT_COORD_LSA_INTEREST);
+  sendInterestAndCheckStats(interestPrefix, boost::lexical_cast<std::string>(Lsa::Type::COORDINATE),
+                            seqNo, Statistics::PacketType::SENT_COORD_LSA_INTEREST);
 
   // Name LSA
-  sendInterestAndCheckStats(interestPrefix, std::to_string(Lsa::Type::NAME), seqNo,
-                            Statistics::PacketType::SENT_NAME_LSA_INTEREST);
+  sendInterestAndCheckStats(interestPrefix, boost::lexical_cast<std::string>(Lsa::Type::NAME),
+                            seqNo, Statistics::PacketType::SENT_NAME_LSA_INTEREST);
 
   // 3 total lsa interests were sent
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::SENT_LSA_INTEREST), 3);
@@ -226,10 +226,10 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
   lsdb.buildAndInstallOwnAdjLsa();
 
   ndn::Name adjLsaKey = conf.getRouterPrefix();
-  adjLsaKey.append(std::to_string(Lsa::Type::ADJACENCY));
+  adjLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
 
   AdjLsa* adjLsa = lsdb.findAdjLsa(adjLsaKey);
-  uint32_t seqNo = adjLsa->getLsSeqNo();
+  uint32_t seqNo = adjLsa->getSeqNo();
 
   Adjacent adjacency("adjacency");
   adjacency.setStatus(Adjacent::STATUS_ACTIVE);
@@ -242,26 +242,26 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
 
   // Receive Adjacency LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
-                                   std::to_string(Lsa::Type::ADJACENCY),
+                                   boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY),
                                    seqNo,
                                    Statistics::PacketType::RCV_ADJ_LSA_INTEREST,
                                    Statistics::PacketType::SENT_ADJ_LSA_DATA);
 
   // Name LSA
   ndn::Name nameLsaKey = conf.getRouterPrefix();
-  nameLsaKey.append(std::to_string(Lsa::Type::NAME));
+  nameLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
 
   NameLsa* nameLsa = lsdb.findNameLsa(nameLsaKey);
   BOOST_ASSERT(nameLsa != nullptr);
 
-  seqNo = nameLsa->getLsSeqNo();
+  seqNo = nameLsa->getSeqNo();
 
   nameLsa->addName(ndn::Name("/ndn/name"));
   lsdb.installNameLsa(*nameLsa);
 
   // Receive Name LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
-                                   std::to_string(Lsa::Type::NAME),
+                                   boost::lexical_cast<std::string>(Lsa::Type::NAME),
                                    seqNo,
                                    Statistics::PacketType::RCV_NAME_LSA_INTEREST,
                                    Statistics::PacketType::SENT_NAME_LSA_DATA);
@@ -269,16 +269,16 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
   // // Coordinate LSA
   lsdb.buildAndInstallOwnCoordinateLsa();
   ndn::Name coorLsaKey = conf.getRouterPrefix();
-  coorLsaKey.append(std::to_string(Lsa::Type::COORDINATE));
+  coorLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
 
   CoordinateLsa* coorLsa = lsdb.findCoordinateLsa(coorLsaKey);
-  seqNo = coorLsa->getLsSeqNo();
+  seqNo = coorLsa->getSeqNo();
   coorLsa->setCorTheta({20.0, 30.0});
   lsdb.installCoordinateLsa(*coorLsa);
 
   // Receive Adjacency LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
-                                   std::to_string(Lsa::Type::COORDINATE),
+                                   boost::lexical_cast<std::string>(Lsa::Type::COORDINATE),
                                    seqNo,
                                    Statistics::PacketType::RCV_COORD_LSA_INTEREST,
                                    Statistics::PacketType::SENT_COORD_LSA_DATA);
@@ -306,9 +306,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   AdjLsa aLsa(routerName, seqNo, MAX_TIME, 1, conf.getAdjacencyList());
   lsdb.installAdjLsa(aLsa);
 
-  ndn::Block block = ndn::encoding::makeStringBlock(ndn::tlv::Content, aLsa.serialize());
-
-  lsdb.afterFetchLsa(block.getBuffer(), adjInterest);
+  lsdb.afterFetchLsa(aLsa.wireEncode().getBuffer(), adjInterest);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_ADJ_LSA_DATA), 1);
 
   // coordinate lsa
@@ -318,20 +316,16 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   CoordinateLsa cLsa(routerName, seqNo, MAX_TIME, 2.5, angles);
   lsdb.installCoordinateLsa(cLsa);
 
-  block = ndn::encoding::makeStringBlock(ndn::tlv::Content, cLsa.serialize());
-
-  lsdb.afterFetchLsa(block.getBuffer(), coordInterest);
+  lsdb.afterFetchLsa(cLsa.wireEncode().getBuffer(), coordInterest);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_COORD_LSA_DATA), 1);
 
   // name lsa
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
-  NameLsa nLsa(routerName, seqNo, MAX_TIME, conf.getNamePrefixList());
-  lsdb.installNameLsa(nLsa);
+  NameLsa nlsa(routerName, seqNo, MAX_TIME, conf.getNamePrefixList());
+  lsdb.installNameLsa(nlsa);
 
-  block = ndn::encoding::makeStringBlock(ndn::tlv::Content, nLsa.serialize());
-
-  lsdb.afterFetchLsa(block.getBuffer(), interestName);
+  lsdb.afterFetchLsa(nlsa.wireEncode().getBuffer(), interestName);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_NAME_LSA_DATA), 1);
 
   // 3 lsa data types should be received

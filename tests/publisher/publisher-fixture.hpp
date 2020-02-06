@@ -64,40 +64,6 @@ public:
     lsa.addAdjacent(std::move(adjacency));
   }
 
-  void
-  checkTlvLsaInfo(const tlv::LsaInfo& info, Lsa& lsa)
-  {
-    BOOST_CHECK_EQUAL(info.getOriginRouter(), lsa.getOrigRouter());
-    BOOST_CHECK_EQUAL(info.getSequenceNumber(), lsa.getLsSeqNo());
-    BOOST_CHECK_LE(info.getExpirationPeriod(), ndn::time::milliseconds(0));
-  }
-
-  void
-  checkTlvAdjLsa(const ndn::Block& block, AdjLsa& lsa)
-  {
-    BOOST_CHECK_EQUAL(block.type(), ndn::tlv::nlsr::AdjacencyLsa);
-
-    tlv::AdjacencyLsa tlvLsa;
-    BOOST_REQUIRE_NO_THROW(tlvLsa.wireDecode(block));
-
-    checkTlvAdjLsa(tlvLsa, lsa);
-  }
-
-  void
-  checkTlvAdjLsa(const tlv::AdjacencyLsa& tlvLsa, AdjLsa& lsa)
-  {
-    checkTlvLsaInfo(tlvLsa.getLsaInfo(), lsa);
-
-    std::list<tlv::Adjacency>::const_iterator it = tlvLsa.getAdjacencies().begin();
-
-    for (const Adjacent& adjacency : lsa.getAdl().getAdjList()) {
-      BOOST_CHECK_EQUAL(it->getName(), adjacency.getName());
-      BOOST_CHECK_EQUAL(it->getUri(), adjacency.getFaceUri().toString());
-      BOOST_CHECK_EQUAL(it->getCost(), adjacency.getLinkCost());
-      ++it;
-    }
-  }
-
   NextHop
   createNextHop(const std::string& faceUri, double cost)
   {
@@ -111,50 +77,6 @@ public:
     CoordinateLsa lsa(origin, 1, ndn::time::system_clock::now(),
                       radius, angle);
     return lsa;
-  }
-
-  void
-  checkTlvCoordinateLsa(const ndn::Block& block, CoordinateLsa& lsa)
-  {
-    BOOST_CHECK_EQUAL(block.type(), ndn::tlv::nlsr::CoordinateLsa);
-
-    tlv::CoordinateLsa tlvLsa;
-    BOOST_REQUIRE_NO_THROW(tlvLsa.wireDecode(block));
-
-    checkTlvCoordinateLsa(tlvLsa, lsa);
-  }
-
-  void
-  checkTlvCoordinateLsa(const tlv::CoordinateLsa& tlvLsa, CoordinateLsa& lsa)
-  {
-    checkTlvLsaInfo(tlvLsa.getLsaInfo(), lsa);
-
-    BOOST_CHECK_EQUAL(tlvLsa.getHyperbolicRadius(), lsa.getCorRadius());
-    BOOST_CHECK(tlvLsa.getHyperbolicAngle() == lsa.getCorTheta());
-  }
-
-  void
-  checkTlvNameLsa(const ndn::Block& block, NameLsa& lsa)
-  {
-    BOOST_CHECK_EQUAL(block.type(), ndn::tlv::nlsr::NameLsa);
-
-    tlv::NameLsa tlvLsa;
-    BOOST_REQUIRE_NO_THROW(tlvLsa.wireDecode(block));
-
-    checkTlvNameLsa(tlvLsa, lsa);
-  }
-
-  void
-  checkTlvNameLsa(const tlv::NameLsa& tlvLsa, NameLsa& lsa)
-  {
-    checkTlvLsaInfo(tlvLsa.getLsaInfo(), lsa);
-
-    std::list<ndn::Name>::const_iterator it = tlvLsa.getNames().begin();
-
-    for (const ndn::Name& name : lsa.getNpl().getNames()) {
-      BOOST_CHECK_EQUAL(*it, name);
-      ++it;
-    }
   }
 
 public:

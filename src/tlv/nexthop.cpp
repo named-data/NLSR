@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,7 +21,6 @@
 
 #include "nexthop.hpp"
 #include "tlv-nlsr.hpp"
-#include "coordinate-lsa.hpp"
 
 #include <ndn-cxx/util/concepts.hpp>
 #include <ndn-cxx/encoding/block-helpers.hpp>

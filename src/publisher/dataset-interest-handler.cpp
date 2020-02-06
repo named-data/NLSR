@@ -67,25 +67,8 @@ void
 DatasetInterestHandler::publishAdjStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                          ndn::mgmt::StatusDatasetContext& context)
 {
-  NLSR_LOG_DEBUG("Received interest:  " << interest);
-
-  auto lsaRange = std::make_pair<std::list<AdjLsa>::const_iterator,
-                                 std::list<AdjLsa>::const_iterator>(
-    m_lsdb.getAdjLsdb().cbegin(), m_lsdb.getAdjLsdb().cend());
-  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
-    tlv::AdjacencyLsa tlvLsa;
-    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
-    tlvLsa.setLsaInfo(*tlvLsaInfo);
-
-    for (const Adjacent& adj : lsa->getAdl().getAdjList()) {
-      tlv::Adjacency tlvAdj;
-      tlvAdj.setName(adj.getName());
-      tlvAdj.setUri(adj.getFaceUri().toString());
-      tlvAdj.setCost(adj.getLinkCost());
-      tlvLsa.addAdjacency(tlvAdj);
-    }
-    const ndn::Block& wire = tlvLsa.wireEncode();
-    context.append(wire);
+  for (const auto& adjLsa : m_lsdb.getAdjLsdb()) {
+    context.append(adjLsa.wireEncode());
   }
   context.end();
 }
@@ -94,21 +77,8 @@ void
 DatasetInterestHandler::publishCoordinateStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                                 ndn::mgmt::StatusDatasetContext& context)
 {
-  auto lsaRange = std::make_pair<std::list<CoordinateLsa>::const_iterator,
-                                 std::list<CoordinateLsa>::const_iterator>(
-    m_lsdb.getCoordinateLsdb().cbegin(), m_lsdb.getCoordinateLsdb().cend());
-
-  NLSR_LOG_DEBUG("Received interest:  " << interest);
-  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
-    tlv::CoordinateLsa tlvLsa;
-    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
-    tlvLsa.setLsaInfo(*tlvLsaInfo);
-
-    tlvLsa.setHyperbolicRadius(lsa->getCorRadius());
-    tlvLsa.setHyperbolicAngle(lsa->getCorTheta());
-
-    const ndn::Block& wire = tlvLsa.wireEncode();
-    context.append(wire);
+  for (const auto& coordinateLsa : m_lsdb.getCoordinateLsdb()) {
+    context.append(coordinateLsa.wireEncode());
   }
   context.end();
 }
@@ -117,21 +87,8 @@ void
 DatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                           ndn::mgmt::StatusDatasetContext& context)
 {
-  auto lsaRange = std::make_pair<std::list<NameLsa>::const_iterator, std::list<NameLsa>::const_iterator>(
-    m_lsdb.getNameLsdb().cbegin(), m_lsdb.getNameLsdb().cend());
-  NLSR_LOG_DEBUG("Received interest:  " << interest);
-  for (auto lsa = lsaRange.first; lsa != lsaRange.second; lsa++) {
-    tlv::NameLsa tlvLsa;
-
-    std::shared_ptr<tlv::LsaInfo> tlvLsaInfo = tlv::makeLsaInfo(*lsa);
-    tlvLsa.setLsaInfo(*tlvLsaInfo);
-
-    for (const ndn::Name& name : lsa->getNpl().getNames()) {
-      tlvLsa.addName(name);
-    }
-
-    const ndn::Block& wire = tlvLsa.wireEncode();
-    context.append(wire);
+  for (const auto& nameLsa : m_lsdb.getNameLsdb()) {
+    context.append(nameLsa.wireEncode());
   }
   context.end();
 }

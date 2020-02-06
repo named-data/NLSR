@@ -23,7 +23,7 @@
 
 #include "test-common.hpp"
 #include "nlsr.hpp"
-#include "lsa.hpp"
+#include "lsa/lsa.hpp"
 #include "name-prefix-list.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
@@ -175,12 +175,13 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
   ndn::Name lsaKey("/ndn/site/%C1.Router/this-router/NAME");
 
   NameLsa* nameLsa = lsdb.findNameLsa(lsaKey);
-  uint64_t seqNo = nameLsa->getLsSeqNo();
+  BOOST_REQUIRE(nameLsa != nullptr);
+  uint64_t seqNo = nameLsa->getSeqNo();
 
   ndn::Name prefix("/ndn/edu/memphis/netlab/research/nlsr/test/prefix/");
 
   int nPrefixes = 0;
-  while (nameLsa->serialize().size() < ndn::MAX_NDN_PACKET_SIZE) {
+  while (nameLsa->wireEncode().size() < ndn::MAX_NDN_PACKET_SIZE) {
     nameLsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
     break;
   }
@@ -218,17 +219,17 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
   ndn::Name lsaKey("/ndn/site/%C1.Router/this-router/NAME");
 
   NameLsa* lsa = lsdb.findNameLsa(lsaKey);
-  uint64_t seqNo = lsa->getLsSeqNo();
+  uint64_t seqNo = lsa->getSeqNo();
 
   ndn::Name prefix("/ndn/edu/memphis/netlab/research/nlsr/test/prefix/");
 
   int nPrefixes = 0;
-  while (lsa->serialize().size() < ndn::MAX_NDN_PACKET_SIZE) {
+  while (lsa->wireEncode().size() < ndn::MAX_NDN_PACKET_SIZE) {
     lsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
   }
   lsdb.installNameLsa(*lsa);
 
-  std::string expectedDataContent = lsa->serialize();
+  ndn::Block expectedDataContent = lsa->wireEncode();
 
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/NAME/");
   interestName.appendNumber(seqNo);
@@ -240,7 +241,7 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
                                                   ndn::security::v2::getAcceptAllValidator());
   fetcher->onComplete.connect([&expectedDataContent] (ndn::ConstBufferPtr bufferPtr) {
                                 ndn::Block block(bufferPtr);
-                                BOOST_CHECK_EQUAL(expectedDataContent, readString(block));
+                                BOOST_CHECK_EQUAL(expectedDataContent, block);
                               });
 
   advanceClocks(ndn::time::milliseconds(1), 100);
@@ -264,13 +265,13 @@ BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
 
-  ndn::Block block = ndn::encoding::makeStringBlock(ndn::tlv::Content, lsa.serialize());
+  ndn::Block block = lsa.wireEncode();
   lsdb.afterFetchLsa(block.getBuffer(), interestName);
 
   NameLsa* foundLsa = lsdb.findNameLsa(lsa.getKey());
   BOOST_REQUIRE(foundLsa != nullptr);
 
-  BOOST_CHECK_EQUAL(foundLsa->serialize(), lsa.serialize());
+  BOOST_CHECK_EQUAL(foundLsa->wireEncode(), lsa.wireEncode());
 }
 
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)

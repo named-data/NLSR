@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -24,7 +24,6 @@
 #include "common.hpp"
 #include "map-entry.hpp"
 
-#include <iostream>
 #include <list>
 #include <boost/cstdint.hpp>
 
@@ -81,7 +80,7 @@ public:
   {
     BOOST_STATIC_ASSERT_MSG(is_iterator<IteratorType>::value, "IteratorType must be an iterator!");
     for (auto lsa = begin; lsa != end; lsa++) {
-      addEntry(lsa->getOrigRouter());
+      addEntry(lsa->getOriginRouter());
       for (const auto& adjacent : lsa->getAdl().getAdjList()) {
         addEntry(adjacent.getName());
       }
@@ -98,7 +97,7 @@ public:
   {
     BOOST_STATIC_ASSERT_MSG(is_iterator<IteratorType>::value, "IteratorType must be an iterator!");
     for (auto lsa = begin; lsa != end; lsa++) {
-      addEntry(lsa->getOrigRouter());
+      addEntry(lsa->getOriginRouter());
     }
   }
 

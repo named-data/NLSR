@@ -24,7 +24,7 @@
 #include "route/routing-table-calculator.hpp"
 
 #include "adjacency-list.hpp"
-#include "lsa.hpp"
+//#include "lsa.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
 #include "route/map.hpp"
@@ -68,7 +68,7 @@ public:
     lsdb.installAdjLsa(adjA);
 
 
-    CoordinateLsa coordA(adjA.getOrigRouter(), 1, MAX_TIME, 16.23, anglesA);
+    CoordinateLsa coordA(adjA.getOriginRouter(), 1, MAX_TIME, 16.23, anglesA);
     lsdb.installCoordinateLsa(coordA);
 
     // Router B
@@ -82,7 +82,7 @@ public:
     AdjLsa adjB(b.getName(), 1, MAX_TIME, 2, adjacencyListB);
     lsdb.installAdjLsa(adjB);
 
-    CoordinateLsa coordB(adjB.getOrigRouter(), 1, MAX_TIME, 16.59, anglesB);
+    CoordinateLsa coordB(adjB.getOriginRouter(), 1, MAX_TIME, 16.59, anglesB);
     lsdb.installCoordinateLsa(coordB);
 
     // Router C
@@ -96,7 +96,7 @@ public:
     AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
     lsdb.installAdjLsa(adjC);
 
-    CoordinateLsa coordC(adjC.getOrigRouter(), 1, MAX_TIME, 14.11, anglesC);
+    CoordinateLsa coordC(adjC.getOriginRouter(), 1, MAX_TIME, 14.11, anglesC);
     lsdb.installCoordinateLsa(coordC);
 
     map.createFromAdjLsdb(lsdb.getAdjLsdb().begin(), lsdb.getAdjLsdb().end());

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2017,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -17,8 +17,9 @@
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
-#ifndef NLSR_NEXTHOP_HPP
-#define NLSR_NEXTHOP_HPP
+
+#ifndef NLSR_ROUTE_NEXTHOP_HPP
+#define NLSR_ROUTE_NEXTHOP_HPP
 
 #include "test-access-control.hpp"
 
@@ -27,6 +28,7 @@
 #include <boost/cstdint.hpp>
 
 namespace nlsr {
+
 class NextHop
 {
 public:
@@ -121,4 +123,4 @@ operator<<(std::ostream& os, const NextHop& hop);
 
 } // namespace nlsr
 
-#endif //NLSR_NEXTHOP_HPP
+#endif // NLSR_ROUTE_NEXTHOP_HPP

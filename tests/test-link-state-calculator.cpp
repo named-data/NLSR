@@ -22,7 +22,7 @@
 #include "route/routing-table-calculator.hpp"
 
 #include "adjacency-list.hpp"
-#include "lsa.hpp"
+//#include "lsa.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
 #include "test-common.hpp"
@@ -172,11 +172,11 @@ BOOST_AUTO_TEST_CASE(Basic)
 BOOST_AUTO_TEST_CASE(Asymmetric)
 {
   // Asymmetric link cost between B and C
-  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
+  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
   AdjLsa* lsa = nlsr.m_lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
-  auto c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
+  auto c = lsa->m_adl.findAdjacent(ROUTER_C_NAME);
   BOOST_REQUIRE(c != conf.getAdjacencyList().end());
 
   double higherLinkCost = LINK_BC_COST + 1;
@@ -221,11 +221,11 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
 BOOST_AUTO_TEST_CASE(NonAdjacentCost)
 {
   // Asymmetric link cost between B and C
-  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
+  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
   auto lsa = nlsr.m_lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
-  auto c = lsa->getAdl().findAdjacent(ROUTER_C_NAME);
+  auto c = lsa->m_adl.findAdjacent(ROUTER_C_NAME);
   BOOST_REQUIRE(c != conf.getAdjacencyList().end());
 
   // Break the link between B - C by setting it to a NON_ADJACENT_COST.
@@ -263,24 +263,24 @@ BOOST_AUTO_TEST_CASE(NonAdjacentCost)
 BOOST_AUTO_TEST_CASE(AsymmetricZeroCostLink)
 {
   // Asymmetric and zero link cost between B - C, and B - A.
-  ndn::Name keyB = ndn::Name(ROUTER_B_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
+  ndn::Name keyB = ndn::Name(ROUTER_B_NAME).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
   auto lsaB = nlsr.m_lsdb.findAdjLsa(keyB);
   BOOST_REQUIRE(lsaB != nullptr);
 
-  auto c = lsaB->getAdl().findAdjacent(ROUTER_C_NAME);
+  auto c = lsaB->m_adl.findAdjacent(ROUTER_C_NAME);
   BOOST_REQUIRE(c != conf.getAdjacencyList().end());
   // Re-adjust link cost to 0 from B-C. However, this should not set B-C cost 0 because C-B
   // cost is greater that 0 i.e. 17
   c->setLinkCost(0);
 
-  auto a = lsaB->getAdl().findAdjacent(ROUTER_A_NAME);
+  auto a = lsaB->m_adl.findAdjacent(ROUTER_A_NAME);
   BOOST_REQUIRE(a != conf.getAdjacencyList().end());
 
-  ndn::Name keyA = ndn::Name(ROUTER_A_NAME).append(std::to_string(Lsa::Type::ADJACENCY));
+  ndn::Name keyA = ndn::Name(ROUTER_A_NAME).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
   auto lsaA = nlsr.m_lsdb.findAdjLsa(keyA);
   BOOST_REQUIRE(lsaA != nullptr);
 
-  auto b = lsaA->getAdl().findAdjacent(ROUTER_B_NAME);
+  auto b = lsaA->m_adl.findAdjacent(ROUTER_B_NAME);
   BOOST_REQUIRE(b != conf.getAdjacencyList().end());
 
   // Re-adjust link cost to 0 from both the direction i.e B-A and A-B

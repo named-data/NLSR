@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -37,9 +37,6 @@
 #include "lsdb.hpp"
 #include "logger.hpp"
 
-#include "tlv/adjacency-lsa.hpp"
-#include "tlv/coordinate-lsa.hpp"
-#include "tlv/name-lsa.hpp"
 #include "tlv/routing-table-status.hpp"
 #include "tlv/routing-table-entry.hpp"
 

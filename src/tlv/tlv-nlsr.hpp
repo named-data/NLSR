@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2019,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -34,24 +34,23 @@ namespace nlsr {
  *  used in the LSDB Status Dataset.
  */
 enum {
-  LsaInfo          = 128,
-  OriginRouter     = 129,
-  SequenceNumber   = 130,
-  AdjacencyLsa     = 131,
-  Adjacency        = 132,
-  CoordinateLsa    = 133,
-  CostDouble       = 134,
-  HyperbolicRadius = 135,
-  HyperbolicAngle  = 136,
-  NameLsa          = 137,
-  LsdbStatus       = 138,
-  ExpirationPeriod = 139,
-  Cost             = 140,
-  Uri              = 141,
-  Destination      = 142,
-  NextHop          = 143,
-  RoutingTable     = 144,
-  RouteTableEntry  = 145,
+  Lsa                         = 128,
+  SequenceNumber              = 130,
+  AdjacencyLsa                = 131,
+  Adjacency                   = 132,
+  CoordinateLsa               = 133,
+  CostDouble                  = 134,
+  HyperbolicRadius            = 135,
+  HyperbolicAngle             = 136,
+  NameLsa                     = 137,
+  LsdbStatus                  = 138,
+  ExpirationTime              = 139,
+  Cost                        = 140,
+  Uri                         = 141,
+  Destination                 = 142,
+  NextHop                     = 143,
+  RoutingTable                = 144,
+  RoutingTableEntry           = 145
 };
 
 } // namespace nlsr

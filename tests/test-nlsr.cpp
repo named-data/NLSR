@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEvent)
   Adjacent neighbor("/ndn/neighborA", ndn::FaceUri(faceUri), 10,
                     Adjacent::STATUS_INACTIVE, 0, 0);
 
-  BOOST_REQUIRE_EQUAL(conf.getAdjacencyList().insert(neighbor), 0);
+  BOOST_REQUIRE_EQUAL(conf.getAdjacencyList().insert(neighbor), true);
 
   this->advanceClocks(10_ms);
 
@@ -306,11 +306,11 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
 
   // Make sure an adjacency LSA was built
   ndn::Name key = ndn::Name(conf.getRouterPrefix())
-    .append(std::to_string(Lsa::Type::ADJACENCY));
+    .append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
   AdjLsa* lsa = lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
-  uint32_t lastAdjLsaSeqNo = lsa->getLsSeqNo();
+  uint32_t lastAdjLsaSeqNo = lsa->getSeqNo();
   nlsr.m_lsdb.m_sequencingManager.setAdjLsaSeq(lastAdjLsaSeqNo);
 
   this->advanceClocks(1500_ms, 10);
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
   lsa = lsdb.findAdjLsa(key);
   BOOST_REQUIRE(lsa != nullptr);
 
-  BOOST_CHECK_EQUAL(lsa->getLsSeqNo(), lastAdjLsaSeqNo + 1);
+  BOOST_CHECK_EQUAL(lsa->getSeqNo(), lastAdjLsaSeqNo + 1);
 
   this->advanceClocks(15_s, 10);
 
@@ -381,7 +381,7 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   receiveHelloData(neighborAName, conf.getRouterPrefix());
   this->advanceClocks(1_s, 10);
 
-  ndn::Name lsaKey = ndn::Name(conf.getRouterPrefix()).append(std::to_string(Lsa::Type::ADJACENCY));
+  ndn::Name lsaKey = ndn::Name(conf.getRouterPrefix()).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
 
   // Adjacency LSA should be built even though other router is INACTIVE
   AdjLsa* lsa = lsdb.findAdjLsa(lsaKey);

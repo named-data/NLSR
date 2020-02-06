@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /**
- * Copyright (c) 2014-2018,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -21,7 +21,7 @@
 #include "map.hpp"
 #include "nlsr.hpp"
 #include "adjacent.hpp"
-#include "lsa.hpp"
+#include "lsa/lsa.hpp"
 #include "lsdb.hpp"
 #include "logger.hpp"
 

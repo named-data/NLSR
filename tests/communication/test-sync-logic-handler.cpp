@@ -23,7 +23,6 @@
 #include "tests/test-common.hpp"
 #include "common.hpp"
 #include "nlsr.hpp"
-#include "lsa.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
@@ -101,7 +100,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherLS, T, Protocols, SyncLogicFixtur
   uint64_t syncSeqNo = 1;
 
   for (const Lsa::Type& lsaType : lsaTypes) {
-    std::string updateName = this->updateNamePrefix + std::to_string(lsaType);
+    std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
 
     // Actual testing done here -- signal function callback
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
@@ -127,7 +126,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherHR, T, Protocols, SyncLogicFixtur
   std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME, Lsa::Type::COORDINATE};
 
   for (const Lsa::Type& lsaType : lsaTypes) {
-    std::string updateName = this->updateNamePrefix + std::to_string(lsaType);
+    std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
 
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
       [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
@@ -151,7 +150,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherHRDry, T, Protocols, SyncLogicFix
   uint64_t syncSeqNo = 1;
 
   for (const Lsa::Type& lsaType : this->lsaTypes) {
-    std::string updateName = this->updateNamePrefix + std::to_string(lsaType);
+    std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
 
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
       [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
@@ -178,7 +177,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(NoUpdateForSelf, T, Protocols, SyncLogicFixture
     ndn::Name updateName = ndn::Name{this->conf.getLsaPrefix()};
     updateName.append(this->conf.getSiteName())
               .append(this->conf.getRouterName())
-              .append(std::to_string(lsaType));
+              .append(boost::lexical_cast<std::string>(lsaType));
 
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
       [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
@@ -200,7 +199,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(MalformedUpdate, T, Protocols, SyncLogicFixture
 
   for (const Lsa::Type& lsaType : this->lsaTypes) {
     ndn::Name updateName{this->conf.getSiteName()};
-    updateName.append(this->conf.getRouterName()).append(std::to_string(lsaType));
+    updateName.append(this->conf.getRouterName()).append(boost::lexical_cast<std::string>(lsaType));
 
     ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
       [&] (const ndn::Name& routerName, const uint64_t& sequenceNumber,
@@ -231,7 +230,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(LsaNotNew, T, Protocols, SyncLogicFixture<T::va
         BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
       });
 
-  std::string updateName = this->updateNamePrefix + std::to_string(Lsa::Type::NAME);
+  std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(Lsa::Type::NAME);
 
   this->receiveUpdate(updateName, sequenceNumber);
 }
@@ -247,11 +246,11 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdatePrefix, T, Protocols, SyncLogicFixture<T:
   expectedPrefix.append(this->conf.getRouterName());
 
   BOOST_CHECK_EQUAL(this->sync.m_nameLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::NAME)));
+                    ndn::Name(expectedPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::NAME)));
   BOOST_CHECK_EQUAL(this->sync.m_adjLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::ADJACENCY)));
+                    ndn::Name(expectedPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY)));
   BOOST_CHECK_EQUAL(this->sync.m_coorLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(std::to_string(Lsa::Type::COORDINATE)));
+                    ndn::Name(expectedPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
