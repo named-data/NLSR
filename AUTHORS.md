@@ -1,59 +1,38 @@
-NLSR Authors
-============
+# NLSR Authors
 
-NLSR is an open source project includes contributions from the members of the
-[NDN project team](http://named-data.net/project/participants/).
+The following lists maintainers, primary developers, and all much-appreciated contributors to NLSR in alphabetic order.
+The specific contributions of individual authors can be obtained from the git history of the [official NLSR repository](https://github.com/named-data/NLSR).
+If you would like to become a contributor to the official repository, please follow the recommendations in https://github.com/named-data/.github/blob/master/CONTRIBUTING.md.
 
-## Project co-leads:
+* Alexander Afanasyev <https://users.cs.fiu.edu/~afanasyev>
+* Adam Alyyan <https://github.com/a64adam>
+* Syed Obaid Amin <http://obaidamin.weebly.com/>
+* Pedro David Arjona Villicaña <https://github.com/david-arjona>
+* Muktadir R. Chowdhury <https://github.com/alvyC>
+* Damian Coomes <https://github.com/dmcoomes>
+* ***(Maintainer)*** Saurab Dulal <https://dulalsaurab.github.io>
+* Laqin Fan <https://github.com/laqinfan>
+* Simon Fayer <https://github.com/sfayer>
+* ***(Former Maintainer)*** Ashlesh Gawande <https://www.linkedin.com/in/agawande>
+* ***(Former Maintainer)*** Nicholas Gordon <https://github.com/gorgonical>
+* ***(Former Maintainer)*** A. K. M. Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
+* ***(Former Maintainer)*** Vince Lehman <http://vslehman.com>
+* Tianxing Ma <https://github.com/matianxing1992>
+* Spyridon Mastorakis <https://sites.google.com/site/spyridonmastorakis>
+* Eric Newberry <https://ericnewberry.com>
+* João Pereira <http://website.jpereira.co.uk>
+* Davide Pesavento <https://github.com/Pesa>
+* Md Ashiqur Rahman <https://ashiqrahman.com>
+* Junxiao Shi <https://cs.arizona.edu/~shijunxiao>
+* Salvatore Signorello <https://wwwen.uni.lu/snt/people/salvatore_signorello>
+* Jiewen Tan <https://www.linkedin.com/in/jiewentan>
+* Alejandro Gil Torres <https://github.com/gltorres>
+* Ryan Wickman <http://rwickman.github.io>
+* Yingdi Yu <https://irl.cs.ucla.edu/~yingdi>
+* Minsheng Zhang <https://www.linkedin.com/in/minsheng-zhang-032023a1>
 
-* Ashlesh Gawande  <https://www.linkedin.com/in/agawande>
-* Saurab Dulal <https://dulalsaurab.github.io>
+## Technical Advisors
 
-## Past project leads:
-
-* A K M Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
-* Vince Lehman <http://vslehman.com>
-* Nicholas Gordon <nmgordon@memphis.edu>
-
-## Technical advisors:
-
-* Lan Wang            <http://www.cs.memphis.edu/~lanwang/>
-* Beichuan Zhang      <http://www.cs.arizona.edu/~bzhang/>
-* Lixia Zhang         <http://www.cs.ucla.edu/~lixia/>
-
-
-## All project authors, contributors and their affiliations:
-
-* The University of Memphis
-
-    * A K M Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
-    * Ashlesh Gawande      <https://www.linkedin.com/in/agawande>
-    * Minsheng Zhang       <https://www.linkedin.com/in/minsheng-zhang-032023a1>
-    * Syed Obaid Amin      <http://obaidamin.weebly.com/>
-    * Vince Lehman         <http://vslehman.com>
-    * Muktadir R Chowdhury <mrchwdhr@memphis.edu>
-    * Nicholas Gordon      <nmgordon@memphis.edu>
-    * Laqin Fan            <lfan1@memphis.edu>
-    * Damian Coomes        <dmcoomes@memphis.edu>
-    * Saurab Dulal         <sdulal@memphis.edu>
-
-* University of California, Los Angeles
-
-    * Yingdi Yu           <http://irl.cs.ucla.edu/~yingdi/web/index.html>
-    * Alexander Afanasyev <http://lasr.cs.ucla.edu/afanasyev/index.html>
-    * Spyridon Mastorakis <http://cs.ucla.edu/~mastorakis/>
-    * Jiewen Tan          <https://www.linkedin.com/in/jiewentan>
-
-* Universidad Autónoma de San Luis Potosí (UASLP)
-
-    * Pedro David Arjona Villicaña <david.arjona@uaslp.mx>
-
-* Individual Contributor(s)
-
-    * Junxiao Shi         <https://www.linkedin.com/in/shijunxiao>
-    * Davide Pesavento    <https://www.linkedin.com/in/davidepesavento>
-
-## Queries about NLSR
-
-Any question related to NLSR should be directed to Ashlesh Gawande (agawande@memphis.edu), Saurab Dulal (sdulal@memphis.edu),
-Muktadir R Chowdhury (mrchwdhr@memphis.edu).
+* Lan Wang <http://www.cs.memphis.edu/~lanwang>
+* Beichuan Zhang <https://cs.arizona.edu/~bzhang>
+* Lixia Zhang <https://web.cs.ucla.edu/~lixia>
