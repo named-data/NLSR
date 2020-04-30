@@ -7,48 +7,36 @@ NLSR Installation Instructions
 Prerequisites
 -------------
 
--  `NFD <https://named-data.net/doc/NFD/>`_ and its requirements:
+-  `NFD <https://named-data.net/doc/NFD/>`_ and its dependencies
 
 Refer to `Getting started with NFD <https://named-data.net/doc/NFD/current/INSTALL.html>`_
 for detailed installation and running instruction.
 
--  ChronoSync library:
+-  ChronoSync library
 
-Download the ChronoSync library and build it according to the instructions at the following
-address:
+Download the ChronoSync library and build it according to the instructions available at
+https://github.com/named-data/ChronoSync#build
 
-   ::
+-  PSync library
 
-       https://github.com/named-data/ChronoSync#build
-
--  PSync library:
-
-Download the PSync library and build it according to the instructions at the following
-address:
-
-   ::
-
-       https://github.com/named-data/PSync#build
+Download the PSync library and build it according to the instructions available at
+https://github.com/named-data/PSync#build
 
 Build
 -----
 
-Execute the following commands to build NLSR:
-
-::
+Execute the following commands to build NLSR::
 
     ./waf configure
     ./waf
     sudo ./waf install
 
-Refer to ``./waf –help`` for more options that can be used during the configure stage and
+Refer to ``./waf --help`` for more options that can be used during the configure stage and
 how to properly configure NLSR.
 
 If your pkgconfig path is not set properly you can do the following before running ``./waf
-configure``
+configure``::
 
-::
-
-    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
-    or
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+    # or
     export PKG_CONFIG_PATH=/path/to/pkgconfig/on/your/machine

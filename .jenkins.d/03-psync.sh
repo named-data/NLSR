@@ -1,57 +1,46 @@
 #!/usr/bin/env bash
-set -e
+set -ex
 
-JDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "$JDIR"/util.sh
+PROJ=PSync
 
-set -x
-
-pushd "${CACHE_DIR:-/tmp}" >/dev/null
+pushd "$CACHE_DIR" >/dev/null
 
 INSTALLED_VERSION=
 NDN_CXX=$(ndnsec version)
-OLD_NDN_CXX=$(cat ndn_cxx_psync.txt || :)
+OLD_NDN_CXX=$(cat "$PROJ-ndn-cxx.txt" || :)
 if [[ $OLD_NDN_CXX != $NDN_CXX ]]; then
-    echo "$NDN_CXX" > ndn_cxx_psync.txt
+    echo "$NDN_CXX" > "$PROJ-ndn-cxx.txt"
     INSTALLED_VERSION=NONE
 fi
 
 if [[ -z $INSTALLED_VERSION ]]; then
-    INSTALLED_VERSION=$(git -C PSync rev-parse HEAD 2>/dev/null || echo NONE)
+    INSTALLED_VERSION=$(git -C "$PROJ" rev-parse HEAD 2>/dev/null || echo NONE)
 fi
 
-sudo rm -Rf PSync-latest
-
-git clone --depth 1 git://github.com/named-data/PSync PSync-latest
-
-LATEST_VERSION=$(git -C PSync-latest rev-parse HEAD 2>/dev/null || echo UNKNOWN)
+sudo rm -rf "$PROJ-latest"
+git clone --depth 1 "https://github.com/named-data/$PROJ.git" "$PROJ-latest"
+LATEST_VERSION=$(git -C "$PROJ-latest" rev-parse HEAD 2>/dev/null || echo UNKNOWN)
 
 if [[ $INSTALLED_VERSION != $LATEST_VERSION ]]; then
-    sudo rm -Rf PSync
-    mv PSync-latest PSync
+    sudo rm -rf "$PROJ"
+    mv "$PROJ-latest" "$PROJ"
 else
-    sudo rm -Rf PSync-latest
+    sudo rm -rf "$PROJ-latest"
 fi
 
-sudo rm -fr /usr/local/include/PSync
-sudo rm -f /usr/local/lib{,64}/libPSync*
-sudo rm -f /usr/local/lib{,64}/pkgconfig/PSync.pc
+sudo rm -fr /usr/local/include/"$PROJ"
+sudo rm -f /usr/local/lib{,64}/lib"$PROJ"*
+sudo rm -f /usr/local/lib{,64}/pkgconfig/"$PROJ".pc
 
-pushd PSync >/dev/null
+pushd "$PROJ" >/dev/null
 
-if has FreeBSD10 $NODE_LABELS; then
-    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig/
-fi
-
-./waf configure --color=yes
-./waf build --color=yes -j${WAF_JOBS:-1}
-sudo_preserve_env PATH -- ./waf install --color=yes
+./waf --color=yes configure
+./waf --color=yes build -j$WAF_JOBS
+sudo_preserve_env PATH -- ./waf --color=yes install
 
 popd >/dev/null
 popd >/dev/null
 
 if has Linux $NODE_LABELS; then
     sudo ldconfig
-elif has FreeBSD10 $NODE_LABELS; then
-    sudo ldconfig -m
 fi

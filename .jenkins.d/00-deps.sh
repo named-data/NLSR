@@ -1,31 +1,32 @@
 #!/usr/bin/env bash
-set -e
-
-JDIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-source "$JDIR"/util.sh
-
-set -x
+set -ex
 
 if has OSX $NODE_LABELS; then
     FORMULAE=(boost openssl pkg-config)
-    brew update
-    if [[ -n $TRAVIS ]]; then
-        # travis images come with a large number of brew packages
-        # pre-installed, don't waste time upgrading all of them
-        for FORMULA in "${FORMULAE[@]}"; do
-            brew outdated $FORMULA || brew upgrade $FORMULA
-        done
-    else
-        brew upgrade
+    if has OSX-10.13 $NODE_LABELS || has OSX-10.14 $NODE_LABELS; then
+        FORMULAE+=(python)
     fi
-    brew install "${FORMULAE[@]}"
-    brew cleanup
-fi
 
-if has Ubuntu $NODE_LABELS; then
+    if [[ -n $TRAVIS ]]; then
+        # Travis images come with a large number of pre-installed
+        # brew packages, don't waste time upgrading all of them
+        brew list --versions "${FORMULAE[@]}" || brew update
+        for FORMULA in "${FORMULAE[@]}"; do
+            brew list --versions "$FORMULA" || brew install "$FORMULA"
+        done
+        # Ensure /usr/local/opt/openssl exists
+        brew reinstall openssl
+    else
+        brew update
+        brew upgrade
+        brew install "${FORMULAE[@]}"
+        brew cleanup
+    fi
+
+elif has Ubuntu $NODE_LABELS; then
     sudo apt-get -qq update
-    sudo apt-get -qy install build-essential pkg-config libboost-all-dev \
-                             libsqlite3-dev libssl-dev
+    sudo apt-get -qy install g++ pkg-config python3-minimal \
+                             libboost-all-dev libssl-dev libsqlite3-dev
 
     if [[ $JOB_NAME == *"code-coverage" ]]; then
         sudo apt-get -qy install gcovr lcov libgd-perl
