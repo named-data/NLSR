@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -23,8 +23,6 @@
 #include "adjacent.hpp"
 #include "utility/name-helper.hpp"
 #include "update/prefix-update-processor.hpp"
-
-#include <boost/cstdint.hpp>
 
 #include <ndn-cxx/name.hpp>
 #include <ndn-cxx/net/face-uri.hpp>
@@ -473,19 +471,19 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
         std::string uriString = CommandAttriTree.get<std::string>("face-uri");
 
         ndn::FaceUri faceUri;
-        if (! faceUri.parse(uriString)) {
-          std::cerr << "Parsing failed!" << std::endl;
+        if (!faceUri.parse(uriString)) {
+          std::cerr << "face-uri parsing failed" << std::endl;
           return false;
         }
 
         bool failedToCanonize = false;
-        faceUri.canonize([&faceUri] (ndn::FaceUri canonicalUri) {
+        faceUri.canonize([&faceUri] (const auto& canonicalUri) {
                            faceUri = canonicalUri;
                          },
-                         [&faceUri, &failedToCanonize] (const std::string& reason) {
+                         [&faceUri, &failedToCanonize] (const auto& reason) {
                            failedToCanonize = true;
-                           std::cerr << "Could not canonize URI: " << faceUri
-                                     << "because: " << reason << std::endl;
+                           std::cerr << "Could not canonize URI: '" << faceUri
+                                     << "' because: " << reason << std::endl;
                          },
                          m_io,
                          TIME_ALLOWED_FOR_CANONIZATION);
@@ -496,8 +494,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
           return false;
         }
 
-        double linkCost = CommandAttriTree.get<double>("link-cost",
-                                                       Adjacent::DEFAULT_LINK_COST);
+        double linkCost = CommandAttriTree.get<double>("link-cost", Adjacent::DEFAULT_LINK_COST);
         ndn::Name neighborName(name);
         if (!neighborName.empty()) {
           Adjacent adj(name, faceUri, linkCost, Adjacent::STATUS_INACTIVE, 0, 0);

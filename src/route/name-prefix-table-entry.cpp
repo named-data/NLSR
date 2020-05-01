@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -43,8 +43,7 @@ NamePrefixTableEntry::generateNhlfromRteList()
 }
 
 uint64_t
-NamePrefixTableEntry::removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry>
-                                              entryPtr)
+NamePrefixTableEntry::removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry> entryPtr)
 {
   auto iterator = std::find(m_rteList.begin(), m_rteList.end(), entryPtr);
 
@@ -62,8 +61,7 @@ NamePrefixTableEntry::removeRoutingTableEntry(std::shared_ptr<RoutingTablePoolEn
 }
 
 void
-NamePrefixTableEntry::addRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry>
-                                           entryPtr)
+NamePrefixTableEntry::addRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry> entryPtr)
 {
   auto iterator = std::find(m_rteList.begin(), m_rteList.end(), entryPtr);
 
@@ -93,24 +91,22 @@ NamePrefixTableEntry::writeLog()
 bool
 operator==(const NamePrefixTableEntry& lhs, const NamePrefixTableEntry& rhs)
 {
-  return (lhs.getNamePrefix() == rhs.getNamePrefix());
+  return lhs.getNamePrefix() == rhs.getNamePrefix();
 }
 
 bool
 operator==(const NamePrefixTableEntry& lhs, const ndn::Name& rhs)
 {
-  return (lhs.getNamePrefix() == rhs);
+  return lhs.getNamePrefix() == rhs;
 }
 
 std::ostream&
 operator<<(std::ostream& os, const NamePrefixTableEntry& entry)
 {
   os << "Name: " << entry.getNamePrefix() << "\n";
-
-  for (const std::shared_ptr<RoutingTablePoolEntry> entryPtr : entry.getRteList()) {
+  for (const auto& entryPtr : entry.getRteList()) {
     os << "Destination: " << entryPtr->getDestination() << "\n";
   }
-
   return os;
 }
 
