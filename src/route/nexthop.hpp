@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,12 +16,16 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_ROUTE_NEXTHOP_HPP
 #define NLSR_ROUTE_NEXTHOP_HPP
 
 #include "test-access-control.hpp"
+
+#include <ndn-cxx/encoding/block.hpp>
+#include <ndn-cxx/encoding/encoding-buffer.hpp>
+#include <ndn-cxx/encoding/tlv.hpp>
 
 #include <iostream>
 #include <cmath>
@@ -29,9 +33,19 @@
 
 namespace nlsr {
 
+/*! \brief Data abstraction for Nexthop
+ *
+ *   NextHop := NEXTHOP-TYPE TLV-LENGTH
+ *                Uri
+ *                Cost
+ *
+ * \sa https://redmine.named-data.net/projects/nlsr/wiki/Routing_Table_Dataset
+ */
 class NextHop
 {
 public:
+  using Error = ndn::tlv::Error;
+
   NextHop()
     : m_connectingFaceUri()
     , m_routeCost(0)
@@ -40,10 +54,15 @@ public:
   }
 
   NextHop(const std::string& cfu, double rc)
-    : m_isHyperbolic(false)
+    : m_connectingFaceUri(cfu)
+    , m_routeCost(rc)
+    , m_isHyperbolic(false)
   {
-    m_connectingFaceUri = cfu;
-    m_routeCost = rc;
+  }
+
+  NextHop(const ndn::Block& block)
+  {
+    wireDecode(block);
   }
 
   const std::string&
@@ -96,10 +115,22 @@ public:
     return m_isHyperbolic;
   }
 
+  template<ndn::encoding::Tag TAG>
+  size_t
+  wireEncode(ndn::EncodingImpl<TAG>& block) const;
+
+  const ndn::Block&
+  wireEncode() const;
+
+  void
+  wireDecode(const ndn::Block& wire);
+
 private:
   std::string m_connectingFaceUri;
   double m_routeCost;
   bool m_isHyperbolic;
+
+  mutable ndn::Block m_wire;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Used to adjust floating point route costs to integers
@@ -114,6 +145,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   */
   static const uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 1000;
 };
+
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(NextHop);
 
 bool
 operator==(const NextHop& lhs, const NextHop& rhs);

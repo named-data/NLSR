@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,27 +16,38 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
+ */
 
 #ifndef NLSR_ROUTING_TABLE_ENTRY_HPP
 #define NLSR_ROUTING_TABLE_ENTRY_HPP
 
 #include "nexthop-list.hpp"
 
+#include <ndn-cxx/encoding/block.hpp>
+#include <ndn-cxx/encoding/encoding-buffer.hpp>
+#include <ndn-cxx/encoding/tlv.hpp>
 #include <ndn-cxx/name.hpp>
 
 namespace nlsr {
 
+/*! \brief Data abstraction for RouteTableInfo
+ *
+ *   RoutingTableEntry := ROUTINGTABLEENTRY-TYPE TLV-LENGTH
+ *                          Name
+ *                          NexthopList*
+ *
+ * \sa https://redmine.named-data.net/projects/nlsr/wiki/Routing_Table_DataSet
+ */
 class RoutingTableEntry
 {
 public:
-  RoutingTableEntry()
-  {
-  }
+  using Error = ndn::tlv::Error;
 
-  ~RoutingTableEntry()
+  RoutingTableEntry() = default;
+
+  RoutingTableEntry(const ndn::Block& block)
   {
+    wireDecode(block);
   }
 
   RoutingTableEntry(const ndn::Name& dest)
@@ -65,14 +76,28 @@ public:
   inline bool
   operator==(RoutingTableEntry& rhs)
   {
-    return ((*this).getDestination() == rhs.getDestination() &&
-            (*this).getNexthopList() == rhs.getNexthopList());
+    return m_destination == rhs.getDestination() &&
+           m_nexthopList == rhs.getNexthopList();
   }
+
+  template<ndn::encoding::Tag TAG>
+  size_t
+  wireEncode(ndn::EncodingImpl<TAG>& block) const;
+
+  const ndn::Block&
+  wireEncode() const;
+
+  void
+  wireDecode(const ndn::Block& wire);
 
 protected:
   ndn::Name m_destination;
   NexthopList m_nexthopList;
+
+  mutable ndn::Block m_wire;
 };
+
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(RoutingTableEntry);
 
 std::ostream&
 operator<<(std::ostream& os, const RoutingTableEntry& rte);

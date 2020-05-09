@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -16,9 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- * \author Ashlesh Gawande <agawande@memphis.edu>
- **/
+ */
 
 #include "route/nexthop.hpp"
 #include "tests/boost-test.hpp"
@@ -100,6 +98,50 @@ BOOST_AUTO_TEST_CASE(HyperbolicRound)
 
   hop2.setRouteCost(1 + getHyperbolicAdjustedDecimal(4));
   BOOST_CHECK(hop1.getRouteCostAsAdjustedInteger() > hop2.getRouteCostAsAdjustedInteger());
+}
+
+const uint8_t NexthopData[] =
+{
+  // Header
+  0x8f, 0x1d,
+  // Uri
+  0x8d, 0x11, 0x2f, 0x74, 0x65, 0x73, 0x74, 0x2f, 0x6e, 0x65, 0x78, 0x74, 0x68, 0x6f,
+  0x70, 0x2f, 0x74, 0x6c, 0x76,
+  // Cost
+  0x86, 0x08, 0x3f, 0xfa, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66
+};
+
+BOOST_AUTO_TEST_CASE(NexthopEncode)
+{
+  NextHop nexthops1;
+  nexthops1.setConnectingFaceUri("/test/nexthop/tlv");
+  nexthops1.setRouteCost(1.65);
+
+  const ndn::Block& wire = nexthops1.wireEncode();
+  BOOST_REQUIRE_EQUAL_COLLECTIONS(NexthopData,
+                                  NexthopData + sizeof(NexthopData),
+                                  wire.begin(), wire.end());
+}
+
+BOOST_AUTO_TEST_CASE(NexthopDecode)
+{
+  NextHop nexthops1;
+
+  nexthops1.wireDecode(ndn::Block(NexthopData, sizeof(NexthopData)));
+
+  BOOST_REQUIRE_EQUAL(nexthops1.getConnectingFaceUri(), "/test/nexthop/tlv");
+  BOOST_REQUIRE_EQUAL(nexthops1.getRouteCost(), 1.65);
+}
+
+BOOST_AUTO_TEST_CASE(AdjacencyOutputStream)
+{
+  NextHop nexthops1;
+  nexthops1.setConnectingFaceUri("/test/nexthop/tlv");
+  nexthops1.setRouteCost(99);
+
+  std::ostringstream os;
+  os << nexthops1;
+  BOOST_CHECK_EQUAL(os.str(), "NextHop(Uri: /test/nexthop/tlv, Cost: 99)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

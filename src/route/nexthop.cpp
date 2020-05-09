@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -16,29 +16,91 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- *
- **/
+ */
 
 #include "nexthop.hpp"
+#include "tlv-nlsr.hpp"
+
+#include <ndn-cxx/encoding/block-helpers.hpp>
 
 namespace nlsr {
+
+template<ndn::encoding::Tag TAG>
+size_t
+NextHop::wireEncode(ndn::EncodingImpl<TAG>& block) const
+{
+  size_t totalLength = 0;
+
+  totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::CostDouble, m_routeCost);
+  totalLength += ndn::encoding::prependStringBlock(block, ndn::tlv::nlsr::Uri, m_connectingFaceUri);
+
+  totalLength += block.prependVarNumber(totalLength);
+  totalLength += block.prependVarNumber(ndn::tlv::nlsr::NextHop);
+
+  return totalLength;
+}
+
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(NextHop);
+
+const ndn::Block&
+NextHop::wireEncode() const
+{
+  if (m_wire.hasWire()) {
+    return m_wire;
+  }
+
+  ndn::EncodingEstimator estimator;
+  size_t estimatedSize = wireEncode(estimator);
+
+  ndn::EncodingBuffer buffer(estimatedSize, 0);
+  wireEncode(buffer);
+
+  m_wire = buffer.block();
+
+  return m_wire;
+}
+
+void
+NextHop::wireDecode(const ndn::Block& wire)
+{
+  m_connectingFaceUri = "";
+  m_routeCost = 0;
+
+  m_wire = wire;
+
+  if (m_wire.type() != ndn::tlv::nlsr::NextHop) {
+    std::stringstream error;
+    error << "Expected NextHop Block, but Block is of a different type: #"
+          << m_wire.type();
+    BOOST_THROW_EXCEPTION(Error(error.str()));
+  }
+
+  m_wire.parse();
+
+  ndn::Block::element_const_iterator val = m_wire.elements_begin();
+
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Uri) {
+    m_connectingFaceUri.assign(reinterpret_cast<const char*>(val->value()), val->value_size());
+    ++val;
+  }
+  else {
+    BOOST_THROW_EXCEPTION(Error("Missing required Uri field"));
+  }
+
+  m_routeCost = ndn::encoding::readDouble(*val);
+}
 
 bool
 operator==(const NextHop& lhs, const NextHop& rhs)
 {
-  return ((lhs.getRouteCostAsAdjustedInteger() == rhs.getRouteCostAsAdjustedInteger())
-          &&
-          (lhs.getConnectingFaceUri() == rhs.getConnectingFaceUri()));
+  return (lhs.getRouteCostAsAdjustedInteger() == rhs.getRouteCostAsAdjustedInteger()) &&
+         (lhs.getConnectingFaceUri() == rhs.getConnectingFaceUri());
 }
 
 std::ostream&
 operator<<(std::ostream& os, const NextHop& hop)
 {
-  os << "Nexthop("
-     << "face-uri: " << hop.getConnectingFaceUri()
-     << ", cost: " << hop.getRouteCost() << ")";
-
+  os << "NextHop(Uri: " << hop.getConnectingFaceUri() << ", Cost: " << hop.getRouteCost() << ")";
   return os;
 }
 

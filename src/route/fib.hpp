@@ -87,9 +87,6 @@ public:
    * strictly necessary, because eventually those prefix registrations
    * will expire, but cleaning up after ourselves improves
    * performance.
-   *
-   * \sa NlsrRunner::run
-   *
    */
   void
   clean();
@@ -212,8 +209,6 @@ private:
    * an entry is removed. Typically this happens when NLSR is
    * terminated or crashes, and we don't want the scheduler to crash
    * because it's referencing memory that has no valid function.
-   *
-   * \sa NlsrRunner::run
    */
   void
   cancelEntryRefresh(const FibEntry& entry);

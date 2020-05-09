@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,12 +17,12 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "lsa/adj-lsa.hpp"
 #include "lsa/coordinate-lsa.hpp"
 #include "lsa/name-lsa.hpp"
-#include "tlv/routing-table-status.hpp"
+#include "route/routing-table.hpp"
 
 #include <boost/noncopyable.hpp>
 #include <ndn-cxx/face.hpp>
@@ -123,7 +123,7 @@ private:
   recordLsa(const nlsr::Lsa& lsa);
 
   void
-  recordRtable(const nlsr::tlv::RoutingTableStatus& rts);
+  recordRtable(const nlsr::RoutingTableStatus& rts);
 
   void
   printLsdb();

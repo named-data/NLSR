@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,23 +16,24 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_MAP_HPP
 #define NLSR_MAP_HPP
 
 #include "common.hpp"
-#include "map-entry.hpp"
-
-#include <list>
-#include <boost/cstdint.hpp>
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/mem_fun.hpp>
+#include <boost/multi_index/member.hpp>
 #include <boost/multi_index/tag.hpp>
 
 namespace nlsr {
+
+struct MapEntry {
+  ndn::Name router;
+  int32_t mappingNumber = -1;
+};
 
 namespace detail {
 
@@ -44,10 +45,10 @@ namespace detail {
     MapEntry,
     indexed_by<
       hashed_unique<tag<byRouterName>,
-                    const_mem_fun<MapEntry, const ndn::Name&, &MapEntry::getRouter>,
+                    member<MapEntry, ndn::Name, &MapEntry::router>,
                     std::hash<ndn::Name>>,
       hashed_unique<tag<byMappingNumber>,
-                    const_mem_fun<MapEntry, int32_t, &MapEntry::getMappingNumber>>
+                    member<MapEntry, int32_t, &MapEntry::mappingNumber>>
       >
     >;
 
@@ -106,9 +107,6 @@ public:
 
   ndn::optional<int32_t>
   getMappingNoByRouterName(const ndn::Name& rName);
-
-  void
-  reset();
 
   size_t
   getMapSize() const

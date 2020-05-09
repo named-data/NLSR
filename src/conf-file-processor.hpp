@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
- *                           Regents of the University of California
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_CONF_FILE_PROCESSOR_HPP
 #define NLSR_CONF_FILE_PROCESSOR_HPP
@@ -39,12 +40,7 @@ using ConfigSection = boost::property_tree::ptree;
  * set all the parameters in NLSR to the received values. There are
  * defaults for any unconfigured settings.
  *
- * This is currently called by the wrapper class NlsrRunner to
- * populate the NLSR object with its configuration before NLSR is
- * started.
- *
  * \sa nlsr::ConfParameter
- * \sa NlsrRunner::run
  */
 class ConfFileProcessor
 {

@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,8 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
+ */
 
 #ifndef NLSR_ROUTING_TABLE_HPP
 #define NLSR_ROUTING_TABLE_HPP
@@ -35,7 +34,58 @@ namespace nlsr {
 
 class NextHop;
 
-class RoutingTable : boost::noncopyable
+/*! \brief Data abstraction for routing table status
+ *
+ * RtStatus := RT-STATUS-TYPE TLV-LENGTH
+ *              RouteTableEntry*
+ *
+ * \sa https://redmine.named-data.net/projects/nlsr/wiki/Routing_Table_Dataset
+ */
+class RoutingTableStatus
+{
+public:
+  using Error = ndn::tlv::Error;
+
+  RoutingTableStatus() = default;
+
+  RoutingTableStatus(const ndn::Block& block)
+  {
+    wireDecode(block);
+  }
+
+  const std::list<RoutingTableEntry>&
+  getRoutingTableEntry() const
+  {
+    return m_rTable;
+  }
+
+  const std::list<RoutingTableEntry>&
+  getDryRoutingTableEntry() const
+  {
+    return m_dryTable;
+  }
+
+  const ndn::Block&
+  wireEncode() const;
+
+private:
+  void
+  wireDecode(const ndn::Block& wire);
+
+  template<ndn::encoding::Tag TAG>
+  size_t
+  wireEncode(ndn::EncodingImpl<TAG>& block) const;
+
+PUBLIC_WITH_TESTS_ELSE_PROTECTED:
+  std::list<RoutingTableEntry> m_dryTable;
+  std::list<RoutingTableEntry> m_rTable;
+  mutable ndn::Block m_wire;
+};
+
+std::ostream&
+operator<<(std::ostream& os, const RoutingTableStatus& rts);
+
+class RoutingTable : public RoutingTableStatus
 {
 public:
   explicit
@@ -84,18 +134,6 @@ public:
     return m_routingCalcInterval;
   }
 
-  const std::list<RoutingTableEntry>&
-  getRoutingTableEntry() const
-  {
-    return m_rTable;
-  }
-
-  const std::list<RoutingTableEntry>&
-  getDryRoutingTableEntry() const
-  {
-    return m_dryTable;
-  }
-
   uint64_t
   getRtSize()
   {
@@ -117,22 +155,14 @@ private:
   void
   clearDryRoutingTable();
 
-  void
-  writeLog();
-
 public:
   std::unique_ptr<AfterRoutingChange> afterRoutingChange;
-
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  std::list<RoutingTableEntry> m_rTable;
 
 private:
   ndn::Scheduler& m_scheduler;
   Fib& m_fib;
   Lsdb& m_lsdb;
   NamePrefixTable& m_namePrefixTable;
-
-  std::list<RoutingTableEntry> m_dryTable;
 
   ndn::time::seconds m_routingCalcInterval;
 

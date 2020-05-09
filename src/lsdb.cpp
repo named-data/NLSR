@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "lsdb.hpp"
 
@@ -368,9 +368,9 @@ Lsdb::doesNameLsaExist(const ndn::Name& key)
 void
 Lsdb::writeNameLsdbLog()
 {
-  NLSR_LOG_DEBUG("---------------Name LSDB-------------------");
+  NLSR_LOG_TRACE("---------------Name LSDB-------------------");
   for (const auto& nlsa : m_nameLsdb) {
-    NLSR_LOG_DEBUG(nlsa);
+    NLSR_LOG_TRACE(nlsa);
   }
 }
 
@@ -1247,9 +1247,9 @@ Lsdb::writeAdjLsdbLog()
     return;
   }
 
-  NLSR_LOG_DEBUG("---------------Adj LSDB-------------------");
+  NLSR_LOG_TRACE("---------------Adj LSDB-------------------");
   for (const auto& adj : m_adjLsdb) {
-    NLSR_LOG_DEBUG(adj);
+    NLSR_LOG_TRACE(adj);
   }
 }
 

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,16 +17,15 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "nexthop-list.hpp"
 #include "common.hpp"
 #include "nexthop.hpp"
-#include "logger.hpp"
+
+#include <ndn-cxx/util/ostream-joiner.hpp>
 
 namespace nlsr {
-
-INIT_LOGGER(route.NexthopList);
 
 static bool
 nexthopAddCompare(const NextHop& nh1, const NextHop& nh2)
@@ -71,21 +70,16 @@ operator!=(const NexthopList& lhs, const NexthopList& rhs)
 std::ostream&
 operator<<(std::ostream& os, const NexthopList& nhl)
 {
-  NexthopList& ucnhl = const_cast<NexthopList&>(nhl);
-  os << "NexthopList(\nNext hops: ";
-  for (auto&& nh : ucnhl.getNextHops()) {
-    os << nh;
-  }
-  os << ")";
+  os << "    ";
+  std::copy(nhl.cbegin(), nhl.cend(), ndn::make_ostream_joiner(os, "\n    "));
   return os;
 }
 
 void
 NexthopList::addNextHop(const NextHop& nh)
 {
-  std::set<NextHop, NextHopComparator>::iterator it = std::find_if(m_nexthopList.begin(),
-                                                 m_nexthopList.end(),
-                                                 std::bind(&nexthopAddCompare, _1, nh));
+  auto it = std::find_if(m_nexthopList.begin(), m_nexthopList.end(),
+                         std::bind(&nexthopAddCompare, _1, nh));
   if (it == m_nexthopList.end()) {
     m_nexthopList.insert(nh);
   }
@@ -98,22 +92,10 @@ NexthopList::addNextHop(const NextHop& nh)
 void
 NexthopList::removeNextHop(const NextHop& nh)
 {
-  std::set<NextHop, NextHopComparator>::iterator it = std::find_if(m_nexthopList.begin(),
-                                                 m_nexthopList.end(),
-                                                 std::bind(&nexthopRemoveCompare, _1, nh));
+  auto it = std::find_if(m_nexthopList.begin(), m_nexthopList.end(),
+                         std::bind(&nexthopRemoveCompare, _1, nh));
   if (it != m_nexthopList.end()) {
     m_nexthopList.erase(it);
-  }
-}
-
-void
-NexthopList::writeLog() const
-{
-  int i = 1;
-
-  for (const auto& nexthop : m_nexthopList) {
-    NLSR_LOG_DEBUG("Nexthop " << i++ << ": " << nexthop.getConnectingFaceUri() <<
-                   " Route Cost: " << nexthop.getRouteCost());
   }
 }
 

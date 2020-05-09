@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "sync-logic-handler.hpp"
 #include "common.hpp"
@@ -27,9 +27,6 @@
 #include "utility/name-helper.hpp"
 
 namespace nlsr {
-
-const std::string NLSR_COMPONENT = "nlsr";
-const std::string LSA_COMPONENT = "LSA";
 
 INIT_LOGGER(SyncLogicHandler);
 
@@ -49,12 +46,11 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
   m_coorLsaUserPrefix = ndn::Name(m_confParam.getSyncUserPrefix())
                          .append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
 
-  if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF ||
-      m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
+  if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_ON) {
     m_syncLogic.addUserNode(m_adjLsaUserPrefix);
   }
-  else if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON ||
-           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
+
+  if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
     m_syncLogic.addUserNode(m_coorLsaUserPrefix);
   }
 }
@@ -64,8 +60,8 @@ SyncLogicHandler::processUpdate(const ndn::Name& updateName, uint64_t highSeq)
 {
   NLSR_LOG_DEBUG("Update Name: " << updateName << " Seq no: " << highSeq);
 
-  int32_t nlsrPosition = util::getNameComponentPosition(updateName, nlsr::NLSR_COMPONENT);
-  int32_t lsaPosition = util::getNameComponentPosition(updateName, nlsr::LSA_COMPONENT);
+  int32_t nlsrPosition = util::getNameComponentPosition(updateName, NLSR_COMPONENT);
+  int32_t lsaPosition = util::getNameComponentPosition(updateName, LSA_COMPONENT);
 
   if (nlsrPosition < 0 || lsaPosition < 0) {
     NLSR_LOG_WARN("Received malformed sync update");

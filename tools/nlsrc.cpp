@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "nlsrc.hpp"
 
@@ -273,10 +273,7 @@ Nlsrc::fetchNameLsas()
 void
 Nlsrc::fetchRtables()
 {
-  fetchFromRt<nlsr::tlv::RoutingTableStatus>(
-    [this] (const nlsr::tlv::RoutingTableStatus& rts) {
-      recordRtable(rts);
-    });
+  fetchFromRt<nlsr::RoutingTableStatus>([this] (const auto& rts) { recordRtable(rts); });
 }
 
 template <class T>
@@ -373,24 +370,10 @@ Nlsrc::recordLsa(const nlsr::Lsa& lsa)
 }
 
 void
-Nlsrc::recordRtable(const nlsr::tlv::RoutingTableStatus& rts)
+Nlsrc::recordRtable(const nlsr::RoutingTableStatus& rts)
 {
   std::ostringstream os;
-
-  ndn::Name firstDes;
-  for (const auto& rt : rts.getRoutingtable()) {
-    if (firstDes.empty()) {
-      firstDes = rt.getDestination().getName();
-      os << rt << std::endl;
-      continue;
-    }
-
-    if (firstDes == rt.getDestination().getName()) {
-      os << "\n------Dry-run Hyperbolic Routing Tables:------- \n " << std::endl;
-    }
-    os << rt << std::endl;
-  }
-
+  os << rts;
   m_rtString = os.str();
 }
 
@@ -423,8 +406,7 @@ void
 Nlsrc::printRT()
 {
   if (!m_rtString.empty()) {
-    std::cout << "Routing Table" << std::endl;
-    std::cout << m_rtString << std::endl;
+    std::cout << m_rtString;
   }
   else {
     std::cout << "Routing Table is not calculated yet" << std::endl;

@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
  /*! \file dataset-interest-handler.hpp
 
@@ -36,9 +36,6 @@
 #include "route/nexthop-list.hpp"
 #include "lsdb.hpp"
 #include "logger.hpp"
-
-#include "tlv/routing-table-status.hpp"
-#include "tlv/routing-table-entry.hpp"
 
 #include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/face.hpp>
@@ -79,11 +76,6 @@ private:
   void
   setDispatcher(ndn::mgmt::Dispatcher& dispatcher);
 
-  /*! \brief generate a TLV-format of routing table entry
-   */
-  std::vector<tlv::RoutingTable>
-  getTlvRTEntries();
-
   /*! \brief provide routing-table dataset
   */
   void
@@ -111,9 +103,7 @@ private:
 private:
   ndn::mgmt::Dispatcher& m_dispatcher;
   const Lsdb& m_lsdb;
-
-  const std::list<RoutingTableEntry>& m_routingTableEntries;
-  const std::list<RoutingTableEntry>& m_dryRoutingTableEntries;
+  const RoutingTable& m_routingTable;
 };
 
 } // namespace nlsr

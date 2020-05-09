@@ -61,8 +61,6 @@
 
 namespace nlsr {
 
-static ndn::Name DEFAULT_BROADCAST_PREFIX("/ndn/broadcast");
-
 class Nlsr
 {
 public:
@@ -208,12 +206,9 @@ public:
 private:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
-  ndn::security::KeyChain& m_keyChain;
   ConfParameter& m_confParam;
   AdjacencyList& m_adjacencyList;
   NamePrefixList& m_namePrefixList;
-  bool m_isDaemonProcess;
-  ndn::security::ValidatorConfig& m_validator;
   std::vector<ndn::Name> m_strategySetOnRouters;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
@@ -248,8 +243,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
 private:
   ndn::nfd::FaceMonitor m_faceMonitor;
-
-  friend class NlsrRunner;
 };
 
 } // namespace nlsr

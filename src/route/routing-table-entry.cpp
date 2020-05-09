@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -16,19 +16,96 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "routing-table-entry.hpp"
 #include "nexthop-list.hpp"
+#include "tlv-nlsr.hpp"
 
 namespace nlsr {
+
+template<ndn::encoding::Tag TAG>
+size_t
+RoutingTableEntry::wireEncode(ndn::EncodingImpl<TAG>& block) const
+{
+  size_t totalLength = 0;
+
+  for (auto it = m_nexthopList.rbegin(); it != m_nexthopList.rend(); ++it) {
+    totalLength += it->wireEncode(block);
+  }
+
+  totalLength += m_destination.wireEncode(block);
+
+  totalLength += block.prependVarNumber(totalLength);
+  totalLength += block.prependVarNumber(ndn::tlv::nlsr::RoutingTableEntry);
+
+  return totalLength;
+}
+
+NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(RoutingTableEntry);
+
+const ndn::Block&
+RoutingTableEntry::wireEncode() const
+{
+  if (m_wire.hasWire()) {
+    return m_wire;
+  }
+
+  ndn::EncodingEstimator estimator;
+  size_t estimatedSize = wireEncode(estimator);
+
+  ndn::EncodingBuffer buffer(estimatedSize, 0);
+  wireEncode(buffer);
+
+  m_wire = buffer.block();
+
+  return m_wire;
+}
+
+void
+RoutingTableEntry::wireDecode(const ndn::Block& wire)
+{
+  m_nexthopList.clear();
+
+  m_wire = wire;
+
+  if (m_wire.type() != ndn::tlv::nlsr::RoutingTableEntry) {
+    std::stringstream error;
+    error << "Expected RoutingTable Block, but Block is of a different type: #"
+          << m_wire.type();
+    BOOST_THROW_EXCEPTION(Error(error.str()));
+  }
+
+  m_wire.parse();
+
+  auto val = m_wire.elements_begin();
+
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::Name) {
+    m_destination.wireDecode(*val);
+    ++val;
+  }
+  else {
+    BOOST_THROW_EXCEPTION(Error("Missing required destination field"));
+  }
+
+  for (; val != m_wire.elements_end(); ++val) {
+    if (val->type() == ndn::tlv::nlsr::NextHop) {
+      m_nexthopList.addNextHop(NextHop(*val));
+    }
+    else {
+      std::stringstream error;
+      error << "Expected NextHop Block, but Block is of a different type: #"
+            << m_wire.type();
+      BOOST_THROW_EXCEPTION(Error(error.str()));
+    }
+  }
+}
 
 std::ostream&
 operator<<(std::ostream& os, const RoutingTableEntry& rte)
 {
-  os << "RoutingTableEntry("
-     << "Destination: " << rte.getDestination()
-     << "Next hop list: " << rte.getNexthopList() << ")";
+  os << "  Destination: " << rte.getDestination() << "\n"
+     << rte.getNexthopList() << "\n";
 
   return os;
 }

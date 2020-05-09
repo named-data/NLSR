@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "name-prefix-table-entry.hpp"
 
@@ -32,7 +32,7 @@ INIT_LOGGER(route.NamePrefixTableEntry);
 void
 NamePrefixTableEntry::generateNhlfromRteList()
 {
-  m_nexthopList.reset();
+  m_nexthopList.clear();
   for (auto iterator = m_rteList.begin(); iterator != m_rteList.end(); ++iterator) {
     for (auto nhItr = (*iterator)->getNexthopList().getNextHops().begin();
          nhItr != (*iterator)->getNexthopList().getNextHops().end();
@@ -76,18 +76,6 @@ NamePrefixTableEntry::addRoutingTableEntry(std::shared_ptr<RoutingTablePoolEntry
   // be updated there.
 }
 
-void
-NamePrefixTableEntry::writeLog()
-{
-  NLSR_LOG_DEBUG("Name: " << m_namePrefix);
-  for (auto it = m_rteList.begin(); it != m_rteList.end(); ++it) {
-    NLSR_LOG_DEBUG("Destination: " << (*it)->getDestination());
-    NLSR_LOG_DEBUG("Nexthops: ");
-    (*it)->getNexthopList().writeLog();
-  }
-  m_nexthopList.writeLog();
-}
-
 bool
 operator==(const NamePrefixTableEntry& lhs, const NamePrefixTableEntry& rhs)
 {
@@ -104,8 +92,10 @@ std::ostream&
 operator<<(std::ostream& os, const NamePrefixTableEntry& entry)
 {
   os << "Name: " << entry.getNamePrefix() << "\n";
+
   for (const auto& entryPtr : entry.getRteList()) {
-    os << "Destination: " << entryPtr->getDestination() << "\n";
+    os << "  Destination: " << entryPtr->getDestination() << "\n";
+    os << entryPtr->getNexthopList();
   }
   return os;
 }

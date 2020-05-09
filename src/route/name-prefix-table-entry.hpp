@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,13 +17,12 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
 #define NLSR_NAME_PREFIX_TABLE_ENTRY_HPP
 
 #include "routing-table-pool-entry.hpp"
-
 #include "test-access-control.hpp"
 
 #include <list>
@@ -64,7 +63,7 @@ public:
   {
     if (m_rteList.size() > 0) {
       for (auto it = m_rteList.begin(); it != m_rteList.end(); ++it) {
-        (*it)->getNexthopList().reset();
+        (*it)->getNexthopList().clear();
       }
     }
   }
@@ -112,7 +111,6 @@ private:
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::list<std::shared_ptr<RoutingTablePoolEntry>> m_rteList;
   NexthopList m_nexthopList;
-
 };
 
 bool

@@ -42,16 +42,14 @@ const ndn::Name Nlsr::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
 Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   : m_face(face)
   , m_scheduler(face.getIoService())
-  , m_keyChain(keyChain)
   , m_confParam(confParam)
   , m_adjacencyList(confParam.getAdjacencyList())
   , m_namePrefixList(confParam.getNamePrefixList())
-  , m_validator(m_confParam.getValidator())
-  , m_fib(m_face, m_scheduler, m_adjacencyList, m_confParam, m_keyChain)
+  , m_fib(m_face, m_scheduler, m_adjacencyList, m_confParam, keyChain)
   , m_routingTable(m_scheduler, m_fib, m_lsdb, m_namePrefixTable, m_confParam)
   , m_namePrefixTable(m_fib, m_routingTable, m_routingTable.afterRoutingChange)
-  , m_lsdb(m_face, m_keyChain, m_confParam, m_namePrefixTable, m_routingTable)
-  , m_helloProtocol(m_face, m_keyChain, confParam, m_routingTable, m_lsdb)
+  , m_lsdb(m_face, keyChain, m_confParam, m_namePrefixTable, m_routingTable)
+  , m_helloProtocol(m_face, keyChain, confParam, m_routingTable, m_lsdb)
   , m_onNewLsaConnection(m_lsdb.getSync().onNewLsa->connect(
       [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
               const ndn::Name& originRouter) {
@@ -69,10 +67,10 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
                                ndn::time::milliseconds::max(), ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
         }
       }))
-  , m_dispatcher(m_face, m_keyChain)
+  , m_dispatcher(m_face, keyChain)
   , m_datasetHandler(m_dispatcher, m_lsdb, m_routingTable)
-  , m_controller(m_face, m_keyChain)
-  , m_faceDatasetController(m_face, m_keyChain)
+  , m_controller(m_face, keyChain)
+  , m_faceDatasetController(m_face, keyChain)
   , m_prefixUpdateProcessor(m_dispatcher,
       m_confParam.getPrefixUpdateValidator(),
       m_namePrefixList,

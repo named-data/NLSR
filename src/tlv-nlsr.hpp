@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_TLV_NLSR_HPP
 #define NLSR_TLV_NLSR_HPP
@@ -47,7 +47,6 @@ enum {
   ExpirationTime              = 139,
   Cost                        = 140,
   Uri                         = 141,
-  Destination                 = 142,
   NextHop                     = 143,
   RoutingTable                = 144,
   RoutingTableEntry           = 145

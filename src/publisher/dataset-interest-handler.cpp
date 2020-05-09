@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "dataset-interest-handler.hpp"
 #include "nlsr.hpp"
@@ -40,8 +40,7 @@ DatasetInterestHandler::DatasetInterestHandler(ndn::mgmt::Dispatcher& dispatcher
                                                const RoutingTable& rt)
   : m_dispatcher(dispatcher)
   , m_lsdb(lsdb)
-  , m_routingTableEntries(rt.getRoutingTableEntry())
-  , m_dryRoutingTableEntries(rt.getDryRoutingTableEntry())
+  , m_routingTable(rt)
 {
   setDispatcher(m_dispatcher);
 }
@@ -93,51 +92,12 @@ DatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const ndn:
   context.end();
 }
 
-
-std::vector<tlv::RoutingTable>
-DatasetInterestHandler::getTlvRTEntries()
-{
-  std::vector<tlv::RoutingTable> rtable;
-  for (const auto& rte : m_routingTableEntries) {
-    tlv::RoutingTable tlvRoutingTable;
-    std::shared_ptr<tlv::Destination> tlvDes = tlv::makeDes(rte);
-    tlvRoutingTable.setDestination(*tlvDes);
-    for (const auto& nh : rte.getNexthopList().getNextHops()) {
-      tlv::NextHop tlvNexthop;
-      tlvNexthop.setUri(nh.getConnectingFaceUri());
-      tlvNexthop.setCost(nh.getRouteCost());
-      tlvRoutingTable.addNexthops(tlvNexthop);
-    }
-    rtable.push_back(tlvRoutingTable);
-  }
-  if (!m_dryRoutingTableEntries.empty()) {
-    for (const auto& dryRte : m_dryRoutingTableEntries) {
-      tlv::RoutingTable tlvRoutingTable;
-      std::shared_ptr<tlv::Destination> tlvDes = tlv::makeDes(dryRte);
-      tlvRoutingTable.setDestination(*tlvDes);
-      for (const auto& nh : dryRte.getNexthopList().getNextHops()) {
-        tlv::NextHop tlvNexthop;
-        tlvNexthop.setUri(nh.getConnectingFaceUri());
-        tlvNexthop.setCost(nh.getRouteCost());
-        tlvRoutingTable.addNexthops(tlvNexthop);
-      }
-      rtable.push_back(tlvRoutingTable);
-    }
-  }
-  return rtable;
-}
-
 void
 DatasetInterestHandler::publishRtStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                         ndn::mgmt::StatusDatasetContext& context)
 {
-  NLSR_LOG_DEBUG("Received interest:  " << interest);
-  tlv::RoutingTableStatus rtStatus;
-  for (const tlv::RoutingTable& rt : getTlvRTEntries()) {
-    rtStatus.addRoutingTable(rt);
-  }
-  const ndn::Block& wire = rtStatus.wireEncode();
-  context.append(wire);
+  NLSR_LOG_DEBUG("Received interest: " << interest);
+  context.append(m_routingTable.wireEncode());
   context.end();
 }
 

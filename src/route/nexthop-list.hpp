@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_NEXTHOP_LIST_HPP
 #define NLSR_NEXTHOP_LIST_HPP
@@ -47,13 +47,7 @@ struct NextHopComparator {
 class NexthopList
 {
 public:
-  NexthopList()
-  {
-  }
-
-  ~NexthopList()
-  {
-  }
+  NexthopList() = default;
 
   /*! \brief Adds a next hop to the list.
     \param nh The next hop.
@@ -80,7 +74,7 @@ public:
   }
 
   void
-  reset()
+  clear()
   {
     m_nexthopList.clear();
   }
@@ -93,6 +87,7 @@ public:
 
   typedef std::set<NextHop, NextHopComparator>::iterator iterator;
   typedef std::set<NextHop, NextHopComparator>::const_iterator const_iterator;
+  typedef std::set<NextHop, NextHopComparator>::reverse_iterator reverse_iterator;
 
   iterator
   begin()
@@ -118,8 +113,17 @@ public:
     return m_nexthopList.end();
   }
 
-  void
-  writeLog() const;
+  reverse_iterator
+  rbegin() const
+  {
+    return m_nexthopList.rbegin();
+  }
+
+  reverse_iterator
+  rend() const
+  {
+    return m_nexthopList.rend();
+  }
 
 private:
   std::set<NextHop, NextHopComparator> m_nexthopList;
