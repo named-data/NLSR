@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_LSDB_HPP
 #define NLSR_LSDB_HPP
@@ -39,6 +39,10 @@
 #include <ndn-cxx/util/segment-fetcher.hpp>
 #include <ndn-cxx/ims/in-memory-storage-persistent.hpp>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/hashed_index.hpp>
+#include <boost/multi_index/composite_key.hpp>
+
 #include <PSync/segment-publisher.hpp>
 
 #include <utility>
@@ -46,153 +50,52 @@
 
 namespace nlsr {
 
+namespace bmi = boost::multi_index;
+using namespace ndn::literals::time_literals;
+
+static constexpr ndn::time::seconds GRACE_PERIOD = 10_s;
+
 class Lsdb
 {
 public:
   Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam,
        NamePrefixTable& namePrefixTable, RoutingTable& routingTable);
 
-  ~Lsdb();
+  ~Lsdb()
+  {
+    for (const auto& sp : m_fetchers) {
+      sp->stop();
+    }
+  }
 
+  /*! \brief Returns whether the LSDB contains some LSA.
+   */
   bool
-  isLsaNew(const ndn::Name& routerName, const Lsa::Type& lsaType, const uint64_t& sequenceNumber);
-
-  bool
-  doesLsaExist(const ndn::Name& key, const Lsa::Type& lsType);
+  doesLsaExist(const ndn::Name& router, Lsa::Type lsaType)
+  {
+    return m_lsdb.get<byName>().find(std::make_tuple(router, lsaType)) != m_lsdb.end();
+  }
 
   /*! \brief Builds a name LSA for this router and then installs it
       into the LSDB.
   */
-  bool
+  void
   buildAndInstallOwnNameLsa();
 
-  /*! \brief Returns the name LSA with the given key.
-    \param key The name of the router that the desired LSA comes from.
-  */
-  NameLsa*
-  findNameLsa(const ndn::Name& key);
-
-  /*! \brief Installs a name LSA into the LSDB
-    \param nlsa The name LSA to install into the LSDB.
-  */
-  bool
-  installNameLsa(NameLsa& nlsa);
-
-  /*! \brief Remove a name LSA from the LSDB.
-    \param key The name of the router that published the LSA to remove.
-
-    This function will remove a name LSA from the LSDB by finding an
-    LSA whose name matches key. This removal also causes the NPT to
-    remove those name prefixes if no more LSAs advertise them.
-   */
-  bool
-  removeNameLsa(const ndn::Name& key);
-
-  /*! Returns whether a seq. no. from a certain router signals a new LSA.
-    \param key The name of the originating router.
-    \param seqNo The sequence number to check.
-  */
-  bool
-  isNameLsaNew(const ndn::Name& key, uint64_t seqNo);
-
-  void
-  writeNameLsdbLog();
-
-  const std::list<NameLsa>&
-  getNameLsdb() const;
-
   /*! \brief Builds a cor. LSA for this router and installs it into the LSDB. */
-  bool
-  buildAndInstallOwnCoordinateLsa();
-
-  /*! \brief Finds a cor. LSA in the LSDB.
-    \param key The name of the originating router that published the LSA.
-  */
-  CoordinateLsa*
-  findCoordinateLsa(const ndn::Name& key);
-
-  /*! \brief Installs a cor. LSA into the LSDB.
-    \param clsa The cor. LSA to install.
-  */
-  bool
-  installCoordinateLsa(CoordinateLsa& clsa);
-
-  /*! \brief Removes a cor. LSA from the LSDB.
-    \param key The name of the router that published the LSA to remove.
-
-    Removes the coordinate LSA whose origin router name matches that
-    given by key. Additionally, ask the NPT to remove the prefix,
-    which will occur if no other LSAs point there.
-  */
-  bool
-  removeCoordinateLsa(const ndn::Name& key);
-
-  /*! \brief Returns whether a cor. LSA from a router is new or not.
-    \param key The name prefix of the originating router.
-    \param seqNo The sequence number of the candidate LSA.
-  */
-  bool
-  isCoordinateLsaNew(const ndn::Name& key, uint64_t seqNo);
-
   void
-  writeCorLsdbLog();
-
-  const std::list<CoordinateLsa>&
-  getCoordinateLsdb() const;
-
-  //function related to Adj LSDB
+  buildAndInstallOwnCoordinateLsa();
 
   /*! \brief Schedules a build of this router's LSA. */
   void
   scheduleAdjLsaBuild();
 
-  /*! \brief Wrapper event to build and install an adj. LSA for this router. */
-  bool
-  buildAndInstallOwnAdjLsa();
-
-  /*! \brief Removes an adj. LSA from the LSDB.
-    \param key The name of the publishing router whose LSA to remove.
-  */
-  bool
-  removeAdjLsa(const ndn::Name& key);
-
-  /*! \brief Returns whether an LSA is new.
-    \param key The name of the publishing router.
-    \param seqNo The seq. no. of the candidate LSA.
-
-    This function determines whether the LSA with the name key and
-    seq. no. seqNo would be new to this LSDB.
-  */
-  bool
-  isAdjLsaNew(const ndn::Name& key, uint64_t seqNo);
-
-  /*! \brief Installs an adj. LSA into the LSDB.
-    \param alsa The adj. LSA to add to the LSDB.
-  */
-  bool
-  installAdjLsa(AdjLsa& alsa);
-
-  /*! \brief Finds an adj. LSA in the LSDB.
-    \param key The name of the publishing router whose LSA to find.
-   */
-  AdjLsa*
-  findAdjLsa(const ndn::Name& key);
-
-  const std::list<AdjLsa>&
-  getAdjLsdb() const;
+  template<typename T>
+  void
+  writeLog() const;
 
   void
-  setAdjLsaBuildInterval(uint32_t interval)
-  {
-    m_adjLsaBuildInterval = ndn::time::seconds(interval);
-  }
-
-  void
-  writeAdjLsdbLog();
-
-  void
-  expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
-                  ndn::time::steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
+  writeLog() const;
 
   /* \brief Process interest which can be either:
    * 1) Discovery interest from segment fetcher:
@@ -204,40 +107,143 @@ public:
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
 
   bool
-  getIsBuildAdjLsaSheduled()
+  getIsBuildAdjLsaSheduled() const
   {
     return m_isBuildAdjLsaSheduled;
   }
 
   SyncLogicHandler&
-  getSync() {
+  getSync()
+  {
     return m_sync;
   }
 
-private:
-  /* \brief Add a name LSA to the LSDB if it isn't already there.
-     \param nlsa The candidade name LSA.
+  template<typename T>
+  std::shared_ptr<T>
+  findLsa(const ndn::Name& router) const
+  {
+    return std::static_pointer_cast<T>(findLsa(router, T::type()));
+  }
+
+  struct name_hash {
+    int
+    operator()(const ndn::Name& name) const {
+      return std::hash<ndn::Name>{}(name);
+    }
+  };
+
+  struct enum_class_hash {
+    template<typename T>
+    int
+    operator()(T t) const {
+      return static_cast<int>(t);
+    }
+  };
+
+  struct byName{};
+  struct byType{};
+
+  using LsaContainer = boost::multi_index_container<
+    std::shared_ptr<Lsa>,
+    bmi::indexed_by<
+      bmi::hashed_unique<
+        bmi::tag<byName>,
+        bmi::composite_key<
+          Lsa,
+          bmi::const_mem_fun<Lsa, ndn::Name, &Lsa::getOriginRouterCopy>,
+          bmi::const_mem_fun<Lsa, Lsa::Type, &Lsa::getType>
+        >,
+        bmi::composite_key_hash<name_hash, enum_class_hash>
+      >,
+      bmi::hashed_non_unique<
+        bmi::tag<byType>,
+        bmi::const_mem_fun<Lsa, Lsa::Type, &Lsa::getType>,
+        enum_class_hash
+      >
+    >
+  >;
+
+  template<typename T>
+  std::pair<LsaContainer::index<Lsdb::byType>::type::iterator,
+            LsaContainer::index<Lsdb::byType>::type::iterator>
+  getLsdbIterator() const
+  {
+    return m_lsdb.get<byType>().equal_range(T::type());
+  }
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  std::shared_ptr<Lsa>
+  findLsa(const ndn::Name& router, Lsa::Type lsaType) const
+  {
+    auto it = m_lsdb.get<byName>().find(std::make_tuple(router, lsaType));
+    return it != m_lsdb.end() ? *it : nullptr;
+  }
+
+  void
+  incrementDataSentStats(Lsa::Type lsaType) {
+    if (lsaType == Lsa::Type::NAME) {
+      lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_DATA);
+    }
+    else if (lsaType == Lsa::Type::ADJACENCY) {
+      lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_DATA);
+    }
+    else if (lsaType == Lsa::Type::COORDINATE) {
+      lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_DATA);
+    }
+  }
+
+  void
+  incrementInterestRcvdStats(Lsa::Type lsaType) {
+    if (lsaType == Lsa::Type::NAME) {
+      lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_INTEREST);
+    }
+    else if (lsaType == Lsa::Type::ADJACENCY) {
+      lsaIncrementSignal(Statistics::PacketType::RCV_ADJ_LSA_INTEREST);
+    }
+    else if (lsaType == Lsa::Type::COORDINATE) {
+      lsaIncrementSignal(Statistics::PacketType::RCV_COORD_LSA_INTEREST);
+    }
+  }
+
+  void
+  incrementInterestSentStats(Lsa::Type lsaType) {
+    if (lsaType == Lsa::Type::NAME) {
+      lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_INTEREST);
+    }
+    else if (lsaType == Lsa::Type::ADJACENCY) {
+      lsaIncrementSignal(Statistics::PacketType::SENT_ADJ_LSA_INTEREST);
+    }
+    else if (lsaType == Lsa::Type::COORDINATE) {
+      lsaIncrementSignal(Statistics::PacketType::SENT_COORD_LSA_INTEREST);
+    }
+  }
+
+  /*! Returns whether a seq. no. from a certain router signals a new LSA.
+    \param originRouter The name of the originating router.
+    \param lsaType The type of the LSA.
+    \param seqNo The sequence number to check.
   */
   bool
-  addNameLsa(NameLsa& nlsa);
+  isLsaNew(const ndn::Name& originRouter, const Lsa::Type& lsaType, uint64_t lsSeqNo)
+  {
+    // Is the name in the LSDB and the supplied seq no is the highest so far
+    auto lsaPtr = findLsa(originRouter, lsaType);
+    return lsaPtr ? lsaPtr->getSeqNo() < lsSeqNo : true;
+  }
 
-  /*! \brief Returns whether the LSDB contains some LSA.
-    \param key The name of the publishing router whose LSA to check for.
+  void
+  installLsa(shared_ptr<Lsa> lsa);
+
+  /*! \brief Remove a name LSA from the LSDB.
+    \param router The name of the router that published the LSA to remove.
+    \param lsaType The type of the LSA.
+
+    This function will remove a name LSA from the LSDB by finding an
+    LSA whose name matches key. This removal also causes the NPT to
+    remove those name prefixes if no more LSAs advertise them.
    */
   bool
-  doesNameLsaExist(const ndn::Name& key);
-
-  /*! \brief Adds a cor. LSA to the LSDB if it isn't already there.
-    \param clsa The candidate cor. LSA.
-  */
-  bool
-  addCoordinateLsa(CoordinateLsa& clsa);
-
-  /*! \brief Returns whether a cor. LSA is in the LSDB.
-    \param key The name of the router that published the queried LSA.
-   */
-  bool
-  doesCoordinateLsaExist(const ndn::Name& key);
+  removeLsa(const ndn::Name& router, Lsa::Type lsaType);
 
   /*! \brief Attempts to construct an adj. LSA.
 
@@ -249,84 +255,34 @@ private:
   void
   buildAdjLsa();
 
-  /*! \brief Adds an adj. LSA to the LSDB if it isn't already there.
-    \param alsa The candidate adj. LSA to add to the LSDB.
-  */
-  bool
-  addAdjLsa(AdjLsa& alsa);
-
-  /*! \brief Returns whether the LSDB contains an LSA.
-    \param key The name of a router whose LSA to check for in the LSDB.
-  */
-  bool
-  doesAdjLsaExist(const ndn::Name& key);
+  /*! \brief Wrapper event to build and install an adj. LSA for this router. */
+  void
+  buildAndInstallOwnAdjLsa();
 
   /*! \brief Schedules a refresh/expire event in the scheduler.
-    \param key The name of the router that published the LSA.
-    \param seqNo The seq. no. associated with the LSA.
+    \param lsa The LSA.
     \param expTime How many seconds to wait before triggering the event.
    */
   ndn::scheduler::EventId
-  scheduleNameLsaExpiration(const ndn::Name& key, int seqNo,
-                            const ndn::time::seconds& expTime);
+  scheduleLsaExpiration(std::shared_ptr<Lsa> lsa, ndn::time::seconds expTime)
+  {
+    return m_scheduler.schedule(expTime + GRACE_PERIOD, [this, lsa] { expireOrRefreshLsa(lsa); });
+  }
 
   /*! \brief Either allow to expire, or refresh a name LSA.
-    \param lsaKey The name of the router that published the LSA.
-    \param seqNo The seq. no. of the LSA to check.
+    \param lsa The LSA.
   */
   void
-  expireOrRefreshNameLsa(const ndn::Name& lsaKey, uint64_t seqNo);
+  expireOrRefreshLsa(std::shared_ptr<Lsa> lsa);
 
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  /*! \brief Schedules an expire/refresh event in the LSA.
-    \param key The name of the router whose LSA is in question.
-    \param seqNo The sequence number of the LSA to check.
-    \param expTime The number of seconds to wait before triggering the event.
-  */
-  ndn::scheduler::EventId
-  scheduleAdjLsaExpiration(const ndn::Name& key, int seqNo,
-                           const ndn::time::seconds& expTime);
-
-private:
-  void
-  expireOrRefreshAdjLsa(const ndn::Name& lsaKey, uint64_t seqNo);
-
-  ndn::scheduler::EventId
-  scheduleCoordinateLsaExpiration(const ndn::Name& key, int seqNo,
-                                  const ndn::time::seconds& expTime);
+  bool
+  processInterestForLsa(const ndn::Interest& interest, const ndn::Name& originRouter,
+                        Lsa::Type lsaType, uint64_t seqNo);
 
   void
-  expireOrRefreshCoordinateLsa(const ndn::Name& lsaKey,
-                               uint64_t seqNo);
+  expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
+                  ndn::time::steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
 
-  void
-  processInterestForNameLsa(const ndn::Interest& interest,
-                            const ndn::Name& lsaKey,
-                            uint64_t seqNo);
-
-  void
-  processInterestForAdjacencyLsa(const ndn::Interest& interest,
-                                 const ndn::Name& lsaKey,
-                                 uint64_t seqNo);
-
-  void
-  processInterestForCoordinateLsa(const ndn::Interest& interest,
-                                  const ndn::Name& lsaKey,
-                                  uint64_t seqNo);
-
-  void
-  processContentNameLsa(const ndn::Name& lsaKey,
-                        uint64_t lsSeqNo, const ndn::Block& block);
-
-  void
-  processContentAdjacencyLsa(const ndn::Name& lsaKey,
-                             uint64_t lsSeqNo, const ndn::Block& block);
-
-  void
-  processContentCoordinateLsa(const ndn::Name& lsaKey,
-                              uint64_t lsSeqNo, const ndn::Block& block);
-
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*!
      \brief Error callback when SegmentFetcher fails to return an LSA
 
@@ -342,13 +298,10 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
      is reached.
    */
   void
-  onFetchLsaError(uint32_t errorCode,
-                  const std::string& msg,
-                  const ndn::Name& interestName,
-                  uint32_t retransmitNo,
+  onFetchLsaError(uint32_t errorCode, const std::string& msg,
+                  const ndn::Name& interestName, uint32_t retransmitNo,
                   const ndn::time::steady_clock::TimePoint& deadline,
-                  ndn::Name lsaName,
-                  uint64_t seqNo);
+                  ndn::Name lsaName, uint64_t seqNo);
 
   /*!
      \brief Success callback when SegmentFetcher returns a valid LSA
@@ -365,17 +318,17 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     afterSegmentValidatedSignal(data);
   }
 
-private:
   ndn::time::system_clock::TimePoint
-  getLsaExpirationTimePoint();
+  getLsaExpirationTimePoint() const
+  {
+    return ndn::time::system_clock::now() + ndn::time::seconds(m_confParam.getRouterDeadInterval());
+  }
 
 public:
-  static const ndn::Name::Component NAME_COMPONENT;
-
   ndn::util::signal::Signal<Lsdb, Statistics::PacketType> lsaIncrementSignal;
   ndn::util::signal::Signal<Lsdb, const ndn::Data&> afterSegmentValidatedSignal;
 
-private:
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
 
@@ -383,32 +336,20 @@ private:
   NamePrefixTable& m_namePrefixTable;
   RoutingTable& m_routingTable;
 
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   SyncLogicHandler m_sync;
 
-private:
-  std::list<NameLsa> m_nameLsdb;
-  std::list<AdjLsa> m_adjLsdb;
-  std::list<CoordinateLsa> m_corLsdb;
+  LsaContainer m_lsdb;
 
   ndn::time::seconds m_lsaRefreshTime;
-  std::string m_thisRouterPrefix;
-
-  typedef std::map<ndn::Name, uint64_t> SequenceNumberMap;
+  ndn::time::seconds m_adjLsaBuildInterval;
+  const ndn::Name& m_thisRouterPrefix;
 
   // Maps the name of an LSA to its highest known sequence number from sync;
   // Used to stop NLSR from trying to fetch outdated LSAs
-  SequenceNumberMap m_highestSeqNo;
-
-  static const ndn::time::seconds GRACE_PERIOD;
-  static const ndn::time::steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
-
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  ndn::time::seconds m_adjLsaBuildInterval;
+  std::map<ndn::Name, uint64_t> m_highestSeqNo;
 
   SequencingManager m_sequencingManager;
 
-private:
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
 
   std::set<std::shared_ptr<ndn::util::SegmentFetcher>> m_fetchers;
@@ -418,8 +359,10 @@ private:
   int64_t m_adjBuildCount;
   ndn::scheduler::ScopedEventId m_scheduledAdjLsaBuild;
 
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::InMemoryStoragePersistent m_lsaStorage;
+
+  const ndn::Name::Component NAME_COMPONENT = ndn::Name::Component("lsdb");
+  static const ndn::time::steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
 };
 
 } // namespace nlsr

@@ -24,9 +24,9 @@
 
 namespace nlsr {
 
-NameLsa::NameLsa(const ndn::Name& originRouter, uint32_t seqNo,
+NameLsa::NameLsa(const ndn::Name& originRouter, uint64_t seqNo,
                  const ndn::time::system_clock::TimePoint& timepoint,
-                 NamePrefixList& npl)
+                 const NamePrefixList& npl)
   : Lsa(originRouter, seqNo, timepoint)
 {
   for (const auto& name : npl.getNames()) {
@@ -64,7 +64,7 @@ NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(NameLsa);
 const ndn::Block&
 NameLsa::wireEncode() const
 {
-  if (m_wire.hasWire() && m_baseWire.hasWire()) {
+  if (m_wire.hasWire()) {
     return m_wire;
   }
 
@@ -91,7 +91,7 @@ NameLsa::wireDecode(const ndn::Block& wire)
 
   m_wire.parse();
 
-  ndn::Block::element_const_iterator val = m_wire.elements_begin();
+  auto val = m_wire.elements_begin();
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
     Lsa::wireDecode(*val);
@@ -121,18 +121,24 @@ NameLsa::isEqualContent(const NameLsa& other) const
   return m_npl == other.getNpl();
 }
 
-std::ostream&
-operator<<(std::ostream& os, const NameLsa& lsa)
+std::string
+NameLsa::toString() const
 {
-  os << lsa.toString();
+  std::ostringstream os;
+  os << Lsa::toString();
   os << "      Names:\n";
   int i = 0;
-  auto names = lsa.getNpl().getNames();
-  for (const auto& name : names) {
+  for (const auto& name : m_npl.getNames()) {
     os << "        Name " << i++ << ": " << name << "\n";
   }
 
-  return os;
+  return os.str();
+}
+
+std::ostream&
+operator<<(std::ostream& os, const NameLsa& lsa)
+{
+  return os << lsa.toString();
 }
 
 } // namespace nlsr

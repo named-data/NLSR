@@ -27,18 +27,12 @@
 
 namespace nlsr {
 
-Lsa::Lsa(const ndn::Name& originRouter, uint32_t seqNo,
+Lsa::Lsa(const ndn::Name& originRouter, uint64_t seqNo,
          ndn::time::system_clock::TimePoint expirationTimePoint)
   : m_originRouter(originRouter)
   , m_seqNo(seqNo)
   , m_expirationTimePoint(expirationTimePoint)
 {
-}
-
-ndn::Name
-Lsa::getKey() const
-{
-  return ndn::Name(m_originRouter).append(boost::lexical_cast<std::string>((getType())));
 }
 
 template<ndn::encoding::Tag TAG>
@@ -70,20 +64,12 @@ Lsa::wireDecode(const ndn::Block& wire)
   m_originRouter.clear();
   m_seqNo = 0;
 
-  m_baseWire = wire;
+  ndn::Block baseWire = wire;
+  baseWire.parse();
 
-  if (m_baseWire.type() != ndn::tlv::nlsr::Lsa) {
-    std::stringstream error;
-    error << "Expected Lsa Block, but Block is of a different type: #"
-          << m_baseWire.type();
-    BOOST_THROW_EXCEPTION(Error(error.str()));
-  }
+  auto val = baseWire.elements_begin();
 
-  m_baseWire.parse();
-
-  ndn::Block::element_const_iterator val = m_baseWire.elements_begin();
-
-  if (val != m_baseWire.elements_end() && val->type() == ndn::tlv::Name) {
+  if (val != baseWire.elements_end() && val->type() == ndn::tlv::Name) {
     m_originRouter.wireDecode(*val);
   }
   else {
@@ -92,7 +78,7 @@ Lsa::wireDecode(const ndn::Block& wire)
 
   ++val;
 
-  if (val != m_baseWire.elements_end() && val->type() == ndn::tlv::nlsr::SequenceNumber) {
+  if (val != baseWire.elements_end() && val->type() == ndn::tlv::nlsr::SequenceNumber) {
     m_seqNo = ndn::readNonNegativeInteger(*val);
     ++val;
   }
@@ -100,7 +86,7 @@ Lsa::wireDecode(const ndn::Block& wire)
     BOOST_THROW_EXCEPTION(Error("Missing required SequenceNumber field"));
   }
 
-  if (val != m_baseWire.elements_end() && val->type() == ndn::tlv::nlsr::ExpirationTime) {
+  if (val != baseWire.elements_end() && val->type() == ndn::tlv::nlsr::ExpirationTime) {
     m_expirationTimePoint = ndn::time::fromString(readString(*val));
   }
   else {

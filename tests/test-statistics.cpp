@@ -1,5 +1,5 @@
- /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "statistics.hpp"
 #include "test-common.hpp"
@@ -225,10 +225,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
   // Adjacency LSA
   lsdb.buildAndInstallOwnAdjLsa();
 
-  ndn::Name adjLsaKey = conf.getRouterPrefix();
-  adjLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
-
-  AdjLsa* adjLsa = lsdb.findAdjLsa(adjLsaKey);
+  auto adjLsa = lsdb.findLsa<AdjLsa>(conf.getRouterPrefix());
   uint32_t seqNo = adjLsa->getSeqNo();
 
   Adjacent adjacency("adjacency");
@@ -236,7 +233,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
 
   adjLsa->addAdjacent(adjacency);
 
-  lsdb.installAdjLsa(*adjLsa);
+  lsdb.installLsa(adjLsa);
 
   const std::string interestPrefix("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/");
 
@@ -248,16 +245,13 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
                                    Statistics::PacketType::SENT_ADJ_LSA_DATA);
 
   // Name LSA
-  ndn::Name nameLsaKey = conf.getRouterPrefix();
-  nameLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
-
-  NameLsa* nameLsa = lsdb.findNameLsa(nameLsaKey);
+  auto nameLsa = std::static_pointer_cast<NameLsa>(lsdb.findLsa(conf.getRouterPrefix(), Lsa::Type::NAME));
   BOOST_ASSERT(nameLsa != nullptr);
 
   seqNo = nameLsa->getSeqNo();
 
   nameLsa->addName(ndn::Name("/ndn/name"));
-  lsdb.installNameLsa(*nameLsa);
+  lsdb.installLsa(nameLsa);
 
   // Receive Name LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
@@ -271,10 +265,11 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
   ndn::Name coorLsaKey = conf.getRouterPrefix();
   coorLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
 
-  CoordinateLsa* coorLsa = lsdb.findCoordinateLsa(coorLsaKey);
+  auto coorLsa = lsdb.findLsa<CoordinateLsa>(conf.getRouterPrefix());
+
   seqNo = coorLsa->getSeqNo();
   coorLsa->setCorTheta({20.0, 30.0});
-  lsdb.installCoordinateLsa(*coorLsa);
+  lsdb.installLsa(coorLsa);
 
   // Receive Adjacency LSA Interest
   receiveInterestAndCheckSentStats(interestPrefix,
@@ -304,7 +299,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   ndn::Name adjInterest("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/ADJACENCY/");
   adjInterest.appendNumber(seqNo);
   AdjLsa aLsa(routerName, seqNo, MAX_TIME, 1, conf.getAdjacencyList());
-  lsdb.installAdjLsa(aLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(aLsa));
 
   lsdb.afterFetchLsa(aLsa.wireEncode().getBuffer(), adjInterest);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_ADJ_LSA_DATA), 1);
@@ -314,7 +309,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   coordInterest.appendNumber(seqNo);
   std::vector<double> angles = {20.0, 30.0};
   CoordinateLsa cLsa(routerName, seqNo, MAX_TIME, 2.5, angles);
-  lsdb.installCoordinateLsa(cLsa);
+  lsdb.installLsa(std::make_shared<CoordinateLsa>(cLsa));
 
   lsdb.afterFetchLsa(cLsa.wireEncode().getBuffer(), coordInterest);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_COORD_LSA_DATA), 1);
@@ -323,7 +318,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/NAME/");
   interestName.appendNumber(seqNo);
   NameLsa nlsa(routerName, seqNo, MAX_TIME, conf.getNamePrefixList());
-  lsdb.installNameLsa(nlsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(nlsa));
 
   lsdb.afterFetchLsa(nlsa.wireEncode().getBuffer(), interestName);
   BOOST_CHECK_EQUAL(collector.getStatistics().get(Statistics::PacketType::RCV_NAME_LSA_DATA), 1);

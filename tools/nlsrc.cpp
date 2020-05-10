@@ -281,23 +281,34 @@ void
 Nlsrc::fetchFromLsdb(const ndn::Name::Component& datasetType,
                      const std::function<void(const T&)>& recordLsa)
 {
-  ndn::Name command = LSDB_PREFIX;
-  command.append(datasetType);
-
-  ndn::Interest interest(command);
+  ndn::Interest interest(ndn::Name(LSDB_PREFIX).append(datasetType));
 
   auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest, m_validator);
   fetcher->onComplete.connect(std::bind(&Nlsrc::onFetchSuccess<T>, this, _1, recordLsa));
   fetcher->onError.connect(std::bind(&Nlsrc::onTimeout, this, _1, _2));
 }
 
+void
+Nlsrc::recordLsa(const nlsr::Lsa& lsa)
+{
+  Router& router = m_routers.emplace(lsa.getOriginRouter(), Router()).first->second;
+
+  if (lsa.getType() == nlsr::Lsa::Type::ADJACENCY) {
+    router.adjacencyLsaString = lsa.toString();
+  }
+  else if (lsa.getType() == nlsr::Lsa::Type::COORDINATE) {
+    router.coordinateLsaString = lsa.toString();
+  }
+  else if (lsa.getType() == nlsr::Lsa::Type::NAME) {
+    router.nameLsaString = lsa.toString();
+  }
+}
+
 template <class T>
 void
 Nlsrc::fetchFromRt(const std::function<void(const T&)>& recordDataset)
 {
-  ndn::Name command = RT_PREFIX;
-
-  ndn::Interest interest(command);
+  ndn::Interest interest(RT_PREFIX);
 
   auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest, m_validator);
   fetcher->onComplete.connect(std::bind(&Nlsrc::onFetchSuccess<T>, this, _1, recordDataset));
@@ -335,38 +346,6 @@ Nlsrc::onTimeout(uint32_t errorCode, const std::string& error)
 {
   std::cerr << "Request timed out (code: " << errorCode
             << ", error: " << error << ")"  << std::endl;
-}
-
-void
-Nlsrc::recordLsa(const nlsr::Lsa& lsa)
-{
-  const auto& pair = m_routers.emplace(lsa.getOriginRouter(), Router());
-  Router& router = pair.first->second;
-
-  std::ostringstream os;
-
-  switch (lsa.getType()) {
-    case nlsr::Lsa::Type::ADJACENCY: {
-      const nlsr::AdjLsa& adjLsa = static_cast<const nlsr::AdjLsa&>(lsa);
-      os << adjLsa;
-      router.adjacencyLsaString = os.str();
-      break;
-    }
-    case nlsr::Lsa::Type::COORDINATE: {
-      const nlsr::CoordinateLsa& coorLsa = static_cast<const nlsr::CoordinateLsa&>(lsa);
-      os << coorLsa;
-      router.coordinateLsaString = os.str();
-      break;
-    }
-    case nlsr::Lsa::Type::NAME: {
-      const nlsr::NameLsa& nameLsa = static_cast<const nlsr::NameLsa&>(lsa);
-      os << nameLsa;
-      router.nameLsaString = os.str();
-      break;
-    }
-    default:
-      break;
-  }
 }
 
 void
@@ -419,21 +398,6 @@ Nlsrc::printAll()
   std::cout << "NLSR Status" << std::endl;
   printLsdb();
   printRT();
-}
-
-std::string
-Nlsrc::getLsaInfo(const nlsr::Lsa& lsa)
-{
-  auto duration = ndn::time::duration_cast<ndn::time::seconds>(lsa.getExpirationTimePoint() -
-                                                               ndn::time::system_clock::now());
-  std::ostringstream os;
-  os << "     LsaInfo("
-     << "OriginRouter: " << lsa.getOriginRouter() << ", "
-     << "SequenceNumber: " << lsa.getSeqNo() << ", "
-     << "ExpirationPeriod: " << duration;
-     os << ")\n\n";
-
-  return os.str();
 }
 
 } // namespace nlsrc

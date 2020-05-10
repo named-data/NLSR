@@ -22,8 +22,6 @@
 #ifndef NLSR_TLV_NLSR_HPP
 #define NLSR_TLV_NLSR_HPP
 
-#include <ndn-cxx/encoding/tlv.hpp>
-
 namespace ndn {
 namespace tlv {
 namespace nlsr {

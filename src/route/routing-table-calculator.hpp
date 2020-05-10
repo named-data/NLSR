@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,8 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
+ */
 
 #ifndef NLSR_ROUTING_TABLE_CALCULATOR_HPP
 #define NLSR_ROUTING_TABLE_CALCULATOR_HPP
@@ -25,6 +24,7 @@
 #include "common.hpp"
 #include "lsa/lsa.hpp"
 #include "lsa/adj-lsa.hpp"
+#include "lsdb.hpp"
 #include "conf-parameter.hpp"
 
 #include <list>
@@ -56,11 +56,11 @@ protected:
   initMatrix();
 
   /*! \brief Constructs an adj. matrix to calculate with.
-    \param adjLsaList The Adjacency Lsa list.
+    \param lsdb Reference to the Lsdb
     \param pMap The map to populate with the adj. data.
   */
   void
-  makeAdjMatrix(const std::list<AdjLsa>& adjLsaList, Map& pMap);
+  makeAdjMatrix(const Lsdb& lsdb, Map& pMap);
 
   /*! \brief Writes a formated adjacent matrix to DEBUG log
     \param map The map containing adjacent matrix data
@@ -137,7 +137,7 @@ public:
 
   void
   calculatePath(Map& pMap, RoutingTable& rt, ConfParameter& confParam,
-                const std::list<AdjLsa>& adjLsaList);
+                const Lsdb& lsdb);
 
 private:
   /*! \brief Performs a Dijkstra's calculation over the adjacency matrix.

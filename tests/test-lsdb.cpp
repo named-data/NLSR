@@ -87,6 +87,21 @@ public:
     }
   }
 
+  void
+  isFirstNameLsaEqual(const Lsdb& otherLsdb)
+  {
+    auto selfLsaRange = lsdb.getLsdbIterator<NameLsa>();
+    auto otherLsaRange = otherLsdb.getLsdbIterator<NameLsa>();
+
+    if (selfLsaRange.first != selfLsaRange.second && otherLsaRange.first != otherLsaRange.second) {
+      auto ownLsa = std::static_pointer_cast<NameLsa>(*selfLsaRange.first);
+      auto otherLsa = std::static_pointer_cast<NameLsa>(*otherLsaRange.first);
+      BOOST_CHECK_EQUAL(ownLsa->getNpl(), otherLsa->getNpl());
+      return;
+    }
+    BOOST_CHECK(false);
+  }
+
 public:
   ndn::util::DummyClientFace face;
   ConfParameter conf;
@@ -172,9 +187,9 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
 BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
 {
   // Add a lot of NameLSAs to exceed max packet size
-  ndn::Name lsaKey("/ndn/site/%C1.Router/this-router/NAME");
+  ndn::Name originRouter("/ndn/site/%C1.Router/this-router");
 
-  NameLsa* nameLsa = lsdb.findNameLsa(lsaKey);
+  auto nameLsa = lsdb.findLsa<NameLsa>(originRouter);
   BOOST_REQUIRE(nameLsa != nullptr);
   uint64_t seqNo = nameLsa->getSeqNo();
 
@@ -185,7 +200,7 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
     nameLsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
     break;
   }
-  lsdb.installNameLsa(*nameLsa);
+  lsdb.installLsa(nameLsa);
 
   // Create another Lsdb and expressInterest
   ndn::util::DummyClientFace face2(m_ioService, m_keyChain, {true, true});
@@ -211,14 +226,14 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
 
   advanceClocks(ndn::time::milliseconds(200), 20);
 
-  BOOST_CHECK_EQUAL(lsdb.getNameLsdb().front().getNpl(), lsdb2.getNameLsdb().back().getNpl());
+  isFirstNameLsaEqual(lsdb2);
 }
 
 BOOST_AUTO_TEST_CASE(SegmentLsaData)
 {
-  ndn::Name lsaKey("/ndn/site/%C1.Router/this-router/NAME");
+  ndn::Name originRouter("/ndn/site/%C1.Router/this-router");
 
-  NameLsa* lsa = lsdb.findNameLsa(lsaKey);
+  auto lsa = lsdb.findLsa<NameLsa>(originRouter);
   uint64_t seqNo = lsa->getSeqNo();
 
   ndn::Name prefix("/ndn/edu/memphis/netlab/research/nlsr/test/prefix/");
@@ -227,7 +242,7 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
   while (lsa->wireEncode().size() < ndn::MAX_NDN_PACKET_SIZE) {
     lsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
   }
-  lsdb.installNameLsa(*lsa);
+  lsdb.installLsa(lsa);
 
   ndn::Block expectedDataContent = lsa->wireEncode();
 
@@ -268,7 +283,7 @@ BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
   ndn::Block block = lsa.wireEncode();
   lsdb.afterFetchLsa(block.getBuffer(), interestName);
 
-  NameLsa* foundLsa = lsdb.findNameLsa(lsa.getKey());
+  auto foundLsa = std::static_pointer_cast<NameLsa>(lsdb.findLsa(lsa.getOriginRouter(), lsa.getType()));
   BOOST_REQUIRE(foundLsa != nullptr);
 
   BOOST_CHECK_EQUAL(foundLsa->wireEncode(), lsa.wireEncode());
@@ -281,7 +296,7 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 
   std::string s1 = "name1";
   std::string s2 = "name2";
-  std::string router1 = "router1/1";
+  std::string router1 = "/router1/1";
 
   npl1.insert(s1);
   npl1.insert(s2);
@@ -289,18 +304,17 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   // For NameLsa lsType is name.
   // 12 is seqNo, randomly generated.
   // 1800 seconds is the default life time.
-  NameLsa nlsa1(ndn::Name("/router1/1"), 12, testTimePoint, npl1);
+  NameLsa nlsa1(router1, 12, testTimePoint, npl1);
 
   Lsdb& lsdb1(nlsr.m_lsdb);
 
-  lsdb1.installNameLsa(nlsa1);
-  lsdb1.writeNameLsdbLog();
+  lsdb1.installLsa(std::make_shared<NameLsa>(nlsa1));
 
-  BOOST_CHECK(lsdb1.doesLsaExist(ndn::Name("/router1/1/NAME"), Lsa::Type::NAME));
+  BOOST_CHECK(lsdb1.doesLsaExist(router1, Lsa::Type::NAME));
 
-  lsdb1.removeNameLsa(router1);
+  lsdb1.removeLsa(router1, Lsa::Type::NAME);
 
-  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(ndn::Name("/router1/1"), Lsa::Type::NAME), false);
+  BOOST_CHECK_EQUAL(lsdb1.doesLsaExist(router1, Lsa::Type::NAME), false);
 }
 
 BOOST_AUTO_TEST_CASE(InstallNameLsa)
@@ -317,10 +331,10 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   ndn::time::system_clock::TimePoint MAX_TIME = ndn::time::system_clock::TimePoint::max();
 
   NameLsa lsa(otherRouter, 1, MAX_TIME, prefixes);
-  lsdb.installNameLsa(lsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(lsa));
 
-  BOOST_REQUIRE_EQUAL(lsdb.doesLsaExist(otherRouter + "/NAME", Lsa::Type::NAME), true);
-  NamePrefixList& nameList = lsdb.findNameLsa(otherRouter + "/NAME")->getNpl();
+  BOOST_REQUIRE_EQUAL(lsdb.doesLsaExist(otherRouter, Lsa::Type::NAME), true);
+  NamePrefixList& nameList = std::static_pointer_cast<NameLsa>(lsdb.findLsa(otherRouter, Lsa::Type::NAME))->getNpl();
 
   BOOST_CHECK_EQUAL(nameList, prefixes);
   //areNamePrefixListsEqual(nameList, prefixes);
@@ -330,7 +344,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   prefixes.insert(name3);
 
   NameLsa addLsa(otherRouter, 2, MAX_TIME, prefixes);
-  lsdb.installNameLsa(addLsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(addLsa));
 
   // Lsa should include name1, name2, and name3
   BOOST_CHECK_EQUAL(nameList, prefixes);
@@ -339,7 +353,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   prefixes.remove(name2);
 
   NameLsa removeLsa(otherRouter, 3, MAX_TIME, prefixes);
-  lsdb.installNameLsa(removeLsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(removeLsa));
 
   // Lsa should include name1 and name3
   BOOST_CHECK_EQUAL(nameList, prefixes);
@@ -349,7 +363,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   prefixes.remove(name3);
 
   NameLsa addAndRemoveLsa(otherRouter, 4, MAX_TIME, prefixes);
-  lsdb.installNameLsa(addAndRemoveLsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(addAndRemoveLsa));
 
   // Lsa should include name1 and name2
   BOOST_CHECK_EQUAL(nameList, prefixes);
@@ -363,7 +377,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   newPrefixes.insert(name5);
 
   NameLsa newLsa(otherRouter, 5, MAX_TIME, newPrefixes);
-  lsdb.installNameLsa(newLsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(newLsa));
 
   // Lsa should include name4 and name5
   BOOST_CHECK_EQUAL(nameList, newPrefixes);
@@ -371,16 +385,13 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
 
 BOOST_AUTO_TEST_CASE(TestIsLsaNew)
 {
-  const ndn::Name::Component CONFIG_NETWORK{"/ndn"};
-  const ndn::Name::Component CONFIG_SITE{"/memphis"};
-  ndn::Name originRouter{};
-  originRouter.append(CONFIG_NETWORK).append(CONFIG_SITE).append("/%C1.Router/other-router");
+  ndn::Name originRouter("/ndn/memphis/%C1.Router/other-router");
 
   // Install Name LSA
   NamePrefixList nameList;
   NameLsa lsa(originRouter, 999, ndn::time::system_clock::TimePoint::max(), nameList);
 
-  lsdb.installNameLsa(lsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(lsa));
 
   // Lower NameLSA sequence number
   uint64_t lowerSeqNo = 998;

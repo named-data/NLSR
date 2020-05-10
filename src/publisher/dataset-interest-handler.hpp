@@ -82,23 +82,12 @@ private:
   publishRtStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                   ndn::mgmt::StatusDatasetContext& context);
 
-  /*! \brief provide adjacent status dataset
+  /*! \brief provide LSA status dataset
    */
+  template <typename T>
   void
-  publishAdjStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+  publishLsaStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                    ndn::mgmt::StatusDatasetContext& context);
-
-  /*! \brief provide coordinate status dataset
-   */
-  void
-  publishCoordinateStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                          ndn::mgmt::StatusDatasetContext& context);
-
-  /*! \brief provide name status dataset
-   */
-  void
-  publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                    ndn::mgmt::StatusDatasetContext& context);
 
 private:
   ndn::mgmt::Dispatcher& m_dispatcher;

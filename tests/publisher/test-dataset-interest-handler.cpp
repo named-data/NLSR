@@ -56,21 +56,16 @@ BOOST_AUTO_TEST_CASE(Localhost)
 
   // Install adjacency LSA
   AdjLsa adjLsa;
+  adjLsa.m_expirationTimePoint = ndn::time::system_clock::now() + 3600_s;
   adjLsa.m_originRouter = "/RouterA";
   addAdjacency(adjLsa, "/RouterA/adjacency1", "udp://face-1", 10);
-  lsdb.installAdjLsa(adjLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(adjLsa));
 
   std::vector<double> angles = {20.00, 30.00};
 
   // Install coordinate LSA
   CoordinateLsa coordinateLsa = createCoordinateLsa("/RouterA", 10.0, angles);
-  lsdb.installCoordinateLsa(coordinateLsa);
-
-  // Install Name LSA
-  NameLsa nameLsa;
-  nameLsa.m_originRouter = "/RouterA";
-  nameLsa.addName("/RouterA/name1");
-  lsdb.installNameLsa(nameLsa);
+  lsdb.installLsa(std::make_shared<CoordinateLsa>(coordinateLsa));
 
   // Install routing table
   RoutingTableEntry rte1("desrouter1");
@@ -115,13 +110,13 @@ BOOST_AUTO_TEST_CASE(Routername)
   AdjLsa adjLsa;
   adjLsa.m_originRouter = "/RouterA";
   addAdjacency(adjLsa, "/RouterA/adjacency1", "udp://face-1", 10);
-  lsdb.installAdjLsa(adjLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(adjLsa));
 
   std::vector<double> angles = {20.00, 30.00};
 
   // Install coordinate LSA
   CoordinateLsa coordinateLsa = createCoordinateLsa("/RouterA", 10.0, angles);
-  lsdb.installCoordinateLsa(coordinateLsa);
+  lsdb.installLsa(std::make_shared<CoordinateLsa>(coordinateLsa));
 
   // Install routing table
   RoutingTableEntry rte1("desrouter1");

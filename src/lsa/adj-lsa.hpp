@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_LSA_ADJ_LSA_HPP
 #define NLSR_LSA_ADJ_LSA_HPP
@@ -41,7 +41,7 @@ public:
 
   AdjLsa() = default;
 
-  AdjLsa(const ndn::Name& originR, uint32_t seqNo,
+  AdjLsa(const ndn::Name& originR, uint64_t seqNo,
          const ndn::time::system_clock::TimePoint& timepoint,
          uint32_t noLink, AdjacencyList& adl);
 
@@ -49,6 +49,12 @@ public:
 
   Lsa::Type
   getType() const override
+  {
+    return type();
+  }
+
+  static constexpr Lsa::Type
+  type()
   {
     return Lsa::Type::ADJACENCY;
   }
@@ -99,18 +105,19 @@ public:
   wireEncode(ndn::EncodingImpl<TAG>& block) const;
 
   const ndn::Block&
-  wireEncode() const;
+  wireEncode() const override;
 
   void
   wireDecode(const ndn::Block& wire);
+
+  std::string
+  toString() const override;
 
 private:
   uint32_t m_noLink;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   AdjacencyList m_adl;
-
-  mutable ndn::Block m_wire;
 };
 
 NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(AdjLsa);

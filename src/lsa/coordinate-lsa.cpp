@@ -26,7 +26,7 @@
 
 namespace nlsr {
 
-CoordinateLsa::CoordinateLsa(const ndn::Name& originRouter, uint32_t seqNo,
+CoordinateLsa::CoordinateLsa(const ndn::Name& originRouter, uint64_t seqNo,
                              const ndn::time::system_clock::TimePoint& timepoint,
                              double radius, std::vector<double> angles)
   : Lsa(originRouter, seqNo, timepoint)
@@ -84,7 +84,7 @@ NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(CoordinateLsa);
 const ndn::Block&
 CoordinateLsa::wireEncode() const
 {
-  if (m_wire.hasWire() && m_baseWire.hasWire()) {
+  if (m_wire.hasWire()) {
     return m_wire;
   }
 
@@ -113,7 +113,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
 
   m_wire.parse();
 
-  ndn::Block::element_const_iterator val = m_wire.elements_begin();
+  auto val = m_wire.elements_begin();
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
     Lsa::wireDecode(*val);
@@ -143,17 +143,24 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
   m_hyperbolicAngles = angles;
 }
 
-std::ostream&
-operator<<(std::ostream& os, const CoordinateLsa& lsa)
+std::string
+CoordinateLsa::toString() const
 {
-  os << lsa.toString();
-  os << "      Hyperbolic Radius  : " << lsa.getCorRadius() << "\n";
+  std::ostringstream os;
+  os << Lsa::toString();
+  os << "      Hyperbolic Radius  : " << m_hyperbolicRadius << "\n";
   int i = 0;
-  for (const auto& value : lsa.getCorTheta()) {
+  for (const auto& value : m_hyperbolicAngles) {
     os << "      Hyperbolic Theta " << i++ << " : " << value << "\n";
   }
 
-  return os;
+  return os.str();
+}
+
+std::ostream&
+operator<<(std::ostream& os, const CoordinateLsa& lsa)
+{
+  return os << lsa.toString();
 }
 
 } // namespace nlsr

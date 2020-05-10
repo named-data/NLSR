@@ -52,9 +52,7 @@ RoutingTable::RoutingTable(ndn::Scheduler& scheduler, Fib& fib, Lsdb& lsdb,
 void
 RoutingTable::calculate()
 {
-  m_lsdb.writeCorLsdbLog();
-  m_lsdb.writeNameLsdbLog();
-  m_lsdb.writeAdjLsdbLog();
+  m_lsdb.writeLog();
   m_namePrefixTable.writeLog();
   if (m_isRoutingTableCalculating == false) {
     // setting routing table calculation
@@ -63,14 +61,10 @@ RoutingTable::calculate()
     bool isHrEnabled = m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF;
 
     if ((!isHrEnabled &&
-         m_lsdb
-         .doesLsaExist(ndn::Name{m_confParam.getRouterPrefix()}
-                       .append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY)), Lsa::Type::ADJACENCY))
+         m_lsdb.doesLsaExist(m_confParam.getRouterPrefix(), Lsa::Type::ADJACENCY))
         ||
         (isHrEnabled &&
-         m_lsdb
-         .doesLsaExist(ndn::Name{m_confParam.getRouterPrefix()}
-                       .append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE)), Lsa::Type::COORDINATE))) {
+         m_lsdb.doesLsaExist(m_confParam.getRouterPrefix(), Lsa::Type::COORDINATE))) {
       if (m_lsdb.getIsBuildAdjLsaSheduled() != 1) {
         NLSR_LOG_TRACE("Clearing old routing table");
         clearRoutingTable();
@@ -80,8 +74,8 @@ RoutingTable::calculate()
         NLSR_LOG_DEBUG("Calculating routing table");
 
         // calculate Link State routing
-        if ((m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF)
-            || (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN)) {
+        if ((m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) ||
+            (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN)) {
           calculateLsRoutingTable();
         }
         // calculate hyperbolic routing
@@ -126,25 +120,26 @@ RoutingTable::calculate()
 void
 RoutingTable::calculateLsRoutingTable()
 {
-  NLSR_LOG_DEBUG("RoutingTable::calculateLsRoutingTable Called");
+  NLSR_LOG_TRACE("CalculateLsRoutingTable Called");
 
   Map map;
-  map.createFromAdjLsdb(m_lsdb.getAdjLsdb().begin(), m_lsdb.getAdjLsdb().end());
+  auto lsaRange = m_lsdb.getLsdbIterator<AdjLsa>();
+  map.createFromAdjLsdb(lsaRange.first, lsaRange.second);
   map.writeLog();
 
   size_t nRouters = map.getMapSize();
 
   LinkStateRoutingTableCalculator calculator(nRouters);
 
-  calculator.calculatePath(map, *this, m_confParam, m_lsdb.getAdjLsdb());
+  calculator.calculatePath(map, *this, m_confParam, m_lsdb);
 }
 
 void
 RoutingTable::calculateHypRoutingTable(bool isDryRun)
 {
   Map map;
-  map.createFromCoordinateLsdb(m_lsdb.getCoordinateLsdb().begin(),
-                               m_lsdb.getCoordinateLsdb().end());
+  auto lsaRange = m_lsdb.getLsdbIterator<CoordinateLsa>();
+  map.createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
   map.writeLog();
 
   size_t nRouters = map.getMapSize();

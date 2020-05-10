@@ -44,7 +44,6 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/validator-config.hpp>
 #include <ndn-cxx/security/certificate-fetcher-direct-fetch.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 #include <ndn-cxx/security/signing-info.hpp>

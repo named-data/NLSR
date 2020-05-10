@@ -64,11 +64,10 @@ public:
     adjacencies.insert(c);
 
     AdjLsa adjA(a.getName(), 1, MAX_TIME, 2, adjacencies);
-    lsdb.installAdjLsa(adjA);
-
+    lsdb.installLsa(std::make_shared<AdjLsa>(adjA));
 
     CoordinateLsa coordA(adjA.getOriginRouter(), 1, MAX_TIME, 16.23, anglesA);
-    lsdb.installCoordinateLsa(coordA);
+    lsdb.installLsa(std::make_shared<CoordinateLsa>(coordA));
 
     // Router B
     a.setFaceId(1);
@@ -79,10 +78,10 @@ public:
     adjacencyListB.insert(c);
 
     AdjLsa adjB(b.getName(), 1, MAX_TIME, 2, adjacencyListB);
-    lsdb.installAdjLsa(adjB);
+    lsdb.installLsa(std::make_shared<AdjLsa>(adjB));
 
     CoordinateLsa coordB(adjB.getOriginRouter(), 1, MAX_TIME, 16.59, anglesB);
-    lsdb.installCoordinateLsa(coordB);
+    lsdb.installLsa(std::make_shared<CoordinateLsa>(coordB));
 
     // Router C
     a.setFaceId(1);
@@ -93,12 +92,13 @@ public:
     adjacencyListC.insert(b);
 
     AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
-    lsdb.installAdjLsa(adjC);
+    lsdb.installLsa(std::make_shared<AdjLsa>(adjC));
 
     CoordinateLsa coordC(adjC.getOriginRouter(), 1, MAX_TIME, 14.11, anglesC);
-    lsdb.installCoordinateLsa(coordC);
+    lsdb.installLsa(std::make_shared<CoordinateLsa>(coordC));
 
-    map.createFromAdjLsdb(lsdb.getAdjLsdb().begin(), lsdb.getAdjLsdb().end());
+    auto lsaRange = lsdb.getLsdbIterator<CoordinateLsa>();
+    map.createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
   }
 
   void runTest(const double& expectedCost)

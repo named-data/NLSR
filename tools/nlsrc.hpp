@@ -91,12 +91,6 @@ private:
   fetchAdjacencyLsas();
 
   void
-  fetchRtables();
-
-  void
-  fetchHRRtables();
-
-  void
   fetchCoordinateLsas();
 
   void
@@ -106,6 +100,12 @@ private:
   void
   fetchFromLsdb(const ndn::Name::Component& datasetType,
                 const std::function<void(const T&)>& recordLsa);
+
+  void
+  recordLsa(const nlsr::Lsa& lsa);
+
+  void
+  fetchRtables();
 
   template <class T>
   void
@@ -120,9 +120,6 @@ private:
   onTimeout(uint32_t errorCode, const std::string& error);
 
   void
-  recordLsa(const nlsr::Lsa& lsa);
-
-  void
   recordRtable(const nlsr::RoutingTableStatus& rts);
 
   void
@@ -133,9 +130,6 @@ private:
 
   void
   printAll();
-
-  std::string
-  getLsaInfo(const nlsr::Lsa& lsa);
 
 public:
   const char* programName;

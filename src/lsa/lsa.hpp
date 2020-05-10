@@ -60,7 +60,7 @@ public:
   };
 
 protected:
-  Lsa(const ndn::Name& originRouter, uint32_t seqNo,
+  Lsa(const ndn::Name& originRouter, uint64_t seqNo,
       ndn::time::system_clock::TimePoint expirationTimePoint);
 
   Lsa() = default;
@@ -70,16 +70,13 @@ public:
   ~Lsa() = default;
 
   virtual Type
-  getType() const
-  {
-    return Type::BASE;
-  }
+  getType() const = 0;
 
   void
   setSeqNo(uint64_t seqNo)
   {
     m_seqNo = seqNo;
-    m_baseWire.reset();
+    m_wire.reset();
   }
 
   uint64_t
@@ -94,6 +91,12 @@ public:
     return m_originRouter;
   }
 
+  ndn::Name
+  getOriginRouterCopy() const
+  {
+    return m_originRouter;
+  }
+
   const ndn::time::system_clock::TimePoint&
   getExpirationTimePoint() const
   {
@@ -104,7 +107,7 @@ public:
   setExpirationTimePoint(const ndn::time::system_clock::TimePoint& lt)
   {
     m_expirationTimePoint = lt;
-    m_baseWire.reset();
+    m_wire.reset();
   }
 
   void
@@ -119,18 +122,15 @@ public:
     return m_expiringEventId;
   }
 
-  /*! \brief Gets the key for this LSA.
-
-    Format is: \<router name\>/\<LSA type>\
-   */
-  ndn::Name
-  getKey() const;
-
   /*! Get data common to all LSA types.
    */
-  std::string
+  virtual std::string
   toString() const;
 
+  virtual const ndn::Block&
+  wireEncode() const = 0;
+
+protected:
   template<ndn::encoding::Tag TAG>
   size_t
   wireEncode(ndn::EncodingImpl<TAG>& block) const;
@@ -144,7 +144,7 @@ PUBLIC_WITH_TESTS_ELSE_PROTECTED:
   ndn::time::system_clock::TimePoint m_expirationTimePoint;
   ndn::scheduler::EventId m_expiringEventId;
 
-  mutable ndn::Block m_baseWire;
+  mutable ndn::Block m_wire;
 };
 
 NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(Lsa);

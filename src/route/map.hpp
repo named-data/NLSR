@@ -22,6 +22,7 @@
 #define NLSR_MAP_HPP
 
 #include "common.hpp"
+#include "lsa/adj-lsa.hpp"
 
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
@@ -81,8 +82,9 @@ public:
   {
     BOOST_STATIC_ASSERT_MSG(is_iterator<IteratorType>::value, "IteratorType must be an iterator!");
     for (auto lsa = begin; lsa != end; lsa++) {
-      addEntry(lsa->getOriginRouter());
-      for (const auto& adjacent : lsa->getAdl().getAdjList()) {
+      auto adjLsa = std::static_pointer_cast<AdjLsa>(*lsa);
+      addEntry(adjLsa->getOriginRouter());
+      for (const auto& adjacent : adjLsa->getAdl().getAdjList()) {
         addEntry(adjacent.getName());
       }
     }
@@ -98,7 +100,7 @@ public:
   {
     BOOST_STATIC_ASSERT_MSG(is_iterator<IteratorType>::value, "IteratorType must be an iterator!");
     for (auto lsa = begin; lsa != end; lsa++) {
-      addEntry(lsa->getOriginRouter());
+      addEntry((*lsa)->getOriginRouter());
     }
   }
 

@@ -24,7 +24,7 @@
 
 namespace nlsr {
 
-AdjLsa::AdjLsa(const ndn::Name& originRouter, uint32_t seqNo,
+AdjLsa::AdjLsa(const ndn::Name& originRouter, uint64_t seqNo,
                const ndn::time::system_clock::TimePoint& timepoint,
                uint32_t noLink, AdjacencyList& adl)
   : Lsa(originRouter, seqNo, timepoint)
@@ -72,7 +72,7 @@ NDN_CXX_DEFINE_WIRE_ENCODE_INSTANTIATIONS(AdjLsa);
 const ndn::Block&
 AdjLsa::wireEncode() const
 {
-  if (m_wire.hasWire() && m_baseWire.hasWire()) {
+  if (m_wire.hasWire()) {
     return m_wire;
   }
 
@@ -99,7 +99,7 @@ AdjLsa::wireDecode(const ndn::Block& wire)
 
   m_wire.parse();
 
-  ndn::Block::element_const_iterator val = m_wire.elements_begin();
+  auto val = m_wire.elements_begin();
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
     Lsa::wireDecode(*val);
@@ -123,22 +123,29 @@ AdjLsa::wireDecode(const ndn::Block& wire)
   m_adl = adl;
 }
 
-std::ostream&
-operator<<(std::ostream& os, const AdjLsa& lsa)
+std::string
+AdjLsa::toString() const
 {
-  os << lsa.toString();
-  os << "      Adjacents:\n";
+  std::ostringstream os;
+  os << Lsa::toString();
+  os << "      Adjacent(s):\n";
 
   int adjacencyIndex = 0;
 
-  for (const Adjacent& adjacency : lsa.getAdl()) {
-  os << "        Adjacent " << adjacencyIndex++
-     << ": (name=" << adjacency.getName()
-     << ", uri="   << adjacency.getFaceUri()
-     << ", cost="  << adjacency.getLinkCost() << ")\n";
+  for (const auto& adjacency : m_adl) {
+    os << "        Adjacent " << adjacencyIndex++
+       << ": (name=" << adjacency.getName()
+       << ", uri="   << adjacency.getFaceUri()
+       << ", cost="  << adjacency.getLinkCost() << ")\n";
   }
 
-  return os;
+  return os.str();
+}
+
+std::ostream&
+operator<<(std::ostream& os, const AdjLsa& lsa)
+{
+  return os << lsa.toString();
 }
 
 } // namespace nlsr

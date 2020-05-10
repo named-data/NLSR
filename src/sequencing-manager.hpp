@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,12 +17,13 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_SEQUENCING_MANAGER_HPP
 #define NLSR_SEQUENCING_MANAGER_HPP
 
 #include "conf-parameter.hpp"
+#include "lsa/lsa.hpp"
 #include "test-access-control.hpp"
 
 #include <ndn-cxx/face.hpp>
@@ -37,6 +38,39 @@ class SequencingManager
 {
 public:
   SequencingManager(const std::string& filePath, int hypState);
+
+  void
+  setLsaSeq(uint64_t seqNo, Lsa::Type lsaType)
+  {
+    switch (lsaType) {
+      case Lsa::Type::ADJACENCY:
+        m_adjLsaSeq = seqNo;
+        break;
+      case Lsa::Type::COORDINATE:
+        m_corLsaSeq = seqNo;
+        break;
+      case Lsa::Type::NAME:
+        m_nameLsaSeq = seqNo;
+        break;
+      default:
+        return;
+    }
+  }
+
+  uint64_t
+  getLsaSeq(Lsa::Type lsaType)
+  {
+    switch (lsaType) {
+      case Lsa::Type::ADJACENCY:
+        return m_adjLsaSeq;
+      case Lsa::Type::COORDINATE:
+        return m_corLsaSeq;
+      case Lsa::Type::NAME:
+        return m_nameLsaSeq;
+      default:
+        return 0;
+    }
+  }
 
   uint64_t
   getNameLsaSeq() const

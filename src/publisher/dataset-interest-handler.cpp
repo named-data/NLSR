@@ -50,44 +50,26 @@ DatasetInterestHandler::setDispatcher(ndn::mgmt::Dispatcher& dispatcher)
 {
   dispatcher.addStatusDataset(ADJACENCIES_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&DatasetInterestHandler::publishAdjStatus, this, _1, _2, _3));
+    std::bind(&DatasetInterestHandler::publishLsaStatus<AdjLsa>, this, _1, _2, _3));
   dispatcher.addStatusDataset(COORDINATES_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&DatasetInterestHandler::publishCoordinateStatus, this, _1, _2, _3));
+    std::bind(&DatasetInterestHandler::publishLsaStatus<CoordinateLsa>, this, _1, _2, _3));
   dispatcher.addStatusDataset(NAMES_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&DatasetInterestHandler::publishNameStatus, this, _1, _2, _3));
+    std::bind(&DatasetInterestHandler::publishLsaStatus<NameLsa>, this, _1, _2, _3));
   dispatcher.addStatusDataset(RT_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
     std::bind(&DatasetInterestHandler::publishRtStatus, this, _1, _2, _3));
 }
 
+template <typename T>
 void
-DatasetInterestHandler::publishAdjStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
+DatasetInterestHandler::publishLsaStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                          ndn::mgmt::StatusDatasetContext& context)
 {
-  for (const auto& adjLsa : m_lsdb.getAdjLsdb()) {
-    context.append(adjLsa.wireEncode());
-  }
-  context.end();
-}
-
-void
-DatasetInterestHandler::publishCoordinateStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                                                ndn::mgmt::StatusDatasetContext& context)
-{
-  for (const auto& coordinateLsa : m_lsdb.getCoordinateLsdb()) {
-    context.append(coordinateLsa.wireEncode());
-  }
-  context.end();
-}
-
-void
-DatasetInterestHandler::publishNameStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
-                                          ndn::mgmt::StatusDatasetContext& context)
-{
-  for (const auto& nameLsa : m_lsdb.getNameLsdb()) {
-    context.append(nameLsa.wireEncode());
+  auto lsaRange = m_lsdb.getLsdbIterator<T>();
+  for (auto lsaIt = lsaRange.first; lsaIt != lsaRange.second; ++lsaIt) {
+    context.append((*lsaIt)->wireEncode());
   }
   context.end();
 }

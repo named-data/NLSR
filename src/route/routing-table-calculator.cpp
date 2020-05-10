@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "routing-table-calculator.hpp"
 #include "lsdb.hpp"
@@ -61,13 +61,15 @@ RoutingTableCalculator::initMatrix()
 }
 
 void
-RoutingTableCalculator::makeAdjMatrix(const std::list<AdjLsa>& adjLsaList, Map& pMap)
+RoutingTableCalculator::makeAdjMatrix(const Lsdb& lsdb, Map& pMap)
 {
   // For each LSA represented in the map
-  for (const auto& adjLsa : adjLsaList) {
-    ndn::optional<int32_t> row = pMap.getMappingNoByRouterName(adjLsa.getOriginRouter());
+  auto lsaRange = lsdb.getLsdbIterator<AdjLsa>();
+  for (auto lsaIt = lsaRange.first; lsaIt != lsaRange.second; ++lsaIt) {
+    auto adjLsa = std::static_pointer_cast<AdjLsa>(*lsaIt);
+    ndn::optional<int32_t> row = pMap.getMappingNoByRouterName(adjLsa->getOriginRouter());
 
-    std::list<Adjacent> adl = adjLsa.getAdl().getAdjList();
+    std::list<Adjacent> adl = adjLsa->getAdl().getAdjList();
     // For each adjacency represented in the LSA
     for (const auto& adjacent : adl) {
       ndn::optional<int32_t> col = pMap.getMappingNoByRouterName(adjacent.getName());
@@ -217,7 +219,6 @@ RoutingTableCalculator::allocateLinkCosts()
   linkCosts = new double[vNoLink];
 }
 
-
 void
 RoutingTableCalculator::freeLinks()
 {
@@ -232,12 +233,12 @@ RoutingTableCalculator::freeLinksCosts()
 void
 LinkStateRoutingTableCalculator::calculatePath(Map& pMap, RoutingTable& rt,
                                                ConfParameter& confParam,
-                                               const std::list<AdjLsa>& adjLsaList)
+                                               const Lsdb& lsdb)
 {
   NLSR_LOG_DEBUG("LinkStateRoutingTableCalculator::calculatePath Called");
   allocateAdjMatrix();
   initMatrix();
-  makeAdjMatrix(adjLsaList, pMap);
+  makeAdjMatrix(lsdb, pMap);
   writeAdjMatrixLog(pMap);
   ndn::optional<int32_t> sourceRouter =
     pMap.getMappingNoByRouterName(confParam.getRouterPrefix());
@@ -497,15 +498,8 @@ HyperbolicRoutingCalculator::getHyperbolicDistance(Lsdb& lsdb, ndn::Name src, nd
 
   double distance = UNKNOWN_DISTANCE;
 
-  ndn::Name srcLsaKey = src;
-  srcLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
-
-  CoordinateLsa* srcLsa = lsdb.findCoordinateLsa(srcLsaKey);
-
-  ndn::Name destLsaKey = dest;
-  destLsaKey.append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
-
-  CoordinateLsa* destLsa = lsdb.findCoordinateLsa(destLsaKey);
+  auto srcLsa  = lsdb.findLsa<CoordinateLsa>(src);
+  auto destLsa = lsdb.findLsa<CoordinateLsa>(dest);
 
   // Coordinate LSAs do not exist for these routers
   if (srcLsa == nullptr || destLsa == nullptr) {

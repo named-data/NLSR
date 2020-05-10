@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "route/name-prefix-table.hpp"
 #include "nlsr.hpp"
@@ -69,11 +69,11 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   // This router's Adjacency LSA
   conf.getAdjacencyList().insert(bupt);
   AdjLsa thisRouterAdjLsa(thisRouter.getName(), 1,
-                          ndn::time::system_clock::now() + ndn::time::seconds::max(),
+                          ndn::time::system_clock::now() + 3600_s,
                           2,
                           conf.getAdjacencyList());
 
-  lsdb.installAdjLsa(thisRouterAdjLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(thisRouterAdjLsa));
 
   // BUPT Adjacency LSA
   AdjacencyList buptAdjacencies;
@@ -82,17 +82,17 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
                     ndn::time::system_clock::now() + ndn::time::seconds(5),
                     0 , buptAdjacencies);
 
-  lsdb.installAdjLsa(buptAdjLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(buptAdjLsa));
 
   // BUPT Name LSA
   ndn::Name buptAdvertisedName("/ndn/cn/edu/bupt");
 
   NamePrefixList buptNames{buptAdvertisedName};
 
-  NameLsa buptNameLsa(buptRouterName, 1, ndn::time::system_clock::now(),
+  NameLsa buptNameLsa(buptRouterName, 1, ndn::time::system_clock::now() + ndn::time::seconds(5),
                       buptNames);
 
-  lsdb.installNameLsa(buptNameLsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(buptNameLsa));
 
   // Advance clocks to expire LSAs
   this->advanceClocks(ndn::time::seconds(15));
@@ -106,7 +106,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
                          ndn::time::system_clock::now() + ndn::time::seconds(3600),
                          buptNames);
 
-  lsdb.installNameLsa(buptNewNameLsa);
+  lsdb.installLsa(std::make_shared<NameLsa>(buptNewNameLsa));
 
   this->advanceClocks(ndn::time::seconds(1));
 
@@ -114,7 +114,7 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
   AdjLsa buptNewAdjLsa(buptRouterName, 12,
                        ndn::time::system_clock::now() + ndn::time::seconds(3600),
                        0, buptAdjacencies);
-  lsdb.installAdjLsa(buptNewAdjLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(buptNewAdjLsa));
 
   this->advanceClocks(ndn::time::seconds(1));
 

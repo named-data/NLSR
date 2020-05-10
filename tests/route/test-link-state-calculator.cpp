@@ -67,7 +67,7 @@ public:
     adjacencyListA.insert(c);
 
     AdjLsa adjA(a.getName(), 1, MAX_TIME, 2, adjacencyListA);
-    lsdb.installAdjLsa(adjA);
+    lsdb.installLsa(std::make_shared<AdjLsa>(adjA));
 
     // Router B
     a.setLinkCost(LINK_AB_COST);
@@ -78,7 +78,7 @@ public:
     adjacencyListB.insert(c);
 
     AdjLsa adjB(b.getName(), 1, MAX_TIME, 2, adjacencyListB);
-    lsdb.installAdjLsa(adjB);
+    lsdb.installLsa(std::make_shared<AdjLsa>(adjB));
 
     // Router C
     a.setLinkCost(LINK_AC_COST);
@@ -89,9 +89,10 @@ public:
     adjacencyListC.insert(b);
 
     AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
-    lsdb.installAdjLsa(adjC);
+    lsdb.installLsa(std::make_shared<AdjLsa>(adjC));
 
-    map.createFromAdjLsdb(lsdb.getAdjLsdb().begin(), lsdb.getAdjLsdb().end());
+    auto lsaRange = lsdb.getLsdbIterator<AdjLsa>();
+    map.createFromAdjLsdb(lsaRange.first, lsaRange.second);
   }
 
 public:
@@ -134,7 +135,7 @@ BOOST_FIXTURE_TEST_SUITE(TestLinkStateRoutingCalculator, LinkStateCalculatorFixt
 BOOST_AUTO_TEST_CASE(Basic)
 {
   LinkStateRoutingTableCalculator calculator(map.getMapSize());
-  calculator.calculatePath(map, routingTable, conf, lsdb.getAdjLsdb());
+  calculator.calculatePath(map, routingTable, conf, lsdb);
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
   BOOST_REQUIRE(entryB != nullptr);
@@ -171,8 +172,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 BOOST_AUTO_TEST_CASE(Asymmetric)
 {
   // Asymmetric link cost between B and C
-  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
-  AdjLsa* lsa = nlsr.m_lsdb.findAdjLsa(key);
+  auto lsa = nlsr.m_lsdb.findLsa<AdjLsa>(ndn::Name(ROUTER_B_NAME));
   BOOST_REQUIRE(lsa != nullptr);
 
   auto c = lsa->m_adl.findAdjacent(ROUTER_C_NAME);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
 
   // Calculation should consider the link between B and C as having cost = higherLinkCost
   LinkStateRoutingTableCalculator calculator(map.getMapSize());
-  calculator.calculatePath(map, routingTable, conf, lsdb.getAdjLsdb());
+  calculator.calculatePath(map, routingTable, conf, lsdb);
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
   BOOST_REQUIRE(entryB != nullptr);
@@ -220,8 +220,7 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
 BOOST_AUTO_TEST_CASE(NonAdjacentCost)
 {
   // Asymmetric link cost between B and C
-  ndn::Name key = ndn::Name(ROUTER_B_NAME).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
-  auto lsa = nlsr.m_lsdb.findAdjLsa(key);
+  auto lsa = nlsr.m_lsdb.findLsa<AdjLsa>(ROUTER_B_NAME);
   BOOST_REQUIRE(lsa != nullptr);
 
   auto c = lsa->m_adl.findAdjacent(ROUTER_C_NAME);
@@ -232,7 +231,7 @@ BOOST_AUTO_TEST_CASE(NonAdjacentCost)
 
   // Calculation should consider the link between B and C as down
   LinkStateRoutingTableCalculator calculator(map.getMapSize());
-  calculator.calculatePath(map, routingTable, conf, lsdb.getAdjLsdb());
+  calculator.calculatePath(map, routingTable, conf, lsdb);
 
   // Router A should be able to get to B through B but not through C
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
@@ -262,8 +261,7 @@ BOOST_AUTO_TEST_CASE(NonAdjacentCost)
 BOOST_AUTO_TEST_CASE(AsymmetricZeroCostLink)
 {
   // Asymmetric and zero link cost between B - C, and B - A.
-  ndn::Name keyB = ndn::Name(ROUTER_B_NAME).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
-  auto lsaB = nlsr.m_lsdb.findAdjLsa(keyB);
+  auto lsaB = nlsr.m_lsdb.findLsa<AdjLsa>(ROUTER_B_NAME);
   BOOST_REQUIRE(lsaB != nullptr);
 
   auto c = lsaB->m_adl.findAdjacent(ROUTER_C_NAME);
@@ -275,8 +273,7 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCostLink)
   auto a = lsaB->m_adl.findAdjacent(ROUTER_A_NAME);
   BOOST_REQUIRE(a != conf.getAdjacencyList().end());
 
-  ndn::Name keyA = ndn::Name(ROUTER_A_NAME).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
-  auto lsaA = nlsr.m_lsdb.findAdjLsa(keyA);
+  auto lsaA = nlsr.m_lsdb.findLsa<AdjLsa>(ROUTER_A_NAME);
   BOOST_REQUIRE(lsaA != nullptr);
 
   auto b = lsaA->m_adl.findAdjacent(ROUTER_B_NAME);
@@ -288,7 +285,7 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCostLink)
 
   // Calculation should consider 0 link-cost between B and C
   LinkStateRoutingTableCalculator calculator(map.getMapSize());
-  calculator.calculatePath(map, routingTable, conf, lsdb.getAdjLsdb());
+  calculator.calculatePath(map, routingTable, conf, lsdb);
 
   // Router A should be able to get to B through B and C
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);

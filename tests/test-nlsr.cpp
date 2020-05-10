@@ -89,9 +89,8 @@ BOOST_AUTO_TEST_CASE(HyperbolicOn_ZeroCostNeighbors)
 
   nlsr.initialize();
 
-  std::list<Adjacent> neighborList = neighbors.getAdjList();
-  for (std::list<Adjacent>::iterator it = neighborList.begin(); it != neighborList.end(); ++it) {
-    BOOST_CHECK_EQUAL(it->getLinkCost(), 0);
+  for (const auto neighbor : neighbors.getAdjList()) {
+    BOOST_CHECK_EQUAL(neighbor.getLinkCost(), 0);
   }
 }
 
@@ -279,7 +278,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
 
   AdjLsa ownAdjLsa(conf.getRouterPrefix(), 10,
                    ndn::time::system_clock::now(), 1, neighbors);
-  lsdb.installAdjLsa(ownAdjLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(ownAdjLsa));
 
   // Router that will fail
   AdjacencyList failAdjacencies;
@@ -289,7 +288,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
                     ndn::time::system_clock::now() + ndn::time::seconds(3600),
                     1, failAdjacencies);
 
-  lsdb.installAdjLsa(failAdjLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(failAdjLsa));
 
   // Other router
   AdjacencyList otherAdjacencies;
@@ -299,15 +298,13 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
                      ndn::time::system_clock::now() + ndn::time::seconds(3600),
                      1, otherAdjacencies);
 
-  lsdb.installAdjLsa(otherAdjLsa);
+  lsdb.installLsa(std::make_shared<AdjLsa>(otherAdjLsa));
 
   // Run the scheduler to build an adjacency LSA
   this->advanceClocks(10_ms);
 
   // Make sure an adjacency LSA was built
-  ndn::Name key = ndn::Name(conf.getRouterPrefix())
-    .append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
-  AdjLsa* lsa = lsdb.findAdjLsa(key);
+  auto lsa = lsdb.findLsa(conf.getRouterPrefix(), Lsa::Type::ADJACENCY);
   BOOST_REQUIRE(lsa != nullptr);
 
   uint32_t lastAdjLsaSeqNo = lsa->getSeqNo();
@@ -325,7 +322,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
   event.setKind(ndn::nfd::FACE_EVENT_DESTROYED)
        .setFaceId(destroyFaceId);
 
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  auto data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
   data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
@@ -342,7 +339,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
                     conf.getInterestRetryNumber());
   BOOST_CHECK_EQUAL(updatedNeighbor.getStatus(), Adjacent::STATUS_INACTIVE);
 
-  lsa = lsdb.findAdjLsa(key);
+  lsa = lsdb.findLsa<AdjLsa>(conf.getRouterPrefix());
   BOOST_REQUIRE(lsa != nullptr);
 
   BOOST_CHECK_EQUAL(lsa->getSeqNo(), lastAdjLsaSeqNo + 1);
@@ -381,10 +378,8 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   receiveHelloData(neighborAName, conf.getRouterPrefix());
   this->advanceClocks(1_s, 10);
 
-  ndn::Name lsaKey = ndn::Name(conf.getRouterPrefix()).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
-
   // Adjacency LSA should be built even though other router is INACTIVE
-  AdjLsa* lsa = lsdb.findAdjLsa(lsaKey);
+  auto lsa = lsdb.findLsa<AdjLsa>(conf.getRouterPrefix());
   BOOST_REQUIRE(lsa != nullptr);
   BOOST_CHECK_EQUAL(lsa->getAdl().size(), 1);
 
@@ -401,7 +396,7 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
 
   // Adjacency LSA should have been removed since this router's adjacencies are
   // INACTIVE and have timed out
-  lsa = lsdb.findAdjLsa(lsaKey);
+  lsa = lsdb.findLsa<AdjLsa>(conf.getRouterPrefix());
   BOOST_CHECK(lsa == nullptr);
 
   // Receive HELLO response from Router A and B
@@ -410,7 +405,7 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
   this->advanceClocks(1_s, 10);
 
   // Adjacency LSA should be built
-  lsa = lsdb.findAdjLsa(lsaKey);
+  lsa = lsdb.findLsa<AdjLsa>(conf.getRouterPrefix());
   BOOST_REQUIRE(lsa != nullptr);
   BOOST_CHECK_EQUAL(lsa->getAdl().size(), 2);
 }
