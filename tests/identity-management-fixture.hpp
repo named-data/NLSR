@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  Regents of the University of California,
+/*
+ * Copyright (c) 2014-2020,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -31,7 +31,7 @@
 
 #include <vector>
 
-#include <ndn-cxx/security/v2/key-chain.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
 namespace nlsr {
@@ -93,7 +93,7 @@ public:
   /**
    * @brief Add a self-signed certificate to @p key with issuer ID @p issuer
    */
-  ndn::security::v2::Certificate
+  ndn::security::Certificate
   addCertificate(const ndn::security::Key& key, const std::string& issuer);
 
 protected:

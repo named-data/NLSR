@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "conf-parameter.hpp"
 #include "logger.hpp"
@@ -30,10 +30,10 @@ using namespace ndn::time_literals;
 // To be changed when breaking changes are made to sync
 const uint64_t ConfParameter::SYNC_VERSION = 8;
 
-static std::unique_ptr<ndn::security::v2::CertificateFetcherDirectFetch>
+static std::unique_ptr<ndn::security::CertificateFetcherDirectFetch>
 makeCertificateFetcher(ndn::Face& face)
 {
-  auto fetcher = std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face);
+  auto fetcher = std::make_unique<ndn::security::CertificateFetcherDirectFetch>(face);
   fetcher->setSendDirectInterestOnly(true);
   return fetcher;
 }
@@ -58,7 +58,7 @@ ConfParameter::ConfParameter(ndn::Face& face, ndn::KeyChain& keyChain,
   , m_adjl()
   , m_npl()
   , m_validator(makeCertificateFetcher(face))
-  , m_prefixUpdateValidator(std::make_unique<ndn::security::v2::CertificateFetcherDirectFetch>(face))
+  , m_prefixUpdateValidator(std::make_unique<ndn::security::CertificateFetcherDirectFetch>(face))
   , m_keyChain(keyChain)
 {
 }
@@ -113,14 +113,14 @@ ConfParameter::setNetwork(const ndn::Name& networkName)
 }
 
 void
-ConfParameter::loadCertToValidator(const ndn::security::v2::Certificate& cert)
+ConfParameter::loadCertToValidator(const ndn::security::Certificate& cert)
 {
   NLSR_LOG_TRACE("Loading Certificate Name: " << cert.getName());
-  m_validator.loadAnchor("Authoritative-Certificate", ndn::security::v2::Certificate(cert));
-  m_prefixUpdateValidator.loadAnchor("Authoritative-Certificate", ndn::security::v2::Certificate(cert));
+  m_validator.loadAnchor("Authoritative-Certificate", ndn::security::Certificate(cert));
+  m_prefixUpdateValidator.loadAnchor("Authoritative-Certificate", ndn::security::Certificate(cert));
 }
 
-shared_ptr<ndn::security::v2::Certificate>
+shared_ptr<ndn::security::Certificate>
 ConfParameter::initializeKey()
 {
   NLSR_LOG_DEBUG("Initializing Key ...");
@@ -145,7 +145,7 @@ ConfParameter::initializeKey()
     NLSR_LOG_ERROR("Can be ignored if running in non-production environments.");
     return nullptr;
   }
-  auto certificate = std::make_shared<ndn::security::v2::Certificate>();
+  auto certificate = std::make_shared<ndn::security::Certificate>();
   auto nlsrInstanceKey = nlsrInstanceIdentity.getDefaultKey();
   ndn::Name certificateName = nlsrInstanceKey.getName();
   certificateName.append("NA");

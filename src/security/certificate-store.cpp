@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "certificate-store.hpp"
 #include "conf-parameter.hpp"
@@ -40,7 +40,7 @@ CertificateStore::CertificateStore(ndn::Face& face, ConfParameter& confParam, Ls
                                                 this, _1)))
 {
   for (const auto& x: confParam.getIdCerts()) {
-    auto idCert = ndn::io::load<ndn::security::v2::Certificate>(x);
+    auto idCert = ndn::io::load<ndn::security::Certificate>(x);
     insert(*idCert);
   }
 
@@ -48,13 +48,13 @@ CertificateStore::CertificateStore(ndn::Face& face, ConfParameter& confParam, Ls
 }
 
 void
-CertificateStore::insert(const ndn::security::v2::Certificate& certificate)
+CertificateStore::insert(const ndn::security::Certificate& certificate)
 {
   m_certificates[certificate.getKeyName()] = certificate;
   NLSR_LOG_TRACE("Certificate inserted successfully");
 }
 
-const ndn::security::v2::Certificate*
+const ndn::security::Certificate*
 CertificateStore::find(const ndn::Name& keyName) const
 {
   auto it = m_certificates.find(keyName);
@@ -147,7 +147,7 @@ CertificateStore::publishCertFromCache(const ndn::Name& keyName)
   if (cert) {
     insert(*cert);
     NLSR_LOG_TRACE(*cert);
-    ndn::Name certName = ndn::security::v2::extractKeyNameFromCertName(cert->getName());
+    ndn::Name certName = ndn::security::extractKeyNameFromCertName(cert->getName());
     NLSR_LOG_TRACE("Setting interest filter for: " << certName);
 
     setInterestFilter(certName);

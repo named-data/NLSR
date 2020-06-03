@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  Regents of the University of California,
+/*
+ * Copyright (c) 2014-2020,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -26,14 +26,14 @@
 #include "identity-management-fixture.hpp"
 
 #include <ndn-cxx/util/io.hpp>
-#include <ndn-cxx/security/v2/additional-description.hpp>
+#include <ndn-cxx/security/additional-description.hpp>
 
 #include <boost/filesystem.hpp>
 
 namespace nlsr {
 namespace tests {
 
-namespace v2 = ndn::security::v2;
+namespace v2 = ndn::security;
 namespace io = ndn::io;
 namespace time = ndn::time;
 

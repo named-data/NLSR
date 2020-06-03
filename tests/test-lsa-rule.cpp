@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "test-common.hpp"
 #include "nlsr.hpp"
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   // Make NLSR validate data signed by its own key
   confParam.getValidator().validate(data,
                                     [] (const Data&) { BOOST_CHECK(true); },
-                                    [] (const Data&, const ndn::security::v2::ValidationError&) {
+                                    [] (const Data&, const ndn::security::ValidationError&) {
                                       BOOST_CHECK(false);
                                     });
 }
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
   // Make NLSR validate data signed by its own key
   confParam.getValidator().validate(data,
                                     [] (const Data&) { BOOST_CHECK(false); },
-                                    [] (const Data&, const ndn::security::v2::ValidationError&) {
+                                    [] (const Data&, const ndn::security::ValidationError&) {
                                       BOOST_CHECK(true);
                                     });
 }

@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_CERTIFICATE_STORE_HPP
 #define NLSR_CERTIFICATE_STORE_HPP
@@ -28,7 +28,7 @@
 
 #include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/mgmt/nfd/controller.hpp>
-#include <ndn-cxx/security/v2/certificate.hpp>
+#include <ndn-cxx/security/certificate.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
 
 namespace nlsr {
@@ -49,7 +49,7 @@ public:
   CertificateStore(ndn::Face& face, ConfParameter& confParam, Lsdb& lsdb);
 
   void
-  insert(const ndn::security::v2::Certificate& certificate);
+  insert(const ndn::security::Certificate& certificate);
 
   /*! \brief Find a certificate
    *
@@ -59,7 +59,7 @@ public:
    * checks the cache of certificates it has already fetched. If none
    * can be found, it will return an null pointer.
  */
-  const ndn::security::v2::Certificate*
+  const ndn::security::Certificate*
   find(const ndn::Name& keyName) const;
 
   /*! \brief Retrieves the chain of certificates from Validator's cache and
@@ -92,7 +92,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   registrationFailed(const ndn::Name& name);
 
 private:
-  typedef std::map<ndn::Name, ndn::security::v2::Certificate> CertMap;
+  typedef std::map<ndn::Name, ndn::security::Certificate> CertMap;
   CertMap m_certificates;
   ndn::Face& m_face;
   ConfParameter& m_confParam;

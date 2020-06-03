@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  Regents of the University of California,
+/*
+ * Copyright (c) 2014-2020,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -29,8 +29,6 @@
 #include "boost-test.hpp"
 
 #include <fstream>
-
-#include <ndn-cxx/security/v2/key-chain.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -80,8 +78,6 @@ public:
     }
 
     boost::filesystem::remove_all(m_pibDir);
-    //const_cast<std::string&>(ndn::security::v2::KeyChain::getDefaultPibLocator()).clear();
-    //const_cast<std::string&>(ndn::security::v2::KeyChain::getDefaultTpmLocator()).clear();
   }
 
 protected:

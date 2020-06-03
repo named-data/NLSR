@@ -53,7 +53,7 @@ class Fib
 {
 public:
   Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList,
-      ConfParameter& conf, ndn::security::v2::KeyChain& keyChain);
+      ConfParameter& conf, ndn::security::KeyChain& keyChain);
 
   /*! \brief Completely remove a name prefix from the FIB.
    *

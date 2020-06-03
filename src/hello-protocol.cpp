@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "hello-protocol.hpp"
 #include "nlsr.hpp"
@@ -232,7 +232,7 @@ HelloProtocol::onContentValidated(const ndn::Data& data)
 
 void
 HelloProtocol::onContentValidationFailed(const ndn::Data& data,
-                                         const ndn::security::v2::ValidationError& ve)
+                                         const ndn::security::ValidationError& ve)
 {
   NLSR_LOG_DEBUG("Validation Error: " << ve);
 }

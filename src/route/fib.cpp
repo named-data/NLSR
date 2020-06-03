@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "fib.hpp"
 #include "adjacency-list.hpp"
@@ -38,7 +38,7 @@ const std::string Fib::MULTICAST_STRATEGY("ndn:/localhost/nfd/strategy/multicast
 const std::string Fib::BEST_ROUTE_V2_STRATEGY("ndn:/localhost/nfd/strategy/best-route");
 
 Fib::Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList,
-         ConfParameter& conf, ndn::security::v2::KeyChain& keyChain)
+         ConfParameter& conf, ndn::security::KeyChain& keyChain)
   : m_scheduler(scheduler)
   , m_refreshTime(2 * conf.getLsaRefreshTime())
   , m_controller(face, keyChain)

@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "lsdb.hpp"
 
@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
   face.linkTo(face2);
 
   auto fetcher = ndn::util::SegmentFetcher::start(face2, ndn::Interest(interestName),
-                                                  ndn::security::v2::getAcceptAllValidator());
+                                                  ndn::security::getAcceptAllValidator());
   fetcher->onComplete.connect([&expectedDataContent] (ndn::ConstBufferPtr bufferPtr) {
                                 ndn::Block block(bufferPtr);
                                 BOOST_CHECK_EQUAL(expectedDataContent, block);

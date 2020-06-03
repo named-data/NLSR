@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "security/certificate-store.hpp"
 
@@ -116,7 +116,7 @@ public:
 
   Nlsr nlsr;
   Lsdb& lsdb;
-  ndn::security::v2::Certificate certificate;
+  ndn::security::Certificate certificate;
   ndn::Name certificateKey;
   security::CertificateStore certStore;
   const boost::filesystem::path ROOT_CERT_PATH;
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
   // Make NLSR validate data signed by its own key
   conf.getValidator().validate(data,
                                  [] (const ndn::Data&) { BOOST_CHECK(true); },
-                                 [] (const ndn::Data&, const ndn::security::v2::ValidationError&) {
+                                 [] (const ndn::Data&, const ndn::security::ValidationError&) {
                                    BOOST_CHECK(false);
                                  });
 

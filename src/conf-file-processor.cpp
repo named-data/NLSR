@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "conf-file-processor.hpp"
 #include "adjacent.hpp"
@@ -653,7 +653,7 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 
       std::string file = it->second.data();
       bf::path certfilePath = absolute(file, bf::path(m_confFileName).parent_path());
-      auto idCert = ndn::io::load<ndn::security::v2::Certificate>(certfilePath.string());
+      auto idCert = ndn::io::load<ndn::security::Certificate>(certfilePath.string());
 
       if (idCert == nullptr) {
         std::cerr << "Error: Cannot load cert-to-publish: " << file << "!" << std::endl;

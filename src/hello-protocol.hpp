@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_HELLO_PROTOCOL_HPP
 #define NLSR_HELLO_PROTOCOL_HPP
@@ -33,7 +33,7 @@
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
-#include <ndn-cxx/security/v2/validation-error.hpp>
+#include <ndn-cxx/security/validation-error.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
 
 namespace nlsr {
@@ -123,7 +123,7 @@ private:
    */
   void
   onContentValidationFailed(const ndn::Data& data,
-                            const ndn::security::v2::ValidationError& ve);
+                            const ndn::security::ValidationError& ve);
 
   /*! \brief Treat a failed Face registration as an INACTIVE neighbor.
    *
@@ -158,7 +158,7 @@ public:
 private:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
-  ndn::security::v2::KeyChain& m_keyChain;
+  ndn::security::KeyChain& m_keyChain;
   const ndn::security::SigningInfo& m_signingInfo;
   ConfParameter& m_confParam;
   RoutingTable& m_routingTable;

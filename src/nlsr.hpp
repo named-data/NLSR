@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_NLSR_HPP
 #define NLSR_NLSR_HPP
@@ -45,7 +45,7 @@
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
-#include <ndn-cxx/security/v2/certificate-fetcher-direct-fetch.hpp>
+#include <ndn-cxx/security/certificate-fetcher-direct-fetch.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 #include <ndn-cxx/security/signing-info.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
@@ -208,7 +208,7 @@ public:
 private:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
-  ndn::security::v2::KeyChain& m_keyChain;
+  ndn::security::KeyChain& m_keyChain;
   ConfParameter& m_confParam;
   AdjacencyList& m_adjacencyList;
   NamePrefixList& m_namePrefixList;

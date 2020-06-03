@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "prefix-update-processor.hpp"
 #include "lsdb.hpp"
@@ -89,7 +89,7 @@ PrefixUpdateProcessor::makeAuthorization()
         NLSR_LOG_DEBUG("accept " << request.getName() << " signer=" << signer);
         accept(signer);
       },
-      [reject] (const ndn::Interest& request, const ndn::security::v2::ValidationError& error) {
+      [reject] (const ndn::Interest& request, const ndn::security::ValidationError& error) {
         NLSR_LOG_DEBUG("reject " << request.getName() << " signer=" <<
                         getSignerFromTag(request).value_or("?") << ' ' << error);
         reject(ndn::mgmt::RejectReply::STATUS403);

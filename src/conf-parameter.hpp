@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_CONF_PARAMETER_HPP
 #define NLSR_CONF_PARAMETER_HPP
@@ -31,7 +31,7 @@
 #include <boost/cstdint.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
-#include <ndn-cxx/security/v2/certificate-fetcher-direct-fetch.hpp>
+#include <ndn-cxx/security/certificate-fetcher-direct-fetch.hpp>
 #include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
@@ -478,11 +478,11 @@ public:
     return m_keyChain;
   }
 
-  shared_ptr<ndn::security::v2::Certificate>
+  shared_ptr<ndn::security::Certificate>
   initializeKey();
 
   void
-  loadCertToValidator(const ndn::security::v2::Certificate& cert);
+  loadCertToValidator(const ndn::security::Certificate& cert);
 
   /*! \brief Dump the current state of all attributes to the log.
    */
