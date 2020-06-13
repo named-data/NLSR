@@ -104,7 +104,7 @@ IdentityManagementFixture::addSubCertificate(const ndn::Name& subIdentityName,
 
   v2::AdditionalDescription description;
   description.set("type", "sub-certificate");
-  info.appendTypeSpecificTlv(description.wireEncode());
+  info.addCustomTlv(description.wireEncode());
 
   m_keyChain.sign(request, ndn::signingByIdentity(issuer).setSignatureInfo(info));
   m_keyChain.setDefaultCertificate(subIdentity.getDefaultKey(), request);

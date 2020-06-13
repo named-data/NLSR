@@ -187,9 +187,9 @@ void
 HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
 {
   NLSR_LOG_DEBUG("Received data for INFO(name): " << data.getName());
-  if (data.getSignature().hasKeyLocator() &&
-      data.getSignature().getKeyLocator().getType() == ndn::tlv::Name) {
-    NLSR_LOG_DEBUG("Data signed with: " << data.getSignature().getKeyLocator().getName());
+  auto kl = data.getKeyLocator();
+  if (kl && kl->getType() == ndn::tlv::Name) {
+    NLSR_LOG_DEBUG("Data signed with: " << kl->getName());
   }
   m_confParam.getValidator().validate(data,
                                       std::bind(&HelloProtocol::onContentValidated, this, _1),

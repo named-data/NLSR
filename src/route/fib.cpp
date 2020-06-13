@@ -33,7 +33,6 @@ namespace nlsr {
 
 INIT_LOGGER(route.Fib);
 
-const uint64_t Fib::GRACE_PERIOD = 10;
 const std::string Fib::MULTICAST_STRATEGY("ndn:/localhost/nfd/strategy/multicast");
 const std::string Fib::BEST_ROUTE_V2_STRATEGY("ndn:/localhost/nfd/strategy/best-route");
 
@@ -54,11 +53,10 @@ Fib::remove(const ndn::Name& name)
   auto it = m_table.find(name);
 
   // Only unregister the prefix if it ISN'T a neighbor.
-  if (it != m_table.end() && isNotNeighbor((it->second).getName())) {
-    for (const auto& nexthop : (it->second).getNexthopList().getNextHops()) {
-      unregisterPrefix((it->second).getName(), nexthop.getConnectingFaceUri());
+  if (it != m_table.end() && isNotNeighbor((it->second).name)) {
+    for (const auto& nexthop : (it->second).nexthopList.getNextHops()) {
+      unregisterPrefix((it->second).name, nexthop.getConnectingFaceUri());
     }
-    cancelEntryRefresh(it->second);
     m_table.erase(it);
   }
 }
@@ -66,14 +64,14 @@ Fib::remove(const ndn::Name& name)
 void
 Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, const NexthopList& hopsToAdd)
 {
-  const ndn::Name& name = entry.getName();
+  const ndn::Name& name = entry.name;
 
   bool shouldRegister = isNotNeighbor(name);
 
   for (const auto& hop : hopsToAdd.getNextHops())
   {
     // Add nexthop to FIB entry
-    entry.getNexthopList().addNextHop(hop);
+    entry.nexthopList.addNextHop(hop);
 
     if (shouldRegister) {
       // Add nexthop to NDN-FIB
@@ -108,11 +106,12 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
   if (entryIt == m_table.end() && hopsToAdd.size() != 0) {
     NLSR_LOG_DEBUG("New FIB Entry");
 
-    FibEntry entry(name);
+    FibEntry entry;
+    entry.name = name;
 
     addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
 
-    m_table.emplace(name, entry);
+    m_table.emplace(name, std::move(entry));
 
     entryIt = m_table.find(name);
   }
@@ -131,47 +130,39 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
     addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
 
     std::set<NextHop, NextHopComparator> hopsToRemove;
-    std::set_difference(entry.getNexthopList().begin(), entry.getNexthopList().end(),
+    std::set_difference(entry.nexthopList.begin(), entry.nexthopList.end(),
                         hopsToAdd.begin(), hopsToAdd.end(),
                         std::inserter(hopsToRemove, hopsToRemove.end()), NextHopComparator());
 
-    bool isUpdatable = isNotNeighbor(entry.getName());
+    bool isUpdatable = isNotNeighbor(entry.name);
     // Remove the uninstalled next hops from NFD and FIB entry
     for (const auto& hop : hopsToRemove){
       if (isUpdatable) {
-        unregisterPrefix(entry.getName(), hop.getConnectingFaceUri());
+        unregisterPrefix(entry.name, hop.getConnectingFaceUri());
       }
-      NLSR_LOG_DEBUG("Removing " << hop.getConnectingFaceUri() << " from " << entry.getName());
-      entry.getNexthopList().removeNextHop(hop);
+      NLSR_LOG_DEBUG("Removing " << hop.getConnectingFaceUri() << " from " << entry.name);
+      entry.nexthopList.removeNextHop(hop);
     }
 
     // Increment sequence number
-    entry.setSeqNo(entry.getSeqNo() + 1);
-
+    entry.seqNo += 1;
     entryIt = m_table.find(name);
-
   }
+
   if (entryIt != m_table.end() &&
-      !entryIt->second.getRefreshEventId() &&
-      isNotNeighbor(entryIt->second.getName())) {
-    scheduleEntryRefresh(entryIt->second,
-                         [this] (FibEntry& entry) {
-                           scheduleLoop(entry);
-                         });
+      !entryIt->second.refreshEventId &&
+      isNotNeighbor(entryIt->second.name)) {
+    scheduleEntryRefresh(entryIt->second, [this] (FibEntry& entry) { scheduleLoop(entry); });
   }
 }
 
 void
 Fib::clean()
 {
-  NLSR_LOG_DEBUG("Fib::clean called");
-  // can't use const ref here as getNexthopList can't be marked const
-  for (auto&& it : m_table) {
-    NLSR_LOG_DEBUG("Canceling Scheduled event. Name: " << it.second.getName());
-    cancelEntryRefresh(it.second);
-
-    for (const auto& hop : it.second.getNexthopList().getNextHops()) {
-      unregisterPrefix(it.second.getName(), hop.getConnectingFaceUri());
+  NLSR_LOG_DEBUG("Clean called");
+  for (const auto& it : m_table) {
+    for (const auto& hop : it.second.nexthopList.getNextHops()) {
+      unregisterPrefix(it.second.name, hop.getConnectingFaceUri());
     }
   }
 }
@@ -182,13 +173,8 @@ Fib::getNumberOfFacesForName(const NexthopList& nextHopList)
   uint32_t nNextHops = static_cast<uint32_t>(nextHopList.getNextHops().size());
   uint32_t nMaxFaces = m_confParameter.getMaxFacesPerPrefix();
 
-  // Allow all faces
-  if (nMaxFaces == 0) {
-    return nNextHops;
-  }
-  else {
-    return std::min(nNextHops, nMaxFaces);
-  }
+  // 0 == all faces
+  return nMaxFaces == 0 ? nNextHops : std::min(nNextHops, nMaxFaces);
 }
 
 bool
@@ -325,26 +311,19 @@ Fib::onSetStrategyFailure(const ndn::nfd::ControlResponse& response,
 void
 Fib::scheduleEntryRefresh(FibEntry& entry, const afterRefreshCallback& refreshCallback)
 {
-  NLSR_LOG_DEBUG("Scheduling refresh for " << entry.getName() <<
-                 " Seq Num: " << entry.getSeqNo() <<
+  NLSR_LOG_DEBUG("Scheduling refresh for " << entry.name <<
+                 " Seq Num: " << entry.seqNo <<
                  " in " << m_refreshTime << " seconds");
 
-  entry.setRefreshEventId(m_scheduler.schedule(ndn::time::seconds(m_refreshTime),
-                                               std::bind(&Fib::refreshEntry, this,
-                                                         entry.getName(), refreshCallback)));
+  entry.refreshEventId = m_scheduler.schedule(ndn::time::seconds(m_refreshTime),
+                                              std::bind(&Fib::refreshEntry, this,
+                                                        entry.name, refreshCallback));
 }
 
 void
 Fib::scheduleLoop(FibEntry& entry)
 {
   scheduleEntryRefresh(entry, std::bind(&Fib::scheduleLoop, this, _1));
-}
-
-void
-Fib::cancelEntryRefresh(const FibEntry& entry)
-{
-  NLSR_LOG_DEBUG("Canceling refresh for " << entry.getName() << " Seq Num: " << entry.getSeqNo());
-  entry.getRefreshEventId().cancel();
 }
 
 void
@@ -356,13 +335,12 @@ Fib::refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb)
   }
 
   FibEntry& entry = it->second;
-  NLSR_LOG_DEBUG("Refreshing " << entry.getName() << " Seq Num: " << entry.getSeqNo());
+  NLSR_LOG_DEBUG("Refreshing " << entry.name << " Seq Num: " << entry.seqNo);
 
-  // Increment sequence number
-  entry.setSeqNo(entry.getSeqNo() + 1);
+  entry.seqNo += 1;
 
-  for (const NextHop& hop : entry) {
-    registerPrefix(entry.getName(),
+  for (const NextHop& hop : entry.nexthopList) {
+    registerPrefix(entry.name,
                    ndn::FaceUri(hop.getConnectingFaceUri()),
                    hop.getRouteCostAsAdjustedInteger(),
                    ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
@@ -377,7 +355,9 @@ Fib::writeLog()
 {
   NLSR_LOG_DEBUG("-------------------FIB-----------------------------");
   for (const auto& entry : m_table) {
-    entry.second.writeLog();
+    NLSR_LOG_DEBUG("Name Prefix: " << entry.second.name);
+    NLSR_LOG_DEBUG("Seq No: " <<  entry.second.seqNo);
+    NLSR_LOG_DEBUG(entry.second.nexthopList);
   }
 }
 

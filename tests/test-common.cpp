@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "test-common.hpp"
 
@@ -26,9 +26,8 @@ namespace test {
 ndn::Data&
 signData(ndn::Data& data)
 {
-  ndn::SignatureSha256WithRsa fakeSignature;
-  fakeSignature.setValue(ndn::encoding::makeEmptyBlock(ndn::tlv::SignatureValue));
-  data.setSignature(fakeSignature);
+  data.setSignatureInfo(ndn::SignatureInfo(ndn::tlv::SignatureTypeValue::SignatureSha256WithRsa));
+  data.setSignatureValue(ndn::encoding::makeEmptyBlock(ndn::tlv::SignatureValue).getBuffer());
   data.wireEncode();
 
   return data;

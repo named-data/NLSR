@@ -85,12 +85,12 @@ CertificateStore::registerKeyPrefixes()
   // Router's NLSR certificate
   ndn::Name nlsrKeyPrefix = m_confParam.getRouterPrefix();
   nlsrKeyPrefix.append("nlsr");
-  nlsrKeyPrefix.append("KEY");
+  nlsrKeyPrefix.append(ndn::security::Certificate::KEY_COMPONENT);
   prefixes.push_back(nlsrKeyPrefix);
 
   // Router's certificate
   ndn::Name routerKeyPrefix = m_confParam.getRouterPrefix();
-  routerKeyPrefix.append("KEY");
+  routerKeyPrefix.append(ndn::security::Certificate::KEY_COMPONENT);
   prefixes.push_back(routerKeyPrefix);
 
   // Router's operator's certificate
@@ -102,7 +102,7 @@ CertificateStore::registerKeyPrefixes()
   // Router's site's certificate
   ndn::Name siteKeyPrefix = m_confParam.getNetwork();
   siteKeyPrefix.append(m_confParam.getSiteName());
-  siteKeyPrefix.append("KEY");
+  siteKeyPrefix.append(ndn::security::Certificate::KEY_COMPONENT);
   prefixes.push_back(siteKeyPrefix);
 
   // Start listening for interest of this router's NLSR certificate,
@@ -152,8 +152,9 @@ CertificateStore::publishCertFromCache(const ndn::Name& keyName)
 
     setInterestFilter(certName);
 
-    if (cert->getKeyName() != cert->getSignature().getKeyLocator().getName()) {
-      publishCertFromCache(cert->getSignature().getKeyLocator().getName());
+    const ndn::Name& keyLocatorName = cert->getSignatureInfo().getKeyLocator().getName();
+    if (cert->getKeyName() != keyLocatorName) {
+      publishCertFromCache(keyLocatorName);
     }
   }
   else {
@@ -165,7 +166,7 @@ CertificateStore::publishCertFromCache(const ndn::Name& keyName)
 void
 CertificateStore::afterFetcherSignalEmitted(const ndn::Data& lsaSegment)
 {
-  const auto keyName = lsaSegment.getSignature().getKeyLocator().getName();
+  const auto keyName = lsaSegment.getSignatureInfo().getKeyLocator().getName();
   if (!find(keyName)) {
     NLSR_LOG_TRACE("Publishing certificate for: " << keyName);
     publishCertFromCache(keyName);

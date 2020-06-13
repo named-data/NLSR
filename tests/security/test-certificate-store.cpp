@@ -153,12 +153,12 @@ BOOST_AUTO_TEST_CASE(TestKeyPrefixRegistration)
   // check if nlsrKeyPrefix is registered
   ndn::Name nlsrKeyPrefix = conf.getRouterPrefix();
   nlsrKeyPrefix.append("nlsr");
-  nlsrKeyPrefix.append("KEY");
+  nlsrKeyPrefix.append(ndn::security::Certificate::KEY_COMPONENT);
   checkPrefixRegistered(face, nlsrKeyPrefix);
 
   // check if routerPrefix is registered
   ndn::Name routerKeyPrefix = conf.getRouterPrefix();
-  routerKeyPrefix.append("KEY");
+  routerKeyPrefix.append(ndn::security::Certificate::KEY_COMPONENT);
   checkPrefixRegistered(face, routerKeyPrefix);
 
   // check if operatorKeyPrefix is registered
@@ -206,7 +206,7 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
                                  });
 
   lsdb.emitSegmentValidatedSignal(data);
-  const auto keyName = data.getSignature().getKeyLocator().getName();
+  const auto keyName = data.getSignatureInfo().getKeyLocator().getName();
   BOOST_CHECK(certStore.find(keyName) != nullptr);
 
   // testing a callback after segment validation signal from lsdb

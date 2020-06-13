@@ -128,9 +128,9 @@ Nlsr::registerStrategyForCerts(const ndn::Name& originRouter)
   m_strategySetOnRouters.push_back(originRouter);
 
   ndn::Name routerKey(originRouter);
-  routerKey.append("KEY");
+  routerKey.append(ndn::security::Certificate::KEY_COMPONENT);
   ndn::Name instanceKey(originRouter);
-  instanceKey.append("nlsr").append("KEY");
+  instanceKey.append("nlsr").append(ndn::security::Certificate::KEY_COMPONENT);
 
   m_fib.setStrategy(routerKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
   m_fib.setStrategy(instanceKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
@@ -143,7 +143,7 @@ Nlsr::registerStrategyForCerts(const ndn::Name& originRouter)
     siteKey.append(originRouter[i]);
   }
   ndn::Name opPrefix(siteKey);
-  siteKey.append("KEY");
+  siteKey.append(ndn::security::Certificate::KEY_COMPONENT);
   m_fib.setStrategy(siteKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
 
   opPrefix.append(std::string("%C1.Operator"));

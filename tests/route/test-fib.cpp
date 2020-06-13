@@ -1,5 +1,5 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
+/*
  * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
@@ -16,8 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
+ */
 
 #include "route/fib.hpp"
 #include "../test-common.hpp"
@@ -301,13 +300,14 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
 BOOST_FIXTURE_TEST_CASE(ScheduleFibEntryRefresh, FibFixture)
 {
   ndn::Name name1("/name/1");
-  FibEntry fe(name1);
-  fib->m_table.emplace(name1, fe);
-  int origSeqNo = fe.getSeqNo();
+  FibEntry fe;
+  fe.name = name1;
+  int origSeqNo = fe.seqNo;
+  fib->m_table.emplace(name1, std::move(fe));
 
   fib->scheduleEntryRefresh(fe,
                             [&] (FibEntry& entry) {
-                              BOOST_CHECK_EQUAL(origSeqNo + 1, entry.getSeqNo());
+                              BOOST_CHECK_EQUAL(origSeqNo + 1, entry.seqNo);
                             });
   this->advanceClocks(ndn::time::milliseconds(10), 1);
 }

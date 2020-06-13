@@ -22,19 +22,26 @@
 #ifndef NLSR_ROUTE_FIB_HPP
 #define NLSR_ROUTE_FIB_HPP
 
-#include "fib-entry.hpp"
 #include "test-access-control.hpp"
+#include "nexthop-list.hpp"
 
 #include <ndn-cxx/mgmt/nfd/controller.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
+
+struct FibEntry {
+  ndn::Name name;
+  ndn::scheduler::ScopedEventId refreshEventId;
+  int32_t seqNo = 1;
+  NexthopList nexthopList;
+};
 
 typedef std::function<void(FibEntry&)> afterRefreshCallback;
 
 class AdjacencyList;
 class ConfParameter;
-class FibEntry;
 
 /*! \brief Maps names to lists of next hops, and exports this information to NFD.
  *
@@ -203,16 +210,6 @@ private:
   void
   scheduleLoop(FibEntry& entry);
 
-  /*! \brief Cancel an entry's refresh event.
-   *
-   * Cancel an entry's refresh event. This only needs to be done when
-   * an entry is removed. Typically this happens when NLSR is
-   * terminated or crashes, and we don't want the scheduler to crash
-   * because it's referencing memory that has no valid function.
-   */
-  void
-  cancelEntryRefresh(const FibEntry& entry);
-
   /*! \brief Refreshes an entry in NFD.
    */
   void
@@ -239,7 +236,7 @@ private:
    * allow for things like stuttering prefix registrations and
    * processing time when refreshing events.
    */
-  static const uint64_t GRACE_PERIOD;
+  static constexpr uint64_t GRACE_PERIOD = 10;
 };
 
 } // namespace nlsr
