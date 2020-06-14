@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -68,7 +68,7 @@ public:
       BOOST_CHECK_EQUAL(nlsr.m_routingTable.m_isRouteCalculationScheduled, false);
     }
     else {
-      BOOST_CHECK_EQUAL(nlsr.m_lsdb.m_isBuildAdjLsaSheduled, false);
+      BOOST_CHECK_EQUAL(nlsr.m_lsdb.m_isBuildAdjLsaScheduled, false);
     }
     BOOST_CHECK_EQUAL(adjList.findAdjacent(ndn::Name(ACTIVE_NEIGHBOR))->getStatus(),
                       Adjacent::STATUS_ACTIVE);
@@ -79,7 +79,7 @@ public:
       BOOST_CHECK_EQUAL(nlsr.m_routingTable.m_isRouteCalculationScheduled, true);
     }
     else {
-      BOOST_CHECK_EQUAL(nlsr.m_lsdb.m_isBuildAdjLsaSheduled, true);
+      BOOST_CHECK_EQUAL(nlsr.m_lsdb.m_isBuildAdjLsaScheduled, true);
     }
     BOOST_CHECK_EQUAL(adjList.findAdjacent(ndn::Name(ACTIVE_NEIGHBOR))->getStatus(),
                       Adjacent::STATUS_INACTIVE);

@@ -144,7 +144,7 @@ std::string
 CoordinateLsa::toString() const
 {
   std::ostringstream os;
-  os << Lsa::toString();
+  os << getString();
   os << "      Hyperbolic Radius  : " << m_hyperbolicRadius << "\n";
   int i = 0;
   for (const auto& value : m_hyperbolicAngles) {
@@ -152,6 +152,21 @@ CoordinateLsa::toString() const
   }
 
   return os.str();
+}
+
+std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
+CoordinateLsa::update(const std::shared_ptr<Lsa>& lsa)
+{
+  auto clsa = std::static_pointer_cast<CoordinateLsa>(lsa);
+  if (!isEqualContent(*clsa)) {
+    m_hyperbolicRadius = clsa->getCorRadius();
+    m_hyperbolicAngles.clear();
+    for (const auto& angle : clsa->getCorTheta()) {
+      m_hyperbolicAngles.push_back(angle);
+    }
+    return std::make_tuple(true, std::list<ndn::Name>{}, std::list<ndn::Name>{});
+  }
+  return std::make_tuple(false, std::list<ndn::Name>{}, std::list<ndn::Name>{});
 }
 
 std::ostream&

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -27,6 +27,7 @@
 #include "lsdb.hpp"
 #include "route/fib.hpp"
 #include "test-access-control.hpp"
+#include "route/name-prefix-table.hpp"
 
 #include <ndn-cxx/util/scheduler.hpp>
 
@@ -89,8 +90,12 @@ class RoutingTable : public RoutingTableStatus
 {
 public:
   explicit
-  RoutingTable(ndn::Scheduler& scheduler, Fib& fib, Lsdb& lsdb,
-               NamePrefixTable& namePrefixTable, ConfParameter& confParam);
+  RoutingTable(ndn::Scheduler& scheduler, Lsdb& lsdb, ConfParameter& confParam);
+
+  ~RoutingTable()
+  {
+    m_afterLsdbModified.disconnect();
+  }
 
   /*! \brief Calculates a list of next hops for each router in the network.
    *
@@ -122,24 +127,6 @@ public:
   void
   scheduleRoutingTableCalculation();
 
-  void
-  setRoutingCalcInterval(uint32_t interval)
-  {
-    m_routingCalcInterval = ndn::time::seconds(interval);
-  }
-
-  const ndn::time::seconds&
-  getRoutingCalcInterval() const
-  {
-    return m_routingCalcInterval;
-  }
-
-  uint64_t
-  getRtSize()
-  {
-    return m_rTable.size();
-  }
-
 private:
   /*! \brief Calculates a link-state routing table. */
   void
@@ -156,21 +143,21 @@ private:
   clearDryRoutingTable();
 
 public:
-  std::unique_ptr<AfterRoutingChange> afterRoutingChange;
+  AfterRoutingChange afterRoutingChange;
 
 private:
   ndn::Scheduler& m_scheduler;
-  Fib& m_fib;
   Lsdb& m_lsdb;
-  NamePrefixTable& m_namePrefixTable;
-
-  ndn::time::seconds m_routingCalcInterval;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  ndn::time::seconds m_routingCalcInterval;
   bool m_isRoutingTableCalculating;
   bool m_isRouteCalculationScheduled;
 
   ConfParameter& m_confParam;
+  ndn::util::signal::Connection m_afterLsdbModified;
+  int32_t m_hyperbolicState;
+  bool m_ownAdjLsaExist = false;
 };
 
 } // namespace nlsr

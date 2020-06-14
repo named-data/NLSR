@@ -32,13 +32,10 @@ INIT_LOGGER(Lsdb);
 const ndn::time::steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE =
   ndn::time::steady_clock::TimePoint::min();
 
-Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam,
-           NamePrefixTable& namePrefixTable, RoutingTable& routingTable)
+Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   : m_face(face)
   , m_scheduler(face.getIoService())
   , m_confParam(confParam)
-  , m_namePrefixTable(namePrefixTable)
-  , m_routingTable(routingTable)
   , m_sync(m_face,
            [this] (const ndn::Name& routerName, const Lsa::Type& lsaType,
                    const uint64_t& sequenceNumber) {
@@ -56,9 +53,26 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam,
         expressInterest(lsaInterest, 0);
       }))
   , m_segmentPublisher(m_face, keyChain)
-  , m_isBuildAdjLsaSheduled(false)
+  , m_isBuildAdjLsaScheduled(false)
   , m_adjBuildCount(0)
 {
+  ndn::Name name = m_confParam.getLsaPrefix();
+  NLSR_LOG_DEBUG("Setting interest filter for LsaPrefix: " << name);
+
+  m_face.setInterestFilter(ndn::InterestFilter(name).allowLoopback(false),
+    [this] (const auto& name, const auto& interest) { processInterest(name, interest); },
+    [] (const auto& name) { NLSR_LOG_DEBUG("Successfully registered prefix: " << name); },
+    [] (const auto& name, const auto& reason) {
+      NLSR_LOG_ERROR("Failed to register prefix " << name);
+      NDN_THROW(std::runtime_error("Register prefix failed: " + reason));
+    },
+    m_confParam.getSigningInfo(), ndn::nfd::ROUTE_FLAG_CAPTURE);
+
+  buildAndInstallOwnNameLsa();
+  // Install coordinate LSAs if using HR or dry-run HR.
+  if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+    buildAndInstallOwnCoordinateLsa();
+  }
 }
 
 void
@@ -101,41 +115,34 @@ Lsdb::scheduleAdjLsaBuild()
     return;
   }
 
-  if (m_isBuildAdjLsaSheduled) {
+  if (m_isBuildAdjLsaScheduled) {
     NLSR_LOG_DEBUG("Rescheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
   }
   else {
     NLSR_LOG_DEBUG("Scheduling Adjacency LSA build in " << m_adjLsaBuildInterval);
-    m_isBuildAdjLsaSheduled = true;
+    m_isBuildAdjLsaScheduled = true;
   }
   m_scheduledAdjLsaBuild = m_scheduler.schedule(m_adjLsaBuildInterval, [this] { buildAdjLsa(); });
 }
 
-template<typename T>
 void
 Lsdb::writeLog() const
 {
-  if ((T::type() == Lsa::Type::COORDINATE &&
-      m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) ||
-      (T::type() == Lsa::Type::ADJACENCY &&
-      m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON)) {
-    return;
-  }
+  static const Lsa::Type types[] = {Lsa::Type::COORDINATE, Lsa::Type::NAME, Lsa::Type::ADJACENCY};
+  for (const auto& type : types) {
+    if ((type == Lsa::Type::COORDINATE &&
+         m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) ||
+        (type == Lsa::Type::ADJACENCY &&
+       m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON)) {
+      continue;
+    }
 
-  NLSR_LOG_DEBUG("---------------" << T::type() << " LSDB-------------------");
-  auto lsaRange = m_lsdb.get<byType>().equal_range(T::type());
-  for (auto lsaIt = lsaRange.first; lsaIt != lsaRange.second; ++lsaIt) {
-    auto lsaPtr = std::static_pointer_cast<T>(*lsaIt);
-    NLSR_LOG_DEBUG(lsaPtr->toString());
+    NLSR_LOG_DEBUG("---------------" << type << " LSDB-------------------");
+    auto lsaRange = m_lsdb.get<byType>().equal_range(type);
+    for (auto lsaIt = lsaRange.first; lsaIt != lsaRange.second; ++lsaIt) {
+      NLSR_LOG_DEBUG((*lsaIt)->toString());
+    }
   }
-}
-
-void
-Lsdb::writeLog() const
-{
-  writeLog<CoordinateLsa>();
-  writeLog<NameLsa>();
-  writeLog<AdjLsa>();
 }
 
 void
@@ -199,8 +206,7 @@ Lsdb::processInterestForLsa(const ndn::Interest& interest, const ndn::Name& orig
   if (auto lsaPtr = findLsa(originRouter, lsaType)) {
     NLSR_LOG_TRACE("Verifying SeqNo for " << lsaType << " is same as requested.");
     if (lsaPtr->getSeqNo() == seqNo) {
-      m_segmentPublisher.publish(interest.getName(), interest.getName(),
-                                 lsaPtr->wireEncode(),
+      m_segmentPublisher.publish(interest.getName(), interest.getName(), lsaPtr->wireEncode(),
                                  m_lsaRefreshTime, m_confParam.getSigningInfo());
       incrementDataSentStats(lsaType);
       return true;
@@ -216,39 +222,21 @@ void
 Lsdb::installLsa(std::shared_ptr<Lsa> lsa)
 {
   auto timeToExpire = m_lsaRefreshTime;
+  if (lsa->getOriginRouter() != m_thisRouterPrefix) {
+    auto duration = lsa->getExpirationTimePoint() - ndn::time::system_clock::now();
+    if (duration > ndn::time::seconds(0)) {
+      timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
+    }
+  }
 
   auto chkLsa = findLsa(lsa->getOriginRouter(), lsa->getType());
   if (chkLsa == nullptr) {
     NLSR_LOG_DEBUG("Adding " << lsa->getType() << " LSA");
     NLSR_LOG_DEBUG(lsa->toString());
-    ndn::time::seconds timeToExpire = m_lsaRefreshTime;
 
     m_lsdb.emplace(lsa);
 
-    // Add any new name prefixes to the NPT if from another router
-    if (lsa->getOriginRouter() != m_thisRouterPrefix) {
-      // Pass the origin router as both the name to register and where it came from.
-      m_namePrefixTable.addEntry(lsa->getOriginRouter(), lsa->getOriginRouter());
-
-      if (lsa->getType() == Lsa::Type::NAME) {
-        auto nlsa = std::static_pointer_cast<NameLsa>(lsa);
-        for (const auto& name : nlsa->getNpl().getNames()) {
-          if (name != m_thisRouterPrefix) {
-            m_namePrefixTable.addEntry(name, nlsa->getOriginRouter());
-          }
-        }
-      }
-
-      auto duration = lsa->getExpirationTimePoint() - ndn::time::system_clock::now();
-      if (duration > ndn::time::seconds(0)) {
-        timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
-      }
-    }
-
-    if ((lsa->getType() == Lsa::Type::ADJACENCY && m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_ON)||
-        (lsa->getType() == Lsa::Type::COORDINATE && m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF)) {
-      m_routingTable.scheduleRoutingTableCalculation();
-    }
+    onLsdbModified(lsa, LsdbUpdate::INSTALLED, {}, {});
 
     lsa->setExpiringEventId(scheduleLsaExpiration(lsa, timeToExpire));
   }
@@ -259,104 +247,36 @@ Lsdb::installLsa(std::shared_ptr<Lsa> lsa)
     chkLsa->setSeqNo(lsa->getSeqNo());
     chkLsa->setExpirationTimePoint(lsa->getExpirationTimePoint());
 
-    if (lsa->getType() == Lsa::Type::NAME) {
-      auto chkNameLsa = std::static_pointer_cast<NameLsa>(chkLsa);
-      auto nlsa = std::static_pointer_cast<NameLsa>(lsa);
-      chkNameLsa->getNpl().sort();
-      nlsa->getNpl().sort();
-      if (!chkNameLsa->isEqualContent(*nlsa)) {
-        // Obtain the set difference of the current and the incoming
-        // name prefix sets, and add those.
-        std::list<ndn::Name> newNames = nlsa->getNpl().getNames();
-        std::list<ndn::Name> oldNames = chkNameLsa->getNpl().getNames();
-        std::list<ndn::Name> namesToAdd;
-        std::set_difference(newNames.begin(), newNames.end(), oldNames.begin(), oldNames.end(),
-                            std::inserter(namesToAdd, namesToAdd.begin()));
-        for (const auto& name : namesToAdd) {
-          chkNameLsa->addName(name);
-          if (nlsa->getOriginRouter() != m_thisRouterPrefix && name != m_thisRouterPrefix) {
-            m_namePrefixTable.addEntry(name, nlsa->getOriginRouter());
-          }
-        }
+    bool updated;
+    std::list<ndn::Name> namesToAdd, namesToRemove;
+    std::tie(updated, namesToAdd, namesToRemove) = chkLsa->update(lsa);
 
-        chkNameLsa->getNpl().sort();
-
-        // Also remove any names that are no longer being advertised.
-        std::list<ndn::Name> namesToRemove;
-        std::set_difference(oldNames.begin(), oldNames.end(), newNames.begin(), newNames.end(),
-                            std::inserter(namesToRemove, namesToRemove.begin()));
-        for (const auto& name : namesToRemove) {
-          NLSR_LOG_DEBUG("Removing name" << name << " from Name LSA no longer advertised.");
-          chkNameLsa->removeName(name);
-          if (nlsa->getOriginRouter() != m_thisRouterPrefix && name != m_thisRouterPrefix) {
-            m_namePrefixTable.removeEntry(name, nlsa->getOriginRouter());
-          }
-        }
-      }
-    }
-    else if (lsa->getType() == Lsa::Type::ADJACENCY) {
-      auto chkAdjLsa = std::static_pointer_cast<AdjLsa>(chkLsa);
-      auto alsa = std::static_pointer_cast<AdjLsa>(lsa);
-      if (!chkAdjLsa->isEqualContent(*alsa)) {
-        chkAdjLsa->resetAdl();
-        for (const auto& adjacent : alsa->getAdl()) {
-          chkAdjLsa->addAdjacent(adjacent);
-        }
-        m_routingTable.scheduleRoutingTableCalculation();
-      }
-    }
-    else {
-      auto chkCorLsa = std::static_pointer_cast<CoordinateLsa>(chkLsa);
-      auto clsa = std::static_pointer_cast<CoordinateLsa>(lsa);
-      if (!chkCorLsa->isEqualContent(*clsa)) {
-        chkCorLsa->setCorRadius(clsa->getCorRadius());
-        chkCorLsa->setCorTheta(clsa->getCorTheta());
-        if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
-          m_routingTable.scheduleRoutingTableCalculation();
-        }
-      }
+    if (updated) {
+      onLsdbModified(lsa, LsdbUpdate::UPDATED, namesToAdd, namesToRemove);
     }
 
-    if (chkLsa->getOriginRouter() != m_thisRouterPrefix) {
-      auto duration = lsa->getExpirationTimePoint() - ndn::time::system_clock::now();
-      if (duration > ndn::time::seconds(0)) {
-        timeToExpire = ndn::time::duration_cast<ndn::time::seconds>(duration);
-      }
-    }
-    chkLsa->getExpiringEventId().cancel();
     chkLsa->setExpiringEventId(scheduleLsaExpiration(chkLsa, timeToExpire));
     NLSR_LOG_DEBUG("Updated " << lsa->getType() << " LSA:");
     NLSR_LOG_DEBUG(chkLsa->toString());
   }
 }
 
-bool
-Lsdb::removeLsa(const ndn::Name& router, Lsa::Type lsaType)
+void
+Lsdb::removeLsa(const LsaContainer::index<Lsdb::byName>::type::iterator& lsaIt)
 {
-  auto lsaIt = m_lsdb.get<byName>().find(std::make_tuple(router, lsaType));
-
   if (lsaIt != m_lsdb.end()) {
     auto lsaPtr = *lsaIt;
-    NLSR_LOG_DEBUG("Removing " << lsaType << " LSA:");
+    NLSR_LOG_DEBUG("Removing " << lsaPtr->getType() << " LSA:");
     NLSR_LOG_DEBUG(lsaPtr->toString());
-    // If the requested name LSA is not ours, we also need to remove
-    // its entries from the NPT.
-    if (lsaPtr->getOriginRouter() != m_thisRouterPrefix) {
-      m_namePrefixTable.removeEntry(lsaPtr->getOriginRouter(), lsaPtr->getOriginRouter());
-
-      if (lsaType == Lsa::Type::NAME) {
-        auto nlsaPtr = std::static_pointer_cast<NameLsa>(lsaPtr);
-        for (const auto& name : nlsaPtr->getNpl().getNames()) {
-          if (name != m_thisRouterPrefix) {
-            m_namePrefixTable.removeEntry(name, nlsaPtr->getOriginRouter());
-          }
-        }
-      }
-    }
     m_lsdb.erase(lsaIt);
-    return true;
+    onLsdbModified(lsaPtr, LsdbUpdate::REMOVED, {}, {});
   }
-  return false;
+}
+
+void
+Lsdb::removeLsa(const ndn::Name& router, Lsa::Type lsaType)
+{
+  removeLsa(m_lsdb.get<byName>().find(std::make_tuple(router, lsaType)));
 }
 
 void
@@ -364,7 +284,7 @@ Lsdb::buildAdjLsa()
 {
   NLSR_LOG_TRACE("buildAdjLsa called");
 
-  m_isBuildAdjLsaSheduled = false;
+  m_isBuildAdjLsaScheduled = false;
 
   if (m_confParam.getAdjacencyList().isAdjLsaBuildable(m_confParam.getInterestRetryNumber())) {
 
@@ -382,10 +302,7 @@ Lsdb::buildAdjLsa()
       // routers to delete it, too.
       else {
         NLSR_LOG_DEBUG("Removing own Adj LSA; no ACTIVE neighbors");
-
         removeLsa(m_thisRouterPrefix, Lsa::Type::ADJACENCY);
-        // Recompute routing table after removal
-        m_routingTable.scheduleRoutingTableCalculation();
       }
       // In the case that during building the adj LSA, the FIB has to
       // wait on an Interest response, the number of scheduled adj LSA
@@ -397,7 +314,7 @@ Lsdb::buildAdjLsa()
   // neighbor, so schedule a build for later (when all that has
   // hopefully finished)
   else {
-    m_isBuildAdjLsaSheduled = true;
+    m_isBuildAdjLsaScheduled = true;
     auto schedulingTime = ndn::time::seconds(m_confParam.getInterestRetryNumber() *
                                              m_confParam.getInterestResendTime());
     m_scheduledAdjLsaBuild = m_scheduler.schedule(schedulingTime, [this] { buildAdjLsa(); });
@@ -420,6 +337,13 @@ Lsdb::buildAndInstallOwnAdjLsa()
   }
 
   installLsa(std::make_shared<AdjLsa>(adjLsa));
+}
+
+ndn::scheduler::EventId
+Lsdb::scheduleLsaExpiration(std::shared_ptr<Lsa> lsa, ndn::time::seconds expTime)
+{
+  NLSR_LOG_DEBUG("Scheduling expiration in: " << expTime + GRACE_PERIOD << " for " << lsa->getOriginRouter());
+  return m_scheduler.schedule(expTime + GRACE_PERIOD, [this, lsa] { expireOrRefreshLsa(lsa); });
 }
 
 void
@@ -454,7 +378,7 @@ Lsdb::expireOrRefreshLsa(std::shared_ptr<Lsa> lsa)
       // Since we cannot refresh other router's LSAs, our only choice is to expire.
       else {
         NLSR_LOG_DEBUG("Other's " << lsaPtr->getType() << " LSA, so removing from LSDB");
-        removeLsa(lsaPtr->getOriginRouter(), lsaPtr->getType());
+        removeLsa(lsaIt);
       }
     }
   }
@@ -581,7 +505,6 @@ Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& inter
     ndn::Name originRouter = m_confParam.getNetwork();
     originRouter.append(interestName.getSubName(lsaPosition + 1,
                                                 interestName.size() - lsaPosition - 3));
-
     try {
       Lsa::Type interestedLsType;
       std::istringstream(interestName[-2].toUri()) >> interestedLsType;
@@ -613,7 +536,6 @@ Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& inter
     }
     catch (const std::exception& e) {
       NLSR_LOG_TRACE("LSA data decoding error :( " << e.what());
-      return;
     }
   }
 }

@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(HyperbolicOn_ZeroCostNeighbors)
 
   conf.setHyperbolicState(HYPERBOLIC_STATE_ON);
 
-  nlsr.initialize();
+  Nlsr nlsr2(m_face, m_keyChain, conf);
 
   for (const auto& neighbor : neighbors.getAdjList()) {
     BOOST_CHECK_EQUAL(neighbor.getLinkCost(), 0);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(HyperbolicOff_LinkStateCost)
                      Adjacent::STATUS_INACTIVE, 0, 0);
   neighbors.insert(neighborC);
 
-  nlsr.initialize();
+  Nlsr nlsr2(m_face, m_keyChain, conf);
 
   for (const auto& neighbor : neighbors.getAdjList()) {
     BOOST_CHECK_NE(neighbor.getLinkCost(), 0);
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
   const Lsdb& lsdb = nlsr2.m_lsdb;
   const RoutingTable& rt = nlsr2.m_routingTable;
 
-  BOOST_CHECK_EQUAL(lsdb.m_adjLsaBuildInterval, ndn::time::seconds(3));
-  BOOST_CHECK_EQUAL(rt.getRoutingCalcInterval(), ndn::time::seconds(9));
+  BOOST_CHECK_EQUAL(lsdb.m_adjLsaBuildInterval, 3_s);
+  BOOST_CHECK_EQUAL(rt.m_routingCalcInterval, 9_s);
 }
 
 BOOST_AUTO_TEST_CASE(FaceCreateEvent)
@@ -263,7 +263,6 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
   // Set HelloInterest lifetime as 10 seconds so that neighbors are not marked INACTIVE
   // upon timeout before this test ends
   conf.setInterestResendTime(10);
-  nlsr.initialize();
 
   // Simulate successful HELLO responses
   lsdb.scheduleAdjLsaBuild();
@@ -366,8 +365,6 @@ BOOST_AUTO_TEST_CASE(BuildAdjLsaAfterHelloResponse)
                      0, Adjacent::STATUS_INACTIVE, 0, 0);
 
   neighbors.insert(neighborB);
-
-  nlsr.initialize();
 
   this->advanceClocks(10_ms);
 

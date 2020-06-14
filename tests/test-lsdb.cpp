@@ -22,7 +22,6 @@
 #include "lsdb.hpp"
 
 #include "test-common.hpp"
-#include "nlsr.hpp"
 #include "lsa/lsa.hpp"
 #include "name-prefix-list.hpp"
 
@@ -41,14 +40,11 @@ public:
     : face(m_ioService, m_keyChain, {true, true})
     , conf(face, m_keyChain)
     , confProcessor(conf)
-    , nlsr(face, m_keyChain, conf)
-    , lsdb(nlsr.m_lsdb)
+    , lsdb(face, m_keyChain, conf)
     , REGISTER_COMMAND_PREFIX("/localhost/nfd/rib")
     , REGISTER_VERB("register")
   {
     addIdentity("/ndn/site/%C1.Router/this-router");
-
-    nlsr.initialize();
 
     advanceClocks(10_ms);
     face.sentInterests.clear();
@@ -100,15 +96,50 @@ public:
     BOOST_CHECK(false);
   }
 
+  void
+  checkSignalResult(LsdbUpdate updateType,
+                    const std::shared_ptr<Lsa>& lsaPtr,
+                    const std::list<ndn::Name>& namesToAdd,
+                    const std::list<ndn::Name>& namesToRemove)
+  {
+    BOOST_CHECK(updateHappened);
+    BOOST_CHECK_EQUAL(lsaPtrCheck->getOriginRouter(), lsaPtr->getOriginRouter());
+    BOOST_CHECK_EQUAL(lsaPtrCheck->getType(), lsaPtr->getType());
+    BOOST_CHECK(updateType == updateTypeCheck);
+    BOOST_CHECK(namesToAdd == namesToAddCheck);
+    BOOST_CHECK(namesToRemove == namesToRemoveCheck);
+    updateHappened = false;
+  }
+
+  void
+  connectSignal()
+  {
+    lsdb.onLsdbModified.connect(
+      [&] (std::shared_ptr<Lsa> lsa, LsdbUpdate updateType,
+           const auto& namesToAdd, const auto& namesToRemove) {
+        lsaPtrCheck = lsa;
+        updateTypeCheck = updateType;
+        namesToAddCheck = namesToAdd;
+        namesToRemoveCheck = namesToRemove;
+        updateHappened = true;
+      }
+    );
+  }
+
 public:
   ndn::util::DummyClientFace face;
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
-  Nlsr nlsr;
-  Lsdb& lsdb;
+  Lsdb lsdb;
 
   ndn::Name REGISTER_COMMAND_PREFIX;
   ndn::Name::Component REGISTER_VERB;
+
+  LsdbUpdate updateTypeCheck = LsdbUpdate::INSTALLED;
+  std::list<ndn::Name> namesToAddCheck;
+  std::list<ndn::Name> namesToRemoveCheck;
+  std::shared_ptr<Lsa> lsaPtrCheck = nullptr;
+  bool updateHappened = false;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestLsdb, LsdbFixture)
@@ -212,9 +243,8 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
                 }
             )CONF";
   conf2.getValidator().load(config, "config-file-from-string");
-  Nlsr nlsr2(face2, m_keyChain, conf2);
 
-  Lsdb& lsdb2(nlsr2.m_lsdb);
+  Lsdb lsdb2(face2, m_keyChain, conf2);
 
   advanceClocks(ndn::time::milliseconds(10), 10);
 
@@ -304,7 +334,7 @@ BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
   // 1800 seconds is the default life time.
   NameLsa nlsa1(router1, 12, testTimePoint, npl1);
 
-  Lsdb& lsdb1(nlsr.m_lsdb);
+  Lsdb& lsdb1(lsdb);
 
   lsdb1.installLsa(std::make_shared<NameLsa>(nlsa1));
 
@@ -402,6 +432,70 @@ BOOST_AUTO_TEST_CASE(TestIsLsaNew)
   // Higher NameLSA sequence number
   uint64_t higherSeqNo = 1000;
   BOOST_CHECK(lsdb.isLsaNew(originRouter, Lsa::Type::NAME, higherSeqNo));
+}
+
+BOOST_AUTO_TEST_CASE(LsdbSignals)
+{
+  connectSignal();
+  auto testTimePoint = ndn::time::system_clock::now() + 3600_s;
+  ndn::Name router2("/router2");
+  AdjLsa adjLsa(router2, 12, testTimePoint, 2, conf.getAdjacencyList());
+  std::shared_ptr<Lsa> lsaPtr = std::make_shared<AdjLsa>(adjLsa);
+  lsdb.installLsa(lsaPtr);
+  checkSignalResult(LsdbUpdate::INSTALLED, lsaPtr, {}, {});
+
+  adjLsa.setSeqNo(13);
+  updateHappened = false;
+  lsaPtr = std::make_shared<AdjLsa>(adjLsa);
+  lsdb.installLsa(lsaPtr);
+  BOOST_CHECK(!updateHappened);
+
+  Adjacent adj("Neighbor1");
+  adjLsa.setSeqNo(14);
+  adjLsa.addAdjacent(adj);
+  lsaPtr = std::make_shared<AdjLsa>(adjLsa);
+  lsdb.installLsa(lsaPtr);
+  checkSignalResult(LsdbUpdate::UPDATED, lsaPtr, {}, {});
+
+  lsdb.removeLsa(lsaPtrCheck->getOriginRouter(), Lsa::Type::ADJACENCY);
+  checkSignalResult(LsdbUpdate::REMOVED, lsaPtr, {}, {});
+
+  // Name LSA
+  NamePrefixList npl1{"name1", "name2"};
+  NameLsa nameLsa(router2, 12, testTimePoint, npl1);
+  lsaPtr = std::make_shared<NameLsa>(nameLsa);
+  lsdb.installLsa(lsaPtr);
+  checkSignalResult(LsdbUpdate::INSTALLED, lsaPtr, {}, {});
+
+  nameLsa.setSeqNo(13);
+  lsaPtr = std::make_shared<NameLsa>(nameLsa);
+  lsdb.installLsa(lsaPtr);
+  BOOST_CHECK(!updateHappened);
+
+  NamePrefixList npl2{"name2", "name3"};
+  NameLsa nameLsa2(router2, 14, testTimePoint, npl2);
+  lsaPtr = std::make_shared<NameLsa>(nameLsa2);
+  lsdb.installLsa(lsaPtr);
+  checkSignalResult(LsdbUpdate::UPDATED, lsaPtr, {"name3"}, {"name1"});
+
+  lsdb.removeLsa(lsaPtrCheck->getOriginRouter(), Lsa::Type::NAME);
+  checkSignalResult(LsdbUpdate::REMOVED, lsaPtr, {}, {});
+
+  // Coordinate LSA
+  lsaPtr = std::make_shared<CoordinateLsa>(CoordinateLsa("router1", 12, testTimePoint, 2.5, {30}));
+  lsdb.installLsa(lsaPtr);
+  checkSignalResult(LsdbUpdate::INSTALLED, lsaPtr, {}, {});
+
+  lsaPtr = std::make_shared<CoordinateLsa>(CoordinateLsa("router1", 13, testTimePoint, 2.5, {30}));
+  lsdb.installLsa(lsaPtr);
+  BOOST_CHECK(!updateHappened);
+
+  lsaPtr = std::make_shared<CoordinateLsa>(CoordinateLsa("router1", 14, testTimePoint, 2.5, {40}));
+  lsdb.installLsa(lsaPtr);
+  checkSignalResult(LsdbUpdate::UPDATED, lsaPtr, {}, {});
+
+  lsdb.removeLsa(lsaPtrCheck->getOriginRouter(), Lsa::Type::COORDINATE);
+  checkSignalResult(LsdbUpdate::REMOVED, lsaPtr, {}, {});
 }
 
 BOOST_AUTO_TEST_SUITE_END() // TestLsdb

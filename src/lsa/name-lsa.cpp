@@ -122,7 +122,7 @@ std::string
 NameLsa::toString() const
 {
   std::ostringstream os;
-  os << Lsa::toString();
+  os << getString();
   os << "      Names:\n";
   int i = 0;
   for (const auto& name : m_npl.getNames()) {
@@ -130,6 +130,38 @@ NameLsa::toString() const
   }
 
   return os.str();
+}
+
+std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
+NameLsa::update(const std::shared_ptr<Lsa>& lsa)
+{
+  auto nlsa = std::static_pointer_cast<NameLsa>(lsa);
+  bool updated = false;
+
+  // Obtain the set difference of the current and the incoming
+  // name prefix sets, and add those.
+  std::list<ndn::Name> newNames = nlsa->getNpl().getNames();
+  std::list<ndn::Name> oldNames = m_npl.getNames();
+  std::list<ndn::Name> namesToAdd;
+  std::set_difference(newNames.begin(), newNames.end(), oldNames.begin(), oldNames.end(),
+                      std::inserter(namesToAdd, namesToAdd.begin()));
+  for (const auto& name : namesToAdd) {
+    addName(name);
+    updated = true;
+  }
+
+  m_npl.sort();
+
+  // Also remove any names that are no longer being advertised.
+  std::list<ndn::Name> namesToRemove;
+  std::set_difference(oldNames.begin(), oldNames.end(), newNames.begin(), newNames.end(),
+                      std::inserter(namesToRemove, namesToRemove.begin()));
+  for (const auto& name : namesToRemove) {
+    removeName(name);
+    updated = true;
+  }
+
+  return std::make_tuple(updated, namesToAdd, namesToRemove);
 }
 
 std::ostream&

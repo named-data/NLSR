@@ -60,6 +60,8 @@ protected:
 
   Lsa() = default;
 
+  Lsa(const Lsa& lsa);
+
 public:
   virtual
   ~Lsa() = default;
@@ -108,19 +110,16 @@ public:
   void
   setExpiringEventId(ndn::scheduler::EventId eid)
   {
-    m_expiringEventId = std::move(eid);
+    m_expiringEventId = eid;
   }
 
-  ndn::scheduler::EventId
-  getExpiringEventId() const
-  {
-    return m_expiringEventId;
-  }
-
-  /*! Get data common to all LSA types.
+  /*! Get data common to all LSA types for printing purposes.
    */
   virtual std::string
-  toString() const;
+  toString() const = 0;
+
+  virtual std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
+  update(const std::shared_ptr<Lsa>& lsa) = 0;
 
   virtual const ndn::Block&
   wireEncode() const = 0;
@@ -133,11 +132,14 @@ protected:
   void
   wireDecode(const ndn::Block& wire);
 
+  std::string
+  getString() const;
+
 PUBLIC_WITH_TESTS_ELSE_PROTECTED:
   ndn::Name m_originRouter;
   uint64_t m_seqNo = 0;
   ndn::time::system_clock::TimePoint m_expirationTimePoint;
-  ndn::scheduler::EventId m_expiringEventId;
+  ndn::scheduler::ScopedEventId m_expiringEventId;
 
   mutable ndn::Block m_wire;
 };

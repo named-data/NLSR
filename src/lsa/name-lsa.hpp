@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -96,6 +96,9 @@ public:
 
   std::string
   toString() const override;
+
+  std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
+  update(const std::shared_ptr<Lsa>& lsa) override;
 
 private:
   NamePrefixList m_npl;

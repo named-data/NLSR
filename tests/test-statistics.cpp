@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -46,8 +46,6 @@ public:
     conf.setSyncInterestLifetime(1000);
 
     addIdentity(conf.getRouterPrefix());
-
-    nlsr.initialize();
 
     this->advanceClocks(ndn::time::milliseconds(1), 10);
     face.sentInterests.clear();

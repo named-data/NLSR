@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -71,11 +71,6 @@ public:
                          const RoutingTable& rt);
 
 private:
-  /*! \brief set dispatcher for localhost or remote router
-   */
-  void
-  setDispatcher(ndn::mgmt::Dispatcher& dispatcher);
-
   /*! \brief provide routing-table dataset
   */
   void
@@ -90,7 +85,6 @@ private:
                    ndn::mgmt::StatusDatasetContext& context);
 
 private:
-  ndn::mgmt::Dispatcher& m_dispatcher;
   const Lsdb& m_lsdb;
   const RoutingTable& m_routingTable;
 };

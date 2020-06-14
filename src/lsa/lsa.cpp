@@ -35,6 +35,13 @@ Lsa::Lsa(const ndn::Name& originRouter, uint64_t seqNo,
 {
 }
 
+Lsa::Lsa(const Lsa& lsa)
+  : m_originRouter(lsa.getOriginRouter())
+  , m_seqNo(lsa.getSeqNo())
+  , m_expirationTimePoint(lsa.getExpirationTimePoint())
+{
+}
+
 template<ndn::encoding::Tag TAG>
 size_t
 Lsa::wireEncode(ndn::EncodingImpl<TAG>& encoder) const
@@ -138,13 +145,13 @@ operator>>(std::istream& is, Lsa::Type& type)
 }
 
 std::string
-Lsa::toString() const
+Lsa::getString() const
 {
   std::ostringstream os;
-  auto duration = getExpirationTimePoint() - ndn::time::system_clock::now();
+  auto duration = m_expirationTimePoint - ndn::time::system_clock::now();
   os << "    " << getType() << " LSA:\n"
-     << "      Origin Router      : " << getOriginRouter() << "\n"
-     << "      Sequence Number    : " << getSeqNo() << "\n"
+     << "      Origin Router      : " << m_originRouter << "\n"
+     << "      Sequence Number    : " << m_seqNo << "\n"
      << "      Expires in         : " << ndn::time::duration_cast<ndn::time::milliseconds>(duration)
      << "\n";
   return os.str();

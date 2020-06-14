@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -28,23 +28,25 @@
 namespace nlsr {
 namespace test {
 
-class RoutingTableFixture
+class RoutingTableFixture : public UnitTestTimeFixture
 {
 public:
   RoutingTableFixture()
-    : conf(face, keyChain)
-    , nlsr(face, keyChain, conf)
-    , rt(nlsr.m_routingTable)
+    : face(m_ioService, m_keyChain, {true, true})
+    , conf(face, m_keyChain)
+    , confProcessor(conf)
+    , lsdb(face, m_keyChain, conf)
+    , rt(m_scheduler, lsdb, conf)
   {
   }
 
 public:
   ndn::util::DummyClientFace face;
-  ndn::KeyChain keyChain;
   ConfParameter conf;
-  Nlsr nlsr;
+  DummyConfFileProcessor confProcessor;
 
-  RoutingTable& rt;
+  Lsdb lsdb;
+  RoutingTable rt;
 };
 
 BOOST_AUTO_TEST_SUITE(TestRoutingTable)
@@ -128,6 +130,83 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableOutputStream, RoutingTableFixture)
                     "Routing Table:\n"
                     "  Destination: /dest1\n"
                     "    NextHop(Uri: nexthop, Cost: 99)\n");
+}
+
+BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, RoutingTableFixture)
+{
+  ndn::time::system_clock::TimePoint testTimePoint = ndn::time::system_clock::now() + 3600_s;
+  ndn::Name router2("/router2");
+  AdjLsa adjLsa(router2, 12, testTimePoint, 2, conf.getAdjacencyList());
+  std::shared_ptr<Lsa> lsaPtr = std::make_shared<AdjLsa>(adjLsa);
+  BOOST_CHECK(!rt.m_isRouteCalculationScheduled);
+  lsdb.installLsa(lsaPtr);
+  BOOST_CHECK(rt.m_isRouteCalculationScheduled);
+
+  // After 15_s (by default) routing table calculation is done
+  advanceClocks(15_s);
+  BOOST_CHECK(!rt.m_isRouteCalculationScheduled);
+
+  // Update to installed LSA
+  std::shared_ptr<Lsa> lsaPtr2 = std::make_shared<AdjLsa>(adjLsa);
+  auto adjPtr = std::static_pointer_cast<AdjLsa>(lsaPtr2);
+  adjPtr->addAdjacent(Adjacent("router3"));
+  adjPtr->setSeqNo(13);
+  lsdb.installLsa(lsaPtr2);
+  BOOST_CHECK(rt.m_isRouteCalculationScheduled);
+
+  // Insert a neighbor so that AdjLsa can be installed
+  AdjacencyList adjl;
+  Adjacent ownAdj(conf.getRouterPrefix());
+  ownAdj.setStatus(Adjacent::STATUS_ACTIVE);
+  adjl.insert(ownAdj);
+  AdjLsa adjLsa4("/router4", 12, testTimePoint, 2, adjl);
+  lsaPtr = std::make_shared<AdjLsa>(adjLsa4);
+  lsdb.installLsa(lsaPtr);
+
+  Adjacent adj("/router4");
+  adj.setStatus(Adjacent::STATUS_ACTIVE);
+  conf.getAdjacencyList().insert(adj);
+  lsdb.scheduleAdjLsaBuild();
+  BOOST_CHECK_EQUAL(rt.m_rTable.size(), 0);
+  advanceClocks(15_s);
+  BOOST_CHECK_EQUAL(rt.m_rTable.size(), 1);
+
+  rt.wireEncode();
+  BOOST_CHECK(rt.m_wire.isValid());
+  BOOST_CHECK_GT(rt.m_wire.size(), 0);
+
+  // Remove own Adj Lsa - Make sure routing table is wiped out
+  conf.getAdjacencyList().setStatusOfNeighbor("/router4", Adjacent::STATUS_INACTIVE);
+  conf.getAdjacencyList().setTimedOutInterestCount("/router4", HELLO_RETRIES_MAX);
+  lsdb.scheduleAdjLsaBuild();
+  advanceClocks(15_s);
+  BOOST_CHECK_EQUAL(rt.m_rTable.size(), 0);
+  BOOST_CHECK(!rt.m_wire.isValid());
+
+  // Check that HR routing is scheduled, once Coordinate LSA is added
+  BOOST_CHECK(!rt.m_isRouteCalculationScheduled);
+  rt.m_hyperbolicState = HYPERBOLIC_STATE_ON;
+  CoordinateLsa clsa("router5", 12, testTimePoint, 2.5, {30.0});
+  auto clsaPtr = std::make_shared<CoordinateLsa>(clsa);
+  lsdb.installLsa(clsaPtr);
+  BOOST_CHECK(rt.m_isRouteCalculationScheduled);
+
+  Adjacent router5("/router5");
+  router5.setStatus(Adjacent::STATUS_ACTIVE);
+  conf.getAdjacencyList().insert(router5);
+  conf.getAdjacencyList().setStatusOfNeighbor("/router5", Adjacent::STATUS_ACTIVE);
+  advanceClocks(15_s);
+  rt.wireEncode();
+  BOOST_CHECK(rt.m_wire.isValid());
+  BOOST_CHECK_GT(rt.m_wire.size(), 0);
+  BOOST_CHECK(!rt.m_isRouteCalculationScheduled);
+
+  // Emulate HelloProtocol neighbor down
+  conf.getAdjacencyList().setStatusOfNeighbor("/router5", Adjacent::STATUS_INACTIVE);
+  rt.scheduleRoutingTableCalculation();
+  advanceClocks(15_s);
+  BOOST_CHECK_EQUAL(rt.m_rTable.size(), 0);
+  BOOST_CHECK(!rt.m_wire.isValid());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

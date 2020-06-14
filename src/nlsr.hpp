@@ -40,16 +40,11 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/certificate-fetcher-direct-fetch.hpp>
-#include <ndn-cxx/security/signing-helpers.hpp>
-#include <ndn-cxx/security/signing-info.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 #include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
 #include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/mgmt/nfd/face-status.hpp>
-#include <ndn-cxx/data.hpp>
-#include <ndn-cxx/encoding/block.hpp>
 #include <ndn-cxx/encoding/nfd-constants.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
@@ -70,26 +65,6 @@ public:
 
   Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam);
 
-  void
-  registerStrategyForCerts(const ndn::Name& originRouter);
-
-  void
-  registrationFailed(const ndn::Name& name);
-
-  void
-  onRegistrationSuccess(const ndn::Name& name);
-
-  void
-  setLsaInterestFilter();
-
-  /*! \brief Add top level prefixes for Dispatcher
-   *
-   * All dispatcher-related sub-prefixes *must* be registered before sub-prefixes
-   * must be added before adding top
-   */
-  void
-  addDispatcherTopPrefix(const ndn::Name& topPrefix);
-
   Lsdb&
   getLsdb()
   {
@@ -102,9 +77,19 @@ public:
     return m_fib;
   }
 
+private:
   void
-  initialize();
+  registerStrategyForCerts(const ndn::Name& originRouter);
 
+  /*! \brief Add top level prefixes for Dispatcher
+   *
+   * All dispatcher-related sub-prefixes *must* be registered before sub-prefixes
+   * must be added before adding top
+   */
+  void
+  addDispatcherTopPrefix(const ndn::Name& topPrefix);
+
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Initializes neighbors' Faces using information from NFD.
    * \sa Nlsr::initialize()
    * \sa Nlsr::processFaceDataset()
@@ -137,6 +122,7 @@ public:
   void
   processFaceDataset(const std::vector<ndn::nfd::FaceStatus>& faces);
 
+private:
   /*! \brief Registers NLSR-specific prefixes for a neighbor (Adjacent)
    * \sa Nlsr::initializeFaces
    * \param adj A reference to the neighbor to register prefixes for
@@ -147,22 +133,12 @@ public:
    * *each* registration request that is made.
    */
   void
-  registerAdjacencyPrefixes(const Adjacent& adj,
-                            const ndn::time::milliseconds& timeout);
+  registerAdjacencyPrefixes(const Adjacent& adj, ndn::time::milliseconds timeout);
 
-  void
-  setStrategies();
-
-private:
-  /*! \brief Registers the prefix that NLSR will consider to be the machine-local, secure prefix.
+  /*! \brief Registers the prefix
    */
   void
-  registerLocalhostPrefix();
-
-  /*! \brief Registers the <router-prefix>/nlsr so that NLSR can respond to status requests from remote routers.
-   */
-  void
-  registerRouterPrefix();
+  registerPrefix(const ndn::Name& prefix);
 
   /*! \brief Do nothing.
    */
@@ -182,12 +158,6 @@ private:
   void
   enableIncomingFaceIdIndication();
 
-  void
-  onFaceIdIndicationSuccess(const ndn::nfd::ControlParameters& cp);
-
-  void
-  onFaceIdIndicationFailure(const ndn::nfd::ControlResponse& cr);
-
 public:
   static const ndn::Name LOCALHOST_PREFIX;
 
@@ -201,9 +171,9 @@ private:
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   Fib m_fib;
+  Lsdb m_lsdb;
   RoutingTable m_routingTable;
   NamePrefixTable m_namePrefixTable;
-  Lsdb m_lsdb;
   HelloProtocol m_helloProtocol;
 
 private:

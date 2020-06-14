@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "update/prefix-update-processor.hpp"
 #include "nlsr.hpp"
@@ -85,9 +85,6 @@ public:
     inputFile.close();
 
     addIdentity(conf.getRouterPrefix());
-
-    // Initialize NLSR so a sync socket is created
-    nlsr.initialize();
 
     this->advanceClocks(ndn::time::milliseconds(10));
 

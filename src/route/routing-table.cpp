@@ -24,93 +24,85 @@
 #include "conf-parameter.hpp"
 #include "routing-table-calculator.hpp"
 #include "routing-table-entry.hpp"
-#include "name-prefix-table.hpp"
 #include "logger.hpp"
 #include "tlv-nlsr.hpp"
-
-#include <list>
-#include <string>
 
 namespace nlsr {
 
 INIT_LOGGER(route.RoutingTable);
 
-RoutingTable::RoutingTable(ndn::Scheduler& scheduler, Fib& fib, Lsdb& lsdb,
-                           NamePrefixTable& namePrefixTable, ConfParameter& confParam)
-  : afterRoutingChange{std::make_unique<AfterRoutingChange>()}
-  , m_scheduler(scheduler)
-  , m_fib(fib)
+RoutingTable::RoutingTable(ndn::Scheduler& scheduler, Lsdb& lsdb, ConfParameter& confParam)
+  : m_scheduler(scheduler)
   , m_lsdb(lsdb)
-  , m_namePrefixTable(namePrefixTable)
   , m_routingCalcInterval{confParam.getRoutingCalcInterval()}
   , m_isRoutingTableCalculating(false)
   , m_isRouteCalculationScheduled(false)
   , m_confParam(confParam)
+  , m_hyperbolicState(m_confParam.getHyperbolicState())
 {
+  m_afterLsdbModified = lsdb.onLsdbModified.connect(
+    [this] (std::shared_ptr<Lsa> lsa, LsdbUpdate updateType,
+            const auto& namesToAdd, const auto& namesToRemove) {
+      auto type = lsa->getType();
+      bool updateForOwnAdjacencyLsa = lsa->getOriginRouter() == m_confParam.getRouterPrefix() &&
+                                      type == Lsa::Type::ADJACENCY;
+      bool scheduleCalculation = false;
+
+      if (updateType == LsdbUpdate::REMOVED && updateForOwnAdjacencyLsa) {
+        // If own Adjacency LSA is removed then we have no ACTIVE neighbors.
+        // (Own Coordinate LSA is never removed. But routing table calculation is scheduled
+        // in HelloProtocol. The routing table calculator for HR takes into account
+        // the INACTIVE status of the link).
+        NLSR_LOG_DEBUG("No Adj LSA of router itself, routing table can not be calculated :(");
+        clearRoutingTable();
+        clearDryRoutingTable();
+        NLSR_LOG_DEBUG("Calling Update NPT With new Route");
+        afterRoutingChange(m_rTable);
+        NLSR_LOG_DEBUG(*this);
+        m_ownAdjLsaExist = false;
+      }
+
+      if (updateType == LsdbUpdate::INSTALLED && updateForOwnAdjacencyLsa) {
+        m_ownAdjLsaExist = true;
+      }
+
+      // Don;t do anything on removal, wait for HelloProtocol to confirm and then react
+      if (updateType == LsdbUpdate::INSTALLED || updateType == LsdbUpdate::UPDATED) {
+        if ((type == Lsa::Type::ADJACENCY  && m_hyperbolicState != HYPERBOLIC_STATE_ON) ||
+            (type == Lsa::Type::COORDINATE && m_hyperbolicState != HYPERBOLIC_STATE_OFF)) {
+          scheduleCalculation = true;
+        }
+      }
+
+      if (scheduleCalculation) {
+        scheduleRoutingTableCalculation();
+      }
+    }
+  );
 }
 
 void
 RoutingTable::calculate()
 {
   m_lsdb.writeLog();
-  m_namePrefixTable.writeLog();
+  NLSR_LOG_TRACE("Calculating routing table");
+
   if (m_isRoutingTableCalculating == false) {
-    // setting routing table calculation
     m_isRoutingTableCalculating = true;
 
-    bool isHrEnabled = m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF;
-
-    if ((!isHrEnabled &&
-         m_lsdb.doesLsaExist(m_confParam.getRouterPrefix(), Lsa::Type::ADJACENCY))
-        ||
-        (isHrEnabled &&
-         m_lsdb.doesLsaExist(m_confParam.getRouterPrefix(), Lsa::Type::COORDINATE))) {
-      if (m_lsdb.getIsBuildAdjLsaSheduled() != 1) {
-        NLSR_LOG_TRACE("Clearing old routing table");
-        clearRoutingTable();
-        // for dry run options
-        clearDryRoutingTable();
-
-        NLSR_LOG_DEBUG("Calculating routing table");
-
-        // calculate Link State routing
-        if ((m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) ||
-            (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN)) {
-          calculateLsRoutingTable();
-        }
-        // calculate hyperbolic routing
-        if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-          calculateHypRoutingTable(false);
-        }
-        // calculate dry hyperbolic routing
-        if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_DRY_RUN) {
-          calculateHypRoutingTable(true);
-        }
-        // Inform the NPT that updates have been made
-        NLSR_LOG_DEBUG("Calling Update NPT With new Route");
-        (*afterRoutingChange)(m_rTable);
-        NLSR_LOG_DEBUG(*this);
-        m_namePrefixTable.writeLog();
-        m_fib.writeLog();
-      }
-      else {
-        NLSR_LOG_DEBUG("Adjacency building is scheduled, so routing table can not be calculated :(");
-      }
+    if (m_hyperbolicState == HYPERBOLIC_STATE_OFF) {
+      calculateLsRoutingTable();
     }
-    else {
-      NLSR_LOG_DEBUG("No Adj LSA of router itself, so Routing table can not be calculated :(");
-      clearRoutingTable();
-      clearDryRoutingTable(); // for dry run options
-      // need to update NPT here
-      NLSR_LOG_DEBUG("Calling Update NPT With new Route");
-      (*afterRoutingChange)(m_rTable);
-      NLSR_LOG_DEBUG(*this);
-      m_namePrefixTable.writeLog();
-      m_fib.writeLog();
-      // debugging purpose end
+    else if (m_hyperbolicState == HYPERBOLIC_STATE_DRY_RUN) {
+      calculateLsRoutingTable();
+      calculateHypRoutingTable(true);
     }
-    m_isRouteCalculationScheduled = false; // clear scheduled flag
-    m_isRoutingTableCalculating = false; // unsetting routing table calculation
+    else if (m_hyperbolicState == HYPERBOLIC_STATE_ON) {
+      calculateHypRoutingTable(false);
+    }
+
+    m_isRouteCalculationScheduled = false;
+    m_isRoutingTableCalculating = false;
   }
   else {
     scheduleRoutingTableCalculation();
@@ -122,6 +114,19 @@ RoutingTable::calculateLsRoutingTable()
 {
   NLSR_LOG_TRACE("CalculateLsRoutingTable Called");
 
+  if (m_lsdb.getIsBuildAdjLsaScheduled()) {
+    NLSR_LOG_DEBUG("Adjacency build is scheduled, routing table can not be calculated :(");
+    return;
+  }
+
+  // We only check this in LS since we never remove our own Coordinate LSA,
+  // whereas we remove our own Adjacency LSA if we don't have any neighbors
+  if (!m_ownAdjLsaExist) {
+    return;
+  }
+
+  clearRoutingTable();
+
   Map map;
   auto lsaRange = m_lsdb.getLsdbIterator<AdjLsa>();
   map.createFromAdjLsdb(lsaRange.first, lsaRange.second);
@@ -132,11 +137,22 @@ RoutingTable::calculateLsRoutingTable()
   LinkStateRoutingTableCalculator calculator(nRouters);
 
   calculator.calculatePath(map, *this, m_confParam, m_lsdb);
+
+  NLSR_LOG_DEBUG("Calling Update NPT With new Route");
+  afterRoutingChange(m_rTable);
+  NLSR_LOG_DEBUG(*this);
 }
 
 void
 RoutingTable::calculateHypRoutingTable(bool isDryRun)
 {
+  if (isDryRun) {
+    clearDryRoutingTable();
+  }
+  else {
+    clearRoutingTable();
+  }
+
   Map map;
   auto lsaRange = m_lsdb.getLsdbIterator<CoordinateLsa>();
   map.createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
@@ -147,6 +163,12 @@ RoutingTable::calculateHypRoutingTable(bool isDryRun)
   HyperbolicRoutingCalculator calculator(nRouters, isDryRun, m_confParam.getRouterPrefix());
 
   calculator.calculatePath(map, *this, m_lsdb, m_confParam.getAdjacencyList());
+
+  if (!isDryRun) {
+    NLSR_LOG_DEBUG("Calling Update NPT With new Route");
+    afterRoutingChange(m_rTable);
+    NLSR_LOG_DEBUG(*this);
+  }
 }
 
 void
@@ -179,6 +201,7 @@ RoutingTable::addNextHop(const ndn::Name& destRouter, NextHop& nh)
   else {
     rteChk->getNexthopList().addNextHop(nh);
   }
+  m_wire.reset();
 }
 
 RoutingTableEntry*
@@ -207,22 +230,21 @@ RoutingTable::addNextHopToDryTable(const ndn::Name& destRouter, NextHop& nh)
   else {
     it->getNexthopList().addNextHop(nh);
   }
+  m_wire.reset();
 }
 
 void
 RoutingTable::clearRoutingTable()
 {
-  if (m_rTable.size() > 0) {
-    m_rTable.clear();
-  }
+  m_rTable.clear();
+  m_wire.reset();
 }
 
 void
 RoutingTable::clearDryRoutingTable()
 {
-  if (m_dryTable.size() > 0) {
-    m_dryTable.clear();
-  }
+  m_dryTable.clear();
+  m_wire.reset();
 }
 
 template<ndn::encoding::Tag TAG>

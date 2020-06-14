@@ -20,7 +20,9 @@
  */
 
 #include "route/name-prefix-table.hpp"
-#include "nlsr.hpp"
+#include "route/fib.hpp"
+#include "route/routing-table.hpp"
+#include "lsdb.hpp"
 #include "../test-common.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
@@ -34,32 +36,38 @@ public:
   NamePrefixTableFixture()
     : face(m_ioService, m_keyChain)
     , conf(face, m_keyChain)
-    , nlsr(face, m_keyChain, conf)
-    , lsdb(nlsr.m_lsdb)
-    , npt(nlsr.m_namePrefixTable)
+    , confProcessor(conf)
+    , lsdb(face, m_keyChain, conf)
+    , fib(face, m_scheduler, conf.getAdjacencyList(), conf, m_keyChain)
+    , rt(m_scheduler, lsdb, conf)
+    , npt(conf.getRouterPrefix(), fib, rt, rt.afterRoutingChange, lsdb.onLsdbModified)
   {
+  }
+
+  bool
+  isNameInNpt(const ndn::Name& name)
+  {
+    auto it = std::find_if(npt.begin(), npt.end(),
+                           [&] (const auto& entry) { return name == entry->getNamePrefix(); });
+    return it != npt.end();
   }
 
 public:
   ndn::util::DummyClientFace face;
   ConfParameter conf;
-  Nlsr nlsr;
+  DummyConfFileProcessor confProcessor;
 
-  Lsdb& lsdb;
-  NamePrefixTable& npt;
+  Lsdb lsdb;
+  Fib fib;
+  RoutingTable rt;
+  NamePrefixTable npt;
 };
 
 BOOST_AUTO_TEST_SUITE(TestNamePrefixTable)
 
 BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
 {
-  conf.setNetwork("/ndn");
-  conf.setSiteName("/router");
-  conf.setRouterName("/a");
-  conf.buildRouterAndSyncUserPrefix();
-
-  RoutingTable& routingTable = nlsr.m_routingTable;
-  routingTable.setRoutingCalcInterval(0);
+  rt.m_routingCalcInterval = 0_s;
 
   Adjacent thisRouter(conf.getRouterPrefix(), ndn::FaceUri("udp4://10.0.0.1"), 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
@@ -265,7 +273,6 @@ BOOST_FIXTURE_TEST_CASE(RemoveNptEntryPtrFromRoutingEntry, NamePrefixTableFixtur
 
 BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
 {
-  RoutingTable& routingTable = nlsr.m_routingTable;
   const ndn::Name destination = ndn::Name{"/ndn/destination1"};
   NextHop hop1{"upd4://10.0.0.1", 0};
   NextHop hop2{"udp4://10.0.0.2", 1};
@@ -273,10 +280,10 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
   const NamePrefixTableEntry entry1{"/ndn/router1"};
   npt.addEntry(entry1.getNamePrefix(), destination);
 
-  routingTable.addNextHop(destination, hop1);
-  routingTable.addNextHop(destination, hop2);
+  rt.addNextHop(destination, hop1);
+  rt.addNextHop(destination, hop2);
 
-  npt.updateWithNewRoute(routingTable.m_rTable);
+  npt.updateWithNewRoute(rt.m_rTable);
 
   // At this point the NamePrefixTableEntry should have two NextHops.
   auto nameIterator = std::find_if(npt.begin(), npt.end(),
@@ -291,8 +298,8 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
   BOOST_CHECK_EQUAL(nextHops.size(), 2);
 
   // Add the other NextHop
-  routingTable.addNextHop(destination, hop3);
-  npt.updateWithNewRoute(routingTable.m_rTable);
+  rt.addNextHop(destination, hop3);
+  npt.updateWithNewRoute(rt.m_rTable);
 
   // At this point the NamePrefixTableEntry should have three NextHops.
   nameIterator = std::find_if(npt.begin(), npt.end(),
@@ -304,6 +311,65 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
   BOOST_REQUIRE(iterator != npt.m_rtpool.end());
   nextHops = (iterator->second)->getNexthopList();
   BOOST_CHECK_EQUAL(nextHops.size(), 3);
+}
+
+BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, NamePrefixTableFixture)
+{
+  ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
+  NamePrefixList npl1;
+  ndn::Name n1("name1");
+  ndn::Name n2("name2");
+  ndn::Name router1("/router1/1");
+
+  npl1.insert(n1);
+  npl1.insert(n2);
+
+  NameLsa nlsa1(router1, 12, testTimePoint, npl1);
+  std::shared_ptr<Lsa> lsaPtr = std::make_shared<NameLsa>(nlsa1);
+
+  BOOST_CHECK(npt.begin() == npt.end());
+  npt.updateFromLsdb(lsaPtr, LsdbUpdate::INSTALLED, {}, {});
+  BOOST_CHECK_EQUAL(npt.m_table.size(), 3); // Router + 2 names
+
+  BOOST_CHECK(isNameInNpt(n1));
+  BOOST_CHECK(isNameInNpt(n2));
+
+  ndn::Name n3("name3");
+  auto nlsa = std::static_pointer_cast<NameLsa>(lsaPtr);
+  nlsa->removeName(n2);
+  nlsa->addName(n3);
+  npt.updateFromLsdb(lsaPtr, LsdbUpdate::UPDATED, {n3}, {n2});
+  BOOST_CHECK(isNameInNpt(n1));
+  BOOST_CHECK(!isNameInNpt(n2)); // Removed
+  BOOST_CHECK(isNameInNpt(n3));
+
+  BOOST_CHECK_EQUAL(npt.m_table.size(), 3); // Still router + 2 names
+
+  npt.updateFromLsdb(lsaPtr, LsdbUpdate::REMOVED, {}, {});
+  BOOST_CHECK_EQUAL(npt.m_table.size(), 0);
+
+  // Adj and Coordinate LSAs router
+  ndn::Name router2("/router2/2");
+  AdjLsa adjLsa(router2, 12, testTimePoint, 2, conf.getAdjacencyList());
+  lsaPtr = std::make_shared<AdjLsa>(adjLsa);
+  BOOST_CHECK(npt.begin() == npt.end());
+  npt.updateFromLsdb(lsaPtr, LsdbUpdate::INSTALLED, {}, {});
+  BOOST_CHECK_EQUAL(npt.m_table.size(), 1);
+  BOOST_CHECK(isNameInNpt(router2));
+
+  npt.updateFromLsdb(lsaPtr, LsdbUpdate::REMOVED, {}, {});
+  BOOST_CHECK_EQUAL(npt.m_table.size(), 0);
+
+  ndn::Name router3("/router3/3");
+  CoordinateLsa corLsa(router3, 12, testTimePoint, 2, {3});
+  lsaPtr = std::make_shared<CoordinateLsa>(corLsa);
+  BOOST_CHECK(npt.begin() == npt.end());
+  npt.updateFromLsdb(lsaPtr, LsdbUpdate::INSTALLED, {}, {});
+  BOOST_CHECK_EQUAL(npt.m_table.size(), 1);
+  BOOST_CHECK(isNameInNpt(router3));
+
+  npt.updateFromLsdb(lsaPtr, LsdbUpdate::REMOVED, {}, {});
+  BOOST_CHECK_EQUAL(npt.m_table.size(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

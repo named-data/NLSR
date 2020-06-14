@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -38,15 +38,8 @@ const ndn::PartialName RT_DATASET = ndn::PartialName("routing-table");
 DatasetInterestHandler::DatasetInterestHandler(ndn::mgmt::Dispatcher& dispatcher,
                                                const Lsdb& lsdb,
                                                const RoutingTable& rt)
-  : m_dispatcher(dispatcher)
-  , m_lsdb(lsdb)
+  : m_lsdb(lsdb)
   , m_routingTable(rt)
-{
-  setDispatcher(m_dispatcher);
-}
-
-void
-DatasetInterestHandler::setDispatcher(ndn::mgmt::Dispatcher& dispatcher)
 {
   dispatcher.addStatusDataset(ADJACENCIES_DATASET,
     ndn::mgmt::makeAcceptAllAuthorization(),
@@ -67,6 +60,7 @@ void
 DatasetInterestHandler::publishLsaStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                          ndn::mgmt::StatusDatasetContext& context)
 {
+  NLSR_LOG_TRACE("Received interest: " << interest);
   auto lsaRange = m_lsdb.getLsdbIterator<T>();
   for (auto lsaIt = lsaRange.first; lsaIt != lsaRange.second; ++lsaIt) {
     context.append((*lsaIt)->wireEncode());
@@ -78,7 +72,7 @@ void
 DatasetInterestHandler::publishRtStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                                         ndn::mgmt::StatusDatasetContext& context)
 {
-  NLSR_LOG_DEBUG("Received interest: " << interest);
+  NLSR_LOG_TRACE("Received interest: " << interest);
   context.append(m_routingTable.wireEncode());
   context.end();
 }

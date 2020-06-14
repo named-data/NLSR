@@ -31,7 +31,6 @@
 #include "test-access-control.hpp"
 #include "communication/sync-logic-handler.hpp"
 #include "statistics.hpp"
-#include "route/name-prefix-table.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/signal.hpp>
@@ -51,11 +50,16 @@ namespace bmi = boost::multi_index;
 
 static constexpr ndn::time::seconds GRACE_PERIOD = 10_s;
 
+enum class LsdbUpdate {
+  INSTALLED,
+  UPDATED,
+  REMOVED
+};
+
 class Lsdb
 {
 public:
-  Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam,
-       NamePrefixTable& namePrefixTable, RoutingTable& routingTable);
+  Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam);
 
   ~Lsdb()
   {
@@ -78,17 +82,15 @@ public:
   void
   buildAndInstallOwnNameLsa();
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Builds a cor. LSA for this router and installs it into the LSDB. */
   void
   buildAndInstallOwnCoordinateLsa();
 
+public:
   /*! \brief Schedules a build of this router's LSA. */
   void
   scheduleAdjLsaBuild();
-
-  template<typename T>
-  void
-  writeLog() const;
 
   void
   writeLog() const;
@@ -103,9 +105,9 @@ public:
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
 
   bool
-  getIsBuildAdjLsaSheduled() const
+  getIsBuildAdjLsaScheduled() const
   {
-    return m_isBuildAdjLsaSheduled;
+    return m_isBuildAdjLsaScheduled;
   }
 
   SyncLogicHandler&
@@ -238,8 +240,11 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     LSA whose name matches key. This removal also causes the NPT to
     remove those name prefixes if no more LSAs advertise them.
    */
-  bool
+  void
   removeLsa(const ndn::Name& router, Lsa::Type lsaType);
+
+  void
+  removeLsa(const LsaContainer::index<Lsdb::byName>::type::iterator& lsaIt);
 
   /*! \brief Attempts to construct an adj. LSA.
 
@@ -260,10 +265,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     \param expTime How many seconds to wait before triggering the event.
    */
   ndn::scheduler::EventId
-  scheduleLsaExpiration(std::shared_ptr<Lsa> lsa, ndn::time::seconds expTime)
-  {
-    return m_scheduler.schedule(expTime + GRACE_PERIOD, [this, lsa] { expireOrRefreshLsa(lsa); });
-  }
+  scheduleLsaExpiration(std::shared_ptr<Lsa> lsa, ndn::time::seconds expTime);
 
   /*! \brief Either allow to expire, or refresh a name LSA.
     \param lsa The LSA.
@@ -321,16 +323,17 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
 public:
-  ndn::util::signal::Signal<Lsdb, Statistics::PacketType> lsaIncrementSignal;
-  ndn::util::signal::Signal<Lsdb, const ndn::Data&> afterSegmentValidatedSignal;
+  ndn::util::Signal<Lsdb, Statistics::PacketType> lsaIncrementSignal;
+  ndn::util::Signal<Lsdb, ndn::Data> afterSegmentValidatedSignal;
+  using AfterLsdbModified = ndn::util::Signal<Lsdb, std::shared_ptr<Lsa>, LsdbUpdate,
+                                              std::list<ndn::Name>, std::list<ndn::Name>>;
+  AfterLsdbModified onLsdbModified;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
 
   ConfParameter& m_confParam;
-  NamePrefixTable& m_namePrefixTable;
-  RoutingTable& m_routingTable;
 
   SyncLogicHandler m_sync;
 
@@ -351,7 +354,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::set<std::shared_ptr<ndn::util::SegmentFetcher>> m_fetchers;
   psync::SegmentPublisher m_segmentPublisher;
 
-  bool m_isBuildAdjLsaSheduled;
+  bool m_isBuildAdjLsaScheduled;
   int64_t m_adjBuildCount;
   ndn::scheduler::ScopedEventId m_scheduledAdjLsaBuild;
 

@@ -33,11 +33,7 @@ INIT_LOGGER(CertificateStore);
 CertificateStore::CertificateStore(ndn::Face& face, ConfParameter& confParam, Lsdb& lsdb)
   : m_face(face)
   , m_confParam(confParam)
-  , m_lsdb(lsdb)
   , m_validator(m_confParam.getValidator())
-  , m_afterSegmentValidatedConnection(m_lsdb.afterSegmentValidatedSignal.connect(
-                                      std::bind(&CertificateStore::afterFetcherSignalEmitted,
-                                                this, _1)))
 {
   for (const auto& x: confParam.getIdCerts()) {
     auto idCert = ndn::io::load<ndn::security::Certificate>(x);
@@ -45,6 +41,9 @@ CertificateStore::CertificateStore(ndn::Face& face, ConfParameter& confParam, Ls
   }
 
   registerKeyPrefixes();
+
+  m_afterSegmentValidatedConnection = lsdb.afterSegmentValidatedSignal.connect(
+    [this] (const ndn::Data& data) { afterFetcherSignalEmitted(data); });
 }
 
 void

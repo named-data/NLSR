@@ -33,26 +33,88 @@ namespace nlsr {
 
 INIT_LOGGER(route.NamePrefixTable);
 
-NamePrefixTable::NamePrefixTable(Fib& fib, RoutingTable& routingTable,
-                                 std::unique_ptr<AfterRoutingChange>& afterRoutingChangeSignal)
-  : m_fib(fib)
+NamePrefixTable::NamePrefixTable(const ndn::Name& ownRouterName, Fib& fib,
+                                 RoutingTable& routingTable,
+                                 AfterRoutingChange& afterRoutingChangeSignal,
+                                 Lsdb::AfterLsdbModified& afterLsdbModifiedSignal)
+  : m_ownRouterName(ownRouterName)
+  , m_fib(fib)
   , m_routingTable(routingTable)
 {
-  m_afterRoutingChangeConnection = afterRoutingChangeSignal->connect(
+  m_afterRoutingChangeConnection = afterRoutingChangeSignal.connect(
     [this] (const std::list<RoutingTableEntry>& entries) {
       updateWithNewRoute(entries);
     });
+
+  m_afterLsdbModified = afterLsdbModifiedSignal.connect(
+    [this] (std::shared_ptr<Lsa> lsa, LsdbUpdate updateType,
+            const auto& namesToAdd, const auto& namesToRemove) {
+      updateFromLsdb(lsa, updateType, namesToAdd, namesToRemove);
+    }
+  );
 }
 
 NamePrefixTable::~NamePrefixTable()
 {
   m_afterRoutingChangeConnection.disconnect();
+  m_afterLsdbModified.disconnect();
+}
+
+void
+NamePrefixTable::updateFromLsdb(std::shared_ptr<Lsa> lsa, LsdbUpdate updateType,
+                                const std::list<ndn::Name>& namesToAdd,
+                                const std::list<ndn::Name>& namesToRemove)
+{
+  if (m_ownRouterName == lsa->getOriginRouter()) {
+    return;
+  }
+  NLSR_LOG_TRACE("Got update from Lsdb for router: " << lsa->getOriginRouter());
+
+  if (updateType == LsdbUpdate::INSTALLED) {
+    addEntry(lsa->getOriginRouter(), lsa->getOriginRouter());
+
+    if (lsa->getType() == Lsa::Type::NAME) {
+      auto nlsa = std::static_pointer_cast<NameLsa>(lsa);
+      for (const auto& name : nlsa->getNpl().getNames()) {
+        if (name != m_ownRouterName) {
+          addEntry(name, lsa->getOriginRouter());
+        }
+      }
+    }
+  }
+  else if (updateType == LsdbUpdate::UPDATED) {
+    if (lsa->getType() != Lsa::Type::NAME) {
+      return;
+    }
+
+    for (const auto& name : namesToAdd) {
+      if (name != m_ownRouterName) {
+        addEntry(name, lsa->getOriginRouter());
+      }
+    }
+
+    for (const auto& name : namesToRemove) {
+      if (name != m_ownRouterName) {
+        removeEntry(name, lsa->getOriginRouter());
+      }
+    }
+  }
+  else {
+    removeEntry(lsa->getOriginRouter(), lsa->getOriginRouter());
+    if (lsa->getType() == Lsa::Type::NAME) {
+      auto nlsa = std::static_pointer_cast<NameLsa>(lsa);
+      for (const auto& name : nlsa->getNpl().getNames()) {
+        if (name != m_ownRouterName) {
+          removeEntry(name, lsa->getOriginRouter());
+        }
+      }
+    }
+  }
 }
 
 void
 NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
 {
-
   // Check if the advertised name prefix is in the table already.
   NptEntryList::iterator nameItr =
     std::find_if(m_table.begin(),

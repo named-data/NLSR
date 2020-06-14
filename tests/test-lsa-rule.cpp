@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -50,7 +50,7 @@ public:
     , confParam(face, m_keyChain)
     , confProcessor(confParam, SYNC_PROTOCOL_PSYNC, HYPERBOLIC_STATE_OFF,
                     "/ndn/", "/edu/test-site", "/%C1.Router/router1")
-    , nlsr(face, m_keyChain, confParam)
+    , lsdb(face, m_keyChain, confParam)
     , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))
   {
     rootId = addIdentity(rootIdName);
@@ -90,9 +90,6 @@ public:
     }
     inputFile.close();
 
-    // Initialize NLSR to initialize the keyChain
-    nlsr.initialize();
-
     this->advanceClocks(ndn::time::milliseconds(10));
 
     face.sentInterests.clear();
@@ -105,7 +102,7 @@ public:
   ndn::security::pib::Identity rootId, siteIdentity, opIdentity, routerId;
   ConfParameter confParam;
   DummyConfFileProcessor confProcessor;
-  Nlsr nlsr;
+  Lsdb lsdb;
 
   const boost::filesystem::path ROOT_CERT_PATH;
 };
@@ -122,7 +119,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   lsaDataName.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
-  lsaDataName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
+  lsaDataName.appendNumber(lsdb.m_sequencingManager.getNameLsaSeq());
 
   // Append version, segmentNo
   lsaDataName.appendNumber(1).appendNumber(1);
@@ -152,7 +149,7 @@ BOOST_AUTO_TEST_CASE(DoNotValidateIncorrectLSA)
   lsaDataName.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
 
   // This would be the sequence number of its own NameLsa
-  lsaDataName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
+  lsaDataName.appendNumber(lsdb.m_sequencingManager.getNameLsaSeq());
 
   // Append version, segmentNo
   lsaDataName.appendNumber(1).appendNumber(1);

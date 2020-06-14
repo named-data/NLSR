@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_NAME_PREFIX_TABLE_HPP
 #define NLSR_NAME_PREFIX_TABLE_HPP
@@ -27,6 +27,7 @@
 #include "signals.hpp"
 #include "test-access-control.hpp"
 #include "route/fib.hpp"
+#include "lsdb.hpp"
 
 #include <list>
 #include <unordered_map>
@@ -41,10 +42,22 @@ public:
   using NptEntryList = std::list<std::shared_ptr<NamePrefixTableEntry>>;
   using const_iterator = NptEntryList::const_iterator;
 
-  NamePrefixTable(Fib& fib, RoutingTable& routingTable,
-                  std::unique_ptr<AfterRoutingChange>& afterRoutingChangeSignal);
+  NamePrefixTable(const ndn::Name& ownRouterName, Fib& fib, RoutingTable& routingTable,
+                  AfterRoutingChange& afterRoutingChangeSignal,
+                  Lsdb::AfterLsdbModified& afterLsdbModifiedSignal);
 
   ~NamePrefixTable();
+
+  /*! \brief Add, update, or remove Names according to the Lsdb update
+    \param lsa The LSA class pointer
+    \param updateType Update type from Lsdb (INSTALLED, UPDATED, REMOVED)
+    \param namesToAdd If LSA is UPDATED, then these are the names to add
+    \param namesToRemove If LSA is UPDATED, then these are the names to remove
+   */
+  void
+  updateFromLsdb(std::shared_ptr<Lsa> lsa, LsdbUpdate updateType,
+                 const std::list<ndn::Name>& namesToAdd,
+                 const std::list<ndn::Name>& namesToRemove);
 
   /*! \brief Adds a destination to the specified name prefix.
     \param name The name prefix
@@ -125,9 +138,11 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   NptEntryList m_table;
 
 private:
+  const ndn::Name& m_ownRouterName;
   Fib& m_fib;
   RoutingTable& m_routingTable;
   ndn::util::signal::Connection m_afterRoutingChangeConnection;
+  ndn::util::signal::Connection m_afterLsdbModified;
 };
 
 inline NamePrefixTable::const_iterator

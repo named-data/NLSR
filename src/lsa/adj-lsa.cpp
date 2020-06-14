@@ -124,7 +124,7 @@ std::string
 AdjLsa::toString() const
 {
   std::ostringstream os;
-  os << Lsa::toString();
+  os << getString();
   os << "      Adjacent(s):\n";
 
   int adjacencyIndex = 0;
@@ -137,6 +137,20 @@ AdjLsa::toString() const
   }
 
   return os.str();
+}
+
+std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
+AdjLsa::update(const std::shared_ptr<Lsa>& lsa)
+{
+  auto alsa = std::static_pointer_cast<AdjLsa>(lsa);
+  if (!isEqualContent(*alsa)) {
+    resetAdl();
+    for (const auto& adjacent : alsa->getAdl()) {
+      addAdjacent(adjacent);
+    }
+    return std::make_tuple(true, std::list<ndn::Name>{}, std::list<ndn::Name>{});
+  }
+  return std::make_tuple(false, std::list<ndn::Name>{}, std::list<ndn::Name>{});
 }
 
 std::ostream&
