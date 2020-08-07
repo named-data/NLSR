@@ -16,7 +16,6 @@ if [[ $JOB_NAME == *"code-coverage" ]]; then
 
     genhtml --branch-coverage \
             --demangle-cpp \
-            --frames \
             --legend \
             --output-directory build/coverage \
             --title "NLSR unit tests" \

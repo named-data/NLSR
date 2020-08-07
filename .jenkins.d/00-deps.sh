@@ -25,10 +25,10 @@ if has OSX $NODE_LABELS; then
 
 elif has Ubuntu $NODE_LABELS; then
     sudo apt-get -qq update
-    sudo apt-get -qy install g++ pkg-config python3-minimal \
+    sudo apt-get -qy install build-essential pkg-config python3-minimal \
                              libboost-all-dev libssl-dev libsqlite3-dev
 
     if [[ $JOB_NAME == *"code-coverage" ]]; then
-        sudo apt-get -qy install gcovr lcov libgd-perl
+        sudo apt-get -qy install gcovr lcov
     fi
 fi
