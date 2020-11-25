@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(HyperbolicOn_ZeroCostNeighbors)
 
   nlsr.initialize();
 
-  for (const auto neighbor : neighbors.getAdjList()) {
+  for (const auto& neighbor : neighbors.getAdjList()) {
     BOOST_CHECK_EQUAL(neighbor.getLinkCost(), 0);
   }
 }
@@ -111,9 +111,8 @@ BOOST_AUTO_TEST_CASE(HyperbolicOff_LinkStateCost)
 
   nlsr.initialize();
 
-  std::list<Adjacent> neighborList = neighbors.getAdjList();
-  for (std::list<Adjacent>::iterator it = neighborList.begin(); it != neighborList.end(); ++it) {
-    BOOST_CHECK(it->getLinkCost() != 0);
+  for (const auto& neighbor : neighbors.getAdjList()) {
+    BOOST_CHECK_NE(neighbor.getLinkCost(), 0);
   }
 }
 
