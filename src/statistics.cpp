@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -28,13 +28,11 @@ namespace nlsr {
 size_t
 Statistics::get(PacketType type) const
 {
-  std::map<PacketType,int>::const_iterator it = m_packetCounter.find(type);
-  if(it != m_packetCounter.end())
-  {
+  auto it = m_packetCounter.find(type);
+  if (it != m_packetCounter.end()) {
     return it->second;
   }
-  else
-  {
+  else {
     return 0;
   }
 }
@@ -48,8 +46,7 @@ Statistics::increment(PacketType type)
 void
 Statistics::resetAll()
 {
-  for (auto&& it : m_packetCounter )
-  {
+  for (auto& it : m_packetCounter) {
     it.second = 0;
   }
 }

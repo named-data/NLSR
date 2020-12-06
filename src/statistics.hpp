@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,12 +23,12 @@
 #define NLSR_STATISTICS_HPP
 
 #include <map>
+#include <ostream>
 
 namespace nlsr {
 
 class Statistics
 {
-
 public:
   enum class PacketType {
     SENT_HELLO_INTEREST,
@@ -57,10 +57,10 @@ public:
   get(PacketType) const;
 
   void
-  resetAll();
+  increment(PacketType);
 
   void
-  increment(PacketType);
+  resetAll();
 
   const std::map<PacketType,int>&
   getCounter() const
@@ -69,7 +69,7 @@ public:
   }
 
 private:
-  std::map<PacketType,int> m_packetCounter;
+  std::map<PacketType, int> m_packetCounter;
 };
 
 std::ostream&
