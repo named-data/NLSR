@@ -273,7 +273,7 @@ Nlsrc::fetchNameLsas()
 void
 Nlsrc::fetchRtables()
 {
-  fetchFromRt<nlsr::RoutingTableStatus>([this] (const auto& rts) { recordRtable(rts); });
+  fetchFromRt<nlsr::RoutingTableStatus>([this] (const auto& rts) { this->recordRtable(rts); });
 }
 
 template <class T>
