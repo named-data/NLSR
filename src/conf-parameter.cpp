@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -28,7 +28,7 @@ INIT_LOGGER(ConfParameter);
 using namespace ndn::time_literals;
 
 // To be changed when breaking changes are made to sync
-const uint64_t ConfParameter::SYNC_VERSION = 8;
+const uint64_t ConfParameter::SYNC_VERSION = 9;
 
 static std::unique_ptr<ndn::security::CertificateFetcherDirectFetch>
 makeCertificateFetcher(ndn::Face& face)
