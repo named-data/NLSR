@@ -24,6 +24,8 @@
 #include "utility/name-helper.hpp"
 #include "logger.hpp"
 
+#include <ndn-cxx/encoding/nfd-constants.hpp>
+
 namespace nlsr {
 
 INIT_LOGGER(HelloProtocol);
@@ -43,6 +45,24 @@ HelloProtocol::HelloProtocol(ndn::Face& face, ndn::KeyChain& keyChain,
   , m_lsdb(lsdb)
   , m_adjacencyList(m_confParam.getAdjacencyList())
 {
+  ndn::Name name(m_confParam.getRouterPrefix());
+  name.append(NLSR_COMPONENT);
+  name.append(INFO_COMPONENT);
+
+  NLSR_LOG_DEBUG("Setting interest filter for Hello interest: " << name);
+
+  m_face.setInterestFilter(ndn::InterestFilter(name).allowLoopback(false),
+    [this] (const auto& name, const auto& interest) {
+      processInterest(name, interest);
+    },
+    [] (const auto& name) {
+      NLSR_LOG_DEBUG("Successfully registered prefix: " << name);
+    },
+    [] (const auto& name, const auto& resp) {
+      NLSR_LOG_ERROR("Failed to register prefix " << name);
+      NDN_THROW(std::runtime_error("Failed to register hello prefix: " + resp));
+    },
+    m_signingInfo, ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
 void
@@ -161,7 +181,7 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   uint32_t infoIntTimedOutCount = m_adjacencyList.getTimedOutInterestCount(neighbor);
   NLSR_LOG_DEBUG("Status: " << status);
   NLSR_LOG_DEBUG("Info Interest Timed out: " << infoIntTimedOutCount);
-  if (infoIntTimedOutCount <= m_confParam.getInterestRetryNumber()) {
+  if (infoIntTimedOutCount < m_confParam.getInterestRetryNumber()) {
     // interest name: /<neighbor>/NLSR/INFO/<router>
     ndn::Name interestName(neighbor);
     interestName.append(NLSR_COMPONENT);
@@ -170,13 +190,17 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
     NLSR_LOG_DEBUG("Resending interest: " << interestName);
     expressInterest(interestName, m_confParam.getInterestResendTime());
   }
-  else if ((status == Adjacent::STATUS_ACTIVE) &&
-           (infoIntTimedOutCount == m_confParam.getInterestRetryNumber())) {
+  else if (status == Adjacent::STATUS_ACTIVE) {
     m_adjacencyList.setStatusOfNeighbor(neighbor, Adjacent::STATUS_INACTIVE);
 
     NLSR_LOG_DEBUG("Neighbor: " << neighbor << " status changed to INACTIVE");
 
-    m_lsdb.scheduleAdjLsaBuild();
+    if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+      m_routingTable.scheduleRoutingTableCalculation();
+    }
+    else {
+      m_lsdb.scheduleAdjLsaBuild();
+    }
   }
 }
 

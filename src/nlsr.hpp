@@ -88,9 +88,6 @@ public:
   onRegistrationSuccess(const ndn::Name& name);
 
   void
-  setInfoInterestFilter();
-
-  void
   setLsaInterestFilter();
 
   /*! \brief Add top level prefixes for Dispatcher

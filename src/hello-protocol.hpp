@@ -125,33 +125,6 @@ private:
   onContentValidationFailed(const ndn::Data& data,
                             const ndn::security::ValidationError& ve);
 
-  /*! \brief Treat a failed Face registration as an INACTIVE neighbor.
-   *
-   * If NLSR fails to register a Face when contacting a neighbor, it
-   * will instantly toggle that neighbor to INACTIVE. This is
-   * necessary because NLSR will put off building its own adjacency
-   * LSA until the status of each neighbor is definitively
-   * known. Without this, NLSR might have to wait many scheduled Hello
-   * intervals to finish building an adjacency LSA.
-   */
-  void
-  onRegistrationFailure(const ndn::nfd::ControlResponse& response,
-                        const ndn::Name& name);
-
-  /*! \brief Set up a Face for NLSR use.
-   *
-   * When NLSR receives a Hello Interest from a neighbor that it has
-   * not seen before, it may need to create a Face for that
-   * neighbor. After doing so, it will be necessary to inform NFD
-   * about the standard prefixes that NLSR needs a node to have in
-   * order to conduct normal operations. This function accomplishes
-   * that, and then sends its own Hello Interest to confirm the
-   * contact.
-   */
-  void
-  onRegistrationSuccess(const ndn::nfd::ControlParameters& commandSuccessResult,
-                        const ndn::Name& neighbor, const ndn::time::milliseconds& timeout);
-
 public:
   ndn::util::Signal<HelloProtocol, const ndn::Name&> onHelloDataValidated;
 

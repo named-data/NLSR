@@ -26,8 +26,8 @@
 #include "signals.hpp"
 #include "lsdb.hpp"
 #include "route/fib.hpp"
+#include "test-access-control.hpp"
 
-#include <boost/cstdint.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {
@@ -166,6 +166,7 @@ private:
 
   ndn::time::seconds m_routingCalcInterval;
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   bool m_isRoutingTableCalculating;
   bool m_isRouteCalculationScheduled;
 

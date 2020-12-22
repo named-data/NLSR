@@ -31,7 +31,6 @@
 #include <vector>
 
 #include <ndn-cxx/net/face-uri.hpp>
-#include <ndn-cxx/signature.hpp>
 
 namespace nlsr {
 
@@ -94,9 +93,7 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
 
   NLSR_LOG_DEBUG("Default NLSR identity: " << m_confParam.getSigningInfo().getSignerName());
 
-  // Can be moved to HelloProtocol and Lsdb ctor if initializeKey is set
-  // earlier in the Nlsr constructor so as to set m_signingInfo
-  setInfoInterestFilter();
+  // Can be moved to Lsdb ctor
   setLsaInterestFilter();
 
   // Add top-level prefixes: router and localhost prefix
@@ -154,29 +151,13 @@ void
 Nlsr::registrationFailed(const ndn::Name& name)
 {
   NLSR_LOG_ERROR("ERROR: Failed to register prefix " << name << " in local hub's daemon");
-  BOOST_THROW_EXCEPTION(Error("Error: Prefix registration failed"));
+  NDN_THROW(Error("Error: Prefix registration failed"));
 }
 
 void
 Nlsr::onRegistrationSuccess(const ndn::Name& name)
 {
   NLSR_LOG_DEBUG("Successfully registered prefix: " << name);
-}
-
-void
-Nlsr::setInfoInterestFilter()
-{
-  ndn::Name name(m_confParam.getRouterPrefix());
-  name.append("nlsr");
-  name.append("INFO");
-
-  NLSR_LOG_DEBUG("Setting interest filter for Hello interest: " << name);
-
-  m_face.setInterestFilter(ndn::InterestFilter(name).allowLoopback(false),
-                           std::bind(&HelloProtocol::processInterest, &m_helloProtocol, _1, _2),
-                           std::bind(&Nlsr::onRegistrationSuccess, this, _1),
-                           std::bind(&Nlsr::registrationFailed, this, _1),
-                           m_confParam.getSigningInfo(), ndn::nfd::ROUTE_FLAG_CAPTURE);
 }
 
 void
@@ -253,7 +234,7 @@ Nlsr::registerRouterPrefix()
 void
 Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification)
 {
-  NLSR_LOG_TRACE("Nlsr::onFaceEventNotification called");
+  NLSR_LOG_TRACE("onFaceEventNotification called");
 
   switch (faceEventNotification.getKind()) {
     case ndn::nfd::FACE_EVENT_DESTROYED: {
@@ -288,10 +269,12 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
           // has met the HELLO retry threshold
           adjacent->setInterestTimedOutNo(m_confParam.getInterestRetryNumber());
 
-          if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+          if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
             m_routingTable.scheduleRoutingTableCalculation();
           }
           else {
+            // Will call scheduleRoutingTableCalculation internally
+            // if needed in case of LS or DRY_RUN
             m_lsdb.scheduleAdjLsaBuild();
           }
         }
@@ -322,12 +305,10 @@ Nlsr::onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNo
 
         registerAdjacencyPrefixes(*adjacent, ndn::time::milliseconds::max());
 
-        if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
-          m_routingTable.scheduleRoutingTableCalculation();
-        }
-        else {
-         m_lsdb.scheduleAdjLsaBuild();
-        }
+        // We should not do scheduleRoutingTableCalculation or scheduleAdjLsaBuild here
+        // because once the prefixes are registered, we send a HelloInterest
+        // to the prefix (see NLSR ctor). HelloProtocol will call these functions
+        // once HelloData is received and validated.
       }
       break;
     }
