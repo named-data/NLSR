@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "nfd-rib-command-processor.hpp"
 
@@ -32,12 +32,12 @@ NfdRibCommandProcessor::NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher
   m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("register"),
     ndn::mgmt::makeAcceptAllAuthorization(),
     std::bind(&NfdRibCommandProcessor::validateParameters<NfdRibRegisterCommand>, this, _1),
-    bind(&NfdRibCommandProcessor::advertiseAndInsertPrefix, this, _1, _2, _3, _4));
+    std::bind(&NfdRibCommandProcessor::advertiseAndInsertPrefix, this, _1, _2, _3, _4));
 
   m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("unregister"),
     ndn::mgmt::makeAcceptAllAuthorization(),
     std::bind(&NfdRibCommandProcessor::validateParameters<NfdRibUnregisterCommand>, this, _1),
-    bind(&NfdRibCommandProcessor::withdrawAndRemovePrefix, this, _1, _2, _3, _4));
+    std::bind(&NfdRibCommandProcessor::withdrawAndRemovePrefix, this, _1, _2, _3, _4));
 }
 
 } // namespace update

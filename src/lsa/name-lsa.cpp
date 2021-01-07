@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -85,8 +85,7 @@ NameLsa::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::NameLsa) {
-    BOOST_THROW_EXCEPTION(Error("Expected NameLsa Block, but Block is of a different type: #" +
-                                ndn::to_string(m_wire.type())));
+    NDN_THROW(Error("NameLsa", m_wire.type()));
   }
 
   m_wire.parse();
@@ -98,7 +97,7 @@ NameLsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required Lsa field"));
+    NDN_THROW(Error("Missing required Lsa field"));
   }
 
   NamePrefixList npl;
@@ -107,11 +106,9 @@ NameLsa::wireDecode(const ndn::Block& wire)
       npl.insert(ndn::Name(*val));
     }
     else {
-      BOOST_THROW_EXCEPTION(Error("Expected Name Block, but Block is of a different type: #" +
-                                  ndn::to_string(m_wire.type())));
+      NDN_THROW(Error("Name", val->type()));
     }
   }
-
   m_npl = npl;
 }
 

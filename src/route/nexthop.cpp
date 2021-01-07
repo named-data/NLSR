@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -69,25 +69,28 @@ NextHop::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::NextHop) {
-    std::stringstream error;
-    error << "Expected NextHop Block, but Block is of a different type: #"
-          << m_wire.type();
-    BOOST_THROW_EXCEPTION(Error(error.str()));
+    NDN_THROW(Error("NextHop", m_wire.type()));
   }
 
   m_wire.parse();
 
-  ndn::Block::element_const_iterator val = m_wire.elements_begin();
+  auto val = m_wire.elements_begin();
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Uri) {
-    m_connectingFaceUri.assign(reinterpret_cast<const char*>(val->value()), val->value_size());
+    m_connectingFaceUri = ndn::encoding::readString(*val);
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required Uri field"));
+    NDN_THROW(Error("Missing required Uri field"));
   }
 
-  m_routeCost = ndn::encoding::readDouble(*val);
+  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::CostDouble) {
+    m_routeCost = ndn::encoding::readDouble(*val);
+    ++val;
+  }
+  else {
+    NDN_THROW(Error("Missing required CostDouble field"));
+  }
 }
 
 bool

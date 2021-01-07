@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,7 +26,6 @@
 #include "common.hpp"
 
 #include <list>
-#include <boost/cstdint.hpp>
 
 namespace nlsr {
 
@@ -37,7 +36,7 @@ public:
   typedef std::list<Adjacent>::iterator iterator;
 
   bool
-  insert(Adjacent& adjacent);
+  insert(const Adjacent& adjacent);
 
   std::list<Adjacent>&
   getAdjList();

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -273,14 +273,10 @@ RoutingTableStatus::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::RoutingTable) {
-    std::stringstream error;
-    error << "Expected RoutingTableStatus Block, but Block is of a different type: #"
-          << m_wire.type();
-    BOOST_THROW_EXCEPTION(Error(error.str()));
+    NDN_THROW(Error("RoutingTable", m_wire.type()));
   }
 
   m_wire.parse();
-
   auto val = m_wire.elements_begin();
 
   std::set<ndn::Name> destinations;
@@ -297,10 +293,7 @@ RoutingTableStatus::wireDecode(const ndn::Block& wire)
   }
 
   if (val != m_wire.elements_end()) {
-    std::stringstream error;
-    error << "Expected the end of elements, but Block is of a different type: #"
-          << val->type();
-    BOOST_THROW_EXCEPTION(Error(error.str()));
+    NDN_THROW(Error("Unrecognized TLV of type " + ndn::to_string(val->type()) + " in RoutingTable"));
   }
 }
 

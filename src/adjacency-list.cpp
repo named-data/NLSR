@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,9 +20,6 @@
  **/
 
 #include "adjacency-list.hpp"
-
-#include "adjacent.hpp"
-#include "common.hpp"
 #include "logger.hpp"
 
 #include <algorithm>
@@ -32,9 +29,9 @@ namespace nlsr {
 INIT_LOGGER(AdjacencyList);
 
 bool
-AdjacencyList::insert(Adjacent& adjacent)
+AdjacencyList::insert(const Adjacent& adjacent)
 {
-  std::list<Adjacent>::iterator it = find(adjacent.getName());
+  auto it = find(adjacent.getName());
   if (it != m_adjList.end()) {
     return false;
   }

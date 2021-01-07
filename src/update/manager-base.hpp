@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_MANAGER_BASE_HPP
 #define NLSR_MANAGER_BASE_HPP
@@ -37,6 +37,7 @@
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
 #include <boost/noncopyable.hpp>
+#include <iostream>
 
 namespace nlsr {
 
@@ -52,16 +53,10 @@ public:
   class Error : public std::runtime_error
   {
   public:
-    explicit
-    Error(const std::string& what)
-      : std::runtime_error(what)
-    {
-    }
+    using std::runtime_error::runtime_error;
   };
 
-public:
-  ManagerBase(ndn::mgmt::Dispatcher& m_dispatcher,
-              const std::string& module);
+  ManagerBase(ndn::mgmt::Dispatcher& m_dispatcher, const std::string& module);
 
 protected:
   /*! \brief generate the relative prefix for a handler by appending the verb name to the module name
@@ -76,16 +71,15 @@ PUBLIC_WITH_TESTS_ELSE_PROTECTED:
   bool
   validateParameters(const ndn::mgmt::ControlParameters& parameters)
   {
-    const ndn::nfd::ControlParameters* castParams =
-    dynamic_cast<const ndn::nfd::ControlParameters*>(&parameters);
-
+    const auto* castParams = dynamic_cast<const ndn::nfd::ControlParameters*>(&parameters);
     BOOST_ASSERT(castParams != nullptr);
+
     T command;
     try {
       command.validateRequest(*castParams);
     }
-    catch (const ndn::nfd::ControlCommand::ArgumentError& ae) {
-      throw ae;
+    catch (const ndn::nfd::ControlCommand::ArgumentError&) {
+      throw;
     }
     catch (const std::exception& e) {
       std::cerr << e.what() << std::endl;

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -28,11 +28,9 @@
 #include "adjacency-list.hpp"
 #include "name-prefix-list.hpp"
 
-#include <boost/cstdint.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
 #include <ndn-cxx/security/certificate-fetcher-direct-fetch.hpp>
-#include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 
@@ -128,9 +126,8 @@ enum {
  */
 class ConfParameter
 {
-
 public:
-  ConfParameter(ndn::Face& face,  ndn::KeyChain& keyChain,
+  ConfParameter(ndn::Face& face, ndn::KeyChain& keyChain,
                 const std::string& confFileName = "nlsr.conf");
 
   const std::string&
@@ -478,7 +475,7 @@ public:
     return m_keyChain;
   }
 
-  shared_ptr<ndn::security::Certificate>
+  std::shared_ptr<ndn::security::Certificate>
   initializeKey();
 
   void
@@ -492,6 +489,7 @@ public:
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::string m_confFileName;
   std::string m_confFileNameDynamic;
+
 private:
   ndn::Name m_routerName;
   ndn::Name m_siteName;

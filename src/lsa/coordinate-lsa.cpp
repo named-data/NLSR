@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -105,10 +105,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::CoordinateLsa) {
-    std::stringstream error;
-    error << "Expected CoordinateLsa Block, but Block is of a different type: #"
-          << m_wire.type();
-    BOOST_THROW_EXCEPTION(Error(error.str()));
+    NDN_THROW(Error("CoordinateLsa", m_wire.type()));
   }
 
   m_wire.parse();
@@ -120,7 +117,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required Lsa field"));
+    NDN_THROW(Error("Missing required Lsa field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::HyperbolicRadius) {
@@ -128,7 +125,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required HyperbolicRadius field"));
+    NDN_THROW(Error("Missing required HyperbolicRadius field"));
   }
 
   std::vector<double> angles;
@@ -137,7 +134,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
       angles.push_back(ndn::encoding::readDouble(*val));
     }
     else {
-      BOOST_THROW_EXCEPTION(Error("Missing required HyperbolicAngle field"));
+      NDN_THROW(Error("Missing required HyperbolicAngle field"));
     }
   }
   m_hyperbolicAngles = angles;

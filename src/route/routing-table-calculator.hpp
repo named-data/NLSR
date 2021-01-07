@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -28,9 +28,6 @@
 #include "conf-parameter.hpp"
 
 #include <list>
-#include <boost/cstdint.hpp>
-
-#include <ndn-cxx/name.hpp>
 
 namespace nlsr {
 

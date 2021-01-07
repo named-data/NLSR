@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -27,9 +27,8 @@
 #include <ndn-cxx/encoding/encoding-buffer.hpp>
 #include <ndn-cxx/encoding/tlv.hpp>
 
-#include <iostream>
 #include <cmath>
-#include <boost/cstdint.hpp>
+#include <ostream>
 
 namespace nlsr {
 

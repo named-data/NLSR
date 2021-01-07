@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -30,9 +30,6 @@
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/util/signal.hpp>
-#include <boost/throw_exception.hpp>
-
-class InterestManager;
 
 namespace nlsr {
 
@@ -49,18 +46,14 @@ class ConfParameter;
 class SyncLogicHandler
 {
 public:
-  using IsLsaNew =
-    std::function<bool(const ndn::Name&, const Lsa::Type& lsaType, const uint64_t&)>;
-
   class Error : public std::runtime_error
   {
   public:
-    explicit
-    Error(const std::string& what)
-      : std::runtime_error(what)
-    {
-    }
+    using std::runtime_error::runtime_error;
   };
+
+  using IsLsaNew =
+    std::function<bool(const ndn::Name&, const Lsa::Type& lsaType, const uint64_t&)>;
 
   SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew, const ConfParameter& conf);
 

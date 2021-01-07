@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -73,7 +73,7 @@ Lsa::wireDecode(const ndn::Block& wire)
     m_originRouter.wireDecode(*val);
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("OriginRouter: Missing required Name field"));
+    NDN_THROW(Error("OriginRouter: Missing required Name field"));
   }
 
   ++val;
@@ -83,14 +83,14 @@ Lsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required SequenceNumber field"));
+    NDN_THROW(Error("Missing required SequenceNumber field"));
   }
 
   if (val != baseWire.elements_end() && val->type() == ndn::tlv::nlsr::ExpirationTime) {
     m_expirationTimePoint = ndn::time::fromString(readString(*val));
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required ExpirationTimePoint field"));
+    NDN_THROW(Error("Missing required ExpirationTime field"));
   }
 }
 

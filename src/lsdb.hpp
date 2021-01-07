@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -45,13 +45,9 @@
 
 #include <PSync/segment-publisher.hpp>
 
-#include <utility>
-#include <boost/cstdint.hpp>
-
 namespace nlsr {
 
 namespace bmi = boost::multi_index;
-using namespace ndn::literals::time_literals;
 
 static constexpr ndn::time::seconds GRACE_PERIOD = 10_s;
 
@@ -232,7 +228,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
   void
-  installLsa(shared_ptr<Lsa> lsa);
+  installLsa(std::shared_ptr<Lsa> lsa);
 
   /*! \brief Remove a name LSA from the LSDB.
     \param router The name of the router that published the LSA to remove.

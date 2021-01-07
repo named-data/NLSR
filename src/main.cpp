@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,33 +20,12 @@
  **/
 
 #include "conf-file-processor.hpp"
-#include "security/certificate-store.hpp"
 #include "nlsr.hpp"
+#include "security/certificate-store.hpp"
 #include "version.hpp"
 
-#include <boost/exception/get_error_info.hpp>
-#include <sstream>
-
-template<typename E>
-static std::string
-getExtendedErrorMessage(const E& exception)
-{
-  std::ostringstream errorMessage;
-  errorMessage << exception.what();
-
-  const char* const* file = boost::get_error_info<boost::throw_file>(exception);
-  const int* line = boost::get_error_info<boost::throw_line>(exception);
-  const char* const* func = boost::get_error_info<boost::throw_function>(exception);
-  if (file && line) {
-    errorMessage << " [from " << *file << ":" << *line;
-    if (func) {
-      errorMessage << " in " << *func;
-    }
-    errorMessage << "]";
-  }
-
-  return errorMessage.str();
-}
+#include <boost/exception/diagnostic_information.hpp>
+#include <iostream>
 
 static void
 printUsage(std::ostream& os, const std::string& programName)
@@ -95,6 +74,7 @@ main(int argc, char** argv)
     std::cerr << "Error in configuration file processing" << std::endl;
     return 2;
   }
+
   // Since confParam is already populated, key is initialized here before
   // and independent of the NLSR class
   auto certificate = confParam.initializeKey();
@@ -102,7 +82,6 @@ main(int argc, char** argv)
   nlsr::Nlsr nlsr(face, keyChain, confParam);
 
   nlsr::security::CertificateStore certStore(face, confParam, nlsr.getLsdb());
-
   if (certificate) {
     certStore.insert(*certificate);
   }
@@ -112,7 +91,7 @@ main(int argc, char** argv)
   }
   catch (const std::exception& e) {
     nlsr.getFib().clean();
-    std::cerr << "FATAL: " << getExtendedErrorMessage(e) << std::endl;
+    std::cerr << "FATAL: " << boost::diagnostic_information(e) << std::endl;
     return 1;
   }
 

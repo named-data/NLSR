@@ -25,8 +25,6 @@ namespace nlsr {
 
 INIT_LOGGER(ConfParameter);
 
-using namespace ndn::time_literals;
-
 // To be changed when breaking changes are made to sync
 const uint64_t ConfParameter::SYNC_VERSION = 9;
 
@@ -120,7 +118,7 @@ ConfParameter::loadCertToValidator(const ndn::security::Certificate& cert)
   m_prefixUpdateValidator.loadAnchor("Authoritative-Certificate", ndn::security::Certificate(cert));
 }
 
-shared_ptr<ndn::security::Certificate>
+std::shared_ptr<ndn::security::Certificate>
 ConfParameter::initializeKey()
 {
   NLSR_LOG_DEBUG("Initializing Key ...");

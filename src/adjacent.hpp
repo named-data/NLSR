@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -19,14 +19,14 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#ifndef NLSR_ADJACENT_HPP
+#define NLSR_ADJACENT_HPP
+
 #include <string>
 #include <cmath>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/net/face-uri.hpp>
-
-#ifndef NLSR_ADJACENT_HPP
-#define NLSR_ADJACENT_HPP
 
 namespace nlsr {
 
@@ -49,11 +49,7 @@ public:
   class Error : public ndn::tlv::Error
   {
   public:
-    explicit
-    Error(const std::string& what)
-      : ndn::tlv::Error(what)
-    {
-    }
+    using ndn::tlv::Error::Error;
   };
 
   enum Status

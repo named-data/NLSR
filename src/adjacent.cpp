@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -30,12 +30,12 @@ const double Adjacent::DEFAULT_LINK_COST = 10.0;
 const double Adjacent::NON_ADJACENT_COST = -12345;
 
 Adjacent::Adjacent()
-    : m_name()
-    , m_faceUri()
-    , m_linkCost(DEFAULT_LINK_COST)
-    , m_status(STATUS_INACTIVE)
-    , m_interestTimedOutNo(0)
-    , m_faceId(0)
+  : m_name()
+  , m_faceUri()
+  , m_linkCost(DEFAULT_LINK_COST)
+  , m_status(STATUS_INACTIVE)
+  , m_interestTimedOutNo(0)
+  , m_faceId(0)
 {
 }
 
@@ -45,35 +45,34 @@ Adjacent::Adjacent(const ndn::Block& block)
 }
 
 Adjacent::Adjacent(const ndn::Name& an)
-    : m_name(an)
-    , m_faceUri()
-    , m_linkCost(DEFAULT_LINK_COST)
-    , m_status(STATUS_INACTIVE)
-    , m_interestTimedOutNo(0)
-    , m_faceId(0)
-  {
-  }
+  : m_name(an)
+  , m_faceUri()
+  , m_linkCost(DEFAULT_LINK_COST)
+  , m_status(STATUS_INACTIVE)
+  , m_interestTimedOutNo(0)
+  , m_faceId(0)
+{
+}
 
 Adjacent::Adjacent(const ndn::Name& an, const ndn::FaceUri& faceUri, double lc,
                    Status s, uint32_t iton, uint64_t faceId)
-    : m_name(an)
-    , m_faceUri(faceUri)
-    , m_status(s)
-    , m_interestTimedOutNo(iton)
-    , m_faceId(faceId)
-  {
-    this->setLinkCost(lc);
-  }
+  : m_name(an)
+  , m_faceUri(faceUri)
+  , m_status(s)
+  , m_interestTimedOutNo(iton)
+  , m_faceId(faceId)
+{
+  this->setLinkCost(lc);
+}
 
 void
 Adjacent::setLinkCost(double lc)
 {
   // NON_ADJACENT_COST is a negative value and is used for nodes that aren't direct neighbors.
   // But for direct/active neighbors, the cost cannot be negative.
-  if (lc < 0 && lc != NON_ADJACENT_COST)
-  {
+  if (lc < 0 && lc != NON_ADJACENT_COST) {
     NLSR_LOG_ERROR(" Neighbor's link-cost cannot be negative");
-    BOOST_THROW_EXCEPTION(ndn::tlv::Error("Neighbor's link-cost cannot be negative"));
+    NDN_THROW(ndn::tlv::Error("Neighbor's link-cost cannot be negative"));
   }
 
   m_linkCost = lc;
@@ -127,20 +126,19 @@ Adjacent::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::Adjacency) {
-    BOOST_THROW_EXCEPTION(Error("Expected Adjacency Block, but Block is of a different type: #" +
-                                ndn::to_string(m_wire.type())));
+    NDN_THROW(Error("Adjacency", m_wire.type()));
   }
 
   m_wire.parse();
 
-  ndn::Block::element_const_iterator val = m_wire.elements_begin();
+  auto val = m_wire.elements_begin();
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::Name) {
     m_name.wireDecode(*val);
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required Name field"));
+    NDN_THROW(Error("Missing required Name field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Uri) {
@@ -148,7 +146,7 @@ Adjacent::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required Uri field"));
+    NDN_THROW(Error("Missing required Uri field"));
   }
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Cost) {
@@ -156,7 +154,7 @@ Adjacent::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required Cost field"));
+    NDN_THROW(Error("Missing required Cost field"));
   }
 }
 

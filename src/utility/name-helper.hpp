@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -18,17 +18,12 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \author A K M Mahmudul Hoque <ahoque1@memphis.edu>
- *
- **/
+ */
+
 #ifndef NLSR_NAME_HELPER_HPP
 #define NLSR_NAME_HELPER_HPP
 
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/regex_find_format.hpp>
-#include <boost/regex.hpp>
-#include <boost/cstdint.hpp>
-#include <ndn-cxx/name-component.hpp>
-#include <ndn-cxx/name.hpp>
+#include "common.hpp"
 
 namespace nlsr {
 namespace util {
@@ -40,7 +35,7 @@ namespace util {
    \return -1 if searchString not found else return the position
    starting from 0
  */
-inline static int32_t
+inline int32_t
 getNameComponentPosition(const ndn::Name& name, const std::string& searchString)
 {
   ndn::name::Component component(searchString);
@@ -54,7 +49,6 @@ getNameComponentPosition(const ndn::Name& name, const std::string& searchString)
 }
 
 } // namespace util
-
 } // namespace nlsr
 
-#endif //NLSR_NAME_HELPER_HPP
+#endif // NLSR_NAME_HELPER_HPP

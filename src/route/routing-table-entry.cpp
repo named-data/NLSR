@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -70,14 +70,10 @@ RoutingTableEntry::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::RoutingTableEntry) {
-    std::stringstream error;
-    error << "Expected RoutingTable Block, but Block is of a different type: #"
-          << m_wire.type();
-    BOOST_THROW_EXCEPTION(Error(error.str()));
+    NDN_THROW(Error("RoutingTableEntry", m_wire.type()));
   }
 
   m_wire.parse();
-
   auto val = m_wire.elements_begin();
 
   if (val != m_wire.elements_end() && val->type() == ndn::tlv::Name) {
@@ -85,7 +81,7 @@ RoutingTableEntry::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required destination field"));
+    NDN_THROW(Error("Missing required Name field"));
   }
 
   for (; val != m_wire.elements_end(); ++val) {
@@ -93,10 +89,7 @@ RoutingTableEntry::wireDecode(const ndn::Block& wire)
       m_nexthopList.addNextHop(NextHop(*val));
     }
     else {
-      std::stringstream error;
-      error << "Expected NextHop Block, but Block is of a different type: #"
-            << m_wire.type();
-      BOOST_THROW_EXCEPTION(Error(error.str()));
+      NDN_THROW(Error("NextHop", val->type()));
     }
   }
 }
@@ -104,10 +97,8 @@ RoutingTableEntry::wireDecode(const ndn::Block& wire)
 std::ostream&
 operator<<(std::ostream& os, const RoutingTableEntry& rte)
 {
-  os << "  Destination: " << rte.getDestination() << "\n"
-     << rte.getNexthopList() << "\n";
-
-  return os;
+  return os << "  Destination: " << rte.getDestination() << "\n"
+            << rte.getNexthopList() << "\n";
 }
 
 } // namespace nlsr

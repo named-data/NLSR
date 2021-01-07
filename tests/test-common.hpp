@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -40,8 +40,6 @@
 namespace nlsr {
 namespace test {
 
-using namespace ndn::time_literals;
-
 ndn::Data&
 signData(ndn::Data& data);
 
@@ -50,8 +48,8 @@ checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& p
 
 /** \brief add a fake signature to Data
  */
-inline shared_ptr<ndn::Data>
-signData(shared_ptr<ndn::Data> data)
+inline std::shared_ptr<ndn::Data>
+signData(std::shared_ptr<ndn::Data> data)
 {
   signData(*data);
   return data;
@@ -158,7 +156,7 @@ public:
                          " cannot be satisfied by this Data " << name);
     }
 
-    auto data = make_shared<ndn::Data>(name);
+    auto data = std::make_shared<ndn::Data>(name);
     data->setFreshnessPeriod(1_s);
     data->setFinalBlock(name[-1]);
     data->setContent(std::forward<ContentArgs>(contentArgs)...);

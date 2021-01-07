@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -16,33 +16,32 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
-
-/*! \file
- * Shared include file to provide a single point-of-entry, and
- * hopefully improve compile times.
  */
 
 #ifndef NLSR_COMMON_HPP
 #define NLSR_COMMON_HPP
 
-#include <ndn-cxx/util/time.hpp>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <utility>
+
 #include <ndn-cxx/name.hpp>
+#include <ndn-cxx/util/exception.hpp>
+#include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 
-using std::bind;
-using std::make_shared;
-using std::shared_ptr;
-using std::function;
+using namespace ndn::time_literals;
 
-const ndn::time::seconds TIME_ALLOWED_FOR_CANONIZATION = ndn::time::seconds(4);
+const ndn::time::seconds TIME_ALLOWED_FOR_CANONIZATION = 4_s;
 
 template<typename T, typename = void>
 struct is_iterator
 {
-   static constexpr bool value = false;
+  static constexpr bool value = false;
 };
 
 /*! Use C++11 iterator_traits to check if some type is an iterator
@@ -52,7 +51,7 @@ struct is_iterator<T, typename std::enable_if<!std::is_same<
   typename std::iterator_traits<T>::value_type,
   void>::value>::type>
 {
-   static constexpr bool value = true;
+  static constexpr bool value = true;
 };
 
 } // namespace nlsr

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -451,9 +451,9 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
 
   // Set the interval between FaceStatus dataset fetch attempts.
   ConfigurationVariable<uint32_t> faceDatasetFetchInterval("face-dataset-fetch-interval",
-                                                           bind(&ConfParameter::setFaceDatasetFetchInterval,
-                                                                &m_confParam,
-                                                                _1));
+                                                           std::bind(&ConfParameter::setFaceDatasetFetchInterval,
+                                                                     &m_confParam,
+                                                                     _1));
 
   faceDatasetFetchInterval.setMinAndMaxValue(FACE_DATASET_FETCH_INTERVAL_MIN,
                                              FACE_DATASET_FETCH_INTERVAL_MAX);

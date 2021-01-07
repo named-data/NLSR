@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -93,8 +93,7 @@ AdjLsa::wireDecode(const ndn::Block& wire)
   m_wire = wire;
 
   if (m_wire.type() != ndn::tlv::nlsr::AdjacencyLsa) {
-    BOOST_THROW_EXCEPTION(Error("Expected AdjacencyLsa Block, but Block is of a different type: #" +
-                                ndn::to_string(m_wire.type())));
+    NDN_THROW(Error("AdjacencyLsa", m_wire.type()));
   }
 
   m_wire.parse();
@@ -106,18 +105,16 @@ AdjLsa::wireDecode(const ndn::Block& wire)
     ++val;
   }
   else {
-    BOOST_THROW_EXCEPTION(Error("Missing required Lsa field"));
+    NDN_THROW(Error("Missing required Lsa field"));
   }
 
   AdjacencyList adl;
   for (; val != m_wire.elements_end(); ++val) {
     if (val->type() == ndn::tlv::nlsr::Adjacency) {
-      Adjacent adj = Adjacent(*val);
-      adl.insert(adj);
+      adl.insert(Adjacent(*val));
     }
     else {
-      BOOST_THROW_EXCEPTION(Error("Expected Adjacency Block, but Block is of a different type: #" +
-                                  ndn::to_string(m_wire.type())));
+      NDN_THROW(Error("Adjacency", val->type()));
     }
   }
   m_adl = adl;

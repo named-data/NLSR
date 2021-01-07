@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -129,14 +129,14 @@ CertificateStore::onKeyInterest(const ndn::Name& name, const ndn::Interest& inte
 void
 CertificateStore::onKeyPrefixRegSuccess(const ndn::Name& name)
 {
-  NLSR_LOG_DEBUG("KEY prefix: " << name << " registration is successful.");
+  NLSR_LOG_DEBUG("KEY prefix: " << name << " registration is successful");
 }
 
 void
 CertificateStore::registrationFailed(const ndn::Name& name)
 {
-  NLSR_LOG_ERROR("ERROR: Failed to register prefix " << name);
-  BOOST_THROW_EXCEPTION(std::runtime_error("Prefix registration failed"));
+  NLSR_LOG_ERROR("Failed to register prefix " << name);
+  NDN_THROW(std::runtime_error("Prefix registration failed"));
 }
 
 void

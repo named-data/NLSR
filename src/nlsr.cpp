@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,11 +24,8 @@
 #include "logger.hpp"
 
 #include <cstdlib>
-#include <string>
-#include <sstream>
 #include <cstdio>
 #include <unistd.h>
-#include <vector>
 
 #include <ndn-cxx/net/face-uri.hpp>
 
@@ -426,8 +423,8 @@ Nlsr::enableIncomingFaceIdIndication()
   m_controller.start<ndn::nfd::FaceUpdateCommand>(
     ndn::nfd::ControlParameters()
       .setFlagBit(ndn::nfd::FaceFlagBit::BIT_LOCAL_FIELDS_ENABLED, true),
-    bind(&Nlsr::onFaceIdIndicationSuccess, this, _1),
-    bind(&Nlsr::onFaceIdIndicationFailure, this, _1));
+    std::bind(&Nlsr::onFaceIdIndicationSuccess, this, _1),
+    std::bind(&Nlsr::onFaceIdIndicationFailure, this, _1));
 }
 
 void
@@ -440,11 +437,8 @@ Nlsr::onFaceIdIndicationSuccess(const ndn::nfd::ControlParameters& cp)
 void
 Nlsr::onFaceIdIndicationFailure(const ndn::nfd::ControlResponse& cr)
 {
-  std::ostringstream os;
-  os << "Failed to enable incoming face id indication feature: " <<
-        "(code: " << cr.getCode() << ", reason: " << cr.getText() << ")";
-
-  NLSR_LOG_DEBUG(os.str());
+  NLSR_LOG_DEBUG("Failed to enable incoming face id indication feature: " <<
+                 "(code: " << cr.getCode() << ", reason: " << cr.getText() << ")");
 }
 
 } // namespace nlsr

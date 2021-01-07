@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -181,7 +181,7 @@ BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr1", 0);
 
   NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
-  npt.m_table.push_back(make_shared<NamePrefixTableEntry>(npte1));
+  npt.m_table.push_back(std::make_shared<NamePrefixTableEntry>(npte1));
 
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/altrtr");
@@ -204,7 +204,7 @@ BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
 BOOST_FIXTURE_TEST_CASE(AddNptEntryPtrToRoutingEntry, NamePrefixTableFixture)
 {
   NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
-  npt.m_table.push_back(make_shared<NamePrefixTableEntry>(npte1));
+  npt.m_table.push_back(std::make_shared<NamePrefixTableEntry>(npte1));
 
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
 
@@ -232,8 +232,8 @@ BOOST_FIXTURE_TEST_CASE(RemoveNptEntryPtrFromRoutingEntry, NamePrefixTableFixtur
   NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
   NamePrefixTableEntry npte2("/ndn/memphis/rtr2");
   RoutingTableEntry rte1("/ndn/memphis/destination1");
-  npt.m_table.push_back(make_shared<NamePrefixTableEntry>(npte1));
-  npt.m_table.push_back(make_shared<NamePrefixTableEntry>(npte2));
+  npt.m_table.push_back(std::make_shared<NamePrefixTableEntry>(npte1));
+  npt.m_table.push_back(std::make_shared<NamePrefixTableEntry>(npte2));
 
   npt.addEntry(npte1.getNamePrefix(), rte1.getDestination());
   // We have to add two entries, otherwise the routing pool entry will be deleted.

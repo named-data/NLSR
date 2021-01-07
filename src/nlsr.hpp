@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -38,10 +38,6 @@
 #include "utility/name-helper.hpp"
 #include "stats-collector.hpp"
 
-#include <boost/cstdint.hpp>
-#include <stdexcept>
-#include <boost/throw_exception.hpp>
-
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/certificate-fetcher-direct-fetch.hpp>
@@ -69,11 +65,7 @@ public:
   class Error : public std::runtime_error
   {
   public:
-    explicit
-    Error(const std::string& what)
-      : std::runtime_error(what)
-    {
-    }
+    using std::runtime_error::runtime_error;
   };
 
   Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam);

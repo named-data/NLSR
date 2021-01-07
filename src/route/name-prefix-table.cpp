@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -94,11 +94,12 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
   // Either we have to make a new NPT entry or there already was one.
   if (nameItr == m_table.end()) {
     NLSR_LOG_DEBUG("Adding origin: " << rtpePtr->getDestination()
-               << " to a new name prefix: " << name);
-    npte = make_shared<NamePrefixTableEntry>(name);
+                   << " to a new name prefix: " << name);
+    npte = std::make_shared<NamePrefixTableEntry>(name);
     npte->addRoutingTableEntry(rtpePtr);
     npte->generateNhlfromRteList();
     m_table.push_back(npte);
+
     // If this entry has next hops, we need to inform the FIB
     if (npte->getNexthopList().size() > 0) {
       NLSR_LOG_TRACE("Updating FIB with next hops for " << npte->getNamePrefix());
@@ -131,6 +132,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
       m_fib.remove(name);
     }
   }
+
   // Add the reference to this NPT to the RTPE.
   rtpePtr->namePrefixTableEntries.emplace(
     std::make_pair(npte->getNamePrefix(), std::weak_ptr<NamePrefixTableEntry>(npte)));

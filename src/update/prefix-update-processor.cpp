@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,8 +22,10 @@
 #include "prefix-update-processor.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
-#include <ndn-cxx/mgmt/nfd/control-response.hpp>
+
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/mgmt/nfd/control-response.hpp>
+
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
 
@@ -41,7 +43,7 @@ using SignerTag = ndn::SimpleTag<ndn::Name, 20>;
 static ndn::optional<std::string>
 getSignerFromTag(const ndn::Interest& interest)
 {
-  shared_ptr<SignerTag> signerTag = interest.getTag<SignerTag>();
+  auto signerTag = interest.getTag<SignerTag>();
   if (signerTag == nullptr) {
     return ndn::nullopt;
   }

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -28,7 +28,6 @@
 #include "test-access-control.hpp"
 
 #include <ndn-cxx/util/scheduler.hpp>
-#include <ndn-cxx/util/time.hpp>
 
 namespace nlsr {
 
@@ -45,11 +44,7 @@ public:
   class Error : public ndn::tlv::Error
   {
   public:
-    explicit
-    Error(const std::string& what)
-      : ndn::tlv::Error(what)
-    {
-    }
+    using ndn::tlv::Error::Error;
   };
 
   enum class Type {
