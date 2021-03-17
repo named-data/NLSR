@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -25,8 +25,6 @@
 #include "tests/test-common.hpp"
 #include "publisher-fixture.hpp"
 
-#include <ndn-cxx/mgmt/nfd/control-response.hpp>
-
 namespace nlsr {
 namespace test {
 
@@ -41,7 +39,7 @@ processDatasetInterest(ndn::util::DummyClientFace& face,
   ndn::Block parser(face.sentData[0].getContent());
   parser.parse();
 
-  ndn::Block::element_const_iterator it = parser.elements_begin();
+  auto it = parser.elements_begin();
   BOOST_CHECK_EQUAL(isSameType(*it++), true);
   BOOST_CHECK(it == parser.elements_end());
 
@@ -97,7 +95,7 @@ BOOST_AUTO_TEST_CASE(Localhost)
       return block.type() == ndn::tlv::nlsr::RoutingTable; });
 }
 
-BOOST_AUTO_TEST_CASE(Routername)
+BOOST_AUTO_TEST_CASE(RouterName)
 {
   ndn::Name regRouterPrefix(conf.getRouterPrefix());
   regRouterPrefix.append("nlsr");
@@ -120,11 +118,8 @@ BOOST_AUTO_TEST_CASE(Routername)
 
   // Install routing table
   RoutingTableEntry rte1("desrouter1");
-  const ndn::Name& DEST_ROUTER = rte1.getDestination();
-
   NextHop nh = createNextHop("udp://face-test1", 10);
-
-  rt1.addNextHop(DEST_ROUTER, nh);
+  rt1.addNextHop(rte1.getDestination(), nh);
 
   ndn::Name routerName(conf.getRouterPrefix());
   routerName.append("nlsr");
@@ -132,23 +127,22 @@ BOOST_AUTO_TEST_CASE(Routername)
   // Request adjacency LSAs
   face.receive(ndn::Interest(ndn::Name(routerName).append("lsdb").append("adjacencies")).setCanBePrefix(true));
   processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
+    [] (const auto& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
 
   // Request coordinate LSAs
   face.receive(ndn::Interest(ndn::Name(routerName).append("lsdb").append("coordinates")).setCanBePrefix(true));
   processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
+    [] (const auto& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
 
   // Request Name LSAs
   face.receive(ndn::Interest(ndn::Name(routerName).append("lsdb").append("names")).setCanBePrefix(true));
   processDatasetInterest(face,
-    [] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
+    [] (const auto& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
 
   // Request Routing Table
-  face.receive(ndn::Interest(ndn::Name(routerName).append("routing-table")));
+  face.receive(ndn::Interest(ndn::Name(routerName).append("routing-table")).setCanBePrefix(true));
   processDatasetInterest(face,
-    [] (const ndn::Block& block) {
-      return block.type() == ndn::tlv::nlsr::RoutingTable; });
+    [] (const auto& block) { return block.type() == ndn::tlv::nlsr::RoutingTable; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
