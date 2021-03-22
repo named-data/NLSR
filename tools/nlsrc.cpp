@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,15 +24,16 @@
 #include "version.hpp"
 #include "src/publisher/dataset-interest-handler.hpp"
 
-#include <ndn-cxx/face.hpp>
 #include <ndn-cxx/data.hpp>
-#include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/encoding/block.hpp>
+#include <ndn-cxx/face.hpp>
+#include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
-#include <ndn-cxx/util/segment-fetcher.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/command-interest-signer.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/security/signing-helpers.hpp>
+#include <ndn-cxx/util/segment-fetcher.hpp>
 
 #include <iostream>
 

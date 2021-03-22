@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -25,6 +25,8 @@
 #include "lsa/lsa.hpp"
 #include "logger.hpp"
 #include "utility/name-helper.hpp"
+
+#include <boost/lexical_cast.hpp>
 
 namespace nlsr {
 

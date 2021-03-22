@@ -293,9 +293,15 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   }
 
   // sync-protocol
-  std::string syncProtocol = section.get<std::string>("sync-protocol", "chronosync");
+  std::string syncProtocol = section.get<std::string>("sync-protocol", "psync");
   if (syncProtocol == "chronosync") {
+#ifdef HAVE_CHRONOSYNC
     m_confParam.setSyncProtocol(SYNC_PROTOCOL_CHRONOSYNC);
+#else
+    std::cerr << "NLSR was compiled without Chronosync support!" << std::endl;
+    std::cerr << "Only PSync support is currently available ('sync-protocol psync')" << std::endl;
+    return false;
+#endif
   }
   else if (syncProtocol == "psync") {
     m_confParam.setSyncProtocol(SYNC_PROTOCOL_PSYNC);

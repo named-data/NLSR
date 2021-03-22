@@ -177,7 +177,7 @@ class DummyConfFileProcessor
 
 public:
   DummyConfFileProcessor(ConfParameter& conf,
-                         int32_t protocol = SYNC_PROTOCOL_PSYNC,
+                         SyncProtocol protocol = SYNC_PROTOCOL_PSYNC,
                          int32_t hyperbolicState = HYPERBOLIC_STATE_OFF,
                          ndn::Name networkName = "/ndn", ndn::Name siteName = "/site",
                          ndn::Name routerName = "/%C1.Router/this-router")

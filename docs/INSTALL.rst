@@ -12,15 +12,16 @@ Prerequisites
 Refer to `Getting started with NFD <https://named-data.net/doc/NFD/current/INSTALL.html>`_
 for detailed installation and running instruction.
 
--  ChronoSync library
-
-Download the ChronoSync library and build it according to the instructions available at
-https://github.com/named-data/ChronoSync#build
-
 -  PSync library
 
 Download the PSync library and build it according to the instructions available at
 https://github.com/named-data/PSync#build
+
+-  [Optional] ChronoSync library
+
+For testing purposes, NLSR can be optionally built with Chronosync support.
+Download the ChronoSync library and build it according to the instructions available at
+https://github.com/named-data/ChronoSync#build
 
 Build
 -----
@@ -40,3 +41,7 @@ configure``::
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
     # or
     export PKG_CONFIG_PATH=/path/to/pkgconfig/on/your/machine
+
+If ChronoSync support is desired, NLSR needs to be configured with the following option:
+
+   ./waf configure --with-chronosync

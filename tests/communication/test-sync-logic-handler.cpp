@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "communication/sync-logic-handler.hpp"
 #include "tests/test-common.hpp"
@@ -25,20 +25,20 @@
 #include "nlsr.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace nlsr {
 namespace test {
 
 using std::shared_ptr;
 
-template<int32_t Protocol>
 class SyncLogicFixture : public UnitTestTimeFixture
 {
 public:
   SyncLogicFixture()
     : face(m_ioService, m_keyChain)
     , conf(face, m_keyChain)
-    , confProcessor(conf, Protocol)
+    , confProcessor(conf, SYNC_PROTOCOL_PSYNC)
     , testIsLsaNew([] (const ndn::Name& name, const Lsa::Type& lsaType,
                        const uint64_t sequenceNumber) {
                      return true;
@@ -57,16 +57,9 @@ public:
     this->advanceClocks(ndn::time::milliseconds(1), 10);
     face.sentInterests.clear();
 
-    if (Protocol == SYNC_PROTOCOL_CHRONOSYNC) {
-      std::vector<chronosync::MissingDataInfo> updates;
-      updates.push_back({ndn::Name(prefix).appendNumber(1), 0, seqNo});
-      sync.m_syncLogic.onChronoSyncUpdate(updates);
-    }
-    else {
-      std::vector<psync::MissingDataInfo> updates;
-      updates.push_back({ndn::Name(prefix), 0, seqNo});
-      sync.m_syncLogic.onPSyncUpdate(updates);
-    }
+    std::vector<psync::MissingDataInfo> updates;
+    updates.push_back({ndn::Name(prefix), 0, seqNo});
+    sync.m_syncLogic.onPSyncUpdate(updates);
 
     this->advanceClocks(ndn::time::milliseconds(1), 10);
   }
@@ -83,17 +76,13 @@ public:
                                              Lsa::Type::COORDINATE};
 };
 
-using mpl_::int_;
-using Protocols = boost::mpl::vector<int_<SYNC_PROTOCOL_CHRONOSYNC>,
-                                     int_<SYNC_PROTOCOL_PSYNC>>;
-
 BOOST_AUTO_TEST_SUITE(TestSyncLogicHandler)
 
 /* Tests that when SyncLogicHandler receives an LSA of either Name or
    Adjacency type that appears to be newer, it will emit to its signal
    with those LSA details.
  */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherLS, T, Protocols, SyncLogicFixture<T::value>)
+BOOST_FIXTURE_TEST_CASE(UpdateForOtherLS, SyncLogicFixture)
 {
   std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME, Lsa::Type::ADJACENCY};
 
@@ -118,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherLS, T, Protocols, SyncLogicFixtur
    either Coordinate or Name type that appears to be newer, it will
    emit to its signal with those LSA details.
  */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherHR, T, Protocols, SyncLogicFixture<T::value>)
+BOOST_FIXTURE_TEST_CASE(UpdateForOtherHR, SyncLogicFixture)
 {
   this->conf.setHyperbolicState(HYPERBOLIC_STATE_ON);
 
@@ -143,7 +132,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherHR, T, Protocols, SyncLogicFixtur
    any type that appears to be newer, it will emit to its signal with
    those LSA details.
  */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherHRDry, T, Protocols, SyncLogicFixture<T::value>)
+BOOST_FIXTURE_TEST_CASE(UpdateForOtherHRDry, SyncLogicFixture)
 {
   this->conf.setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
 
@@ -167,7 +156,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdateForOtherHRDry, T, Protocols, SyncLogicFix
    details matching this router's details, it will *not* emit to its
    signal those LSA details.
  */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(NoUpdateForSelf, T, Protocols, SyncLogicFixture<T::value>)
+BOOST_FIXTURE_TEST_CASE(NoUpdateForSelf, SyncLogicFixture)
 {
   const uint64_t sequenceNumber = 1;
 
@@ -193,7 +182,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(NoUpdateForSelf, T, Protocols, SyncLogicFixture
    details that do not match the expected format, it will *not* emit
    to its signal those LSA details.
  */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(MalformedUpdate, T, Protocols, SyncLogicFixture<T::value>)
+BOOST_FIXTURE_TEST_CASE(MalformedUpdate, SyncLogicFixture)
 {
   const uint64_t sequenceNumber = 1;
 
@@ -215,7 +204,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(MalformedUpdate, T, Protocols, SyncLogicFixture
    details that do not appear to be new, it will *not* emit to its
    signal those LSA details.
  */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(LsaNotNew, T, Protocols, SyncLogicFixture<T::value>)
+BOOST_FIXTURE_TEST_CASE(LsaNotNew, SyncLogicFixture)
 {
   auto testLsaAlwaysFalse = [] (const ndn::Name& routerName, const Lsa::Type& lsaType,
                                 const uint64_t& sequenceNumber) {
@@ -237,9 +226,9 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(LsaNotNew, T, Protocols, SyncLogicFixture<T::va
 
 /* Tests that SyncLogicHandler successfully concatenates configured
    variables together to form the necessary prefixes to advertise
-   through ChronoSync.
+   through sync.
  */
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(UpdatePrefix, T, Protocols, SyncLogicFixture<T::value>)
+BOOST_FIXTURE_TEST_CASE(UpdatePrefix, SyncLogicFixture)
 {
   ndn::Name expectedPrefix = this->conf.getLsaPrefix();
   expectedPrefix.append(this->conf.getSiteName());

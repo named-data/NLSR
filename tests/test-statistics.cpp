@@ -26,6 +26,7 @@
 #include "nlsr.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace nlsr {
 namespace test {

@@ -1,6 +1,6 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 """
-Copyright (c) 2014-2019,  The University of Memphis,
+Copyright (c) 2014-2021,  The University of Memphis,
                           Regents of the University of California,
                           Arizona Board of Regents.
 
@@ -37,6 +37,8 @@ def options(opt):
     optgrp = opt.add_option_group('NLSR Options')
     optgrp.add_option('--with-tests', action='store_true', default=False,
                       help='Build unit tests')
+    optgrp.add_option('--with-chronosync', action='store_true', default=False,
+                      help='Build with Chronosync support')
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
@@ -59,8 +61,9 @@ def configure(conf):
                    'Please upgrade your distribution or manually install a newer version of Boost'
                    ' (https://redmine.named-data.net/projects/nfd/wiki/Boost_FAQ)')
 
-    conf.check_cfg(package='ChronoSync', args=['--cflags', '--libs'], uselib_store='SYNC',
-                   pkg_config_path=pkg_config_path)
+    if conf.options.with_chronosync:
+        conf.check_cfg(package='ChronoSync', args=['--cflags', '--libs'],
+                       uselib_store='CHRONOSYNC', pkg_config_path=pkg_config_path)
 
     conf.check_cfg(package='PSync', args=['--cflags', '--libs'], uselib_store='PSYNC',
                    pkg_config_path=pkg_config_path)
@@ -98,7 +101,7 @@ def build(bld):
         target='nlsr-objects',
         source=bld.path.ant_glob('src/**/*.cpp',
                                  excl=['src/main.cpp']),
-        use='NDN_CXX BOOST SYNC PSYNC',
+        use='NDN_CXX BOOST CHRONOSYNC PSYNC',
         includes='. src',
         export_includes='. src')
 

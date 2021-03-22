@@ -53,7 +53,7 @@ public:
     , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
     , counter(0)
   {
-    std::ifstream source("/usr/local/etc/ndn/nlsr.conf.sample", std::ios::binary);
+    std::ifstream source("nlsr.conf", std::ios::binary);
     std::ofstream destination(testConfFile, std::ios::binary);
     destination << source.rdbuf();
     source.close();

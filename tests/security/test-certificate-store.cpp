@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,6 +26,7 @@
 #include "lsdb.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace nlsr {
 namespace test {

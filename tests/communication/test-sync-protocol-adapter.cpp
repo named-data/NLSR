@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,15 +17,14 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "communication/sync-protocol-adapter.hpp"
 #include "tests/test-common.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
-#include <boost/mpl/int.hpp>
-#include <boost/mpl/vector.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace nlsr {
 namespace test {
@@ -43,7 +42,6 @@ public:
     syncPrefix.appendVersion(4);
   }
 
-  template <int32_t T>
   void
   addNodes()
   {
@@ -51,7 +49,7 @@ public:
       faces[i] = std::make_shared<ndn::util::DummyClientFace>(m_ioService,
                                                               util::DummyClientFace::Options{true, true});
       userPrefixes[i] = Name(nameLsaUserPrefix).appendNumber(i);
-      nodes[i] = std::make_shared<SyncProtocolAdapter>(*faces[i], T, syncPrefix,
+      nodes[i] = std::make_shared<SyncProtocolAdapter>(*faces[i], SYNC_PROTOCOL_PSYNC, syncPrefix,
                                                        userPrefixes[i],
                                                        syncInterestLifetime,
                                                        [i, this] (const ndn::Name& updateName,
@@ -73,14 +71,11 @@ public:
   std::map<ndn::Name, uint64_t> prefixToSeq[2];
 };
 
-using boost::mpl::int_;
-using Protocols = boost::mpl::vector<int_<SYNC_PROTOCOL_CHRONOSYNC>, int_<SYNC_PROTOCOL_PSYNC>>;
+BOOST_AUTO_TEST_SUITE(TestSyncProtocolAdapter)
 
-BOOST_FIXTURE_TEST_SUITE(TestSyncProtocolAdapter, SyncProtocolAdapterFixture)
-
-BOOST_AUTO_TEST_CASE_TEMPLATE(Sync, SyncProtocol, Protocols)
+BOOST_FIXTURE_TEST_CASE(Basic, SyncProtocolAdapterFixture)
 {
-  addNodes<SyncProtocol::value>();
+  addNodes();
 
   nodes[0]->publishUpdate(userPrefixes[0], 10);
   advanceClocks(ndn::time::milliseconds(1000), 100);

@@ -40,9 +40,11 @@ enum {
   LSA_REFRESH_TIME_MAX = 7200
 };
 
-enum {
-  SYNC_PROTOCOL_CHRONOSYNC = 0,
-  SYNC_PROTOCOL_PSYNC = 1
+enum SyncProtocol {
+#ifdef HAVE_CHRONOSYNC
+  SYNC_PROTOCOL_CHRONOSYNC,
+#endif
+  SYNC_PROTOCOL_PSYNC
 };
 
 enum {
@@ -211,18 +213,16 @@ public:
     m_lsaRefreshTime = lrt;
   }
 
-  uint32_t
+  SyncProtocol
   getSyncProtocol() const
   {
     return m_syncProtocol;
   }
 
   void
-  setSyncProtocol(int32_t syncProtocol)
+  setSyncProtocol(SyncProtocol syncProtocol)
   {
-    if (syncProtocol == SYNC_PROTOCOL_CHRONOSYNC || syncProtocol == SYNC_PROTOCOL_PSYNC) {
-      m_syncProtocol = syncProtocol;
-    }
+    m_syncProtocol = syncProtocol;
   }
 
   uint32_t
@@ -527,7 +527,7 @@ private:
 
   ndn::time::milliseconds m_syncInterestLifetime;
 
-  int32_t m_syncProtocol;
+  SyncProtocol m_syncProtocol;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   static const uint64_t SYNC_VERSION;

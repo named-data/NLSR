@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2018,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "sync-protocol-adapter.hpp"
 #include "logger.hpp"
@@ -29,7 +29,7 @@ namespace nlsr {
 const auto FIXED_SESSION = ndn::name::Component::fromNumber(0);
 
 SyncProtocolAdapter::SyncProtocolAdapter(ndn::Face& face,
-                                         int32_t syncProtocol,
+                                         SyncProtocol syncProtocol,
                                          const ndn::Name& syncPrefix,
                                          const ndn::Name& userPrefix,
                                          ndn::time::milliseconds syncInterestLifetime,
@@ -37,6 +37,9 @@ SyncProtocolAdapter::SyncProtocolAdapter(ndn::Face& face,
  : m_syncProtocol(syncProtocol)
  , m_syncUpdateCallback(syncUpdateCallback)
 {
+  NLSR_LOG_TRACE("SyncProtocol value: " << m_syncProtocol);
+
+#ifdef HAVE_CHRONOSYNC
   if (m_syncProtocol == SYNC_PROTOCOL_CHRONOSYNC) {
     NDN_LOG_DEBUG("Using ChronoSync");
     m_chronoSyncLogic = std::make_shared<chronosync::Logic>(face,
@@ -52,40 +55,45 @@ SyncProtocolAdapter::SyncProtocolAdapter(ndn::Face& face,
                           chronosync::Logic::DEFAULT_SYNC_REPLY_FRESHNESS,
                           chronosync::Logic::DEFAULT_RECOVERY_INTEREST_LIFETIME,
                           FIXED_SESSION);
+    return;
   }
-  else {
-    NDN_LOG_DEBUG("Using PSync");
-    m_psyncLogic = std::make_shared<psync::FullProducer>(80,
-                     face,
-                     syncPrefix,
-                     userPrefix,
-                     std::bind(&SyncProtocolAdapter::onPSyncUpdate, this, _1),
-                     syncInterestLifetime);
-  }
+#endif
+
+  NDN_LOG_DEBUG("Using PSync");
+  m_psyncLogic = std::make_shared<psync::FullProducer>(80,
+                   face,
+                   syncPrefix,
+                   userPrefix,
+                   std::bind(&SyncProtocolAdapter::onPSyncUpdate, this, _1),
+                   syncInterestLifetime);
 }
 
 void
 SyncProtocolAdapter::addUserNode(const ndn::Name& userPrefix)
 {
+#ifdef HAVE_CHRONOSYNC
   if (m_syncProtocol == SYNC_PROTOCOL_CHRONOSYNC) {
     m_chronoSyncLogic->addUserNode(userPrefix, chronosync::Logic::DEFAULT_NAME, FIXED_SESSION);
+    return;
   }
-  else {
-    m_psyncLogic->addUserNode(userPrefix);
-  }
+#endif
+
+  m_psyncLogic->addUserNode(userPrefix);
 }
 
 void
 SyncProtocolAdapter::publishUpdate(const ndn::Name& userPrefix, uint64_t seq)
 {
+#ifdef HAVE_CHRONOSYNC
   if (m_syncProtocol == SYNC_PROTOCOL_CHRONOSYNC) {
     m_chronoSyncLogic->updateSeqNo(seq, userPrefix);
+    return;
   }
-  else {
-    m_psyncLogic->publishName(userPrefix, seq);
-  }
+#endif
+  m_psyncLogic->publishName(userPrefix, seq);
 }
 
+#ifdef HAVE_CHRONOSYNC
 void
 SyncProtocolAdapter::onChronoSyncUpdate(const std::vector<chronosync::MissingDataInfo>& updates)
 {
@@ -96,6 +104,7 @@ SyncProtocolAdapter::onChronoSyncUpdate(const std::vector<chronosync::MissingDat
     m_syncUpdateCallback(update.session.getPrefix(-1), update.high);
   }
 }
+#endif
 
 void
 SyncProtocolAdapter::onPSyncUpdate(const std::vector<psync::MissingDataInfo>& updates)

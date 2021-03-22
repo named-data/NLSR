@@ -27,6 +27,8 @@
 #include "../test-common.hpp"
 #include "../control-commands.hpp"
 
+#include <boost/lexical_cast.hpp>
+
 namespace nlsr {
 namespace test {
 

@@ -18,7 +18,7 @@ A beginners guide to installing and testing NLSR on Fedora
 The following instructions are based on the information provided at the
 Named Data Networking project web page [NDNmain]_.
 Before installing NLSR it is necessary to install different libraries
-and programs: ndn-cxx, NFD, ChronoSync, and PSync. This document describes the
+and programs: ndn-cxx, NFD, ChronoSync [optional], and PSync. This document describes the
 necessary steps to correctly install these programs (§ `2 <#ndncxx>`__,
 `3 <#nfd>`__ and `4 <#nlsr>`__) and a brief guide on how to configure
 and test NLSR using a simple two-node network (§ `5 <#test>`__).
@@ -361,8 +361,40 @@ commands:
 4. Installing NLSR
 ==================
 
-4.1 Installing ChronoSync
--------------------------
+4.1 Installing PSync
+--------------------
+
+Before installing NLSR, it is also necessary to download and install
+PSync. PSync is a synchronization library which allows NLSR to synchronize LSAs
+similar to ChronoSync. More information about PSync may be found at [PSync]_.
+This library may be installed by running the following commands as a regular
+user and at the directory defined at § `1 <#intro>`__:
+
+::
+
+      $ git clone --depth 1 https://github.com/named-data/PSync.git
+      $ cd PSync
+      $ ./waf configure
+      $ ./waf
+      $ sudo ./waf install
+
+The following command needs to be used again to configure the libraries:
+
+::
+
+      $ sudo ldconfig -v | grep -i psync
+
+This command should display a line similar to the following:
+
+::
+
+         libPSync.so.0.1.0 -> libPSync.so.0.1.0
+
+4.2 [Optional] Installing ChronoSync
+------------------------------------
+
+By default NLSR no longer builds with ChronoSync support.
+Since ChronoSync is deprecated, only install it for testing purposes.
 
 Before installing NLSR, it is necessary to first download and install
 ChronoSync, which is a synchronization library which allows NLSR routers
@@ -391,35 +423,6 @@ This command should display a line similar to the following:
 
          libChronoSync.so.0.5.0 -> libChronoSync.so.0.5.0
 
-4.2 Installing PSync
--------------------------
-
-Before installing NLSR, it is also necessary to download and install
-PSync. PSync is a synchronization library which allows NLSR to synchronize LSAs
-similar to ChronoSync. More information about PSync may be found at [PSync]_.
-This library may be installed by running the following commands as a regular
-user and at the directory defined at § `1 <#intro>`__:
-
-::
-
-      $ git clone --depth 1 https://github.com/named-data/PSync.git
-      $ cd PSync
-      $ ./waf configure
-      $ ./waf
-      $ sudo ./waf install
-
-The following command needs to be used again to configure the libraries:
-
-::
-
-      $ sudo ldconfig -v | grep -i psync
-
-This command should display a line similar to the following:
-
-::
-
-         libPSync.so.0.1.0 -> libPSync.so.0.1.0
-
 4.3 Downloading and installing NLSR
 -----------------------------------
 
@@ -434,6 +437,12 @@ commands need to be run as a regular user:
       $ ./waf configure
       $ ./waf
       $ sudo ./waf install
+
+If ChronoSync support is needed for testing, please configure NLSR with:
+
+::
+
+      $ ./waf configure --with-chronosync
 
 4.4 Configuring NLSR
 --------------------
