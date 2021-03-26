@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEvent)
   event.setKind(ndn::nfd::FACE_EVENT_CREATED)
     .setRemoteUri(faceUri)
     .setFaceId(faceId);
-  auto data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  auto data = std::make_shared<ndn::Data>(ndn::Name("/localhost/nfd/faces/events").appendSequenceNumber(0));
   data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventNoMatch)
   event.setKind(ndn::nfd::FACE_EVENT_CREATED)
     .setRemoteUri(eventUri)
     .setFaceId(faceId);
-  auto data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  auto data = std::make_shared<ndn::Data>(ndn::Name("/localhost/nfd/faces/events").appendSequenceNumber(0));
   data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
@@ -215,7 +215,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
   event.setKind(ndn::nfd::FACE_EVENT_CREATED)
     .setRemoteUri(faceUri)
     .setFaceId(neighborFaceId); // Does not matter what we set here, dummy face always returns 1
-  std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  auto data = std::make_shared<ndn::Data>(ndn::Name("/localhost/nfd/faces/events").appendSequenceNumber(0));
   data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
 
   // Resend same event notification again
   m_face.sentInterests.clear();
-  data->setName("/localhost/nfd/faces/events/%FE%01");
+  data->setName(ndn::Name("/localhost/nfd/faces/events").appendSequenceNumber(1));
   m_keyChain.sign(*data);
   m_face.receive(*data);
   this->advanceClocks(10_ms);
@@ -318,7 +318,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
   event.setKind(ndn::nfd::FACE_EVENT_DESTROYED)
        .setFaceId(destroyFaceId);
 
-  auto data = std::make_shared<ndn::Data>("/localhost/nfd/faces/events/%FE%00");
+  auto data = std::make_shared<ndn::Data>(ndn::Name("/localhost/nfd/faces/events").appendSequenceNumber(0));
   data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
   m_keyChain.sign(*data);
