@@ -179,7 +179,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 private:
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
   ndn::util::signal::ScopedConnection m_onPrefixRegistrationSuccess;
-  ndn::util::signal::ScopedConnection m_onHelloDataValidated;
+  ndn::util::signal::ScopedConnection m_onInitialHelloDataValidated;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::mgmt::Dispatcher m_dispatcher;

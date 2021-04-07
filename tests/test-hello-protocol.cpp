@@ -115,6 +115,38 @@ BOOST_AUTO_TEST_CASE(HelloInterestTimeoutHR) // #5139
   checkHelloInterestTimeout();
 }
 
+BOOST_AUTO_TEST_CASE(CheckHelloDataValidatedSignal) // # 5157
+{
+  int numOnInitialHelloDataValidates = 0;
+  helloProtocol.onInitialHelloDataValidated.connect(
+    [&] (const ndn::Name& neighbor) {
+      ++numOnInitialHelloDataValidates;
+    }
+  );
+
+  ndn::FaceUri faceUri("udp4://10.0.0.2:6363");
+  Adjacent adj1("/ndn/site/%C1.Router/router-other", faceUri, 10,
+                Adjacent::STATUS_INACTIVE, 0, 300);
+  adjList.insert(adj1);
+
+  ndn::Name dataName = adj1.getName() ;
+  dataName.append(nlsr::HelloProtocol::NLSR_COMPONENT);
+  dataName.append(nlsr::HelloProtocol::INFO_COMPONENT);
+  dataName.append(conf.getRouterPrefix().wireEncode());
+
+  ndn::Data data(ndn::Name(dataName).appendVersion());
+  BOOST_CHECK_EQUAL(numOnInitialHelloDataValidates, 0);
+  helloProtocol.onContentValidated(data);
+  BOOST_CHECK_EQUAL(numOnInitialHelloDataValidates, 1);
+  BOOST_CHECK_EQUAL(adjList.getStatusOfNeighbor(adj1.getName()), Adjacent::STATUS_ACTIVE);
+
+  // No state change of neighbor so no signal:
+  ndn::Data data2(ndn::Name(dataName).appendVersion());
+  helloProtocol.onContentValidated(data2);
+  BOOST_CHECK_EQUAL(numOnInitialHelloDataValidates, 1);
+  BOOST_CHECK_EQUAL(adjList.getStatusOfNeighbor(adj1.getName()), Adjacent::STATUS_ACTIVE);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test

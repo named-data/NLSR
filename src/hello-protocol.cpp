@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -246,9 +246,8 @@ HelloProtocol::onContentValidated(const ndn::Data& data)
       else {
         m_lsdb.scheduleAdjLsaBuild();
       }
+      onInitialHelloDataValidated(neighbor);
     }
-
-    onHelloDataValidated(neighbor);
   }
   // increment RCV_HELLO_DATA
   hpIncrementSignal(Statistics::PacketType::RCV_HELLO_DATA);

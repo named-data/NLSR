@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -126,7 +126,7 @@ private:
                             const ndn::security::ValidationError& ve);
 
 public:
-  ndn::util::Signal<HelloProtocol, const ndn::Name&> onHelloDataValidated;
+  ndn::util::Signal<HelloProtocol, const ndn::Name&> onInitialHelloDataValidated;
 
 private:
   ndn::Face& m_face;
@@ -138,6 +138,7 @@ private:
   Lsdb& m_lsdb;
   AdjacencyList& m_adjacencyList;
 
+PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   static const std::string INFO_COMPONENT;
   static const std::string NLSR_COMPONENT;
 };

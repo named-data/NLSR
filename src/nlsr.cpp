@@ -56,7 +56,7 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
       [this] (const ndn::Name& name) {
         m_helloProtocol.sendHelloInterest(name);
       }))
-  , m_onHelloDataValidated(m_helloProtocol.onHelloDataValidated.connect(
+  , m_onInitialHelloDataValidated(m_helloProtocol.onInitialHelloDataValidated.connect(
       [this] (const ndn::Name& neighbor) {
         auto it = m_adjacencyList.findAdjacent(neighbor);
         if (it != m_adjacencyList.end()) {
