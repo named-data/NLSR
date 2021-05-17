@@ -27,7 +27,7 @@
 #include "conf-parameter.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
-#include <ndn-cxx/security/command-interest-signer.hpp>
+#include <ndn-cxx/security/interest-signer.hpp>
 #include <ndn-cxx/security/pib/identity.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
@@ -138,21 +138,20 @@ public:
   {
     ndn::nfd::ControlParameters parameters;
     parameters.setName(prefixName);
-    if (P_FLAG)
-    {
+    if (P_FLAG) {
       parameters.setFlags(update::PREFIX_FLAG);
     }
     ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
     ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
-    ndn::security::CommandInterestSigner cis(m_keyChain);
+    ndn::security::InterestSigner signer(m_keyChain);
     // type true for advertise, else withdraw
     if (type == "advertise") {
       advertiseCommand.append(parameters.wireEncode());
-      return cis.makeCommandInterest(advertiseCommand, ndn::security::signingByIdentity(opIdentity));
+      return signer.makeCommandInterest(advertiseCommand, ndn::security::signingByIdentity(opIdentity));
     }
     else {
       withdrawCommand.append(parameters.wireEncode());
-      return cis.makeCommandInterest(withdrawCommand, ndn::security::signingByIdentity(opIdentity));
+      return signer.makeCommandInterest(withdrawCommand, ndn::security::signingByIdentity(opIdentity));
     }
   }
 

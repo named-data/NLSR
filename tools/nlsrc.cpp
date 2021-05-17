@@ -30,7 +30,7 @@
 #include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
-#include <ndn-cxx/security/command-interest-signer.hpp>
+#include <ndn-cxx/security/interest-signer.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 #include <ndn-cxx/util/segment-fetcher.hpp>
@@ -205,13 +205,9 @@ Nlsrc::sendNamePrefixUpdate(const ndn::Name& name,
   commandName.append(verb);
   commandName.append(parameters.wireEncode());
 
-  ndn::security::CommandInterestSigner cis(m_keyChain);
-
-  ndn::Interest commandInterest =
-    cis.makeCommandInterest(commandName,
-                            ndn::security::signingByIdentity(m_keyChain.getPib().
-                                                             getDefaultIdentity()));
-
+  ndn::security::InterestSigner signer(m_keyChain);
+  auto commandInterest = signer.makeCommandInterest(commandName,
+                           ndn::security::signingByIdentity(m_keyChain.getPib().getDefaultIdentity()));
   commandInterest.setMustBeFresh(true);
 
   m_face.expressInterest(commandInterest,

@@ -26,7 +26,7 @@
 #include "tests/test-common.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
-#include <ndn-cxx/security/command-interest-signer.hpp>
+#include <ndn-cxx/security/interest-signer.hpp>
 #include <ndn-cxx/security/pib/identity.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
@@ -163,13 +163,12 @@ BOOST_AUTO_TEST_CASE(Basic)
   // append /<control-parameters>
   advertiseCommand.append(parameters.wireEncode());
 
-  ndn::security::CommandInterestSigner cis(m_keyChain);
+  ndn::security::InterestSigner signer(m_keyChain);
 
-  // CommandInterestSigner::makeCommandInterest() will append the last
+  // InterestSigner::makeCommandInterest() will append the last
   // three components: (<timestamp>/<random-value>/<signed-interests-components>)
-  ndn::Interest advertiseInterest =
-    cis.makeCommandInterest(advertiseCommand,
-                            ndn::security::signingByIdentity(opIdentity));
+  auto advertiseInterest = signer.makeCommandInterest(advertiseCommand,
+                                                      ndn::security::signingByIdentity(opIdentity));
 
   face.receive(advertiseInterest);
 
@@ -185,13 +184,12 @@ BOOST_AUTO_TEST_CASE(Basic)
   face.sentData.clear();
   nameLsaSeqNoBeforeInterest = nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq();
 
-  //Withdraw
+  // Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
   withdrawCommand.append(parameters.wireEncode());
 
-  ndn::Interest withdrawInterest
-    = cis.makeCommandInterest(withdrawCommand,
-                              ndn::security::signingByIdentity(opIdentity));
+  auto withdrawInterest= signer.makeCommandInterest(withdrawCommand,
+                                                    ndn::security::signingByIdentity(opIdentity));
 
   face.receive(withdrawInterest);
   this->advanceClocks(ndn::time::milliseconds(10));
