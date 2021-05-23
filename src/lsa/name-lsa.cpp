@@ -138,6 +138,9 @@ NameLsa::update(const std::shared_ptr<Lsa>& lsa)
   auto nlsa = std::static_pointer_cast<NameLsa>(lsa);
   bool updated = false;
 
+  m_npl.sort();
+  nlsa->getNpl().sort();
+
   // Obtain the set difference of the current and the incoming
   // name prefix sets, and add those.
   std::list<ndn::Name> newNames = nlsa->getNpl().getNames();

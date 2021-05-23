@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -376,7 +376,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   BOOST_CHECK(adjlsa1.isEqualContent(adjlsa2));
 
   //Name LSA
-  /*ndn::Name s1{"name1"};
+  ndn::Name s1{"name1"};
   ndn::Name s2{"name2"};
   NamePrefixList npl1{s1, s2};
 
@@ -388,7 +388,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   std::vector<double> angles = {30, 40.0};
   CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, angles);
   CoordinateLsa clsa2(clsa1.wireEncode());
-  BOOST_CHECK_EQUAL(clsa1.wireEncode(), clsa2.wireEncode());*/
+  BOOST_CHECK_EQUAL(clsa1.wireEncode(), clsa2.wireEncode());
 }
 
 BOOST_AUTO_TEST_CASE(OperatorEquals)
@@ -408,6 +408,40 @@ BOOST_AUTO_TEST_CASE(OperatorEquals)
   lsa2.addName(name3);
 
   BOOST_CHECK(lsa1.isEqualContent(lsa2));
+}
+
+BOOST_AUTO_TEST_CASE(NameLsaUpdate)
+{
+  NameLsa knownNameLsa;
+  knownNameLsa.m_originRouter = ndn::Name("/yoursunny/_/%C1.Router/dal");
+  knownNameLsa.m_seqNo = 2683;
+  knownNameLsa.setExpirationTimePoint(ndn::time::system_clock::now() + 3561_ms);
+  knownNameLsa.addName("/yoursunny/_/dal");
+  knownNameLsa.addName("/ndn");
+
+  std::shared_ptr<Lsa> rcvdLsa = std::make_shared<NameLsa>();
+
+  rcvdLsa->m_originRouter = ndn::Name("/yoursunny/_/%C1.Router/dal");
+  rcvdLsa->m_seqNo = 2684;
+  rcvdLsa->setExpirationTimePoint(ndn::time::system_clock::now() + 3600_ms);
+  auto nlsa = std::static_pointer_cast<NameLsa>(rcvdLsa);
+  nlsa->addName("/ndn");
+  nlsa->addName("/yoursunny/_/dal");
+  ndn::Name addedName1("/yoursunny/video/ndn-dpdk_acmicn20_20200917");
+  ndn::Name addedName2("/yoursunny/pushups");
+  nlsa->addName(addedName1);
+  nlsa->addName(addedName2);
+
+  bool updated;
+  std::list<ndn::Name> namesToAdd, namesToRemove;
+  std::tie(updated, namesToAdd, namesToRemove) = knownNameLsa.update(rcvdLsa);
+
+  BOOST_CHECK_EQUAL(namesToRemove.size(), 0);
+  BOOST_CHECK_EQUAL(namesToAdd.size(), 2);
+  auto it = std::find(namesToAdd.begin(), namesToAdd.end(), addedName1);
+  BOOST_CHECK(it != namesToAdd.end());
+  it = std::find(namesToAdd.begin(), namesToAdd.end(), addedName2);
+  BOOST_CHECK(it != namesToAdd.end());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
