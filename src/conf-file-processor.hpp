@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,12 +26,10 @@
 #include "conf-parameter.hpp"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/property_tree/info_parser.hpp>
-#include <boost/filesystem.hpp>
+#include <boost/property_tree/ptree.hpp>
 
 namespace nlsr {
 
-namespace bf = boost::filesystem;
 using ConfigSection = boost::property_tree::ptree;
 
 /*! \brief A class containing methods to parse an NLSR configuration file
@@ -125,4 +123,5 @@ private:
 };
 
 } // namespace nlsr
+
 #endif // NLSR_CONF_FILE_PROCESSOR_HPP

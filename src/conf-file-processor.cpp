@@ -27,8 +27,13 @@
 #include <ndn-cxx/name.hpp>
 #include <ndn-cxx/net/face-uri.hpp>
 
-#include <iostream>
+#include <boost/filesystem.hpp>
+#include <boost/property_tree/info_parser.hpp>
+
 #include <fstream>
+#include <iostream>
+
+namespace bf = boost::filesystem;
 
 namespace nlsr {
 
@@ -331,9 +336,8 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     std::string stateDir = section.get<std::string>("state-dir");
     if (bf::exists(stateDir)) {
       if (bf::is_directory(stateDir)) {
-
-        // copying nlsr.conf file to a user define directory for possible modification
-        std::string conFileDynamic = (bf::path(stateDir) / "nlsr.conf").c_str();
+        // copying nlsr.conf file to a user-defined directory for possible modification
+        std::string conFileDynamic = (bf::path(stateDir) / "nlsr.conf").string();
 
         if (m_confFileName == conFileDynamic) {
           std::cerr << "Please use nlsr.conf stored at another location "
@@ -347,32 +351,38 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
 
         m_confParam.setConfFileNameDynamic(conFileDynamic);
         try {
-          bf::copy_file(m_confFileName, conFileDynamic, bf::copy_option::overwrite_if_exists);
+          bf::copy_file(m_confFileName, conFileDynamic,
+#if BOOST_VERSION >= 107400
+                        bf::copy_options::overwrite_existing
+#else
+                        bf::copy_option::overwrite_if_exists
+#endif
+                        );
         }
         catch (const bf::filesystem_error& e) {
           std::cerr << "Error copying conf file to the state directory: " << e.what() << std::endl;
+          return false;
         }
 
-        std::string testFileName = (bf::path(stateDir) / "test.seq").c_str();
+        std::string testFileName = (bf::path(stateDir) / "test.seq").string();
         std::ofstream testOutFile(testFileName);
         if (testOutFile) {
           m_confParam.setStateFileDir(stateDir);
         }
         else {
-          std::cerr << "User does not have read and write permission on the state directory";
-          std::cerr << std::endl;
+          std::cerr << "NLSR does not have read/write permission on the state directory" << std::endl;
           return false;
         }
         testOutFile.close();
         remove(testFileName.c_str());
       }
       else {
-        std::cerr << "Provided: " << stateDir << "is not a directory" << std::endl;
+        std::cerr << "Provided path '" << stateDir << "' is not a directory" << std::endl;
         return false;
       }
     }
     else {
-      std::cerr << "Provided state directory <" << stateDir << "> does not exist" << std::endl;
+      std::cerr << "Provided state directory '" << stateDir << "' does not exist" << std::endl;
       return false;
     }
   }
