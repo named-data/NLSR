@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -54,7 +54,7 @@ Fib::remove(const ndn::Name& name)
 
   // Only unregister the prefix if it ISN'T a neighbor.
   if (it != m_table.end() && isNotNeighbor((it->second).name)) {
-    for (const auto& nexthop : (it->second).nexthopList.getNextHops()) {
+    for (const auto& nexthop : (it->second).nexthopSet) {
       unregisterPrefix((it->second).name, nexthop.getConnectingFaceUri());
     }
     m_table.erase(it);
@@ -62,16 +62,17 @@ Fib::remove(const ndn::Name& name)
 }
 
 void
-Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, const NexthopList& hopsToAdd)
+Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, const NextHopsUriSortedSet& hopsToAdd)
 {
   const ndn::Name& name = entry.name;
 
   bool shouldRegister = isNotNeighbor(name);
 
-  for (const auto& hop : hopsToAdd.getNextHops())
+  for (const auto& hop : hopsToAdd)
   {
     // Add nexthop to FIB entry
-    entry.nexthopList.addNextHop(hop);
+    NLSR_LOG_DEBUG("Adding " << hop.getConnectingFaceUri() << " to " << entry.name);
+    entry.nexthopSet.addNextHop(hop);
 
     if (shouldRegister) {
       // Add nexthop to NDN-FIB
@@ -92,7 +93,7 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
   // the length of the list of all next hops.
   unsigned int maxFaces = getNumberOfFacesForName(allHops);
 
-  NexthopList hopsToAdd;
+  NextHopsUriSortedSet hopsToAdd;
   unsigned int nFaces = 0;
 
   // Create a list of next hops to be installed with length == maxFaces
@@ -129,10 +130,11 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
     FibEntry& entry = (entryIt->second);
     addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
 
-    std::set<NextHop, NextHopComparator> hopsToRemove;
-    std::set_difference(entry.nexthopList.begin(), entry.nexthopList.end(),
+    std::set<NextHop, NextHopUriSortedComparator> hopsToRemove;
+    std::set_difference(entry.nexthopSet.begin(), entry.nexthopSet.end(),
                         hopsToAdd.begin(), hopsToAdd.end(),
-                        std::inserter(hopsToRemove, hopsToRemove.end()), NextHopComparator());
+                        std::inserter(hopsToRemove, hopsToRemove.begin()),
+                        NextHopUriSortedComparator());
 
     bool isUpdatable = isNotNeighbor(entry.name);
     // Remove the uninstalled next hops from NFD and FIB entry
@@ -141,7 +143,7 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
         unregisterPrefix(entry.name, hop.getConnectingFaceUri());
       }
       NLSR_LOG_DEBUG("Removing " << hop.getConnectingFaceUri() << " from " << entry.name);
-      entry.nexthopList.removeNextHop(hop);
+      entry.nexthopSet.removeNextHop(hop);
     }
 
     // Increment sequence number
@@ -161,7 +163,7 @@ Fib::clean()
 {
   NLSR_LOG_DEBUG("Clean called");
   for (const auto& it : m_table) {
-    for (const auto& hop : it.second.nexthopList.getNextHops()) {
+    for (const auto& hop : it.second.nexthopSet) {
       unregisterPrefix(it.second.name, hop.getConnectingFaceUri());
     }
   }
@@ -339,7 +341,7 @@ Fib::refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb)
 
   entry.seqNo += 1;
 
-  for (const NextHop& hop : entry.nexthopList) {
+  for (const NextHop& hop : entry.nexthopSet) {
     registerPrefix(entry.name,
                    ndn::FaceUri(hop.getConnectingFaceUri()),
                    hop.getRouteCostAsAdjustedInteger(),
@@ -355,9 +357,9 @@ Fib::writeLog()
 {
   NLSR_LOG_DEBUG("-------------------FIB-----------------------------");
   for (const auto& entry : m_table) {
-    NLSR_LOG_DEBUG("Name Prefix: " << entry.second.name);
+    NLSR_LOG_DEBUG("Name prefix: "  << entry.first);
     NLSR_LOG_DEBUG("Seq No: " <<  entry.second.seqNo);
-    NLSR_LOG_DEBUG(entry.second.nexthopList);
+    NLSR_LOG_DEBUG("Nexthop List: \n" << entry.second.nexthopSet);
   }
 }
 

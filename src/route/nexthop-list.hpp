@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -25,6 +25,8 @@
 #include "adjacent.hpp"
 
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/util/ostream-joiner.hpp>
+
 #include <set>
 
 namespace nlsr {
@@ -44,10 +46,31 @@ struct NextHopComparator {
   }
 };
 
-class NexthopList
+struct NextHopUriSortedComparator {
+  bool
+  operator() (const NextHop& nh1, const NextHop& nh2) const {
+    return nh1.getConnectingFaceUri() < nh2.getConnectingFaceUri();
+  }
+};
+
+static inline bool
+nexthopAddCompare(const NextHop& nh1, const NextHop& nh2)
+{
+  return nh1.getConnectingFaceUri() == nh2.getConnectingFaceUri();
+}
+
+static inline bool
+nexthopRemoveCompare(const NextHop& nh1, const NextHop& nh2)
+{
+  return (nh1.getConnectingFaceUri() == nh2.getConnectingFaceUri() &&
+          nh1.getRouteCostAsAdjustedInteger() == nh2.getRouteCostAsAdjustedInteger()) ;
+}
+
+template<typename T = NextHopComparator>
+class NexthopListT
 {
 public:
-  NexthopList() = default;
+  NexthopListT() = default;
 
   /*! \brief Adds a next hop to the list.
     \param nh The next hop.
@@ -57,7 +80,18 @@ public:
     hop's route cost is updated.
   */
   void
-  addNextHop(const NextHop& nh);
+  addNextHop(const NextHop& nh)
+  {
+    auto it = std::find_if(m_nexthopList.begin(), m_nexthopList.end(),
+                           std::bind(&nexthopAddCompare, _1, nh));
+    if (it == m_nexthopList.end()) {
+      m_nexthopList.insert(nh);
+    }
+    else if (it->getRouteCost() > nh.getRouteCost()) {
+      removeNextHop(*it);
+      m_nexthopList.insert(nh);
+    }
+  }
 
   /*! \brief Remove a next hop from the Next Hop list
       \param nh The NextHop we want to remove.
@@ -65,7 +99,14 @@ public:
     The next hop gets removed only if both next hop face and route cost are same.
   */
   void
-  removeNextHop(const NextHop& nh);
+  removeNextHop(const NextHop& nh)
+  {
+    auto it = std::find_if(m_nexthopList.begin(), m_nexthopList.end(),
+                           std::bind(&nexthopRemoveCompare, _1, nh));
+    if (it != m_nexthopList.end()) {
+      m_nexthopList.erase(it);
+    }
+  }
 
   size_t
   size() const
@@ -79,24 +120,25 @@ public:
     m_nexthopList.clear();
   }
 
-  const std::set<NextHop, NextHopComparator>&
+  const std::set<NextHop, T>&
   getNextHops() const
   {
     return m_nexthopList;
   }
 
-  typedef std::set<NextHop, NextHopComparator>::iterator iterator;
-  typedef std::set<NextHop, NextHopComparator>::const_iterator const_iterator;
-  typedef std::set<NextHop, NextHopComparator>::reverse_iterator reverse_iterator;
+  typedef T value_type;
+  typedef typename std::set<NextHop, T>::iterator iterator;
+  typedef typename std::set<NextHop, T>::const_iterator const_iterator;
+  typedef typename std::set<NextHop, T>::reverse_iterator reverse_iterator;
 
   iterator
-  begin()
+  begin() const
   {
     return m_nexthopList.begin();
   }
 
   iterator
-  end()
+  end() const
   {
     return m_nexthopList.end();
   }
@@ -126,20 +168,33 @@ public:
   }
 
 private:
-  std::set<NextHop, NextHopComparator> m_nexthopList;
+  std::set<NextHop, T> m_nexthopList;
 };
 
-bool
-operator==(NexthopList& lhs, NexthopList& rhs);
+typedef NexthopListT<> NexthopList;
 
+template<typename T>
 bool
-operator==(const NexthopList& lhs, const NexthopList& rhs);
+operator==(const NexthopListT<T>& lhs, const NexthopListT<T>& rhs)
+{
+  return lhs.getNextHops() == rhs.getNextHops();
+}
 
+template<typename T>
 bool
-operator!=(const NexthopList& lhs, const NexthopList& rhs);
+operator!=(const NexthopListT<T>& lhs, const NexthopListT<T>& rhs)
+{
+  return !(lhs == rhs);
+}
 
+template<typename T>
 std::ostream&
-operator<<(std::ostream& os, const NexthopList& nhl);
+operator<<(std::ostream& os, const NexthopListT<T>& nhl)
+{
+  os << "    ";
+  std::copy(nhl.cbegin(), nhl.cend(), ndn::make_ostream_joiner(os, "\n    "));
+  return os;
+}
 
 } // namespace nlsr
 

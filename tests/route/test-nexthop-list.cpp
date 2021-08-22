@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,6 +21,7 @@
 
 #include "route/nexthop-list.hpp"
 #include "route/nexthop.hpp"
+#include "route/fib.hpp"
 #include "tests/boost-test.hpp"
 
 namespace nlsr {
@@ -178,6 +179,53 @@ BOOST_AUTO_TEST_CASE(UseCheaperNextHop)
   for (const auto& hop : list) {
     BOOST_CHECK_EQUAL(hop, hopB);
   }
+}
+
+/* Fib needs a NexthopList to be sorted by FaceUri when updating
+   to avoid removing prefixes that were just installed. The above
+   test does not apply to this scenario as the NexthopList
+   sorted by cost is given to the Fib::update.
+ */
+BOOST_AUTO_TEST_CASE(NextHopListDiffForFibUpdate) // #5179
+{
+  // If default sorter is used then difference results in
+  // the same hops to remove as those that were added
+  NexthopList nhl1;
+  nhl1.addNextHop(NextHop("udp4://10.0.0.13:6363", 28));
+  nhl1.addNextHop(NextHop("udp4://10.0.0.9:6363", 38));
+  nhl1.addNextHop(NextHop("udp4://10.0.0.26:6363", 44));
+
+  NexthopList nhl2;
+  nhl2.addNextHop(NextHop("udp4://10.0.0.9:6363", 21));
+  nhl2.addNextHop(NextHop("udp4://10.0.0.13:6363", 26));
+  nhl2.addNextHop(NextHop("udp4://10.0.0.26:6363", 42));
+
+  std::set<NextHop, NextHopComparator> hopsToRemove;
+  std::set_difference(nhl2.begin(), nhl2.end(),
+                      nhl1.begin(), nhl1.end(),
+                      std::inserter(hopsToRemove, hopsToRemove.begin()),
+                      NextHopComparator());
+
+  BOOST_CHECK_EQUAL(hopsToRemove.size(), 3);
+
+  // Sorted by FaceUri
+  NextHopsUriSortedSet nhs1;
+  nhs1.addNextHop(NextHop("udp4://10.0.0.13:6363", 28));
+  nhs1.addNextHop(NextHop("udp4://10.0.0.9:6363", 38));
+  nhs1.addNextHop(NextHop("udp4://10.0.0.26:6363", 44));
+
+  NextHopsUriSortedSet nhs2;
+  nhs2.addNextHop(NextHop("udp4://10.0.0.9:6363", 21));
+  nhs2.addNextHop(NextHop("udp4://10.0.0.13:6363", 26));
+  nhs2.addNextHop(NextHop("udp4://10.0.0.26:6363", 42));
+
+  std::set<NextHop, NextHopUriSortedComparator> hopsToRemove2;
+  std::set_difference(nhs2.begin(), nhs2.end(),
+                      nhs1.begin(), nhs1.end(),
+                      std::inserter(hopsToRemove2, hopsToRemove2.begin()),
+                      NextHopUriSortedComparator());
+
+  BOOST_CHECK_EQUAL(hopsToRemove2.size(), 0);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

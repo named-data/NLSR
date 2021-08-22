@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -29,16 +29,19 @@
 namespace nlsr {
 namespace test {
 
-using std::shared_ptr;
-
 class FibFixture : public UnitTestTimeFixture
 {
 public:
   FibFixture()
-    : face(std::make_shared<ndn::util::DummyClientFace>(m_ioService, m_keyChain))
-    , conf(*face, m_keyChain)
-    , interests(face->sentInterests)
+    : face(m_ioService, m_keyChain)
+    , conf(face, m_keyChain)
+    , adjacencies(conf.getAdjacencyList())
+    , fib(face, m_scheduler, adjacencies, conf, m_keyChain)
+    , interests(face.sentInterests)
   {
+    enableRegistrationReplyWithFaceId();
+    advanceClocks(1_s);
+
     Adjacent neighbor1(router1Name, ndn::FaceUri(router1FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
     adjacencies.insert(neighbor1);
 
@@ -50,16 +53,44 @@ public:
 
     conf.setMaxFacesPerPrefix(2);
 
-    fib = std::make_shared<Fib>(*face, m_scheduler, adjacencies, conf, m_keyChain);
-    fib->setEntryRefreshTime(1);
+    fib.setEntryRefreshTime(1);
+  }
+
+  void
+  enableRegistrationReplyWithFaceId() {
+    face.onSendInterest.connect([this] (const ndn::Interest& interest) {
+      static const ndn::Name localhostRegistration("/localhost/nfd/rib");
+      if (!localhostRegistration.isPrefixOf(interest.getName()))
+        return;
+
+      ndn::nfd::ControlParameters params(interest.getName().get(-5).blockFromValue());
+      if (!params.hasFaceId()) {
+        params.setFaceId(1);
+      }
+      params.setOrigin(ndn::nfd::ROUTE_ORIGIN_APP);
+      if (interest.getName().get(3) == ndn::name::Component("register")) {
+        params.setCost(0);
+      }
+
+      ndn::nfd::ControlResponse resp;
+      resp.setCode(200);
+      resp.setBody(params.wireEncode());
+
+      ndn::Data data(interest.getName());
+      data.setContent(resp.wireEncode());
+
+      m_keyChain.sign(data, ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_SHA256));
+
+      face.getIoService().post([this, data] { face.receive(data); });
+    });
   }
 
 public:
-  std::shared_ptr<ndn::util::DummyClientFace> face;
-  std::shared_ptr<Fib> fib;
+  ndn::util::DummyClientFace face;
 
-  AdjacencyList adjacencies;
   ConfParameter conf;
+  AdjacencyList& adjacencies;
+  Fib fib;
   std::vector<ndn::Interest>& interests;
 
   static const ndn::Name router1Name;
@@ -98,8 +129,8 @@ BOOST_AUTO_TEST_CASE(NextHopsAdd)
   hops.addNextHop(hop1);
   hops.addNextHop(hop2);
 
-  fib->update("/ndn/name", hops);
-  face->processEvents(ndn::time::milliseconds(-1));
+  fib.update("/ndn/name", hops);
+  face.processEvents(ndn::time::milliseconds(-1));
 
   // Should register faces 1 and 2 for /ndn/name
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
@@ -122,7 +153,6 @@ BOOST_AUTO_TEST_CASE(NextHopsAdd)
               verb == ndn::Name::Component("register"));
 }
 
-
 BOOST_AUTO_TEST_CASE(NextHopsNoChange)
 {
   NextHop hop1(router1FaceUri, 10);
@@ -132,14 +162,14 @@ BOOST_AUTO_TEST_CASE(NextHopsNoChange)
   oldHops.addNextHop(hop1);
   oldHops.addNextHop(hop2);
 
-  fib->update("/ndn/name", oldHops);
-  face->processEvents(ndn::time::milliseconds(-1));
+  fib.update("/ndn/name", oldHops);
+  face.processEvents(ndn::time::milliseconds(-1));
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
   interests.clear();
 
-  fib->update("/ndn/name", oldHops);
-  face->processEvents(ndn::time::milliseconds(-1));
+  fib.update("/ndn/name", oldHops);
+  face.processEvents(ndn::time::milliseconds(-1));
 
   // Should register face 1 and 2 for /ndn/name
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
@@ -171,16 +201,16 @@ BOOST_AUTO_TEST_CASE(NextHopsRemoveAll)
   oldHops.addNextHop(hop1);
   oldHops.addNextHop(hop2);
 
-  fib->update("/ndn/name", oldHops);
-  face->processEvents(ndn::time::milliseconds(-1));
+  fib.update("/ndn/name", oldHops);
+  face.processEvents(ndn::time::milliseconds(-1));
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
   interests.clear();
 
   NexthopList empty;
 
-  fib->update("/ndn/name", empty);
-  face->processEvents(ndn::time::milliseconds(-1));
+  fib.update("/ndn/name", empty);
+  face.processEvents(ndn::time::milliseconds(-1));
 
   // Should unregister faces 1 and 2 for /ndn/name
   BOOST_CHECK_EQUAL(interests.size(), 2);
@@ -214,8 +244,8 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixes)
   hops.addNextHop(hop2);
   hops.addNextHop(hop3);
 
-  fib->update("/ndn/name", hops);
-  face->processEvents(ndn::time::milliseconds(-1));
+  fib.update("/ndn/name", hops);
+  face.processEvents(ndn::time::milliseconds(-1));
 
   // Should only register faces 1 and 2 for /ndn/name
   BOOST_CHECK_EQUAL(interests.size(), 2);
@@ -247,8 +277,8 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   hops.addNextHop(hop1);
   hops.addNextHop(hop2);
 
-  fib->update("/ndn/name", hops);
-  face->processEvents(ndn::time::milliseconds(-1));
+  fib.update("/ndn/name", hops);
+  face.processEvents(ndn::time::milliseconds(-1));
 
   // FIB
   // Name        NextHops
@@ -260,8 +290,8 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   NextHop hop3(router3FaceUri, 5);
   hops.addNextHop(hop3);
 
-  fib->update("/ndn/name", hops);
-  face->processEvents(ndn::time::milliseconds(-1));
+  fib.update("/ndn/name", hops);
+  face.processEvents(ndn::time::milliseconds(-1));
 
   // To maintain a max 2 face requirement, face 3 should be registered and face 2 should be
   // unregistered. Face 1 will also be re-registered.
@@ -279,14 +309,14 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   extractRibCommandParameters(*it, verb, extractedParameters);
 
   BOOST_CHECK(extractedParameters.getName() == "/ndn/name" &&
-              extractedParameters.getFaceId() == router3FaceId &&
+              extractedParameters.getFaceId() == router1FaceId &&
               verb == ndn::Name::Component("register"));
 
   ++it;
   extractRibCommandParameters(*it, verb, extractedParameters);
 
   BOOST_CHECK(extractedParameters.getName() == "/ndn/name" &&
-              extractedParameters.getFaceId() == router1FaceId &&
+              extractedParameters.getFaceId() == router3FaceId &&
               verb == ndn::Name::Component("register"));
 
   ++it;
@@ -303,9 +333,9 @@ BOOST_FIXTURE_TEST_CASE(ScheduleFibEntryRefresh, FibFixture)
   FibEntry fe;
   fe.name = name1;
   int origSeqNo = fe.seqNo;
-  fib->m_table.emplace(name1, std::move(fe));
+  fib.m_table.emplace(name1, std::move(fe));
 
-  fib->scheduleEntryRefresh(fe,
+  fib.scheduleEntryRefresh(fe,
                             [&] (FibEntry& entry) {
                               BOOST_CHECK_EQUAL(origSeqNo + 1, entry.seqNo);
                             });
@@ -321,11 +351,64 @@ BOOST_AUTO_TEST_CASE(ShouldNotRefreshNeighborRoute) // #4799
   hops.addNextHop(hop1);
 
   // Simulate update for this neighbor from name prefix table
-  fib->update(router1Name, hops);
+  fib.update(router1Name, hops);
   this->advanceClocks(ndn::time::seconds(1));
 
   // Should not send the register interest
-  BOOST_CHECK_EQUAL(face->sentInterests.size(), 0);
+  BOOST_CHECK_EQUAL(face.sentInterests.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(PrefixWithdrawalFibUpdateBug) // #5179
+{
+  fib.setEntryRefreshTime(3600);
+  conf.setMaxFacesPerPrefix(3);
+
+  // Three adjacencies of Neu
+  Adjacent neighbor1("/ndn/memphis/router-memphis",
+                     ndn::FaceUri("udp4://10.0.0.9:6363"), 21, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
+  adjacencies.insert(neighbor1);
+
+  Adjacent neighbor2("/ndn/michigan/router-michigan",
+                     ndn::FaceUri("udp4://10.0.0.13:6363"), 14, Adjacent::STATUS_ACTIVE, 0, router2FaceId);
+  adjacencies.insert(neighbor2);
+
+  Adjacent neighbor3("/ndn/savi/router-savi",
+                     ndn::FaceUri("udp4://10.0.0.26:6363"), 15, Adjacent::STATUS_ACTIVE, 0, router3FaceId);
+  adjacencies.insert(neighbor3);
+
+  // Wustl advertises /test
+  NexthopList nhl1;
+  nhl1.addNextHop(NextHop("udp4://10.0.0.13:6363", 28));
+  nhl1.addNextHop(NextHop("udp4://10.0.0.9:6363", 38));
+  nhl1.addNextHop(NextHop("udp4://10.0.0.26:6363", 44));
+  fib.update("/test", nhl1);
+
+  // Memphis advertises /test
+  NexthopList nhl2;
+  nhl2.addNextHop(NextHop("udp4://10.0.0.9:6363", 21));
+  nhl2.addNextHop(NextHop("udp4://10.0.0.13:6363", 26));
+  nhl2.addNextHop(NextHop("udp4://10.0.0.26:6363", 42));
+  fib.update("/test", nhl2);
+
+  advanceClocks(10_ms);
+  face.sentInterests.clear();
+  // Memphis withdraws /test
+  // NamePrefixTable calls this saying we need to install the Wu routes
+  // instead of the existing Memphis' cheaper routes
+  fib.update("/test", nhl1);
+
+  advanceClocks(10_ms);
+  int numRegister = 0;
+  // Do not expect any unregisters, just registers which will update the cost in NFD
+  for (const auto& i : face.sentInterests) {
+    if (i.getName().getPrefix(4) == "/localhost/nfd/rib/unregister/") {
+      BOOST_CHECK(false);
+    }
+    else {
+      ++numRegister;
+    }
+  }
+  BOOST_CHECK_EQUAL(numRegister, 3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
