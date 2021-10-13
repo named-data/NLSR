@@ -1,10 +1,8 @@
-.. _Manpages:
-
-Manpages
-========
+Man pages
+=========
 
 .. toctree::
-   manpages/nlsr
-   manpages/nlsr.conf
-   manpages/nlsrc
+   :glob:
    :maxdepth: 1
+
+   manpages/*

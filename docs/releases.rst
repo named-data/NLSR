@@ -2,24 +2,12 @@ NLSR Versions
 +++++++++++++
 
 .. toctree::
+   :glob:
    :hidden:
    :maxdepth: 1
+   :reversed:
 
-   release-notes/release-notes-0.6.0
-   release-notes/release-notes-0.5.2
-   release-notes/release-notes-0.5.1
-   release-notes/release-notes-0.5.0
-   release-notes/release-notes-0.4.3
-   release-notes/release-notes-0.4.2
-   release-notes/release-notes-0.4.1
-   release-notes/release-notes-0.4.0
-   release-notes/release-notes-0.3.2
-   release-notes/release-notes-0.3.1
-   release-notes/release-notes-0.3.0
-   release-notes/release-notes-0.2.2
-   release-notes/release-notes-0.2.1
-   release-notes/release-notes-0.2.0
-   release-notes/release-notes-0.1.0
+   release-notes/*
 
 * **NLSR version 0.6.0**
   (:doc:`Release Notes <release-notes/release-notes-0.6.0>`, `Documentation <https://named-data.net/doc/NLSR/0.6.0/>`__)

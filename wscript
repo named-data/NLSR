@@ -30,15 +30,16 @@ GIT_TAG_PREFIX = "NLSR-"
 
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
-    opt.load(['default-compiler-flags', 'coverage', 'sanitizers',
-              'boost', 'doxygen', 'sphinx_build'],
+    opt.load(['default-compiler-flags',
+              'coverage', 'sanitizers', 'boost',
+              'doxygen', 'sphinx_build'],
              tooldir=['.waf-tools'])
 
     optgrp = opt.add_option_group('NLSR Options')
     optgrp.add_option('--with-tests', action='store_true', default=False,
                       help='Build unit tests')
     optgrp.add_option('--with-chronosync', action='store_true', default=False,
-                      help='Build with Chronosync support')
+                      help='Build with ChronoSync support')
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
@@ -46,6 +47,8 @@ def configure(conf):
                'doxygen', 'sphinx_build'])
 
     conf.env.WITH_TESTS = conf.options.with_tests
+
+    conf.find_program('dot', var='DOT', mandatory=False)
 
     pkg_config_path = os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR)
     conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'], uselib_store='NDN_CXX',
@@ -57,9 +60,13 @@ def configure(conf):
 
     conf.check_boost(lib=boost_libs, mt=True)
     if conf.env.BOOST_VERSION_NUMBER < 105800:
-        conf.fatal('Minimum required Boost version is 1.58.0\n'
-                   'Please upgrade your distribution or manually install a newer version of Boost'
-                   ' (https://redmine.named-data.net/projects/nfd/wiki/Boost_FAQ)')
+        conf.fatal('The minimum supported version of Boost is 1.65.1.\n'
+                   'Please upgrade your distribution or manually install a newer version of Boost.\n'
+                   'For more information, see https://redmine.named-data.net/projects/nfd/wiki/Boost')
+    elif conf.env.BOOST_VERSION_NUMBER < 106501:
+        Logs.warn('WARNING: Using a version of Boost older than 1.65.1 is not officially supported and may not work.\n'
+                  'If you encounter any problems, please upgrade your distribution or manually install a newer version of Boost.\n'
+                  'For more information, see https://redmine.named-data.net/projects/nfd/wiki/Boost')
 
     if conf.options.with_chronosync:
         conf.check_cfg(package='ChronoSync', args=['--cflags', '--libs'],
@@ -156,6 +163,7 @@ def doxygen(bld):
         target=['docs/doxygen.conf',
                 'docs/named_data_theme/named_data_footer-with-analytics.html'],
         VERSION=VERSION,
+        HAVE_DOT='YES' if bld.env.DOT else 'NO',
         HTML_FOOTER='../build/docs/named_data_theme/named_data_footer-with-analytics.html' \
                         if os.getenv('GOOGLE_ANALYTICS', None) \
                         else '../docs/named_data_theme/named_data_footer.html',

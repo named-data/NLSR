@@ -1,4 +1,4 @@
-NLSR Release Notes
-==================
+Release Notes
+=============
 
 .. include:: release-notes-latest.rst

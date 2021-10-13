@@ -3,7 +3,7 @@ NLSR - Named Data Link State Routing Protocol
 
 NLSR is a routing protocol in NDN that populates NDN's Routing Information Base. NLSR will
 continue to evolve alongside the Named Data Networking `protocol
-<https://named-data.net/doc/ndn-tlv/>`_.
+<https://named-data.net/doc/NDN-packet-spec/current/>`_.
 
 NLSR is an open and free software package licensed under the GPL 3.0 license and free to
 all Internet users and developers. For more information about the licensing details and
@@ -23,11 +23,11 @@ inter-domain routing protocol for NDN.  The protocol design is presented in full
 the `NLSR Paper`_.
 
 NLSR Documentation
--------------------
+------------------
 
 .. toctree::
    :hidden:
-   :maxdepth: 3
+   :maxdepth: 2
 
    GETTING-STARTED
    INSTALL
