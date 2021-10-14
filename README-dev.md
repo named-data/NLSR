@@ -8,8 +8,8 @@ files:
 Include the following header in all `.hpp` and `.cpp` files:
 
     /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-    /**
-     * Copyright (c) [Year(s)],  [Copyright Holder(s)].
+    /*
+     * Copyright (c) [Year(s)], [Copyright Holder(s)].
      *
      * This file is part of NLSR (Named-data Link State Routing).
      * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -24,7 +24,7 @@ Include the following header in all `.hpp` and `.cpp` files:
      *
      * You should have received a copy of the GNU General Public License along with
      * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
-     **/
+     */
 
 If you are affiliated with an NSF-supported NDN project institution,
 please use the [NDN Team License Boilerplate]

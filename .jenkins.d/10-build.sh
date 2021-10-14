@@ -28,7 +28,7 @@ if [[ $JOB_NAME != *"code-coverage" && $JOB_NAME != *"limited-build" ]]; then
 fi
 
 # Build in debug mode with tests
-./waf --color=yes configure --with-chronosync --debug --with-tests $ASAN $COVERAGE
+./waf --color=yes configure --debug --with-chronosync --with-tests $ASAN $COVERAGE
 ./waf --color=yes build -j$WAF_JOBS
 
 # (tests will be run against the debug version)
