@@ -27,12 +27,12 @@
 
 #include <ndn-cxx/security/key-chain.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/property_tree/info_parser.hpp>
 
 namespace nlsr {
 namespace test {
 
 using std::shared_ptr;
-using namespace nlsr::test;
 
 class CertificateStoreFixture : public UnitTestTimeFixture
 {

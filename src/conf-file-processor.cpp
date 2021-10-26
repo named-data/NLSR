@@ -21,11 +21,12 @@
 
 #include "conf-file-processor.hpp"
 #include "adjacent.hpp"
-#include "utility/name-helper.hpp"
 #include "update/prefix-update-processor.hpp"
+#include "utility/name-helper.hpp"
 
 #include <ndn-cxx/name.hpp>
 #include <ndn-cxx/net/face-uri.hpp>
+#include <ndn-cxx/util/io.hpp>
 
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/info_parser.hpp>
@@ -144,24 +145,19 @@ ConfFileProcessor::ConfFileProcessor(ConfParameter& confParam)
 bool
 ConfFileProcessor::processConfFile()
 {
-  bool ret = true;
-  std::ifstream inputFile;
-  inputFile.open(m_confFileName.c_str());
+  std::ifstream inputFile(m_confFileName);
   if (!inputFile.is_open()) {
-    std::string msg = "Failed to read configuration file: ";
-    msg += m_confFileName;
-    std::cerr << msg << std::endl;
+    std::cerr << "Failed to read configuration file: " << m_confFileName << std::endl;
     return false;
   }
-  ret = load(inputFile);
-  inputFile.close();
 
-  if (ret) {
-    m_confParam.buildRouterAndSyncUserPrefix();
-    m_confParam.writeLog();
+  if (!load(inputFile)) {
+    return false;
   }
 
-  return ret;
+  m_confParam.buildRouterAndSyncUserPrefix();
+  m_confParam.writeLog();
+  return true;
 }
 
 bool
@@ -171,10 +167,9 @@ ConfFileProcessor::load(std::istream& input)
   try {
     boost::property_tree::read_info(input, pt);
   }
-  catch (const boost::property_tree::info_parser_error& error) {
-    std::stringstream msg;
-    std::cerr << "Failed to parse configuration file " << std::endl;
-    std::cerr << m_confFileName << std::endl;
+  catch (const boost::property_tree::ptree_error& e) {
+    std::cerr << "Failed to parse configuration file '" << m_confFileName
+              << "': " << e.what() << std::endl;
     return false;
   }
 
@@ -190,33 +185,26 @@ bool
 ConfFileProcessor::processSection(const std::string& sectionName, const ConfigSection& section)
 {
   bool ret = true;
-  if (sectionName == "general")
-  {
+  if (sectionName == "general") {
     ret = processConfSectionGeneral(section);
   }
-  else if (sectionName == "neighbors")
-  {
+  else if (sectionName == "neighbors") {
     ret = processConfSectionNeighbors(section);
   }
-  else if (sectionName == "hyperbolic")
-  {
+  else if (sectionName == "hyperbolic") {
     ret = processConfSectionHyperbolic(section);
   }
-  else if (sectionName == "fib")
-  {
+  else if (sectionName == "fib") {
     ret = processConfSectionFib(section);
   }
-  else if (sectionName == "advertising")
-  {
+  else if (sectionName == "advertising") {
     ret = processConfSectionAdvertising(section);
   }
-  else if (sectionName == "security")
-  {
+  else if (sectionName == "security") {
     ret = processConfSectionSecurity(section);
   }
-  else
-  {
-    std::cerr << "Wrong configuration section: " << sectionName << std::endl;
+  else {
+    std::cerr << "Unknown configuration section: " << sectionName << std::endl;
   }
   return ret;
 }
@@ -233,7 +221,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
       m_confParam.setNetwork(networkName);
     }
     else {
-      std::cerr << " Network can not be null or empty or in bad URI format :(!" << std::endl;
+      std::cerr << "Network can not be null or empty or in bad URI format" << std::endl;
       return false;
     }
     ndn::Name siteName(site);
@@ -241,7 +229,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
       m_confParam.setSiteName(siteName);
     }
     else {
-      std::cerr << "Site can not be null or empty or in bad URI format:( !" << std::endl;
+      std::cerr << "Site can not be null or empty or in bad URI format" << std::endl;
       return false;
     }
     ndn::Name routerName(router);
@@ -249,7 +237,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
       m_confParam.setRouterName(routerName);
     }
     else {
-      std::cerr << " Router name can not be null or empty or in bad URI format:( !" << std::endl;
+      std::cerr << "Router name can not be null or empty or in bad URI format" << std::endl;
       return false;
     }
   }
@@ -265,15 +253,14 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     m_confParam.setLsaRefreshTime(lsaRefreshTime);
   }
   else {
-    std::cerr << "Wrong value for lsa-refresh-time ";
-    std::cerr << "Allowed value: " << LSA_REFRESH_TIME_MIN << "-";
-    std::cerr << LSA_REFRESH_TIME_MAX << std::endl;
-
+    std::cerr << "Invalid value for lsa-refresh-time. "
+              << "Allowed range: " << LSA_REFRESH_TIME_MIN
+              << "-" << LSA_REFRESH_TIME_MAX << std::endl;
     return false;
   }
 
   // router-dead-interval
-  uint32_t routerDeadInterval = section.get<uint32_t>("router-dead-interval", (2*lsaRefreshTime));
+  uint32_t routerDeadInterval = section.get<uint32_t>("router-dead-interval", 2 * lsaRefreshTime);
 
   if (routerDeadInterval > m_confParam.getLsaRefreshTime()) {
     m_confParam.setRouterDeadInterval(routerDeadInterval);
@@ -290,10 +277,9 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     m_confParam.setLsaInterestLifetime(ndn::time::seconds(lifetime));
   }
   else {
-    std::cerr << "Wrong value for lsa-interest-timeout. "
-              << "Allowed value:" << LSA_INTEREST_LIFETIME_MIN << "-"
-              << LSA_INTEREST_LIFETIME_MAX << std::endl;
-
+    std::cerr << "Invalid value for lsa-interest-timeout. "
+              << "Allowed range: " << LSA_INTEREST_LIFETIME_MIN
+              << "-" << LSA_INTEREST_LIFETIME_MAX << std::endl;
     return false;
   }
 
@@ -312,7 +298,7 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     m_confParam.setSyncProtocol(SYNC_PROTOCOL_PSYNC);
   }
   else {
-    std::cerr << "Sync protocol " << syncProtocol << " is not supported!"
+    std::cerr << "Sync protocol '" << syncProtocol << "' is not supported!\n"
               << "Use chronosync or psync" << std::endl;
     return false;
   }
@@ -325,10 +311,9 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     m_confParam.setSyncInterestLifetime(syncInterestLifetime);
   }
   else {
-    std::cerr << "Wrong value for sync-interest-lifetime. "
-              << "Allowed value:" << SYNC_INTEREST_LIFETIME_MIN << "-"
-              << SYNC_INTEREST_LIFETIME_MAX << std::endl;
-
+    std::cerr << "Invalid value for sync-interest-lifetime. "
+              << "Allowed range: " << SYNC_INTEREST_LIFETIME_MIN
+              << "-" << SYNC_INTEREST_LIFETIME_MAX << std::endl;
     return false;
   }
 
@@ -405,10 +390,8 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
     m_confParam.setInterestRetryNumber(retrials);
   }
   else {
-    std::cerr << "Wrong value for hello-retries." << std::endl;
-    std::cerr << "Allowed value:" << HELLO_RETRIES_MIN << "-";
-    std::cerr << HELLO_RETRIES_MAX << std::endl;
-
+    std::cerr << "Invalid value for hello-retries. "
+              << "Allowed range: " << HELLO_RETRIES_MIN << "-" << HELLO_RETRIES_MAX << std::endl;
     return false;
   }
 
@@ -419,10 +402,8 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
     m_confParam.setInterestResendTime(timeOut);
   }
   else {
-    std::cerr << "Wrong value for hello-timeout. ";
-    std::cerr << "Allowed value:" << HELLO_TIMEOUT_MIN << "-";
-    std::cerr << HELLO_TIMEOUT_MAX << std::endl;
-
+    std::cerr << "Invalid value for hello-timeout. "
+              << "Allowed range: " << HELLO_TIMEOUT_MIN << "-" << HELLO_TIMEOUT_MAX << std::endl;
     return false;
   }
 
@@ -433,10 +414,8 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
     m_confParam.setInfoInterestInterval(interval);
   }
   else {
-    std::cerr << "Wrong value for hello-interval. ";
-    std::cerr << "Allowed value:" << HELLO_INTERVAL_MIN << "-";
-    std::cerr << HELLO_INTERVAL_MAX << std::endl;
-
+    std::cerr << "Invalid value for hello-interval. "
+              << "Allowed range: " << HELLO_INTERVAL_MIN << "-" << HELLO_INTERVAL_MAX << std::endl;
     return false;
   }
 
@@ -454,8 +433,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   // Set the retry count for fetching the FaceStatus dataset
   ConfigurationVariable<uint32_t> faceDatasetFetchTries("face-dataset-fetch-tries",
                                                         std::bind(&ConfParameter::setFaceDatasetFetchTries,
-                                                                  &m_confParam,
-                                                                  _1));
+                                                                  &m_confParam, _1));
 
   faceDatasetFetchTries.setMinAndMaxValue(FACE_DATASET_FETCH_TRIES_MIN,
                                           FACE_DATASET_FETCH_TRIES_MAX);
@@ -468,8 +446,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
   // Set the interval between FaceStatus dataset fetch attempts.
   ConfigurationVariable<uint32_t> faceDatasetFetchInterval("face-dataset-fetch-interval",
                                                            std::bind(&ConfParameter::setFaceDatasetFetchInterval,
-                                                                     &m_confParam,
-                                                                     _1));
+                                                                     &m_confParam, _1));
 
   faceDatasetFetchInterval.setMinAndMaxValue(FACE_DATASET_FETCH_INTERVAL_MIN,
                                              FACE_DATASET_FETCH_INTERVAL_MAX);
@@ -542,13 +519,12 @@ ConfFileProcessor::processConfSectionHyperbolic(const ConfigSection& section)
   else if (boost::iequals(state, "on")) {
     m_confParam.setHyperbolicState(HYPERBOLIC_STATE_ON);
   }
-  else if (state == "dry-run") {
+  else if (boost::iequals(state, "dry-run")) {
     m_confParam.setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
   }
   else {
-    std::cerr << "Wrong format for hyperbolic state." << std::endl;
-    std::cerr << "Allowed value: off, on, dry-run" << std::endl;
-
+    std::cerr << "Invalid setting for hyperbolic state. "
+              << "Allowed values: off, on, dry-run" << std::endl;
     return false;
   }
 
@@ -594,14 +570,13 @@ ConfFileProcessor::processConfSectionFib(const ConfigSection& section)
   int maxFacesPerPrefix = section.get<int>("max-faces-per-prefix", MAX_FACES_PER_PREFIX_DEFAULT);
 
   if (maxFacesPerPrefix >= MAX_FACES_PER_PREFIX_MIN &&
-      maxFacesPerPrefix <= MAX_FACES_PER_PREFIX_MAX)
-  {
+      maxFacesPerPrefix <= MAX_FACES_PER_PREFIX_MAX) {
     m_confParam.setMaxFacesPerPrefix(maxFacesPerPrefix);
   }
   else {
-    std::cerr << "Wrong value for max-faces-per-prefix. ";
-    std::cerr << MAX_FACES_PER_PREFIX_MIN << std::endl;
-
+    std::cerr << "Invalid value for max-faces-per-prefix. "
+              << "Allowed range: " << MAX_FACES_PER_PREFIX_MIN
+              << "-" << MAX_FACES_PER_PREFIX_MAX << std::endl;
     return false;
   }
 
@@ -646,10 +621,10 @@ ConfFileProcessor::processConfSectionAdvertising(const ConfigSection& section)
 bool
 ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 {
-  ConfigSection::const_iterator it = section.begin();
+  auto it = section.begin();
 
   if (it == section.end() || it->first != "validator") {
-    std::cerr << "Error: Expect validator section!" << std::endl;
+    std::cerr << "Error: Expected validator section!" << std::endl;
     return false;
   }
 
@@ -661,22 +636,26 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
 
     it++;
     for (; it != section.end(); it++) {
-
       if (it->first != "cert-to-publish") {
-        std::cerr << "Error: Expect cert-to-publish!" << std::endl;
+        std::cerr << "Error: Expected cert-to-publish!" << std::endl;
         return false;
       }
 
       std::string file = it->second.data();
       bf::path certfilePath = absolute(file, bf::path(m_confFileName).parent_path());
-      auto idCert = ndn::io::load<ndn::security::Certificate>(certfilePath.string());
+      std::ifstream ifs(certfilePath.string());
 
-      if (idCert == nullptr) {
-        std::cerr << "Error: Cannot load cert-to-publish: " << file << "!" << std::endl;
+      ndn::security::Certificate idCert;
+      try {
+        idCert = ndn::io::loadTlv<ndn::security::Certificate>(ifs);
+      }
+      catch (const std::exception& e) {
+        std::cerr << "Error: Cannot load cert-to-publish '" << file << "': " << e.what() << std::endl;
         return false;
       }
+
       m_confParam.addCertPath(certfilePath.string());
-      m_confParam.loadCertToValidator(*idCert);
+      m_confParam.loadCertToValidator(idCert);
     }
   }
 

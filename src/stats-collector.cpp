@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -16,11 +16,10 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "stats-collector.hpp"
 #include "logger.hpp"
-#include <fstream>
 
 namespace nlsr {
 
@@ -28,13 +27,10 @@ StatsCollector::StatsCollector(Lsdb& lsdb, HelloProtocol& hp)
   : m_lsdb(lsdb)
   , m_hp(hp)
 {
-  m_lsaIncrementConn =
-  this->m_lsdb.lsaIncrementSignal.connect(std::bind(&StatsCollector::statsIncrement,
-                                                    this, _1));
-
-  m_helloIncrementConn =
-  this->m_hp.hpIncrementSignal.connect(std::bind(&StatsCollector::statsIncrement,
-                                                 this, _1));
+  m_lsaIncrementConn = m_lsdb.lsaIncrementSignal.connect(std::bind(&StatsCollector::statsIncrement,
+                                                                   this, _1));
+  m_helloIncrementConn = m_hp.hpIncrementSignal.connect(std::bind(&StatsCollector::statsIncrement,
+                                                                  this, _1));
 }
 
 StatsCollector::~StatsCollector()

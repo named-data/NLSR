@@ -28,6 +28,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <algorithm>
+#include <fstream>
 
 namespace nlsr {
 namespace update {

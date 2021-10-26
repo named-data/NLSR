@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,18 +17,17 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
 #define NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
 
 #include "manager-base.hpp"
 #include "prefix-update-commands.hpp"
-#include <ndn-cxx/util/io.hpp>
+
 #include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/util/io.hpp>
+
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/info_parser.hpp>
 
 namespace nlsr {
 namespace update {

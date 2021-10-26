@@ -32,14 +32,14 @@
 #include <ndn-cxx/security/signing-helpers.hpp>
 
 #include <boost/filesystem.hpp>
+#include <boost/property_tree/info_parser.hpp>
 
 namespace nlsr {
 namespace test {
 
-namespace pt = boost::property_tree;
-using namespace pt;
+namespace bpt = boost::property_tree;
 
-class PrefixSaveDeleteFixture : public nlsr::test::UnitTestTimeFixture
+class PrefixSaveDeleteFixture : public UnitTestTimeFixture
 {
 public:
   PrefixSaveDeleteFixture()
@@ -70,8 +70,8 @@ public:
     std::ifstream inputFile;
     inputFile.open(testConfFile);
     BOOST_REQUIRE(inputFile.is_open());
-    pt::ptree pt;
-    boost::property_tree::read_info(inputFile, pt);
+    bpt::ptree pt;
+    bpt::read_info(inputFile, pt);
     // Loads section and file name
     for (const auto& section : pt) {
       if (section.first == "security") {
@@ -117,20 +117,18 @@ public:
   bool
   checkPrefix(const std::string prefixName)
   {
-    counter = 0;
-    pt::ptree m_savePrefix;
-    pt::info_parser::read_info(testConfFile, m_savePrefix);
+    bpt::ptree m_savePrefix;
+    bpt::read_info(testConfFile, m_savePrefix);
+
     // counter helps to check if multiple prefix of same name exists on conf file
+    counter = 0;
     for (const auto& section : m_savePrefix.get_child("advertising")) {
-      std:: string b = section.second.get_value<std::string>();
+      auto b = section.second.get_value<std::string>();
       if (b == prefixName) {
         counter++;
       }
     }
-    if (counter > 0) {
-      return true;
-    }
-    return false;
+    return counter > 0;
   }
 
   ndn::Interest
@@ -176,7 +174,6 @@ BOOST_FIXTURE_TEST_SUITE(TestAdvertiseWithdrawPrefix, PrefixSaveDeleteFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-
   face.receive(advertiseWithdraw("/prefix/to/save", "advertise", false));
   this->advanceClocks(ndn::time::milliseconds(10));
   BOOST_CHECK_EQUAL(checkPrefix("/prefix/to/save"), false);

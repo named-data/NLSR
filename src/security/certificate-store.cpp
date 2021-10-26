@@ -24,6 +24,7 @@
 #include "logger.hpp"
 
 #include <ndn-cxx/util/io.hpp>
+#include <fstream>
 
 namespace nlsr {
 namespace security {
@@ -35,9 +36,9 @@ CertificateStore::CertificateStore(ndn::Face& face, ConfParameter& confParam, Ls
   , m_confParam(confParam)
   , m_validator(m_confParam.getValidator())
 {
-  for (const auto& x: confParam.getIdCerts()) {
-    auto idCert = ndn::io::load<ndn::security::Certificate>(x);
-    insert(*idCert);
+  for (const auto& certfile : confParam.getIdCerts()) {
+    std::ifstream ifs(certfile);
+    insert(ndn::io::loadTlv<ndn::security::Certificate>(ifs));
   }
 
   registerKeyPrefixes();
