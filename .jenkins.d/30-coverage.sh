@@ -2,6 +2,17 @@
 set -ex
 
 if [[ $JOB_NAME == *"code-coverage" ]]; then
+    # Generate an XML report (Cobertura format) and a detailed HTML report using gcovr
+    # Note: trailing slashes are important in the paths below. Do not remove them!
+    gcovr -j$WAF_JOBS \
+          --object-directory build \
+          --filter src/ \
+          --exclude-throw-branches \
+          --exclude-unreachable-branches \
+          --print-summary \
+          --html-details build/gcovr/ \
+          --xml build/coverage.xml
+
     # Generate a detailed HTML report using lcov
     lcov --quiet \
          --capture \
