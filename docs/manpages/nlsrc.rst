@@ -6,7 +6,8 @@ Usage
 
 ::
 
-    nlsrc [-h] [-V] COMMAND [<Command Options>]
+    nlsrc [-h | -V]
+    nlsrc [-R <router prefix> [-c <nlsr.conf path> | -k]] COMMAND [<Command Options>]
 
 
 Description
@@ -23,6 +24,17 @@ Options
 
 ``-V``
   Show NLSRC version information
+
+``-R <router prefix>``
+  Target a remote NLSR instance.
+  The default is the local NLSR instance ``/localhost``.
+
+``-c <nlsr.conf path>``
+  Verify remote status information with the trust schema loaded from ``security.validator`` section of specified nlsr.conf config file.
+  The default is loading from ``/etc/ndn/nlsr.conf``.
+
+``-k``
+  Insecure: do not verify signature on status information retrieved from remote router.
 
 ``COMMAND``
 

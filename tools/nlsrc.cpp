@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,6 +21,7 @@
 
 #include "nlsrc.hpp"
 
+#include "config.hpp"
 #include "version.hpp"
 #include "src/publisher/dataset-interest-handler.hpp"
 
@@ -33,50 +34,106 @@
 #include <ndn-cxx/security/interest-signer.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
+#include <ndn-cxx/security/validator-config.hpp>
+#include <ndn-cxx/security/validator-null.hpp>
 #include <ndn-cxx/util/segment-fetcher.hpp>
+
+#include <boost/algorithm/string/replace.hpp>
+#include <boost/property_tree/info_parser.hpp>
 
 #include <iostream>
 
 namespace nlsrc {
 
-const ndn::Name Nlsrc::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
-const ndn::Name Nlsrc::LSDB_PREFIX = ndn::Name(Nlsrc::LOCALHOST_PREFIX).append("lsdb");
-const ndn::Name Nlsrc::NAME_UPDATE_PREFIX = ndn::Name(Nlsrc::LOCALHOST_PREFIX).append("prefix-update");
+const ndn::Name LOCALHOST_PREFIX("/localhost");
+const ndn::PartialName LSDB_SUFFIX("nlsr/lsdb");
+const ndn::PartialName NAME_UPDATE_SUFFIX("nlsr/prefix-update");
+const ndn::PartialName RT_SUFFIX("nlsr/routing-table");
 
-const ndn::Name Nlsrc::RT_PREFIX = ndn::Name(Nlsrc::LOCALHOST_PREFIX).append("routing-table");
+const uint32_t ERROR_CODE_TIMEOUT = 10060;
+const uint32_t RESPONSE_CODE_SUCCESS = 200;
+const uint32_t RESPONSE_CODE_SAVE_OR_DELETE = 205;
 
-const uint32_t Nlsrc::ERROR_CODE_TIMEOUT = 10060;
-const uint32_t Nlsrc::RESPONSE_CODE_SUCCESS = 200;
-const uint32_t Nlsrc::RESPONSE_CODE_SAVE_OR_DELETE = 205;
-
-Nlsrc::Nlsrc(ndn::Face& face)
-  : m_face(face)
+Nlsrc::Nlsrc(std::string programName, ndn::Face& face)
+  : m_programName(std::move(programName))
+  , m_routerPrefix(LOCALHOST_PREFIX)
+  , m_face(face)
 {
+  disableValidator();
 }
 
 void
-Nlsrc::printUsage()
+Nlsrc::printUsage() const
 {
-  std::cout << "Usage:\n" << programName  << " [-h] [-V] COMMAND [<Command Options>]\n"
-    "       -h print usage and exit\n"
-    "       -V print version and exit\n"
-    "\n"
-    "   COMMAND can be one of the following:\n"
-    "       lsdb\n"
-    "           display NLSR lsdb status\n"
-    "       routing\n"
-    "           display routing table status\n"
-    "       status\n"
-    "           display all NLSR status (lsdb & routingtable)\n"
-    "       advertise name\n"
-    "           advertise a name prefix through NLSR\n"
-    "       advertise name save\n"
-    "           advertise and save the name prefix to the conf file\n"
-    "       withdraw name\n"
-    "           remove a name prefix advertised through NLSR\n"
-    "       withdraw name delete\n"
-    "           withdraw and delete the name prefix from the conf file"
-    << std::endl;
+  std::string help(R"EOT(Usage:
+@NLSRC@ [-h | -V]
+@NLSRC@ [-R <router prefix> [-c <nlsr.conf path> | -k]] COMMAND [<Command Options>]
+       -h print usage and exit
+       -V print version and exit
+       -R target a remote NLSR instance
+       -c verify response with nlsr.conf security.validator policy
+       -k do not verify response (insecure)
+
+   COMMAND can be one of the following:
+       lsdb
+           display NLSR lsdb status
+       routing
+           display routing table status
+       status
+           display all NLSR status (lsdb & routingtable)
+       advertise <name>
+           advertise a name prefix through NLSR
+       advertise <name> save
+           advertise and save the name prefix to the conf file
+       withdraw <name>
+           remove a name prefix advertised through NLSR
+       withdraw <name> delete
+           withdraw and delete the name prefix from the conf file
+)EOT");
+  boost::algorithm::replace_all(help, "@NLSRC@", m_programName);
+  std::cout << help;
+}
+
+void
+Nlsrc::setRouterPrefix(ndn::Name prefix)
+{
+  m_routerPrefix = std::move(prefix);
+}
+
+void
+Nlsrc::disableValidator()
+{
+  m_validator.reset(new ndn::security::ValidatorNull());
+}
+
+bool
+Nlsrc::enableValidator(const std::string& filename)
+{
+  using namespace boost::property_tree;
+  ptree validatorConfig;
+  try {
+    ptree config;
+    read_info(filename, config);
+    validatorConfig = config.get_child("security.validator");
+  }
+  catch (const ptree_error& e) {
+    std::cerr << "Failed to parse configuration file '" << filename
+              << "': " << e.what() << std::endl;
+    return false;
+  }
+
+  auto validator = std::make_unique<ndn::security::ValidatorConfig>(m_face);
+  try {
+    validator->load(validatorConfig, filename);
+  }
+  catch (const ndn::security::validator_config::Error& e) {
+    std::cerr << "Failed to load validator config from '" << filename
+              << "' security.validator section: " << e.what() << std::endl;
+    return false;
+  }
+
+  m_validator = std::move(validator);
+  return true;
 }
 
 void
@@ -92,7 +149,7 @@ Nlsrc::getStatus(const std::string& command)
     m_fetchSteps.push_back(std::bind(&Nlsrc::fetchRtables, this));
     m_fetchSteps.push_back(std::bind(&Nlsrc::printRT, this));
   }
-  else if(command == "status") {
+  else if (command == "status") {
     m_fetchSteps.push_back(std::bind(&Nlsrc::fetchAdjacencyLsas, this));
     m_fetchSteps.push_back(std::bind(&Nlsrc::fetchCoordinateLsas, this));
     m_fetchSteps.push_back(std::bind(&Nlsrc::fetchNameLsas, this));
@@ -103,46 +160,49 @@ Nlsrc::getStatus(const std::string& command)
 }
 
 bool
-Nlsrc::dispatch(const std::string& command)
+Nlsrc::dispatch(ndn::span<std::string> subcommand)
 {
-  if (command == "advertise") {
-    if (nOptions < 0) {
-      return false;
-    }
-    else if (nOptions == 1) {
-      std::string saveFlag = commandLineArguments[0];
-      if (saveFlag != "save") {
-        return false;
-      }
-    }
-
-    advertiseName();
-    return true;
-  }
-  else if (command == "withdraw") {
-    if (nOptions < 0) {
-      return false;
-    }
-    else if (nOptions == 1) {
-      std::string saveFlag = commandLineArguments[0];
-      if (saveFlag != "delete") {
-        return false;
-      }
-    }
-
-    withdrawName();
-    return true;
-  }
-  else if ((command == "lsdb") || (command == "routing") || (command == "status")) {
-    if (nOptions != -1) {
-      return false;
-    }
-    commandString = command;
-
-    getStatus(command);
-    return true;
+  if (subcommand.size() == 0) {
+    return false;
   }
 
+  if (subcommand[0] == "advertise") {
+    switch (subcommand.size()) {
+      case 2:
+        advertiseName(subcommand[1], false);
+        return true;
+      case 3:
+        if (subcommand[2] != "save") {
+          return false;
+        }
+        advertiseName(subcommand[1], true);
+        return true;
+    }
+    return false;
+  }
+
+  if (subcommand[0] == "withdraw") {
+    switch (subcommand.size()) {
+      case 2:
+        withdrawName(subcommand[1], false);
+        return true;
+      case 3:
+        if (subcommand[2] != "delete") {
+          return false;
+        }
+        withdrawName(subcommand[1], true);
+        return true;
+    }
+    return false;
+  }
+
+  if (subcommand[0] == "lsdb" || subcommand[0] == "routing" || subcommand[0] == "status") {
+    if (subcommand.size() != 1) {
+      return false;
+    }
+    getStatus(subcommand[0]);
+    return true;
+  }
   return false;
 }
 
@@ -160,33 +220,19 @@ Nlsrc::runNextStep()
 }
 
 void
-Nlsrc::advertiseName()
+Nlsrc::advertiseName(ndn::Name name, bool wantSave)
 {
-  ndn::Name name = commandLineArguments[-1];
-
-  bool saveFlag = false;
-  std::string info = "(Advertise: " + name.toUri() + ")";
-  if (commandLineArguments[0]) {
-    saveFlag = true;
-    info = "(Save: " + name.toUri() + ")";
-  }
+  std::string info = (wantSave ? "(Save: " : "(Advertise: ") + name.toUri() + ")";
   ndn::Name::Component verb("advertise");
-  sendNamePrefixUpdate(name, verb, info, saveFlag);
+  sendNamePrefixUpdate(name, verb, info, wantSave);
 }
 
 void
-Nlsrc::withdrawName()
+Nlsrc::withdrawName(ndn::Name name, bool wantDelete)
 {
-  ndn::Name name = commandLineArguments[-1];
-
-  bool deleteFlag = false;
-  std::string info = "(Withdraw: " + name.toUri() + ")";
-  if (commandLineArguments[0]) {
-    deleteFlag = true;
-    info = "(Delete: " + name.toUri() + ")";
-  }
+  std::string info = (wantDelete ? "(Delete: " : "(Withdraw: ") + name.toUri() + ")";
   ndn::Name::Component verb("withdraw");
-  sendNamePrefixUpdate(name, verb, info, deleteFlag);
+  sendNamePrefixUpdate(name, verb, info, wantDelete);
 }
 
 void
@@ -201,9 +247,11 @@ Nlsrc::sendNamePrefixUpdate(const ndn::Name& name,
     parameters.setFlags(1);
   }
 
-  ndn::Name commandName = NAME_UPDATE_PREFIX;
+  auto paramWire = parameters.wireEncode();
+  ndn::Name commandName = m_routerPrefix;
+  commandName.append(NAME_UPDATE_SUFFIX);
   commandName.append(verb);
-  commandName.append(parameters.wireEncode());
+  commandName.append(paramWire.begin(), paramWire.end());
 
   ndn::security::InterestSigner signer(m_keyChain);
   auto commandInterest = signer.makeCommandInterest(commandName,
@@ -273,14 +321,17 @@ Nlsrc::fetchRtables()
   fetchFromRt<nlsr::RoutingTableStatus>([this] (const auto& rts) { this->recordRtable(rts); });
 }
 
-template <class T>
+template<class T>
 void
 Nlsrc::fetchFromLsdb(const ndn::Name::Component& datasetType,
                      const std::function<void(const T&)>& recordLsa)
 {
-  ndn::Interest interest(ndn::Name(LSDB_PREFIX).append(datasetType));
+  auto name = m_routerPrefix;
+  name.append(LSDB_SUFFIX);
+  name.append(datasetType);
+  ndn::Interest interest(name);
 
-  auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest, m_validator);
+  auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest, *m_validator);
   fetcher->onComplete.connect(std::bind(&Nlsrc::onFetchSuccess<T>, this, _1, recordLsa));
   fetcher->onError.connect(std::bind(&Nlsrc::onTimeout, this, _1, _2));
 }
@@ -301,18 +352,20 @@ Nlsrc::recordLsa(const nlsr::Lsa& lsa)
   }
 }
 
-template <class T>
+template<class T>
 void
 Nlsrc::fetchFromRt(const std::function<void(const T&)>& recordDataset)
 {
-  ndn::Interest interest(RT_PREFIX);
+  auto name = m_routerPrefix;
+  name.append(RT_SUFFIX);
+  ndn::Interest interest(name);
 
-  auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest, m_validator);
+  auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest, *m_validator);
   fetcher->onComplete.connect(std::bind(&Nlsrc::onFetchSuccess<T>, this, _1, recordDataset));
   fetcher->onError.connect(std::bind(&Nlsrc::onTimeout, this, _1, _2));
 }
 
-template <class T>
+template<class T>
 void
 Nlsrc::onFetchSuccess(const ndn::ConstBufferPtr& data,
                       const std::function<void(const T&)>& recordDataset)
@@ -406,9 +459,7 @@ int
 main(int argc, char** argv)
 {
   ndn::Face face;
-  nlsrc::Nlsrc nlsrc(face);
-
-  nlsrc.programName = argv[0];
+  nlsrc::Nlsrc nlsrc(argv[0], face);
 
   if (argc < 2) {
     nlsrc.printUsage();
@@ -416,7 +467,9 @@ main(int argc, char** argv)
   }
 
   int opt;
-  while ((opt = ::getopt(argc, argv, "hV")) != -1) {
+  const char* confFile = DEFAULT_CONFIG_FILE;
+  bool disableValidator = false;
+  while ((opt = ::getopt(argc, argv, "hVR:c:k")) != -1) {
     switch (opt) {
     case 'h':
       nlsrc.printUsage();
@@ -424,6 +477,15 @@ main(int argc, char** argv)
     case 'V':
       std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
       return 0;
+    case 'R':
+      nlsrc.setRouterPrefix(::optarg);
+      break;
+    case 'c':
+      confFile = ::optarg;
+      break;
+    case 'k':
+      disableValidator = true;
+      break;
     default:
       nlsrc.printUsage();
       return 1;
@@ -435,14 +497,17 @@ main(int argc, char** argv)
     return 1;
   }
 
+  if (nlsrc.getRouterPrefix() != nlsrc::LOCALHOST_PREFIX && !disableValidator) {
+    if (!nlsrc.enableValidator(confFile)) {
+      return 1;
+    }
+  }
+
+  std::vector<std::string> subcommand;
+  std::copy(&argv[::optind], &argv[argc], std::back_inserter(subcommand));
+
   try {
-    ::optind = 3; // Set ::optind to the command's index
-
-    nlsrc.commandLineArguments = argv + ::optind;
-    nlsrc.nOptions = argc - ::optind;
-
-    // argv[1] points to the command, so pass it to the dispatch
-    bool isOk = nlsrc.dispatch(argv[1]);
+    bool isOk = nlsrc.dispatch(subcommand);
     if (!isOk) {
       nlsrc.printUsage();
       return 1;

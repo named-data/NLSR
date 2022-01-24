@@ -82,6 +82,7 @@ def configure(conf):
     conf.load('sanitizers')
 
     conf.define_cond('WITH_TESTS', conf.env.WITH_TESTS)
+    conf.define('DEFAULT_CONFIG_FILE', '%s/ndn/nlsr.conf' % conf.env.SYSCONFDIR)
     # The config header will contain all defines that were added using conf.define()
     # or conf.define_cond().  Everything that was added directly to conf.env.DEFINES
     # will not appear in the config header, but will instead be passed directly to the
