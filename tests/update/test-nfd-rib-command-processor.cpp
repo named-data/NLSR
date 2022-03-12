@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -32,7 +32,7 @@
 namespace nlsr {
 namespace test {
 
-class NfdRibCommandProcessorFixture : public nlsr::test::UnitTestTimeFixture
+class NfdRibCommandProcessorFixture : public UnitTestTimeFixture
 {
 public:
   NfdRibCommandProcessorFixture()
@@ -55,7 +55,6 @@ public:
   sendCommand(ndn::Name prefix, const ndn::nfd::ControlParameters& parameters)
   {
     ndn::Interest interest(prefix.append(parameters.wireEncode()));
-    interest.setCanBePrefix(false);
     face.receive(interest);
     this->advanceClocks(ndn::time::milliseconds(10), 10);
   }

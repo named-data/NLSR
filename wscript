@@ -50,30 +50,26 @@ def configure(conf):
 
     conf.find_program('dot', var='DOT', mandatory=False)
 
-    pkg_config_path = os.environ.get('PKG_CONFIG_PATH', '%s/pkgconfig' % conf.env.LIBDIR)
-    conf.check_cfg(package='libndn-cxx', args=['--cflags', '--libs'], uselib_store='NDN_CXX',
-                   pkg_config_path=pkg_config_path)
+    pkg_config_path = os.environ.get('PKG_CONFIG_PATH', f'{conf.env.LIBDIR}/pkgconfig')
+    conf.check_cfg(package='libndn-cxx', args=['libndn-cxx >= 0.8.0', '--cflags', '--libs'],
+                   uselib_store='NDN_CXX', pkg_config_path=pkg_config_path)
 
     boost_libs = ['system', 'iostreams', 'filesystem', 'regex']
     if conf.env.WITH_TESTS:
-        boost_libs += ['program_options', 'unit_test_framework']
+        boost_libs.append('unit_test_framework')
 
     conf.check_boost(lib=boost_libs, mt=True)
-    if conf.env.BOOST_VERSION_NUMBER < 105800:
+    if conf.env.BOOST_VERSION_NUMBER < 106501:
         conf.fatal('The minimum supported version of Boost is 1.65.1.\n'
                    'Please upgrade your distribution or manually install a newer version of Boost.\n'
                    'For more information, see https://redmine.named-data.net/projects/nfd/wiki/Boost')
-    elif conf.env.BOOST_VERSION_NUMBER < 106501:
-        Logs.warn('WARNING: Using a version of Boost older than 1.65.1 is not officially supported and may not work.\n'
-                  'If you encounter any problems, please upgrade your distribution or manually install a newer version of Boost.\n'
-                  'For more information, see https://redmine.named-data.net/projects/nfd/wiki/Boost')
 
     if conf.options.with_chronosync:
-        conf.check_cfg(package='ChronoSync', args=['--cflags', '--libs'],
+        conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.5.4', '--cflags', '--libs'],
                        uselib_store='CHRONOSYNC', pkg_config_path=pkg_config_path)
 
-    conf.check_cfg(package='PSync', args=['--cflags', '--libs'], uselib_store='PSYNC',
-                   pkg_config_path=pkg_config_path)
+    conf.check_cfg(package='PSync', args=['PSync >= 0.3.0', '--cflags', '--libs'],
+                   uselib_store='PSYNC', pkg_config_path=pkg_config_path)
 
     conf.check_compiler_flags()
 

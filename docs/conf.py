@@ -18,7 +18,7 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = u'Named Data Link State Routing Protocol (NLSR)'
-copyright = u'Copyright © 2014-2021 Named Data Networking Project.'
+copyright = u'Copyright © 2014-2022 Named Data Networking Project.'
 author = u'Named Data Networking Project'
 
 # The short X.Y version.

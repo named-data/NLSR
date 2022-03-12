@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -40,7 +40,7 @@ using namespace ndn;
 namespace nlsr {
 namespace test {
 
-class PrefixUpdateFixture : public nlsr::test::UnitTestTimeFixture
+class PrefixUpdateFixture : public UnitTestTimeFixture
 {
 public:
   PrefixUpdateFixture()

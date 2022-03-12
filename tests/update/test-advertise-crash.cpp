@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,7 +26,7 @@
 namespace nlsr {
 namespace test {
 
-class AdvertiseCrashFixture : public nlsr::test::UnitTestTimeFixture
+class AdvertiseCrashFixture : public UnitTestTimeFixture
 {
 public:
   AdvertiseCrashFixture()
@@ -70,7 +70,9 @@ public:
   NamePrefixList& namePrefixList;
 };
 
-BOOST_FIXTURE_TEST_CASE(TestAdvertiseCrash, AdvertiseCrashFixture)
+BOOST_FIXTURE_TEST_SUITE(TestAdvertiseCrash, AdvertiseCrashFixture)
+
+BOOST_AUTO_TEST_CASE(ReceiveAdvertiseInterest)
 {
   // Note that this test does not setup any security
   // and the interest will be rejected by NLSR.
@@ -84,10 +86,14 @@ BOOST_FIXTURE_TEST_CASE(TestAdvertiseCrash, AdvertiseCrashFixture)
   advertiseCommand.append(parameters.wireEncode());
 
   auto advertiseInterest = std::make_shared<ndn::Interest>(advertiseCommand);
-  advertiseInterest->setCanBePrefix(false);
   face.receive(*advertiseInterest);
   this->advanceClocks(ndn::time::milliseconds(10), 10);
+
+  // avoid "test case [...] did not check any assertions" message from Boost.Test
+  BOOST_CHECK(true);
 }
+
+BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace test
 } // namespace nlsr

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -95,7 +95,7 @@ public:
   const std::string ACTIVE_NEIGHBOR = "/ndn/site/%C1.Router/router-active";
 };
 
-BOOST_FIXTURE_TEST_SUITE(HelloProtocol, HelloProtocolFixture)
+BOOST_FIXTURE_TEST_SUITE(TestHelloProtocol, HelloProtocolFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
