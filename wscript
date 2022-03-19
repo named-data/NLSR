@@ -1,6 +1,6 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 """
-Copyright (c) 2014-2021,  The University of Memphis,
+Copyright (c) 2014-2022,  The University of Memphis,
                           Regents of the University of California,
                           Arizona Board of Regents.
 
@@ -24,8 +24,6 @@ import os, subprocess
 
 VERSION = "0.6.0"
 APPNAME = "nlsr"
-BUGREPORT = "https://redmine.named-data.net/projects/nlsr"
-URL = "https://named-data.net/doc/NLSR/"
 GIT_TAG_PREFIX = "NLSR-"
 
 def options(opt):

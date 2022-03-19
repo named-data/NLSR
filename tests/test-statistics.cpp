@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,10 +20,11 @@
  */
 
 #include "statistics.hpp"
-#include "test-common.hpp"
 #include "hello-protocol.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
+
+#include "test-common.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 #include <boost/lexical_cast.hpp>
@@ -158,7 +159,7 @@ BOOST_AUTO_TEST_CASE(SendHelloInterest)
   ndn::Name otherName(other.getName());
   otherName.append("NLSR");
   otherName.append("INFO");
-  otherName.append(conf.getRouterPrefix().wireEncode());
+  otherName.append(ndn::tlv::GenericNameComponent, conf.getRouterPrefix().wireEncode());
 
   hello.expressInterest(otherName, 1);
   this->advanceClocks(ndn::time::milliseconds(1), 10);
@@ -168,7 +169,7 @@ BOOST_AUTO_TEST_CASE(SendHelloInterest)
   ndn::Name thisName(conf.getRouterPrefix());
   thisName.append("NLSR");
   thisName.append("INFO");
-  thisName.append(other.getName().wireEncode());
+  thisName.append(ndn::tlv::GenericNameComponent, other.getName().wireEncode());
 
   ndn::Interest interest(thisName);
   hello.processInterest(ndn::Name(), interest);

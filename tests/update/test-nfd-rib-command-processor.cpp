@@ -54,7 +54,7 @@ public:
   void
   sendCommand(ndn::Name prefix, const ndn::nfd::ControlParameters& parameters)
   {
-    ndn::Interest interest(prefix.append(parameters.wireEncode()));
+    ndn::Interest interest(prefix.append(ndn::tlv::GenericNameComponent, parameters.wireEncode()));
     face.receive(interest);
     this->advanceClocks(ndn::time::milliseconds(10), 10);
   }

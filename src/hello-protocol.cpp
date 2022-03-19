@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -103,7 +103,7 @@ HelloProtocol::sendHelloInterest(const ndn::Name& neighbor)
     ndn::Name interestName = adjacent->getName() ;
     interestName.append(NLSR_COMPONENT);
     interestName.append(INFO_COMPONENT);
-    interestName.append(m_confParam.getRouterPrefix().wireEncode());
+    interestName.append(ndn::tlv::GenericNameComponent, m_confParam.getRouterPrefix().wireEncode());
     expressInterest(interestName, m_confParam.getInterestResendTime());
     NLSR_LOG_DEBUG("Sending HELLO interest: " << interestName);
   }
@@ -136,8 +136,8 @@ HelloProtocol::processInterest(const ndn::Name& name,
     std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
     data->setName(ndn::Name(interest.getName()).appendVersion());
     data->setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
-    data->setContent(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.c_str()),
-                                                      INFO_COMPONENT.size());
+    data->setContent(ndn::make_span(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.data()),
+                                    INFO_COMPONENT.size()));
 
     m_keyChain.sign(*data, m_signingInfo);
 
@@ -156,7 +156,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
         ndn::Name interestName(neighbor);
         interestName.append(NLSR_COMPONENT);
         interestName.append(INFO_COMPONENT);
-        interestName.append(m_confParam.getRouterPrefix().wireEncode());
+        interestName.append(ndn::tlv::GenericNameComponent, m_confParam.getRouterPrefix().wireEncode());
         expressInterest(interestName, m_confParam.getInterestResendTime());
       }
     }
@@ -186,7 +186,7 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
     ndn::Name interestName(neighbor);
     interestName.append(NLSR_COMPONENT);
     interestName.append(INFO_COMPONENT);
-    interestName.append(m_confParam.getRouterPrefix().wireEncode());
+    interestName.append(ndn::tlv::GenericNameComponent, m_confParam.getRouterPrefix().wireEncode());
     NLSR_LOG_DEBUG("Resending interest: " << interestName);
     expressInterest(interestName, m_confParam.getInterestResendTime());
   }

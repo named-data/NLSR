@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -26,13 +26,13 @@ namespace test {
 
 BOOST_AUTO_TEST_SUITE(TestNexthop)
 
-double
+static double
 getHyperbolicAdjustedDecimal(unsigned int i)
 {
   return static_cast<double>(i)/(10*NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR);
 }
 
-uint64_t
+static uint64_t
 applyHyperbolicFactorAndRound(double d)
 {
   return round(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR*d);
@@ -117,17 +117,13 @@ BOOST_AUTO_TEST_CASE(NexthopEncode)
   nexthops1.setConnectingFaceUri("/test/nexthop/tlv");
   nexthops1.setRouteCost(1.65);
 
-  const ndn::Block& wire = nexthops1.wireEncode();
-  BOOST_REQUIRE_EQUAL_COLLECTIONS(NexthopData,
-                                  NexthopData + sizeof(NexthopData),
-                                  wire.begin(), wire.end());
+  BOOST_TEST(nexthops1.wireEncode() == NexthopData, boost::test_tools::per_element());
 }
 
 BOOST_AUTO_TEST_CASE(NexthopDecode)
 {
   NextHop nexthops1;
-
-  nexthops1.wireDecode(ndn::Block(NexthopData, sizeof(NexthopData)));
+  nexthops1.wireDecode(ndn::Block{NexthopData});
 
   BOOST_REQUIRE_EQUAL(nexthops1.getConnectingFaceUri(), "/test/nexthop/tlv");
   BOOST_REQUIRE_EQUAL(nexthops1.getRouteCost(), 1.65);

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -102,7 +102,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableEncode2, RoutingTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(RoutingTableDecode1, RoutingTableFixture)
 {
-  RoutingTableStatus rtStatus(ndn::Block(RoutingTableData1, sizeof(RoutingTableData1)));
+  RoutingTableStatus rtStatus(ndn::Block{RoutingTableData1});
 
   auto it1 = rtStatus.m_rTable.begin();
 

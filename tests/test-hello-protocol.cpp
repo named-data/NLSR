@@ -129,10 +129,10 @@ BOOST_AUTO_TEST_CASE(CheckHelloDataValidatedSignal) // # 5157
                 Adjacent::STATUS_INACTIVE, 0, 300);
   adjList.insert(adj1);
 
-  ndn::Name dataName = adj1.getName() ;
-  dataName.append(nlsr::HelloProtocol::NLSR_COMPONENT);
-  dataName.append(nlsr::HelloProtocol::INFO_COMPONENT);
-  dataName.append(conf.getRouterPrefix().wireEncode());
+  ndn::Name dataName = adj1.getName();
+  dataName.append(HelloProtocol::NLSR_COMPONENT);
+  dataName.append(HelloProtocol::INFO_COMPONENT);
+  dataName.append(ndn::tlv::GenericNameComponent, conf.getRouterPrefix().wireEncode());
 
   ndn::Data data(ndn::Name(dataName).appendVersion());
   BOOST_CHECK_EQUAL(numOnInitialHelloDataValidates, 0);

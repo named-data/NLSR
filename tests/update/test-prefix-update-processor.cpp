@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
 
   // append /<control-parameters>
-  advertiseCommand.append(parameters.wireEncode());
+  advertiseCommand.append(ndn::tlv::GenericNameComponent, parameters.wireEncode());
 
   ndn::security::InterestSigner signer(m_keyChain);
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 
   // Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
-  withdrawCommand.append(parameters.wireEncode());
+  withdrawCommand.append(ndn::tlv::GenericNameComponent, parameters.wireEncode());
 
   auto withdrawInterest= signer.makeCommandInterest(withdrawCommand,
                                                     ndn::security::signingByIdentity(opIdentity));

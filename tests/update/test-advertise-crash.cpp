@@ -83,7 +83,7 @@ BOOST_AUTO_TEST_CASE(ReceiveAdvertiseInterest)
   ndn::nfd::ControlParameters parameters;
   parameters.setName("/prefix/to/advertise");
   ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
-  advertiseCommand.append(parameters.wireEncode());
+  advertiseCommand.append(ndn::tlv::GenericNameComponent, parameters.wireEncode());
 
   auto advertiseInterest = std::make_shared<ndn::Interest>(advertiseCommand);
   face.receive(*advertiseInterest);

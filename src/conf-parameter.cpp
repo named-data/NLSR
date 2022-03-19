@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -156,8 +156,7 @@ ConfParameter::initializeKey()
   certificate->setFreshnessPeriod(365_days);
 
   // set content
-  certificate->setContent(nlsrInstanceKey.getPublicKey().data(),
-                          nlsrInstanceKey.getPublicKey().size());
+  certificate->setContent(nlsrInstanceKey.getPublicKey());
 
   // set signature-info
   ndn::SignatureInfo signatureInfo;

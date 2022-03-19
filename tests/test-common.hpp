@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,10 +24,10 @@
 
 #include "common.hpp"
 #include "conf-parameter.hpp"
-#include "identity-management-fixture.hpp"
+#include "route/fib.hpp"
 
 #include "boost-test.hpp"
-#include "route/fib.hpp"
+#include "identity-management-fixture.hpp"
 
 #include <boost/asio.hpp>
 
@@ -132,7 +132,7 @@ public:
     payload2.wireEncode(buffer);
     payload1.wireEncode(buffer);
 
-    this->sendDatasetReply(prefix, buffer.buf(), buffer.size());
+    this->sendDatasetReply(prefix, buffer);
   }
 
   /** \brief send a payload in reply to StatusDataset request
@@ -186,7 +186,6 @@ public:
     conf.setSiteName(siteName);
     conf.setRouterName(routerName);
     conf.buildRouterAndSyncUserPrefix();
-
     conf.setSyncProtocol(protocol);
     conf.setHyperbolicState(hyperbolicState);
   }

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -31,10 +31,11 @@
 namespace nlsr {
 namespace test {
 
-/*static void
-printBytes(const uint8_t* buf, size_t size)
+/*
+static void
+printBytes(ndn::span<const uint8_t> buf)
 {
-  std::string hex = ndn::toHex(buf, size);
+  std::string hex = ndn::toHex(buf);
 
   for (size_t i = 0; i < hex.size(); i++) {
     if (i > 0 && i % 30 == 0)
@@ -49,7 +50,8 @@ printBytes(const uint8_t* buf, size_t size)
   std::cout << "\n" << "};" << std::endl;
 }
 
-printBytes(wire.wire(), wire.size());*/
+printBytes(block);
+*/
 
 BOOST_AUTO_TEST_SUITE(TestLsa)
 
@@ -90,8 +92,7 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
   ndn::Name s2{"name2"};
   NamePrefixList npl1{s1, s2};
 
-  ndn::time::system_clock::TimePoint testTimePoint =
-    ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196014943));
+  auto testTimePoint = ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196014943));
 
   // 3rd argument is seqNo
   NameLsa nlsa1("router1", 12, testTimePoint, npl1);
@@ -172,8 +173,7 @@ BOOST_AUTO_TEST_CASE(AdjLsaBasic)
 {
   ndn::Name routerName("/ndn/site/router");
   ndn::Name adjacencyName("/ndn/site/adjacency");
-  ndn::time::system_clock::TimePoint testTimePoint =
-    ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196014943));
+  auto testTimePoint = ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196014943));
   uint32_t seqNo = 12;
 
   // An AdjLsa initialized with ACTIVE adjacencies should copy the adjacencies
@@ -272,9 +272,8 @@ const uint8_t COORDINATE_LSA_DIFF_TS[] = {
 
 BOOST_AUTO_TEST_CASE(CoordinateLsaBasic)
 {
-  ndn::time::system_clock::TimePoint testTimePoint =
-    ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196014943));
-  std::vector<double> angles1 {30.0}, angles2 {30.0};
+  auto testTimePoint = ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196014943));
+  std::vector<double> angles1{30.0}, angles2{30.0};
   angles1.push_back(30.0);
   angles2.push_back(30.0);
   CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, angles1);
@@ -369,7 +368,7 @@ BOOST_AUTO_TEST_CASE(TestInitializeFromContent)
   adjList.insert(adj1);
   adjList.insert(adj2);
 
-  ndn::time::system_clock::TimePoint testTimePoint = ndn::time::system_clock::now();
+  auto testTimePoint = ndn::time::system_clock::now();
 
   AdjLsa adjlsa1("router1", 1, testTimePoint, adjList.size(), adjList);
   AdjLsa adjlsa2(adjlsa1.wireEncode());
