@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -101,7 +101,7 @@ SyncProtocolAdapter::onChronoSyncUpdate(const std::vector<chronosync::MissingDat
 
   for (const auto& update : updates) {
     // Remove FIXED_SESSION
-    m_syncUpdateCallback(update.session.getPrefix(-1), update.high);
+    m_syncUpdateCallback(update.session.getPrefix(-1), update.high, 0);
   }
 }
 #endif
@@ -112,7 +112,7 @@ SyncProtocolAdapter::onPSyncUpdate(const std::vector<psync::MissingDataInfo>& up
   NLSR_LOG_TRACE("Received PSync update event");
 
   for (const auto& update : updates) {
-    m_syncUpdateCallback(update.prefix, update.highSeq);
+    m_syncUpdateCallback(update.prefix, update.highSeq, update.incomingFace);
   }
 }
 

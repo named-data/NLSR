@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -53,7 +53,7 @@ public:
   };
 
   using IsLsaNew =
-    std::function<bool(const ndn::Name&, const Lsa::Type& lsaType, const uint64_t&)>;
+    std::function<bool(const ndn::Name&, const Lsa::Type& lsaType, const uint64_t&, uint64_t/*inFace*/)>;
 
   SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew, const ConfParameter& conf);
 
@@ -77,7 +77,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
    * \param highSeq The latest sequence number of the update
    */
   void
-  processUpdate(const ndn::Name& updateName, uint64_t highSeq);
+  processUpdate(const ndn::Name& updateName, uint64_t highSeq, uint64_t incomingFaceId);
 
   /*! \brief Determine which kind of LSA was updated and fetch it.
    *
@@ -89,7 +89,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
    */
   void
   processUpdateFromSync(const ndn::Name& originRouter,
-                        const ndn::Name& updateName, uint64_t seqNo);
+                        const ndn::Name& updateName, uint64_t seqNo, uint64_t incomingFaceId);
 
 public:
   std::unique_ptr<OnNewLsa> onNewLsa;

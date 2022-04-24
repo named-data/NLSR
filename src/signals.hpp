@@ -1,7 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
- *                           Regents of the University of California
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -16,8 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
+ */
 
 #ifndef NLSR_SIGNALS_HPP
 #define NLSR_SIGNALS_HPP
@@ -32,8 +32,8 @@ class RoutingTable;
 class RoutingTableEntry;
 class SyncLogicHandler;
 
-using AfterRoutingChange = ndn::util::Signal<RoutingTable, const std::list<RoutingTableEntry>&>;
-using OnNewLsa = ndn::util::Signal<SyncLogicHandler, const ndn::Name&, const uint64_t&, const ndn::Name&>;
+using AfterRoutingChange = ndn::util::Signal<RoutingTable, std::list<RoutingTableEntry>>;
+using OnNewLsa = ndn::util::Signal<SyncLogicHandler, ndn::Name, uint64_t, ndn::Name, uint64_t>;
 
 } // namespace nlsr
 

@@ -53,7 +53,7 @@ public:
                                                        userPrefixes[i],
                                                        syncInterestLifetime,
                                                        [i, this] (const ndn::Name& updateName,
-                                                                  uint64_t highSeq) {
+                                                                   uint64_t highSeq, uint64_t incomingFaceId) {
                                                          prefixToSeq[i].emplace(updateName, highSeq);
                                                        });
     }

@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK(certStore.find(certKey) != nullptr);
   BOOST_CHECK(certStore.find(certificate.getName()) != nullptr);
 
-  lsdb.expressInterest(certKey, 0);
+  lsdb.expressInterest(certKey, 0, 0);
 
   advanceClocks(10_ms);
   checkForInterest(certKey);
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
   lsaInterestName.append(boost::lexical_cast<std::string>(Lsa::Type::NAME));
   lsaInterestName.appendNumber(nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq() + 1);
 
-  lsdb.expressInterest(lsaInterestName, 0);
+  lsdb.expressInterest(lsaInterestName, 0, 0);
   advanceClocks(10_ms);
 
   checkForInterest(lsaInterestName);

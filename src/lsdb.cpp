@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -25,6 +25,8 @@
 #include "nlsr.hpp"
 #include "utility/name-helper.hpp"
 
+#include <ndn-cxx/lp/tags.hpp>
+
 namespace nlsr {
 
 INIT_LOGGER(Lsdb);
@@ -38,7 +40,7 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   , m_confParam(confParam)
   , m_sync(m_face,
            [this] (const ndn::Name& routerName, const Lsa::Type& lsaType,
-                   const uint64_t& sequenceNumber) {
+                   const uint64_t& sequenceNumber, uint64_t incomingFaceId) {
              return isLsaNew(routerName, lsaType, sequenceNumber);
            }, m_confParam)
   , m_lsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()))
@@ -47,10 +49,10 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   , m_sequencingManager(m_confParam.getStateFileDir(), m_confParam.getHyperbolicState())
   , m_onNewLsaConnection(m_sync.onNewLsa->connect(
       [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
-              const ndn::Name& originRouter) {
+              const ndn::Name& originRouter, uint64_t incomingFaceId) {
         ndn::Name lsaInterest{updateName};
         lsaInterest.appendNumber(sequenceNumber);
-        expressInterest(lsaInterest, 0);
+        expressInterest(lsaInterest, 0, incomingFaceId);
       }))
   , m_segmentPublisher(m_face, keyChain)
   , m_isBuildAdjLsaScheduled(false)
@@ -385,7 +387,7 @@ Lsdb::expireOrRefreshLsa(std::shared_ptr<Lsa> lsa)
 }
 
 void
-Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
+Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount, uint64_t incomingFaceId,
                       ndn::time::steady_clock::TimePoint deadline)
 {
   // increment SENT_LSA_INTEREST
@@ -413,6 +415,9 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount,
   }
 
   ndn::Interest interest(interestName);
+  if (incomingFaceId != 0) {
+    interest.setTag(std::make_shared<ndn::lp::NextHopFaceIdTag>(incomingFaceId));
+  }
   ndn::util::SegmentFetcher::Options options;
   options.interestLifetime = m_confParam.getLsaInterestLifetime();
 
@@ -472,7 +477,7 @@ Lsdb::onFetchLsaError(uint32_t errorCode, const std::string& msg, const ndn::Nam
         delay = ndn::time::seconds(0);
       }
       m_scheduler.schedule(delay, std::bind(&Lsdb::expressInterest, this,
-                                            interestName, retransmitNo + 1, deadline));
+                                            interestName, /*??*/0, retransmitNo + 1, deadline));
     }
   }
 }

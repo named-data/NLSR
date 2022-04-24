@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   ndn::Name oldInterestName = interestName;
   oldInterestName.appendNumber(oldSeqNo);
 
-  lsdb.expressInterest(oldInterestName, 0);
+  lsdb.expressInterest(oldInterestName, 0, 0);
   advanceClocks(10_ms);
 
   std::vector<ndn::Interest>& interests = face.sentInterests;
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   ndn::Name newInterestName = interestName;
   newInterestName.appendNumber(newSeqNo);
 
-  lsdb.expressInterest(newInterestName, 0);
+  lsdb.expressInterest(newInterestName, 0, 0);
   advanceClocks(10_ms);
 
   BOOST_REQUIRE(interests.size() > 0);
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
 
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/NAME");
   interestName.appendNumber(seqNo);
-  lsdb2.expressInterest(interestName, 0/*= timeout count*/);
+  lsdb2.expressInterest(interestName, 0/*= timeout count*/, 0);
 
   advanceClocks(ndn::time::milliseconds(200), 20);
 

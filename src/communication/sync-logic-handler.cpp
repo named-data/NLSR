@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -41,7 +41,7 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
   , m_nameLsaUserPrefix(ndn::Name(m_confParam.getSyncUserPrefix()).append(boost::lexical_cast<std::string>(Lsa::Type::NAME)))
   , m_syncLogic(m_syncFace, m_confParam.getSyncProtocol(), m_confParam.getSyncPrefix(),
                 m_nameLsaUserPrefix, m_confParam.getSyncInterestLifetime(),
-                std::bind(&SyncLogicHandler::processUpdate, this, _1, _2))
+                std::bind(&SyncLogicHandler::processUpdate, this, _1, _2, _3))
 {
   m_adjLsaUserPrefix = ndn::Name(m_confParam.getSyncUserPrefix())
                          .append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
@@ -58,7 +58,7 @@ SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
 }
 
 void
-SyncLogicHandler::processUpdate(const ndn::Name& updateName, uint64_t highSeq)
+SyncLogicHandler::processUpdate(const ndn::Name& updateName, uint64_t highSeq, uint64_t incomingFaceId)
 {
   NLSR_LOG_DEBUG("Update Name: " << updateName << " Seq no: " << highSeq);
 
@@ -76,12 +76,13 @@ SyncLogicHandler::processUpdate(const ndn::Name& updateName, uint64_t highSeq)
   ndn::Name originRouter = networkName;
   originRouter.append(routerName);
 
-  processUpdateFromSync(originRouter, updateName, highSeq);
+  processUpdateFromSync(originRouter, updateName, highSeq, incomingFaceId);
 }
 
 void
 SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
-                                        const ndn::Name& updateName, uint64_t seqNo)
+                                        const ndn::Name& updateName, uint64_t seqNo,
+                                        uint64_t incomingFaceId)
 {
   NLSR_LOG_DEBUG("Origin Router of update: " << originRouter);
 
@@ -94,7 +95,7 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
     NLSR_LOG_DEBUG("Received sync update with higher " << lsaType <<
                    " sequence number than entry in LSDB");
 
-    if (m_isLsaNew(originRouter, lsaType, seqNo)) {
+    if (m_isLsaNew(originRouter, lsaType, seqNo, incomingFaceId)) {
       if (lsaType == Lsa::Type::ADJACENCY && seqNo != 0 &&
           m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
         NLSR_LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing " <<
@@ -108,7 +109,7 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
                        "is enabled. Not going to fetch.");
         return;
       }
-      (*onNewLsa)(updateName, seqNo, originRouter);
+      (*onNewLsa)(updateName, seqNo, originRouter, incomingFaceId);
     }
   }
 }

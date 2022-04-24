@@ -103,7 +103,7 @@ public:
   {
     size_t sentBefore = collector.getStatistics().get(statsType);
 
-    lsdb.expressInterest(ndn::Name(prefix + lsaType).appendNumber(seqNo), 0,
+    lsdb.expressInterest(ndn::Name(prefix + lsaType).appendNumber(seqNo), 0, 0,
                          ndn::time::steady_clock::TimePoint::min());
     this->advanceClocks(ndn::time::milliseconds(1), 10);
 

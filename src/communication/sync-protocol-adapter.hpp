@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -33,7 +33,7 @@
 namespace nlsr {
 
 typedef std::function<void(const ndn::Name& updateName,
-                           uint64_t seqNo)> SyncUpdateCallback;
+                           uint64_t seqNo, uint64_t incomingFaceId)> SyncUpdateCallback;
 
 class SyncProtocolAdapter
 {
