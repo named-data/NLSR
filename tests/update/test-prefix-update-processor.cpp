@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -40,7 +40,7 @@ using namespace ndn;
 namespace nlsr {
 namespace test {
 
-class PrefixUpdateFixture : public UnitTestTimeFixture
+class PrefixUpdateFixture : public nlsr::test::UnitTestTimeFixture
 {
 public:
   PrefixUpdateFixture()
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   ndn::Name advertiseCommand("/localhost/nlsr/prefix-update/advertise");
 
   // append /<control-parameters>
-  advertiseCommand.append(ndn::tlv::GenericNameComponent, parameters.wireEncode());
+  advertiseCommand.append(parameters.wireEncode());
 
   ndn::security::InterestSigner signer(m_keyChain);
 
@@ -186,7 +186,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 
   // Withdraw
   ndn::Name withdrawCommand("/localhost/nlsr/prefix-update/withdraw");
-  withdrawCommand.append(ndn::tlv::GenericNameComponent, parameters.wireEncode());
+  withdrawCommand.append(parameters.wireEncode());
 
   auto withdrawInterest= signer.makeCommandInterest(withdrawCommand,
                                                     ndn::security::signingByIdentity(opIdentity));

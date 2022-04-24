@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -144,11 +144,11 @@ public:
     ndn::security::InterestSigner signer(m_keyChain);
     // type true for advertise, else withdraw
     if (type == "advertise") {
-      advertiseCommand.append(ndn::tlv::GenericNameComponent, parameters.wireEncode());
+      advertiseCommand.append(parameters.wireEncode());
       return signer.makeCommandInterest(advertiseCommand, ndn::security::signingByIdentity(opIdentity));
     }
     else {
-      withdrawCommand.append(ndn::tlv::GenericNameComponent, parameters.wireEncode());
+      withdrawCommand.append(parameters.wireEncode());
       return signer.makeCommandInterest(withdrawCommand, ndn::security::signingByIdentity(opIdentity));
     }
   }

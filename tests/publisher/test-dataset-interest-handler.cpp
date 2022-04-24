@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -46,11 +46,11 @@ processDatasetInterest(ndn::util::DummyClientFace& face,
   face.sentData.clear();
 }
 
-BOOST_FIXTURE_TEST_SUITE(TestDatasetInterestHandler, PublisherFixture)
+BOOST_FIXTURE_TEST_SUITE(PublisherTestLsdbDatasetInterestHandler, PublisherFixture)
 
 BOOST_AUTO_TEST_CASE(Localhost)
 {
-  checkPrefixRegistered(face, Nlsr::LOCALHOST_PREFIX);
+  nlsr::test::checkPrefixRegistered(face, Nlsr::LOCALHOST_PREFIX);
 
   // Install adjacency LSA
   AdjLsa adjLsa;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(RouterName)
   // Should already be added to dispatcher
   BOOST_CHECK_THROW(nlsr.m_dispatcher.addTopPrefix(regRouterPrefix), std::out_of_range);
 
-  checkPrefixRegistered(face,regRouterPrefix);
+  nlsr::test::checkPrefixRegistered(face,regRouterPrefix);
 
   // Install adjacencies LSA
   AdjLsa adjLsa;

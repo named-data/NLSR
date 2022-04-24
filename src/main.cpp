@@ -35,6 +35,10 @@ printUsage(std::ostream& os, const std::string& programName)
      << "Options:\n"
      << "    -f <FILE>   Path to configuration file\n"
      << "    -h          Display this help message\n"
+	  //added_GM, by liupenghui
+#if 1
+	 << "    -s		  use SM2 certification\n"
+#endif
      << "    -V          Display version information\n"
      << std::endl;
 }
@@ -44,30 +48,61 @@ main(int argc, char** argv)
 {
   std::string programName(argv[0]);
   std::string configFileName("nlsr.conf");
+//added_GM, by liupenghui
+#if 1
+	int opt;
+	char keyTypeChoice = 'e';
+	
+	while ((opt = getopt(argc, argv, "hsf:V")) != -1) {
+	  switch (opt) {
+	  case 'h':
+		printUsage(std::cout, programName);
+		return 0;
+	  case 's':
+	    keyTypeChoice = 's';
+		break;
+	  case 'f':
+		configFileName = optarg;
+		break;
+	  case 'V':
+		std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
+		return 0;
+	  default:
+		printUsage(std::cerr, programName);
+		return 2;
+	  }
+	}
+#else
+	int opt;
+	while ((opt = getopt(argc, argv, "hf:V")) != -1) {
+	  switch (opt) {
+	  case 'h':
+		printUsage(std::cout, programName);
+		return 0;
+	  case 'f':
+		configFileName = optarg;
+		break;
+	  case 'V':
+		std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
+		return 0;
+	  default:
+		printUsage(std::cerr, programName);
+		return 2;
+	  }
+	}
+#endif
 
-  int opt;
-  while ((opt = getopt(argc, argv, "hf:V")) != -1) {
-    switch (opt) {
-    case 'h':
-      printUsage(std::cout, programName);
-      return 0;
-    case 'f':
-      configFileName = optarg;
-      break;
-    case 'V':
-      std::cout << NLSR_VERSION_BUILD_STRING << std::endl;
-      return 0;
-    default:
-      printUsage(std::cerr, programName);
-      return 2;
-    }
-  }
 
   boost::asio::io_service ioService;
   ndn::Face face(ioService);
   ndn::KeyChain keyChain;
 
   nlsr::ConfParameter confParam(face, keyChain, configFileName);
+  //added_GM, by liupenghui
+#if 1
+  confParam.setKeyTypeChoice(keyTypeChoice);
+#endif
+
   nlsr::ConfFileProcessor configProcessor(confParam);
 
   if (!configProcessor.processConfFile()) {

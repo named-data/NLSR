@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -20,6 +20,11 @@
 
 #include "conf-parameter.hpp"
 #include "logger.hpp"
+//added_GM liupenghui
+#if 1
+#include <ndn-cxx/security/key-params.hpp>
+#include <ndn-cxx/security/signing-info.hpp>
+#endif
 
 namespace nlsr {
 
@@ -134,8 +139,29 @@ ConfParameter::initializeKey()
   }
 
   ndn::security::Identity nlsrInstanceIdentity;
+
   try {
+  //added_GM, by liupenghui
+#if 1
+  switch (m_keyTypeChoice) {
+  case 'e':
+    {
+       ndn::EcKeyParams keyParams;
+       nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName, keyParams);
+    }
+       break;
+  case 's':
+    {
+       ndn::sm2KeyParams keyParamsgm;
+       nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName, keyParamsgm);
+    }
+       break;
+  default:
+       NLSR_LOG_ERROR("Cannot generate key for nlsrInstanceIdentity.");
+  } 
+#else
     nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName);
+#endif
   }
   catch (const std::exception& e) {
     NLSR_LOG_ERROR(e.what());
@@ -143,6 +169,7 @@ ConfParameter::initializeKey()
     NLSR_LOG_ERROR("Can be ignored if running in non-production environments.");
     return nullptr;
   }
+
   auto certificate = std::make_shared<ndn::security::Certificate>();
   auto nlsrInstanceKey = nlsrInstanceIdentity.getDefaultKey();
   ndn::Name certificateName = nlsrInstanceKey.getName();
@@ -156,7 +183,8 @@ ConfParameter::initializeKey()
   certificate->setFreshnessPeriod(365_days);
 
   // set content
-  certificate->setContent(nlsrInstanceKey.getPublicKey());
+  certificate->setContent(nlsrInstanceKey.getPublicKey().data(),
+                          nlsrInstanceKey.getPublicKey().size());
 
   // set signature-info
   ndn::SignatureInfo signatureInfo;
@@ -164,7 +192,7 @@ ConfParameter::initializeKey()
                                                                 ndn::time::system_clock::now()
                                                                 + 365_days));
 
-  try {
+  /*try {
     m_keyChain.sign(*certificate,
                     ndn::security::SigningInfo(m_keyChain.getPib().getIdentity(m_routerPrefix))
                                                .setSignatureInfo(signatureInfo));
@@ -175,8 +203,62 @@ ConfParameter::initializeKey()
 
   }
 
+
   m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
                                              nlsrInstanceName);
+  */
+
+try {
+
+//added_GM, by liupenghui
+#if 1
+
+  switch (m_keyTypeChoice) {
+  case 'e':
+    {
+       m_keyChain.sign(*certificate,
+         ndn::security::SigningInfo(m_keyChain.getPib().getIdentity(m_routerPrefix))
+             .setSignatureInfo(signatureInfo));
+         m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
+             nlsrInstanceName);
+    }
+       break;
+  case 's':
+    {
+        m_keyChain.sign(*certificate,
+            ndn::security::SigningInfo(m_keyChain.getPib().getIdentity(m_routerPrefix))
+             .setSignatureInfo(signatureInfo).setDigestAlgorithm(ndn::DigestAlgorithm::SM3));
+	m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
+                                            nlsrInstanceName).setDigestAlgorithm(ndn::DigestAlgorithm::SM3).setPibIdentity(nlsrInstanceIdentity);
+    }
+       break;
+  default:
+       NLSR_LOG_ERROR("Cannot generate key for nlsrInstanceIdentity.");
+  }
+
+
+#else
+  m_keyChain.sign(*certificate,
+       ndn::security::SigningInfo(m_keyChain.getPib().getIdentity(m_routerPrefix))
+             .setSignatureInfo(signatureInfo));
+#endif
+   
+  }
+  catch (const std::exception& e) {
+    NLSR_LOG_ERROR("Router's " << e.what() << ", NLSR is running without security. " <<
+                   "If security is enabled in the configuration, NLSR will not converge.");
+
+  }
+//added_GM, by liupenghui
+//#if 1
+  //m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
+   //                                          nlsrInstanceName).setDigestAlgorithm(ndn::DigestAlgorithm::SM3);
+//  m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
+//                                             nlsrInstanceName).setDigestAlgorithm(ndn::DigestAlgorithm::SM3).setPibIdentity(nlsrInstanceIdentity);
+//#else
+//  m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
+//             nlsrInstanceName);
+//#endif
 
   loadCertToValidator(*certificate);
 

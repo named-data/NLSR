@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -52,7 +52,8 @@ Lsa::wireEncode(ndn::EncodingImpl<TAG>& encoder) const
                                     ndn::tlv::nlsr::ExpirationTime,
                                     ndn::time::toString(m_expirationTimePoint));
 
-  totalLength += prependNonNegativeIntegerBlock(encoder, ndn::tlv::nlsr::SequenceNumber, m_seqNo);
+  totalLength += prependNonNegativeIntegerBlock(encoder, ndn::tlv::nlsr::SequenceNumber,
+                                                m_seqNo);
 
   totalLength += m_originRouter.wireEncode(encoder);
 
@@ -104,15 +105,18 @@ std::ostream&
 operator<<(std::ostream& os, const Lsa::Type& type)
 {
   switch (type) {
-  case Lsa::Type::ADJACENCY:
+  case nlsr::Lsa::Type::ADJACENCY:
     os << "ADJACENCY";
     break;
-  case Lsa::Type::COORDINATE:
+
+  case nlsr::Lsa::Type::COORDINATE:
     os << "COORDINATE";
     break;
-  case Lsa::Type::NAME:
+
+  case nlsr::Lsa::Type::NAME:
     os << "NAME";
     break;
+
   default:
     os << "BASE";
     break;

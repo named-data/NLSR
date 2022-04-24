@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2021,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -19,11 +19,10 @@
  */
 
 #include "route/fib.hpp"
-#include "adjacency-list.hpp"
-#include "conf-parameter.hpp"
-
 #include "../test-common.hpp"
 #include "../control-commands.hpp"
+#include "adjacency-list.hpp"
+#include "conf-parameter.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
@@ -336,11 +335,11 @@ BOOST_FIXTURE_TEST_CASE(ScheduleFibEntryRefresh, FibFixture)
   int origSeqNo = fe.seqNo;
   fib.m_table.emplace(name1, std::move(fe));
 
-  fib.scheduleEntryRefresh(fe, [&] (auto& entry) { BOOST_CHECK_EQUAL(origSeqNo + 1, entry.seqNo); });
+  fib.scheduleEntryRefresh(fe,
+                            [&] (FibEntry& entry) {
+                              BOOST_CHECK_EQUAL(origSeqNo + 1, entry.seqNo);
+                            });
   this->advanceClocks(ndn::time::milliseconds(10), 1);
-
-  // avoid "test case [...] did not check any assertions" message from Boost.Test
-  BOOST_CHECK(true);
 }
 
 BOOST_AUTO_TEST_CASE(ShouldNotRefreshNeighborRoute) // #4799

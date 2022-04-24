@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -69,13 +69,18 @@ BOOST_AUTO_TEST_CASE(RoutingTableEntryEncodeWithNexthops)
   nexthops2.setRouteCost(1.65);
   rte.getNexthopList().addNextHop(nexthops2);
 
-  BOOST_TEST(rte.wireEncode() == RoutingTableEntryWithNexthopsData,
-             boost::test_tools::per_element());
+  const ndn::Block& wire = rte.wireEncode();
+
+  BOOST_REQUIRE_EQUAL_COLLECTIONS(RoutingTableEntryWithNexthopsData,
+                                  RoutingTableEntryWithNexthopsData +
+                                    sizeof(RoutingTableEntryWithNexthopsData),
+                                  wire.begin(), wire.end());
 }
 
 BOOST_AUTO_TEST_CASE(RoutingTableEntryDecodeWithNexthops)
 {
-  RoutingTableEntry rte(ndn::Block{RoutingTableEntryWithNexthopsData});
+  RoutingTableEntry rte(ndn::Block(RoutingTableEntryWithNexthopsData,
+                                   sizeof(RoutingTableEntryWithNexthopsData)));
   BOOST_CHECK_EQUAL(rte.getDestination(), "dest1");
 
   BOOST_CHECK(rte.getNexthopList().size() != 0);
@@ -91,16 +96,24 @@ BOOST_AUTO_TEST_CASE(RoutingTableEntryDecodeWithNexthops)
 BOOST_AUTO_TEST_CASE(RoutingTableEntryEncodeWithoutNexthops)
 {
   RoutingTableEntry rte(ndn::Name("dest1"));
-  BOOST_TEST(rte.wireEncode() == RoutingTableEntryWithoutNexthopsData,
-             boost::test_tools::per_element());
+
+  auto wire = rte.wireEncode();
+
+  BOOST_REQUIRE_EQUAL_COLLECTIONS(RoutingTableEntryWithoutNexthopsData,
+                                  RoutingTableEntryWithoutNexthopsData +
+                                    sizeof(RoutingTableEntryWithoutNexthopsData),
+                                  wire.begin(), wire.end());
 }
 
 BOOST_AUTO_TEST_CASE(RoutingTableEntryDecodeWithoutNexthops)
 {
-  RoutingTableEntry rte(ndn::Block{RoutingTableEntryWithoutNexthopsData});
+  RoutingTableEntry rte(ndn::Block(RoutingTableEntryWithoutNexthopsData,
+                                   sizeof(RoutingTableEntryWithoutNexthopsData)));
+
   BOOST_CHECK_EQUAL(rte.getDestination(), "dest1");
-  BOOST_CHECK_EQUAL(rte.getNexthopList().size(), 0);
+  BOOST_CHECK(rte.getNexthopList().size() == 0);
 }
+
 
 BOOST_AUTO_TEST_CASE(RoutingTableEntryClear)
 {

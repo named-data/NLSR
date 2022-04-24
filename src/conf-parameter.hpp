@@ -146,6 +146,15 @@ public:
   {
     return m_network;
   }
+  
+//added_GM, by liupenghui
+#if 1
+  void
+  setKeyTypeChoice(const char keyTypeChoice)
+  {
+    m_keyTypeChoice = keyTypeChoice;
+  }
+#endif
 
   void
   setRouterName(const ndn::Name& routerName)
@@ -494,7 +503,10 @@ private:
   ndn::Name m_routerName;
   ndn::Name m_siteName;
   ndn::Name m_network;
-
+//added_GM, by liupenghui
+#if 1
+  char m_keyTypeChoice;
+#endif
   ndn::Name m_routerPrefix;
   ndn::Name m_syncUserPrefix;
 

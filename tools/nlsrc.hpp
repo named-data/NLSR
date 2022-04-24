@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2020,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -27,7 +27,7 @@
 #include <boost/noncopyable.hpp>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/validator.hpp>
+#include <ndn-cxx/security/validator-null.hpp>
 
 #include <deque>
 #include <map>
@@ -42,31 +42,16 @@ class Nlsrc : boost::noncopyable
 {
 public:
   explicit
-  Nlsrc(std::string programName, ndn::Face& face);
+  Nlsrc(ndn::Face& face);
 
   void
-  printUsage() const;
-
-  const ndn::Name&
-  getRouterPrefix() const
-  {
-    return m_routerPrefix;
-  }
-
-  void
-  setRouterPrefix(ndn::Name prefix);
-
-  void
-  disableValidator();
-
-  bool
-  enableValidator(const std::string& filename);
+  printUsage();
 
   void
   getStatus(const std::string& command);
 
   bool
-  dispatch(ndn::span<std::string> subcommand);
+  dispatch(const std::string& cmd);
 
 private:
   void
@@ -80,7 +65,7 @@ private:
    *
    */
   void
-  advertiseName(ndn::Name name, bool wantSave);
+  advertiseName();
 
   /**
    * \brief Removes a name prefix from NLSR's Name LSA
@@ -90,7 +75,7 @@ private:
    *
    */
   void
-  withdrawName(ndn::Name name, bool wantDelete);
+  withdrawName();
 
   void
   sendNamePrefixUpdate(const ndn::Name& name,
@@ -111,7 +96,7 @@ private:
   void
   fetchNameLsas();
 
-  template<class T>
+  template <class T>
   void
   fetchFromLsdb(const ndn::Name::Component& datasetType,
                 const std::function<void(const T&)>& recordLsa);
@@ -122,11 +107,11 @@ private:
   void
   fetchRtables();
 
-  template<class T>
+  template <class T>
   void
   fetchFromRt(const std::function<void(const T&)>& recordLsa);
 
-  template<class T>
+  template <class T>
   void
   onFetchSuccess(const ndn::ConstBufferPtr& data,
                  const std::function<void(const T&)>& recordLsa);
@@ -146,22 +131,41 @@ private:
   void
   printAll();
 
-private:
-  std::string m_programName;
-  ndn::Name m_routerPrefix;
-  std::unique_ptr<ndn::security::Validator> m_validator;
-  ndn::KeyChain m_keyChain;
-  ndn::Face& m_face;
+public:
+  const char* programName;
 
+  // command parameters without leading 'cmd' component
+  const char* const* commandLineArguments;
+  int nOptions;
+
+private:
   struct Router
   {
     std::string adjacencyLsaString;
     std::string coordinateLsaString;
     std::string nameLsaString;
   };
+
   std::map<ndn::Name, Router> m_routers;
+
+private:
+  ndn::KeyChain m_keyChain;
+  ndn::Face& m_face;
+  ndn::security::ValidatorNull m_validator;
+  std::string commandString;
   std::string m_rtString;
+
   std::deque<std::function<void()>> m_fetchSteps;
+
+  static const ndn::Name LOCALHOST_PREFIX;
+  static const ndn::Name LSDB_PREFIX;
+  static const ndn::Name NAME_UPDATE_PREFIX;
+
+  static const ndn::Name RT_PREFIX;
+
+  static const uint32_t ERROR_CODE_TIMEOUT;
+  static const uint32_t RESPONSE_CODE_SUCCESS;
+  static const uint32_t RESPONSE_CODE_SAVE_OR_DELETE;
 };
 
 } // namespace nlsrc
