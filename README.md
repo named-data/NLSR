@@ -1,6 +1,6 @@
 # NLSR: Named Data Link State Routing Protocol working with ISO-chinese cypto standard algorithms
 
-This version works with ndn-cxx: NDN C++ library with ISO-chinese cypto standard algorithms SM2, SM3, SM4 eXperimental eXtensions
+This version works with ndn-cxx: NDN C++ library with ISO-chinese cypto standard algorithms SM2, SM3, SM4 eXperimental eXtensions at
 https://github.com/liupenghui-owen/ndn-cxx-gm
 
 [![CI](https://github.com/named-data/NLSR/actions/workflows/ci.yml/badge.svg)](https://github.com/named-data/NLSR/actions/workflows/ci.yml)
