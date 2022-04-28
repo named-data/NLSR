@@ -65,21 +65,15 @@ public:
 
     saveCertificate(rootId, ROOT_CERT_PATH.string());
 
-    confParam.loadCertToValidator(rootId.getDefaultKey().getDefaultCertificate());
-    confParam.loadCertToValidator(siteIdentity.getDefaultKey().getDefaultCertificate());
-    confParam.loadCertToValidator(opIdentity.getDefaultKey().getDefaultCertificate());
-    confParam.loadCertToValidator(routerId.getDefaultKey().getDefaultCertificate());
+    for (const auto& id : {rootId, siteIdentity, opIdentity, routerId}) {
+      const auto& cert = id.getDefaultKey().getDefaultCertificate();
+      confParam.loadCertToValidator(cert);
+    }
 
     // Loading the security section's validator part into the validator
     // See conf file processor for more details
-    std::ifstream inputFile;
-    inputFile.open(std::string("nlsr.conf"));
-
-    BOOST_REQUIRE(inputFile.is_open());
-
     boost::property_tree::ptree pt;
-
-    boost::property_tree::read_info(inputFile, pt);
+    boost::property_tree::read_info("nlsr.conf", pt);
 
     // Loads section and file name
     for (const auto& tn : pt) {
@@ -89,10 +83,8 @@ public:
         break;
       }
     }
-    inputFile.close();
 
-    this->advanceClocks(ndn::time::milliseconds(10));
-
+    this->advanceClocks(10_ms);
     face.sentInterests.clear();
    }
 
@@ -126,7 +118,7 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   lsaDataName.appendNumber(1).appendNumber(1);
 
   ndn::Data data(lsaDataName);
-  data.setFreshnessPeriod(ndn::time::seconds(10));
+  data.setFreshnessPeriod(10_s);
 
   // Sign data with NLSR's key
   m_keyChain.sign(data, confParam.getSigningInfo());
@@ -134,8 +126,8 @@ BOOST_AUTO_TEST_CASE(ValidateCorrectLSA)
   // Make NLSR validate data signed by its own key
   confParam.getValidator().validate(data,
                                     [] (const Data&) { BOOST_CHECK(true); },
-                                    [] (const Data&, const ndn::security::ValidationError&) {
-                                      BOOST_CHECK(false);
+                                    [] (const Data&, const ndn::security::ValidationError& e) {
+                                      BOOST_ERROR(e);
                                     });
 }
 

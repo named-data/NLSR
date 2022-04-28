@@ -20,6 +20,7 @@
 
 #include "conf-parameter.hpp"
 #include "logger.hpp"
+#include <ndn-cxx/security/signing-helpers.hpp>
 
 namespace nlsr {
 
@@ -118,69 +119,38 @@ ConfParameter::loadCertToValidator(const ndn::security::Certificate& cert)
   m_prefixUpdateValidator.loadAnchor("Authoritative-Certificate", ndn::security::Certificate(cert));
 }
 
-std::shared_ptr<ndn::security::Certificate>
+ndn::optional<ndn::security::Certificate>
 ConfParameter::initializeKey()
 {
+  using namespace ndn::security;
   NLSR_LOG_DEBUG("Initializing Key ...");
 
-  ndn::Name nlsrInstanceName(m_routerPrefix);
-  nlsrInstanceName.append("nlsr");
-
+  Identity routerIdentity;
   try {
-    m_keyChain.deleteIdentity(m_keyChain.getPib().getIdentity(nlsrInstanceName));
+    routerIdentity = m_keyChain.getPib().getIdentity(m_routerPrefix);
   }
-  catch (const std::exception& e) {
-    NLSR_LOG_WARN(e.what());
-  }
-
-  ndn::security::Identity nlsrInstanceIdentity;
-  try {
-    nlsrInstanceIdentity = m_keyChain.createIdentity(nlsrInstanceName);
-  }
-  catch (const std::exception& e) {
-    NLSR_LOG_ERROR(e.what());
-    NLSR_LOG_ERROR("Unable to create identity, NLSR will run without security!");
-    NLSR_LOG_ERROR("Can be ignored if running in non-production environments.");
-    return nullptr;
-  }
-  auto certificate = std::make_shared<ndn::security::Certificate>();
-  auto nlsrInstanceKey = nlsrInstanceIdentity.getDefaultKey();
-  ndn::Name certificateName = nlsrInstanceKey.getName();
-  certificateName.append("NA");
-  certificateName.appendVersion();
-
-  certificate->setName(certificateName);
-
-  // set metainfo
-  certificate->setContentType(ndn::tlv::ContentType_Key);
-  certificate->setFreshnessPeriod(365_days);
-
-  // set content
-  certificate->setContent(nlsrInstanceKey.getPublicKey());
-
-  // set signature-info
-  ndn::SignatureInfo signatureInfo;
-  signatureInfo.setValidityPeriod(ndn::security::ValidityPeriod(ndn::time::system_clock::TimePoint(),
-                                                                ndn::time::system_clock::now()
-                                                                + 365_days));
-
-  try {
-    m_keyChain.sign(*certificate,
-                    ndn::security::SigningInfo(m_keyChain.getPib().getIdentity(m_routerPrefix))
-                                               .setSignatureInfo(signatureInfo));
-  }
-  catch (const std::exception& e) {
-    NLSR_LOG_ERROR("Router's " << e.what() << ", NLSR is running without security. " <<
+  catch (const Pib::Error&) {
+    NLSR_LOG_ERROR("Router identity " << m_routerPrefix << " not found. "
+                   "NLSR is running without security. "
                    "If security is enabled in the configuration, NLSR will not converge.");
-
+    return ndn::nullopt;
   }
 
-  m_signingInfo = ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_ID,
-                                             nlsrInstanceName);
+  auto instanceName = ndn::Name(m_routerPrefix).append("nlsr");
+  try {
+    m_keyChain.deleteIdentity(m_keyChain.getPib().getIdentity(instanceName));
+  }
+  catch (const Pib::Error&) {
+    // old instance identity does not exist
+  }
 
-  loadCertToValidator(*certificate);
+  auto key = m_keyChain.createIdentity(instanceName).getDefaultKey();
+  auto cert = m_keyChain.makeCertificate(key, signingByIdentity(routerIdentity));
+  m_keyChain.setDefaultCertificate(key, cert);
 
-  return certificate;
+  m_signingInfo = signingByCertificate(cert);
+  loadCertToValidator(cert);
+  return cert;
 }
 
 } // namespace nlsr

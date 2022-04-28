@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -44,23 +44,24 @@ namespace security {
  */
 class CertificateStore
 {
-
 public:
   CertificateStore(ndn::Face& face, ConfParameter& confParam, Lsdb& lsdb);
 
   void
   insert(const ndn::security::Certificate& certificate);
 
-  /*! \brief Find a certificate
+  /*!
+   * \brief Find a certificate
+   * \param name Either key name or certificate name.
    *
    * Find a certificate that NLSR has. First it checks against the
    * certificates this NLSR claims to be authoritative for, usually
    * something like this specific router's certificate, and then
    * checks the cache of certificates it has already fetched. If none
    * can be found, it will return an null pointer.
- */
+   */
   const ndn::security::Certificate*
-  find(const ndn::Name& keyName) const;
+  find(const ndn::Name& name) const;
 
   /*! \brief Retrieves the chain of certificates from Validator's cache and
    *   store them in Nlsr's own CertificateStore.
@@ -73,6 +74,12 @@ public:
   afterFetcherSignalEmitted(const ndn::Data& lsaSegment);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+  const ndn::security::Certificate*
+  findByKeyName(const ndn::Name& keyName) const;
+
+  const ndn::security::Certificate*
+  findByCertName(const ndn::Name& certName) const;
+
   void
   clear();
 

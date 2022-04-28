@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -55,10 +55,29 @@ CertificateStore::insert(const ndn::security::Certificate& certificate)
 }
 
 const ndn::security::Certificate*
-CertificateStore::find(const ndn::Name& keyName) const
+CertificateStore::find(const ndn::Name& name) const
+{
+  if (ndn::security::Certificate::isValidName(name)) {
+    return findByCertName(name);
+  }
+  return findByKeyName(name);
+}
+
+const ndn::security::Certificate*
+CertificateStore::findByKeyName(const ndn::Name& keyName) const
 {
   auto it = m_certificates.find(keyName);
   return it != m_certificates.end() ? &it->second : nullptr;
+}
+
+const ndn::security::Certificate*
+CertificateStore::findByCertName(const ndn::Name& certName) const
+{
+  auto found = findByKeyName(ndn::security::extractKeyNameFromCertName(certName));
+  if (found == nullptr || found->getName() != certName) {
+    return nullptr;
+  }
+  return found;
 }
 
 void
@@ -113,7 +132,7 @@ CertificateStore::registerKeyPrefixes()
 }
 
 void
-CertificateStore::onKeyInterest(const ndn::Name& name, const ndn::Interest& interest)
+CertificateStore::onKeyInterest(const ndn::Name&, const ndn::Interest& interest)
 {
   NLSR_LOG_DEBUG("Got interest for certificate. Interest: " << interest.getName());
 

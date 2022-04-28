@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -59,26 +59,21 @@ public:
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
     routerId = addSubCertificate(routerIdName, opIdentity);
 
-    auto certificate = conf.initializeKey();
-    if (certificate) {
-      certStore.insert(*certificate);
-    };
+    auto instanceCert = conf.initializeKey();
+    BOOST_REQUIRE(!!instanceCert);
+    certStore.insert(*instanceCert);
+    instanceCertName = instanceCert->getName();
 
     // Create certificate and load it to the validator
     // previously this was done by in nlsr ctor
-    conf.loadCertToValidator(rootId.getDefaultKey().getDefaultCertificate());
-    conf.loadCertToValidator(siteIdentity.getDefaultKey().getDefaultCertificate());
-    conf.loadCertToValidator(opIdentity.getDefaultKey().getDefaultCertificate());
-    conf.loadCertToValidator(routerId.getDefaultKey().getDefaultCertificate());
-
-    std::ifstream inputFile;
-    inputFile.open(std::string("nlsr.conf"));
-
-    BOOST_REQUIRE(inputFile.is_open());
+    for (const auto& id : {rootId, siteIdentity, opIdentity, routerId}) {
+      const auto& cert = id.getDefaultKey().getDefaultCertificate();
+      conf.loadCertToValidator(cert);
+      certStore.insert(cert);
+    }
 
     boost::property_tree::ptree pt;
-
-    boost::property_tree::read_info(inputFile, pt);
+    boost::property_tree::read_info("nlsr.conf", pt);
 
     // Load security section and file name
     for (const auto& tn : pt) {
@@ -88,9 +83,8 @@ public:
         break;
       }
     }
-    inputFile.close();
 
-    this->advanceClocks(ndn::time::milliseconds(20));
+    advanceClocks(20_ms);
   }
 
 public:
@@ -114,6 +108,7 @@ public:
 
   ndn::Name rootIdName, siteIdentityName, opIdentityName, routerIdName;
   ndn::security::pib::Identity rootId, siteIdentity, opIdentity, routerId;
+  ndn::Name instanceCertName;
 
   Nlsr nlsr;
   Lsdb& lsdb;
@@ -136,17 +131,54 @@ BOOST_AUTO_TEST_CASE(Basic)
   ndn::Name certKey = certificate.getKeyName();
 
   BOOST_CHECK(certStore.find(certKey) == nullptr);
+  BOOST_CHECK(certStore.find(certificate.getName()) == nullptr);
 
   // Certificate should be retrievable from the CertificateStore
   certStore.insert(certificate);
   conf.loadCertToValidator(certificate);
 
   BOOST_CHECK(certStore.find(certKey) != nullptr);
+  BOOST_CHECK(certStore.find(certificate.getName()) != nullptr);
 
   lsdb.expressInterest(certKey, 0);
 
   advanceClocks(10_ms);
   checkForInterest(certKey);
+}
+
+BOOST_AUTO_TEST_CASE(RetrieveCert)
+{
+  ndn::util::DummyClientFace consumer(m_ioService);
+  consumer.linkTo(face);
+
+  auto checkRetrieve = [&] (const ndn::Name& interestName, bool canBePrefix, const ndn::Name& dataName) {
+    ndn::Interest interest(interestName);
+    interest.setCanBePrefix(canBePrefix);
+    BOOST_TEST_CONTEXT(interest) {
+      bool hasData = false;
+      consumer.expressInterest(interest,
+        [&] (const auto&, const auto& data) {
+          BOOST_CHECK(!hasData);
+          hasData = true;
+          BOOST_CHECK_EQUAL(data.getName(), dataName);
+        },
+        [&] (const auto&, const auto&) { BOOST_ERROR("unexpected Nack"); },
+        [&] (const auto&) { BOOST_ERROR("unexpected timeout"); }
+      );
+      advanceClocks(10_ms, 2);
+      BOOST_CHECK(hasData);
+    }
+  };
+
+  for (const auto& id : {siteIdentity, opIdentity, routerId}) {
+    auto key = id.getDefaultKey();
+    auto cert = key.getDefaultCertificate();
+    checkRetrieve(key.getName(), true, cert.getName());
+    checkRetrieve(cert.getName(), false, cert.getName());
+  }
+
+  checkRetrieve(ndn::security::extractKeyNameFromCertName(instanceCertName), true, instanceCertName);
+  checkRetrieve(instanceCertName, false, instanceCertName);
 }
 
 BOOST_AUTO_TEST_CASE(TestKeyPrefixRegistration)
@@ -202,12 +234,13 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
   // Make NLSR validate data signed by its own key
   conf.getValidator().validate(data,
                                  [] (const ndn::Data&) { BOOST_CHECK(true); },
-                                 [] (const ndn::Data&, const ndn::security::ValidationError&) {
-                                   BOOST_CHECK(false);
+                                 [] (const ndn::Data&, const ndn::security::ValidationError& e) {
+                                   BOOST_ERROR(e);
                                  });
 
   lsdb.emitSegmentValidatedSignal(data);
-  const auto keyName = data.getSignatureInfo().getKeyLocator().getName();
+  auto certName = data.getSignatureInfo().getKeyLocator().getName();
+  auto keyName = ndn::security::extractKeyNameFromCertName(certName);
   BOOST_CHECK(certStore.find(keyName) != nullptr);
 
   // testing a callback after segment validation signal from lsdb
