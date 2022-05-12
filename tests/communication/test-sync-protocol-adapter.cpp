@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,24 +20,24 @@
  */
 
 #include "communication/sync-protocol-adapter.hpp"
-#include "tests/test-common.hpp"
+
+#include "tests/boost-test.hpp"
+#include "tests/io-key-chain-fixture.hpp"
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
-
-#include <boost/lexical_cast.hpp>
 
 namespace nlsr {
 namespace test {
 
 using namespace ndn;
 
-class SyncProtocolAdapterFixture : public UnitTestTimeFixture
+class SyncProtocolAdapterFixture : public IoKeyChainFixture
 {
 public:
   SyncProtocolAdapterFixture()
-   : syncPrefix("/localhop/ndn/nlsr/sync/")
-   , nameLsaUserPrefix("/localhop/ndn/nlsr/LSA/NAME")
-   , syncInterestLifetime(time::seconds(60))
+    : syncPrefix("/localhop/ndn/nlsr/sync")
+    , nameLsaUserPrefix("/localhop/ndn/nlsr/LSA/NAME")
+    , syncInterestLifetime(time::seconds(60))
   {
     syncPrefix.appendVersion(4);
   }
@@ -46,14 +46,14 @@ public:
   addNodes()
   {
     for (int i = 0; i < 2; i++) {
-      faces[i] = std::make_shared<ndn::util::DummyClientFace>(m_ioService,
-                                                              util::DummyClientFace::Options{true, true});
+      faces[i] = std::make_shared<util::DummyClientFace>(m_io,
+                                                         util::DummyClientFace::Options{true, true});
       userPrefixes[i] = Name(nameLsaUserPrefix).appendNumber(i);
       nodes[i] = std::make_shared<SyncProtocolAdapter>(*faces[i], SYNC_PROTOCOL_PSYNC, syncPrefix,
                                                        userPrefixes[i],
                                                        syncInterestLifetime,
                                                        [i, this] (const ndn::Name& updateName,
-                                                                   uint64_t highSeq) {
+                                                                  uint64_t highSeq) {
                                                          prefixToSeq[i].emplace(updateName, highSeq);
                                                        });
     }

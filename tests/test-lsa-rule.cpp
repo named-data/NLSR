@@ -19,31 +19,28 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test-common.hpp"
 #include "nlsr.hpp"
 #include "security/certificate-store.hpp"
 
-#include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/signing-helpers.hpp>
-#include <ndn-cxx/security/signing-info.hpp>
-#include <ndn-cxx/util/dummy-client-face.hpp>
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-using namespace ndn;
-
 namespace nlsr {
 namespace test {
 
-class LsaRuleFixture : public UnitTestTimeFixture
+using namespace ndn;
+
+class LsaRuleFixture : public IoKeyChainFixture
 {
 public:
   LsaRuleFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , rootIdName("/ndn")
     , siteIdentityName("/ndn/edu/test-site")
     , opIdentityName("/ndn/edu/test-site/%C1.Operator/op1")
@@ -54,7 +51,7 @@ public:
     , lsdb(face, m_keyChain, confParam)
     , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))
   {
-    rootId = addIdentity(rootIdName);
+    rootId = m_keyChain.createIdentity(rootIdName);
     siteIdentity = addSubCertificate(siteIdentityName, rootId);
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
     routerId = addSubCertificate(routerIdName, opIdentity);
@@ -63,7 +60,7 @@ public:
     // previously this was done by in nlsr ctor
     confParam.initializeKey();
 
-    saveCertificate(rootId, ROOT_CERT_PATH.string());
+    saveIdentityCert(rootId, ROOT_CERT_PATH.string());
 
     for (const auto& id : {rootId, siteIdentity, opIdentity, routerId}) {
       const auto& cert = id.getDefaultKey().getDefaultCertificate();

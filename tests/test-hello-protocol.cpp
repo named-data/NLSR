@@ -21,16 +21,18 @@
 
 #include "hello-protocol.hpp"
 #include "nlsr.hpp"
-#include "test-common.hpp"
+
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
 namespace nlsr {
 namespace test {
 
-class HelloProtocolFixture : public UnitTestTimeFixture
+class HelloProtocolFixture : public IoKeyChainFixture
 {
 public:
   HelloProtocolFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , adjList(conf.getAdjacencyList())

@@ -22,11 +22,10 @@
 #include "lsa/name-lsa.hpp"
 #include "lsa/adj-lsa.hpp"
 #include "lsa/coordinate-lsa.hpp"
-#include "test-common.hpp"
 #include "adjacent.hpp"
 #include "name-prefix-list.hpp"
 
-#include <ndn-cxx/util/time.hpp>
+#include "tests/boost-test.hpp"
 
 namespace nlsr {
 namespace test {

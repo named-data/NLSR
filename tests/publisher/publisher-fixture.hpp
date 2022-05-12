@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -19,40 +19,31 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NLSR_PUBLISHER_FIXTURE_HPP
-#define NLSR_PUBLISHER_FIXTURE_HPP
+#ifndef NLSR_TESTS_PUBLISHER_FIXTURE_HPP
+#define NLSR_TESTS_PUBLISHER_FIXTURE_HPP
 
 #include "publisher/dataset-interest-handler.hpp"
 #include "nlsr.hpp"
 
+#include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
-
-#include <ndn-cxx/util/dummy-client-face.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/security/pib/identity.hpp>
-
-#include <ndn-cxx/util/io.hpp>
-
-#include <boost/filesystem.hpp>
-
-using namespace ndn;
 
 namespace nlsr {
 namespace test {
 
-class PublisherFixture : public BaseFixture
+class PublisherFixture : public IoKeyChainFixture
 {
 public:
   PublisherFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , lsdb(nlsr.m_lsdb)
     , rt1(nlsr.m_routingTable)
   {
-    routerId = addIdentity(conf.getRouterPrefix());
-    face.processEvents(ndn::time::milliseconds(100));
+    routerId = m_keyChain.createIdentity(conf.getRouterPrefix());
+    advanceClocks(100_ms);
   }
 
   void
@@ -65,16 +56,28 @@ public:
   NextHop
   createNextHop(const std::string& faceUri, double cost)
   {
-    NextHop nexthop(faceUri, cost);
-    return nexthop;
+    return {faceUri, cost};
   }
 
   CoordinateLsa
   createCoordinateLsa(const std::string& origin, double radius, std::vector<double> angle)
   {
-    CoordinateLsa lsa(origin, 1, ndn::time::system_clock::now(),
-                      radius, angle);
-    return lsa;
+    return {origin, 1, ndn::time::system_clock::now(), radius, angle};
+  }
+
+  void
+  processDatasetInterest(std::function<bool(const ndn::Block&)> isSameType)
+  {
+    advanceClocks(30_ms);
+
+    BOOST_REQUIRE_EQUAL(face.sentData.size(), 1);
+    ndn::Block parser(face.sentData[0].getContent());
+    parser.parse();
+    face.sentData.clear();
+
+    auto it = parser.elements_begin();
+    BOOST_CHECK(isSameType(*it++));
+    BOOST_CHECK(it == parser.elements_end());
   }
 
 public:
@@ -91,4 +94,4 @@ public:
 } // namespace test
 } // namespace nlsr
 
-#endif // NLSR_PUBLISHER_FIXTURE_HPP
+#endif // NLSR_TESTS_PUBLISHER_FIXTURE_HPP

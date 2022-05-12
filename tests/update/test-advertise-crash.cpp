@@ -21,16 +21,17 @@
 
 #include "nlsr.hpp"
 
-#include "../test-common.hpp"
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
 namespace nlsr {
 namespace test {
 
-class AdvertiseCrashFixture : public UnitTestTimeFixture
+class AdvertiseCrashFixture : public IoKeyChainFixture
 {
 public:
   AdvertiseCrashFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
@@ -49,7 +50,7 @@ public:
 
     std::vector<ndn::nfd::FaceStatus> faces{payload1};
 
-    addIdentity(conf.getRouterPrefix());
+    m_keyChain.createIdentity(conf.getRouterPrefix());
 
     // Simulate a callback with fake response
     // This will trigger the undefined behavior found

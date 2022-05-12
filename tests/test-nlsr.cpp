@@ -20,14 +20,87 @@
  */
 
 #include "nlsr.hpp"
-#include "test-common.hpp"
-#include "control-commands.hpp"
 #include "logger.hpp"
+
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 
 namespace nlsr {
 namespace test {
+
+class MockNfdMgmtFixture : public IoKeyChainFixture
+{
+public:
+  /** \brief send one WireEncodable in reply to StatusDataset request
+   *  \param prefix dataset prefix without version and segment
+   *  \param payload payload block
+   *  \note payload must fit in one Data
+   *  \pre Interest for dataset has been expressed, sendDataset has not been invoked
+   */
+  template<typename T>
+  void
+  sendDataset(const ndn::Name& prefix, const T& payload)
+  {
+    BOOST_CONCEPT_ASSERT((ndn::WireEncodable<T>));
+
+    this->sendDatasetReply(prefix, payload.wireEncode());
+  }
+
+  /** \brief send two WireEncodables in reply to StatusDataset request
+   *  \param prefix dataset prefix without version and segment
+   *  \param payload1 first vector item
+   *  \param payload2 second vector item
+   *  \note all payloads must fit in one Data
+   *  \pre Interest for dataset has been expressed, sendDataset has not been invoked
+   */
+  template<typename T1, typename T2>
+  void
+  sendDataset(const ndn::Name& prefix, const T1& payload1, const T2& payload2)
+  {
+    BOOST_CONCEPT_ASSERT((ndn::WireEncodable<T1>));
+    BOOST_CONCEPT_ASSERT((ndn::WireEncodable<T2>));
+
+    ndn::encoding::EncodingBuffer buffer;
+    payload2.wireEncode(buffer);
+    payload1.wireEncode(buffer);
+
+    this->sendDatasetReply(prefix, buffer);
+  }
+
+  /** \brief send a payload in reply to StatusDataset request
+   *  \param name dataset prefix without version and segment
+   *  \param contentArgs passed to Data::setContent
+   */
+  template<typename ...ContentArgs>
+  void
+  sendDatasetReply(ndn::Name name, ContentArgs&&... contentArgs)
+  {
+    name.appendVersion().appendSegment(0);
+
+    // These warnings assist in debugging when nfdc does not receive StatusDataset.
+    // They usually indicate a misspelled prefix or incorrect timing in the test case.
+    if (m_face.sentInterests.empty()) {
+      BOOST_WARN_MESSAGE(false, "no Interest expressed");
+    }
+    else {
+      BOOST_WARN_MESSAGE(m_face.sentInterests.back().getName().isPrefixOf(name),
+                         "last Interest " << m_face.sentInterests.back().getName() <<
+                         " cannot be satisfied by this Data " << name);
+    }
+
+    auto data = std::make_shared<ndn::Data>(name);
+    data->setFreshnessPeriod(1_s);
+    data->setFinalBlock(name[-1]);
+    data->setContent(std::forward<ContentArgs>(contentArgs)...);
+    signData(*data);
+    m_face.receive(*data);
+  }
+
+public:
+  ndn::util::DummyClientFace m_face{m_io, m_keyChain, {true, true}};
+};
 
 class NlsrFixture : public MockNfdMgmtFixture
 {
@@ -41,7 +114,7 @@ public:
     , nSuccessCallbacks(0)
     , nFailureCallbacks(0)
   {
-    addIdentity(conf.getRouterPrefix());
+    m_keyChain.createIdentity(conf.getRouterPrefix());
   }
 
   void

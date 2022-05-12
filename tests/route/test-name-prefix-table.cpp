@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,21 +23,18 @@
 #include "route/fib.hpp"
 #include "route/routing-table.hpp"
 #include "lsdb.hpp"
-#include "../test-common.hpp"
 
-#include <ndn-cxx/util/dummy-client-face.hpp>
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
 namespace nlsr {
 namespace test {
 
-class NamePrefixTableFixture : public UnitTestTimeFixture
+class NamePrefixTableFixture : public IoKeyChainFixture
 {
 public:
   NamePrefixTableFixture()
-    : face(m_ioService, m_keyChain)
-    , conf(face, m_keyChain)
-    , confProcessor(conf)
-    , lsdb(face, m_keyChain, conf)
+    : lsdb(face, m_keyChain, conf)
     , fib(face, m_scheduler, conf.getAdjacencyList(), conf, m_keyChain)
     , rt(m_scheduler, lsdb, conf)
     , npt(conf.getRouterPrefix(), fib, rt, rt.afterRoutingChange, lsdb.onLsdbModified)
@@ -52,10 +49,13 @@ public:
     return it != npt.end();
   }
 
+private:
+  ndn::Scheduler m_scheduler{m_io};
+
 public:
-  ndn::util::DummyClientFace face;
-  ConfParameter conf;
-  DummyConfFileProcessor confProcessor;
+  ndn::util::DummyClientFace face{m_io, m_keyChain};
+  ConfParameter conf{face, m_keyChain};
+  DummyConfFileProcessor confProcessor{conf};
 
   Lsdb lsdb;
   Fib fib;

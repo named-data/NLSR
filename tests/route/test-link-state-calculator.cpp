@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,14 +22,14 @@
 #include "route/routing-table-calculator.hpp"
 
 #include "adjacency-list.hpp"
+#include "adjacent.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
-#include "../test-common.hpp"
 #include "route/map.hpp"
 #include "route/routing-table.hpp"
-#include "adjacent.hpp"
 
-#include <ndn-cxx/util/dummy-client-face.hpp>
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
 namespace nlsr {
 namespace test {
@@ -37,11 +37,11 @@ namespace test {
 static const ndn::time::system_clock::TimePoint MAX_TIME =
   ndn::time::system_clock::TimePoint::max();
 
-class LinkStateCalculatorFixture : public BaseFixture
+class LinkStateCalculatorFixture : public IoKeyChainFixture
 {
 public:
   LinkStateCalculatorFixture()
-    : face(m_ioService, m_keyChain)
+    : face(m_io, m_keyChain)
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)

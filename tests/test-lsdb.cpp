@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,12 +20,14 @@
  */
 
 #include "lsdb.hpp"
-
-#include "test-common.hpp"
 #include "lsa/lsa.hpp"
 #include "name-prefix-list.hpp"
 
-#include <ndn-cxx/util/dummy-client-face.hpp>
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
+
+#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
+#include <ndn-cxx/security/validator-null.hpp>
 #include <ndn-cxx/util/segment-fetcher.hpp>
 
 #include <unistd.h>
@@ -33,18 +35,18 @@
 namespace nlsr {
 namespace test {
 
-class LsdbFixture : public UnitTestTimeFixture
+class LsdbFixture : public IoKeyChainFixture
 {
 public:
   LsdbFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , lsdb(face, m_keyChain, conf)
     , REGISTER_COMMAND_PREFIX("/localhost/nfd/rib")
     , REGISTER_VERB("register")
   {
-    addIdentity("/ndn/site/%C1.Router/this-router");
+    m_keyChain.createIdentity("/ndn/site/%C1.Router/this-router");
 
     advanceClocks(10_ms);
     face.sentInterests.clear();
@@ -57,25 +59,18 @@ public:
     const ndn::Name& name = interest.getName();
     verb = name[REGISTER_COMMAND_PREFIX.size()];
     const ndn::Name::Component& parameterComponent = name[REGISTER_COMMAND_PREFIX.size() + 1];
-
-    ndn::Block rawParameters = parameterComponent.blockFromValue();
-    extractedParameters.wireDecode(rawParameters);
+    extractedParameters.wireDecode(parameterComponent.blockFromValue());
   }
 
   void
   areNamePrefixListsEqual(NamePrefixList& lhs, NamePrefixList& rhs)
   {
-
-    typedef std::list<ndn::Name> NameList;
-
-    NameList lhsList = lhs.getNames();
-    NameList rhsList = rhs.getNames();
-
+    auto lhsList = lhs.getNames();
+    auto rhsList = rhs.getNames();
     BOOST_REQUIRE_EQUAL(lhsList.size(), rhsList.size());
 
-    NameList::iterator i = lhsList.begin();
-    NameList::iterator j = rhsList.begin();
-
+    auto i = lhsList.begin();
+    auto j = rhsList.begin();
     for (; i != lhsList.end(); ++i, ++j) {
       BOOST_CHECK_EQUAL(*i, *j);
     }
@@ -232,7 +227,7 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
   lsdb.installLsa(nameLsa);
 
   // Create another Lsdb and expressInterest
-  ndn::util::DummyClientFace face2(m_ioService, m_keyChain, {true, true});
+  ndn::util::DummyClientFace face2(m_io, m_keyChain, {true, true});
   face.linkTo(face2);
 
   ConfParameter conf2(face2, m_keyChain);
@@ -277,7 +272,7 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/NAME/");
   interestName.appendNumber(seqNo);
 
-  ndn::util::DummyClientFace face2(m_ioService, m_keyChain, {true, true});
+  ndn::util::DummyClientFace face2(m_io, m_keyChain, {true, true});
   face.linkTo(face2);
 
   auto fetcher = ndn::util::SegmentFetcher::start(face2, ndn::Interest(interestName),

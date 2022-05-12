@@ -1,7 +1,6 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
-
 """
-Copyright (c) 2014-2019,  The University of Memphis
+Copyright (c) 2014-2022,  The University of Memphis
                           Regents of the University of California
 
 This file is part of NLSR (Named-data Link State Routing).
@@ -22,9 +21,6 @@ NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 top = '..'
 
 def build(bld):
-    if not bld.env.WITH_TESTS:
-        return
-
     bld.objects(target='unit-test-objects',
                 source=bld.path.ant_glob('**/*.cpp', excl=['main.cpp']),
                 use='nlsr-objects')

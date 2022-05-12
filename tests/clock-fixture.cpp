@@ -23,5 +23,38 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE NLSR
-#include "tests/boost-test.hpp"
+#include "tests/clock-fixture.hpp"
+
+namespace nlsr {
+namespace test {
+
+ClockFixture::ClockFixture()
+  : m_steadyClock(std::make_shared<time::UnitTestSteadyClock>())
+  , m_systemClock(std::make_shared<time::UnitTestSystemClock>())
+{
+  time::setCustomClocks(m_steadyClock, m_systemClock);
+}
+
+ClockFixture::~ClockFixture()
+{
+  time::setCustomClocks(nullptr, nullptr);
+}
+
+void
+ClockFixture::advanceClocks(time::nanoseconds tick, time::nanoseconds total)
+{
+  BOOST_ASSERT(tick > time::nanoseconds::zero());
+  BOOST_ASSERT(total >= time::nanoseconds::zero());
+
+  while (total > time::nanoseconds::zero()) {
+    auto t = std::min(tick, total);
+    m_steadyClock->advance(t);
+    m_systemClock->advance(t);
+    total -= t;
+
+    afterTick();
+  }
+}
+
+} // namespace test
+} // namespace nlsr

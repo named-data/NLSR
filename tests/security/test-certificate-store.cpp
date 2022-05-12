@@ -20,12 +20,14 @@
  */
 
 #include "security/certificate-store.hpp"
-
-#include "tests/test-common.hpp"
 #include "nlsr.hpp"
 #include "lsdb.hpp"
 
-#include <ndn-cxx/security/key-chain.hpp>
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
+
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
@@ -34,11 +36,11 @@ namespace test {
 
 using std::shared_ptr;
 
-class CertificateStoreFixture : public UnitTestTimeFixture
+class CertificateStoreFixture : public IoKeyChainFixture
 {
 public:
   CertificateStoreFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , conf(face, m_keyChain, "unit-test-nlsr.conf")
     , confProcessor(conf, SYNC_PROTOCOL_PSYNC, HYPERBOLIC_STATE_OFF,
                     "/ndn/", "/site", "/%C1.Router/router1")
@@ -51,10 +53,9 @@ public:
     , nlsr(face, m_keyChain, conf)
     , lsdb(nlsr.getLsdb())
     , certStore(face, conf, lsdb)
-    , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))
-
+    , ROOT_CERT_PATH(boost::filesystem::current_path() / "root.cert")
   {
-    rootId = addIdentity(rootIdName);
+    rootId = m_keyChain.createIdentity(rootIdName);
     siteIdentity = addSubCertificate(siteIdentityName, rootId);
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
     routerId = addSubCertificate(routerIdName, opIdentity);
@@ -148,7 +149,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 
 BOOST_AUTO_TEST_CASE(RetrieveCert)
 {
-  ndn::util::DummyClientFace consumer(m_ioService);
+  ndn::util::DummyClientFace consumer(m_io);
   consumer.linkTo(face);
 
   auto checkRetrieve = [&] (const ndn::Name& interestName, bool canBePrefix, const ndn::Name& dataName) {

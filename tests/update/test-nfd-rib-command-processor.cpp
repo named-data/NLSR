@@ -24,26 +24,26 @@
 #include "conf-parameter.hpp"
 #include "nlsr.hpp"
 
-#include "../test-common.hpp"
-#include "../control-commands.hpp"
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
 #include <boost/lexical_cast.hpp>
 
 namespace nlsr {
 namespace test {
 
-class NfdRibCommandProcessorFixture : public UnitTestTimeFixture
+class NfdRibCommandProcessorFixture : public IoKeyChainFixture
 {
 public:
   NfdRibCommandProcessorFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , namePrefixes(conf.getNamePrefixList())
     , processor(nlsr.m_nfdRibCommandProcessor)
   {
-    addIdentity(conf.getRouterPrefix());
+    m_keyChain.createIdentity(conf.getRouterPrefix());
 
     this->advanceClocks(ndn::time::milliseconds(10), 10);
     face.sentInterests.clear();

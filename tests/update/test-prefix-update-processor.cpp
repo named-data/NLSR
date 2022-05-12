@@ -22,29 +22,29 @@
 #include "update/prefix-update-processor.hpp"
 #include "nlsr.hpp"
 
-#include "tests/control-commands.hpp"
+#include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-#include <ndn-cxx/mgmt/nfd/control-response.hpp>
+#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/security/interest-signer.hpp>
-#include <ndn-cxx/security/pib/identity.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-using namespace ndn;
-
 namespace nlsr {
 namespace test {
 
-class PrefixUpdateFixture : public UnitTestTimeFixture
+using namespace ndn;
+
+class PrefixUpdateFixture : public IoKeyChainFixture
 {
 public:
   PrefixUpdateFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , siteIdentityName(ndn::Name("site"))
     , opIdentityName(ndn::Name("site").append(ndn::Name("%C1.Operator")))
     , conf(face, m_keyChain)
@@ -54,8 +54,8 @@ public:
     , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
   {
     // Site cert
-    siteIdentity = addIdentity(siteIdentityName);
-    saveCertificate(siteIdentity, SITE_CERT_PATH.string());
+    siteIdentity = m_keyChain.createIdentity(siteIdentityName);
+    saveIdentityCert(siteIdentity, SITE_CERT_PATH.string());
 
     // Operator cert
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
@@ -68,11 +68,9 @@ public:
 
     std::ifstream inputFile;
     inputFile.open(std::string("nlsr.conf"));
-
     BOOST_REQUIRE(inputFile.is_open());
 
     boost::property_tree::ptree pt;
-
     boost::property_tree::read_info(inputFile, pt);
     for (const auto& tn : pt) {
       if (tn.first == "security") {
@@ -85,7 +83,7 @@ public:
     }
     inputFile.close();
 
-    addIdentity(conf.getRouterPrefix());
+    m_keyChain.createIdentity(conf.getRouterPrefix());
 
     this->advanceClocks(ndn::time::milliseconds(10));
 

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -19,8 +19,6 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../test-common.hpp"
-
 #include "route/routing-table-calculator.hpp"
 
 #include "adjacency-list.hpp"
@@ -29,7 +27,8 @@
 #include "route/map.hpp"
 #include "route/routing-table.hpp"
 
-#include <ndn-cxx/util/dummy-client-face.hpp>
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
 namespace nlsr {
 namespace test {
@@ -38,11 +37,11 @@ using std::shared_ptr;
 using ndn::time::system_clock;
 static const system_clock::TimePoint MAX_TIME = system_clock::TimePoint::max();
 
-class HyperbolicCalculatorFixture : public BaseFixture
+class HyperbolicCalculatorFixture : public IoKeyChainFixture
 {
 public:
   HyperbolicCalculatorFixture()
-    : face(m_ioService, m_keyChain)
+    : face(m_io, m_keyChain)
     , conf(face, m_keyChain)
     , nlsr(face, m_keyChain, conf)
     , routingTable(nlsr.m_routingTable)

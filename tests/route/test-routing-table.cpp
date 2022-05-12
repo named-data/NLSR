@@ -23,30 +23,24 @@
 #include "route/routing-table-entry.hpp"
 #include "route/nexthop.hpp"
 
+#include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
 namespace nlsr {
 namespace test {
 
-class RoutingTableFixture : public UnitTestTimeFixture
+class RoutingTableFixture : public IoKeyChainFixture
 {
-public:
-  RoutingTableFixture()
-    : face(m_ioService, m_keyChain, {true, true})
-    , conf(face, m_keyChain)
-    , confProcessor(conf)
-    , lsdb(face, m_keyChain, conf)
-    , rt(m_scheduler, lsdb, conf)
-  {
-  }
+private:
+  ndn::Scheduler m_scheduler{m_io};
 
 public:
-  ndn::util::DummyClientFace face;
-  ConfParameter conf;
-  DummyConfFileProcessor confProcessor;
+  ndn::util::DummyClientFace face{m_io, m_keyChain, {true, true}};
+  ConfParameter conf{face, m_keyChain};
+  DummyConfFileProcessor confProcessor{conf};
 
-  Lsdb lsdb;
-  RoutingTable rt;
+  Lsdb lsdb{face, m_keyChain, conf};
+  RoutingTable rt{m_scheduler, lsdb, conf};
 };
 
 BOOST_AUTO_TEST_SUITE(TestRoutingTable)

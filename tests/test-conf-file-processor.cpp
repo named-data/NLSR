@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,12 +20,13 @@
  **/
 
 #include "conf-file-processor.hpp"
-#include "test-common.hpp"
+
+#include "tests/boost-test.hpp"
+#include "tests/io-key-chain-fixture.hpp"
 
 #include <fstream>
-
-#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
+
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
 namespace nlsr {
@@ -118,16 +119,16 @@ const std::string CONFIG_HYPERBOLIC_ANGLES = SECTION_GENERAL + SECTION_NEIGHBORS
                                              SECTION_HYPERBOLIC_ANGLES_ON + SECTION_FIB +
                                              SECTION_ADVERTISING;
 
-class ConfFileProcessorFixture : public BaseFixture
+class ConfFileProcessorFixture : public IoKeyChainFixture
 {
 public:
   ConfFileProcessorFixture()
-    : face(m_ioService, m_keyChain)
+    : face(m_io, m_keyChain)
     , conf(face, m_keyChain, "unit-test-nlsr.conf")
   {
   }
 
-  ~ConfFileProcessorFixture()
+  ~ConfFileProcessorFixture() override
   {
     remove("unit-test-nlsr.conf");
   }
@@ -375,8 +376,8 @@ BOOST_AUTO_TEST_CASE(NegativeValue)
 
 BOOST_AUTO_TEST_CASE(LoadCertToPublish)
 {
-  auto identity = addIdentity("/TestNLSR/identity");
-  saveCertificate(identity, "cert-to-publish.cert");
+  auto identity = m_keyChain.createIdentity("/TestNLSR/identity");
+  saveIdentityCert(identity, "cert-to-publish.cert");
 
   const std::string SECTION_SECURITY = R"CONF(
       security

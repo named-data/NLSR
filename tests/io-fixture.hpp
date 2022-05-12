@@ -23,5 +23,37 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE NLSR
-#include "tests/boost-test.hpp"
+#ifndef NLSR_TESTS_IO_FIXTURE_HPP
+#define NLSR_TESTS_IO_FIXTURE_HPP
+
+#include "tests/clock-fixture.hpp"
+
+#include <boost/asio/io_service.hpp>
+
+namespace nlsr {
+namespace test {
+
+class IoFixture : public ClockFixture
+{
+private:
+  void
+  afterTick() final
+  {
+    if (m_io.stopped()) {
+#if BOOST_VERSION >= 106600
+      m_io.restart();
+#else
+      m_io.reset();
+#endif
+    }
+    m_io.poll();
+  }
+
+protected:
+  boost::asio::io_service m_io;
+};
+
+} // namespace test
+} // namespace nlsr
+
+#endif // NLSR_TESTS_IO_FIXTURE_HPP

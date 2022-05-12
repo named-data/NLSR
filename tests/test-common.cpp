@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -18,18 +18,26 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test-common.hpp"
+#include "tests/test-common.hpp"
+
+#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 
 namespace nlsr {
 namespace test {
 
+std::shared_ptr<ndn::Data>
+makeData(const ndn::Name& name)
+{
+  auto data = std::make_shared<ndn::Data>(name);
+  return signData(data);
+}
+
 ndn::Data&
 signData(ndn::Data& data)
 {
-  data.setSignatureInfo(ndn::SignatureInfo(ndn::tlv::SignatureTypeValue::SignatureSha256WithRsa));
-  data.setSignatureValue(ndn::encoding::makeEmptyBlock(ndn::tlv::SignatureValue).getBuffer());
+  data.setSignatureInfo(ndn::SignatureInfo(ndn::tlv::NullSignature));
+  data.setSignatureValue(std::make_shared<ndn::Buffer>());
   data.wireEncode();
-
   return data;
 }
 
@@ -40,7 +48,7 @@ checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& p
   for (const auto& interest : face.sentInterests) {
     if (interest.getName().size() > 4 &&
         interest.getName().get(3) == ndn::name::Component("register")) {
-      ndn::name::Component test = interest.getName().get(4);
+      auto test = interest.getName().get(4);
       ndn::nfd::ControlParameters params(test.blockFromValue());
       if (params.getName() == prefix) {
         registerCommandEmitted = true;
@@ -49,32 +57,6 @@ checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& p
     }
   }
   BOOST_CHECK(registerCommandEmitted);
-}
-
-MockNfdMgmtFixture::MockNfdMgmtFixture()
-  : m_face(m_ioService, m_keyChain, {true, true})
-{
-}
-
-void
-MockNfdMgmtFixture::signDatasetReply(ndn::Data& data)
-{
-  signData(data);
-}
-
-void
-UnitTestTimeFixture::advanceClocks(const ndn::time::nanoseconds& tick, size_t nTicks)
-{
-  for (size_t i = 0; i < nTicks; ++i) {
-    steadyClock->advance(tick);
-    systemClock->advance(tick);
-
-    if (m_ioService.stopped()) {
-      m_ioService.reset();
-    }
-
-    m_ioService.poll();
-  }
 }
 
 } // namespace test

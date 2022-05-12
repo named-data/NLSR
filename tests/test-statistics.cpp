@@ -24,19 +24,19 @@
 #include "lsdb.hpp"
 #include "nlsr.hpp"
 
-#include "test-common.hpp"
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
 
-#include <ndn-cxx/util/dummy-client-face.hpp>
 #include <boost/lexical_cast.hpp>
 
 namespace nlsr {
 namespace test {
 
-class StatisticsFixture : public UnitTestTimeFixture
+class StatisticsFixture : public IoKeyChainFixture
 {
 public:
   StatisticsFixture()
-    : face(m_ioService, m_keyChain)
+    : face(m_io, m_keyChain)
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
@@ -47,7 +47,7 @@ public:
     // Otherwise code coverage node fails with default 60 seconds lifetime
     conf.setSyncInterestLifetime(1000);
 
-    addIdentity(conf.getRouterPrefix());
+    m_keyChain.createIdentity(conf.getRouterPrefix());
 
     this->advanceClocks(ndn::time::milliseconds(1), 10);
     face.sentInterests.clear();

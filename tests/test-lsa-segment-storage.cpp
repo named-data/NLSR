@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  Regents of the University of California,
+ * Copyright (c) 2014-2022,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -23,19 +23,21 @@
  * NFD, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "test-common.hpp"
 #include "nlsr.hpp"
 #include "name-prefix-list.hpp"
 // #include "lsa.hpp"
 
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
+
 namespace nlsr {
 namespace test {
 
-class LsaSegmentStorageFixture : public UnitTestTimeFixture
+class LsaSegmentStorageFixture : public IoKeyChainFixture
 {
 public:
   LsaSegmentStorageFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)

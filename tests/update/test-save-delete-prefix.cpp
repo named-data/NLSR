@@ -20,18 +20,18 @@
  */
 
 #include "update/prefix-update-processor.hpp"
+#include "conf-parameter.hpp"
 #include "nlsr.hpp"
 
-#include "tests/control-commands.hpp"
+#include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
-#include "conf-parameter.hpp"
 
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 #include <ndn-cxx/security/interest-signer.hpp>
-#include <ndn-cxx/security/pib/identity.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
-#include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/path.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
 namespace nlsr {
@@ -39,11 +39,11 @@ namespace test {
 
 namespace bpt = boost::property_tree;
 
-class PrefixSaveDeleteFixture : public UnitTestTimeFixture
+class PrefixSaveDeleteFixture : public IoKeyChainFixture
 {
 public:
   PrefixSaveDeleteFixture()
-    : face(m_ioService, m_keyChain, {true, true})
+    : face(m_io, m_keyChain, {true, true})
     , siteIdentityName(ndn::Name("/edu/test-site"))
     , opIdentityName(ndn::Name("/edu/test-site").append(ndn::Name("%C1.Operator")))
     , testConfFile("/tmp/nlsr.conf.test")
@@ -60,8 +60,8 @@ public:
     destination.close();
 
     conf.setConfFileNameDynamic(testConfFile);
-    siteIdentity = addIdentity(siteIdentityName);
-    saveCertificate(siteIdentity, SITE_CERT_PATH.string());
+    siteIdentity = m_keyChain.createIdentity(siteIdentityName);
+    saveIdentityCert(siteIdentity, SITE_CERT_PATH.string());
 
     // Operator cert
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
@@ -86,8 +86,8 @@ public:
     inputFile.close();
 
     // Site cert
-    siteIdentity = addIdentity(siteIdentityName);
-    saveCertificate(siteIdentity, SITE_CERT_PATH.string());
+    siteIdentity = m_keyChain.createIdentity(siteIdentityName);
+    saveIdentityCert(siteIdentity, SITE_CERT_PATH.string());
 
     // Operator cert
     opIdentity = addSubCertificate(opIdentityName, siteIdentity);
@@ -98,7 +98,7 @@ public:
     conf.loadCertToValidator(opIdentity.getDefaultKey().getDefaultCertificate());
 
     // Set the network so the LSA prefix is constructed
-    addIdentity(conf.getRouterPrefix());
+    m_keyChain.createIdentity(conf.getRouterPrefix());
 
     this->advanceClocks(ndn::time::milliseconds(10));
     face.sentInterests.clear();

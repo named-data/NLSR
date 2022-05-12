@@ -1,12 +1,8 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  Regents of the University of California,
- *                           Arizona Board of Regents,
- *                           Colorado State University,
- *                           University Pierre & Marie Curie, Sorbonne University,
- *                           Washington University in St. Louis,
- *                           Beijing Institute of Technology,
- *                           The University of Memphis.
+ * Copyright (c) 2014-2022,  The University of Memphis,
+ *                           Regents of the University of California,
+ *                           Arizona Board of Regents.
  *
  * This file is part of NLSR (Named-data Link State Routing).
  * See AUTHORS.md for complete list of NLSR authors and contributors.
@@ -23,5 +19,20 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE NLSR
-#include "tests/boost-test.hpp"
+#ifndef NLSR_TESTS_IO_KEY_CHAIN_FIXTURE_HPP
+#define NLSR_TESTS_IO_KEY_CHAIN_FIXTURE_HPP
+
+#include "tests/key-chain-fixture.hpp"
+#include "tests/io-fixture.hpp"
+
+namespace nlsr {
+namespace test {
+
+class IoKeyChainFixture : public IoFixture, public KeyChainFixture
+{
+};
+
+} // namespace test
+} // namespace nlsr
+
+#endif // NLSR_TESTS_IO_KEY_CHAIN_FIXTURE_HPP

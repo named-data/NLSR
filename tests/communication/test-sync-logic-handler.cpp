@@ -20,11 +20,11 @@
  */
 
 #include "communication/sync-logic-handler.hpp"
-#include "tests/test-common.hpp"
-#include "common.hpp"
 #include "nlsr.hpp"
 
-#include <ndn-cxx/util/dummy-client-face.hpp>
+#include "tests/io-key-chain-fixture.hpp"
+#include "tests/test-common.hpp"
+
 #include <boost/lexical_cast.hpp>
 
 namespace nlsr {
@@ -32,7 +32,7 @@ namespace test {
 
 using std::shared_ptr;
 
-class SyncLogicFixture : public UnitTestTimeFixture
+class SyncLogicFixture : public IoKeyChainFixture
 {
 public:
   SyncLogicFixture()
@@ -42,7 +42,7 @@ public:
                        this->conf.getSiteName().toUri() +
                        "/%C1.Router/other-router/")
   {
-    addIdentity(conf.getRouterPrefix());
+    m_keyChain.createIdentity(conf.getRouterPrefix());
   }
 
   void
@@ -59,16 +59,16 @@ public:
   }
 
 public:
-  ndn::util::DummyClientFace face{m_ioService, m_keyChain};
+  ndn::util::DummyClientFace face{m_io, m_keyChain};
   ConfParameter conf{face, m_keyChain};
   DummyConfFileProcessor confProcessor{conf, SYNC_PROTOCOL_PSYNC};
   SyncLogicHandler::IsLsaNew testIsLsaNew;
   SyncLogicHandler sync;
 
   const std::string updateNamePrefix;
-  const std::vector<Lsa::Type> lsaTypes = {Lsa::Type::NAME,
-                                           Lsa::Type::ADJACENCY,
-                                           Lsa::Type::COORDINATE};
+  const std::vector<Lsa::Type> lsaTypes{Lsa::Type::NAME,
+                                        Lsa::Type::ADJACENCY,
+                                        Lsa::Type::COORDINATE};
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestSyncLogicHandler, SyncLogicFixture)

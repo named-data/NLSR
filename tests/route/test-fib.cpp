@@ -22,21 +22,20 @@
 #include "adjacency-list.hpp"
 #include "conf-parameter.hpp"
 
-#include "../test-common.hpp"
-#include "../control-commands.hpp"
+#include "tests/boost-test.hpp"
+#include "tests/io-key-chain-fixture.hpp"
 
+#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
 namespace nlsr {
 namespace test {
 
-class FibFixture : public UnitTestTimeFixture
+class FibFixture : public IoKeyChainFixture
 {
 public:
   FibFixture()
-    : face(m_ioService, m_keyChain)
-    , conf(face, m_keyChain)
-    , adjacencies(conf.getAdjacencyList())
+    : adjacencies(conf.getAdjacencyList())
     , fib(face, m_scheduler, adjacencies, conf, m_keyChain)
     , interests(face.sentInterests)
   {
@@ -58,7 +57,8 @@ public:
   }
 
   void
-  enableRegistrationReplyWithFaceId() {
+  enableRegistrationReplyWithFaceId()
+  {
     face.onSendInterest.connect([this] (const ndn::Interest& interest) {
       static const ndn::Name localhostRegistration("/localhost/nfd/rib");
       if (!localhostRegistration.isPrefixOf(interest.getName()))
@@ -86,10 +86,25 @@ public:
     });
   }
 
-public:
-  ndn::util::DummyClientFace face;
+  static void
+  extractRibCommandParameters(const ndn::Interest& interest, ndn::Name::Component& verb,
+                              ndn::nfd::ControlParameters& extractedParameters)
+  {
+    static const ndn::Name commandPrefix("/localhost/nfd/rib");
 
-  ConfParameter conf;
+    const auto& name = interest.getName();
+    verb = name.at(commandPrefix.size());
+    const auto& paramComponent = name.at(commandPrefix.size() + 1);
+    extractedParameters.wireDecode(paramComponent.blockFromValue());
+  }
+
+private:
+  ndn::Scheduler m_scheduler{m_io};
+
+public:
+  ndn::util::DummyClientFace face{m_io, m_keyChain};
+
+  ConfParameter conf{face, m_keyChain};
   AdjacencyList& adjacencies;
   Fib fib;
   std::vector<ndn::Interest>& interests;
@@ -402,7 +417,7 @@ BOOST_AUTO_TEST_CASE(PrefixWithdrawalFibUpdateBug) // #5179
   int numRegister = 0;
   // Do not expect any unregisters, just registers which will update the cost in NFD
   for (const auto& i : face.sentInterests) {
-    if (i.getName().getPrefix(4) == "/localhost/nfd/rib/unregister/") {
+    if (i.getName().getPrefix(4) == "/localhost/nfd/rib/unregister") {
       BOOST_CHECK(false);
     }
     else {
