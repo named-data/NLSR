@@ -135,6 +135,11 @@ ConfParameter::initializeKey()
                    "If security is enabled in the configuration, NLSR will not converge.");
     return ndn::nullopt;
   }
+  catch (const std::invalid_argument& e) {
+    // This is (probably) needed for the dummy keychain patch.
+    // https://github.com/named-data/mini-ndn/blob/master/util/patches/ndn-cxx-dummy-keychain.patch
+    NLSR_LOG_DEBUG(e.what());
+  }
 
   auto instanceName = ndn::Name(m_routerPrefix).append("nlsr");
   try {
@@ -142,6 +147,15 @@ ConfParameter::initializeKey()
   }
   catch (const Pib::Error&) {
     // old instance identity does not exist
+  }
+  catch (const std::invalid_argument& e) {
+    // This is needed for the dummy-keychain patch (ref above) to handle the error that it generates.
+    const std::string exceptionText = e.what();
+    if (exceptionText.find("does not match identity") == std::string::npos) {
+      NLSR_LOG_ERROR(exceptionText);
+      throw;
+    }
+    return ndn::nullopt;
   }
 
   auto key = m_keyChain.createIdentity(instanceName).getDefaultKey();
