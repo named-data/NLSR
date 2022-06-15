@@ -49,15 +49,15 @@ Lsa::wireEncode(ndn::EncodingImpl<TAG>& encoder) const
   size_t totalLength = 0;
 
   totalLength += prependStringBlock(encoder,
-                                    ndn::tlv::nlsr::ExpirationTime,
+                                    nlsr::tlv::ExpirationTime,
                                     ndn::time::toString(m_expirationTimePoint));
 
-  totalLength += prependNonNegativeIntegerBlock(encoder, ndn::tlv::nlsr::SequenceNumber, m_seqNo);
+  totalLength += prependNonNegativeIntegerBlock(encoder, nlsr::tlv::SequenceNumber, m_seqNo);
 
   totalLength += m_originRouter.wireEncode(encoder);
 
   totalLength += encoder.prependVarNumber(totalLength);
-  totalLength += encoder.prependVarNumber(ndn::tlv::nlsr::Lsa);
+  totalLength += encoder.prependVarNumber(nlsr::tlv::Lsa);
 
   return totalLength;
 }
@@ -84,7 +84,7 @@ Lsa::wireDecode(const ndn::Block& wire)
 
   ++val;
 
-  if (val != baseWire.elements_end() && val->type() == ndn::tlv::nlsr::SequenceNumber) {
+  if (val != baseWire.elements_end() && val->type() == nlsr::tlv::SequenceNumber) {
     m_seqNo = ndn::readNonNegativeInteger(*val);
     ++val;
   }
@@ -92,7 +92,7 @@ Lsa::wireDecode(const ndn::Block& wire)
     NDN_THROW(Error("Missing required SequenceNumber field"));
   }
 
-  if (val != baseWire.elements_end() && val->type() == ndn::tlv::nlsr::ExpirationTime) {
+  if (val != baseWire.elements_end() && val->type() == nlsr::tlv::ExpirationTime) {
     m_expirationTimePoint = ndn::time::fromString(readString(*val));
   }
   else {

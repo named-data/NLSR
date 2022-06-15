@@ -29,8 +29,7 @@
 #include <ndn-cxx/data.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::test {
 
 /**
  * \brief Create a Data with a null (i.e., empty) signature
@@ -78,7 +77,6 @@ public:
   }
 };
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::test
 
 #endif // NLSR_TESTS_TEST_COMMON_HPP

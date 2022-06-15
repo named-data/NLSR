@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "name-prefix-list.hpp"
 #include "tests/boost-test.hpp"
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(GetNames)
   The NamePrefixList will count the number of sources for a given
   name, with zero for a non-existent name.
  */
-BOOST_AUTO_TEST_CASE(countSources)
+BOOST_AUTO_TEST_CASE(CountSources)
 {
   const ndn::Name name1{"/ndn/test/prefix1"};
   const ndn::Name invalidName{"/not/a/prefix"};
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE(countSources)
   The NamePrefixList will return a container with all the sources for
   a given name, with an empty container for a non-existent name.
  */
-BOOST_AUTO_TEST_CASE(getSources)
+BOOST_AUTO_TEST_CASE(GetSources)
 {
   NamePrefixList list;
   const ndn::Name name1{"/ndn/test/prefix1"};
@@ -183,10 +183,6 @@ BOOST_AUTO_TEST_CASE(BraceInitializerCtors)
   const std::vector<ndn::Name> namesVector{name1, name2, name3};
   NamePrefixList list3(namesVector);
   BOOST_CHECK(list1 == list3);
-
-  const std::list<ndn::Name> namesList{name1, name2, name3};
-  NamePrefixList list4(namesList);
-  BOOST_CHECK(list1 == list4);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

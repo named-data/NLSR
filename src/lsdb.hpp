@@ -279,7 +279,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   void
   expressInterest(const ndn::Name& interestName, uint32_t timeoutCount, uint64_t incomingFaceId,
-                  ndn::time::steady_clock::TimePoint deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
+                  ndn::time::steady_clock::time_point deadline = DEFAULT_LSA_RETRIEVAL_DEADLINE);
 
   /*!
      \brief Error callback when SegmentFetcher fails to return an LSA
@@ -298,7 +298,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   onFetchLsaError(uint32_t errorCode, const std::string& msg,
                   const ndn::Name& interestName, uint32_t retransmitNo,
-                  const ndn::time::steady_clock::TimePoint& deadline,
+                  const ndn::time::steady_clock::time_point& deadline,
                   ndn::Name lsaName, uint64_t seqNo);
 
   /*!
@@ -316,7 +316,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     afterSegmentValidatedSignal(data);
   }
 
-  ndn::time::system_clock::TimePoint
+  ndn::time::system_clock::time_point
   getLsaExpirationTimePoint() const
   {
     return ndn::time::system_clock::now() + ndn::time::seconds(m_confParam.getRouterDeadInterval());
@@ -360,8 +360,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   ndn::InMemoryStoragePersistent m_lsaStorage;
 
-  const ndn::Name::Component NAME_COMPONENT = ndn::Name::Component("lsdb");
-  static const ndn::time::steady_clock::TimePoint DEFAULT_LSA_RETRIEVAL_DEADLINE;
+  static inline const ndn::time::steady_clock::time_point DEFAULT_LSA_RETRIEVAL_DEADLINE =
+    ndn::time::steady_clock::time_point::min();
 };
 
 } // namespace nlsr

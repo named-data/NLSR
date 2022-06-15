@@ -28,8 +28,7 @@
 
 #include <ndn-cxx/util/time-unit-test-clock.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::test {
 
 namespace time = ndn::time;
 
@@ -85,7 +84,6 @@ protected:
   std::shared_ptr<time::UnitTestSystemClock> m_systemClock;
 };
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::test
 
 #endif // NLSR_TESTS_CLOCK_FIXTURE_HPP

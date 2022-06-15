@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -25,8 +25,7 @@
 
 #include "common.hpp"
 
-namespace nlsr {
-namespace util {
+namespace nlsr::util {
 
 /*!
    \brief search a name component in ndn::Name and return the position of the component
@@ -42,13 +41,12 @@ getNameComponentPosition(const ndn::Name& name, const std::string& searchString)
   size_t nameSize = name.size();
   for (uint32_t i = 0; i < nameSize; i++) {
     if (component == name[i]) {
-      return (int32_t)i;
+      return static_cast<int32_t>(i);
     }
   }
   return -1;
 }
 
-} // namespace util
-} // namespace nlsr
+} // namespace nlsr::util
 
 #endif // NLSR_NAME_HELPER_HPP

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -27,18 +27,20 @@
 #include "logger.hpp"
 #include "adjacent.hpp"
 
-#include <boost/math/constants/constants.hpp>
-#include <ndn-cxx/util/logger.hpp>
 #include <cmath>
+#include <boost/lexical_cast.hpp>
+#include <ndn-cxx/util/logger.hpp>
 
 namespace nlsr {
 
 INIT_LOGGER(route.RoutingTableCalculator);
 
-const int LinkStateRoutingTableCalculator::EMPTY_PARENT = -12345;
-const double LinkStateRoutingTableCalculator::INF_DISTANCE = 2147483647;
-const int LinkStateRoutingTableCalculator::NO_MAPPING_NUM = -1;
-const int LinkStateRoutingTableCalculator::NO_NEXT_HOP = -12345;
+const int EMPTY_PARENT = -12345;
+const double INF_DISTANCE = 2147483647;
+const int NO_MAPPING_NUM = -1;
+const int NO_NEXT_HOP = -12345;
+const double UNKNOWN_DISTANCE = -1.0;
+const double UNKNOWN_RADIUS   = -1.0;
 
 void
 RoutingTableCalculator::allocateAdjMatrix()
@@ -67,17 +69,16 @@ RoutingTableCalculator::makeAdjMatrix(const Lsdb& lsdb, Map& pMap)
   auto lsaRange = lsdb.getLsdbIterator<AdjLsa>();
   for (auto lsaIt = lsaRange.first; lsaIt != lsaRange.second; ++lsaIt) {
     auto adjLsa = std::static_pointer_cast<AdjLsa>(*lsaIt);
-    ndn::optional<int32_t> row = pMap.getMappingNoByRouterName(adjLsa->getOriginRouter());
+    auto row = pMap.getMappingNoByRouterName(adjLsa->getOriginRouter());
 
     std::list<Adjacent> adl = adjLsa->getAdl().getAdjList();
     // For each adjacency represented in the LSA
     for (const auto& adjacent : adl) {
-      ndn::optional<int32_t> col = pMap.getMappingNoByRouterName(adjacent.getName());
+      auto col = pMap.getMappingNoByRouterName(adjacent.getName());
       double cost = adjacent.getLinkCost();
 
       if (row && col && *row < static_cast<int32_t>(m_nRouters)
-          && *col < static_cast<int32_t>(m_nRouters))
-      {
+          && *col < static_cast<int32_t>(m_nRouters)) {
         adjMatrix[*row][*col] = cost;
       }
     }
@@ -143,7 +144,7 @@ RoutingTableCalculator::writeAdjMatrixLog(const Map& map) const
   for (size_t i = 0; i < m_nRouters; i++) {
     std::string line;
     for (size_t j = 0; j < m_nRouters; j++) {
-      if (adjMatrix[i][j] == LinkStateRoutingTableCalculator::NO_NEXT_HOP) {
+      if (adjMatrix[i][j] == NO_NEXT_HOP) {
         line += "0 ";
       }
       else {
@@ -240,8 +241,7 @@ LinkStateRoutingTableCalculator::calculatePath(Map& pMap, RoutingTable& rt,
   initMatrix();
   makeAdjMatrix(lsdb, pMap);
   writeAdjMatrixLog(pMap);
-  ndn::optional<int32_t> sourceRouter =
-    pMap.getMappingNoByRouterName(confParam.getRouterPrefix());
+  auto sourceRouter = pMap.getMappingNoByRouterName(confParam.getRouterPrefix());
   allocateParent(); // These two matrices are used in Dijkstra's algorithm.
   allocateDistance(); //
   // We only bother to do the calculation if we have a router by that name.
@@ -346,14 +346,13 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(AdjacencyList& a
         // Fetch its distance
         double routeCost = m_distance[i];
         // Fetch its actual name
-        ndn::optional<ndn::Name> nextHopRouterName= pMap.getRouterNameByMappingNo(nextHopRouter);
+        auto nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
         if (nextHopRouterName) {
           std::string nextHopFace =
             adjacencies.getAdjacent(*nextHopRouterName).getFaceUri().toString();
           // Add next hop to routing table
           NextHop nh(nextHopFace, routeCost);
           rt.addNextHop(*(pMap.getRouterNameByMappingNo(i)), nh);
-
         }
       }
     }
@@ -427,18 +426,13 @@ void LinkStateRoutingTableCalculator::freeDistance()
   delete [] m_distance;
 }
 
-const double HyperbolicRoutingCalculator::MATH_PI = boost::math::constants::pi<double>();
-
-const double HyperbolicRoutingCalculator::UNKNOWN_DISTANCE = -1.0;
-const double HyperbolicRoutingCalculator::UNKNOWN_RADIUS   = -1.0;
-
 void
 HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
                                            Lsdb& lsdb, AdjacencyList& adjacencies)
 {
   NLSR_LOG_TRACE("Calculating hyperbolic paths");
 
-  ndn::optional<int32_t> thisRouter = map.getMappingNoByRouterName(m_thisRouterName);
+  auto thisRouter = map.getMappingNoByRouterName(m_thisRouterName);
 
   // Iterate over directly connected neighbors
   std::list<Adjacent> neighbors = adjacencies.getAdjList();
@@ -462,8 +456,7 @@ HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
     // Install nexthops for this router to the neighbor; direct neighbors have a 0 cost link
     addNextHop(srcRouterName, srcFaceUri, 0, rt);
 
-    ndn::optional<int32_t> src = map.getMappingNoByRouterName(srcRouterName);
-
+    auto src = map.getMappingNoByRouterName(srcRouterName);
     if (!src) {
       NLSR_LOG_WARN(adj->getName() << " does not exist in the router map!");
       continue;
@@ -474,7 +467,7 @@ HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
       // Don't calculate nexthops to this router or from a router to itself
       if (thisRouter && dest != *thisRouter && dest != *src) {
 
-        ndn::optional<ndn::Name> destRouterName = map.getRouterNameByMappingNo(dest);
+        auto destRouterName = map.getRouterNameByMappingNo(dest);
         if (destRouterName) {
           double distance = getHyperbolicDistance(lsdb, srcRouterName, *destRouterName);
 
@@ -551,6 +544,7 @@ HyperbolicRoutingCalculator::calculateAngularDistance(std::vector<double> angleV
       }
     }
   }
+
   if (angleVectorI[angleVectorI.size()-1] > 2.*M_PI ||
       angleVectorI[angleVectorI.size()-1] < 0.0) {
     NLSR_LOG_ERROR("Angle not within [0, 2PI]");

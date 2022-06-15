@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -32,7 +32,7 @@
 namespace nlsr {
 namespace update {
 
-typedef boost::property_tree::ptree ConfigSection;
+using ConfigSection = boost::property_tree::ptree;
 
 class PrefixUpdateProcessor : public CommandManagerBase
 {
@@ -62,11 +62,11 @@ public:
   bool
   addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix);
 
-  ndn::optional<bool>
-  afterAdvertise(const ndn::Name& prefix);
+  std::optional<bool>
+  afterAdvertise(const ndn::Name& prefix) override;
 
-  ndn::optional<bool>
-  afterWithdraw(const ndn::Name& prefix);
+  std::optional<bool>
+  afterWithdraw(const ndn::Name& prefix) override;
 
   /*! \brief Check if a prefix exists in the nlsr configuration file */
   bool

@@ -26,15 +26,14 @@ namespace test {
 
 BOOST_AUTO_TEST_SUITE(TestRoutingTableEntry)
 
-BOOST_AUTO_TEST_CASE(RoutingTableEntryDestination)
+BOOST_AUTO_TEST_CASE(Destination)
 {
   RoutingTableEntry rte1("router1");
 
   BOOST_CHECK_EQUAL(rte1.getDestination(), "router1");
 }
 
-const uint8_t RoutingTableEntryWithNexthopsData[] =
-{
+const uint8_t RoutingTableEntryWithNexthopsData[] = {
   // Header
   0x91, 0x35,
   // Destination Name
@@ -47,15 +46,14 @@ const uint8_t RoutingTableEntryWithNexthopsData[] =
   0x66, 0x66, 0x66, 0x66
 };
 
-const uint8_t RoutingTableEntryWithoutNexthopsData[] =
-{
+const uint8_t RoutingTableEntryWithoutNexthopsData[] = {
   // Header
   0x91, 0x09,
   // Destination Name
   0x07, 0x07, 0x08, 0x05, 0x64, 0x65, 0x73, 0x74, 0x31
 };
 
-BOOST_AUTO_TEST_CASE(RoutingTableEntryEncodeWithNexthops)
+BOOST_AUTO_TEST_CASE(EncodeWithNexthops)
 {
   RoutingTableEntry rte(ndn::Name("dest1"));
 
@@ -73,7 +71,7 @@ BOOST_AUTO_TEST_CASE(RoutingTableEntryEncodeWithNexthops)
              boost::test_tools::per_element());
 }
 
-BOOST_AUTO_TEST_CASE(RoutingTableEntryDecodeWithNexthops)
+BOOST_AUTO_TEST_CASE(DecodeWithNexthops)
 {
   RoutingTableEntry rte(ndn::Block{RoutingTableEntryWithNexthopsData});
   BOOST_CHECK_EQUAL(rte.getDestination(), "dest1");
@@ -88,21 +86,21 @@ BOOST_AUTO_TEST_CASE(RoutingTableEntryDecodeWithNexthops)
   BOOST_CHECK_EQUAL(it->getRouteCost(), 1.65);
 }
 
-BOOST_AUTO_TEST_CASE(RoutingTableEntryEncodeWithoutNexthops)
+BOOST_AUTO_TEST_CASE(EncodeWithoutNexthops)
 {
   RoutingTableEntry rte(ndn::Name("dest1"));
   BOOST_TEST(rte.wireEncode() == RoutingTableEntryWithoutNexthopsData,
              boost::test_tools::per_element());
 }
 
-BOOST_AUTO_TEST_CASE(RoutingTableEntryDecodeWithoutNexthops)
+BOOST_AUTO_TEST_CASE(DecodeWithoutNexthops)
 {
   RoutingTableEntry rte(ndn::Block{RoutingTableEntryWithoutNexthopsData});
   BOOST_CHECK_EQUAL(rte.getDestination(), "dest1");
   BOOST_CHECK_EQUAL(rte.getNexthopList().size(), 0);
 }
 
-BOOST_AUTO_TEST_CASE(RoutingTableEntryClear)
+BOOST_AUTO_TEST_CASE(Clear)
 {
   RoutingTableEntry rte(ndn::Name("dest1"));
 
@@ -131,7 +129,7 @@ BOOST_AUTO_TEST_CASE(RoutingTableEntryClear)
   BOOST_CHECK_EQUAL(it->getRouteCost(), 99);
 }
 
-BOOST_AUTO_TEST_CASE(RoutingTableEntryOutputStream)
+BOOST_AUTO_TEST_CASE(OutputStream)
 {
   RoutingTableEntry rte(ndn::Name("dest1"));
 

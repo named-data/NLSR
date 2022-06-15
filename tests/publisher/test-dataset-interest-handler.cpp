@@ -55,19 +55,19 @@ BOOST_AUTO_TEST_CASE(Localhost)
 
   // Request adjacency LSAs
   face.receive(ndn::Interest("/localhost/nlsr/lsdb/adjacencies").setCanBePrefix(true));
-  processDatasetInterest([] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
+  processDatasetInterest([] (const ndn::Block& block) { return block.type() == nlsr::tlv::AdjacencyLsa; });
 
   // Request coordinate LSAs
   face.receive(ndn::Interest("/localhost/nlsr/lsdb/coordinates").setCanBePrefix(true));
-  processDatasetInterest([] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
+  processDatasetInterest([] (const ndn::Block& block) { return block.type() == nlsr::tlv::CoordinateLsa; });
 
   // Request Name LSAs
   face.receive(ndn::Interest("/localhost/nlsr/lsdb/names").setCanBePrefix(true));
-  processDatasetInterest([] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
+  processDatasetInterest([] (const ndn::Block& block) { return block.type() == nlsr::tlv::NameLsa; });
 
   // Request Routing Table
   face.receive(ndn::Interest("/localhost/nlsr/routing-table").setCanBePrefix(true));
-  processDatasetInterest([] (const ndn::Block& block) { return block.type() == ndn::tlv::nlsr::RoutingTable; });
+  processDatasetInterest([] (const ndn::Block& block) { return block.type() == nlsr::tlv::RoutingTable; });
 }
 
 BOOST_AUTO_TEST_CASE(RouterName)
@@ -101,19 +101,19 @@ BOOST_AUTO_TEST_CASE(RouterName)
 
   // Request adjacency LSAs
   face.receive(ndn::Interest(ndn::Name(routerName).append("lsdb").append("adjacencies")).setCanBePrefix(true));
-  processDatasetInterest([] (const auto& block) { return block.type() == ndn::tlv::nlsr::AdjacencyLsa; });
+  processDatasetInterest([] (const auto& block) { return block.type() == nlsr::tlv::AdjacencyLsa; });
 
   // Request coordinate LSAs
   face.receive(ndn::Interest(ndn::Name(routerName).append("lsdb").append("coordinates")).setCanBePrefix(true));
-  processDatasetInterest([] (const auto& block) { return block.type() == ndn::tlv::nlsr::CoordinateLsa; });
+  processDatasetInterest([] (const auto& block) { return block.type() == nlsr::tlv::CoordinateLsa; });
 
   // Request Name LSAs
   face.receive(ndn::Interest(ndn::Name(routerName).append("lsdb").append("names")).setCanBePrefix(true));
-  processDatasetInterest([] (const auto& block) { return block.type() == ndn::tlv::nlsr::NameLsa; });
+  processDatasetInterest([] (const auto& block) { return block.type() == nlsr::tlv::NameLsa; });
 
   // Request Routing Table
   face.receive(ndn::Interest(ndn::Name(routerName).append("routing-table")).setCanBePrefix(true));
-  processDatasetInterest([] (const auto& block) { return block.type() == ndn::tlv::nlsr::RoutingTable; });
+  processDatasetInterest([] (const auto& block) { return block.type() == nlsr::tlv::RoutingTable; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

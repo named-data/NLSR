@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "adjacency-list.hpp"
 #include "common.hpp"
@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_CHECK_EQUAL(adjacentList1.getStatusOfNeighbor(n1), Adjacent::STATUS_ACTIVE);
 }
 
-BOOST_AUTO_TEST_CASE(findAdjacentByFaceUri)
+BOOST_AUTO_TEST_CASE(FindAdjacentByFaceUri)
 {
   ndn::FaceUri faceUri("udp4://10.0.0.1:6363");
   Adjacent adj1("/ndn/test/1", faceUri, 10, Adjacent::STATUS_INACTIVE, 0, 0);

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -44,20 +44,20 @@ Map::addEntry(MapEntry& mpe)
   return m_entries.insert(mpe).second;
 }
 
-ndn::optional<ndn::Name>
+std::optional<ndn::Name>
 Map::getRouterNameByMappingNo(int32_t mn) const
 {
   auto&& mappingNumberView = m_entries.get<detail::byMappingNumber>();
   auto it = mappingNumberView.find(mn);
-  return it == mappingNumberView.end() ? ndn::nullopt : ndn::optional<ndn::Name>(it->router);
+  return it == mappingNumberView.end() ? std::nullopt : std::optional(it->router);
 }
 
-ndn::optional<int32_t>
+std::optional<int32_t>
 Map::getMappingNoByRouterName(const ndn::Name& rName)
 {
   auto&& routerNameView = m_entries.get<detail::byRouterName>();
   auto it = routerNameView.find(rName);
-  return it == routerNameView.end() ? ndn::nullopt : ndn::optional<int32_t>(it->mappingNumber);
+  return it == routerNameView.end() ? std::nullopt : std::optional(it->mappingNumber);
 }
 
 void
@@ -66,7 +66,7 @@ Map::writeLog()
   NLSR_LOG_DEBUG("---------------Map----------------------");
   for (const auto& entry : m_entries.get<detail::byRouterName>()) {
     NLSR_LOG_DEBUG("MapEntry: ( Router: " << entry.router << " Mapping No: " <<
-                    entry.mappingNumber << " )");
+                   entry.mappingNumber << " )");
   }
 }
 

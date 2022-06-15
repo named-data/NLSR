@@ -29,8 +29,7 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::test {
 
 /**
  * @brief A fixture providing an in-memory KeyChain.
@@ -96,7 +95,6 @@ private:
   std::vector<std::string> m_certFiles;
 };
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::test
 
 #endif // NLSR_TESTS_KEY_CHAIN_FIXTURE_HPP

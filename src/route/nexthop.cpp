@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -31,11 +31,11 @@ NextHop::wireEncode(ndn::EncodingImpl<TAG>& block) const
 {
   size_t totalLength = 0;
 
-  totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::CostDouble, m_routeCost);
-  totalLength += ndn::encoding::prependStringBlock(block, ndn::tlv::nlsr::Uri, m_connectingFaceUri);
+  totalLength += ndn::encoding::prependDoubleBlock(block, nlsr::tlv::CostDouble, m_routeCost);
+  totalLength += ndn::encoding::prependStringBlock(block, nlsr::tlv::Uri, m_connectingFaceUri);
 
   totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::NextHop);
+  totalLength += block.prependVarNumber(nlsr::tlv::NextHop);
 
   return totalLength;
 }
@@ -68,7 +68,7 @@ NextHop::wireDecode(const ndn::Block& wire)
 
   m_wire = wire;
 
-  if (m_wire.type() != ndn::tlv::nlsr::NextHop) {
+  if (m_wire.type() != nlsr::tlv::NextHop) {
     NDN_THROW(Error("NextHop", m_wire.type()));
   }
 
@@ -76,7 +76,7 @@ NextHop::wireDecode(const ndn::Block& wire)
 
   auto val = m_wire.elements_begin();
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Uri) {
+  if (val != m_wire.elements_end() && val->type() == nlsr::tlv::Uri) {
     m_connectingFaceUri = ndn::encoding::readString(*val);
     ++val;
   }
@@ -84,7 +84,7 @@ NextHop::wireDecode(const ndn::Block& wire)
     NDN_THROW(Error("Missing required Uri field"));
   }
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::CostDouble) {
+  if (val != m_wire.elements_end() && val->type() == nlsr::tlv::CostDouble) {
     m_routeCost = ndn::encoding::readDouble(*val);
     ++val;
   }

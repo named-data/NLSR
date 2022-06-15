@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,6 +20,7 @@
  */
 
 #include "prefix-update-processor.hpp"
+#include "logger.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
 
@@ -41,12 +42,12 @@ using SignerTag = ndn::SimpleTag<ndn::Name, 20>;
 
 /** \brief obtain signer from SignerTag attached to Interest, if available
  */
-static ndn::optional<std::string>
+static std::optional<std::string>
 getSignerFromTag(const ndn::Interest& interest)
 {
   auto signerTag = interest.getTag<SignerTag>();
   if (signerTag == nullptr) {
-    return ndn::nullopt;
+    return std::nullopt;
   }
   else {
     return signerTag->get().toUri();
@@ -180,13 +181,13 @@ PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix
   return true;
 }
 
-ndn::optional<bool>
+std::optional<bool>
 PrefixUpdateProcessor::afterAdvertise(const ndn::Name& prefix)
 {
   return addOrDeletePrefix(prefix, true);
 }
 
-ndn::optional<bool>
+std::optional<bool>
 PrefixUpdateProcessor::afterWithdraw(const ndn::Name& prefix)
 {
   return addOrDeletePrefix(prefix, false);

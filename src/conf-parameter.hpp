@@ -23,7 +23,6 @@
 #define NLSR_CONF_PARAMETER_HPP
 
 #include "common.hpp"
-#include "logger.hpp"
 #include "test-access-control.hpp"
 #include "adjacency-list.hpp"
 #include "name-prefix-list.hpp"
@@ -31,6 +30,8 @@
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
 #include <ndn-cxx/security/certificate-fetcher-direct-fetch.hpp>
+
+#include <optional>
 
 namespace nlsr {
 
@@ -475,7 +476,7 @@ public:
     return m_keyChain;
   }
 
-  ndn::optional<ndn::security::Certificate>
+  std::optional<ndn::security::Certificate>
   initializeKey();
 
   void
@@ -530,7 +531,8 @@ private:
   SyncProtocol m_syncProtocol;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  static const uint64_t SYNC_VERSION;
+  // must be incremented when breaking changes are made to sync
+  static constexpr uint64_t SYNC_VERSION = 10;
 
   AdjacencyList m_adjl;
   NamePrefixList m_npl;

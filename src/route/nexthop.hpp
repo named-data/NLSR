@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -142,7 +142,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
       e.g  costs 12.34 and 12.35 will be installed into NFD's FIB as 12340 and 12350
   */
-  static const uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 1000;
+  static constexpr uint64_t HYPERBOLIC_COST_ADJUSTMENT_FACTOR = 1000;
 };
 
 NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(NextHop);

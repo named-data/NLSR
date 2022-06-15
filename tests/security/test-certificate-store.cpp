@@ -119,7 +119,7 @@ public:
   const boost::filesystem::path ROOT_CERT_PATH;
 };
 
-BOOST_FIXTURE_TEST_SUITE(TestSecurityCertificateStore, CertificateStoreFixture)
+BOOST_FIXTURE_TEST_SUITE(TestCertificateStore, CertificateStoreFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -54,7 +54,7 @@ NameLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
   totalLength += Lsa::wireEncode(block);
 
   totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::NameLsa);
+  totalLength += block.prependVarNumber(nlsr::tlv::NameLsa);
 
   return totalLength;
 }
@@ -84,7 +84,7 @@ NameLsa::wireDecode(const ndn::Block& wire)
 {
   m_wire = wire;
 
-  if (m_wire.type() != ndn::tlv::nlsr::NameLsa) {
+  if (m_wire.type() != nlsr::tlv::NameLsa) {
     NDN_THROW(Error("NameLsa", m_wire.type()));
   }
 
@@ -92,7 +92,7 @@ NameLsa::wireDecode(const ndn::Block& wire)
 
   auto val = m_wire.elements_begin();
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
+  if (val != m_wire.elements_end() && val->type() == nlsr::tlv::Lsa) {
     Lsa::wireDecode(*val);
     ++val;
   }
@@ -164,7 +164,7 @@ NameLsa::update(const std::shared_ptr<Lsa>& lsa)
     updated = true;
   }
 
-  return std::make_tuple(updated, namesToAdd, namesToRemove);
+  return {updated, namesToAdd, namesToRemove};
 }
 
 std::ostream&

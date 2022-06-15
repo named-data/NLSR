@@ -20,14 +20,12 @@
 
 #include "conf-parameter.hpp"
 #include "logger.hpp"
+
 #include <ndn-cxx/security/signing-helpers.hpp>
 
 namespace nlsr {
 
 INIT_LOGGER(ConfParameter);
-
-// To be changed when breaking changes are made to sync
-const uint64_t ConfParameter::SYNC_VERSION = 10;
 
 static std::unique_ptr<ndn::security::CertificateFetcherDirectFetch>
 makeCertificateFetcher(ndn::Face& face)
@@ -119,7 +117,7 @@ ConfParameter::loadCertToValidator(const ndn::security::Certificate& cert)
   m_prefixUpdateValidator.loadAnchor("Authoritative-Certificate", ndn::security::Certificate(cert));
 }
 
-ndn::optional<ndn::security::Certificate>
+std::optional<ndn::security::Certificate>
 ConfParameter::initializeKey()
 {
   using namespace ndn::security;
@@ -133,7 +131,7 @@ ConfParameter::initializeKey()
     NLSR_LOG_ERROR("Router identity " << m_routerPrefix << " not found. "
                    "NLSR is running without security. "
                    "If security is enabled in the configuration, NLSR will not converge.");
-    return ndn::nullopt;
+    return std::nullopt;
   }
   catch (const std::invalid_argument& e) {
     // This is (probably) needed for the dummy keychain patch.
@@ -155,7 +153,7 @@ ConfParameter::initializeKey()
       NLSR_LOG_ERROR(exceptionText);
       throw;
     }
-    return ndn::nullopt;
+    return std::nullopt;
   }
 
   auto key = m_keyChain.createIdentity(instanceName).getDefaultKey();

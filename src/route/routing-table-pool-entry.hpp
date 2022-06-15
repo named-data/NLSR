@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -16,8 +16,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- *
- **/
+ */
 
 #ifndef NLSR_ROUTING_TABLE_POOL_ENTRY_HPP
 #define NLSR_ROUTING_TABLE_POOL_ENTRY_HPP
@@ -41,6 +40,7 @@ namespace nlsr {
  * maintain a collection of RoutingTablePoolEntries. Then, this new
  * class can be associated with the name prefixes instead of the
  * original entries, which provides a minimal memory solution.
+ *
  * \sa NamePrefixTable
  */
 class NamePrefixTableEntry;
@@ -48,13 +48,7 @@ class NamePrefixTableEntry;
 class RoutingTablePoolEntry : public RoutingTableEntry
 {
 public:
-  RoutingTablePoolEntry()
-  {
-  }
-
-  ~RoutingTablePoolEntry()
-  {
-  }
+  RoutingTablePoolEntry() = default;
 
   RoutingTablePoolEntry(const ndn::Name& dest)
   {
@@ -76,7 +70,7 @@ public:
   }
 
   uint64_t
-  getUseCount()
+  getUseCount() const
   {
     return m_useCount;
   }
@@ -99,16 +93,14 @@ public:
   void
   setNexthopList(NexthopList nhl)
   {
-    m_nexthopList = nhl;
+    m_nexthopList = std::move(nhl);
   }
 
 public:
-  std::unordered_map<ndn::Name, std::weak_ptr<NamePrefixTableEntry>>
-    namePrefixTableEntries;
+  std::unordered_map<ndn::Name, std::weak_ptr<NamePrefixTableEntry>> namePrefixTableEntries;
 
 private:
   uint64_t m_useCount;
-
 };
 
 bool

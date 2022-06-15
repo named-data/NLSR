@@ -45,7 +45,7 @@ public:
 
 BOOST_AUTO_TEST_SUITE(TestRoutingTable)
 
-BOOST_FIXTURE_TEST_CASE(RoutingTableAddNextHop, RoutingTableFixture)
+BOOST_FIXTURE_TEST_CASE(AddNextHop, RoutingTableFixture)
 {
   NextHop nh1;
   const std::string DEST_ROUTER = "destRouter";
@@ -54,8 +54,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableAddNextHop, RoutingTableFixture)
   BOOST_CHECK_EQUAL(rt.findRoutingTableEntry(DEST_ROUTER)->getDestination(), DEST_ROUTER);
 }
 
-const uint8_t RoutingTableData1[] =
-{
+const uint8_t RoutingTableData1[] = {
   // Header
   0x90, 0x20,
   // Routing table entry
@@ -67,39 +66,30 @@ const uint8_t RoutingTableData1[] =
   0x66, 0x66, 0x66, 0x66, 0x66
 };
 
-const uint8_t RoutingTableData2[] =
-{
+const uint8_t RoutingTableData2[] = {
   // Header
   0x90, 0x00
 };
 
-BOOST_FIXTURE_TEST_CASE(RoutingTableEncode1, RoutingTableFixture)
+BOOST_FIXTURE_TEST_CASE(Encode, RoutingTableFixture)
 {
   NextHop nexthops;
   nexthops.setConnectingFaceUri("nexthop");
   nexthops.setRouteCost(1.65);
   rt.addNextHop("dest1", nexthops);
-
-  auto wire = rt.wireEncode();
-  BOOST_REQUIRE_EQUAL_COLLECTIONS(RoutingTableData1,
-                                  RoutingTableData1 + sizeof(RoutingTableData1),
-                                  wire.begin(), wire.end());
+  BOOST_TEST(rt.wireEncode() == RoutingTableData1, boost::test_tools::per_element());
 }
 
-BOOST_FIXTURE_TEST_CASE(RoutingTableEncode2, RoutingTableFixture)
+BOOST_FIXTURE_TEST_CASE(EncodeEmpty, RoutingTableFixture)
 {
-  auto wire = rt.wireEncode();
-  BOOST_REQUIRE_EQUAL_COLLECTIONS(RoutingTableData2,
-                                  RoutingTableData2 + sizeof(RoutingTableData2),
-                                  wire.begin(), wire.end());
+  BOOST_TEST(rt.wireEncode() == RoutingTableData2, boost::test_tools::per_element());
 }
 
-BOOST_FIXTURE_TEST_CASE(RoutingTableDecode1, RoutingTableFixture)
+BOOST_FIXTURE_TEST_CASE(Decode, RoutingTableFixture)
 {
   RoutingTableStatus rtStatus(ndn::Block{RoutingTableData1});
 
   auto it1 = rtStatus.m_rTable.begin();
-
   ndn::Name des1 = it1->getDestination();
   BOOST_CHECK_EQUAL(des1, "dest1");
 
@@ -110,7 +100,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableDecode1, RoutingTableFixture)
   BOOST_CHECK_EQUAL(rtStatus.m_rTable.size(), 1);
 }
 
-BOOST_FIXTURE_TEST_CASE(RoutingTableOutputStream, RoutingTableFixture)
+BOOST_FIXTURE_TEST_CASE(OutputStream, RoutingTableFixture)
 {
   NextHop nexthops;
   nexthops.setConnectingFaceUri("nexthop");

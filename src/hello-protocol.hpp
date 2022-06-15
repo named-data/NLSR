@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,19 +22,16 @@
 #ifndef NLSR_HELLO_PROTOCOL_HPP
 #define NLSR_HELLO_PROTOCOL_HPP
 
-#include "statistics.hpp"
-#include "test-access-control.hpp"
 #include "conf-parameter.hpp"
 #include "lsdb.hpp"
 #include "route/routing-table.hpp"
+#include "statistics.hpp"
+#include "test-access-control.hpp"
 
-#include <ndn-cxx/util/signal.hpp>
 #include <ndn-cxx/face.hpp>
-#include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
-#include <ndn-cxx/mgmt/nfd/control-response.hpp>
-#include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/security/validation-error.hpp>
-#include <ndn-cxx/security/validator-config.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/util/signal.hpp>
 
 namespace nlsr {
 
@@ -139,8 +136,8 @@ private:
   AdjacencyList& m_adjacencyList;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  static const std::string INFO_COMPONENT;
-  static const std::string NLSR_COMPONENT;
+  static inline const std::string INFO_COMPONENT{"INFO"};
+  static inline const std::string NLSR_COMPONENT{"nlsr"};
 };
 
 } // namespace nlsr

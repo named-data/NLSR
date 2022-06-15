@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -18,15 +18,13 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \author Ashlesh Gawande <agawande@memphis.edu>
- **/
+ */
 
 #include "adjacent.hpp"
 #include "tests/boost-test.hpp"
 
 namespace nlsr {
 namespace test {
-
-using namespace std;
 
 BOOST_AUTO_TEST_SUITE(TestAdjacent)
 
@@ -77,7 +75,7 @@ BOOST_AUTO_TEST_CASE(Accessors)
   BOOST_CHECK_EQUAL(adjacent1.getLinkCost(), 11);
 }
 
-BOOST_AUTO_TEST_CASE(compareFaceUri)
+BOOST_AUTO_TEST_CASE(CompareFaceUri)
 {
   const ndn::Name ADJ_NAME_1 = "name1";
   const ndn::Name ADJ_NAME_2 = "name2";
@@ -90,7 +88,7 @@ BOOST_AUTO_TEST_CASE(compareFaceUri)
   BOOST_CHECK(adjacent1.compareFaceUri(adjacent2.getFaceUri()));
 }
 
-BOOST_AUTO_TEST_CASE(compareFaceId)
+BOOST_AUTO_TEST_CASE(CompareFaceId)
 {
   const ndn::Name ADJ_NAME_1 = "name1";
   const ndn::Name ADJ_NAME_2 = "name2";

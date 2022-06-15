@@ -21,17 +21,14 @@
 #include "hello-protocol.hpp"
 #include "nlsr.hpp"
 #include "lsdb.hpp"
-#include "utility/name-helper.hpp"
 #include "logger.hpp"
+#include "utility/name-helper.hpp"
 
 #include <ndn-cxx/encoding/nfd-constants.hpp>
 
 namespace nlsr {
 
 INIT_LOGGER(HelloProtocol);
-
-const std::string HelloProtocol::INFO_COMPONENT = "INFO";
-const std::string HelloProtocol::NLSR_COMPONENT = "nlsr";
 
 HelloProtocol::HelloProtocol(ndn::Face& face, ndn::KeyChain& keyChain,
                              ConfParameter& confParam, RoutingTable& routingTable,
@@ -204,9 +201,9 @@ HelloProtocol::processInterestTimedOut(const ndn::Interest& interest)
   }
 }
 
-  // This is the first function that incoming Hello data will
-  // see. This checks if the data appears to be signed, and passes it
-  // on to validate the content of the data.
+// This is the first function that incoming Hello data will
+// see. This checks if the data appears to be signed, and passes it
+// on to validate the content of the data.
 void
 HelloProtocol::onContent(const ndn::Interest& interest, const ndn::Data& data)
 {

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,9 +22,7 @@
 #ifndef NLSR_TLV_NLSR_HPP
 #define NLSR_TLV_NLSR_HPP
 
-namespace ndn {
-namespace tlv {
-namespace nlsr {
+namespace nlsr::tlv {
 
 /*! The TLV block types that NLSR uses to encode/decode LSA types. The
  *  way NLSR encodes LSAs to TLV is by encoding each element of the
@@ -47,11 +45,9 @@ enum {
   Uri                         = 141,
   NextHop                     = 143,
   RoutingTable                = 144,
-  RoutingTableEntry           = 145
+  RoutingTableEntry           = 145,
 };
 
-} // namespace nlsr
-} // namespace tlv
-} // namespace ndn
+} // namespace nlsr::tlv
 
 #endif // NLSR_TLV_NLSR_HPP

@@ -30,8 +30,7 @@
 
 #include <boost/asio/io_service.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::test {
 
 class IoFixture : public ClockFixture
 {
@@ -53,7 +52,6 @@ protected:
   boost::asio::io_service m_io;
 };
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::test
 
 #endif // NLSR_TESTS_IO_FIXTURE_HPP

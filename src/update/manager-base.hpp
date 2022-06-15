@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -27,7 +27,6 @@
 #include "lsdb.hpp"
 #include "nfd-rib-commands.hpp"
 #include "prefix-update-commands.hpp"
-#include "logger.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/interest.hpp>
@@ -38,6 +37,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <iostream>
+#include <optional>
 
 namespace nlsr {
 
@@ -95,7 +95,7 @@ private:
   std::string m_module;
 };
 
-class CommandManagerBase: public ManagerBase
+class CommandManagerBase : public ManagerBase
 {
 public:
   CommandManagerBase(ndn::mgmt::Dispatcher& m_dispatcher,
@@ -103,7 +103,8 @@ public:
                      Lsdb& lsdb,
                      const std::string& module);
 
-  virtual ~CommandManagerBase() {}
+  virtual
+  ~CommandManagerBase() = default;
 
   /*! \brief add desired name prefix to the advertised name prefix list
    *         or insert a prefix into the FIB if parameters is valid.
@@ -126,14 +127,20 @@ public:
   /*! \brief save an advertised prefix to the nlsr configuration file
    *         returns bool from the overridden function while nullopt here
    */
-  virtual ndn::optional<bool>
-  afterAdvertise(const ndn::Name& prefix) { return ndn::nullopt; }
+  virtual std::optional<bool>
+  afterAdvertise(const ndn::Name& prefix)
+  {
+    return std::nullopt;
+  }
 
   /*! \brief save an advertised prefix to the nlsr configuration file
    *         returns bool from the overridden function while nullopt here
    */
-  virtual ndn::optional<bool>
-  afterWithdraw(const ndn::Name& prefix) { return ndn::nullopt; }
+  virtual std::optional<bool>
+  afterWithdraw(const ndn::Name& prefix)
+  {
+    return std::nullopt;
+  }
 
 protected:
   NamePrefixList& m_namePrefixList;

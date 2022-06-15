@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -32,8 +32,8 @@ namespace nlsr {
 class AdjacencyList
 {
 public:
-  typedef std::list<Adjacent>::const_iterator const_iterator;
-  typedef std::list<Adjacent>::iterator iterator;
+  using const_iterator = std::list<Adjacent>::const_iterator;
+  using iterator = std::list<Adjacent>::iterator;
 
   bool
   insert(const Adjacent& adjacent);
@@ -116,12 +116,8 @@ public:
     converted to Name and findAdjacent(Name) be used.
     So when faceUri is passed as string this will cause a compile error
    */
-  template <typename T = float> void
-  findAdjacent(const std::string& faceUri)
-  {
-    BOOST_STATIC_ASSERT_MSG(std::is_integral<T>::value,
-      "Don't use std::string with findAdjacent!");
-  }
+  void
+  findAdjacent(const std::string&) = delete;
 
   uint64_t
   getFaceId(const ndn::FaceUri& faceUri);

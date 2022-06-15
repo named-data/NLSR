@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ValidateParametersFailure, NfdRibCommand, Commands
   BOOST_CHECK(!wasValidated);
 }
 
-BOOST_AUTO_TEST_CASE(onReceiveInterestRegisterCommand)
+BOOST_AUTO_TEST_CASE(OnReceiveInterestRegisterCommand)
 {
   ndn::Name name("/localhost/nlsr/rib/register");
   ndn::Name prefixName("/test/prefixA");
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestRegisterCommand)
   BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 }
 
-BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
+BOOST_AUTO_TEST_CASE(OnReceiveInterestUnregisterCommand)
 {
   ndn::Name name("/localhost/nlsr/rib/unregister");
   ndn::Name prefixName("/test/prefixA");
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(onReceiveInterestUnregisterCommand)
   BOOST_CHECK(nameLsaSeqNoBeforeInterest < nlsr.m_lsdb.m_sequencingManager.getNameLsaSeq());
 }
 
-BOOST_AUTO_TEST_CASE(onReceiveInterestInvalidPrefix)
+BOOST_AUTO_TEST_CASE(OnReceiveInterestInvalidPrefix)
 {
   ndn::Name name("/localhost/invalid/rib/register");
   ndn::Name prefixName("/test/prefixA");

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,15 +17,19 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_NAME_PREFIX_LIST_HPP
 #define NLSR_NAME_PREFIX_LIST_HPP
 
 #include "test-access-control.hpp"
 
+#include <initializer_list>
 #include <list>
 #include <string>
+#include <tuple>
+#include <vector>
+
 #include <ndn-cxx/name.hpp>
 
 namespace nlsr {
@@ -34,6 +38,7 @@ class NamePrefixList
 {
 public:
   using NamePair = std::tuple<ndn::Name, std::vector<std::string>>;
+
   enum NamePairIndex {
     NAME,
     SOURCES
@@ -41,21 +46,20 @@ public:
 
   NamePrefixList();
 
-  NamePrefixList(const std::initializer_list<ndn::Name>& names);
+  explicit
+  NamePrefixList(ndn::span<const ndn::Name> names);
 
-  NamePrefixList(const std::initializer_list<NamePrefixList::NamePair>& namesAndSources);
-
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  template<class ContainerType>
-  NamePrefixList(const ContainerType& names)
+#ifdef WITH_TESTS
+  NamePrefixList(std::initializer_list<ndn::Name> names)
+    : NamePrefixList(ndn::span<const ndn::Name>(names))
   {
-    for (const auto& elem : names) {
-      m_names.push_back(NamePair{elem, {""}});
-    }
   }
 
-public:
-  ~NamePrefixList();
+  NamePrefixList(std::initializer_list<NamePair> namesAndSources)
+    : m_names(namesAndSources)
+  {
+  }
+#endif
 
   /*! \brief inserts name into NamePrefixList
       \retval true If the name was successfully inserted.

@@ -367,15 +367,12 @@ Nlsrc::fetchFromRt(const std::function<void(const T&)>& recordDataset)
 
 template<class T>
 void
-Nlsrc::onFetchSuccess(const ndn::ConstBufferPtr& data,
+Nlsrc::onFetchSuccess(const ndn::ConstBufferPtr& buf,
                       const std::function<void(const T&)>& recordDataset)
 {
-  ndn::Block block;
   size_t offset = 0;
-
-  while (offset < data->size()) {
-    bool isOk = false;
-    std::tie(isOk, block) = ndn::Block::fromBuffer(data, offset);
+  while (offset < buf->size()) {
+    auto [isOk, block] = ndn::Block::fromBuffer(buf, offset);
 
     if (!isOk) {
       std::cerr << "ERROR: cannot decode LSA TLV" << std::endl;
@@ -384,8 +381,8 @@ Nlsrc::onFetchSuccess(const ndn::ConstBufferPtr& data,
 
     offset += block.size();
 
-    T data(block);
-    recordDataset(data);
+    T dataset(block);
+    recordDataset(dataset);
   }
 
   runNextStep();

@@ -25,14 +25,12 @@
 #include "tests/key-chain-fixture.hpp"
 #include "tests/io-fixture.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::test {
 
 class IoKeyChainFixture : public IoFixture, public KeyChainFixture
 {
 };
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::test
 
 #endif // NLSR_TESTS_IO_KEY_CHAIN_FIXTURE_HPP

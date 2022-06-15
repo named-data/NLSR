@@ -2,15 +2,11 @@
 
 [![CI](https://github.com/named-data/NLSR/actions/workflows/ci.yml/badge.svg)](https://github.com/named-data/NLSR/actions/workflows/ci.yml)
 [![Docs](https://github.com/named-data/NLSR/actions/workflows/docs.yml/badge.svg)](https://github.com/named-data/NLSR/actions/workflows/docs.yml)
-![Language](https://img.shields.io/badge/C%2B%2B-14-blue)
+![Language](https://img.shields.io/badge/C%2B%2B-17-blue)
 ![Latest version](https://img.shields.io/github/v/tag/named-data/NLSR?label=Latest%20version)
 
 For complete documentation and more extensive information,
 please visit the [NLSR homepage](https://named-data.net/doc/NLSR/current/).
-
-If you are new to the NDN software community, please read the
-[Contributor's Guide](https://github.com/named-data/.github/blob/master/CONTRIBUTING.md)
-to get started.
 
 ## Overview
 
@@ -35,19 +31,17 @@ fledged inter-domain routing protocol for NDN.
 
 ## Source releases
 
-The source code and source-code installation instructions are always available at
-the following links:
+The source code and installation instructions are available at the following locations:
 
 - [Installation](https://named-data.net/doc/NLSR/current/INSTALL.html)
 - [Getting Started with NLSR](https://named-data.net/doc/NLSR/current/GETTING-STARTED.html)
 - [GitHub NLSR repository](https://github.com/named-data/NLSR)
 
-## Additional information
+## Additional resources
 
 - [Contributor's Guide](https://github.com/named-data/.github/blob/master/CONTRIBUTING.md)
-- [NLSR Wiki](https://redmine.named-data.net/projects/nlsr/wiki/)
-- Feature requests and bug reports are welcome on our
-  [NLSR on NDN Redmine](https://redmine.named-data.net/projects/nlsr/issues)
+- [NLSR Wiki](https://redmine.named-data.net/projects/nlsr/wiki)
+- [NLSR Issue Tracker](https://redmine.named-data.net/projects/nlsr/issues)
 - [NLSR Mailing List Sign Up](https://listserv.memphis.edu/scripts/wa.exe?GETPW1)
 - [NLSR Mailing List](https://listserv.memphis.edu/scripts/wa.exe?SUBED1=NLSR-HELP-L&A=1)
 - [NLSR Mailing List Archives](https://listserv.memphis.edu/scripts/wa.exe?A0=NLSR-HELP-L)

@@ -31,16 +31,13 @@ namespace nlsr {
 
 INIT_LOGGER(Lsdb);
 
-const ndn::time::steady_clock::TimePoint Lsdb::DEFAULT_LSA_RETRIEVAL_DEADLINE =
-  ndn::time::steady_clock::TimePoint::min();
-
 Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   : m_face(face)
   , m_scheduler(face.getIoService())
   , m_confParam(confParam)
   , m_sync(m_face,
-           [this] (const ndn::Name& routerName, const Lsa::Type& lsaType,
-                   const uint64_t& sequenceNumber, uint64_t incomingFaceId) {
+           [this] (const auto& routerName, const Lsa::Type& lsaType,
+                   uint64_t sequenceNumber, uint64_t incomingFaceId) {
              return isLsaNew(routerName, lsaType, sequenceNumber);
            }, m_confParam)
   , m_lsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()))
@@ -249,10 +246,7 @@ Lsdb::installLsa(std::shared_ptr<Lsa> lsa)
     chkLsa->setSeqNo(lsa->getSeqNo());
     chkLsa->setExpirationTimePoint(lsa->getExpirationTimePoint());
 
-    bool updated;
-    std::list<ndn::Name> namesToAdd, namesToRemove;
-    std::tie(updated, namesToAdd, namesToRemove) = chkLsa->update(lsa);
-
+    auto [updated, namesToAdd, namesToRemove] = chkLsa->update(lsa);
     if (updated) {
       onLsdbModified(lsa, LsdbUpdate::UPDATED, namesToAdd, namesToRemove);
     }

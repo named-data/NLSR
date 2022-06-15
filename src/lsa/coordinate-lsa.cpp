@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -65,16 +65,15 @@ CoordinateLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
   size_t totalLength = 0;
 
   for (auto it = m_hyperbolicAngles.rbegin(); it != m_hyperbolicAngles.rend(); ++it) {
-    totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::HyperbolicAngle, *it);
+    totalLength += ndn::encoding::prependDoubleBlock(block, nlsr::tlv::HyperbolicAngle, *it);
   }
 
-  totalLength += ndn::encoding::prependDoubleBlock(block, ndn::tlv::nlsr::HyperbolicRadius,
-                                                   m_hyperbolicRadius);
+  totalLength += ndn::encoding::prependDoubleBlock(block, nlsr::tlv::HyperbolicRadius, m_hyperbolicRadius);
 
   totalLength += Lsa::wireEncode(block);
 
   totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::CoordinateLsa);
+  totalLength += block.prependVarNumber(nlsr::tlv::CoordinateLsa);
 
   return totalLength;
 }
@@ -104,7 +103,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
 {
   m_wire = wire;
 
-  if (m_wire.type() != ndn::tlv::nlsr::CoordinateLsa) {
+  if (m_wire.type() != nlsr::tlv::CoordinateLsa) {
     NDN_THROW(Error("CoordinateLsa", m_wire.type()));
   }
 
@@ -112,7 +111,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
 
   auto val = m_wire.elements_begin();
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
+  if (val != m_wire.elements_end() && val->type() == nlsr::tlv::Lsa) {
     Lsa::wireDecode(*val);
     ++val;
   }
@@ -120,7 +119,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
     NDN_THROW(Error("Missing required Lsa field"));
   }
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::HyperbolicRadius) {
+  if (val != m_wire.elements_end() && val->type() == nlsr::tlv::HyperbolicRadius) {
     m_hyperbolicRadius = ndn::encoding::readDouble(*val);
     ++val;
   }
@@ -130,7 +129,7 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
 
   std::vector<double> angles;
   for (; val != m_wire.elements_end(); ++val) {
-    if (val->type() == ndn::tlv::nlsr::HyperbolicAngle) {
+    if (val->type() == nlsr::tlv::HyperbolicAngle) {
       angles.push_back(ndn::encoding::readDouble(*val));
     }
     else {
@@ -164,9 +163,9 @@ CoordinateLsa::update(const std::shared_ptr<Lsa>& lsa)
     for (const auto& angle : clsa->getCorTheta()) {
       m_hyperbolicAngles.push_back(angle);
     }
-    return std::make_tuple(true, std::list<ndn::Name>{}, std::list<ndn::Name>{});
+    return {true, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
   }
-  return std::make_tuple(false, std::list<ndn::Name>{}, std::list<ndn::Name>{});
+  return {false, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
 }
 
 std::ostream&

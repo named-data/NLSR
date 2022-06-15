@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -62,7 +62,7 @@ AdjLsa::wireEncode(ndn::EncodingImpl<TAG>& block) const
   totalLength += Lsa::wireEncode(block);
 
   totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::AdjacencyLsa);
+  totalLength += block.prependVarNumber(nlsr::tlv::AdjacencyLsa);
 
   return totalLength;
 }
@@ -92,7 +92,7 @@ AdjLsa::wireDecode(const ndn::Block& wire)
 {
   m_wire = wire;
 
-  if (m_wire.type() != ndn::tlv::nlsr::AdjacencyLsa) {
+  if (m_wire.type() != nlsr::tlv::AdjacencyLsa) {
     NDN_THROW(Error("AdjacencyLsa", m_wire.type()));
   }
 
@@ -100,7 +100,7 @@ AdjLsa::wireDecode(const ndn::Block& wire)
 
   auto val = m_wire.elements_begin();
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Lsa) {
+  if (val != m_wire.elements_end() && val->type() == nlsr::tlv::Lsa) {
     Lsa::wireDecode(*val);
     ++val;
   }
@@ -110,7 +110,7 @@ AdjLsa::wireDecode(const ndn::Block& wire)
 
   AdjacencyList adl;
   for (; val != m_wire.elements_end(); ++val) {
-    if (val->type() == ndn::tlv::nlsr::Adjacency) {
+    if (val->type() == nlsr::tlv::Adjacency) {
       adl.insert(Adjacent(*val));
     }
     else {
@@ -148,9 +148,9 @@ AdjLsa::update(const std::shared_ptr<Lsa>& lsa)
     for (const auto& adjacent : alsa->getAdl()) {
       addAdjacent(adjacent);
     }
-    return std::make_tuple(true, std::list<ndn::Name>{}, std::list<ndn::Name>{});
+    return {true, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
   }
-  return std::make_tuple(false, std::list<ndn::Name>{}, std::list<ndn::Name>{});
+  return {false, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
 }
 
 std::ostream&

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -31,16 +31,17 @@
 
 namespace nlsr {
 
-typedef NexthopListT<NextHopUriSortedComparator> NextHopsUriSortedSet;
+using NextHopsUriSortedSet = NexthopListT<NextHopUriSortedComparator>;
 
-struct FibEntry {
+struct FibEntry
+{
   ndn::Name name;
   ndn::scheduler::ScopedEventId refreshEventId;
   int32_t seqNo = 1;
   NextHopsUriSortedSet nexthopSet;
 };
 
-typedef std::function<void(FibEntry&)> afterRefreshCallback;
+using AfterRefreshCallback = std::function<void(FibEntry&)>;
 
 class AdjacencyList;
 class ConfParameter;
@@ -135,7 +136,7 @@ public:
                  uint8_t times);
 
   void
-  setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t count);
+  setStrategy(const ndn::Name& name, const ndn::Name& strategy, uint32_t count);
 
   void
   writeLog();
@@ -204,7 +205,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
    * \sa Fib::scheduleLoop
    */
   void
-  scheduleEntryRefresh(FibEntry& entry, const afterRefreshCallback& refreshCb);
+  scheduleEntryRefresh(FibEntry& entry, const AfterRefreshCallback& refreshCb);
 
 private:
   /*! \brief Continue the entry refresh cycle.
@@ -215,12 +216,13 @@ private:
   /*! \brief Refreshes an entry in NFD.
    */
   void
-  refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb);
+  refreshEntry(const ndn::Name& name, AfterRefreshCallback refreshCb);
 
 public:
-  static const std::string MULTICAST_STRATEGY;
-  static const std::string BEST_ROUTE_V2_STRATEGY;
-  ndn::util::Signal<Fib, const ndn::Name&> onPrefixRegistrationSuccess;
+  static inline const ndn::Name MULTICAST_STRATEGY{"/localhost/nfd/strategy/multicast"};
+  static inline const ndn::Name BEST_ROUTE_STRATEGY{"/localhost/nfd/strategy/best-route"};
+
+  ndn::util::Signal<Fib, ndn::Name> onPrefixRegistrationSuccess;
 
 private:
   ndn::Scheduler& m_scheduler;

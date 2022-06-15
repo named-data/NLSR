@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -29,9 +29,12 @@
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/tag.hpp>
 
+#include <optional>
+
 namespace nlsr {
 
-struct MapEntry {
+struct MapEntry
+{
   ndn::Name router;
   int32_t mappingNumber = -1;
 };
@@ -104,10 +107,10 @@ public:
     }
   }
 
-  ndn::optional<ndn::Name>
+  std::optional<ndn::Name>
   getRouterNameByMappingNo(int32_t mn) const;
 
-  ndn::optional<int32_t>
+  std::optional<int32_t>
   getMappingNoByRouterName(const ndn::Name& rName);
 
   size_t

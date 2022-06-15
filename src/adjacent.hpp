@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,13 +17,13 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #ifndef NLSR_ADJACENT_HPP
 #define NLSR_ADJACENT_HPP
 
-#include <string>
 #include <cmath>
+#include <string>
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/net/face-uri.hpp>
@@ -183,8 +183,8 @@ public:
   wireDecode(const ndn::Block& wire);
 
 public:
-  static const double DEFAULT_LINK_COST;
-  static const double NON_ADJACENT_COST;
+  static constexpr double DEFAULT_LINK_COST = 10.0;
+  static constexpr double NON_ADJACENT_COST = -12345.0;
 
 private:
   /*! m_name The NLSR-configured router name of the neighbor */

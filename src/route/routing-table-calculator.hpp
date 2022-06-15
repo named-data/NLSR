@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -26,8 +26,6 @@
 #include "lsa/adj-lsa.hpp"
 #include "lsdb.hpp"
 #include "conf-parameter.hpp"
-
-#include <list>
 
 namespace nlsr {
 
@@ -193,13 +191,6 @@ private:
 private:
   int* m_parent;
   double* m_distance;
-
-  static const int EMPTY_PARENT;
-  static const double INF_DISTANCE;
-  static const int NO_MAPPING_NUM;
-public:
-  static const int NO_NEXT_HOP;
-
 };
 
 class AdjacencyList;
@@ -236,10 +227,6 @@ private:
   const size_t m_nRouters;
   const bool m_isDryRun;
   const ndn::Name m_thisRouterName;
-
-  static const double MATH_PI;
-  static const double UNKNOWN_DISTANCE;
-  static const double UNKNOWN_RADIUS;
 };
 
 } // namespace nlsr

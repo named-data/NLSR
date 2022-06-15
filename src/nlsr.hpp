@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -159,7 +159,7 @@ private:
   enableIncomingFaceIdIndication();
 
 public:
-  static const ndn::Name LOCALHOST_PREFIX;
+  static inline const ndn::Name LOCALHOST_PREFIX{"/localhost/nlsr"};
 
 private:
   ndn::Face& m_face;

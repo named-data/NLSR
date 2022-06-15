@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -35,17 +35,17 @@
 #include "route/routing-table.hpp"
 #include "route/nexthop-list.hpp"
 #include "lsdb.hpp"
-#include "logger.hpp"
 
-#include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <boost/noncopyable.hpp>
 
 namespace nlsr {
+
 namespace dataset {
-const ndn::Name::Component ADJACENCY_COMPONENT = ndn::Name::Component{"adjacencies"};
-const ndn::Name::Component NAME_COMPONENT = ndn::Name::Component{"names"};
-const ndn::Name::Component COORDINATE_COMPONENT = ndn::Name::Component{"coordinates"};
+inline const ndn::Name::Component ADJACENCY_COMPONENT{"adjacencies"};
+inline const ndn::Name::Component NAME_COMPONENT{"names"};
+inline const ndn::Name::Component COORDINATE_COMPONENT{"coordinates"};
 } // namespace dataset
 
 /*!
@@ -59,11 +59,7 @@ public:
   class Error : std::runtime_error
   {
   public:
-    explicit
-    Error(const std::string& what)
-      : std::runtime_error(what)
-    {
-    }
+    using std::runtime_error::runtime_error;
   };
 
   DatasetInterestHandler(ndn::mgmt::Dispatcher& dispatcher,
@@ -79,7 +75,7 @@ private:
 
   /*! \brief provide LSA status dataset
    */
-  template <typename T>
+  template<typename T>
   void
   publishLsaStatus(const ndn::Name& topPrefix, const ndn::Interest& interest,
                    ndn::mgmt::StatusDatasetContext& context);

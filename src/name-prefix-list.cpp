@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "name-prefix-list.hpp"
 #include "common.hpp"
@@ -26,23 +26,10 @@ namespace nlsr {
 
 NamePrefixList::NamePrefixList() = default;
 
-NamePrefixList::NamePrefixList(const std::initializer_list<ndn::Name>& names)
+NamePrefixList::NamePrefixList(ndn::span<const ndn::Name> names)
 {
-  std::vector<NamePrefixList::NamePair> namePairs;
-  std::transform(names.begin(), names.end(), std::back_inserter(namePairs),
-    [] (const ndn::Name& name) {
-      return NamePrefixList::NamePair{name, {""}};
-    });
-  m_names = std::move(namePairs);
-}
-
-NamePrefixList::NamePrefixList(const std::initializer_list<NamePrefixList::NamePair>& namesAndSources)
-  : m_names(namesAndSources)
-{
-}
-
-NamePrefixList::~NamePrefixList()
-{
+  std::transform(names.begin(), names.end(), std::back_inserter(m_names),
+                 [] (const auto& name) { return NamePair{name, {""}}; });
 }
 
 std::vector<NamePrefixList::NamePair>::iterator
@@ -70,11 +57,11 @@ NamePrefixList::insert(const ndn::Name& name, const std::string& source)
   auto pairItr = get(name);
   if (pairItr == m_names.end()) {
     std::vector<std::string> sources{source};
-    m_names.push_back(std::tie(name, sources));
+    m_names.emplace_back(name, sources);
     return true;
   }
   else {
-    std::vector<std::string>& sources = std::get<NamePrefixList::NamePairIndex::SOURCES>(*pairItr);
+    auto& sources = std::get<NamePrefixList::NamePairIndex::SOURCES>(*pairItr);
     auto sourceItr = getSource(source, pairItr);
     if (sourceItr == sources.end()) {
       sources.push_back(source);
@@ -89,11 +76,11 @@ NamePrefixList::remove(const ndn::Name& name, const std::string& source)
 {
   auto pairItr = get(name);
   if (pairItr != m_names.end()) {
-    std::vector<std::string>& sources = std::get<NamePrefixList::NamePairIndex::SOURCES>(*pairItr);
+    auto& sources = std::get<NamePrefixList::NamePairIndex::SOURCES>(*pairItr);
     auto sourceItr = getSource(source, pairItr);
     if (sourceItr != sources.end()) {
       sources.erase(sourceItr);
-      if (sources.size() == 0) {
+      if (sources.empty()) {
         m_names.erase(pairItr);
       }
       return true;
@@ -141,12 +128,13 @@ NamePrefixList::getSources(const ndn::Name& name) const
     return std::get<NamePrefixList::NamePairIndex::SOURCES>(*it);
   }
   else {
-    return std::vector<std::string>{};
+    return {};
   }
 }
 
 std::ostream&
-operator<<(std::ostream& os, const NamePrefixList& list) {
+operator<<(std::ostream& os, const NamePrefixList& list)
+{
   os << "Name prefix list: {\n";
   for (const auto& name : list.getNames()) {
     os << name << "\n"

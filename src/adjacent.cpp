@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -25,9 +25,6 @@
 namespace nlsr {
 
 INIT_LOGGER(Adjacent);
-
-const double Adjacent::DEFAULT_LINK_COST = 10.0;
-const double Adjacent::NON_ADJACENT_COST = -12345;
 
 Adjacent::Adjacent()
   : m_name()
@@ -86,14 +83,14 @@ Adjacent::wireEncode(ndn::EncodingImpl<TAG>& encoder) const
 {
   size_t totalLength = 0;
 
-  totalLength += prependDoubleBlock(encoder, ndn::tlv::nlsr::Cost, m_linkCost);
+  totalLength += prependDoubleBlock(encoder, nlsr::tlv::Cost, m_linkCost);
 
-  totalLength += prependStringBlock(encoder, ndn::tlv::nlsr::Uri, m_faceUri.toString());
+  totalLength += prependStringBlock(encoder, nlsr::tlv::Uri, m_faceUri.toString());
 
   totalLength += m_name.wireEncode(encoder);
 
   totalLength += encoder.prependVarNumber(totalLength);
-  totalLength += encoder.prependVarNumber(ndn::tlv::nlsr::Adjacency);
+  totalLength += encoder.prependVarNumber(nlsr::tlv::Adjacency);
 
   return totalLength;
 }
@@ -125,7 +122,7 @@ Adjacent::wireDecode(const ndn::Block& wire)
 
   m_wire = wire;
 
-  if (m_wire.type() != ndn::tlv::nlsr::Adjacency) {
+  if (m_wire.type() != nlsr::tlv::Adjacency) {
     NDN_THROW(Error("Adjacency", m_wire.type()));
   }
 
@@ -141,7 +138,7 @@ Adjacent::wireDecode(const ndn::Block& wire)
     NDN_THROW(Error("Missing required Name field"));
   }
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Uri) {
+  if (val != m_wire.elements_end() && val->type() == nlsr::tlv::Uri) {
     m_faceUri = ndn::FaceUri(readString(*val));
     ++val;
   }
@@ -149,7 +146,7 @@ Adjacent::wireDecode(const ndn::Block& wire)
     NDN_THROW(Error("Missing required Uri field"));
   }
 
-  if (val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::Cost) {
+  if (val != m_wire.elements_end() && val->type() == nlsr::tlv::Cost) {
     m_linkCost = ndn::encoding::readDouble(*val);
     ++val;
   }

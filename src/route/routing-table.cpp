@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -262,7 +262,7 @@ RoutingTableStatus::wireEncode(ndn::EncodingImpl<TAG>& block) const
   }
 
   totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::RoutingTable);
+  totalLength += block.prependVarNumber(nlsr::tlv::RoutingTable);
 
   return totalLength;
 }
@@ -294,7 +294,7 @@ RoutingTableStatus::wireDecode(const ndn::Block& wire)
 
   m_wire = wire;
 
-  if (m_wire.type() != ndn::tlv::nlsr::RoutingTable) {
+  if (m_wire.type() != nlsr::tlv::RoutingTable) {
     NDN_THROW(Error("RoutingTable", m_wire.type()));
   }
 
@@ -302,7 +302,7 @@ RoutingTableStatus::wireDecode(const ndn::Block& wire)
   auto val = m_wire.elements_begin();
 
   std::set<ndn::Name> destinations;
-  for (; val != m_wire.elements_end() && val->type() == ndn::tlv::nlsr::RoutingTableEntry; ++val) {
+  for (; val != m_wire.elements_end() && val->type() == nlsr::tlv::RoutingTableEntry; ++val) {
     auto entry = RoutingTableEntry(*val);
 
     if (destinations.emplace(entry.getDestination()).second) {

@@ -33,8 +33,6 @@ namespace nlsr {
 
 INIT_LOGGER(Nlsr);
 
-const ndn::Name Nlsr::LOCALHOST_PREFIX = ndn::Name("/localhost/nlsr");
-
 Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   : m_face(face)
   , m_scheduler(face.getIoService())
@@ -126,8 +124,8 @@ Nlsr::registerStrategyForCerts(const ndn::Name& originRouter)
   ndn::Name instanceKey(originRouter);
   instanceKey.append("nlsr").append(ndn::security::Certificate::KEY_COMPONENT);
 
-  m_fib.setStrategy(routerKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
-  m_fib.setStrategy(instanceKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
+  m_fib.setStrategy(routerKey, Fib::BEST_ROUTE_STRATEGY, 0);
+  m_fib.setStrategy(instanceKey, Fib::BEST_ROUTE_STRATEGY, 0);
 
   ndn::Name siteKey;
   for (size_t i = 0; i < originRouter.size(); ++i) {
@@ -138,10 +136,10 @@ Nlsr::registerStrategyForCerts(const ndn::Name& originRouter)
   }
   ndn::Name opPrefix(siteKey);
   siteKey.append(ndn::security::Certificate::KEY_COMPONENT);
-  m_fib.setStrategy(siteKey, Fib::BEST_ROUTE_V2_STRATEGY, 0);
+  m_fib.setStrategy(siteKey, Fib::BEST_ROUTE_STRATEGY, 0);
 
   opPrefix.append(std::string("%C1.Operator"));
-  m_fib.setStrategy(opPrefix, Fib::BEST_ROUTE_V2_STRATEGY, 0);
+  m_fib.setStrategy(opPrefix, Fib::BEST_ROUTE_STRATEGY, 0);
 }
 
 void

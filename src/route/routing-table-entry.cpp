@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -37,7 +37,7 @@ RoutingTableEntry::wireEncode(ndn::EncodingImpl<TAG>& block) const
   totalLength += m_destination.wireEncode(block);
 
   totalLength += block.prependVarNumber(totalLength);
-  totalLength += block.prependVarNumber(ndn::tlv::nlsr::RoutingTableEntry);
+  totalLength += block.prependVarNumber(nlsr::tlv::RoutingTableEntry);
 
   return totalLength;
 }
@@ -69,7 +69,7 @@ RoutingTableEntry::wireDecode(const ndn::Block& wire)
 
   m_wire = wire;
 
-  if (m_wire.type() != ndn::tlv::nlsr::RoutingTableEntry) {
+  if (m_wire.type() != nlsr::tlv::RoutingTableEntry) {
     NDN_THROW(Error("RoutingTableEntry", m_wire.type()));
   }
 
@@ -85,7 +85,7 @@ RoutingTableEntry::wireDecode(const ndn::Block& wire)
   }
 
   for (; val != m_wire.elements_end(); ++val) {
-    if (val->type() == ndn::tlv::nlsr::NextHop) {
+    if (val->type() == nlsr::tlv::NextHop) {
       m_nexthopList.addNextHop(NextHop(*val));
     }
     else {

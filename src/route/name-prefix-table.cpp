@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -116,15 +116,11 @@ void
 NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
 {
   // Check if the advertised name prefix is in the table already.
-  NptEntryList::iterator nameItr =
-    std::find_if(m_table.begin(),
-                 m_table.end(),
-                 [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
-                   return name == entry->getNamePrefix();
-                 });
+  auto nameItr = std::find_if(m_table.begin(), m_table.end(),
+                              [&] (const auto& entry) { return name == entry->getNamePrefix(); });
 
   // Attempt to find a routing table pool entry (RTPE) we can use.
-  RoutingTableEntryPool::iterator rtpeItr = m_rtpool.find(destRouter);
+  auto rtpeItr = m_rtpool.find(destRouter);
 
   // These declarations just to make the compiler happy...
   RoutingTablePoolEntry rtpe;
@@ -196,8 +192,8 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
   }
 
   // Add the reference to this NPT to the RTPE.
-  rtpePtr->namePrefixTableEntries.emplace(
-    std::make_pair(npte->getNamePrefix(), std::weak_ptr<NamePrefixTableEntry>(npte)));
+  rtpePtr->namePrefixTableEntries.try_emplace(npte->getNamePrefix(),
+                                              std::weak_ptr<NamePrefixTableEntry>(npte));
 }
 
 void
@@ -206,27 +202,23 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
   NLSR_LOG_DEBUG("Removing origin: " << destRouter << " from " << name);
 
   // Fetch an iterator to the appropriate pair object in the pool.
-  RoutingTableEntryPool::iterator rtpeItr = m_rtpool.find(destRouter);
+  auto rtpeItr = m_rtpool.find(destRouter);
 
   // Simple error checking to prevent any unusual behavior in the case
   // that we try to remove an entry that isn't there.
   if (rtpeItr == m_rtpool.end()) {
     NLSR_LOG_DEBUG("No entry for origin: " << destRouter
-               << " found, so it cannot be removed from prefix: "
-               << name);
+                   << " found, so it cannot be removed from prefix: " << name);
     return;
   }
   std::shared_ptr<RoutingTablePoolEntry> rtpePtr = rtpeItr->second;
 
   // Ensure that the entry exists
-  NptEntryList::iterator nameItr =
-    std::find_if(m_table.begin(), m_table.end(),
-                 [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
-                   return entry->getNamePrefix() == name;
-                 });
+  auto nameItr = std::find_if(m_table.begin(), m_table.end(),
+                              [&] (const auto& entry) { return entry->getNamePrefix() == name; });
   if (nameItr != m_table.end()) {
     NLSR_LOG_TRACE("Removing origin: " << rtpePtr->getDestination()
-               << " from prefix: " << **nameItr);
+                   << " from prefix: " << **nameItr);
 
     // Rather than iterating through the whole list periodically, just
     // delete them here if they have no references.
@@ -251,20 +243,20 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
     //
     if ((*nameItr)->getRteListSize() == 0) {
       NLSR_LOG_TRACE(**nameItr << " has no routing table entries;"
-                 << " removing from table and FIB");
+                     << " removing from table and FIB");
       m_table.erase(nameItr);
       m_fib.remove(name);
     }
     else {
       NLSR_LOG_TRACE(**nameItr << " has other routing table entries;"
-                 << " updating FIB with next hops");
+                     << " updating FIB with next hops");
       (*nameItr)->generateNhlfromRteList();
       m_fib.update(name, (*nameItr)->getNexthopList());
     }
   }
   else {
     NLSR_LOG_DEBUG("Attempted to remove origin: " << rtpePtr->getDestination()
-               << " from non-existent prefix: " << name);
+                   << " from non-existent prefix: " << name);
   }
 }
 
@@ -305,33 +297,30 @@ NamePrefixTable::updateWithNewRoute(const std::list<RoutingTableEntry>& entries)
   }
 }
 
-  // Inserts the routing table pool entry into the NPT's RTE storage
-  // pool.  This cannot fail, so the pool is guaranteed to contain the
-  // item after this occurs.
+// Inserts the routing table pool entry into the NPT's RTE storage
+// pool.  This cannot fail, so the pool is guaranteed to contain the
+// item after this occurs.
 std::shared_ptr<RoutingTablePoolEntry>
 NamePrefixTable::addRtpeToPool(RoutingTablePoolEntry& rtpe)
 {
-  RoutingTableEntryPool::iterator poolItr =
-    m_rtpool.insert(std::make_pair(rtpe.getDestination(),
-                                   std::make_shared<RoutingTablePoolEntry>
-                                   (rtpe)))
-    .first;
-  return poolItr->second;
+  auto poolIt = m_rtpool.try_emplace(rtpe.getDestination(),
+                                     std::make_shared<RoutingTablePoolEntry>(rtpe)).first;
+  return poolIt->second;
 }
 
-  // Removes the routing table pool entry from the storage pool. The
-  // postconditions of this function are guaranteed to include that
-  // the storage pool does not contain such an item. Additionally,
-  // this function cannot fail, but nonetheless debug information is
-  // given in the case that this function is called with an entry that
-  // isn't in the pool.
+// Removes the routing table pool entry from the storage pool. The
+// postconditions of this function are guaranteed to include that
+// the storage pool does not contain such an item. Additionally,
+// this function cannot fail, but nonetheless debug information is
+// given in the case that this function is called with an entry that
+// isn't in the pool.
 void
 NamePrefixTable::deleteRtpeFromPool(std::shared_ptr<RoutingTablePoolEntry> rtpePtr)
 {
   if (m_rtpool.erase(rtpePtr->getDestination()) != 1) {
     NLSR_LOG_DEBUG("Attempted to delete non-existent origin: "
-               << rtpePtr->getDestination()
-               << " from NPT routing table entry storage pool.");
+                   << rtpePtr->getDestination()
+                   << " from NPT routing table entry storage pool.");
   }
 }
 

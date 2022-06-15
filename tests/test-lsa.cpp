@@ -101,26 +101,22 @@ BOOST_AUTO_TEST_CASE(NameLsaBasic)
   BOOST_CHECK(nlsa1.getExpirationTimePoint() == nlsa2.getExpirationTimePoint());
 
   auto wire = nlsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(NAME_LSA1, NAME_LSA1 + sizeof(NAME_LSA1),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == NAME_LSA1, boost::test_tools::per_element());
 
   nlsa1.addName("name3");
   wire = nlsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(NAME_LSA_EXTRA_NAME,
-                                NAME_LSA_EXTRA_NAME + sizeof(NAME_LSA_EXTRA_NAME),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == NAME_LSA_EXTRA_NAME, boost::test_tools::per_element());
 
   nlsa1.setSeqNo(14);
   wire = nlsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(NAME_LSA_DIFF_SEQ, NAME_LSA_DIFF_SEQ + sizeof(NAME_LSA_DIFF_SEQ),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == NAME_LSA_DIFF_SEQ, boost::test_tools::per_element());
 
   testTimePoint =
     ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196024993));
   nlsa1.setExpirationTimePoint(testTimePoint);
   wire = nlsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(NAME_LSA_DIFF_TS, NAME_LSA_DIFF_TS + sizeof(NAME_LSA_DIFF_TS),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == NAME_LSA_DIFF_TS, boost::test_tools::per_element());
+
   // Not testing router name as not sure if that will ever change once set
 }
 
@@ -209,28 +205,22 @@ BOOST_AUTO_TEST_CASE(AdjLsaBasic)
   BOOST_CHECK(alsa1.isEqualContent(alsa3));
 
   auto wire = alsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(ADJ_LSA1, ADJ_LSA1 + sizeof(ADJ_LSA1),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == ADJ_LSA1, boost::test_tools::per_element());
 
   Adjacent activeAdjacency2("/ndn/edu/adjacency");
   activeAdjacency2.setStatus(Adjacent::STATUS_ACTIVE);
   alsa1.addAdjacent(activeAdjacency2);
   wire = alsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(ADJ_LSA_EXTRA_NEIGHBOR,
-                                ADJ_LSA_EXTRA_NEIGHBOR + sizeof(ADJ_LSA_EXTRA_NEIGHBOR),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == ADJ_LSA_EXTRA_NEIGHBOR, boost::test_tools::per_element());
 
   alsa1.setSeqNo(14);
   wire = alsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(ADJ_LSA_DIFF_SEQ, ADJ_LSA_DIFF_SEQ + sizeof(ADJ_LSA_DIFF_SEQ),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == ADJ_LSA_DIFF_SEQ, boost::test_tools::per_element());
 
-  testTimePoint =
-    ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196024993));
+  testTimePoint = ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196024993));
   alsa1.setExpirationTimePoint(testTimePoint);
   wire = alsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(ADJ_LSA_DIFF_TS, ADJ_LSA_DIFF_TS + sizeof(ADJ_LSA_DIFF_TS),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == ADJ_LSA_DIFF_TS, boost::test_tools::per_element());
 }
 
 const uint8_t COORDINATE_LSA1[] = {
@@ -286,35 +276,25 @@ BOOST_AUTO_TEST_CASE(CoordinateLsaBasic)
   BOOST_CHECK_EQUAL(clsa1.wireEncode(), clsa2.wireEncode());
 
   auto wire = clsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(COORDINATE_LSA1, COORDINATE_LSA1 + sizeof(COORDINATE_LSA1),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == COORDINATE_LSA1, boost::test_tools::per_element());
 
   std::vector<double> angles3{40.0};
   clsa1.setCorTheta(angles3);
   wire = clsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(COORDINATE_LSA_DIFF_ANGLE,
-                                COORDINATE_LSA_DIFF_ANGLE + sizeof(COORDINATE_LSA_DIFF_ANGLE),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == COORDINATE_LSA_DIFF_ANGLE, boost::test_tools::per_element());
 
   clsa1.setCorRadius(2.3);
   wire = clsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(COORDINATE_LSA_DIFF_RADIUS,
-                                COORDINATE_LSA_DIFF_RADIUS + sizeof(COORDINATE_LSA_DIFF_RADIUS),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == COORDINATE_LSA_DIFF_RADIUS, boost::test_tools::per_element());
 
   clsa1.setSeqNo(14);
   wire = clsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(COORDINATE_LSA_DIFF_SEQ,
-                                COORDINATE_LSA_DIFF_SEQ + sizeof(COORDINATE_LSA_DIFF_SEQ),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == COORDINATE_LSA_DIFF_SEQ, boost::test_tools::per_element());
 
-  testTimePoint =
-    ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196024993));
+  testTimePoint = ndn::time::fromUnixTimestamp(ndn::time::milliseconds(1585196024993));
   clsa1.setExpirationTimePoint(testTimePoint);
   wire = clsa1.wireEncode();
-  BOOST_CHECK_EQUAL_COLLECTIONS(COORDINATE_LSA_DIFF_TS,
-                                COORDINATE_LSA_DIFF_TS + sizeof(COORDINATE_LSA_DIFF_TS),
-                                wire.begin(), wire.end());
+  BOOST_TEST(wire == COORDINATE_LSA_DIFF_TS, boost::test_tools::per_element());
 }
 
 BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
@@ -417,11 +397,11 @@ BOOST_AUTO_TEST_CASE(NameLsaUpdate)
   knownNameLsa.addName("/yoursunny/_/dal");
   knownNameLsa.addName("/ndn");
 
-  std::shared_ptr<Lsa> rcvdLsa = std::make_shared<NameLsa>();
-
+  auto rcvdLsa = std::make_shared<NameLsa>();
   rcvdLsa->m_originRouter = ndn::Name("/yoursunny/_/%C1.Router/dal");
   rcvdLsa->m_seqNo = 2684;
   rcvdLsa->setExpirationTimePoint(ndn::time::system_clock::now() + 3600_ms);
+
   auto nlsa = std::static_pointer_cast<NameLsa>(rcvdLsa);
   nlsa->addName("/ndn");
   nlsa->addName("/yoursunny/_/dal");
@@ -430,12 +410,11 @@ BOOST_AUTO_TEST_CASE(NameLsaUpdate)
   nlsa->addName(addedName1);
   nlsa->addName(addedName2);
 
-  bool updated;
-  std::list<ndn::Name> namesToAdd, namesToRemove;
-  std::tie(updated, namesToAdd, namesToRemove) = knownNameLsa.update(rcvdLsa);
+  auto [updated, namesToAdd, namesToRemove] = knownNameLsa.update(rcvdLsa);
 
-  BOOST_CHECK_EQUAL(namesToRemove.size(), 0);
+  BOOST_CHECK_EQUAL(updated, true);
   BOOST_CHECK_EQUAL(namesToAdd.size(), 2);
+  BOOST_CHECK_EQUAL(namesToRemove.size(), 0);
   auto it = std::find(namesToAdd.begin(), namesToAdd.end(), addedName1);
   BOOST_CHECK(it != namesToAdd.end());
   it = std::find(namesToAdd.begin(), namesToAdd.end(), addedName2);

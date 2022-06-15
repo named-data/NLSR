@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -24,17 +24,13 @@
 #include "logger.hpp"
 #include "nexthop-list.hpp"
 
-#include <map>
-#include <cmath>
 #include <algorithm>
-#include <iterator>
+#include <cmath>
+#include <map>
 
 namespace nlsr {
 
 INIT_LOGGER(route.Fib);
-
-const std::string Fib::MULTICAST_STRATEGY("ndn:/localhost/nfd/strategy/multicast");
-const std::string Fib::BEST_ROUTE_V2_STRATEGY("ndn:/localhost/nfd/strategy/best-route");
 
 Fib::Fib(ndn::Face& face, ndn::Scheduler& scheduler, AdjacencyList& adjacencyList,
          ConfParameter& conf, ndn::security::KeyChain& keyChain)
@@ -109,12 +105,9 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
 
     FibEntry entry;
     entry.name = name;
-
     addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
 
-    m_table.emplace(name, std::move(entry));
-
-    entryIt = m_table.find(name);
+    entryIt = m_table.try_emplace(name, std::move(entry)).first;
   }
   // Existing FIB entry that may or may not have nextHops
   else {
@@ -127,7 +120,7 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
       return;
     }
 
-    FibEntry& entry = (entryIt->second);
+    FibEntry& entry = entryIt->second;
     addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
 
     std::set<NextHop, NextHopUriSortedComparator> hopsToRemove;
@@ -278,7 +271,7 @@ Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
 }
 
 void
-Fib::setStrategy(const ndn::Name& name, const std::string& strategy, uint32_t count)
+Fib::setStrategy(const ndn::Name& name, const ndn::Name& strategy, uint32_t count)
 {
   ndn::nfd::ControlParameters parameters;
   parameters
@@ -311,7 +304,7 @@ Fib::onSetStrategyFailure(const ndn::nfd::ControlResponse& response,
 }
 
 void
-Fib::scheduleEntryRefresh(FibEntry& entry, const afterRefreshCallback& refreshCallback)
+Fib::scheduleEntryRefresh(FibEntry& entry, const AfterRefreshCallback& refreshCallback)
 {
   NLSR_LOG_DEBUG("Scheduling refresh for " << entry.name <<
                  " Seq Num: " << entry.seqNo <<
@@ -329,7 +322,7 @@ Fib::scheduleLoop(FibEntry& entry)
 }
 
 void
-Fib::refreshEntry(const ndn::Name& name, afterRefreshCallback refreshCb)
+Fib::refreshEntry(const ndn::Name& name, AfterRefreshCallback refreshCb)
 {
   auto it = m_table.find(name);
   if (it == m_table.end()) {
