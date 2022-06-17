@@ -420,6 +420,7 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount, uint
   }
   ndn::util::SegmentFetcher::Options options;
   options.interestLifetime = m_confParam.getLsaInterestLifetime();
+  options.maxTimeout = m_confParam.getLsaInterestLifetime();
 
   NLSR_LOG_DEBUG("Fetching Data for LSA: " << interestName << " Seq number: " << seqNo);
   auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest,
@@ -477,7 +478,7 @@ Lsdb::onFetchLsaError(uint32_t errorCode, const std::string& msg, const ndn::Nam
         delay = ndn::time::seconds(0);
       }
       m_scheduler.schedule(delay, std::bind(&Lsdb::expressInterest, this,
-                                            interestName, /*??*/0, retransmitNo + 1, deadline));
+                                            interestName, retransmitNo + 1, /*Multicast FaceID*/0, deadline));
     }
   }
 }
