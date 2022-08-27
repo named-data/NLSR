@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -ex
+set -exo pipefail
 
 PROJ=ChronoSync
 
@@ -35,12 +35,15 @@ sudo rm -f /usr/local/lib{,64}/pkgconfig/"$PROJ".pc
 pushd "$PROJ" >/dev/null
 
 ./waf --color=yes configure
-./waf --color=yes build -j$WAF_JOBS
-sudo_preserve_env PATH -- ./waf --color=yes install
+./waf --color=yes build
+sudo ./waf --color=yes install
 
 popd >/dev/null
 popd >/dev/null
 
-if has Linux $NODE_LABELS; then
+if [[ $ID_LIKE == *fedora* ]]; then
+    sudo tee /etc/ld.so.conf.d/ndn.conf >/dev/null <<< /usr/local/lib64
+fi
+if [[ $ID_LIKE == *linux* ]]; then
     sudo ldconfig
 fi

@@ -17,9 +17,9 @@ A beginners guide to installing and testing NLSR on Fedora
 
 The following instructions are based on the information provided at the
 Named Data Networking project web page [NDNmain]_.
-Before installing NLSR it is necessary to install different libraries
-and programs: ndn-cxx, NFD, ChronoSync [optional], and PSync. This document describes the
-necessary steps to correctly install these programs (§ `2 <#ndncxx>`__,
+Before installing NLSR it is necessary to install different libraries and
+programs: ndn-cxx, NFD, ChronoSync [optional], and PSync. This document describes
+the necessary steps to correctly install these programs (§ `2 <#ndncxx>`__,
 `3 <#nfd>`__ and `4 <#nlsr>`__) and a brief guide on how to configure
 and test NLSR using a simple two-node network (§ `5 <#test>`__).
 
@@ -32,7 +32,7 @@ using the following command:
 
       $ sudo -i
 
-And then using the *passwd* command to set up a password. After setting
+And then using the ``passwd`` command to set up a password. After setting
 up the root user, it is possible to become root by employing the
 following command and providing the root password when prompted:
 
@@ -40,7 +40,7 @@ following command and providing the root password when prompted:
 
       $ su -
 
-Fedora employs the *dnf* command to install and verify installed
+Fedora employs the ``dnf`` command to install and verify installed
 packages. The following commands may become useful during the
 installation process and should be executed as root:
 
@@ -75,7 +75,7 @@ create a directory at the home directory where all the following
 programs may get installed. The name of this directory is not important.
 However, the following are provided as suggestions: project, NDNproject,
 NDNprograms. Each of the programs in the following sections should be
-downloaded to their own directory using the *git* command, and then
+downloaded to their own directory using the ``git`` command, and then
 compiled in this directory.
 
 .. _ndncxx:
@@ -88,7 +88,7 @@ compiled in this directory.
 
 An updated list of the packages and programs that need to be installed
 before installing ndn-cxx, is provided at [NDN-cxx]_.
-This list is also reproduced bellow with the commands to verify that all
+This list is also reproduced below with the commands to verify that all
 the packages have been installed in the system. The following commands
 should be run as root:
 
@@ -99,24 +99,22 @@ should be run as root:
        $ dnf list --installed gcc
        $ dnf list --installed gcc-c++
 
-#. Python version 2.6 or later
+#. Python version 3.6 or later
 
    ::
 
-       $ python -V
+       $ python3 -V
 
-#. libsqlite3
+#. SQLite 3.x
 
    ::
 
-       $ dnf list --installed sqlite
        $ dnf list --installed sqlite-devel
 
-#. openssl version 1.0.1 or later
+#. OpenSSL version 1.1.1 or later
 
    ::
 
-       $ openssl version
        $ dnf list --installed openssl-devel
 
 #. pkgconf that replaces pkg-config
@@ -125,73 +123,47 @@ should be run as root:
 
        $ dnf list --installed pkgconf*
 
-#. boost libraries version 1.54 or later
+#. Boost libraries version 1.65.1 or later
 
    ::
 
-       $ dnf list --installed boost
        $ dnf list --installed boost-devel
 
-#. doxygen
+#. git
+
+   ::
+
+       $ dnf list --installed git
+
+#. doxygen (optional)
 
    ::
 
        $ dnf list --installed doxygen
 
-#. graphviz
+#. graphviz (optional)
 
    ::
 
        $ dnf list --installed graphviz
 
-#. python2-sphinx that replaces python-sphinx
+#. python3-pip (optional)
 
    ::
 
-       $ dnf list --installed python2-sphinx
+       $ dnf list --installed python3-pip
 
-#. After verifying that the python-sphinx package has been installed, it
-   is necessary to run the following two commands:
-
-   ::
-
-       $ pip-3 install sphinxcontrib-doxylink
-       $ pip install sphinxcontrib-googleanalytics
-
-   Note: When the two previous commands are run before correctly
-   installing python-sphinx, the following error message is produced
-   when trying to install this latter package: “Error unpacking rpm
-   package python2-urllib3-1.22-3.fc27.noarch”. To fix this problem, it
-   is necessary to run the following commands before installing
-   python-sphinx again:
+#. After verifying that the python3-pip package has been installed, it
+   is necessary to run the following command:
 
    ::
 
-       $ dnf remove python2-sphinx
-       $ pip uninstall sphinxcontrib-googleanalytics
-       $ pip-3 uninstall sphinxcontrib-doxylink
-       $ pip uninstall urllib3
-
-#. dpkg-architecture
-
-   ::
-
-       $ dnf list --installed dpkg
-       $ dnf list --installed dpkg-dev
-
-#. git and valgrind, which is used when installing NFD (§
-   `3 <#nfd>`__).
-
-   ::
-
-       $ dnf list --installed valgrind
-       $ dnf list --installed valgrind-devel
-       $ dnf list --installed git
+       $ pip install sphinx sphinxcontrib-doxylink
 
 2.2 Downloading and installing ndn-cxx
 --------------------------------------
 
-The *git* command allows to download the ndn-cxx library in its own
+The ``git`` command allows to download the ndn-cxx library in its own
 folder, also called *ndn-cxx*. Therefore it is recommended to execute
 this command at the directory created at § `1 <#intro>`__:
 
@@ -214,7 +186,7 @@ continuing:
       $ ./waf configure --with-examples
 
 Compile the ndn-cxx library and install the compiled files at the
-system’s directories:
+system's directories:
 
 ::
 
@@ -248,8 +220,7 @@ Configure the NDN path:
 
 ::
 
-      $ echo export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig >>
-      /etc/profile.d/ndn.sh
+      $ echo export PKG_CONFIG_PATH=/usr/local/lib64/pkgconfig >> /etc/profile.d/ndn.sh
 
 After this command has been executed, it is necessary to apply the
 changes by either logging out and back in, and then running the
@@ -281,17 +252,16 @@ An updated list of the packages and programs that need to be installed
 before NFD is provided at [NDNNFD]_. Before installing
 NFD it is necessary to verify that the following packages are installed:
 
-#. libpcap libraries
+#. pcap library
 
    ::
 
-       $ dnf list --installed libpcap
        $ dnf list --installed libpcap-devel
 
 3.2 Downloading and installing NFD
 ----------------------------------
 
-This library is downloaded and installed in a folder called *NFD*, which
+This software is downloaded and installed in a folder called *NFD*, which
 should be created at the directory defined at § `1 <#intro>`__. The
 following commands need to be run as a regular user:
 
@@ -303,25 +273,15 @@ following commands need to be run as a regular user:
 
 If the previous command prints an error message saying that waf cannot
 find WebSocket, it is necessary to follow the instructions provided by
-this same output, which tells the user to execute either of the
-following two set of commands:
+this same output, which tells the user to run the following command:
 
 ::
 
-      $ git submodule init && git submodule update
+      $ git submodule update --init
 
-Or:
-
-::
-
-      $ mkdir websocketpp
-      $ curl -L https://github.com/zaphoyd/websocketpp/archive/0.7.0.tar.gz
-        > websocket.tar.gz
-      $ tar zxf websocket.tar.gz -C websocketpp/ --strip 1
-
-After executing either of these instructions, complete the configuration
-by running *./waf configure* again. Then complete the installation by
-means of the following commands:
+After executing these instructions, complete the configuration by running
+``./waf configure`` again. Then complete the installation by means of the
+following commands:
 
 ::
 
@@ -337,7 +297,7 @@ Create a configuration file by running the following command as root:
 
       $ cp /usr/local/etc/ndn/nfd.conf.sample /usr/local/etc/ndn/nfd.conf
 
-After the configuration file has been created, NFD’s behavior may be
+After the configuration file has been created, NFD's behavior may be
 changed by modifying this file. Once the configuration file has been
 created, it is recommended to start NFD by using the following command:
 
@@ -348,7 +308,7 @@ created, it is recommended to start NFD by using the following command:
 This command does not properly allow to employ the command window to
 enter new commands; however it displays the NFD logs. Therefore, it is
 recommended to open a new command window. This second window may be used
-to verify NDF’s status and then stop NFD by using the following
+to verify NDF's status and then stop NFD by using the following
 commands:
 
 ::
@@ -583,10 +543,10 @@ operator and router1, while a different computer only functions as
 router2. *Figure 2* shows this
 configuration. For router1, the twelve steps described before need to be
 executed except for exchanging files between computers. For the router2,
-only steps 10 to 12 are needed to generate this router’s certificate.
+only steps 10 to 12 are needed to generate this router's certificate.
 
 Additionally, the following command may be used to print a list and a
-brief description of all the *ndnsec* commands:
+brief description of all the ``ndnsec`` commands:
 
 ::
 
@@ -614,12 +574,12 @@ After the physical network has been assembled, it is necessary to
 configure the network addresses and cards for all the computers in the
 network. It is important to remember that computers that are connected
 to each other should use the same subnetwork address. It is possible to
-verify the network configuration in a Linux computer by means of the *ip
-addr* command
+verify the network configuration in a Linux computer by means of the
+``ip addr`` command.
 
 Once the physical network and network cards have been configured, it is
 necessary to verify that the computers can communicate with each other.
-The simplest way to do this is by using the *ping* command:
+The simplest way to do this is by using the ``ping`` command:
 
 ::
 
@@ -629,7 +589,7 @@ The simplest way to do this is by using the *ping* command:
 --------------------------------
 
 To start and configure NFD it is necessary to open two terminal windows.
-The first one will be used to start NFD by means of the *nfd-start*
+The first one will be used to start NFD by means of the ``nfd-start``
 command. This terminal will also display the logs that NFD generates. By
 default, NFD only generates informational logs (INFO). However, it is
 possible to obtain different levels of verbosity for these logs. These
@@ -653,7 +613,7 @@ to connect to a neighboring computer:
 
       $ nfdc face create udp4://<remote-ip-address>
 
-The face id may be displayed by running either *nfd-status* or:
+The face id may be displayed by running:
 
 ::
 
@@ -677,7 +637,7 @@ the other machine.
 -------------------------------------
 
 Instructions on how to use the configuration file are already provided
-at the NLSR’s Router Configuration page [NLSRrtrconf]_.
+at the NLSR's Router Configuration page [NLSRrtrconf]_.
 Read the information in this page to understand NLSR router
 configuration. The following text describes the instructions that have
 been modified at the default nlsr.conf file for router1:
@@ -818,19 +778,19 @@ following two commands:
       $ nlsr -f <configuration-file>
 
 However, to verify what is NLSR doing, it becomes necessary to employ
-NLSR’s logging facility [NLSRstarting]_. A brief
-description on how to use NDN’s logging facility may be displayed by
-entering the *man ndn-log* command. This guide recommends using one of
-the following two instructions to start NLSR:
+NLSR's logging facility [NLSRstarting]_. A brief
+description on how to use NDN's logging facility may be displayed by
+entering the ``man ndn-log`` command. This guide recommends using one
+of the following two instructions to start NLSR:
 
 ::
 
       $ export NDN_LOG=nlsr.*=TRACE && nlsr
-      $ export NDN_LOG=nlsr.*=TRACE && nlsr -f <configuration-file>  
+      $ export NDN_LOG=nlsr.*=TRACE && nlsr -f <configuration-file>
 
-The second terminal window may be used to run *nfd-status* again and it
-should be possible to verify that the status has changed, specially at
-the FIB and RIB sections of the generated report.
+The second terminal window may be used to run ``nfd-status`` again and
+it should be possible to verify that the status has changed, specially
+at the FIB and RIB sections of the generated report.
 
 .. _turn_off:
 
@@ -857,7 +817,7 @@ recommended:
 
        $ nfd-stop
 
-#. The crossover Ethernet cable may be unplugged and the computers’
+#. The crossover Ethernet cable may be unplugged and the computers'
    network configuration restored to its original settings.
 
 5.7 Where to go from here
@@ -880,13 +840,13 @@ deployment [NDNTestbed]_.
 
 .. [NDNNFDusage] *NFD usage*, http://named-data.net/doc/NFD/current/manpages/nfd.html, May 2018.
 
-.. [Chronosync] Z. Zhu and A. Afanasyev. *Let’s ChronoSync: Decentralized dataset state synchronization in Named Data Networking*, in IEEE ICNP, October 2013.
+.. [Chronosync] Z. Zhu and A. Afanasyev. *Let's ChronoSync: Decentralized dataset state synchronization in Named Data Networking*, in IEEE ICNP, October 2013.
 
 .. [PSync] M. Zhang, V. Lehman, and L. Wang. *Scalable Name-based Data Synchronization for Named Data Networking*, in IEEE INFOCOM, May 2017.
 
 .. [NLSRsecconf] *NLSR Security Configuration*, http://named-data.net/doc/NLSR/current/SECURITY-CONFIG.html June 2018.
 
-.. [NLSRdevguide] V. Lehman, M. Chowdhury, N. Gordon, A. Gawande. *NLSR Developer’s Guide*, University of Memphis, November 2017.
+.. [NLSRdevguide] V. Lehman, M. Chowdhury, N. Gordon, A. Gawande. *NLSR Developer's Guide*, University of Memphis, November 2017.
 
 .. [NLSRrtrconf] *NLSR Router Configuration*, http://named-data.net/doc/NLSR/current/ROUTER-CONFIG.html, April 2018.
 
