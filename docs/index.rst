@@ -50,7 +50,7 @@ NLSR Documentation
 Downloading
 -----------
 
--  `GitHub NLSR repository <https://github.com/named-data/NLSR>`_
+-  `Source code git repository <https://github.com/named-data/NLSR>`_
 
 NLSR mailing list
 -----------------
