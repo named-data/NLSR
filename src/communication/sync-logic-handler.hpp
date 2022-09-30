@@ -23,17 +23,12 @@
 #define NLSR_SYNC_LOGIC_HANDLER_HPP
 
 #include "conf-parameter.hpp"
-#include "test-access-control.hpp"
-#include "signals.hpp"
 #include "lsa/lsa.hpp"
+#include "signals.hpp"
 #include "sync-protocol-adapter.hpp"
-
-#include <ndn-cxx/face.hpp>
-#include <ndn-cxx/util/signal.hpp>
+#include "test-access-control.hpp"
 
 namespace nlsr {
-
-class ConfParameter;
 
 /*! \brief NLSR-to-ChronoSync interaction point
  *
@@ -41,7 +36,6 @@ class ConfParameter;
  * NLSR and its components. NLSR has no particular reliance on
  * ChronoSync, except that the NLSR source would need to be modified
  * for use with other sync protocols.
- *
  */
 class SyncLogicHandler
 {
@@ -55,7 +49,8 @@ public:
   using IsLsaNew =
     std::function<bool(const ndn::Name&, const Lsa::Type& lsaType, const uint64_t&, uint64_t/*inFace*/)>;
 
-  SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew, const ConfParameter& conf);
+  SyncLogicHandler(ndn::Face& face, ndn::KeyChain& keyChain,
+                   IsLsaNew isLsaNew, const ConfParameter& conf);
 
   /*! \brief Instruct ChronoSync to publish an update.
    *
@@ -92,10 +87,9 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
                         const ndn::Name& updateName, uint64_t seqNo, uint64_t incomingFaceId);
 
 public:
-  std::unique_ptr<OnNewLsa> onNewLsa;
+  OnNewLsa onNewLsa;
 
 private:
-  ndn::Face& m_syncFace;
   IsLsaNew m_isLsaNew;
   const ConfParameter& m_confParam;
 
@@ -105,10 +99,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Name m_coorLsaUserPrefix;
 
   SyncProtocolAdapter m_syncLogic;
-
-private:
-  const std::string NLSR_COMPONENT = "nlsr";
-  const std::string LSA_COMPONENT = "LSA";
 };
 
 } // namespace nlsr

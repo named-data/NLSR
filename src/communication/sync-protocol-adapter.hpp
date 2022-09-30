@@ -25,6 +25,8 @@
 #include "conf-parameter.hpp"
 
 #include <ndn-cxx/face.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+
 #ifdef HAVE_CHRONOSYNC
 #include <ChronoSync/logic.hpp>
 #endif
@@ -32,18 +34,19 @@
 
 namespace nlsr {
 
-typedef std::function<void(const ndn::Name& updateName,
-                           uint64_t seqNo, uint64_t incomingFaceId)> SyncUpdateCallback;
+using SyncUpdateCallback = std::function<void(const ndn::Name& updateName,
+                                              uint64_t seqNo, uint64_t incomingFaceId)>;
 
 class SyncProtocolAdapter
 {
 public:
-  SyncProtocolAdapter(ndn::Face& facePtr,
+  SyncProtocolAdapter(ndn::Face& face,
+                      ndn::KeyChain& keyChain,
                       SyncProtocol syncProtocol,
                       const ndn::Name& syncPrefix,
                       const ndn::Name& userPrefix,
                       ndn::time::milliseconds syncInterestLifetime,
-                      const SyncUpdateCallback& syncUpdateCallback);
+                      SyncUpdateCallback syncUpdateCallback);
 
   /*! \brief Add user node to ChronoSync or PSync
    *
@@ -91,6 +94,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 private:
   SyncProtocol m_syncProtocol;
   SyncUpdateCallback m_syncUpdateCallback;
+
 #ifdef HAVE_CHRONOSYNC
   std::shared_ptr<chronosync::Logic> m_chronoSyncLogic;
 #endif

@@ -22,30 +22,32 @@
 #include "sync-protocol-adapter.hpp"
 #include "logger.hpp"
 
-INIT_LOGGER(SyncProtocolAdapter);
-
 namespace nlsr {
 
+INIT_LOGGER(SyncProtocolAdapter);
+
+#ifdef HAVE_CHRONOSYNC
 const auto FIXED_SESSION = ndn::name::Component::fromNumber(0);
+#endif
 
 SyncProtocolAdapter::SyncProtocolAdapter(ndn::Face& face,
+                                         ndn::KeyChain& keyChain,
                                          SyncProtocol syncProtocol,
                                          const ndn::Name& syncPrefix,
                                          const ndn::Name& userPrefix,
                                          ndn::time::milliseconds syncInterestLifetime,
-                                         const SyncUpdateCallback& syncUpdateCallback)
- : m_syncProtocol(syncProtocol)
- , m_syncUpdateCallback(syncUpdateCallback)
+                                         SyncUpdateCallback syncUpdateCallback)
+  : m_syncProtocol(syncProtocol)
+  , m_syncUpdateCallback(std::move(syncUpdateCallback))
 {
-  NLSR_LOG_TRACE("SyncProtocol value: " << m_syncProtocol);
-
+  switch (m_syncProtocol) {
 #ifdef HAVE_CHRONOSYNC
-  if (m_syncProtocol == SYNC_PROTOCOL_CHRONOSYNC) {
+  case SyncProtocol::CHRONOSYNC:
     NDN_LOG_DEBUG("Using ChronoSync");
     m_chronoSyncLogic = std::make_shared<chronosync::Logic>(face,
                           syncPrefix,
                           userPrefix,
-                          std::bind(&SyncProtocolAdapter::onChronoSyncUpdate, this, _1),
+                          [this] (auto&&... args) { onChronoSyncUpdate(std::forward<decltype(args)>(args)...); },
                           chronosync::Logic::DEFAULT_NAME,
                           chronosync::Logic::DEFAULT_VALIDATOR,
                           chronosync::Logic::DEFAULT_RESET_TIMER,
@@ -55,42 +57,55 @@ SyncProtocolAdapter::SyncProtocolAdapter(ndn::Face& face,
                           chronosync::Logic::DEFAULT_SYNC_REPLY_FRESHNESS,
                           chronosync::Logic::DEFAULT_RECOVERY_INTEREST_LIFETIME,
                           FIXED_SESSION);
-    return;
-  }
+    break;
 #endif
-
-  NDN_LOG_DEBUG("Using PSync");
-  m_psyncLogic = std::make_shared<psync::FullProducer>(80,
-                   face,
-                   syncPrefix,
-                   userPrefix,
-                   std::bind(&SyncProtocolAdapter::onPSyncUpdate, this, _1),
-                   syncInterestLifetime);
+  case SyncProtocol::PSYNC:
+    NDN_LOG_DEBUG("Using PSync");
+    m_psyncLogic = std::make_shared<psync::FullProducer>(face,
+                     keyChain,
+                     80,
+                     syncPrefix,
+                     userPrefix,
+                     [this] (auto&&... args) { onPSyncUpdate(std::forward<decltype(args)>(args)...); },
+                     syncInterestLifetime);
+    break;
+  default:
+    NDN_CXX_UNREACHABLE;
+  }
 }
 
 void
 SyncProtocolAdapter::addUserNode(const ndn::Name& userPrefix)
 {
+  switch (m_syncProtocol) {
 #ifdef HAVE_CHRONOSYNC
-  if (m_syncProtocol == SYNC_PROTOCOL_CHRONOSYNC) {
+  case SyncProtocol::CHRONOSYNC:
     m_chronoSyncLogic->addUserNode(userPrefix, chronosync::Logic::DEFAULT_NAME, FIXED_SESSION);
-    return;
-  }
+    break;
 #endif
-
-  m_psyncLogic->addUserNode(userPrefix);
+  case SyncProtocol::PSYNC:
+    m_psyncLogic->addUserNode(userPrefix);
+    break;
+  default:
+    NDN_CXX_UNREACHABLE;
+  }
 }
 
 void
 SyncProtocolAdapter::publishUpdate(const ndn::Name& userPrefix, uint64_t seq)
 {
+  switch (m_syncProtocol) {
 #ifdef HAVE_CHRONOSYNC
-  if (m_syncProtocol == SYNC_PROTOCOL_CHRONOSYNC) {
+  case SyncProtocol::CHRONOSYNC:
     m_chronoSyncLogic->updateSeqNo(seq, userPrefix);
-    return;
-  }
+    break;
 #endif
-  m_psyncLogic->publishName(userPrefix, seq);
+  case SyncProtocol::PSYNC:
+    m_psyncLogic->publishName(userPrefix, seq);
+    break;
+  default:
+    NDN_CXX_UNREACHABLE;
+  }
 }
 
 #ifdef HAVE_CHRONOSYNC

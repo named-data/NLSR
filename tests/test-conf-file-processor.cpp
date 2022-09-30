@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getSyncPrefix(), ndn::Name("/localhop/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION));
   BOOST_CHECK_EQUAL(conf.getLsaPrefix(), "/localhop/ndn/nlsr/LSA");
   BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), 1800);
-  BOOST_CHECK_EQUAL(conf.getSyncProtocol(), SYNC_PROTOCOL_PSYNC);
+  BOOST_CHECK(conf.getSyncProtocol() == SyncProtocol::PSYNC);
   BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(), ndn::time::seconds(3));
   BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), 86400);
   BOOST_CHECK_EQUAL(conf.getSyncInterestLifetime(), ndn::time::milliseconds(10000));

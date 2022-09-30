@@ -35,17 +35,15 @@
 
 namespace nlsr {
 
+enum class SyncProtocol {
+  CHRONOSYNC,
+  PSYNC,
+};
+
 enum {
   LSA_REFRESH_TIME_MIN = 240,
   LSA_REFRESH_TIME_DEFAULT = 1800,
   LSA_REFRESH_TIME_MAX = 7200
-};
-
-enum SyncProtocol {
-#ifdef HAVE_CHRONOSYNC
-  SYNC_PROTOCOL_CHRONOSYNC,
-#endif
-  SYNC_PROTOCOL_PSYNC
 };
 
 enum {
@@ -528,7 +526,7 @@ private:
 
   ndn::time::milliseconds m_syncInterestLifetime;
 
-  SyncProtocol m_syncProtocol;
+  SyncProtocol m_syncProtocol = SyncProtocol::PSYNC;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   // must be incremented when breaking changes are made to sync

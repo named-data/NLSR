@@ -51,7 +51,6 @@ ConfParameter::ConfParameter(ndn::Face& face, ndn::KeyChain& keyChain,
   , m_corR(0)
   , m_maxFacesPerPrefix(MAX_FACES_PER_PREFIX_MIN)
   , m_syncInterestLifetime(ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT))
-  , m_syncProtocol(SYNC_PROTOCOL_PSYNC)
   , m_adjl()
   , m_npl()
   , m_validator(makeCertificateFetcher(face))

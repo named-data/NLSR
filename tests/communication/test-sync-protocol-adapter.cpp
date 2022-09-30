@@ -49,11 +49,11 @@ public:
       faces[i] = std::make_shared<util::DummyClientFace>(m_io,
                                                          util::DummyClientFace::Options{true, true});
       userPrefixes[i] = Name(nameLsaUserPrefix).appendNumber(i);
-      nodes[i] = std::make_shared<SyncProtocolAdapter>(*faces[i], SYNC_PROTOCOL_PSYNC, syncPrefix,
-                                                       userPrefixes[i],
+      nodes[i] = std::make_shared<SyncProtocolAdapter>(*faces[i], m_keyChain, SyncProtocol::PSYNC,
+                                                       syncPrefix, userPrefixes[i],
                                                        syncInterestLifetime,
                                                        [i, this] (const ndn::Name& updateName,
-                                                                   uint64_t highSeq, uint64_t incomingFaceId) {
+                                                                  uint64_t highSeq, uint64_t incomingFaceId) {
                                                          prefixToSeq[i].emplace(updateName, highSeq);
                                                        });
     }

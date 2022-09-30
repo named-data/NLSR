@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -287,19 +287,19 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
   std::string syncProtocol = section.get<std::string>("sync-protocol", "psync");
   if (syncProtocol == "chronosync") {
 #ifdef HAVE_CHRONOSYNC
-    m_confParam.setSyncProtocol(SYNC_PROTOCOL_CHRONOSYNC);
+    m_confParam.setSyncProtocol(SyncProtocol::CHRONOSYNC);
 #else
-    std::cerr << "NLSR was compiled without Chronosync support!" << std::endl;
-    std::cerr << "Only PSync support is currently available ('sync-protocol psync')" << std::endl;
+    std::cerr << "NLSR was compiled without ChronoSync support!\n"
+              << "Only PSync support is currently available ('sync-protocol psync')\n";
     return false;
 #endif
   }
   else if (syncProtocol == "psync") {
-    m_confParam.setSyncProtocol(SYNC_PROTOCOL_PSYNC);
+    m_confParam.setSyncProtocol(SyncProtocol::PSYNC);
   }
   else {
     std::cerr << "Sync protocol '" << syncProtocol << "' is not supported!\n"
-              << "Use chronosync or psync" << std::endl;
+              << "Use either 'chronosync' or 'psync'\n";
     return false;
   }
 

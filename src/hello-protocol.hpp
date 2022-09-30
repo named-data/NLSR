@@ -123,6 +123,9 @@ private:
                             const ndn::security::ValidationError& ve);
 
 public:
+  static inline const std::string INFO_COMPONENT{"INFO"};
+  static inline const std::string NLSR_COMPONENT{"nlsr"};
+
   ndn::util::Signal<HelloProtocol, const ndn::Name&> onInitialHelloDataValidated;
 
 private:
@@ -134,10 +137,6 @@ private:
   RoutingTable& m_routingTable;
   Lsdb& m_lsdb;
   AdjacencyList& m_adjacencyList;
-
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
-  static inline const std::string INFO_COMPONENT{"INFO"};
-  static inline const std::string NLSR_COMPONENT{"nlsr"};
 };
 
 } // namespace nlsr

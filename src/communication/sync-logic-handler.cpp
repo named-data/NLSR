@@ -20,9 +20,7 @@
  */
 
 #include "sync-logic-handler.hpp"
-#include "common.hpp"
-#include "conf-parameter.hpp"
-#include "lsa/lsa.hpp"
+#include "hello-protocol.hpp"
 #include "logger.hpp"
 #include "utility/name-helper.hpp"
 
@@ -32,14 +30,14 @@ namespace nlsr {
 
 INIT_LOGGER(SyncLogicHandler);
 
-SyncLogicHandler::SyncLogicHandler(ndn::Face& face, const IsLsaNew& isLsaNew,
-                                   const ConfParameter& conf)
-  : onNewLsa(std::make_unique<OnNewLsa>())
-  , m_syncFace(face)
-  , m_isLsaNew(isLsaNew)
+const std::string LSA_COMPONENT{"LSA"};
+
+SyncLogicHandler::SyncLogicHandler(ndn::Face& face, ndn::KeyChain& keyChain,
+                                   IsLsaNew isLsaNew, const ConfParameter& conf)
+  : m_isLsaNew(std::move(isLsaNew))
   , m_confParam(conf)
   , m_nameLsaUserPrefix(ndn::Name(m_confParam.getSyncUserPrefix()).append(boost::lexical_cast<std::string>(Lsa::Type::NAME)))
-  , m_syncLogic(m_syncFace, m_confParam.getSyncProtocol(), m_confParam.getSyncPrefix(),
+  , m_syncLogic(face, keyChain, m_confParam.getSyncProtocol(), m_confParam.getSyncPrefix(),
                 m_nameLsaUserPrefix, m_confParam.getSyncInterestLifetime(),
                 std::bind(&SyncLogicHandler::processUpdate, this, _1, _2, _3))
 {
@@ -62,7 +60,7 @@ SyncLogicHandler::processUpdate(const ndn::Name& updateName, uint64_t highSeq, u
 {
   NLSR_LOG_DEBUG("Update Name: " << updateName << " Seq no: " << highSeq);
 
-  int32_t nlsrPosition = util::getNameComponentPosition(updateName, NLSR_COMPONENT);
+  int32_t nlsrPosition = util::getNameComponentPosition(updateName, HelloProtocol::NLSR_COMPONENT);
   int32_t lsaPosition = util::getNameComponentPosition(updateName, LSA_COMPONENT);
 
   if (nlsrPosition < 0 || lsaPosition < 0) {
@@ -70,9 +68,8 @@ SyncLogicHandler::processUpdate(const ndn::Name& updateName, uint64_t highSeq, u
     return;
   }
 
-  ndn::Name networkName = updateName.getSubName(1, nlsrPosition-1);
+  ndn::Name networkName = updateName.getSubName(1, nlsrPosition - 1);
   ndn::Name routerName = updateName.getSubName(lsaPosition + 1).getPrefix(-1);
-
   ndn::Name originRouter = networkName;
   originRouter.append(routerName);
 
@@ -109,7 +106,8 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
                        "is enabled. Not going to fetch.");
         return;
       }
-      (*onNewLsa)(updateName, seqNo, originRouter, incomingFaceId);
+
+      onNewLsa(updateName, seqNo, originRouter, incomingFaceId);
     }
   }
 }

@@ -178,7 +178,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
   void
-  incrementDataSentStats(Lsa::Type lsaType) {
+  incrementDataSentStats(Lsa::Type lsaType)
+  {
     if (lsaType == Lsa::Type::NAME) {
       lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_DATA);
     }
@@ -191,7 +192,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
   void
-  incrementInterestRcvdStats(Lsa::Type lsaType) {
+  incrementInterestRcvdStats(Lsa::Type lsaType)
+  {
     if (lsaType == Lsa::Type::NAME) {
       lsaIncrementSignal(Statistics::PacketType::RCV_NAME_LSA_INTEREST);
     }
@@ -204,7 +206,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
   void
-  incrementInterestSentStats(Lsa::Type lsaType) {
+  incrementInterestSentStats(Lsa::Type lsaType)
+  {
     if (lsaType == Lsa::Type::NAME) {
       lsaIncrementSignal(Statistics::PacketType::SENT_NAME_LSA_INTEREST);
     }
@@ -222,7 +225,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     \param seqNo The sequence number to check.
   */
   bool
-  isLsaNew(const ndn::Name& originRouter, const Lsa::Type& lsaType, uint64_t lsSeqNo)
+  isLsaNew(const ndn::Name& originRouter, const Lsa::Type& lsaType, uint64_t lsSeqNo) const
   {
     // Is the name in the LSDB and the supplied seq no is the highest so far
     auto lsaPtr = findLsa(originRouter, lsaType);

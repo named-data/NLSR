@@ -37,7 +37,6 @@ class SyncLogicFixture : public IoKeyChainFixture
 public:
   SyncLogicFixture()
     : testIsLsaNew([] (auto&&...) { return true; })
-    , sync(face, testIsLsaNew, conf)
     , updateNamePrefix(this->conf.getLsaPrefix().toUri() +
                        this->conf.getSiteName().toUri() +
                        "/%C1.Router/other-router/")
@@ -61,9 +60,9 @@ public:
 public:
   ndn::util::DummyClientFace face{m_io, m_keyChain};
   ConfParameter conf{face, m_keyChain};
-  DummyConfFileProcessor confProcessor{conf, SYNC_PROTOCOL_PSYNC};
+  DummyConfFileProcessor confProcessor{conf, SyncProtocol::PSYNC};
   SyncLogicHandler::IsLsaNew testIsLsaNew;
-  SyncLogicHandler sync;
+  SyncLogicHandler sync{face, m_keyChain, testIsLsaNew, conf};
 
   const std::string updateNamePrefix;
   const std::vector<Lsa::Type> lsaTypes{Lsa::Type::NAME,
@@ -85,7 +84,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
   for (auto lsaType : {Lsa::Type::NAME, Lsa::Type::ADJACENCY}) {
     std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
 
-    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
+    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
@@ -112,7 +111,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
   for (auto lsaType : {Lsa::Type::NAME, Lsa::Type::COORDINATE}) {
     std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
 
-    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
+    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
@@ -139,7 +138,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
   for (auto lsaType : this->lsaTypes) {
     std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
 
-    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
+    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
@@ -168,7 +167,7 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
               .append(this->conf.getRouterName())
               .append(boost::lexical_cast<std::string>(lsaType));
 
-    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
+    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_FAIL("Updates for self should not be emitted!");
       });
@@ -192,7 +191,7 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
     ndn::Name updateName{this->conf.getSiteName()};
     updateName.append(this->conf.getRouterName()).append(boost::lexical_cast<std::string>(lsaType));
 
-    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa->connect(
+    ndn::util::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_FAIL("Malformed updates should not be emitted!");
       });
@@ -216,11 +215,11 @@ BOOST_AUTO_TEST_CASE(LsaNotNew)
   };
 
   const uint64_t sequenceNumber = 1;
-  SyncLogicHandler sync{this->face, testLsaAlwaysFalse, this->conf};
-    ndn::util::signal::ScopedConnection connection = sync.onNewLsa->connect(
-      [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
-        BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
-      });
+  SyncLogicHandler sync{this->face, this->m_keyChain, testLsaAlwaysFalse, this->conf};
+  ndn::util::signal::ScopedConnection connection = sync.onNewLsa.connect(
+    [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
+      BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
+    });
 
   std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(Lsa::Type::NAME);
   this->receiveUpdate(updateName, sequenceNumber);

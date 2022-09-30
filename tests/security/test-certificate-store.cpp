@@ -42,7 +42,7 @@ public:
   CertificateStoreFixture()
     : face(m_io, m_keyChain, {true, true})
     , conf(face, m_keyChain, "unit-test-nlsr.conf")
-    , confProcessor(conf, SYNC_PROTOCOL_PSYNC, HYPERBOLIC_STATE_OFF,
+    , confProcessor(conf, SyncProtocol::PSYNC, HYPERBOLIC_STATE_OFF,
                     "/ndn/", "/site", "/%C1.Router/router1")
     , rootIdName(conf.getNetwork())
     , siteIdentityName(ndn::Name(conf.getNetwork()).append(conf.getSiteName()))

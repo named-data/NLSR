@@ -46,7 +46,7 @@ public:
     , opIdentityName("/ndn/edu/test-site/%C1.Operator/op1")
     , routerIdName("/ndn/edu/test-site/%C1.Router/router1")
     , confParam(face, m_keyChain)
-    , confProcessor(confParam, SYNC_PROTOCOL_PSYNC, HYPERBOLIC_STATE_OFF,
+    , confProcessor(confParam, SyncProtocol::PSYNC, HYPERBOLIC_STATE_OFF,
                     "/ndn/", "/edu/test-site", "/%C1.Router/router1")
     , lsdb(face, m_keyChain, confParam)
     , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))

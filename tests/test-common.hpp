@@ -62,7 +62,7 @@ class DummyConfFileProcessor
 {
 public:
   DummyConfFileProcessor(ConfParameter& conf,
-                         SyncProtocol protocol = SYNC_PROTOCOL_PSYNC,
+                         SyncProtocol protocol = SyncProtocol::PSYNC,
                          HyperbolicState hyperbolicState = HYPERBOLIC_STATE_OFF,
                          const ndn::Name& networkName = "/ndn",
                          const ndn::Name& siteName = "/site",

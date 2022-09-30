@@ -35,7 +35,7 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   : m_face(face)
   , m_scheduler(face.getIoService())
   , m_confParam(confParam)
-  , m_sync(m_face,
+  , m_sync(m_face, keyChain,
            [this] (const auto& routerName, const Lsa::Type& lsaType,
                    uint64_t sequenceNumber, uint64_t incomingFaceId) {
              return isLsaNew(routerName, lsaType, sequenceNumber);
@@ -44,7 +44,7 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   , m_adjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval())
   , m_thisRouterPrefix(m_confParam.getRouterPrefix())
   , m_sequencingManager(m_confParam.getStateFileDir(), m_confParam.getHyperbolicState())
-  , m_onNewLsaConnection(m_sync.onNewLsa->connect(
+  , m_onNewLsaConnection(m_sync.onNewLsa.connect(
       [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
               const ndn::Name& originRouter, uint64_t incomingFaceId) {
         ndn::Name lsaInterest{updateName};

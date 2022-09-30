@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2022,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -18,7 +18,7 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \author Ashlesh Gawande <agawande@memphis.edu>
- **/
+ */
 
 #include "conf-parameter.hpp"
 #include "tests/boost-test.hpp"
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   cp1.setLsaInterestLifetime(ndn::time::seconds(1));
 
-  cp1.setSyncProtocol(SYNC_PROTOCOL_PSYNC);
+  cp1.setSyncProtocol(SyncProtocol::PSYNC);
 
   cp1.setRouterDeadInterval(10);
 
@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   BOOST_CHECK_EQUAL(cp1.getLsaInterestLifetime(), ndn::time::seconds(1));
 
-  BOOST_CHECK_EQUAL(cp1.getSyncProtocol(), SYNC_PROTOCOL_PSYNC);
+  BOOST_CHECK(cp1.getSyncProtocol() == SyncProtocol::PSYNC);
 
   BOOST_CHECK_EQUAL(cp1.getRouterDeadInterval(), 10);
 
