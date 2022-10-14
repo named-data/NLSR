@@ -23,6 +23,12 @@ Prerequisites
   the ChronoSync library and build it according to the instructions available at
   https://github.com/named-data/ChronoSync#build
 
+- [Optional] SVS library
+
+  NLSR can be used with State Vector Sync as the underlying Sync protocol. Download
+  the ndn-svs library and build it according to the instructions available at
+  https://github.com/named-data/ndn-svs#installation
+
 Build
 -----
 

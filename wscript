@@ -36,8 +36,21 @@ def options(opt):
     optgrp = opt.add_option_group('NLSR Options')
     optgrp.add_option('--with-tests', action='store_true', default=False,
                       help='Build unit tests')
-    optgrp.add_option('--with-chronosync', action='store_true', default=False,
+
+    optgrp.add_option('--with-chronosync', dest='with_chronosync', action='store_true', default=False,
                       help='Build with ChronoSync support')
+    optgrp.add_option('--without-chronosync', dest='with_chronosync', action='store_false', default=False,
+                      help='Build without ChronoSync support')
+
+    optgrp.add_option('--with-psync', dest='with_psync', action='store_true', default=True,
+                      help='Build with PSync support')
+    optgrp.add_option('--without-psync', dest='with_psync', action='store_false', default=True,
+                      help='Build without PSync support')
+
+    optgrp.add_option('--with-svs', dest='with_svs', action='store_true', default=False,
+                      help='Build with State Vector Sync support')
+    optgrp.add_option('--without-svs', dest='with_svs', action='store_false', default=False,
+                      help='Build without State Vector Sync support')
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
@@ -71,8 +84,17 @@ def configure(conf):
         conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.5.4', '--cflags', '--libs'],
                        uselib_store='CHRONOSYNC', pkg_config_path=pkg_config_path)
 
-    conf.check_cfg(package='PSync', args=['PSync >= 0.3.0', '--cflags', '--libs'],
-                   uselib_store='PSYNC', pkg_config_path=pkg_config_path)
+    if conf.options.with_psync:
+        conf.check_cfg(package='PSync', args=['PSync >= 0.3.0', '--cflags', '--libs'],
+                       uselib_store='PSYNC', pkg_config_path=pkg_config_path)
+
+    if conf.options.with_svs:
+        conf.check_cfg(package='libndn-svs', args=['libndn-svs >= 0.1.0', '--cflags', '--libs'],
+                       uselib_store='SVS', pkg_config_path=pkg_config_path)
+
+    if not any((conf.options.with_chronosync, conf.options.with_psync, conf.options.with_svs)):
+        conf.fatal('Cannot compile without any Sync protocol. '
+                   'Specify at least one of --with-psync or --with-svs or --with-chronosync')
 
     conf.check_compiler_flags()
 
@@ -108,7 +130,7 @@ def build(bld):
         target='nlsr-objects',
         source=bld.path.ant_glob('src/**/*.cpp',
                                  excl=['src/main.cpp']),
-        use='NDN_CXX BOOST CHRONOSYNC PSYNC',
+        use='NDN_CXX BOOST CHRONOSYNC PSYNC SVS',
         includes='. src',
         export_includes='. src')
 

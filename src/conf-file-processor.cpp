@@ -289,17 +289,29 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
 #ifdef HAVE_CHRONOSYNC
     m_confParam.setSyncProtocol(SyncProtocol::CHRONOSYNC);
 #else
-    std::cerr << "NLSR was compiled without ChronoSync support!\n"
-              << "Only PSync support is currently available ('sync-protocol psync')\n";
+    std::cerr << "NLSR was compiled without ChronoSync support!\n";
     return false;
 #endif
   }
   else if (syncProtocol == "psync") {
+#ifdef HAVE_PSYNC
     m_confParam.setSyncProtocol(SyncProtocol::PSYNC);
+#else
+    std::cerr << "NLSR was compiled without PSync support!\n";
+    return false;
+#endif
+  }
+  else if (syncProtocol == "svs") {
+#ifdef HAVE_SVS
+    m_confParam.setSyncProtocol(SyncProtocol::SVS);
+#else
+    std::cerr << "NLSR was compiled without SVS support!\n";
+    return false;
+#endif
   }
   else {
     std::cerr << "Sync protocol '" << syncProtocol << "' is not supported!\n"
-              << "Use either 'chronosync' or 'psync'\n";
+              << "Use 'chronosync' or 'psync' or 'svs'\n";
     return false;
   }
 

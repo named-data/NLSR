@@ -15,6 +15,9 @@ NLSR relies on third-party software, licensed under the following licenses:
 - PSync is licensed under the terms of the
   [GNU Lesser General Public License version 3](https://github.com/named-data/PSync/blob/master/COPYING.md)
 
+- ndn-svs is licensed under the terms of the
+  [GNU Lesser General Public License v2.1](https://github.com/named-data/ndn-svs/blob/master/COPYING.md)
+
 - The waf build system is licensed under the terms of the
   [BSD license](https://github.com/named-data/NLSR/blob/master/waf)
 

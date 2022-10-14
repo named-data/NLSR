@@ -38,6 +38,7 @@ namespace nlsr {
 enum class SyncProtocol {
   CHRONOSYNC,
   PSYNC,
+  SVS,
 };
 
 enum {

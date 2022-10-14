@@ -58,7 +58,8 @@ SyncProtocolAdapter::SyncProtocolAdapter(ndn::Face& face,
                           chronosync::Logic::DEFAULT_RECOVERY_INTEREST_LIFETIME,
                           FIXED_SESSION);
     break;
-#endif
+#endif // HAVE_CHRONOSYNC
+#ifdef HAVE_PSYNC
   case SyncProtocol::PSYNC:
     NDN_LOG_DEBUG("Using PSync");
     m_psyncLogic = std::make_shared<psync::FullProducer>(face,
@@ -69,6 +70,15 @@ SyncProtocolAdapter::SyncProtocolAdapter(ndn::Face& face,
                      [this] (auto&&... args) { onPSyncUpdate(std::forward<decltype(args)>(args)...); },
                      syncInterestLifetime);
     break;
+#endif // HAVE_PSYNC
+#ifdef HAVE_SVS
+  case SyncProtocol::SVS:
+    NDN_LOG_DEBUG("Using SVS");
+    m_svsCore = std::make_shared<ndn::svs::SVSyncCore>(face,
+                    syncPrefix,
+                    [this] (auto&&... args) { onSvsUpdate(std::forward<decltype(args)>(args)...); });
+    break;
+#endif // HAVE_SVS
   default:
     NDN_CXX_UNREACHABLE;
   }
@@ -82,10 +92,16 @@ SyncProtocolAdapter::addUserNode(const ndn::Name& userPrefix)
   case SyncProtocol::CHRONOSYNC:
     m_chronoSyncLogic->addUserNode(userPrefix, chronosync::Logic::DEFAULT_NAME, FIXED_SESSION);
     break;
-#endif
+#endif // HAVE_CHRONOSYNC
+#ifdef HAVE_PSYNC
   case SyncProtocol::PSYNC:
     m_psyncLogic->addUserNode(userPrefix);
     break;
+#endif // HAVE_PSYNC
+#ifdef HAVE_SVS
+  case SyncProtocol::SVS:
+    break;
+#endif // HAVE_SVS
   default:
     NDN_CXX_UNREACHABLE;
   }
@@ -99,10 +115,17 @@ SyncProtocolAdapter::publishUpdate(const ndn::Name& userPrefix, uint64_t seq)
   case SyncProtocol::CHRONOSYNC:
     m_chronoSyncLogic->updateSeqNo(seq, userPrefix);
     break;
-#endif
+#endif // HAVE_CHRONOSYNC
+#ifdef HAVE_PSYNC
   case SyncProtocol::PSYNC:
     m_psyncLogic->publishName(userPrefix, seq);
     break;
+#endif // HAVE_PSYNC
+#ifdef HAVE_SVS
+  case SyncProtocol::SVS:
+    m_svsCore->updateSeqNo(seq, userPrefix);
+    break;
+#endif // HAVE_SVS
   default:
     NDN_CXX_UNREACHABLE;
   }
@@ -119,8 +142,9 @@ SyncProtocolAdapter::onChronoSyncUpdate(const std::vector<chronosync::MissingDat
     m_syncUpdateCallback(update.session.getPrefix(-1), update.high, 0);
   }
 }
-#endif
+#endif // HAVE_CHRONOSYNC
 
+#ifdef HAVE_PSYNC
 void
 SyncProtocolAdapter::onPSyncUpdate(const std::vector<psync::MissingDataInfo>& updates)
 {
@@ -130,5 +154,18 @@ SyncProtocolAdapter::onPSyncUpdate(const std::vector<psync::MissingDataInfo>& up
     m_syncUpdateCallback(update.prefix, update.highSeq, update.incomingFace);
   }
 }
+#endif // HAVE_PSYNC
+
+#ifdef HAVE_SVS
+void
+SyncProtocolAdapter::onSvsUpdate(const std::vector<ndn::svs::MissingDataInfo>& updates)
+{
+  NLSR_LOG_TRACE("Received SVS update event");
+
+  for (const auto& update : updates) {
+    m_syncUpdateCallback(update.nodeId, update.high, 0);
+  }
+}
+#endif // HAVE_SVS
 
 } // namespace nlsr

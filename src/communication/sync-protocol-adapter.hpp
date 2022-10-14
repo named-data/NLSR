@@ -30,7 +30,12 @@
 #ifdef HAVE_CHRONOSYNC
 #include <ChronoSync/logic.hpp>
 #endif
+#ifdef HAVE_PSYNC
 #include <PSync/full-producer.hpp>
+#endif
+#ifdef HAVE_SVS
+#include <ndn-svs/core.hpp>
+#endif
 
 namespace nlsr {
 
@@ -48,14 +53,14 @@ public:
                       ndn::time::milliseconds syncInterestLifetime,
                       SyncUpdateCallback syncUpdateCallback);
 
-  /*! \brief Add user node to ChronoSync or PSync
+  /*! \brief Add user node to Sync
    *
    * \param userPrefix the Name under which the application will publishData
    */
   void
   addUserNode(const ndn::Name& userPrefix);
 
-  /*! \brief Publish update to ChronoSync or PSync
+  /*! \brief Publish update to Sync
    *
    * NLSR forces sequences number on the sync protocol
    * as it manages is its own sequence number by storing it in a file.
@@ -72,24 +77,36 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
    *
    * This function packages the sync information into discrete updates
    * and passes those off to another function, m_syncUpdateCallback.
-   * \sa m_syncUpdateCallback
    *
-   * \param v A container with the new information sync has received
+   * \param updates A container with the new information sync has received
    */
   void
   onChronoSyncUpdate(const std::vector<chronosync::MissingDataInfo>& updates);
-#endif
+#endif // HAVE_CHRONOSYNC
 
+#ifdef HAVE_PSYNC
    /*! \brief Hook function to call whenever PSync detects new data.
    *
    * This function packages the sync information into discrete updates
    * and passes those off to another function, m_syncUpdateCallback.
-   * \sa m_syncUpdateCallback
    *
-   * \param v A container with the new information sync has received
+   * \param updates A container with the new information sync has received
    */
   void
   onPSyncUpdate(const std::vector<psync::MissingDataInfo>& updates);
+#endif // HAVE_PSYNC
+
+#ifdef HAVE_SVS
+  /*! \brief Hook function to call whenever SVS detects new data.
+   *
+   * This function packages the sync information into discrete updates
+   * and passes those off to another function, m_syncUpdateCallback.
+   *
+   * \param updates A container with the new information sync has received
+   */
+  void
+  onSvsUpdate(const std::vector<ndn::svs::MissingDataInfo>& updates);
+#endif // HAVE_SVS
 
 private:
   SyncProtocol m_syncProtocol;
@@ -98,7 +115,12 @@ private:
 #ifdef HAVE_CHRONOSYNC
   std::shared_ptr<chronosync::Logic> m_chronoSyncLogic;
 #endif
+#ifdef HAVE_PSYNC
   std::shared_ptr<psync::FullProducer> m_psyncLogic;
+#endif
+#ifdef HAVE_SVS
+  std::shared_ptr<ndn::svs::SVSyncCore> m_svsCore;
+#endif
 };
 
 } // namespace nlsr

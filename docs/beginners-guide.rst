@@ -18,10 +18,11 @@ A beginners guide to installing and testing NLSR on Fedora
 The following instructions are based on the information provided at the
 Named Data Networking project web page [NDNmain]_.
 Before installing NLSR it is necessary to install different libraries and
-programs: ndn-cxx, NFD, ChronoSync [optional], and PSync. This document describes
-the necessary steps to correctly install these programs (§ `2 <#ndncxx>`__,
-`3 <#nfd>`__ and `4 <#nlsr>`__) and a brief guide on how to configure
-and test NLSR using a simple two-node network (§ `5 <#test>`__).
+programs: ndn-cxx, NFD, ChronoSync [optional], ndn-svs [optional] and PSync.
+This document describes the necessary steps to correctly install these
+programs (§ `2 <#ndncxx>`__, `3 <#nfd>`__ and `4 <#nlsr>`__) and a brief
+guide on how to configure and test NLSR using a simple two-node
+network (§ `5 <#test>`__).
 
 Many of the commands in this guide need to be executed as *root*.
 Starting from Fedora 28, there is no need to set a root user
@@ -383,7 +384,36 @@ This command should display a line similar to the following:
 
          libChronoSync.so.0.5.0 -> libChronoSync.so.0.5.0
 
-4.3 Downloading and installing NLSR
+4.3 [Optional] Installing SVS
+-----------------------------
+
+NLSR can also use State Vector Sync as the underlying Sync protocol,
+using the ndn-svs library.
+
+This library may be installed by running the following commands as a
+regular user and at the directory defined at § `1 <#intro>`__:
+
+::
+
+      $ git clone --depth 1 https://github.com/named-data/ndn-svs.git
+      $ cd ndn-svs
+      $ ./waf configure
+      $ ./waf
+      $ sudo ./waf install
+
+The following command needs to be used again to configure the libraries:
+
+::
+
+      $ sudo ldconfig -v | grep ndn-svs
+
+This command should display a line similar to the following:
+
+::
+
+         libndn-svs.so.0.0.1 -> libndn-svs.so.0.0.1
+
+4.4 Downloading and installing NLSR
 -----------------------------------
 
 NLSR is downloaded and installed in a folder called *NLSR* which should
@@ -404,7 +434,7 @@ If ChronoSync support is needed for testing, please configure NLSR with:
 
       $ ./waf configure --with-chronosync
 
-4.4 Configuring NLSR
+4.5 Configuring NLSR
 --------------------
 
 Create and configure the following directory by running the following
