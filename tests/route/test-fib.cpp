@@ -59,17 +59,18 @@ public:
   void
   enableRegistrationReplyWithFaceId()
   {
-    face.onSendInterest.connect([this] (const ndn::Interest& interest) {
-      static const ndn::Name localhostRegistration("/localhost/nfd/rib");
-      if (!localhostRegistration.isPrefixOf(interest.getName()))
+    face.onSendInterest.connect([this] (const auto& interest) {
+      if (!RIB_COMMAND_PREFIX.isPrefixOf(interest.getName()))
         return;
 
-      ndn::nfd::ControlParameters params(interest.getName().get(-5).blockFromValue());
+      ndn::name::Component verb;
+      ndn::nfd::ControlParameters params;
+      extractRibCommandParameters(interest, verb, params);
       if (!params.hasFaceId()) {
         params.setFaceId(1);
       }
       params.setOrigin(ndn::nfd::ROUTE_ORIGIN_APP);
-      if (interest.getName().get(3) == ndn::name::Component("register")) {
+      if (verb == ndn::name::Component("register")) {
         params.setCost(0);
       }
 
@@ -79,7 +80,6 @@ public:
 
       ndn::Data data(interest.getName());
       data.setContent(resp.wireEncode());
-
       m_keyChain.sign(data, ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_SHA256));
 
       face.getIoService().post([this, data] { face.receive(data); });
@@ -87,23 +87,22 @@ public:
   }
 
   static void
-  extractRibCommandParameters(const ndn::Interest& interest, ndn::Name::Component& verb,
-                              ndn::nfd::ControlParameters& extractedParameters)
+  extractRibCommandParameters(const ndn::Interest& interest,
+                              ndn::Name::Component& verb,
+                              ndn::nfd::ControlParameters& params)
   {
-    static const ndn::Name commandPrefix("/localhost/nfd/rib");
-
     const auto& name = interest.getName();
-    verb = name.at(commandPrefix.size());
-    const auto& paramComponent = name.at(commandPrefix.size() + 1);
-    extractedParameters.wireDecode(paramComponent.blockFromValue());
+    verb = name.at(RIB_COMMAND_PREFIX.size());
+    params.wireDecode(name.at(RIB_COMMAND_PREFIX.size() + 1).blockFromValue());
   }
 
 private:
+  static inline const ndn::Name RIB_COMMAND_PREFIX{"/localhost/nfd/rib"};
+
   ndn::Scheduler m_scheduler{m_io};
 
 public:
   ndn::util::DummyClientFace face{m_io, m_keyChain};
-
   ConfParameter conf{face, m_keyChain};
   AdjacencyList& adjacencies;
   Fib fib;

@@ -43,23 +43,11 @@ public:
     , conf(face, m_keyChain)
     , confProcessor(conf)
     , lsdb(face, m_keyChain, conf)
-    , REGISTER_COMMAND_PREFIX("/localhost/nfd/rib")
-    , REGISTER_VERB("register")
   {
     m_keyChain.createIdentity("/ndn/site/%C1.Router/this-router");
 
     advanceClocks(10_ms);
     face.sentInterests.clear();
-  }
-
-  void
-  extractParameters(ndn::Interest& interest, ndn::Name::Component& verb,
-                    ndn::nfd::ControlParameters& extractedParameters)
-  {
-    const ndn::Name& name = interest.getName();
-    verb = name[REGISTER_COMMAND_PREFIX.size()];
-    const ndn::Name::Component& parameterComponent = name[REGISTER_COMMAND_PREFIX.size() + 1];
-    extractedParameters.wireDecode(parameterComponent.blockFromValue());
   }
 
   void
@@ -126,9 +114,6 @@ public:
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
   Lsdb lsdb;
-
-  ndn::Name REGISTER_COMMAND_PREFIX;
-  ndn::Name::Component REGISTER_VERB;
 
   LsdbUpdate updateTypeCheck = LsdbUpdate::INSTALLED;
   std::list<ndn::Name> namesToAddCheck;

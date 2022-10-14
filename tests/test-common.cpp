@@ -22,8 +22,7 @@
 
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::test {
 
 std::shared_ptr<ndn::Data>
 makeData(const ndn::Name& name)
@@ -46,10 +45,9 @@ checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& p
 {
   bool registerCommandEmitted = false;
   for (const auto& interest : face.sentInterests) {
-    if (interest.getName().size() > 4 &&
-        interest.getName().get(3) == ndn::name::Component("register")) {
-      auto test = interest.getName().get(4);
-      ndn::nfd::ControlParameters params(test.blockFromValue());
+    const auto& name = interest.getName();
+    if (name.size() > 4 && name[3] == ndn::name::Component("register")) {
+      ndn::nfd::ControlParameters params(name[4].blockFromValue());
       if (params.getName() == prefix) {
         registerCommandEmitted = true;
         break;
@@ -59,5 +57,4 @@ checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& p
   BOOST_CHECK(registerCommandEmitted);
 }
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::test
