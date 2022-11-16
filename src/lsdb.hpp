@@ -22,27 +22,27 @@
 #ifndef NLSR_LSDB_HPP
 #define NLSR_LSDB_HPP
 
+#include "communication/sync-logic-handler.hpp"
 #include "conf-parameter.hpp"
 #include "lsa/lsa.hpp"
 #include "lsa/name-lsa.hpp"
 #include "lsa/coordinate-lsa.hpp"
 #include "lsa/adj-lsa.hpp"
 #include "sequencing-manager.hpp"
-#include "test-access-control.hpp"
-#include "communication/sync-logic-handler.hpp"
 #include "statistics.hpp"
+#include "test-access-control.hpp"
 
+#include <ndn-cxx/ims/in-memory-storage-fifo.hpp>
+#include <ndn-cxx/ims/in-memory-storage-persistent.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/segmenter.hpp>
+#include <ndn-cxx/util/segment-fetcher.hpp>
 #include <ndn-cxx/util/signal.hpp>
 #include <ndn-cxx/util/time.hpp>
-#include <ndn-cxx/util/segment-fetcher.hpp>
-#include <ndn-cxx/ims/in-memory-storage-persistent.hpp>
 
 #include <boost/multi_index_container.hpp>
-#include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/composite_key.hpp>
-
-#include <PSync/segment-publisher.hpp>
+#include <boost/multi_index/hashed_index.hpp>
 
 namespace nlsr {
 
@@ -61,12 +61,7 @@ class Lsdb
 public:
   Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam);
 
-  ~Lsdb()
-  {
-    for (const auto& sp : m_fetchers) {
-      sp->stop();
-    }
-  }
+  ~Lsdb();
 
   /*! \brief Returns whether the LSDB contains some LSA.
    */
@@ -335,7 +330,6 @@ public:
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Face& m_face;
   ndn::Scheduler m_scheduler;
-
   ConfParameter& m_confParam;
 
   SyncLogicHandler m_sync;
@@ -355,7 +349,8 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::util::signal::ScopedConnection m_onNewLsaConnection;
 
   std::set<std::shared_ptr<ndn::util::SegmentFetcher>> m_fetchers;
-  psync::SegmentPublisher m_segmentPublisher;
+  ndn::util::Segmenter m_segmenter;
+  ndn::InMemoryStorageFifo m_segmentFifo;
 
   bool m_isBuildAdjLsaScheduled;
   int64_t m_adjBuildCount;

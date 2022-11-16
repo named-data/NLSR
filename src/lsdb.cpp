@@ -51,7 +51,8 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
         lsaInterest.appendNumber(sequenceNumber);
         expressInterest(lsaInterest, 0, incomingFaceId);
       }))
-  , m_segmentPublisher(m_face, keyChain)
+  , m_segmenter(keyChain, m_confParam.getSigningInfo())
+  , m_segmentFifo(100)
   , m_isBuildAdjLsaScheduled(false)
   , m_adjBuildCount(0)
 {
@@ -71,6 +72,13 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   // Install coordinate LSAs if using HR or dry-run HR.
   if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
     buildAndInstallOwnCoordinateLsa();
+  }
+}
+
+Lsdb::~Lsdb()
+{
+  for (const auto& fetcher : m_fetchers) {
+    fetcher->stop();
   }
 }
 
@@ -110,7 +118,7 @@ Lsdb::scheduleAdjLsaBuild()
 
   if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
     // Don't build adjacency LSAs in hyperbolic routing
-    NLSR_LOG_DEBUG("Adjacency LSA not built. Currently in hyperbolic routing state.");
+    NLSR_LOG_DEBUG("Adjacency LSA not built while in hyperbolic routing state");
     return;
   }
 
@@ -152,12 +160,15 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
 
   if (interestName[-2].isVersion()) {
     // Interest for particular segment
-    if (m_segmentPublisher.replyFromStore(interestName)) {
-      NLSR_LOG_TRACE("Reply from SegmentPublisher storage");
+    auto data = m_segmentFifo.find(interestName);
+    if (data) {
+      NLSR_LOG_TRACE("Replying from FIFO buffer");
+      m_face.put(*data);
       return;
     }
+
     // Remove version and segment
-    interestName = interestName.getSubName(0, interestName.size() - 2);
+    interestName = interestName.getPrefix(-2);
     NLSR_LOG_TRACE("Interest w/o segment and version: " << interestName);
   }
 
@@ -191,8 +202,8 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
     }
   }
   // else the interest is for other router's LSA, serve signed data from LsaSegmentStorage
-  else if (auto lsaSegment = m_lsaStorage.find(interest)) {
-    NLSR_LOG_TRACE("Found data in lsa storage. Sending the data for " << interest.getName());
+  else if (auto lsaSegment = m_lsaStorage.find(interest); lsaSegment) {
+    NLSR_LOG_TRACE("Found data in lsa storage. Sending data for " << interest.getName());
     m_face.put(*lsaSegment);
   }
 }
@@ -202,17 +213,32 @@ Lsdb::processInterestForLsa(const ndn::Interest& interest, const ndn::Name& orig
                             Lsa::Type lsaType, uint64_t seqNo)
 {
   NLSR_LOG_DEBUG(interest << " received for " << lsaType);
-  if (auto lsaPtr = findLsa(originRouter, lsaType)) {
-    NLSR_LOG_TRACE("Verifying SeqNo for " << lsaType << " is same as requested.");
+
+  if (auto lsaPtr = findLsa(originRouter, lsaType); lsaPtr) {
+    NLSR_LOG_TRACE("Verifying SeqNo for " << lsaType << " is same as requested");
     if (lsaPtr->getSeqNo() == seqNo) {
-      m_segmentPublisher.publish(interest.getName(), interest.getName(), lsaPtr->wireEncode(),
-                                 m_lsaRefreshTime, m_confParam.getSigningInfo());
+      auto segments = m_segmenter.segment(lsaPtr->wireEncode(),
+                                          ndn::Name(interest.getName()).appendVersion(),
+                                          ndn::MAX_NDN_PACKET_SIZE / 2, m_lsaRefreshTime);
+      for (const auto& data : segments) {
+        m_segmentFifo.insert(*data, m_lsaRefreshTime);
+        m_scheduler.schedule(m_lsaRefreshTime,
+                             [this, name = data->getName()] { m_segmentFifo.erase(name); });
+      }
+
+      uint64_t segNum = 0;
+      if (interest.getName()[-1].isSegment()) {
+        segNum = interest.getName()[-1].toSegment();
+      }
+      if (segNum < segments.size()) {
+        m_face.put(*segments[segNum]);
+      }
       incrementDataSentStats(lsaType);
       return true;
     }
   }
   else {
-    NLSR_LOG_TRACE(interest << "  was not found in our LSDB");
+    NLSR_LOG_TRACE(interest << " was not found in our LSDB");
   }
   return false;
 }
@@ -358,7 +384,7 @@ Lsdb::expireOrRefreshLsa(std::shared_ptr<Lsa> lsa)
     // If its seq no is the one we are expecting.
     if (lsaPtr->getSeqNo() == lsa->getSeqNo()) {
       if (lsaPtr->getOriginRouter() == m_thisRouterPrefix) {
-        NLSR_LOG_DEBUG("Own " << lsaPtr->getType() << " LSA, so refreshing it.");
+        NLSR_LOG_DEBUG("Own " << lsaPtr->getType() << " LSA, so refreshing it");
         NLSR_LOG_DEBUG("Current LSA:");
         NLSR_LOG_DEBUG(lsaPtr->toString());
         lsaPtr->setSeqNo(lsaPtr->getSeqNo() + 1);
@@ -429,10 +455,9 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount, uint
     // If we don't do this IMS throws: std::bad_weak_ptr: bad_weak_ptr
     auto lsaSegment = std::make_shared<const ndn::Data>(data);
     m_lsaStorage.insert(*lsaSegment);
-    const ndn::Name& segmentName = lsaSegment->getName();
     // Schedule deletion of the segment
     m_scheduler.schedule(ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT),
-                         [this, segmentName] { m_lsaStorage.erase(segmentName); });
+                         [this, name = lsaSegment->getName()] { m_lsaStorage.erase(name); });
   });
 
   fetcher->onComplete.connect([=] (const ndn::ConstBufferPtr& bufferPtr) {
@@ -491,7 +516,7 @@ Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& inter
   }
   else if (seqNo > m_highestSeqNo[lsaName]) {
     m_highestSeqNo[lsaName] = seqNo;
-    NLSR_LOG_TRACE("SeqNo for LSA(name): " << interestName << "  updated");
+    NLSR_LOG_TRACE("SeqNo for LSA(name): " << interestName << " updated");
   }
   else if (seqNo < m_highestSeqNo[lsaName]) {
     return;

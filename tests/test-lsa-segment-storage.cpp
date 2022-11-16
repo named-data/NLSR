@@ -20,11 +20,12 @@
  */
 
 #include "nlsr.hpp"
-#include "name-prefix-list.hpp"
-// #include "lsa.hpp"
 
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
+
+#include <ndn-cxx/ims/in-memory-storage-fifo.hpp>
+#include <ndn-cxx/util/segmenter.hpp>
 
 namespace nlsr {
 namespace test {
@@ -33,16 +34,11 @@ class LsaSegmentStorageFixture : public IoKeyChainFixture
 {
 public:
   LsaSegmentStorageFixture()
-    : face(m_io, m_keyChain, {true, true})
-    , conf(face, m_keyChain)
-    , confProcessor(conf)
-    , nlsr(face, m_keyChain, conf)
-    , lsdb(nlsr.m_lsdb)
-    , segmentPublisher(face, m_keyChain)
-    , numValidationSignal(0)
-    , afterSegmentValidatedConnection(lsdb.afterSegmentValidatedSignal.connect(
-                                      [this] (const ndn::Data& data) { ++numValidationSignal; }))
   {
+    afterSegmentValidatedConn = lsdb.afterSegmentValidatedSignal.connect([this] (auto&&...) {
+      ++numValidationSignal;
+    });
+
     std::string config = R"CONF(
                             trust-anchor
                               {
@@ -56,44 +52,47 @@ public:
   }
 
   void
-  makeLsaContent(const ndn::Name& interestName, int numNames = 1000)
+  makeLsaContent(ndn::Name interestName, int numNames = 1000)
   {
+    const ndn::time::seconds refreshTime{LSA_REFRESH_TIME_DEFAULT};
+
     NamePrefixList npl1;
     for (int i = 0; i < numNames; ++i) {
       npl1.insert("name1-" + std::to_string(i));
     }
     NameLsa nameLsa("/ndn/other-site/%C1.Router/other-router", 12,
-                    ndn::time::system_clock::now() + ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT),
-                    npl1);
-    segmentPublisher.publish(interestName, interestName, nameLsa.wireEncode(),
-                             ndn::time::seconds(LSA_REFRESH_TIME_DEFAULT));
+                    ndn::time::system_clock::now() + refreshTime, npl1);
+
+    interestName.appendVersion();
+    ndn::util::Segmenter segmenter(m_keyChain, ndn::security::SigningInfo());
+    auto segments = segmenter.segment(nameLsa.wireEncode(), interestName,
+                                      ndn::MAX_NDN_PACKET_SIZE / 2, refreshTime);
+    for (const auto& seg : segments) {
+      ims.insert(*seg, refreshTime);
+    }
   }
 
   void
-  receiveLsaInterest(const ndn::Name& baseInterestName, uint64_t segmentNo,
-                     bool isSegmentZero)
+  sendReplies()
   {
-    if (isSegmentZero) {
-      lsdb.processInterest(ndn::Name(), ndn::Interest(baseInterestName));
+    for (const auto& interest : face.sentInterests) {
+      if (auto data = ims.find(interest.getName()); data) {
+        face.put(*data);
+      }
     }
-    else {
-      ndn::Name nextInterestName(baseInterestName);
-      nextInterestName.appendSegment(segmentNo);
-      lsdb.processInterest(ndn::Name(), ndn::Interest(nextInterestName));
-      advanceClocks(ndn::time::milliseconds(1), 10);
-    }
+    face.sentInterests.clear();
   }
 
 public:
-  ndn::util::DummyClientFace face;
-  ConfParameter conf;
-  DummyConfFileProcessor confProcessor;
-  Nlsr nlsr;
-  Lsdb& lsdb;
-  psync::SegmentPublisher segmentPublisher;
+  ndn::util::DummyClientFace face{m_io, m_keyChain, {true, true}};
+  ConfParameter conf{face, m_keyChain};
+  DummyConfFileProcessor confProcessor{conf};
+  Nlsr nlsr{face, m_keyChain, conf};
+  Lsdb& lsdb{nlsr.m_lsdb};
+  ndn::InMemoryStorageFifo ims{100};
 
-  int numValidationSignal;
-  ndn::util::signal::ScopedConnection afterSegmentValidatedConnection;
+  int numValidationSignal = 0;
+  ndn::util::signal::ScopedConnection afterSegmentValidatedConn;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestLsaSegmentStorage, LsaSegmentStorageFixture)
@@ -107,18 +106,19 @@ BOOST_AUTO_TEST_CASE(Basic)
   advanceClocks(ndn::time::milliseconds(10));
 
   makeLsaContent(lsaInterestName);
-  advanceClocks(ndn::time::milliseconds(10));
+  BOOST_CHECK_EQUAL(ims.size(), 3);
 
-  for (const auto& interest : face.sentInterests) {
-    segmentPublisher.replyFromStore(interest.getName());
-    advanceClocks(ndn::time::milliseconds(10));
-  }
+  // 1st segment
+  sendReplies();
+  advanceClocks(ndn::time::milliseconds(10));
+  // 2nd and 3rd segments
+  sendReplies();
+  advanceClocks(ndn::time::milliseconds(10));
 
   // 3 data segments should be in the storage
   BOOST_CHECK_EQUAL(lsdb.m_lsaStorage.size(), 3);
   BOOST_CHECK_EQUAL(numValidationSignal, 3);
   numValidationSignal = 0;
-  face.sentInterests.clear();
 
   // Remove older LSA from storage upon receiving that of higher sequence
   ndn::Name lsaInterestName2("/ndn/NLSR/LSA/other-site/%C1.Router/other-router/NAME");
@@ -127,7 +127,9 @@ BOOST_AUTO_TEST_CASE(Basic)
   advanceClocks(ndn::time::milliseconds(10));
 
   makeLsaContent(lsaInterestName2, 1);
+  sendReplies();
   advanceClocks(ndn::time::milliseconds(10));
+
   // Should have cleared all the three segments for the previous interest w/ seq 12
   // And add one segment for this sequence 13
   BOOST_CHECK_EQUAL(lsdb.m_lsaStorage.size(), 1);
