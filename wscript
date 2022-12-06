@@ -34,8 +34,6 @@ def options(opt):
              tooldir=['.waf-tools'])
 
     optgrp = opt.add_option_group('NLSR Options')
-    optgrp.add_option('--with-tests', action='store_true', default=False,
-                      help='Build unit tests')
 
     optgrp.add_option('--with-chronosync', dest='with_chronosync', action='store_true', default=False,
                       help='Build with ChronoSync support')
@@ -51,6 +49,9 @@ def options(opt):
                       help='Build with State Vector Sync support')
     optgrp.add_option('--without-svs', dest='with_svs', action='store_false', default=False,
                       help='Build without State Vector Sync support')
+
+    optgrp.add_option('--with-tests', action='store_true', default=False,
+                      help='Build unit tests')
 
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
