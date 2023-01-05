@@ -21,11 +21,10 @@ NLSR relies on third-party software, licensed under the following licenses:
 - The waf build system is licensed under the terms of the
   [BSD license](https://github.com/named-data/NLSR/blob/master/waf)
 
-
 The GPL license is provided below in this file.
-For more information, see http://www.gnu.org/licenses/
+For more information, see <https://www.gnu.org/licenses/>
 
-----------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
 ### GNU GENERAL PUBLIC LICENSE
 

@@ -1,5 +1,5 @@
 NLSR Versions
-+++++++++++++
+=============
 
 .. toctree::
    :glob:

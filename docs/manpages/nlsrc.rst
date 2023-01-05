@@ -79,18 +79,15 @@ Notes
 When security is enabled, NLSR will not be allowed to successfully
 advertise/withdraw names without first setting a default identity of operator.
 If default identity is not set as operator, the user will be presented with the
-error message: “Name prefix update error (code: 403)”. To remedy this
-issue, use command 'ndn-sec-default'.
+error message: "Name prefix update error (code: 403)". To remedy this
+issue, use the command ``ndnsec set-default``. Example::
 
-Example:
-
-  ndnsec-set-default /ndn/a-site/%C1.Operator/op
+  ndnsec set-default /ndn/a-site/%C1.Operator/op
 
 Exit Status
 -----------
 
-nlsrc exits with one of the following values:
-::
+nlsrc exits with one of the following values::
 
   0     nlsrc exited successfully
   >0    An error occurred

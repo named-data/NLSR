@@ -3,15 +3,16 @@ NLSR version 0.5.2
 
 **Breaking Changes**
 
-The following breaking changes makes this release incompatible with the previous version.
-- Use latest PSync version 0.2.0, sync data compression enabled in full sync by default (:issue:`5061`, :issue:`4917`)
-- Use the double encoding/decoding functions for hyperbolic coordinates (:issue:`4615`)
+The following breaking changes make this release incompatible with the previous version.
+
+- Use PSync version 0.2.0, sync data compression in full sync is enabled by default (:issue:`5061`, :issue:`4917`)
+- Use the floating point encoding/decoding functions for hyperbolic coordinates (:issue:`4615`)
 
 **New Features**
 
 - Handle zero cost links in Link State Routing (:issue:`4978`)
 
-**Improvements and Bug Fixes**:
+**Improvements and Bug Fixes**
 
 - Remove support for old combined seq no file (:issue:`4143`)
 - Sync common test infrastructure with ndn-cxx

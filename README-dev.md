@@ -1,5 +1,9 @@
-Requirements
-------------
+# Notes for NLSR developers
+
+If you are new to the NDN software community, please read the
+[Contributor's Guide](https://github.com/named-data/.github/blob/master/CONTRIBUTING.md).
+
+## Licensing requirements
 
 Contributions to NLSR must be licensed under GPL 3.0 or compatible license.  If you are
 choosing GPL 3.0, please use the following license boilerplate in all `.hpp` and `.cpp`
@@ -26,15 +30,13 @@ Include the following header in all `.hpp` and `.cpp` files:
      * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
      */
 
-If you are affiliated with an NSF-supported NDN project institution,
-please use the [NDN Team License Boilerplate]
-(https://redmine.named-data.net/projects/nlsr/wiki/NDN_Team_License_Boilerplate_(NLSR)).
+If you are affiliated with an NSF-supported NDN project institution, please use the [NDN Team License
+Boilerplate](https://redmine.named-data.net/projects/nlsr/wiki/NDN_Team_License_Boilerplate_(NLSR)).
 
-Recommendations
----------------
+## Recommendations
 
-NLSR code is subject to the code style, defined here:
-https://redmine.named-data.net/projects/nfd/wiki/CodeStyle
+NLSR code is subject to the code style defined
+[here](https://redmine.named-data.net/projects/nfd/wiki/CodeStyle).
 
-NLSR Developer's guide can be found here:
-https://github.com/named-data/NLSR/blob/developers-guide/NLSR-Developers-Guide.pdf
+NLSR Developer's guide can be found
+[here](https://github.com/named-data/NLSR/blob/developers-guide/NLSR-Developers-Guide.pdf).

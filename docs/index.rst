@@ -1,29 +1,5 @@
-NLSR - Named Data Link State Routing Protocol
-=============================================
-
-NLSR is a routing protocol in NDN that populates NDN's Routing Information Base. NLSR will
-continue to evolve alongside the Named Data Networking `protocol
-<https://named-data.net/doc/NDN-packet-spec/current/>`_.
-
-NLSR is an open and free software package licensed under the GPL 3.0 license and free to
-all Internet users and developers. For more information about the licensing details and
-limitations, refer to `COPYING.md
-<https://github.com/named-data/NLSR/blob/master/COPYING.md>`_.
-
-NLSR is developed by the members of the `NSF-sponsored NDN project team
-<https://named-data.net/project/participants/>`_. For more details, please refer to
-`AUTHORS.md <https://github.com/named-data/NLSR/blob/master/AUTHORS.md>`_. Bug reports and
-feedback are highly appreciated and can be made through the `NLSR Wiki`_.
-
-The main design goal of NLSR is to provide a routing protocol to populate NDN's FIB. NLSR
-calculates the routing table using link-state or hyperbolic routing and produces multiple
-faces for each reachable name prefix in a single authoritative domain. NLSR will continue
-to evolve over time to include neighbor discovery and to become a full fledged
-inter-domain routing protocol for NDN.  The protocol design is presented in full detail in
-the `NLSR Paper`_.
-
-NLSR Documentation
-------------------
+NLSR: Named Data Link State Routing Protocol
+============================================
 
 .. toctree::
    :hidden:
@@ -33,47 +9,74 @@ NLSR Documentation
    INSTALL
    SECURITY-CONFIG
    ROUTER-CONFIG
-   RELEASE-NOTES
-   releases
-   manpages
    beginners-guide
+   manpages
+   release-notes
+   releases
 
--  :doc:`GETTING-STARTED`
--  :doc:`INSTALL`
--  :doc:`SECURITY-CONFIG`
--  :doc:`ROUTER-CONFIG`
--  :doc:`RELEASE-NOTES`
--  :doc:`releases`
--  :doc:`manpages`
--  :doc:`beginners-guide`
+**NLSR** is a routing protocol for NDN that populates NDN's Routing Information Base.
+NLSR will continue to evolve alongside the Named Data Networking `protocol
+<https://named-data.net/doc/NDN-packet-spec/current/>`__.
+
+The main design goal of NLSR is to provide a routing protocol to populate NDN's FIB. NLSR
+calculates the routing table using link-state or hyperbolic routing and produces multiple
+faces for each reachable name prefix in a single authoritative domain. NLSR will continue
+to evolve over time to include neighbor discovery and to become a full fledged
+inter-domain routing protocol for NDN.  The protocol design is presented in full detail in
+the `NLSR Paper`_.
+
+NLSR was mainly developed by members of the NSF-sponsored `NDN project team
+<https://named-data.net/project/participants/>`__.  See `AUTHORS.md
+<https://github.com/named-data/NLSR/blob/master/AUTHORS.md>`__ for details.
+
+Bug reports and feedback are highly appreciated and can be made through the `NLSR Redmine`_.
+
+Documentation
+-------------
+
+- :doc:`GETTING-STARTED`
+- :doc:`INSTALL`
+- :doc:`SECURITY-CONFIG`
+- :doc:`ROUTER-CONFIG`
+- :doc:`beginners-guide`
+- :doc:`manpages`
+- :doc:`release-notes`
+- :doc:`releases`
 
 Downloading
 -----------
 
--  `Source code git repository <https://github.com/named-data/NLSR>`_
+- `Source code git repository <https://github.com/named-data/NLSR>`__
 
 NLSR mailing list
 -----------------
 
--  `NLSR Mailing List`_
-
--  `NLSR Mailing List Archives`_
+- `NLSR Mailing List`_
+- `NLSR Mailing List Archives`_
 
 `Sign up`_ is needed to post to the list or access the archives.
 
-Additional information
-----------------------
+Additional resources
+--------------------
 
--  `NLSR Wiki`_
+- `NLSR Wiki`_
 
--  `NLSR Redmine`_
-   Feature requests and bug reports
+- `NLSR Redmine`_
+  Feature requests and bug reports
 
--  `NLSR Paper`_
-   Detailed explanation of the NLSR design
+- `NLSR Paper`_
+  Detailed explanation of NLSR's design
 
--  `NLSR Developer's Guide`_
-   For NLSR Development
+- `NLSR Developer's Guide`_
+  For NLSR development
+
+- `API documentation (doxygen) <doxygen/annotated.html>`__
+
+License
+-------
+
+NLSR is free software distributed under the GNU General Public License version 3.
+See `COPYING.md <https://github.com/named-data/NLSR/blob/master/COPYING.md>`__ for details.
 
 .. _NLSR Wiki: https://redmine.named-data.net/projects/nlsr/wiki
 .. _NLSR Paper: https://named-data.net/wp-content/uploads/2016/01/ndn-0037-1-nlsr.pdf
