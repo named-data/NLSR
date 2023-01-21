@@ -4,19 +4,20 @@ NLSR version 0.1.0 (initial release)
 Release date: August 25, 2014
 
 The main design goal of NLSR is to provide a routing protocol to populate `NFD's
-<https://named-data.net/doc/NFD/>`_ RIB.  NLSR calculates the routing table using
+<https://github.com/named-data/NFD>`__ RIB.  NLSR calculates the routing table using
 link-state or hyperbolic routing and produces multiple faces for each reachable name
 prefix in a single authoritative domain.
 
-**Included features**:
+Included features
+^^^^^^^^^^^^^^^^^
 
 - Advertise availability of content through the configured router
 
-- Use `ChronoSync <https://github.com/named-data/ChronoSync>`_ to synchronize routers' LSA sequence numbers and Interest/Data to retrieve LSAs
+- Use `ChronoSync <https://github.com/named-data/ChronoSync>`__ to synchronize routers' LSA sequence numbers and Interest/Data to retrieve LSAs
 
 - Produce a list of ranked forwarding options for each name prefix to facilitate NDN's adaptive forwarding strategies
 
-- Configure maximum number of faces per prefix in NFD’s RIB
+- Configure maximum number of faces per prefix in NFD's RIB
 
 - Set up NFD tunnels to neighbors automatically and maintain the tunnels to neighbors
 
@@ -27,4 +28,4 @@ prefix in a single authoritative domain.
 
 - Use a hierarchical trust model for routing within a single administrative domain
 
-- Keep NFD’s RIB updated on failure and recovery
+- Keep NFD's RIB updated on failure and recovery

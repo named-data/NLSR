@@ -1,6 +1,6 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 """
-Copyright (c) 2014-2022,  The University of Memphis,
+Copyright (c) 2014-2023,  The University of Memphis,
                           Regents of the University of California,
                           Arizona Board of Regents.
 
@@ -68,7 +68,7 @@ def configure(conf):
     conf.find_program(['pkgconf', 'pkg-config'], var='PKGCONFIG')
 
     pkg_config_path = os.environ.get('PKG_CONFIG_PATH', f'{conf.env.LIBDIR}/pkgconfig')
-    conf.check_cfg(package='libndn-cxx', args=['libndn-cxx >= 0.8.0', '--cflags', '--libs'],
+    conf.check_cfg(package='libndn-cxx', args=['libndn-cxx >= 0.8.1', '--cflags', '--libs'],
                    uselib_store='NDN_CXX', pkg_config_path=pkg_config_path)
 
     boost_libs = ['system', 'iostreams', 'filesystem', 'regex']
@@ -82,11 +82,11 @@ def configure(conf):
                    'For more information, see https://redmine.named-data.net/projects/nfd/wiki/Boost')
 
     if conf.options.with_chronosync:
-        conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.5.4', '--cflags', '--libs'],
+        conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.5.5', '--cflags', '--libs'],
                        uselib_store='CHRONOSYNC', pkg_config_path=pkg_config_path)
 
     if conf.options.with_psync:
-        conf.check_cfg(package='PSync', args=['PSync >= 0.3.0', '--cflags', '--libs'],
+        conf.check_cfg(package='PSync', args=['PSync >= 0.4.0', '--cflags', '--libs'],
                        uselib_store='PSYNC', pkg_config_path=pkg_config_path)
 
     if conf.options.with_svs:

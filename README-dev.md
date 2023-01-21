@@ -1,7 +1,7 @@
 # Notes for NLSR developers
 
 If you are new to the NDN software community, please read the
-[Contributor's Guide](https://github.com/named-data/.github/blob/master/CONTRIBUTING.md).
+[Contributor's Guide](https://github.com/named-data/.github/blob/main/CONTRIBUTING.md).
 
 ## Licensing requirements
 

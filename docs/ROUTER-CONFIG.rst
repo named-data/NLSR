@@ -49,16 +49,15 @@ Type the following in the terminal:
 
 If you see ``error while connecting to the forwarder (No such file or directory)``,
 ``nfd`` is not running. Follow the instructions in `Getting started with NFD
-<http://named-data.net/doc/NFD/current/INSTALL.html>`_ to run nfd.
+<https://docs.named-data.net/NFD/current/INSTALL.html>`_ to run nfd.
 
 Since v0.4.0, NLSR no longer creates Faces for the neighbors that are
 specified in ``nlsr.conf``. Instead, it relies on the pre-existence of
 the Faces in NFD. NLSR will obtain this information from NFD, and
 configure its neighbors using this information.
 
-To create faces it is now necessary to use the ``nfdc`` command. Its documentation can
-be found `here
-<https://named-data.net/doc/NFD/current/manpages/nfdc.html>`_
+To create faces it is now necessary to use the ``nfdc`` command. See ``man nfdc`` for
+its documentation (`online version <https://docs.named-data.net/NFD/current/manpages/nfdc.html>`__).
 
 Step 2. Determining FaceUri
 ---------------------------

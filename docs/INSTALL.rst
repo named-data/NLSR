@@ -7,27 +7,29 @@ NLSR Installation Instructions
 Prerequisites
 -------------
 
-- `NFD <https://named-data.net/doc/NFD/>`_ and its dependencies
+- `NFD <https://github.com/named-data/NFD>`__ and its dependencies.
 
-  Refer to `Getting started with NFD <https://named-data.net/doc/NFD/current/INSTALL.html>`_
-  for detailed installation and running instruction.
+  Check out the `documentation <https://docs.named-data.net/NFD/current/INSTALL.html>`__
+  for detailed installation and running instructions.
 
-- PSync library
+- PSync library [optional but recommended, enabled by default]
 
   Download the PSync library and build it according to the instructions available at
   https://github.com/named-data/PSync#build
 
-- [Optional] ChronoSync library
+- ChronoSync library [optional]
 
   For testing purposes, NLSR can be optionally built with Chronosync support. Download
   the ChronoSync library and build it according to the instructions available at
   https://github.com/named-data/ChronoSync#build
 
-- [Optional] SVS library
+- SVS library [optional]
 
   NLSR can be used with State Vector Sync as the underlying Sync protocol. Download
   the ndn-svs library and build it according to the instructions available at
   https://github.com/named-data/ndn-svs#installation
+
+Note that at least one sync library must be enabled.
 
 Build
 -----

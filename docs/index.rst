@@ -14,9 +14,9 @@ NLSR: Named Data Link State Routing Protocol
    release-notes
    releases
 
-**NLSR** is a routing protocol for NDN that populates NDN's Routing Information Base.
-NLSR will continue to evolve alongside the Named Data Networking `protocol
-<https://named-data.net/doc/NDN-packet-spec/current/>`__.
+**NLSR** is a routing protocol for Named Data Networking (NDN) that populates the Routing
+Information Base (RIB) of an NDN router, such as `NFD`_. NLSR continues to evolve alongside
+the core `NDN protocol`_.
 
 The main design goal of NLSR is to provide a routing protocol to populate NDN's FIB. NLSR
 calculates the routing table using link-state or hyperbolic routing and produces multiple
@@ -78,6 +78,8 @@ License
 NLSR is free software distributed under the GNU General Public License version 3.
 See `COPYING.md <https://github.com/named-data/NLSR/blob/master/COPYING.md>`__ for details.
 
+.. _NDN protocol: https://docs.named-data.net/NDN-packet-spec/current/
+.. _NFD: https://github.com/named-data/NFD
 .. _NLSR Wiki: https://redmine.named-data.net/projects/nlsr/wiki
 .. _NLSR Paper: https://named-data.net/wp-content/uploads/2016/01/ndn-0037-1-nlsr.pdf
 .. _NLSR Mailing List: https://listserv.memphis.edu/scripts/wa.exe?SUBED1=NLSR-HELP-L&A=1
