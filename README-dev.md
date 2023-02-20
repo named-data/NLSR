@@ -1,15 +1,13 @@
 # Notes for NLSR developers
 
-If you are new to the NDN software community, please read the
+If you are new to the NDN software community, please read our
 [Contributor's Guide](https://github.com/named-data/.github/blob/main/CONTRIBUTING.md).
 
 ## Licensing requirements
 
-Contributions to NLSR must be licensed under GPL 3.0 or compatible license.  If you are
-choosing GPL 3.0, please use the following license boilerplate in all `.hpp` and `.cpp`
-files:
-
-Include the following header in all `.hpp` and `.cpp` files:
+Contributions to NLSR must be licensed under the GPL v3 or a compatible license.
+If you choose the GPL v3, please use the following license boilerplate in all `.hpp`
+and `.cpp` files:
 
     /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
     /*

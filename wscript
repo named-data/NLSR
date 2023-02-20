@@ -22,9 +22,9 @@ NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 from waflib import Context, Logs, Utils
 import os, subprocess
 
-VERSION = "0.6.0"
-APPNAME = "nlsr"
-GIT_TAG_PREFIX = "NLSR-"
+VERSION = '0.6.0'
+APPNAME = 'nlsr'
+GIT_TAG_PREFIX = 'NLSR-'
 
 def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
@@ -257,7 +257,9 @@ def version(ctx):
         Logs.warn('%s is not writable (%s)' % (versionFile, e.strerror))
 
 def dist(ctx):
+    ctx.algo = 'tar.xz'
     version(ctx)
 
 def distcheck(ctx):
+    ctx.algo = 'tar.xz'
     version(ctx)

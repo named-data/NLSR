@@ -860,27 +860,27 @@ configuration management tool, to manage the official NDN testbed
 deployment [NDNTestbed]_.
 
 
-.. [NDNmain] *Named Data Networking*, http://named-data.net/, March 2018.
+.. [NDNmain] *Named Data Networking*, https://named-data.net/, March 2018.
 
 .. [Kolman2018] M. Kolman. *Anaconda improvements in Fedora 28*, Fedora Magazine, June 2018.
 
-.. [NDN-cxx] *Getting started with ndn-cxx*, http://named-data.net/doc/ndn-cxx/current/INSTALL.html, April 2018.
+.. [NDN-cxx] *Getting started with ndn-cxx*, https://docs.named-data.net/ndn-cxx/current/INSTALL.html, April 2018.
 
-.. [NDNNFD] *Getting started with NFD*, http://named-data.net/doc/NFD/current/INSTALL.html, April 2018.
+.. [NDNNFD] *Getting started with NFD*, https://docs.named-data.net/NFD/current/INSTALL.html, April 2018.
 
-.. [NDNNFDusage] *NFD usage*, http://named-data.net/doc/NFD/current/manpages/nfd.html, May 2018.
+.. [NDNNFDusage] *NFD usage*, https://docs.named-data.net/NFD/current/manpages/nfd.html, May 2018.
 
 .. [Chronosync] Z. Zhu and A. Afanasyev. *Let's ChronoSync: Decentralized dataset state synchronization in Named Data Networking*, in IEEE ICNP, October 2013.
 
 .. [PSync] M. Zhang, V. Lehman, and L. Wang. *Scalable Name-based Data Synchronization for Named Data Networking*, in IEEE INFOCOM, May 2017.
 
-.. [NLSRsecconf] *NLSR Security Configuration*, http://named-data.net/doc/NLSR/current/SECURITY-CONFIG.html June 2018.
+.. [NLSRsecconf] *NLSR Security Configuration*, https://docs.named-data.net/NLSR/current/SECURITY-CONFIG.html June 2018.
 
 .. [NLSRdevguide] V. Lehman, M. Chowdhury, N. Gordon, A. Gawande. *NLSR Developer's Guide*, University of Memphis, November 2017.
 
-.. [NLSRrtrconf] *NLSR Router Configuration*, http://named-data.net/doc/NLSR/current/ROUTER-CONFIG.html, April 2018.
+.. [NLSRrtrconf] *NLSR Router Configuration*, https://docs.named-data.net/NLSR/current/ROUTER-CONFIG.html, April 2018.
 
-.. [NLSRstarting] *Getting Started with NLSR*, http://named-data.net/doc/NLSR/current/GETTING-STARTED.html, May 2018.
+.. [NLSRstarting] *Getting Started with NLSR*, https://docs.named-data.net/NLSR/current/GETTING-STARTED.html, May 2018.
 
 .. [NDNAnsible] *NDN Ansible repository*, https://github.com/WU-ARL/NDN_Ansible, October 2018.
 
