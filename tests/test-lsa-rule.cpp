@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -63,8 +63,7 @@ public:
     saveIdentityCert(rootId, ROOT_CERT_PATH.string());
 
     for (const auto& id : {rootId, siteIdentity, opIdentity, routerId}) {
-      const auto& cert = id.getDefaultKey().getDefaultCertificate();
-      confParam.loadCertToValidator(cert);
+      confParam.loadCertToValidator(id.getDefaultKey().getDefaultCertificate());
     }
 
     // Loading the security section's validator part into the validator

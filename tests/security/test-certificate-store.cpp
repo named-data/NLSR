@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -68,7 +68,7 @@ public:
     // Create certificate and load it to the validator
     // previously this was done by in nlsr ctor
     for (const auto& id : {rootId, siteIdentity, opIdentity, routerId}) {
-      const auto& cert = id.getDefaultKey().getDefaultCertificate();
+      auto cert = id.getDefaultKey().getDefaultCertificate();
       conf.loadCertToValidator(cert);
       certStore.insert(cert);
     }
