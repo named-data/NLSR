@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,7 +23,6 @@
 #define NLSR_NLSR_HPP
 
 #include "adjacency-list.hpp"
-#include "common.hpp"
 #include "conf-parameter.hpp"
 #include "hello-protocol.hpp"
 #include "lsdb.hpp"
@@ -39,15 +38,15 @@
 #include "stats-collector.hpp"
 
 #include <ndn-cxx/face.hpp>
-#include <ndn-cxx/security/key-chain.hpp>
-#include <ndn-cxx/util/scheduler.hpp>
+#include <ndn-cxx/encoding/nfd-constants.hpp>
+#include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
 #include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
-#include <ndn-cxx/mgmt/dispatcher.hpp>
 #include <ndn-cxx/mgmt/nfd/face-status.hpp>
-#include <ndn-cxx/encoding/nfd-constants.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
+#include <ndn-cxx/security/key-chain.hpp>
+#include <ndn-cxx/util/scheduler.hpp>
 
 namespace nlsr {
 
