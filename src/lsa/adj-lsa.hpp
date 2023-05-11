@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -42,7 +42,7 @@ public:
   AdjLsa() = default;
 
   AdjLsa(const ndn::Name& originR, uint64_t seqNo,
-         const ndn::time::system_clock::TimePoint& timepoint,
+         const ndn::time::system_clock::time_point& timepoint,
          uint32_t noLink, AdjacencyList& adl);
 
   AdjLsa(const ndn::Block& block);

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -104,7 +104,7 @@ public:
     size_t sentBefore = collector.getStatistics().get(statsType);
 
     lsdb.expressInterest(ndn::Name(prefix + lsaType).appendNumber(seqNo), 0, 0,
-                         ndn::time::steady_clock::TimePoint::min());
+                         ndn::time::steady_clock::time_point::min());
     this->advanceClocks(ndn::time::milliseconds(1), 10);
 
     BOOST_CHECK_EQUAL(collector.getStatistics().get(statsType), sentBefore + 1);
@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
 {
   ndn::Name routerName("/ndn/cs/%C1.Router/router1");
   uint32_t seqNo = 1;
-  ndn::time::system_clock::TimePoint MAX_TIME = ndn::time::system_clock::TimePoint::max();
+  const auto MAX_TIME = ndn::time::system_clock::time_point::max();
 
   // adjacency lsa
   ndn::Name adjInterest("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/ADJACENCY/");

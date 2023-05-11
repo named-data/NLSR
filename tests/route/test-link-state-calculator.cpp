@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -34,8 +34,7 @@
 namespace nlsr {
 namespace test {
 
-static const ndn::time::system_clock::TimePoint MAX_TIME =
-  ndn::time::system_clock::TimePoint::max();
+constexpr ndn::time::system_clock::time_point MAX_TIME = ndn::time::system_clock::time_point::max();
 
 class LinkStateCalculatorFixture : public IoKeyChainFixture
 {

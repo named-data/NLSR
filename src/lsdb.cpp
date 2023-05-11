@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -408,7 +408,7 @@ Lsdb::expireOrRefreshLsa(std::shared_ptr<Lsa> lsa)
 
 void
 Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount, uint64_t incomingFaceId,
-                      ndn::time::steady_clock::TimePoint deadline)
+                      ndn::time::steady_clock::time_point deadline)
 {
   // increment SENT_LSA_INTEREST
   lsaIncrementSignal(Statistics::PacketType::SENT_LSA_INTEREST);
@@ -478,7 +478,7 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount, uint
 
 void
 Lsdb::onFetchLsaError(uint32_t errorCode, const std::string& msg, const ndn::Name& interestName,
-                      uint32_t retransmitNo, const ndn::time::steady_clock::TimePoint& deadline,
+                      uint32_t retransmitNo, const ndn::time::steady_clock::time_point& deadline,
                       ndn::Name lsaName, uint64_t seqNo)
 {
   NLSR_LOG_DEBUG("Failed to fetch LSA: " << lsaName << ", Error code: " << errorCode

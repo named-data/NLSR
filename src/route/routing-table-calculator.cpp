@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -35,12 +35,12 @@ namespace nlsr {
 
 INIT_LOGGER(route.RoutingTableCalculator);
 
-const int EMPTY_PARENT = -12345;
-const double INF_DISTANCE = 2147483647;
-const int NO_MAPPING_NUM = -1;
-const int NO_NEXT_HOP = -12345;
-const double UNKNOWN_DISTANCE = -1.0;
-const double UNKNOWN_RADIUS   = -1.0;
+constexpr int EMPTY_PARENT = -12345;
+constexpr double INF_DISTANCE = 2147483647;
+constexpr int NO_MAPPING_NUM = -1;
+constexpr int NO_NEXT_HOP = -12345;
+constexpr double UNKNOWN_DISTANCE = -1.0;
+constexpr double UNKNOWN_RADIUS   = -1.0;
 
 void
 RoutingTableCalculator::allocateAdjMatrix()

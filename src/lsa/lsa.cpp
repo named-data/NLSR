@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -28,7 +28,7 @@
 namespace nlsr {
 
 Lsa::Lsa(const ndn::Name& originRouter, uint64_t seqNo,
-         ndn::time::system_clock::TimePoint expirationTimePoint)
+         ndn::time::system_clock::time_point expirationTimePoint)
   : m_originRouter(originRouter)
   , m_seqNo(seqNo)
   , m_expirationTimePoint(expirationTimePoint)

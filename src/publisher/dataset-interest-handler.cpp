@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -30,10 +30,10 @@ namespace nlsr {
 
 INIT_LOGGER(DatasetInterestHandler);
 
-const ndn::PartialName ADJACENCIES_DATASET = ndn::PartialName("lsdb/adjacencies");
-const ndn::PartialName COORDINATES_DATASET = ndn::PartialName("lsdb/coordinates");
-const ndn::PartialName NAMES_DATASET = ndn::PartialName("lsdb/names");
-const ndn::PartialName RT_DATASET = ndn::PartialName("routing-table");
+const ndn::PartialName ADJACENCIES_DATASET{"lsdb/adjacencies"};
+const ndn::PartialName COORDINATES_DATASET{"lsdb/coordinates"};
+const ndn::PartialName NAMES_DATASET{"lsdb/names"};
+const ndn::PartialName RT_DATASET{"routing-table"};
 
 DatasetInterestHandler::DatasetInterestHandler(ndn::mgmt::Dispatcher& dispatcher,
                                                const Lsdb& lsdb,

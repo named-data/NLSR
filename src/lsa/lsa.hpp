@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -56,7 +56,7 @@ public:
 
 protected:
   Lsa(const ndn::Name& originRouter, uint64_t seqNo,
-      ndn::time::system_clock::TimePoint expirationTimePoint);
+      ndn::time::system_clock::time_point expirationTimePoint);
 
   Lsa() = default;
 
@@ -94,14 +94,14 @@ public:
     return m_originRouter;
   }
 
-  const ndn::time::system_clock::TimePoint&
+  const ndn::time::system_clock::time_point&
   getExpirationTimePoint() const
   {
     return m_expirationTimePoint;
   }
 
   void
-  setExpirationTimePoint(const ndn::time::system_clock::TimePoint& lt)
+  setExpirationTimePoint(const ndn::time::system_clock::time_point& lt)
   {
     m_expirationTimePoint = lt;
     m_wire.reset();
@@ -138,7 +138,7 @@ protected:
 PUBLIC_WITH_TESTS_ELSE_PROTECTED:
   ndn::Name m_originRouter;
   uint64_t m_seqNo = 0;
-  ndn::time::system_clock::TimePoint m_expirationTimePoint;
+  ndn::time::system_clock::time_point m_expirationTimePoint;
   ndn::scheduler::ScopedEventId m_expiringEventId;
 
   mutable ndn::Block m_wire;

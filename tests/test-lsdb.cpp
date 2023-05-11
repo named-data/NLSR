@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -147,8 +147,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   BOOST_CHECK(didFindInterest);
   interests.clear();
 
-  ndn::time::steady_clock::TimePoint deadline = ndn::time::steady_clock::now() +
-    ndn::time::seconds(LSA_REFRESH_TIME_MAX);
+  auto deadline = ndn::time::steady_clock::now() + ndn::time::seconds(LSA_REFRESH_TIME_MAX);
 
   // Simulate an LSA interest timeout
   lsdb.onFetchLsaError(ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
@@ -299,7 +298,7 @@ BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
 
 BOOST_AUTO_TEST_CASE(LsdbRemoveAndExists)
 {
-  ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
+  auto testTimePoint = ndn::time::system_clock::now();
   NamePrefixList npl1;
 
   std::string s1 = "name1";
@@ -336,7 +335,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   prefixes.insert(name2);
 
   std::string otherRouter("/ndn/site/%C1.router/other-router");
-  ndn::time::system_clock::TimePoint MAX_TIME = ndn::time::system_clock::TimePoint::max();
+  const auto MAX_TIME = ndn::time::system_clock::time_point::max();
 
   NameLsa lsa(otherRouter, 1, MAX_TIME, prefixes);
   lsdb.installLsa(std::make_shared<NameLsa>(lsa));
@@ -397,7 +396,7 @@ BOOST_AUTO_TEST_CASE(TestIsLsaNew)
 
   // Install Name LSA
   NamePrefixList nameList;
-  NameLsa lsa(originRouter, 999, ndn::time::system_clock::TimePoint::max(), nameList);
+  NameLsa lsa(originRouter, 999, ndn::time::system_clock::time_point::max(), nameList);
 
   lsdb.installLsa(std::make_shared<NameLsa>(lsa));
 

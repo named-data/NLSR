@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -315,7 +315,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, NamePrefixTableFixture)
 {
-  ndn::time::system_clock::TimePoint testTimePoint =  ndn::time::system_clock::now();
+  auto testTimePoint = ndn::time::system_clock::now();
   NamePrefixList npl1;
   ndn::Name n1("name1");
   ndn::Name n2("name2");

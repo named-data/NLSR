@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE(OutputStream, RoutingTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, RoutingTableFixture)
 {
-  ndn::time::system_clock::TimePoint testTimePoint = ndn::time::system_clock::now() + 3600_s;
+  auto testTimePoint = ndn::time::system_clock::now() + 3600_s;
   ndn::Name router2("/router2");
   AdjLsa adjLsa(router2, 12, testTimePoint, 2, conf.getAdjacencyList());
   std::shared_ptr<Lsa> lsaPtr = std::make_shared<AdjLsa>(adjLsa);

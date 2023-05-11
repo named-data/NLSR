@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -35,7 +35,8 @@ namespace test {
 
 using std::shared_ptr;
 using ndn::time::system_clock;
-static const system_clock::TimePoint MAX_TIME = system_clock::TimePoint::max();
+
+constexpr system_clock::time_point MAX_TIME = system_clock::time_point::max();
 
 class HyperbolicCalculatorFixture : public IoKeyChainFixture
 {

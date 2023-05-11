@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -83,7 +83,7 @@ public:
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
 
-  ndn::util::signal::Signal<HelloProtocol, Statistics::PacketType> hpIncrementSignal;
+  ndn::util::Signal<HelloProtocol, Statistics::PacketType> hpIncrementSignal;
 
 private:
   /*! \brief Try to contact a neighbor via Hello protocol again
