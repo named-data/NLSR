@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -124,20 +124,21 @@ HelloProtocol::processInterest(const ndn::Name& name,
     return;
   }
 
-  ndn::Name neighbor;
-  neighbor.wireDecode(interestName.get(-1).blockFromValue());
+  ndn::Name neighbor(interestName.get(-1).blockFromValue());
   NLSR_LOG_DEBUG("Neighbor: " << neighbor);
   if (m_adjacencyList.isNeighbor(neighbor)) {
     auto data = std::make_shared<ndn::Data>();
     data->setName(ndn::Name(interest.getName()).appendVersion());
-    data->setFreshnessPeriod(10_s);
+    // A Hello reply being cached longer than is needed to fufill an Interest
+    // can cause counterintuitive behavior. Consequently, we use the default
+    // minimum of 0 ms.
+    data->setFreshnessPeriod(0_ms);
     data->setContent(ndn::make_span(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.data()),
                                     INFO_COMPONENT.size()));
 
     m_keyChain.sign(*data, m_signingInfo);
 
     NLSR_LOG_DEBUG("Sending out data for name: " << interest.getName());
-
     m_face.put(*data);
     // increment SENT_HELLO_DATA
     hpIncrementSignal(Statistics::PacketType::SENT_HELLO_DATA);
@@ -146,7 +147,7 @@ HelloProtocol::processInterest(const ndn::Name& name,
     // If this neighbor was previously inactive, send our own hello interest, too
     if (adjacent->getStatus() == Adjacent::STATUS_INACTIVE) {
       // We can only do that if the neighbor currently has a face.
-      if(adjacent->getFaceId() != 0){
+      if (adjacent->getFaceId() != 0) {
         // interest name: /<neighbor>/NLSR/INFO/<router>
         ndn::Name interestName(neighbor);
         interestName.append(NLSR_COMPONENT);
