@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -67,6 +67,12 @@ public:
 
   bool
   dispatch(ndn::span<std::string> subcommand);
+
+  int
+  getExitCode() const
+  {
+    return m_exitCode;
+  }
 
 private:
   void
@@ -162,6 +168,8 @@ private:
   std::map<ndn::Name, Router> m_routers;
   std::string m_rtString;
   std::deque<std::function<void()>> m_fetchSteps;
+
+  int m_exitCode = 0;
 };
 
 } // namespace nlsrc

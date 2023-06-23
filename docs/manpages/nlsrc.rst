@@ -90,4 +90,5 @@ Exit Status
 nlsrc exits with one of the following values::
 
   0     nlsrc exited successfully
-  >0    An error occurred
+  1     generic error
+  2     bad command line

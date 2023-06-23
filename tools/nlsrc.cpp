@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -52,6 +52,7 @@ const ndn::PartialName RT_SUFFIX("nlsr/routing-table");
 
 const uint32_t ERROR_CODE_TIMEOUT = 10060;
 const uint32_t RESPONSE_CODE_SUCCESS = 200;
+const uint32_t RESPONSE_CODE_NO_EFFECT = 204;
 const uint32_t RESPONSE_CODE_SAVE_OR_DELETE = 205;
 
 Nlsrc::Nlsrc(std::string programName, ndn::Face& face)
@@ -65,7 +66,7 @@ Nlsrc::Nlsrc(std::string programName, ndn::Face& face)
 void
 Nlsrc::printUsage() const
 {
-  std::string help(R"EOT(Usage:
+  const std::string help(R"EOT(Usage:
 @NLSRC@ [-h | -V]
 @NLSRC@ [-R <router prefix> [-c <nlsr.conf path> | -k]] COMMAND [<Command Options>]
        -h print usage and exit
@@ -90,8 +91,8 @@ Nlsrc::printUsage() const
        withdraw <name> delete
            withdraw and delete the name prefix from the conf file
 )EOT");
-  boost::algorithm::replace_all(help, "@NLSRC@", m_programName);
-  std::cout << help;
+  boost::algorithm::replace_all_copy(std::ostream_iterator<char>(std::cout),
+                                     help, "@NLSRC@", m_programName);
 }
 
 void
@@ -279,19 +280,21 @@ Nlsrc::onControlResponse(const std::string& info, const ndn::Data& data)
   }
   catch (const std::exception& e) {
     std::cerr << "ERROR: Control response decoding error" << std::endl;
+    m_exitCode = 1;
     return;
   }
 
   uint32_t code = response.getCode();
 
   if (code != RESPONSE_CODE_SUCCESS && code != RESPONSE_CODE_SAVE_OR_DELETE) {
-
     std::cerr << response.getText() << std::endl;
     std::cerr << "Name prefix update error (code: " << code << ")" << std::endl;
+    m_exitCode = code == RESPONSE_CODE_NO_EFFECT ? 0 : 1;
     return;
   }
 
   std::cout << "Applied Name prefix update successfully: " << info << std::endl;
+  m_exitCode = 0;
 }
 
 void
@@ -393,6 +396,7 @@ Nlsrc::onTimeout(uint32_t errorCode, const std::string& error)
 {
   std::cerr << "Request timed out (code: " << errorCode
             << ", error: " << error << ")"  << std::endl;
+  m_exitCode = 1;
 }
 
 void
@@ -460,7 +464,7 @@ main(int argc, char** argv)
 
   if (argc < 2) {
     nlsrc.printUsage();
-    return 0;
+    return 2;
   }
 
   int opt;
@@ -485,13 +489,13 @@ main(int argc, char** argv)
       break;
     default:
       nlsrc.printUsage();
-      return 1;
+      return 2;
     }
   }
 
   if (argc == ::optind) {
     nlsrc.printUsage();
-    return 1;
+    return 2;
   }
 
   if (nlsrc.getRouterPrefix() != nlsrc::LOCALHOST_PREFIX && !disableValidator) {
@@ -500,21 +504,19 @@ main(int argc, char** argv)
     }
   }
 
-  std::vector<std::string> subcommand;
-  std::copy(&argv[::optind], &argv[argc], std::back_inserter(subcommand));
-
+  std::vector<std::string> subcommand(&argv[::optind], &argv[argc]);
   try {
-    bool isOk = nlsrc.dispatch(subcommand);
-    if (!isOk) {
+    bool isValidSyntax = nlsrc.dispatch(subcommand);
+    if (!isValidSyntax) {
       nlsrc.printUsage();
-      return 1;
+      return 2;
     }
 
     face.processEvents();
   }
   catch (const std::exception& e) {
     std::cerr << "ERROR: " << e.what() << std::endl;
-    return 2;
+    return 1;
   }
-  return 0;
+  return nlsrc.getExitCode();
 }
