@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -96,7 +96,9 @@ ConfParameter::setNetwork(const ndn::Name& networkName)
 {
   m_network = networkName;
 
-  m_syncPrefix.append("localhop");
+  if (m_syncProtocol != SyncProtocol::SVS) {
+    m_syncPrefix.append("localhop");
+  }
   m_syncPrefix.append(m_network);
   m_syncPrefix.append("nlsr");
   m_syncPrefix.append("sync");

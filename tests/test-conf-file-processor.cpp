@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -46,6 +46,15 @@ const std::string SECTION_GENERAL =
   "  sync-protocol psync\n"
   "  sync-interest-lifetime 10000\n"
   "  state-dir /tmp\n"
+  "}\n\n";
+
+const std::string SECTION_GENERAL_SVS =
+  "general\n"
+  "{\n"
+  "  network /ndn/\n"
+  "  site /memphis.edu/\n"
+  "  router /cs/pollux/\n"
+  "  sync-protocol svs\n"
   "}\n\n";
 
 const std::string SECTION_NEIGHBORS =
@@ -118,6 +127,8 @@ const std::string CONFIG_HYPERBOLIC = SECTION_GENERAL + SECTION_NEIGHBORS +
 const std::string CONFIG_HYPERBOLIC_ANGLES = SECTION_GENERAL + SECTION_NEIGHBORS +
                                              SECTION_HYPERBOLIC_ANGLES_ON + SECTION_FIB +
                                              SECTION_ADVERTISING;
+
+const std::string CONFIG_SVS = SECTION_GENERAL_SVS;
 
 class ConfFileProcessorFixture : public IoKeyChainFixture
 {
@@ -207,6 +218,16 @@ BOOST_AUTO_TEST_CASE(LinkState)
 
   // Advertising
   BOOST_CHECK_EQUAL(conf.getNamePrefixList().size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(SVSPrefix)
+{
+  processConfigurationString(CONFIG_SVS);
+  conf.buildRouterAndSyncUserPrefix();
+
+  // SVS does not use localhop
+  BOOST_CHECK_EQUAL(conf.getNetwork(), "/ndn/");
+  BOOST_CHECK_EQUAL(conf.getSyncPrefix(), ndn::Name("/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION));
 }
 
 BOOST_AUTO_TEST_CASE(MalformedUri)

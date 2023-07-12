@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -212,6 +212,38 @@ ConfFileProcessor::processSection(const std::string& sectionName, const ConfigSe
 bool
 ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
 {
+  // sync-protocol
+  std::string syncProtocol = section.get<std::string>("sync-protocol", "psync");
+  if (syncProtocol == "chronosync") {
+#ifdef HAVE_CHRONOSYNC
+    m_confParam.setSyncProtocol(SyncProtocol::CHRONOSYNC);
+#else
+    std::cerr << "NLSR was compiled without ChronoSync support!\n";
+    return false;
+#endif
+  }
+  else if (syncProtocol == "psync") {
+#ifdef HAVE_PSYNC
+    m_confParam.setSyncProtocol(SyncProtocol::PSYNC);
+#else
+    std::cerr << "NLSR was compiled without PSync support!\n";
+    return false;
+#endif
+  }
+  else if (syncProtocol == "svs") {
+#ifdef HAVE_SVS
+    m_confParam.setSyncProtocol(SyncProtocol::SVS);
+#else
+    std::cerr << "NLSR was compiled without SVS support!\n";
+    return false;
+#endif
+  }
+  else {
+    std::cerr << "Sync protocol '" << syncProtocol << "' is not supported!\n"
+              << "Use 'chronosync' or 'psync' or 'svs'\n";
+    return false;
+  }
+
   try {
     std::string network = section.get<std::string>("network");
     std::string site = section.get<std::string>("site");
@@ -280,38 +312,6 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     std::cerr << "Invalid value for lsa-interest-timeout. "
               << "Allowed range: " << LSA_INTEREST_LIFETIME_MIN
               << "-" << LSA_INTEREST_LIFETIME_MAX << std::endl;
-    return false;
-  }
-
-  // sync-protocol
-  std::string syncProtocol = section.get<std::string>("sync-protocol", "psync");
-  if (syncProtocol == "chronosync") {
-#ifdef HAVE_CHRONOSYNC
-    m_confParam.setSyncProtocol(SyncProtocol::CHRONOSYNC);
-#else
-    std::cerr << "NLSR was compiled without ChronoSync support!\n";
-    return false;
-#endif
-  }
-  else if (syncProtocol == "psync") {
-#ifdef HAVE_PSYNC
-    m_confParam.setSyncProtocol(SyncProtocol::PSYNC);
-#else
-    std::cerr << "NLSR was compiled without PSync support!\n";
-    return false;
-#endif
-  }
-  else if (syncProtocol == "svs") {
-#ifdef HAVE_SVS
-    m_confParam.setSyncProtocol(SyncProtocol::SVS);
-#else
-    std::cerr << "NLSR was compiled without SVS support!\n";
-    return false;
-#endif
-  }
-  else {
-    std::cerr << "Sync protocol '" << syncProtocol << "' is not supported!\n"
-              << "Use 'chronosync' or 'psync' or 'svs'\n";
     return false;
   }
 
