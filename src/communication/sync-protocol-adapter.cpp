@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -163,7 +163,7 @@ SyncProtocolAdapter::onSvsUpdate(const std::vector<ndn::svs::MissingDataInfo>& u
   NLSR_LOG_TRACE("Received SVS update event");
 
   for (const auto& update : updates) {
-    m_syncUpdateCallback(update.nodeId, update.high, 0);
+    m_syncUpdateCallback(update.nodeId, update.high, update.incomingFace);
   }
 }
 #endif // HAVE_SVS
