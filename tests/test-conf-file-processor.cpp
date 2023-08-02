@@ -37,9 +37,9 @@ using std::shared_ptr;
 const std::string SECTION_GENERAL =
   "general\n"
   "{\n"
-  "  network /ndn/\n"
-  "  site /memphis.edu/\n"
-  "  router /cs/pollux/\n"
+  "  network /ndn\n"
+  "  site /memphis.edu\n"
+  "  router /cs/pollux\n"
   "  lsa-refresh-time 1800\n"
   "  lsa-interest-lifetime 3\n"
   "  router-dead-interval 86400\n"
@@ -51,10 +51,11 @@ const std::string SECTION_GENERAL =
 const std::string SECTION_GENERAL_SVS =
   "general\n"
   "{\n"
-  "  network /ndn/\n"
-  "  site /memphis.edu/\n"
-  "  router /cs/pollux/\n"
+  "  network /ndn\n"
+  "  site /memphis.edu\n"
+  "  router /cs/pollux\n"
   "  sync-protocol svs\n"
+  "  state-dir /tmp\n"
   "}\n\n";
 
 const std::string SECTION_NEIGHBORS =
@@ -145,7 +146,7 @@ public:
   }
 
   bool
-  processConfigurationString(std::string confString)
+  processConfigurationString(std::string_view confString)
   {
     std::ofstream config;
     config.open("unit-test-nlsr.conf");
@@ -171,14 +172,14 @@ BOOST_FIXTURE_TEST_SUITE(TestConfFileProcessor, ConfFileProcessorFixture)
 
 BOOST_AUTO_TEST_CASE(LinkState)
 {
-  processConfigurationString(CONFIG_LINK_STATE);
+  BOOST_REQUIRE(processConfigurationString(CONFIG_LINK_STATE));
   conf.buildRouterAndSyncUserPrefix();
 
   // General
-  BOOST_CHECK_EQUAL(conf.getNetwork(), "/ndn/");
-  BOOST_CHECK_EQUAL(conf.getSiteName(), "/memphis.edu/");
-  BOOST_CHECK_EQUAL(conf.getRouterName(), "/cs/pollux/");
-  BOOST_CHECK_EQUAL(conf.getRouterPrefix(), "/ndn/memphis.edu/cs/pollux/");
+  BOOST_CHECK_EQUAL(conf.getNetwork(), "/ndn");
+  BOOST_CHECK_EQUAL(conf.getSiteName(), "/memphis.edu");
+  BOOST_CHECK_EQUAL(conf.getRouterName(), "/cs/pollux");
+  BOOST_CHECK_EQUAL(conf.getRouterPrefix(), "/ndn/memphis.edu/cs/pollux");
   BOOST_CHECK_EQUAL(conf.getSyncPrefix(), ndn::Name("/localhop/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION));
   BOOST_CHECK_EQUAL(conf.getLsaPrefix(), "/localhop/ndn/nlsr/LSA");
   BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), 1800);
@@ -220,14 +221,18 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(conf.getNamePrefixList().size(), 2);
 }
 
-BOOST_AUTO_TEST_CASE(SVSPrefix)
+BOOST_AUTO_TEST_CASE(SvsPrefix)
 {
-  processConfigurationString(CONFIG_SVS);
+#ifdef HAVE_SVS
+  BOOST_REQUIRE(processConfigurationString(CONFIG_SVS));
   conf.buildRouterAndSyncUserPrefix();
 
   // SVS does not use localhop
-  BOOST_CHECK_EQUAL(conf.getNetwork(), "/ndn/");
+  BOOST_CHECK_EQUAL(conf.getNetwork(), "/ndn");
   BOOST_CHECK_EQUAL(conf.getSyncPrefix(), ndn::Name("/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION));
+#else
+  BOOST_CHECK_EQUAL(processConfigurationString(CONFIG_SVS), false);
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(MalformedUri)
@@ -252,24 +257,21 @@ BOOST_AUTO_TEST_CASE(MalformedUri)
 
 BOOST_AUTO_TEST_CASE(Hyperbolic)
 {
-  processConfigurationString(CONFIG_HYPERBOLIC);
+  BOOST_REQUIRE(processConfigurationString(CONFIG_HYPERBOLIC));
 
   BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
   BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
-  std::vector<double> angles;
-  angles.push_back(1.45);
+  std::vector<double> angles{1.45};
   BOOST_CHECK(conf.getCorTheta() == angles);
 }
 
 BOOST_AUTO_TEST_CASE(Hyperbolic2)
 {
-  processConfigurationString(CONFIG_HYPERBOLIC_ANGLES);
+  BOOST_REQUIRE(processConfigurationString(CONFIG_HYPERBOLIC_ANGLES));
 
   BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
   BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
-  std::vector<double> angles;
-  angles.push_back(1.45);
-  angles.push_back(2.25);
+  std::vector<double> angles{1.45, 2.25};
   BOOST_CHECK(conf.getCorTheta() == angles);
 }
 
@@ -281,17 +283,17 @@ BOOST_AUTO_TEST_CASE(DefaultValuesGeneral)
   commentOut("lsa-interest-lifetime", config);
   commentOut("router-dead-interval", config);
 
-  BOOST_CHECK(processConfigurationString(config));
+  BOOST_REQUIRE(processConfigurationString(config));
 
   BOOST_CHECK_EQUAL(conf.getLsaRefreshTime(), static_cast<uint32_t>(LSA_REFRESH_TIME_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getLsaInterestLifetime(),
                     static_cast<ndn::time::seconds>(LSA_INTEREST_LIFETIME_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getRouterDeadInterval(), (2 * conf.getLsaRefreshTime()));
 
-  BOOST_CHECK(conf.m_confFileName != conf.getConfFileNameDynamic());
+  BOOST_CHECK_NE(conf.m_confFileName, conf.getConfFileNameDynamic());
   conf.m_confFileName = "/tmp/nlsr.conf";
-  BOOST_CHECK(conf.m_confFileName == conf.getConfFileNameDynamic());
-  BOOST_CHECK(!processConfigurationString(config));
+  BOOST_CHECK_EQUAL(conf.m_confFileName, conf.getConfFileNameDynamic());
+  BOOST_CHECK_EQUAL(processConfigurationString(config), false);
 }
 
 BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)
@@ -304,7 +306,7 @@ BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)
   commentOut("first-hello-interval", config);
   commentOut("adj-lsa-build-interval", config);
 
-  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+  BOOST_REQUIRE(processConfigurationString(config));
 
   BOOST_CHECK_EQUAL(conf.getInterestRetryNumber(), static_cast<uint32_t>(HELLO_RETRIES_DEFAULT));
   BOOST_CHECK_EQUAL(conf.getInterestResendTime(), static_cast<uint32_t>(HELLO_TIMEOUT_DEFAULT));
@@ -315,7 +317,7 @@ BOOST_AUTO_TEST_CASE(DefaultValuesNeighbors)
 
 BOOST_AUTO_TEST_CASE(CanonizeNeighbors)
 {
-  std::string config = std::string(R"INFO(neighbors
+  std::string config{R"INFO(neighbors
     {
       neighbor
       {
@@ -329,9 +331,9 @@ BOOST_AUTO_TEST_CASE(CanonizeNeighbors)
         face-uri  udp4://michigan.testbed.named-data.net
         link-cost 30
       }
-    })INFO");
+    })INFO"};
 
-  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+  BOOST_REQUIRE(processConfigurationString(config));
 
   BOOST_CHECK_EQUAL(conf.m_adjl.getAdjacent("/ndn/edu/arizona/%C1.Router/hobo").getFaceUri().toString(),
                     "udp4://128.196.203.36:6363");
@@ -346,7 +348,7 @@ BOOST_AUTO_TEST_CASE(DefaultValuesFib)
   commentOut("max-faces-per-prefix", config);
   commentOut("routing-calc-interval", config);
 
-  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+  BOOST_REQUIRE(processConfigurationString(config));
 
   BOOST_CHECK_EQUAL(conf.getMaxFacesPerPrefix(),
                     static_cast<uint32_t>(MAX_FACES_PER_PREFIX_DEFAULT));
@@ -360,7 +362,7 @@ BOOST_AUTO_TEST_CASE(DefaultValuesHyperbolic)
 
   commentOut("state", config);
 
-  BOOST_CHECK_EQUAL(processConfigurationString(config), true);
+  BOOST_REQUIRE(processConfigurationString(config));
 
   BOOST_CHECK_EQUAL(conf.getHyperbolicState(), static_cast<int32_t>(HYPERBOLIC_STATE_DEFAULT));
 }
@@ -421,8 +423,7 @@ BOOST_AUTO_TEST_CASE(LoadCertToPublish)
       }
     )CONF";
 
-  BOOST_CHECK(processConfigurationString(SECTION_SECURITY));
-
+  BOOST_REQUIRE(processConfigurationString(SECTION_SECURITY));
 }
 
 BOOST_AUTO_TEST_CASE(PrefixUpdateValidatorOptional) // Bug #2814
@@ -440,7 +441,7 @@ BOOST_AUTO_TEST_CASE(PrefixUpdateValidatorOptional) // Bug #2814
       }
     )CONF";
 
-  BOOST_CHECK(processConfigurationString(SECTION_SECURITY));
+  BOOST_REQUIRE(processConfigurationString(SECTION_SECURITY));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
