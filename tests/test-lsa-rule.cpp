@@ -85,7 +85,7 @@ public:
    }
 
 public:
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
 
   ndn::Name rootIdName, siteIdentityName, opIdentityName, routerIdName;
   ndn::security::pib::Identity rootId, siteIdentity, opIdentity, routerId;

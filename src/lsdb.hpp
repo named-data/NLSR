@@ -321,10 +321,10 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   }
 
 public:
-  ndn::util::Signal<Lsdb, Statistics::PacketType> lsaIncrementSignal;
-  ndn::util::Signal<Lsdb, ndn::Data> afterSegmentValidatedSignal;
-  using AfterLsdbModified = ndn::util::Signal<Lsdb, std::shared_ptr<Lsa>, LsdbUpdate,
-                                              std::list<ndn::Name>, std::list<ndn::Name>>;
+  ndn::signal::Signal<Lsdb, Statistics::PacketType> lsaIncrementSignal;
+  ndn::signal::Signal<Lsdb, ndn::Data> afterSegmentValidatedSignal;
+  using AfterLsdbModified = ndn::signal::Signal<Lsdb, std::shared_ptr<Lsa>, LsdbUpdate,
+                                                std::list<ndn::Name>, std::list<ndn::Name>>;
   AfterLsdbModified onLsdbModified;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
@@ -346,10 +346,10 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   SequencingManager m_sequencingManager;
 
-  ndn::util::signal::ScopedConnection m_onNewLsaConnection;
+  ndn::signal::ScopedConnection m_onNewLsaConnection;
 
-  std::set<std::shared_ptr<ndn::util::SegmentFetcher>> m_fetchers;
-  ndn::util::Segmenter m_segmenter;
+  std::set<std::shared_ptr<ndn::SegmentFetcher>> m_fetchers;
+  ndn::Segmenter m_segmenter;
   ndn::InMemoryStorageFifo m_segmentFifo;
 
   bool m_isBuildAdjLsaScheduled;

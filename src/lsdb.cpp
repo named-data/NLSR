@@ -438,13 +438,12 @@ Lsdb::expressInterest(const ndn::Name& interestName, uint32_t timeoutCount, uint
   if (incomingFaceId != 0) {
     interest.setTag(std::make_shared<ndn::lp::NextHopFaceIdTag>(incomingFaceId));
   }
-  ndn::util::SegmentFetcher::Options options;
+  ndn::SegmentFetcher::Options options;
   options.interestLifetime = m_confParam.getLsaInterestLifetime();
   options.maxTimeout = m_confParam.getLsaInterestLifetime();
 
   NLSR_LOG_DEBUG("Fetching Data for LSA: " << interestName << " Seq number: " << seqNo);
-  auto fetcher = ndn::util::SegmentFetcher::start(m_face, interest,
-                                                  m_confParam.getValidator(), options);
+  auto fetcher = ndn::SegmentFetcher::start(m_face, interest, m_confParam.getValidator(), options);
 
   auto it = m_fetchers.insert(fetcher).first;
 
@@ -493,7 +492,7 @@ Lsdb::onFetchLsaError(uint32_t errorCode, const std::string& msg, const ndn::Nam
       // the potential for constant Interest flooding.
       ndn::time::seconds delay = m_confParam.getLsaInterestLifetime();
 
-      if (errorCode == ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT) {
+      if (errorCode == ndn::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT) {
         delay = ndn::time::seconds(0);
       }
       m_scheduler.schedule(delay, std::bind(&Lsdb::expressInterest, this,

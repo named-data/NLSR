@@ -145,7 +145,7 @@ public:
   }
 
 public:
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
   ConfParameter conf;
   Nlsr nlsr;
   Map map;

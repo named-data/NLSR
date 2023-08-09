@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -155,7 +155,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   bool m_isRouteCalculationScheduled;
 
   ConfParameter& m_confParam;
-  ndn::util::signal::Connection m_afterLsdbModified;
+  ndn::signal::Connection m_afterLsdbModified;
   int32_t m_hyperbolicState;
   bool m_ownAdjLsaExist = false;
 };

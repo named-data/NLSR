@@ -111,7 +111,7 @@ public:
   }
 
 public:
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
   Nlsr nlsr;

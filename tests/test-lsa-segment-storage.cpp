@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -64,7 +64,7 @@ public:
                     ndn::time::system_clock::now() + refreshTime, npl1);
 
     interestName.appendVersion();
-    ndn::util::Segmenter segmenter(m_keyChain, ndn::security::SigningInfo());
+    ndn::Segmenter segmenter(m_keyChain, ndn::security::SigningInfo());
     auto segments = segmenter.segment(nameLsa.wireEncode(), interestName,
                                       ndn::MAX_NDN_PACKET_SIZE / 2, refreshTime);
     for (const auto& seg : segments) {
@@ -84,7 +84,7 @@ public:
   }
 
 public:
-  ndn::util::DummyClientFace face{m_io, m_keyChain, {true, true}};
+  ndn::DummyClientFace face{m_io, m_keyChain, {true, true}};
   ConfParameter conf{face, m_keyChain};
   DummyConfFileProcessor confProcessor{conf};
   Nlsr nlsr{face, m_keyChain, conf};
@@ -92,7 +92,7 @@ public:
   ndn::InMemoryStorageFifo ims{100};
 
   int numValidationSignal = 0;
-  ndn::util::signal::ScopedConnection afterSegmentValidatedConn;
+  ndn::signal::ScopedConnection afterSegmentValidatedConn;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestLsaSegmentStorage, LsaSegmentStorageFixture)

@@ -102,7 +102,7 @@ public:
     BOOST_CHECK(didFindInterest);
   }
 
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
 
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
@@ -149,7 +149,7 @@ BOOST_AUTO_TEST_CASE(Basic)
 
 BOOST_AUTO_TEST_CASE(RetrieveCert)
 {
-  ndn::util::DummyClientFace consumer(m_io);
+  ndn::DummyClientFace consumer(m_io);
   consumer.linkTo(face);
 
   auto checkRetrieve = [&] (const ndn::Name& interestName, bool canBePrefix, const ndn::Name& dataName) {
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
   BOOST_CHECK(certStore.find(keyName) != nullptr);
 
   // testing a callback after segment validation signal from lsdb
-  ndn::util::signal::ScopedConnection connection = lsdb.afterSegmentValidatedSignal.connect(
+  ndn::signal::ScopedConnection connection = lsdb.afterSegmentValidatedSignal.connect(
   [&] (const ndn::Data& lsaSegment) {
     BOOST_CHECK_EQUAL(lsaSegment.getName(), data.getName());
   });

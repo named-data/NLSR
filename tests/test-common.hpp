@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -56,7 +56,7 @@ signData(std::shared_ptr<ndn::Data> data)
 }
 
 void
-checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& prefix);
+checkPrefixRegistered(const ndn::DummyClientFace& face, const ndn::Name& prefix);
 
 class DummyConfFileProcessor
 {

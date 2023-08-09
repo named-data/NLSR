@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -29,7 +29,7 @@
 namespace nlsr {
 namespace test {
 
-using namespace ndn;
+using ndn::Name;
 
 class SyncProtocolAdapterFixture : public IoKeyChainFixture
 {
@@ -37,7 +37,7 @@ public:
   SyncProtocolAdapterFixture()
     : syncPrefix("/localhop/ndn/nlsr/sync")
     , nameLsaUserPrefix("/localhop/ndn/nlsr/LSA/NAME")
-    , syncInterestLifetime(time::seconds(60))
+    , syncInterestLifetime(60_s)
   {
     syncPrefix.appendVersion(4);
   }
@@ -46,29 +46,28 @@ public:
   addNodes()
   {
     for (int i = 0; i < 2; i++) {
-      faces[i] = std::make_shared<util::DummyClientFace>(m_io,
-                                                         util::DummyClientFace::Options{true, true});
+      faces[i] = std::make_shared<ndn::DummyClientFace>(m_io, ndn::DummyClientFace::Options{true, true});
       userPrefixes[i] = Name(nameLsaUserPrefix).appendNumber(i);
-      nodes[i] = std::make_shared<SyncProtocolAdapter>(*faces[i], m_keyChain, SyncProtocol::PSYNC,
-                                                       syncPrefix, userPrefixes[i],
-                                                       syncInterestLifetime,
-                                                       [i, this] (const ndn::Name& updateName,
-                                                                  uint64_t highSeq, uint64_t incomingFaceId) {
-                                                         prefixToSeq[i].emplace(updateName, highSeq);
-                                                       });
+      nodes[i] = std::make_shared<SyncProtocolAdapter>(
+        *faces[i], m_keyChain, SyncProtocol::PSYNC, syncPrefix, userPrefixes[i],
+        syncInterestLifetime,
+        [i, this] (const Name& updateName, uint64_t highSeq, uint64_t incomingFaceId) {
+          prefixToSeq[i].emplace(updateName, highSeq);
+        });
     }
 
     faces[0]->linkTo(*faces[1]);
-    advanceClocks(ndn::time::milliseconds(10), 10);
+    advanceClocks(10_ms, 10);
   }
 
 public:
-  Name syncPrefix, nameLsaUserPrefix;
+  Name syncPrefix;
+  Name nameLsaUserPrefix;
   Name userPrefixes[2];
-  time::milliseconds syncInterestLifetime;
-  std::shared_ptr<ndn::util::DummyClientFace> faces[2];
+  ndn::time::milliseconds syncInterestLifetime;
+  std::shared_ptr<ndn::DummyClientFace> faces[2];
   std::shared_ptr<SyncProtocolAdapter> nodes[2];
-  std::map<ndn::Name, uint64_t> prefixToSeq[2];
+  std::map<Name, uint64_t> prefixToSeq[2];
 };
 
 BOOST_AUTO_TEST_SUITE(TestSyncProtocolAdapter)
@@ -78,7 +77,7 @@ BOOST_FIXTURE_TEST_CASE(Basic, SyncProtocolAdapterFixture)
   addNodes();
 
   nodes[0]->publishUpdate(userPrefixes[0], 10);
-  advanceClocks(ndn::time::milliseconds(1000), 100);
+  advanceClocks(1_s, 100);
 
   auto it = prefixToSeq[1].find(userPrefixes[0]);
   BOOST_CHECK(it != prefixToSeq[1].end());
@@ -86,7 +85,7 @@ BOOST_FIXTURE_TEST_CASE(Basic, SyncProtocolAdapterFixture)
   BOOST_CHECK_EQUAL(it->second, 10);
 
   nodes[1]->publishUpdate(userPrefixes[1], 100);
-  advanceClocks(ndn::time::milliseconds(1000), 100);
+  advanceClocks(1_s, 100);
 
   it = prefixToSeq[0].find(userPrefixes[1]);
   BOOST_CHECK(it != prefixToSeq[0].end());
@@ -95,9 +94,9 @@ BOOST_FIXTURE_TEST_CASE(Basic, SyncProtocolAdapterFixture)
 
   Name adjLsaUserPrefix("/localhop/ndn/nlsr/LSA/ADJACENCY");
   nodes[0]->addUserNode(adjLsaUserPrefix);
-  advanceClocks(ndn::time::milliseconds(1000), 100);
+  advanceClocks(1_s, 100);
   nodes[0]->publishUpdate(adjLsaUserPrefix, 10);
-  advanceClocks(ndn::time::milliseconds(1000), 100);
+  advanceClocks(1_s, 100);
 
   it = prefixToSeq[1].find(adjLsaUserPrefix);
   BOOST_CHECK(it != prefixToSeq[1].end());

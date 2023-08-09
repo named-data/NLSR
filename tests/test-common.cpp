@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -41,7 +41,7 @@ signData(ndn::Data& data)
 }
 
 void
-checkPrefixRegistered(const ndn::util::DummyClientFace& face, const ndn::Name& prefix)
+checkPrefixRegistered(const ndn::DummyClientFace& face, const ndn::Name& prefix)
 {
   bool registerCommandEmitted = false;
   for (const auto& interest : face.sentInterests) {

@@ -99,7 +99,7 @@ public:
   }
 
 public:
-  ndn::util::DummyClientFace m_face{m_io, m_keyChain, {true, true}};
+  ndn::DummyClientFace m_face{m_io, m_keyChain, {true, true}};
 };
 
 class NlsrFixture : public MockNfdMgmtFixture
@@ -138,7 +138,7 @@ public:
   AdjacencyList& neighbors;
   uint32_t nSuccessCallbacks;
   uint32_t nFailureCallbacks;
-  ndn::util::signal::ScopedConnection connection;
+  ndn::signal::ScopedConnection connection;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestNlsr, NlsrFixture)

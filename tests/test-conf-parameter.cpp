@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(TestConfParameter)
 
 BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 {
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
   ndn::KeyChain keyChain;
   ConfParameter cp1(face, keyChain);
 

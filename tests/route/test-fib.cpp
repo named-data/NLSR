@@ -71,8 +71,8 @@ private:
   ndn::Scheduler m_scheduler{m_io};
 
 public:
-  ndn::util::DummyClientFace face{m_io, m_keyChain, [] {
-    ndn::util::DummyClientFace::Options opts;
+  ndn::DummyClientFace face{m_io, m_keyChain, [] {
+    ndn::DummyClientFace::Options opts;
     opts.enableRegistrationReply = true;
     opts.registrationReplyFaceId = 128;
     return opts;

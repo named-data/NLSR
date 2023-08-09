@@ -35,7 +35,7 @@ private:
   ndn::Scheduler m_scheduler{m_io};
 
 public:
-  ndn::util::DummyClientFace face{m_io, m_keyChain, {true, true}};
+  ndn::DummyClientFace face{m_io, m_keyChain, {true, true}};
   ConfParameter conf{face, m_keyChain};
   DummyConfFileProcessor confProcessor{conf};
 

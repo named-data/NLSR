@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(AdjLsaIsBuildableWithOneNodeActive)
   adjacencies.insert(adjacencyA);
   adjacencies.insert(adjacencyB);
 
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
   ndn::KeyChain keyChain;
   ConfParameter conf(face, keyChain);
   BOOST_CHECK(adjacencies.isAdjLsaBuildable(conf.getInterestRetryNumber()));
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(AdjLsaIsBuildableWithAllNodesTimedOut)
   adjacencies.insert(adjacencyA);
   adjacencies.insert(adjacencyB);
 
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
   ndn::KeyChain keyChain;
   ConfParameter conf(face, keyChain);
   conf.setInterestRetryNumber(HELLO_RETRIES_DEFAULT);
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(AdjLsaIsNotBuildable)
   adjacencies.insert(adjacencyA);
   adjacencies.insert(adjacencyB);
 
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
   ndn::KeyChain keyChain;
   ConfParameter conf(face, keyChain);
   conf.setInterestRetryNumber(HELLO_RETRIES_DEFAULT);

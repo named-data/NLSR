@@ -110,7 +110,7 @@ public:
   }
 
 public:
-  ndn::util::DummyClientFace face;
+  ndn::DummyClientFace face;
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
   Lsdb lsdb;
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   auto deadline = ndn::time::steady_clock::now() + ndn::time::seconds(LSA_REFRESH_TIME_MAX);
 
   // Simulate an LSA interest timeout
-  lsdb.onFetchLsaError(ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
+  lsdb.onFetchLsaError(ndn::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
                        oldInterestName, 0, deadline, interestName, oldSeqNo);
   advanceClocks(10_ms);
 
@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(LsdbSync)
   interests.clear();
 
   // Simulate an LSA interest timeout where the sequence number is outdated
-  lsdb.onFetchLsaError(ndn::util::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
+  lsdb.onFetchLsaError(ndn::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT, "Timeout",
                        oldInterestName, 0, deadline, interestName, oldSeqNo);
   advanceClocks(10_ms);
 
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
   lsdb.installLsa(nameLsa);
 
   // Create another Lsdb and expressInterest
-  ndn::util::DummyClientFace face2(m_io, m_keyChain, {true, true});
+  ndn::DummyClientFace face2(m_io, m_keyChain, {true, true});
   face.linkTo(face2);
 
   ConfParameter conf2(face2, m_keyChain);
@@ -256,11 +256,11 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router/NAME/");
   interestName.appendNumber(seqNo);
 
-  ndn::util::DummyClientFace face2(m_io, m_keyChain, {true, true});
+  ndn::DummyClientFace face2(m_io, m_keyChain, {true, true});
   face.linkTo(face2);
 
-  auto fetcher = ndn::util::SegmentFetcher::start(face2, ndn::Interest(interestName),
-                                                  ndn::security::getAcceptAllValidator());
+  auto fetcher = ndn::SegmentFetcher::start(face2, ndn::Interest(interestName),
+                                            ndn::security::getAcceptAllValidator());
   fetcher->onComplete.connect([&expectedDataContent] (ndn::ConstBufferPtr bufferPtr) {
                                 ndn::Block block(bufferPtr);
                                 BOOST_CHECK_EQUAL(expectedDataContent, block);

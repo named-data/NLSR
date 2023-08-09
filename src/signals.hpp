@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -32,8 +32,8 @@ class RoutingTable;
 class RoutingTableEntry;
 class SyncLogicHandler;
 
-using AfterRoutingChange = ndn::util::Signal<RoutingTable, std::list<RoutingTableEntry>>;
-using OnNewLsa = ndn::util::Signal<SyncLogicHandler, ndn::Name, uint64_t, ndn::Name, uint64_t>;
+using AfterRoutingChange = ndn::signal::Signal<RoutingTable, std::list<RoutingTableEntry>>;
+using OnNewLsa = ndn::signal::Signal<SyncLogicHandler, ndn::Name, uint64_t, ndn::Name, uint64_t>;
 
 } // namespace nlsr
 

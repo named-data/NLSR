@@ -83,7 +83,7 @@ public:
   void
   processInterest(const ndn::Name& name, const ndn::Interest& interest);
 
-  ndn::util::Signal<HelloProtocol, Statistics::PacketType> hpIncrementSignal;
+  ndn::signal::Signal<HelloProtocol, Statistics::PacketType> hpIncrementSignal;
 
 private:
   /*! \brief Try to contact a neighbor via Hello protocol again
@@ -126,7 +126,7 @@ public:
   static inline const std::string INFO_COMPONENT{"INFO"};
   static inline const std::string NLSR_COMPONENT{"nlsr"};
 
-  ndn::util::Signal<HelloProtocol, const ndn::Name&> onInitialHelloDataValidated;
+  ndn::signal::Signal<HelloProtocol, const ndn::Name&> onInitialHelloDataValidated;
 
 private:
   ndn::Face& m_face;

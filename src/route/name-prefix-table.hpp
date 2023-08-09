@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -141,8 +141,8 @@ private:
   const ndn::Name& m_ownRouterName;
   Fib& m_fib;
   RoutingTable& m_routingTable;
-  ndn::util::signal::Connection m_afterRoutingChangeConnection;
-  ndn::util::signal::Connection m_afterLsdbModified;
+  ndn::signal::Connection m_afterRoutingChangeConnection;
+  ndn::signal::Connection m_afterLsdbModified;
 };
 
 inline NamePrefixTable::const_iterator
