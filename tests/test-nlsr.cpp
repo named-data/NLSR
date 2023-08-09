@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(SetEventIntervals)
 BOOST_AUTO_TEST_CASE(FaceCreateEvent)
 {
   // Setting constants for the unit test
-  const uint32_t faceId = 1;
+  const uint32_t faceId = 128;
   const std::string faceUri = "udp4://10.0.0.1:6363";
 
   Adjacent neighbor("/ndn/neighborA", ndn::FaceUri(faceUri), 10,
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEvent)
 BOOST_AUTO_TEST_CASE(FaceCreateEventNoMatch)
 {
   // Setting constants for the unit test
-  const uint32_t faceId = 1;
+  const uint32_t faceId = 128;
   const std::string eventUri = "udp4://10.0.0.1:6363";
   const std::string neighborUri = "udp4://10.0.0.2:6363";
 
@@ -272,10 +272,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventNoMatch)
 
 BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
 {
-  // So if NLSR gets the notification and registers prefixes it
-  // will change the Id to 1 and our tests will fail
-  // Need to disable registrationReply in dummy face and have own registration reply in the future
-  const uint32_t neighborFaceId = 1;
+  const uint32_t neighborFaceId = 128;
   const std::string faceUri = "udp4://10.0.0.1:6363";
 
   Adjacent neighbor("/ndn/neighborA", ndn::FaceUri(faceUri), 10,
@@ -289,7 +286,7 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
   ndn::nfd::FaceEventNotification event;
   event.setKind(ndn::nfd::FACE_EVENT_CREATED)
     .setRemoteUri(faceUri)
-    .setFaceId(neighborFaceId); // Does not matter what we set here, dummy face always returns 1
+    .setFaceId(neighborFaceId);
   auto data = std::make_shared<ndn::Data>(ndn::Name("/localhost/nfd/faces/events").appendSequenceNumber(0));
   data->setFreshnessPeriod(1_s);
   data->setContent(event.wireEncode());
@@ -299,7 +296,6 @@ BOOST_AUTO_TEST_CASE(FaceCreateEventAlreadyConfigured)
   // Move the clocks forward so that the Face processes the event.
   this->advanceClocks(10_ms);
 
-  // Check that the neighbor is configured with the face id of 1
   auto iterator = conf.getAdjacencyList().findAdjacent(ndn::FaceUri(faceUri));
   BOOST_REQUIRE(iterator != conf.getAdjacencyList().end());
   BOOST_CHECK_EQUAL(iterator->getFaceId(), neighborFaceId);

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -39,7 +39,6 @@ public:
     , fib(face, m_scheduler, adjacencies, conf, m_keyChain)
     , interests(face.sentInterests)
   {
-    enableRegistrationReplyWithFaceId();
     advanceClocks(1_s);
 
     Adjacent neighbor1(router1Name, ndn::FaceUri(router1FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
@@ -54,36 +53,6 @@ public:
     conf.setMaxFacesPerPrefix(2);
 
     fib.setEntryRefreshTime(1);
-  }
-
-  void
-  enableRegistrationReplyWithFaceId()
-  {
-    face.onSendInterest.connect([this] (const auto& interest) {
-      if (!RIB_COMMAND_PREFIX.isPrefixOf(interest.getName()))
-        return;
-
-      ndn::name::Component verb;
-      ndn::nfd::ControlParameters params;
-      extractRibCommandParameters(interest, verb, params);
-      if (!params.hasFaceId()) {
-        params.setFaceId(1);
-      }
-      params.setOrigin(ndn::nfd::ROUTE_ORIGIN_APP);
-      if (verb == ndn::name::Component("register")) {
-        params.setCost(0);
-      }
-
-      ndn::nfd::ControlResponse resp;
-      resp.setCode(200);
-      resp.setBody(params.wireEncode());
-
-      ndn::Data data(interest.getName());
-      data.setContent(resp.wireEncode());
-      m_keyChain.sign(data, ndn::security::SigningInfo(ndn::security::SigningInfo::SIGNER_TYPE_SHA256));
-
-      face.getIoService().post([this, data] { face.receive(data); });
-    });
   }
 
   static void
@@ -102,7 +71,12 @@ private:
   ndn::Scheduler m_scheduler{m_io};
 
 public:
-  ndn::util::DummyClientFace face{m_io, m_keyChain};
+  ndn::util::DummyClientFace face{m_io, m_keyChain, [] {
+    ndn::util::DummyClientFace::Options opts;
+    opts.enableRegistrationReply = true;
+    opts.registrationReplyFaceId = 128;
+    return opts;
+  } ()};
   ConfParameter conf{face, m_keyChain};
   AdjacencyList& adjacencies;
   Fib fib;
