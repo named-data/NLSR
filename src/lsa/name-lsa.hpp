@@ -25,6 +25,8 @@
 #include "lsa.hpp"
 #include "name-prefix-list.hpp"
 
+#include <boost/operators.hpp>
+
 namespace nlsr {
 
 /*!
@@ -33,7 +35,7 @@ namespace nlsr {
                 Lsa
                 Name+
  */
-class NameLsa : public Lsa
+class NameLsa : public Lsa, private boost::equality_comparable<NameLsa>
 {
 public:
   NameLsa() = default;
@@ -82,9 +84,6 @@ public:
     m_npl.erase(name);
   }
 
-  bool
-  isEqualContent(const NameLsa& other) const;
-
   template<ndn::encoding::Tag TAG>
   size_t
   wireEncode(ndn::EncodingImpl<TAG>& block) const;
@@ -100,6 +99,17 @@ public:
 
   std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
   update(const std::shared_ptr<Lsa>& lsa) override;
+
+private: // non-member operators
+  // NOTE: the following "hidden friend" operators are available via
+  //       argument-dependent lookup only and must be defined inline.
+  // boost::equality_comparable provides != operator.
+
+  friend bool
+  operator==(const NameLsa& lhs, const NameLsa& rhs)
+  {
+    return lhs.m_npl == rhs.m_npl;
+  }
 
 private:
   NamePrefixList m_npl;

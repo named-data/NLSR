@@ -112,12 +112,6 @@ NameLsa::wireDecode(const ndn::Block& wire)
   m_npl = npl;
 }
 
-bool
-NameLsa::isEqualContent(const NameLsa& other) const
-{
-  return m_npl == other.getNpl();
-}
-
 std::string
 NameLsa::toString() const
 {

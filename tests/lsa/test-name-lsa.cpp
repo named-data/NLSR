@@ -107,21 +107,22 @@ BOOST_AUTO_TEST_CASE(InitializeFromContent)
 
 BOOST_AUTO_TEST_CASE(OperatorEquals)
 {
-  NameLsa lsa1;
-  NameLsa lsa2;
   ndn::Name name1("/ndn/test/name1");
   ndn::Name name2("/ndn/test/name2");
   ndn::Name name3("/ndn/some/other/name1");
 
+  NameLsa lsa1;
   lsa1.addName(name1);
   lsa1.addName(name2);
   lsa1.addName(name3);
 
+  NameLsa lsa2;
   lsa2.addName(name1);
   lsa2.addName(name2);
-  lsa2.addName(name3);
+  BOOST_CHECK_NE(lsa1, lsa2);
 
-  BOOST_CHECK(lsa1.isEqualContent(lsa2));
+  lsa2.addName(name3);
+  BOOST_CHECK_EQUAL(lsa1, lsa2);
 }
 
 BOOST_AUTO_TEST_CASE(Update)
