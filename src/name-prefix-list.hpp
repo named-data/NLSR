@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,17 +24,20 @@
 
 #include "test-access-control.hpp"
 
+#include <ndn-cxx/name.hpp>
+
+#include <boost/operators.hpp>
+
 #include <initializer_list>
 #include <list>
+#include <map>
+#include <set>
 #include <string>
-#include <tuple>
 #include <vector>
-
-#include <ndn-cxx/name.hpp>
 
 namespace nlsr {
 
-class NamePrefixList
+class NamePrefixList : private boost::equality_comparable<NamePrefixList>
 {
 public:
   using NamePair = std::tuple<ndn::Name, std::vector<std::string>>;
@@ -56,8 +59,12 @@ public:
   }
 
   NamePrefixList(std::initializer_list<NamePair> namesAndSources)
-    : m_names(namesAndSources)
   {
+    for (const auto& np : namesAndSources) {
+      for (const auto& source : std::get<NamePrefixList::NamePairIndex::SOURCES>(np)) {
+        insert(std::get<NamePrefixList::NamePairIndex::NAME>(np), source);
+      }
+    }
   }
 #endif
 
@@ -73,22 +80,16 @@ public:
       \retval false If the name failed to be removed.
    */
   bool
-  remove(const ndn::Name& name, const std::string& source = "");
-
-  void
-  sort();
+  erase(const ndn::Name& name, const std::string& source = "");
 
   size_t
   size() const
   {
-    return m_names.size();
+    return m_namesSources.size();
   }
 
   std::list<ndn::Name>
   getNames() const;
-
-  bool
-  operator==(const NamePrefixList& other) const;
 
   /*! Returns how many unique sources this name has.
 
@@ -108,24 +109,22 @@ public:
   void
   clear()
   {
-    m_names.clear();
+    m_namesSources.clear();
+  }
+
+private: // non-member operators
+  // NOTE: the following "hidden friend" operators are available via
+  //       argument-dependent lookup only and must be defined inline.
+  // boost::equality_comparable provides != operators.
+
+  friend bool
+  operator==(const NamePrefixList& lhs, const NamePrefixList& rhs)
+  {
+    return lhs.getNames() == rhs.getNames();
   }
 
 private:
-  /*! Obtain an iterator to the entry matching name.
-
-    \note We could do this quite easily inline with a lambda, but this
-    is slightly more efficient.
-   */
-  std::vector<NamePair>::iterator
-  get(const ndn::Name& name);
-
-  /*! Obtain an iterator to a specific source in an entry
-   */
-  std::vector<std::string>::iterator
-  getSource(const std::string& source, std::vector<NamePair>::iterator& entry);
-
-  std::vector<NamePair> m_names;
+  std::map<ndn::Name, std::set<std::string>> m_namesSources;
 };
 
 std::ostream&

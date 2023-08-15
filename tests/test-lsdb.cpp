@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   BOOST_CHECK_EQUAL(nameList, prefixes);
 
   // Remove a prefix: name2
-  prefixes.remove(name2);
+  prefixes.erase(name2);
 
   NameLsa removeLsa(otherRouter, 3, MAX_TIME, prefixes);
   lsdb.installLsa(std::make_shared<NameLsa>(removeLsa));
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
 
   // Add and remove a prefix: add name2, remove name3
   prefixes.insert(name2);
-  prefixes.remove(name3);
+  prefixes.erase(name3);
 
   NameLsa addAndRemoveLsa(otherRouter, 4, MAX_TIME, prefixes);
   lsdb.installLsa(std::make_shared<NameLsa>(addAndRemoveLsa));

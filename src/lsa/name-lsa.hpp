@@ -78,7 +78,7 @@ public:
   removeName(const ndn::Name& name)
   {
     m_wire.reset();
-    m_npl.remove(name);
+    m_npl.erase(name);
   }
 
   bool

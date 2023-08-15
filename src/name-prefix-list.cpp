@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -28,85 +28,39 @@ NamePrefixList::NamePrefixList() = default;
 
 NamePrefixList::NamePrefixList(ndn::span<const ndn::Name> names)
 {
-  std::transform(names.begin(), names.end(), std::back_inserter(m_names),
-                 [] (const auto& name) { return NamePair{name, {""}}; });
-}
-
-std::vector<NamePrefixList::NamePair>::iterator
-NamePrefixList::get(const ndn::Name& name)
-{
-  return std::find_if(m_names.begin(), m_names.end(),
-                      [&] (const NamePrefixList::NamePair& pair) {
-                        return name == std::get<NamePrefixList::NamePairIndex::NAME>(pair);
-                      });
-}
-
-std::vector<std::string>::iterator
-NamePrefixList::getSource(const std::string& source, std::vector<NamePair>::iterator& entry)
-{
-  return std::find_if(std::get<NamePairIndex::SOURCES>(*entry).begin(),
-                      std::get<NamePairIndex::SOURCES>(*entry).end(),
-                      [&] (const std::string& containerSource) {
-                        return source == containerSource;
-                      });
+  for (const auto& name : names) {
+    insert(name);
+  }
 }
 
 bool
 NamePrefixList::insert(const ndn::Name& name, const std::string& source)
 {
-  auto pairItr = get(name);
-  if (pairItr == m_names.end()) {
-    std::vector<std::string> sources{source};
-    m_names.emplace_back(name, sources);
-    return true;
-  }
-  else {
-    auto& sources = std::get<NamePrefixList::NamePairIndex::SOURCES>(*pairItr);
-    auto sourceItr = getSource(source, pairItr);
-    if (sourceItr == sources.end()) {
-      sources.push_back(source);
-      return true;
-    }
-  }
-  return false;
+  auto& sources = m_namesSources[name];
+  return sources.insert(source).second;
 }
 
 bool
-NamePrefixList::remove(const ndn::Name& name, const std::string& source)
+NamePrefixList::erase(const ndn::Name& name, const std::string& source)
 {
-  auto pairItr = get(name);
-  if (pairItr != m_names.end()) {
-    auto& sources = std::get<NamePrefixList::NamePairIndex::SOURCES>(*pairItr);
-    auto sourceItr = getSource(source, pairItr);
-    if (sourceItr != sources.end()) {
-      sources.erase(sourceItr);
-      if (sources.empty()) {
-        m_names.erase(pairItr);
-      }
-      return true;
-    }
+  auto it = m_namesSources.find(name);
+  if (it == m_namesSources.end()) {
+    return false;
   }
-  return false;
-}
 
-bool
-NamePrefixList::operator==(const NamePrefixList& other) const
-{
-  return m_names == other.m_names;
-}
-
-void
-NamePrefixList::sort()
-{
-  std::sort(m_names.begin(), m_names.end());
+  bool isRemoved = it->second.erase(source);
+  if (it->second.empty()) {
+    m_namesSources.erase(it);
+  }
+  return isRemoved;
 }
 
 std::list<ndn::Name>
 NamePrefixList::getNames() const
 {
   std::list<ndn::Name> names;
-  for (const auto& namePair : m_names) {
-    names.push_back(std::get<NamePrefixList::NamePairIndex::NAME>(namePair));
+  for (const auto& [name, sources] : m_namesSources) {
+    names.push_back(name);
   }
   return names;
 }
@@ -120,16 +74,16 @@ NamePrefixList::countSources(const ndn::Name& name) const
 const std::vector<std::string>
 NamePrefixList::getSources(const ndn::Name& name) const
 {
-  auto it = std::find_if(m_names.begin(), m_names.end(),
-                         [&] (const NamePrefixList::NamePair& pair) {
-                           return name == std::get<NamePrefixList::NamePairIndex::NAME>(pair);
-                         });
-  if (it != m_names.end()) {
-    return std::get<NamePrefixList::NamePairIndex::SOURCES>(*it);
-  }
-  else {
+  auto it = m_namesSources.find(name);
+  if (it == m_namesSources.end()) {
     return {};
   }
+
+  std::vector<std::string> result;
+  for (const auto& source : it->second) {
+    result.push_back(source);
+  }
+  return result;
 }
 
 std::ostream&

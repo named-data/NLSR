@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -102,7 +102,7 @@ CommandManagerBase::withdrawAndRemovePrefix(const ndn::Name& prefix,
     static_cast<const ndn::nfd::ControlParameters&>(parameters);
 
   // Only build a Name LSA if the added name is new
-  if (m_namePrefixList.remove(castParams.getName())) {
+  if (m_namePrefixList.erase(castParams.getName())) {
     NLSR_LOG_INFO("Withdrawing/Removing name: " << castParams.getName() << "\n");
     m_lsdb.buildAndInstallOwnNameLsa();
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {

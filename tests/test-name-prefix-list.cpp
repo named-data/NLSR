@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(NplSizeAndRemove)
 
   BOOST_CHECK_EQUAL(npl1.size(), 2);
 
-  npl1.remove(b);
+  npl1.erase(b);
 
   BOOST_CHECK_EQUAL(npl1.size(), 1);
 }
@@ -53,9 +53,19 @@ BOOST_AUTO_TEST_CASE(OperatorEquals)
   ndn::Name name2("/ndn/test/name2");
   ndn::Name name3("/ndn/some/other/name1");
   NamePrefixList list1{name1, name2, name3};
-  NamePrefixList list2{name1, name2, name3};
 
+  NamePrefixList list2;
+  BOOST_CHECK_NE(list1, list2);
+
+  list2.insert(name1);
+  list2.insert(name1, "A1");
+  list2.insert(name2, "B0");
+  list2.insert(name2, "B1");
+  list2.insert(name3, "C0");
   BOOST_CHECK_EQUAL(list1, list2);
+
+  list2.erase(name3, "C0");
+  BOOST_CHECK_NE(list1, list2);
 }
 
 /*
@@ -141,7 +151,7 @@ BOOST_AUTO_TEST_CASE(RemainingSourcesAfterRemoval)
   list.insert(name1, "readvertise");
   list.insert(name1, "prefix-update");
 
-  list.remove(name1, "prefix-update");
+  list.erase(name1, "prefix-update");
 
   std::vector<std::string> referenceSources{"nlsr.conf", "readvertise", "prefix-update"};
   const std::vector<std::string> sources = list.getSources(name1);
@@ -162,8 +172,8 @@ BOOST_AUTO_TEST_CASE(BraceInitializerCtors)
   const ndn::Name name3{"/ndn/test/prefix3"};
   std::list<ndn::Name> testList{name1, name2, name3};
 
-  const std::vector<std::string> sources1{"static", "readvertise"};
-  const std::vector<std::string> sources2{"static", "nlsrc"};
+  const std::vector<std::string> sources1{"readvertise", "static"};
+  const std::vector<std::string> sources2{"nlsrc", "static"};
   const std::vector<std::string> sources3{"static"};
 
   NamePrefixList list1{name1, name2, name3};
