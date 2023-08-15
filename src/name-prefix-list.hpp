@@ -33,51 +33,27 @@
 #include <map>
 #include <set>
 #include <string>
-#include <vector>
 
 namespace nlsr {
 
 class NamePrefixList : private boost::equality_comparable<NamePrefixList>
 {
 public:
-  using NamePair = std::tuple<ndn::Name, std::vector<std::string>>;
-
-  enum NamePairIndex {
-    NAME,
-    SOURCES
-  };
-
   NamePrefixList();
 
   explicit
-  NamePrefixList(ndn::span<const ndn::Name> names);
+  NamePrefixList(std::initializer_list<ndn::Name> names);
 
-#ifdef WITH_TESTS
-  NamePrefixList(std::initializer_list<ndn::Name> names)
-    : NamePrefixList(ndn::span<const ndn::Name>(names))
-  {
-  }
-
-  NamePrefixList(std::initializer_list<NamePair> namesAndSources)
-  {
-    for (const auto& np : namesAndSources) {
-      for (const auto& source : std::get<NamePrefixList::NamePairIndex::SOURCES>(np)) {
-        insert(std::get<NamePrefixList::NamePairIndex::NAME>(np), source);
-      }
-    }
-  }
-#endif
-
-  /*! \brief inserts name into NamePrefixList
-      \retval true If the name was successfully inserted.
-      \retval false If the name could not be inserted.
+  /*! \brief Inserts name and source combination.
+      \retval true Name and source combination is inserted.
+      \retval false Name and source combination already exists.
    */
   bool
   insert(const ndn::Name& name, const std::string& source = "");
 
-  /*! \brief removes name from NamePrefixList
-      \retval true If the name is removed
-      \retval false If the name failed to be removed.
+  /*! \brief Deletes name and source combination
+      \retval true Name and source combination is deleted.
+      \retval false Name and source combination does not exist.
    */
   bool
   erase(const ndn::Name& name, const std::string& source = "");
@@ -91,20 +67,13 @@ public:
   std::list<ndn::Name>
   getNames() const;
 
-  /*! Returns how many unique sources this name has.
-
-    \retval 0 if the name is not in the list, else the number of sources.
-   */
-  uint32_t
-  countSources(const ndn::Name& name) const;
-
+#ifdef WITH_TESTS
   /*! Returns the sources that this name has.
-
-    \retval an empty vector if the name is not in the list, else a
-    vector containing the sources.
+      If the name does not exist, returns an empty container.
    */
-  const std::vector<std::string>
+  std::set<std::string>
   getSources(const ndn::Name& name) const;
+#endif
 
   void
   clear()
@@ -125,10 +94,10 @@ private: // non-member operators
 
 private:
   std::map<ndn::Name, std::set<std::string>> m_namesSources;
-};
 
-std::ostream&
-operator<<(std::ostream& os, const NamePrefixList& list);
+  friend std::ostream&
+  operator<<(std::ostream& os, const NamePrefixList& list);
+};
 
 } // namespace nlsr
 

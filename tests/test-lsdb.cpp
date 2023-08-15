@@ -51,20 +51,6 @@ public:
   }
 
   void
-  areNamePrefixListsEqual(NamePrefixList& lhs, NamePrefixList& rhs)
-  {
-    auto lhsList = lhs.getNames();
-    auto rhsList = rhs.getNames();
-    BOOST_REQUIRE_EQUAL(lhsList.size(), rhsList.size());
-
-    auto i = lhsList.begin();
-    auto j = rhsList.begin();
-    for (; i != lhsList.end(); ++i, ++j) {
-      BOOST_CHECK_EQUAL(*i, *j);
-    }
-  }
-
-  void
   isFirstNameLsaEqual(const Lsdb& otherLsdb)
   {
     auto selfLsaRange = lsdb.getLsdbIterator<NameLsa>();
@@ -344,7 +330,6 @@ BOOST_AUTO_TEST_CASE(InstallNameLsa)
   NamePrefixList& nameList = std::static_pointer_cast<NameLsa>(lsdb.findLsa(otherRouter, Lsa::Type::NAME))->getNpl();
 
   BOOST_CHECK_EQUAL(nameList, prefixes);
-  //areNamePrefixListsEqual(nameList, prefixes);
 
   // Add a prefix: name3
   ndn::Name name3("/ndn/name3");

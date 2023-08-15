@@ -27,20 +27,84 @@ namespace test {
 BOOST_AUTO_TEST_SUITE(TestNpl)
 
 /*
-  The NamePrefixList can have names inserted and removed from it.
+  The NamePrefixList will provide a container of all the names it has,
+  without the sources for those names.
+
+  The NamePrefixList will return a container with all the sources for
+  a given name, with an empty container for a non-existent name.
  */
-BOOST_AUTO_TEST_CASE(NplSizeAndRemove)
+BOOST_AUTO_TEST_CASE(Ctor_Insert_Size_GetNames_GetSources)
 {
-  ndn::Name a{"testname"};
-  ndn::Name b{"name"};
+  ndn::Name name1{"/ndn/test/prefix1"};
+  ndn::Name name2{"/ndn/test/prefix2"};
+  ndn::Name name3{"/ndn/test/prefix3"};
+  std::list<ndn::Name> expectedNames{name1, name2, name3};
 
-  NamePrefixList npl1{a, b};
+  NamePrefixList list1{name1, name2, name3};
+  BOOST_CHECK_EQUAL(list1.size(), 3);
+  BOOST_TEST(list1.getNames() == expectedNames, boost::test_tools::per_element());
 
-  BOOST_CHECK_EQUAL(npl1.size(), 2);
+  std::vector<std::string> sources1{"static", "readvertise"};
+  std::vector<std::string> sources2{"static", "nlsrc"};
+  std::vector<std::string> sources3{"static"};
 
-  npl1.erase(b);
+  NamePrefixList list2;
+  auto list2InsertNameSources = [&] (const ndn::Name& name, ndn::span<const std::string> sources) {
+    for (const auto& source : sources) {
+      list2.insert(name, source);
+    }
+  };
+  list2InsertNameSources(name1, sources1);
+  list2InsertNameSources(name2, sources2);
+  list2InsertNameSources(name3, sources3);
+  BOOST_CHECK_EQUAL(list2.size(), 3);
+  BOOST_TEST(list2.getNames() == expectedNames, boost::test_tools::per_element());
 
-  BOOST_CHECK_EQUAL(npl1.size(), 1);
+  std::sort(sources1.begin(), sources1.end());
+  std::sort(sources2.begin(), sources2.end());
+  std::sort(sources3.begin(), sources3.end());
+  BOOST_TEST(list2.getSources(name1) == sources1, boost::test_tools::per_element());
+  BOOST_TEST(list2.getSources(name2) == sources2, boost::test_tools::per_element());
+  BOOST_TEST(list2.getSources(name3) == sources3, boost::test_tools::per_element());
+
+  auto noSources = list2.getSources("/not/a/prefix");
+  BOOST_CHECK_EQUAL(noSources.size(), 0);
+}
+
+/*
+  The NamePrefixList can have names inserted and removed from it.
+
+  The NamePrefixList will not delete a name as long as it at least one
+  source.
+ */
+BOOST_AUTO_TEST_CASE(Insert_Erase)
+{
+  ndn::Name name1{"/ndn/test/prefix1"};
+  ndn::Name name2{"/ndn/test/prefix2"};
+
+  NamePrefixList list;
+  BOOST_CHECK_EQUAL(list.insert(name2), true);
+  BOOST_CHECK_EQUAL(list.size(), 1);
+  BOOST_CHECK_EQUAL(list.insert(name2), false);
+
+  list.insert(name1, "nlsr.conf");
+  BOOST_CHECK_EQUAL(list.size(), 2);
+  list.insert(name1, "readvertise");
+  list.insert(name1, "prefix-update");
+  BOOST_CHECK_EQUAL(list.size(), 2);
+  list.erase(name1, "prefix-update");
+  BOOST_CHECK_EQUAL(list.size(), 2);
+
+  BOOST_TEST(list.getSources(name1) == (std::set<std::string>{"nlsr.conf", "readvertise"}),
+             boost::test_tools::per_element());
+
+  BOOST_CHECK_EQUAL(list.erase(name2), true);
+  BOOST_CHECK_EQUAL(list.erase(name2), false);
+
+  list.erase(name1, "nlsr.conf");
+  list.erase(name1, "readvertise");
+  BOOST_CHECK_EQUAL(list.size(), 0);
+  BOOST_CHECK_EQUAL(list.getSources(name1).size(), 0);
 }
 
 /*
@@ -66,133 +130,6 @@ BOOST_AUTO_TEST_CASE(OperatorEquals)
 
   list2.erase(name3, "C0");
   BOOST_CHECK_NE(list1, list2);
-}
-
-/*
-  The NamePrefixList will provide a container of all the names it has,
-  without the sources for those names.
- */
-BOOST_AUTO_TEST_CASE(GetNames)
-{
-  const ndn::Name name1{"/ndn/test/prefix1"};
-  const ndn::Name name2{"/ndn/test/prefix2"};
-  const ndn::Name name3{"/ndn/test/prefix3"};
-  NamePrefixList list{name1, name2, name3};
-
-  std::vector<ndn::Name> referenceNames{name1, name2, name3};
-
-  auto names = list.getNames();
-  BOOST_REQUIRE_EQUAL(names.size(), 3);
-  // Verify that all of the names are in the list.
-  for (const auto& name : names) {
-    bool didMatch = false;
-    for (const auto& referenceName : referenceNames) {
-      didMatch = didMatch || (name == referenceName);
-    }
-    BOOST_CHECK(didMatch);
-  }
-}
-
-/*
-  The NamePrefixList will count the number of sources for a given
-  name, with zero for a non-existent name.
- */
-BOOST_AUTO_TEST_CASE(CountSources)
-{
-  const ndn::Name name1{"/ndn/test/prefix1"};
-  const ndn::Name invalidName{"/not/a/prefix"};
-  NamePrefixList list;
-  list.insert(name1, "nlsr.conf");
-  list.insert(name1, "readvertise");
-  list.insert(name1, "prefix-update");
-
-  BOOST_CHECK_EQUAL(list.countSources(name1), 3);
-  BOOST_CHECK_EQUAL(list.countSources(invalidName), 0);
-}
-
-/*
-  The NamePrefixList will return a container with all the sources for
-  a given name, with an empty container for a non-existent name.
- */
-BOOST_AUTO_TEST_CASE(GetSources)
-{
-  NamePrefixList list;
-  const ndn::Name name1{"/ndn/test/prefix1"};
-  const ndn::Name invalidName{"/not/a/prefix"};
-
-  list.insert(name1, "nlsr.conf");
-  list.insert(name1, "readvertise");
-  list.insert(name1, "prefix-update");
-  std::vector<std::string> referenceSources{"nlsr.conf", "readvertise", "prefix-update"};
-
-  const std::vector<std::string> sources = list.getSources(name1);
-  BOOST_REQUIRE_EQUAL(list.countSources(name1), 3);
-  for (const auto& source : sources) {
-    bool didMatch = false;
-    for (const auto& referenceSource : referenceSources) {
-      didMatch = didMatch || (source == referenceSource);
-    }
-    BOOST_CHECK(didMatch);
-  }
-
-  std::vector<std::string> noSources = list.getSources(invalidName);
-  BOOST_REQUIRE_EQUAL(noSources.size(), 0);
-}
-
-/*
-  The NamePrefixList will not delete a name as long as it at least one
-  source.
- */
-BOOST_AUTO_TEST_CASE(RemainingSourcesAfterRemoval)
-{
-  NamePrefixList list;
-  const ndn::Name name1{"/ndn/test/prefix1"};
-  list.insert(name1, "nlsr.conf");
-  list.insert(name1, "readvertise");
-  list.insert(name1, "prefix-update");
-
-  list.erase(name1, "prefix-update");
-
-  std::vector<std::string> referenceSources{"nlsr.conf", "readvertise", "prefix-update"};
-  const std::vector<std::string> sources = list.getSources(name1);
-  BOOST_REQUIRE_EQUAL(list.countSources(name1), 2);
-  for (const auto& source : sources) {
-    bool didMatch = false;
-    for (const auto& referenceSource : referenceSources) {
-      didMatch = didMatch || (source == referenceSource);
-    }
-    BOOST_CHECK(didMatch);
-  }
-}
-
-BOOST_AUTO_TEST_CASE(BraceInitializerCtors)
-{
-  const ndn::Name name1{"/ndn/test/prefix1"};
-  const ndn::Name name2{"/ndn/test/prefix2"};
-  const ndn::Name name3{"/ndn/test/prefix3"};
-  std::list<ndn::Name> testList{name1, name2, name3};
-
-  const std::vector<std::string> sources1{"readvertise", "static"};
-  const std::vector<std::string> sources2{"nlsrc", "static"};
-  const std::vector<std::string> sources3{"static"};
-
-  NamePrefixList list1{name1, name2, name3};
-  auto list = list1.getNames();
-  BOOST_CHECK_EQUAL(list1.size(), 3);
-  BOOST_CHECK(testList == list);
-
-  NamePrefixList list2{ NamePrefixList::NamePair{name1, sources1},
-      NamePrefixList::NamePair{name2, sources2}, NamePrefixList::NamePair{name3, sources3} };
-  auto name1Sources = list2.getSources(name1);
-  BOOST_CHECK(sources1 == name1Sources);
-  auto name2Sources = list2.getSources(name2);
-  BOOST_CHECK(sources2 == name2Sources);
-  auto name3Sources = list2.getSources(name3);
-  BOOST_CHECK(sources3 == name3Sources);
-
-  const std::vector<ndn::Name> namesVector{name1, name2, name3};
-  NamePrefixList list3(namesVector);
-  BOOST_CHECK(list1 == list3);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

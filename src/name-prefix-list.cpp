@@ -26,7 +26,7 @@ namespace nlsr {
 
 NamePrefixList::NamePrefixList() = default;
 
-NamePrefixList::NamePrefixList(ndn::span<const ndn::Name> names)
+NamePrefixList::NamePrefixList(std::initializer_list<ndn::Name> names)
 {
   for (const auto& name : names) {
     insert(name);
@@ -65,35 +65,26 @@ NamePrefixList::getNames() const
   return names;
 }
 
-uint32_t
-NamePrefixList::countSources(const ndn::Name& name) const
-{
-  return getSources(name).size();
-}
+#ifdef WITH_TESTS
 
-const std::vector<std::string>
+std::set<std::string>
 NamePrefixList::getSources(const ndn::Name& name) const
 {
-  auto it = m_namesSources.find(name);
-  if (it == m_namesSources.end()) {
-    return {};
+  if (auto it = m_namesSources.find(name); it != m_namesSources.end()) {
+    return it->second;
   }
-
-  std::vector<std::string> result;
-  for (const auto& source : it->second) {
-    result.push_back(source);
-  }
-  return result;
+  return {};
 }
+
+#endif
 
 std::ostream&
 operator<<(std::ostream& os, const NamePrefixList& list)
 {
   os << "Name prefix list: {\n";
-  for (const auto& name : list.getNames()) {
-    os << name << "\n"
-       << "Sources:\n";
-    for (const auto& source : list.getSources(name)) {
+  for (const auto& [name, sources] : list.m_namesSources) {
+    os << name << "\nSources:\n";
+    for (const auto& source : sources) {
       os << "  " << source << "\n";
     }
   }
