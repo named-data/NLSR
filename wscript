@@ -22,7 +22,7 @@ NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 from waflib import Context, Logs, Utils
 import os, subprocess
 
-VERSION = '0.6.0'
+VERSION = '0.7.0'
 APPNAME = 'nlsr'
 GIT_TAG_PREFIX = 'NLSR-'
 

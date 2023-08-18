@@ -1,5 +1,5 @@
-NLSR Versions
-=============
+All NLSR Releases
+=================
 
 .. toctree::
    :glob:
@@ -8,6 +8,12 @@ NLSR Versions
    :reversed:
 
    release-notes/*
+
+* **NLSR version 0.7.0**
+  (:doc:`Release Notes <release-notes/release-notes-0.7.0>`, `Documentation <https://docs.named-data.net/NLSR/0.7.0/>`__)
+
+  `src (git) <https://github.com/named-data/NLSR/releases/tag/NLSR-0.7.0>`__,
+  `src (tarball) <https://named-data.net/downloads/nlsr-0.7.0.tar.xz>`__ (`checksum <https://named-data.net/downloads/nlsr-0.7.0.tar.xz.sha256>`__)
 
 * **NLSR version 0.6.0**
   (:doc:`Release Notes <release-notes/release-notes-0.6.0>`, `Documentation <https://docs.named-data.net/NLSR/0.6.0/>`__)
