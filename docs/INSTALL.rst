@@ -17,9 +17,9 @@ Prerequisites
   Download the PSync library and build it according to the instructions available at
   https://github.com/named-data/PSync#build
 
-- ChronoSync library [optional]
+- ChronoSync library [optional, deprecated]
 
-  For testing purposes, NLSR can be optionally built with Chronosync support. Download
+  For testing purposes, NLSR can be optionally built with ChronoSync support. Download
   the ChronoSync library and build it according to the instructions available at
   https://github.com/named-data/ChronoSync#build
 
@@ -29,7 +29,7 @@ Prerequisites
   the ndn-svs library and build it according to the instructions available at
   https://github.com/named-data/ndn-svs#installation
 
-Note that at least one sync library must be enabled.
+Note that at least one Sync library must be enabled.
 
 Build
 -----

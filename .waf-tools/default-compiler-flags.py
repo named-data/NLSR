@@ -3,9 +3,11 @@
 import platform
 from waflib import Configure, Logs, Utils
 
+
 def options(opt):
     opt.add_option('--debug', '--with-debug', action='store_true', default=False,
                    help='Compile in debugging mode with minimal optimizations (-Og)')
+
 
 def configure(conf):
     conf.start_msg('Checking C++ compiler version')
@@ -18,19 +20,22 @@ def configure(conf):
     if cxx == 'gcc':
         if ccver < (7, 4, 0):
             errmsg = ('The version of gcc you are using is too old.\n'
-                      'The minimum supported gcc version is 7.4.')
+                      'The minimum supported gcc version is 9.3.')
+        elif ccver < (9, 3, 0):
+            warnmsg = ('Using a version of gcc older than 9.3 is not '
+                       'officially supported and may result in build failures.')
         conf.flags = GccFlags()
     elif cxx == 'clang':
         if Utils.unversioned_sys_platform() == 'darwin':
             if ccver < (10, 0, 0):
                 errmsg = ('The version of Xcode you are using is too old.\n'
-                          'The minimum supported Xcode version is 11.3.')
-            elif ccver < (11, 0, 0):
-                warnmsg = ('Using a version of Xcode older than 11.3 is not '
+                          'The minimum supported Xcode version is 12.4.')
+            elif ccver < (12, 0, 0):
+                warnmsg = ('Using a version of Xcode older than 12.4 is not '
                            'officially supported and may result in build failures.')
-        elif ccver < (6, 0, 0):
+        elif ccver < (7, 0, 0):
             errmsg = ('The version of clang you are using is too old.\n'
-                      'The minimum supported clang version is 6.0.')
+                      'The minimum supported clang version is 7.0.')
         conf.flags = ClangFlags()
     else:
         warnmsg = f'{cxx} compiler is unsupported'
@@ -45,13 +50,14 @@ def configure(conf):
     else:
         conf.end_msg(ccverstr)
 
-    conf.areCustomCxxflagsPresent = (len(conf.env.CXXFLAGS) > 0)
+    conf.areCustomCxxflagsPresent = len(conf.env.CXXFLAGS) > 0
 
     # General flags are always applied (e.g., selecting C++ language standard)
     generalFlags = conf.flags.getGeneralFlags(conf)
     conf.add_supported_cxxflags(generalFlags['CXXFLAGS'])
     conf.add_supported_linkflags(generalFlags['LINKFLAGS'])
     conf.env.DEFINES += generalFlags['DEFINES']
+
 
 @Configure.conf
 def check_compiler_flags(conf):
@@ -75,10 +81,11 @@ def check_compiler_flags(conf):
 
     conf.env.DEFINES += extraFlags['DEFINES']
 
+
 @Configure.conf
 def add_supported_cxxflags(self, cxxflags):
     """
-    Check which cxxflags are supported by compiler and add them to env.CXXFLAGS variable
+    Check which cxxflags are supported by the active compiler and add them to env.CXXFLAGS variable.
     """
     if len(cxxflags) == 0:
         return
@@ -94,10 +101,11 @@ def add_supported_cxxflags(self, cxxflags):
     self.end_msg(' '.join(supportedFlags))
     self.env.prepend_value('CXXFLAGS', supportedFlags)
 
+
 @Configure.conf
 def add_supported_linkflags(self, linkflags):
     """
-    Check which linkflags are supported by compiler and add them to env.LINKFLAGS variable
+    Check which linkflags are supported by the active compiler and add them to env.LINKFLAGS variable.
     """
     if len(linkflags) == 0:
         return
@@ -130,9 +138,10 @@ class CompilerFlags(object):
         """Get dict of CXXFLAGS, LINKFLAGS, and DEFINES that are needed only in optimized mode"""
         return {'CXXFLAGS': [], 'LINKFLAGS': [], 'DEFINES': ['NDEBUG']}
 
+
 class GccBasicFlags(CompilerFlags):
     """
-    This class defines basic flags that work for both gcc and clang compilers
+    This class defines basic flags that work for both gcc and clang compilers.
     """
     def getGeneralFlags(self, conf):
         flags = super(GccBasicFlags, self).getGeneralFlags(conf)
@@ -174,6 +183,7 @@ class GccBasicFlags(CompilerFlags):
         flags['LINKFLAGS'] += ['-Wl,-O1']
         return flags
 
+
 class GccFlags(GccBasicFlags):
     def getDebugFlags(self, conf):
         flags = super(GccFlags, self).getDebugFlags(conf)
@@ -192,6 +202,7 @@ class GccFlags(GccBasicFlags):
         if platform.machine() == 'armv7l':
             flags['CXXFLAGS'] += ['-Wno-psabi'] # Bug #5106
         return flags
+
 
 class ClangFlags(GccBasicFlags):
     def getGeneralFlags(self, conf):
