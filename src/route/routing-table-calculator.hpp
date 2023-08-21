@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -214,7 +214,7 @@ private:
   getHyperbolicDistance(Lsdb& lsdb, ndn::Name src, ndn::Name dest);
 
   void
-  addNextHop(ndn::Name destinationRouter, std::string faceUri, double cost, RoutingTable& rt);
+  addNextHop(const ndn::Name& destinationRouter, const ndn::FaceUri& faceUri, double cost, RoutingTable& rt);
 
   double
   calculateHyperbolicDistance(double rI, double rJ, double deltaTheta);

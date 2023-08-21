@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -35,11 +35,11 @@ BOOST_AUTO_TEST_CASE(EqualsOperator)
 {
   NextHop hop1;
   hop1.setRouteCost(25);
-  hop1.setConnectingFaceUri("AAA");
+  hop1.setConnectingFaceUri(ndn::FaceUri("udp4://192.168.3.1:6363"));
 
   NextHop hop2;
   hop2.setRouteCost(10);
-  hop2.setConnectingFaceUri("BBB");
+  hop2.setConnectingFaceUri(ndn::FaceUri("udp4://192.168.3.2:6363"));
 
   NexthopList nhl1;
   NexthopList nhl2;

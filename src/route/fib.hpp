@@ -165,7 +165,7 @@ private:
    *
    */
   void
-  unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri);
+  unregisterPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri);
 
   /*! \brief Log registration success, and update the Face ID associated with a URI.
    */

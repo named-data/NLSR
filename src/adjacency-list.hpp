@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -109,15 +109,6 @@ public:
 
   AdjacencyList::iterator
   findAdjacent(const ndn::FaceUri& faceUri);
-
-  /*! \brief Hack to stop developers from using this function
-
-    It is here so that faceUri cannot be passed in as string,
-    converted to Name and findAdjacent(Name) be used.
-    So when faceUri is passed as string this will cause a compile error
-   */
-  void
-  findAdjacent(const std::string&) = delete;
 
   uint64_t
   getFaceId(const ndn::FaceUri& faceUri);

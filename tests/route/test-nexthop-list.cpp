@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -86,14 +86,14 @@ BOOST_AUTO_TEST_CASE(HyperbolicRemoveNextHop)
 
 BOOST_AUTO_TEST_CASE(TieBreaker)
 {
-  // equal-cost hops are sorted lexicographically
+  // equal-cost hops are sorted consistently
   NextHop hopA;
   hopA.setRouteCost(25);
-  hopA.setConnectingFaceUri("AAAZZ");
+  hopA.setConnectingFaceUri(ndn::FaceUri("udp4://192.168.3.1:6363"));
 
   NextHop hopZ;
   hopZ.setRouteCost(25);
-  hopZ.setConnectingFaceUri("ZZA");
+  hopZ.setConnectingFaceUri(ndn::FaceUri("udp4://192.168.3.9:6363"));
 
   NexthopList list;
   list.addNextHop(hopA);
@@ -108,32 +108,15 @@ BOOST_AUTO_TEST_CASE(TieBreaker)
 
   it = list.begin();
   BOOST_CHECK_EQUAL(it->getConnectingFaceUri(), hopA.getConnectingFaceUri());
-
-
-  // equal-cost and lexicographically equal hops are sorted by the length of their face uris
-  NextHop longUriHop;
-  longUriHop.setRouteCost(25);
-  longUriHop.setConnectingFaceUri("AAAAAA");
-
-  NextHop shortUriHop;
-  shortUriHop.setRouteCost(25);
-  shortUriHop.setConnectingFaceUri("AAA");
-
-  list.clear();
-  list.addNextHop(longUriHop);
-  list.addNextHop(shortUriHop);
-
-  it = list.begin();
-  BOOST_CHECK_EQUAL(it->getConnectingFaceUri(), shortUriHop.getConnectingFaceUri());
 }
 
 BOOST_AUTO_TEST_CASE(SortOnAddAndRemove)
 {
   NexthopList list;
 
-  NextHop hopA("A", 10);
-  NextHop hopB("B", 5);
-  NextHop hopC("C", 25);
+  NextHop hopA(ndn::FaceUri("udp4://192.168.3.1:6363"), 10);
+  NextHop hopB(ndn::FaceUri("udp4://192.168.3.2:6363"), 5);
+  NextHop hopC(ndn::FaceUri("udp4://192.168.3.3:6363"), 25);
 
   list.addNextHop(hopA);
   list.addNextHop(hopB);
@@ -168,8 +151,8 @@ BOOST_AUTO_TEST_CASE(UseCheaperNextHop)
 {
   NexthopList list;
 
-  NextHop hopA("udp4://10.0.0.1:6363", 10);
-  NextHop hopB("udp4://10.0.0.1:6363", 5);
+  NextHop hopA(ndn::FaceUri("udp4://10.0.0.1:6363"), 10);
+  NextHop hopB(ndn::FaceUri("udp4://10.0.0.1:6363"), 5);
 
   list.addNextHop(hopA);
   list.addNextHop(hopB);
@@ -191,33 +174,32 @@ BOOST_AUTO_TEST_CASE(NextHopListDiffForFibUpdate) // #5179
   // If default sorter is used then difference results in
   // the same hops to remove as those that were added
   NexthopList nhl1;
-  nhl1.addNextHop(NextHop("udp4://10.0.0.13:6363", 28));
-  nhl1.addNextHop(NextHop("udp4://10.0.0.9:6363", 38));
-  nhl1.addNextHop(NextHop("udp4://10.0.0.26:6363", 44));
+  nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.13:6363"), 28));
+  nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.9:6363"), 38));
+  nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.26:6363"), 44));
 
   NexthopList nhl2;
-  nhl2.addNextHop(NextHop("udp4://10.0.0.9:6363", 21));
-  nhl2.addNextHop(NextHop("udp4://10.0.0.13:6363", 26));
-  nhl2.addNextHop(NextHop("udp4://10.0.0.26:6363", 42));
+  nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.9:6363"), 21));
+  nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.13:6363"), 26));
+  nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.26:6363"), 42));
 
-  std::set<NextHop, NextHopComparator> hopsToRemove;
+  std::set<NextHop> hopsToRemove;
   std::set_difference(nhl2.begin(), nhl2.end(),
                       nhl1.begin(), nhl1.end(),
-                      std::inserter(hopsToRemove, hopsToRemove.begin()),
-                      NextHopComparator());
+                      std::inserter(hopsToRemove, hopsToRemove.begin()));
 
   BOOST_CHECK_EQUAL(hopsToRemove.size(), 3);
 
   // Sorted by FaceUri
   NextHopsUriSortedSet nhs1;
-  nhs1.addNextHop(NextHop("udp4://10.0.0.13:6363", 28));
-  nhs1.addNextHop(NextHop("udp4://10.0.0.9:6363", 38));
-  nhs1.addNextHop(NextHop("udp4://10.0.0.26:6363", 44));
+  nhs1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.13:6363"), 28));
+  nhs1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.9:6363"), 38));
+  nhs1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.26:6363"), 44));
 
   NextHopsUriSortedSet nhs2;
-  nhs2.addNextHop(NextHop("udp4://10.0.0.9:6363", 21));
-  nhs2.addNextHop(NextHop("udp4://10.0.0.13:6363", 26));
-  nhs2.addNextHop(NextHop("udp4://10.0.0.26:6363", 42));
+  nhs2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.9:6363"), 21));
+  nhs2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.13:6363"), 26));
+  nhs2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.26:6363"), 42));
 
   std::set<NextHop, NextHopUriSortedComparator> hopsToRemove2;
   std::set_difference(nhs2.begin(), nhs2.end(),

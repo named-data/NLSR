@@ -33,8 +33,14 @@
 namespace nlsr {
 namespace test {
 
-using std::shared_ptr;
 using ndn::time::system_clock;
+
+static const ndn::Name ROUTER_A_NAME = "/ndn/router/a";
+static const ndn::Name ROUTER_B_NAME = "/ndn/router/b";
+static const ndn::Name ROUTER_C_NAME = "/ndn/router/c";
+static const ndn::FaceUri ROUTER_A_FACE("udp4://10.0.0.1:6363");
+static const ndn::FaceUri ROUTER_B_FACE("udp4://10.0.0.2:6363");
+static const ndn::FaceUri ROUTER_C_FACE("udp4://10.0.0.3:6363");
 
 constexpr system_clock::time_point MAX_TIME = system_clock::time_point::max();
 
@@ -112,8 +118,8 @@ public:
     NexthopList& bHopList = entryB->getNexthopList();
     BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 2);
 
-    for (std::set<NextHop, NextHopComparator>::iterator it = bHopList.begin(); it != bHopList.end(); ++it) {
-      std::string faceUri = it->getConnectingFaceUri();
+    for (auto it = bHopList.begin(); it != bHopList.end(); ++it) {
+      auto faceUri = it->getConnectingFaceUri();
       uint64_t cost = it->getRouteCostAsAdjustedInteger();
 
       BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == 0) ||
@@ -126,8 +132,8 @@ public:
     NexthopList& cHopList = entryC->getNexthopList();
     BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 2);
 
-    for (std::set<NextHop, NextHopComparator>::iterator it = cHopList.begin(); it != cHopList.end(); ++it) {
-      std::string faceUri = it->getConnectingFaceUri();
+    for (auto it = cHopList.begin(); it != cHopList.end(); ++it) {
+      auto faceUri = it->getConnectingFaceUri();
       uint64_t cost = it->getRouteCostAsAdjustedInteger();
 
       BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == applyHyperbolicFactorAndRound(expectedCost)) ||
@@ -153,23 +159,7 @@ public:
   RoutingTable& routingTable;
   AdjacencyList& adjacencies;
   Lsdb& lsdb;
-
-  static const ndn::Name ROUTER_A_NAME;
-  static const ndn::Name ROUTER_B_NAME;
-  static const ndn::Name ROUTER_C_NAME;
-
-  static const std::string ROUTER_A_FACE;
-  static const std::string ROUTER_B_FACE;
-  static const std::string ROUTER_C_FACE;
 };
-
-const ndn::Name HyperbolicCalculatorFixture::ROUTER_A_NAME = "/ndn/router/a";
-const ndn::Name HyperbolicCalculatorFixture::ROUTER_B_NAME = "/ndn/router/b";
-const ndn::Name HyperbolicCalculatorFixture::ROUTER_C_NAME = "/ndn/router/c";
-
-const std::string HyperbolicCalculatorFixture::ROUTER_A_FACE = "udp4://10.0.0.1";
-const std::string HyperbolicCalculatorFixture::ROUTER_B_FACE = "udp4://10.0.0.2";
-const std::string HyperbolicCalculatorFixture::ROUTER_C_FACE = "udp4://10.0.0.3";
 
 BOOST_FIXTURE_TEST_SUITE(TestHyperbolicRoutingCalculator, HyperbolicCalculatorFixture)
 

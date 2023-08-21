@@ -35,6 +35,15 @@ namespace nlsr {
 namespace test {
 
 constexpr ndn::time::system_clock::time_point MAX_TIME = ndn::time::system_clock::time_point::max();
+static const ndn::Name ROUTER_A_NAME = "/ndn/site/%C1.Router/this-router";
+static const ndn::Name ROUTER_B_NAME = "/ndn/site/%C1.Router/b";
+static const ndn::Name ROUTER_C_NAME = "/ndn/site/%C1.Router/c";
+static const ndn::FaceUri ROUTER_A_FACE("udp4://10.0.0.1");
+static const ndn::FaceUri ROUTER_B_FACE("udp4://10.0.0.2");
+static const ndn::FaceUri ROUTER_C_FACE("udp4://10.0.0.3");
+constexpr double LINK_AB_COST = 5;
+constexpr double LINK_AC_COST = 10;
+constexpr double LINK_BC_COST = 17;
 
 class LinkStateCalculatorFixture : public IoKeyChainFixture
 {
@@ -53,9 +62,9 @@ public:
   // Triangle topology with routers A, B, C connected
   void setUpTopology()
   {
-    Adjacent a(ROUTER_A_NAME, ndn::FaceUri(ROUTER_A_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
-    Adjacent b(ROUTER_B_NAME, ndn::FaceUri(ROUTER_B_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
-    Adjacent c(ROUTER_C_NAME, ndn::FaceUri(ROUTER_C_FACE), 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent a(ROUTER_A_NAME, ROUTER_A_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent b(ROUTER_B_NAME, ROUTER_B_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
+    Adjacent c(ROUTER_C_NAME, ROUTER_C_FACE, 0, Adjacent::STATUS_ACTIVE, 0, 0);
 
     // Router A
     b.setLinkCost(LINK_AB_COST);
@@ -103,31 +112,7 @@ public:
 
   RoutingTable& routingTable;
   Lsdb& lsdb;
-
-  static const ndn::Name ROUTER_A_NAME;
-  static const ndn::Name ROUTER_B_NAME;
-  static const ndn::Name ROUTER_C_NAME;
-
-  static const std::string ROUTER_A_FACE;
-  static const std::string ROUTER_B_FACE;
-  static const std::string ROUTER_C_FACE;
-
-  static const double LINK_AB_COST;
-  static const double LINK_AC_COST;
-  static const double LINK_BC_COST;
 };
-
-const ndn::Name LinkStateCalculatorFixture::ROUTER_A_NAME = "/ndn/site/%C1.Router/this-router";
-const ndn::Name LinkStateCalculatorFixture::ROUTER_B_NAME = "/ndn/site/%C1.Router/b";
-const ndn::Name LinkStateCalculatorFixture::ROUTER_C_NAME = "/ndn/site/%C1.Router/c";
-
-const std::string LinkStateCalculatorFixture::ROUTER_A_FACE = "udp4://10.0.0.1";
-const std::string LinkStateCalculatorFixture::ROUTER_B_FACE = "udp4://10.0.0.2";
-const std::string LinkStateCalculatorFixture::ROUTER_C_FACE = "udp4://10.0.0.3";
-
-const double LinkStateCalculatorFixture::LINK_AB_COST = 5;
-const double LinkStateCalculatorFixture::LINK_AC_COST = 10;
-const double LinkStateCalculatorFixture::LINK_BC_COST = 17;
 
 BOOST_FIXTURE_TEST_SUITE(TestLinkStateRoutingCalculator, LinkStateCalculatorFixture)
 
@@ -144,7 +129,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 2);
 
   for (const NextHop& hop : bHopList) {
-    std::string faceUri = hop.getConnectingFaceUri();
+    auto faceUri = hop.getConnectingFaceUri();
     uint64_t cost = hop.getRouteCostAsAdjustedInteger();
 
     BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == LINK_AB_COST) ||
@@ -160,7 +145,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 2);
 
   for (const NextHop& hop : cHopList) {
-    std::string faceUri = hop.getConnectingFaceUri();
+    auto faceUri = hop.getConnectingFaceUri();
     uint64_t cost = hop.getRouteCostAsAdjustedInteger();
 
     BOOST_CHECK((faceUri == ROUTER_C_FACE && cost == LINK_AC_COST) ||
@@ -192,7 +177,7 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
   BOOST_REQUIRE_EQUAL(bHopList.getNextHops().size(), 2);
 
   for (const NextHop& hop : bHopList) {
-    std::string faceUri = hop.getConnectingFaceUri();
+    auto faceUri = hop.getConnectingFaceUri();
     uint64_t cost = hop.getRouteCostAsAdjustedInteger();
 
     BOOST_CHECK((faceUri == ROUTER_B_FACE && cost == LINK_AB_COST) ||
@@ -208,7 +193,7 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
   BOOST_REQUIRE_EQUAL(cHopList.getNextHops().size(), 2);
 
   for (const NextHop& hop : cHopList) {
-    std::string faceUri = hop.getConnectingFaceUri();
+    auto faceUri = hop.getConnectingFaceUri();
     uint64_t cost = hop.getRouteCostAsAdjustedInteger();
 
     BOOST_CHECK((faceUri == ROUTER_C_FACE && cost == LINK_AC_COST) ||

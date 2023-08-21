@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -26,6 +26,9 @@
 #include <ndn-cxx/encoding/block.hpp>
 #include <ndn-cxx/encoding/encoding-buffer.hpp>
 #include <ndn-cxx/encoding/tlv.hpp>
+#include <ndn-cxx/net/face-uri.hpp>
+
+#include <boost/operators.hpp>
 
 #include <cmath>
 #include <ostream>
@@ -40,38 +43,33 @@ namespace nlsr {
  *
  * \sa https://redmine.named-data.net/projects/nlsr/wiki/Routing_Table_Dataset
  */
-class NextHop
+class NextHop : private boost::totally_ordered<NextHop>
 {
 public:
   using Error = ndn::tlv::Error;
 
-  NextHop()
-    : m_connectingFaceUri()
-    , m_routeCost(0)
-    , m_isHyperbolic(false)
-  {
-  }
+  NextHop() = default;
 
-  NextHop(const std::string& cfu, double rc)
+  NextHop(const ndn::FaceUri& cfu, double rc)
     : m_connectingFaceUri(cfu)
     , m_routeCost(rc)
-    , m_isHyperbolic(false)
   {
   }
 
+  explicit
   NextHop(const ndn::Block& block)
   {
     wireDecode(block);
   }
 
-  const std::string&
+  const ndn::FaceUri&
   getConnectingFaceUri() const
   {
     return m_connectingFaceUri;
   }
 
   void
-  setConnectingFaceUri(const std::string& cfu)
+  setConnectingFaceUri(const ndn::FaceUri& cfu)
   {
     m_connectingFaceUri = cfu;
   }
@@ -124,10 +122,29 @@ public:
   void
   wireDecode(const ndn::Block& wire);
 
+private: // non-member operators
+  // NOTE: the following "hidden friend" operators are available via
+  //       argument-dependent lookup only and must be defined inline.
+  // boost::totally_ordered provides !=, <=, >=, and > operators.
+
+  friend bool
+  operator==(const NextHop& lhs, const NextHop& rhs)
+  {
+    return lhs.getRouteCostAsAdjustedInteger() == rhs.getRouteCostAsAdjustedInteger() &&
+           lhs.getConnectingFaceUri() == rhs.getConnectingFaceUri();
+  }
+
+  friend bool
+  operator<(const NextHop& lhs, const NextHop& rhs)
+  {
+    return std::forward_as_tuple(lhs.getRouteCostAsAdjustedInteger(), lhs.getConnectingFaceUri()) <
+           std::forward_as_tuple(rhs.getRouteCostAsAdjustedInteger(), rhs.getConnectingFaceUri());
+  }
+
 private:
-  std::string m_connectingFaceUri;
-  double m_routeCost;
-  bool m_isHyperbolic;
+  ndn::FaceUri m_connectingFaceUri;
+  double m_routeCost = 0.0;
+  bool m_isHyperbolic = false;
 
   mutable ndn::Block m_wire;
 
@@ -146,9 +163,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 };
 
 NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(NextHop);
-
-bool
-operator==(const NextHop& lhs, const NextHop& rhs);
 
 std::ostream&
 operator<<(std::ostream& os, const NextHop& hop);

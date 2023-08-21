@@ -56,7 +56,7 @@ public:
   NextHop
   createNextHop(const std::string& faceUri, double cost)
   {
-    return {faceUri, cost};
+    return {ndn::FaceUri(faceUri), cost};
   }
 
   CoordinateLsa

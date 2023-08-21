@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -31,42 +31,16 @@
 
 namespace nlsr {
 
-struct NextHopComparator {
+struct NextHopUriSortedComparator
+{
   bool
-  operator() (const NextHop& nh1, const NextHop& nh2) const {
-    if (nh1.getRouteCostAsAdjustedInteger() < nh2.getRouteCostAsAdjustedInteger()) {
-      return true;
-    }
-    else if (nh1.getRouteCostAsAdjustedInteger() == nh2.getRouteCostAsAdjustedInteger()) {
-      return nh1.getConnectingFaceUri() < nh2.getConnectingFaceUri();
-    }
-    else {
-      return false;
-    }
+  operator()(const NextHop& lhs, const NextHop& rhs) const
+  {
+    return lhs.getConnectingFaceUri() < rhs.getConnectingFaceUri();
   }
 };
 
-struct NextHopUriSortedComparator {
-  bool
-  operator() (const NextHop& nh1, const NextHop& nh2) const {
-    return nh1.getConnectingFaceUri() < nh2.getConnectingFaceUri();
-  }
-};
-
-static inline bool
-nexthopAddCompare(const NextHop& nh1, const NextHop& nh2)
-{
-  return nh1.getConnectingFaceUri() == nh2.getConnectingFaceUri();
-}
-
-static inline bool
-nexthopRemoveCompare(const NextHop& nh1, const NextHop& nh2)
-{
-  return (nh1.getConnectingFaceUri() == nh2.getConnectingFaceUri() &&
-          nh1.getRouteCostAsAdjustedInteger() == nh2.getRouteCostAsAdjustedInteger()) ;
-}
-
-template<typename T = NextHopComparator>
+template<typename T = std::less<NextHop>>
 class NexthopListT
 {
 public:
@@ -76,19 +50,21 @@ public:
     \param nh The next hop.
 
     Adds a next hop to this object. If the next hop is new it is
-    added. If the next hop already exists in the list then that next
-    hop's route cost is updated.
+    added. If the next hop already exists but has a higher cost then
+    its route cost is updated.
   */
   void
   addNextHop(const NextHop& nh)
   {
     auto it = std::find_if(m_nexthopList.begin(), m_nexthopList.end(),
-                           std::bind(&nexthopAddCompare, _1, nh));
+      [&nh] (const auto& item) {
+        return item.getConnectingFaceUri() == nh.getConnectingFaceUri();
+      });
     if (it == m_nexthopList.end()) {
       m_nexthopList.insert(nh);
     }
     else if (it->getRouteCost() > nh.getRouteCost()) {
-      removeNextHop(*it);
+      m_nexthopList.erase(it);
       m_nexthopList.insert(nh);
     }
   }
@@ -101,8 +77,7 @@ public:
   void
   removeNextHop(const NextHop& nh)
   {
-    auto it = std::find_if(m_nexthopList.begin(), m_nexthopList.end(),
-                           std::bind(&nexthopRemoveCompare, _1, nh));
+    auto it = std::find(m_nexthopList.begin(), m_nexthopList.end(), nh);
     if (it != m_nexthopList.end()) {
       m_nexthopList.erase(it);
     }

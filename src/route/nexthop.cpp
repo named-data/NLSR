@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -32,7 +32,7 @@ NextHop::wireEncode(ndn::EncodingImpl<TAG>& block) const
   size_t totalLength = 0;
 
   totalLength += ndn::encoding::prependDoubleBlock(block, nlsr::tlv::CostDouble, m_routeCost);
-  totalLength += ndn::encoding::prependStringBlock(block, nlsr::tlv::Uri, m_connectingFaceUri);
+  totalLength += ndn::encoding::prependStringBlock(block, nlsr::tlv::Uri, m_connectingFaceUri.toString());
 
   totalLength += block.prependVarNumber(totalLength);
   totalLength += block.prependVarNumber(nlsr::tlv::NextHop);
@@ -63,7 +63,7 @@ NextHop::wireEncode() const
 void
 NextHop::wireDecode(const ndn::Block& wire)
 {
-  m_connectingFaceUri = "";
+  m_connectingFaceUri = {};
   m_routeCost = 0;
 
   m_wire = wire;
@@ -77,7 +77,12 @@ NextHop::wireDecode(const ndn::Block& wire)
   auto val = m_wire.elements_begin();
 
   if (val != m_wire.elements_end() && val->type() == nlsr::tlv::Uri) {
-    m_connectingFaceUri = ndn::encoding::readString(*val);
+    try {
+      m_connectingFaceUri = ndn::FaceUri(ndn::encoding::readString(*val));
+    }
+    catch (const ndn::FaceUri::Error& e) {
+      NDN_THROW_NESTED(Error("Invalid Uri"));
+    }
     ++val;
   }
   else {
@@ -91,13 +96,6 @@ NextHop::wireDecode(const ndn::Block& wire)
   else {
     NDN_THROW(Error("Missing required CostDouble field"));
   }
-}
-
-bool
-operator==(const NextHop& lhs, const NextHop& rhs)
-{
-  return (lhs.getRouteCostAsAdjustedInteger() == rhs.getRouteCostAsAdjustedInteger()) &&
-         (lhs.getConnectingFaceUri() == rhs.getConnectingFaceUri());
 }
 
 std::ostream&

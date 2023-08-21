@@ -56,14 +56,18 @@ BOOST_FIXTURE_TEST_CASE(AddNextHop, RoutingTableFixture)
 
 const uint8_t RoutingTableData1[] = {
   // Header
-  0x90, 0x20,
+  0x90, 0x30,
   // Routing table entry
-  0x91, 0x1e,
+  0x91, 0x2e,
   // Destination
-  0x07, 0x07, 0x08, 0x05, 0x64, 0x65, 0x73, 0x74, 0x31, 0x8f, 0x13,
+  0x07, 0x07, 0x08, 0x05, 0x64, 0x65, 0x73, 0x74, 0x31,
   // Nexthop
-  0x8d, 0x07, 0x6e, 0x65, 0x78, 0x74, 0x68, 0x6f, 0x70, 0x86, 0x08, 0x3f, 0xfa, 0x66,
-  0x66, 0x66, 0x66, 0x66, 0x66
+  0x8f, 0x23,
+  // Nexthop.Uri
+  0x8d, 0x17, 0x75, 0x64, 0x70, 0x34, 0x3a, 0x2f, 0x2f, 0x31, 0x39, 0x32, 0x2e, 0x31, 0x36, 0x38,
+  0x2e, 0x33, 0x2e, 0x31, 0x3a, 0x36, 0x33, 0x36, 0x33,
+  // Nexthop.CostDouble
+  0x86, 0x08, 0x3f, 0xfa, 0x66, 0x66, 0x66, 0x66, 0x66, 0x66,
 };
 
 const uint8_t RoutingTableData2[] = {
@@ -74,7 +78,7 @@ const uint8_t RoutingTableData2[] = {
 BOOST_FIXTURE_TEST_CASE(Encode, RoutingTableFixture)
 {
   NextHop nexthops;
-  nexthops.setConnectingFaceUri("nexthop");
+  nexthops.setConnectingFaceUri(ndn::FaceUri("udp4://192.168.3.1:6363"));
   nexthops.setRouteCost(1.65);
   rt.addNextHop("dest1", nexthops);
   BOOST_TEST(rt.wireEncode() == RoutingTableData1, boost::test_tools::per_element());
@@ -94,7 +98,7 @@ BOOST_FIXTURE_TEST_CASE(Decode, RoutingTableFixture)
   BOOST_CHECK_EQUAL(des1, "dest1");
 
   auto it2 = it1->getNexthopList().begin();
-  BOOST_CHECK_EQUAL(it2->getConnectingFaceUri(), "nexthop");
+  BOOST_CHECK_EQUAL(it2->getConnectingFaceUri(), ndn::FaceUri("udp4://192.168.3.1:6363"));
   BOOST_CHECK_EQUAL(it2->getRouteCost(), 1.65);
 
   BOOST_CHECK_EQUAL(rtStatus.m_rTable.size(), 1);
@@ -103,7 +107,7 @@ BOOST_FIXTURE_TEST_CASE(Decode, RoutingTableFixture)
 BOOST_FIXTURE_TEST_CASE(OutputStream, RoutingTableFixture)
 {
   NextHop nexthops;
-  nexthops.setConnectingFaceUri("nexthop");
+  nexthops.setConnectingFaceUri(ndn::FaceUri("udp4://192.168.3.1:6363"));
   nexthops.setRouteCost(99);
   rt.addNextHop("dest1", nexthops);
 
@@ -113,7 +117,7 @@ BOOST_FIXTURE_TEST_CASE(OutputStream, RoutingTableFixture)
   BOOST_CHECK_EQUAL(os.str(),
                     "Routing Table:\n"
                     "  Destination: /dest1\n"
-                    "    NextHop(Uri: nexthop, Cost: 99)\n");
+                    "    NextHop(Uri: udp4://192.168.3.1:6363, Cost: 99)\n");
 }
 
 BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, RoutingTableFixture)

@@ -31,6 +31,16 @@
 namespace nlsr {
 namespace test {
 
+static const ndn::Name router1Name = "/ndn/router1";
+static const ndn::Name router2Name = "/ndn/router2";
+static const ndn::Name router3Name = "/ndn/router3";
+static const ndn::FaceUri router1FaceUri("udp4://10.0.0.1:6363");
+static const ndn::FaceUri router2FaceUri("udp4://10.0.0.2:6363");
+static const ndn::FaceUri router3FaceUri("udp4://10.0.0.3:6363");
+constexpr uint32_t router1FaceId = 1;
+constexpr uint32_t router2FaceId = 2;
+constexpr uint32_t router3FaceId = 3;
+
 class FibFixture : public IoKeyChainFixture
 {
 public:
@@ -41,13 +51,13 @@ public:
   {
     advanceClocks(1_s);
 
-    Adjacent neighbor1(router1Name, ndn::FaceUri(router1FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
+    Adjacent neighbor1(router1Name, router1FaceUri, 0, Adjacent::STATUS_ACTIVE, 0, router1FaceId);
     adjacencies.insert(neighbor1);
 
-    Adjacent neighbor2(router2Name, ndn::FaceUri(router2FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router2FaceId);
+    Adjacent neighbor2(router2Name, router2FaceUri, 0, Adjacent::STATUS_ACTIVE, 0, router2FaceId);
     adjacencies.insert(neighbor2);
 
-    Adjacent neighbor3(router3Name, ndn::FaceUri(router3FaceUri), 0, Adjacent::STATUS_ACTIVE, 0, router3FaceId);
+    Adjacent neighbor3(router3Name, router3FaceUri, 0, Adjacent::STATUS_ACTIVE, 0, router3FaceId);
     adjacencies.insert(neighbor3);
 
     conf.setMaxFacesPerPrefix(2);
@@ -81,31 +91,7 @@ public:
   AdjacencyList& adjacencies;
   Fib fib;
   std::vector<ndn::Interest>& interests;
-
-  static const ndn::Name router1Name;
-  static const ndn::Name router2Name;
-  static const ndn::Name router3Name;
-
-  static const std::string router1FaceUri;
-  static const std::string router2FaceUri;
-  static const std::string router3FaceUri;
-
-  static const uint32_t router1FaceId;
-  static const uint32_t router2FaceId;
-  static const uint32_t router3FaceId;
 };
-
-const ndn::Name FibFixture::router1Name = "/ndn/router1";
-const ndn::Name FibFixture::router2Name = "/ndn/router2";
-const ndn::Name FibFixture::router3Name = "/ndn/router3";
-
-const std::string FibFixture::router1FaceUri = "udp4://10.0.0.1";
-const std::string FibFixture::router2FaceUri = "udp4://10.0.0.2";
-const std::string FibFixture::router3FaceUri = "udp4://10.0.0.3";
-
-const uint32_t FibFixture::router1FaceId = 1;
-const uint32_t FibFixture::router2FaceId = 2;
-const uint32_t FibFixture::router3FaceId = 3;
 
 BOOST_FIXTURE_TEST_SUITE(TestFib, FibFixture)
 
@@ -367,16 +353,16 @@ BOOST_AUTO_TEST_CASE(PrefixWithdrawalFibUpdateBug) // #5179
 
   // Wustl advertises /test
   NexthopList nhl1;
-  nhl1.addNextHop(NextHop("udp4://10.0.0.13:6363", 28));
-  nhl1.addNextHop(NextHop("udp4://10.0.0.9:6363", 38));
-  nhl1.addNextHop(NextHop("udp4://10.0.0.26:6363", 44));
+  nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.13:6363"), 28));
+  nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.9:6363"), 38));
+  nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.26:6363"), 44));
   fib.update("/test", nhl1);
 
   // Memphis advertises /test
   NexthopList nhl2;
-  nhl2.addNextHop(NextHop("udp4://10.0.0.9:6363", 21));
-  nhl2.addNextHop(NextHop("udp4://10.0.0.13:6363", 26));
-  nhl2.addNextHop(NextHop("udp4://10.0.0.26:6363", 42));
+  nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.9:6363"), 21));
+  nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.13:6363"), 26));
+  nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.26:6363"), 42));
   fib.update("/test", nhl2);
 
   advanceClocks(10_ms);

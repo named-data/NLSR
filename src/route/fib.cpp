@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -242,10 +242,10 @@ Fib::onRegistrationFailure(const ndn::nfd::ControlResponse& response,
 }
 
 void
-Fib::unregisterPrefix(const ndn::Name& namePrefix, const std::string& faceUri)
+Fib::unregisterPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri)
 {
   uint64_t faceId = 0;
-  auto adjacent = m_adjacencyList.findAdjacent(ndn::FaceUri(faceUri));
+  auto adjacent = m_adjacencyList.findAdjacent(faceUri);
   if (adjacent != m_adjacencyList.end()) {
     faceId = adjacent->getFaceId();
   }

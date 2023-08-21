@@ -348,8 +348,7 @@ LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(AdjacencyList& a
         // Fetch its actual name
         auto nextHopRouterName = pMap.getRouterNameByMappingNo(nextHopRouter);
         if (nextHopRouterName) {
-          std::string nextHopFace =
-            adjacencies.getAdjacent(*nextHopRouterName).getFaceUri().toString();
+          auto nextHopFace = adjacencies.getAdjacent(*nextHopRouterName).getFaceUri();
           // Add next hop to routing table
           NextHop nh(nextHopFace, routeCost);
           rt.addNextHop(*(pMap.getRouterNameByMappingNo(i)), nh);
@@ -451,10 +450,8 @@ HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
       continue;
     }
 
-    std::string srcFaceUri = adj->getFaceUri().toString();
-
     // Install nexthops for this router to the neighbor; direct neighbors have a 0 cost link
-    addNextHop(srcRouterName, srcFaceUri, 0, rt);
+    addNextHop(srcRouterName, adj->getFaceUri(), 0, rt);
 
     auto src = map.getMappingNoByRouterName(srcRouterName);
     if (!src) {
@@ -477,7 +474,7 @@ HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
                            << " to " << *destRouterName);
             continue;
           }
-          addNextHop(*destRouterName, srcFaceUri, distance, rt);
+          addNextHop(*destRouterName, adj->getFaceUri(), distance, rt);
         }
       }
     }
@@ -618,7 +615,7 @@ HyperbolicRoutingCalculator::calculateHyperbolicDistance(double rI, double rJ,
 }
 
 void
-HyperbolicRoutingCalculator::addNextHop(ndn::Name dest, std::string faceUri,
+HyperbolicRoutingCalculator::addNextHop(const ndn::Name& dest, const ndn::FaceUri& faceUri,
                                         double cost, RoutingTable& rt)
 {
   NextHop hop(faceUri, cost);

@@ -274,9 +274,9 @@ BOOST_FIXTURE_TEST_CASE(RemoveNptEntryPtrFromRoutingEntry, NamePrefixTableFixtur
 BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
 {
   const ndn::Name destination = ndn::Name{"/ndn/destination1"};
-  NextHop hop1{"upd4://10.0.0.1", 0};
-  NextHop hop2{"udp4://10.0.0.2", 1};
-  NextHop hop3{"udp4://10.0.0.3", 2};
+  NextHop hop1{ndn::FaceUri("upd4://10.0.0.1"), 0};
+  NextHop hop2{ndn::FaceUri("upd4://10.0.0.2"), 1};
+  NextHop hop3{ndn::FaceUri("upd4://10.0.0.3"), 2};
   const NamePrefixTableEntry entry1{"/ndn/router1"};
   npt.addEntry(entry1.getNamePrefix(), destination);
 
