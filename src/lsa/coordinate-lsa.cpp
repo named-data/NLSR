@@ -22,8 +22,6 @@
 #include "coordinate-lsa.hpp"
 #include "tlv-nlsr.hpp"
 
-#include <boost/lexical_cast.hpp>
-
 namespace nlsr {
 
 CoordinateLsa::CoordinateLsa(const ndn::Name& originRouter, uint64_t seqNo,

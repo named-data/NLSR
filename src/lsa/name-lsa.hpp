@@ -23,6 +23,7 @@
 #define NLSR_LSA_NAME_LSA_HPP
 
 #include "lsa.hpp"
+#include "name-prefix-list.hpp"
 
 namespace nlsr {
 

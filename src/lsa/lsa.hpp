@@ -22,12 +22,12 @@
 #ifndef NLSR_LSA_LSA_HPP
 #define NLSR_LSA_LSA_HPP
 
-#include "name-prefix-list.hpp"
-#include "adjacent.hpp"
-#include "adjacency-list.hpp"
+#include "common.hpp"
 #include "test-access-control.hpp"
 
 #include <ndn-cxx/util/scheduler.hpp>
+
+#include <list>
 
 namespace nlsr {
 

@@ -20,9 +20,6 @@
  */
 
 #include "lsa.hpp"
-#include "nlsr.hpp"
-#include "name-prefix-list.hpp"
-#include "adjacent.hpp"
 #include "tlv-nlsr.hpp"
 
 namespace nlsr {

@@ -23,7 +23,8 @@
 #define NLSR_LSA_ADJ_LSA_HPP
 
 #include "lsa.hpp"
-#include "test-access-control.hpp"
+#include "adjacent.hpp"
+#include "adjacency-list.hpp"
 
 namespace nlsr {
 
