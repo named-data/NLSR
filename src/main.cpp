@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -63,13 +63,11 @@ main(int argc, char** argv)
     }
   }
 
-  boost::asio::io_service ioService;
-  ndn::Face face(ioService);
   ndn::KeyChain keyChain;
+  ndn::Face face(nullptr, keyChain);
 
   nlsr::ConfParameter confParam(face, keyChain, configFileName);
   nlsr::ConfFileProcessor configProcessor(confParam);
-
   if (!configProcessor.processConfFile()) {
     std::cerr << "Error in configuration file processing" << std::endl;
     return 2;

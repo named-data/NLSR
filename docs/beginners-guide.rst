@@ -100,7 +100,7 @@ should be run as root:
        $ dnf list --installed gcc
        $ dnf list --installed gcc-c++
 
-#. Python version 3.6 or later
+#. Python version 3.8 or later
 
    ::
 
@@ -124,7 +124,7 @@ should be run as root:
 
        $ dnf list --installed pkgconf*
 
-#. Boost libraries version 1.65.1 or later
+#. Boost libraries version 1.71.0 or later
 
    ::
 

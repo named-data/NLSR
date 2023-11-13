@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -25,7 +25,7 @@
 #include "common.hpp"
 #include "conf-parameter.hpp"
 
-#include <boost/algorithm/string.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/property_tree/ptree.hpp>
 
 namespace nlsr {
@@ -118,8 +118,8 @@ private:
   std::string m_confFileName;
   /*! m_confParam The ConfFileProcessor object to configure as parsing is done. */
   ConfParameter& m_confParam;
-  /*! m_io For canonization of faceUri. */
-  boost::asio::io_service m_io;
+  /*! m_io For canonization of FaceUri. */
+  boost::asio::io_context m_io;
 };
 
 } // namespace nlsr

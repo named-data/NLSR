@@ -19,8 +19,9 @@ You should have received a copy of the GNU General Public License along with
 NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import os
+import subprocess
 from waflib import Context, Logs, Utils
-import os, subprocess
 
 VERSION = '0.7.0'
 APPNAME = 'nlsr'
@@ -71,15 +72,14 @@ def configure(conf):
     conf.check_cfg(package='libndn-cxx', args=['libndn-cxx >= 0.8.1', '--cflags', '--libs'],
                    uselib_store='NDN_CXX', pkg_config_path=pkg_config_path)
 
-    boost_libs = ['system', 'iostreams', 'filesystem', 'regex']
-    if conf.env.WITH_TESTS:
-        boost_libs.append('unit_test_framework')
-
-    conf.check_boost(lib=boost_libs, mt=True)
-    if conf.env.BOOST_VERSION_NUMBER < 106501:
-        conf.fatal('The minimum supported version of Boost is 1.65.1.\n'
+    conf.check_boost(lib='filesystem', mt=True)
+    if conf.env.BOOST_VERSION_NUMBER < 107100:
+        conf.fatal('The minimum supported version of Boost is 1.71.0.\n'
                    'Please upgrade your distribution or manually install a newer version of Boost.\n'
                    'For more information, see https://redmine.named-data.net/projects/nfd/wiki/Boost')
+
+    if conf.env.WITH_TESTS:
+        conf.check_boost(lib='unit_test_framework', mt=True, uselib_store='BOOST_TESTS')
 
     if conf.options.with_chronosync:
         conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.5.5', '--cflags', '--libs'],
@@ -104,7 +104,7 @@ def configure(conf):
     conf.load('sanitizers')
 
     conf.define_cond('WITH_TESTS', conf.env.WITH_TESTS)
-    conf.define('DEFAULT_CONFIG_FILE', '%s/ndn/nlsr.conf' % conf.env.SYSCONFDIR)
+    conf.define('DEFAULT_CONFIG_FILE', f'{conf.env.SYSCONFDIR}/ndn/nlsr.conf')
     # The config header will contain all defines that were added using conf.define()
     # or conf.define_cond().  Everything that was added directly to conf.env.DEFINES
     # will not appear in the config header, but will instead be passed directly to the
@@ -118,6 +118,7 @@ def build(bld):
         name='version.hpp',
         source='src/version.hpp.in',
         target='src/version.hpp',
+        install_path=None,
         VERSION_STRING=VERSION_BASE,
         VERSION_BUILD=VERSION,
         VERSION=int(VERSION_SPLIT[0]) * 1000000 +
@@ -129,32 +130,32 @@ def build(bld):
 
     bld.objects(
         target='nlsr-objects',
-        source=bld.path.ant_glob('src/**/*.cpp',
-                                 excl=['src/main.cpp']),
-        use='NDN_CXX BOOST CHRONOSYNC PSYNC SVS',
+        source=bld.path.ant_glob('src/**/*.cpp', excl=['src/main.cpp']),
+        use='BOOST NDN_CXX CHRONOSYNC PSYNC SVS',
         includes='. src',
         export_includes='. src')
 
     bld.program(
-        target='bin/nlsr',
         name='nlsr',
+        target='bin/nlsr',
         source='src/main.cpp',
         use='nlsr-objects')
 
     bld.program(
-        target='bin/nlsrc',
         name='nlsrc',
+        target='bin/nlsrc',
         source='tools/nlsrc.cpp',
         use='nlsr-objects')
 
     if bld.env.WITH_TESTS:
         bld.recurse('tests')
 
+    # Install sample config
     bld.install_as('${SYSCONFDIR}/ndn/nlsr.conf.sample', 'nlsr.conf')
 
     if Utils.unversioned_sys_platform() == 'linux':
         bld(features='subst',
-            name='nlsr.service',
+            name='systemd-units',
             source='systemd/nlsr.service.in',
             target='systemd/nlsr.service')
 
@@ -220,16 +221,16 @@ def version(ctx):
     # first, try to get a version string from git
     gotVersionFromGit = False
     try:
-        cmd = ['git', 'describe', '--always', '--match', '%s*' % GIT_TAG_PREFIX]
-        out = subprocess.check_output(cmd, universal_newlines=True).strip()
+        cmd = ['git', 'describe', '--always', '--match', f'{GIT_TAG_PREFIX}*']
+        out = subprocess.run(cmd, capture_output=True, check=True, text=True).stdout.strip()
         if out:
             gotVersionFromGit = True
             if out.startswith(GIT_TAG_PREFIX):
                 Context.g_module.VERSION = out.lstrip(GIT_TAG_PREFIX)
             else:
                 # no tags matched
-                Context.g_module.VERSION = '%s-commit-%s' % (VERSION_BASE, out)
-    except (OSError, subprocess.CalledProcessError):
+                Context.g_module.VERSION = f'{VERSION_BASE}-commit-{out}'
+    except (OSError, subprocess.SubprocessError):
         pass
 
     versionFile = ctx.path.find_node('VERSION.info')
@@ -247,14 +248,14 @@ def version(ctx):
                 # already up-to-date
                 return
         except EnvironmentError as e:
-            Logs.warn('%s exists but is not readable (%s)' % (versionFile, e.strerror))
+            Logs.warn(f'{versionFile} exists but is not readable ({e.strerror})')
     else:
         versionFile = ctx.path.make_node('VERSION.info')
 
     try:
         versionFile.write(Context.g_module.VERSION)
     except EnvironmentError as e:
-        Logs.warn('%s is not writable (%s)' % (versionFile, e.strerror))
+        Logs.warn(f'{versionFile} is not writable ({e.strerror})')
 
 def dist(ctx):
     ctx.algo = 'tar.xz'

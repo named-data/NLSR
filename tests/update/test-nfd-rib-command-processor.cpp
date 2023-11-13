@@ -28,6 +28,7 @@
 #include "tests/test-common.hpp"
 
 #include <boost/lexical_cast.hpp>
+#include <boost/mp11/list.hpp>
 
 namespace nlsr {
 namespace test {
@@ -97,8 +98,10 @@ public:
   uint64_t nameLsaSeqNoBeforeInterest;
 };
 
-typedef boost::mpl::vector<update::NfdRibRegisterCommand,
-                           update::NfdRibUnregisterCommand> Commands;
+using Commands = boost::mp11::mp_list<
+  update::NfdRibRegisterCommand,
+  update::NfdRibUnregisterCommand
+>;
 
 BOOST_FIXTURE_TEST_SUITE(TestNfdRibCommandProcessor, NfdRibCommandProcessorFixture)
 

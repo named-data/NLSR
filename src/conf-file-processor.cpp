@@ -28,6 +28,7 @@
 #include <ndn-cxx/net/face-uri.hpp>
 #include <ndn-cxx/util/io.hpp>
 
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
@@ -127,8 +128,8 @@ private:
 private:
   const std::string m_key;
   const ConfParameterCallback m_setterCallback;
-  T m_defaultValue;
 
+  T m_defaultValue;
   T m_minValue;
   T m_maxValue;
 
@@ -493,7 +494,7 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
                          m_io,
                          TIME_ALLOWED_FOR_CANONIZATION);
         m_io.run();
-        m_io.reset();
+        m_io.restart();
 
         if (failedToCanonize) {
           return false;
