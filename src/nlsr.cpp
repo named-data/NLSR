@@ -36,7 +36,7 @@ INIT_LOGGER(Nlsr);
 
 Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   : m_face(face)
-  , m_scheduler(face.getIoService())
+  , m_scheduler(face.getIoContext())
   , m_confParam(confParam)
   , m_adjacencyList(confParam.getAdjacencyList())
   , m_namePrefixList(confParam.getNamePrefixList())
@@ -259,7 +259,7 @@ void
 Nlsr::initializeFaces(const FetchDatasetCallback& onFetchSuccess,
                       const FetchDatasetTimeoutCallback& onFetchFailure)
 {
-  NLSR_LOG_TRACE("Initializing Faces...");
+  NLSR_LOG_TRACE("Initializing faces");
   m_faceDatasetController.fetch<ndn::nfd::FaceDataset>(onFetchSuccess, onFetchFailure);
 }
 
@@ -317,14 +317,12 @@ Nlsr::onFaceDatasetFetchTimeout(uint32_t code,
                                 const std::string& msg,
                                 uint32_t nRetriesSoFar)
 {
-  NLSR_LOG_DEBUG("onFaceDatasetFetchTimeout");
   // If we have exceeded the maximum attempt count, do not try again.
   if (nRetriesSoFar++ < m_confParam.getFaceDatasetFetchTries()) {
     NLSR_LOG_DEBUG("Failed to fetch dataset: " << msg << ". Attempting retry #" << nRetriesSoFar);
-    m_faceDatasetController.fetch<ndn::nfd::FaceDataset>(std::bind(&Nlsr::processFaceDataset,
-                                                        this, _1),
-                                              std::bind(&Nlsr::onFaceDatasetFetchTimeout,
-                                                        this, _1, _2, nRetriesSoFar));
+    m_faceDatasetController.fetch<ndn::nfd::FaceDataset>(std::bind(&Nlsr::processFaceDataset, this, _1),
+                                                         std::bind(&Nlsr::onFaceDatasetFetchTimeout,
+                                                                   this, _1, _2, nRetriesSoFar));
   }
   else {
     NLSR_LOG_ERROR("Failed to fetch dataset: " << msg << ". Exceeded limit of " <<
@@ -339,17 +337,12 @@ Nlsr::onFaceDatasetFetchTimeout(uint32_t code,
 void
 Nlsr::scheduleDatasetFetch()
 {
-  NLSR_LOG_DEBUG("Scheduling Dataset Fetch in " << m_confParam.getFaceDatasetFetchInterval());
+  NLSR_LOG_DEBUG("Scheduling dataset fetch in " << m_confParam.getFaceDatasetFetchInterval());
 
-  m_scheduler.schedule(m_confParam.getFaceDatasetFetchInterval(),
-    [this] {
-      this->initializeFaces(
-        [this] (const std::vector<ndn::nfd::FaceStatus>& faces) {
-         this->processFaceDataset(faces);
-        },
-        [this] (uint32_t code, const std::string& msg) {
-         this->onFaceDatasetFetchTimeout(code, msg, 0);
-        });
+  m_scheduler.schedule(m_confParam.getFaceDatasetFetchInterval(), [this] {
+    initializeFaces(
+      [this] (const auto& faces) { processFaceDataset(faces); },
+      [this] (uint32_t code, const std::string& msg) { onFaceDatasetFetchTimeout(code, msg, 0); });
   });
 }
 

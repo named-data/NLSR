@@ -220,11 +220,11 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     \param seqNo The sequence number to check.
   */
   bool
-  isLsaNew(const ndn::Name& originRouter, const Lsa::Type& lsaType, uint64_t lsSeqNo) const
+  isLsaNew(const ndn::Name& originRouter, const Lsa::Type& lsaType, uint64_t seqNo) const
   {
     // Is the name in the LSDB and the supplied seq no is the highest so far
     auto lsaPtr = findLsa(originRouter, lsaType);
-    return lsaPtr ? lsaPtr->getSeqNo() < lsSeqNo : true;
+    return lsaPtr ? lsaPtr->getSeqNo() < seqNo : true;
   }
 
   void

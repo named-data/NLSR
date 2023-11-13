@@ -435,7 +435,7 @@ HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
 
   // Iterate over directly connected neighbors
   std::list<Adjacent> neighbors = adjacencies.getAdjList();
-  for (std::list<Adjacent>::iterator adj = neighbors.begin(); adj != neighbors.end(); ++adj) {
+  for (auto adj = neighbors.begin(); adj != neighbors.end(); ++adj) {
 
     // Don't calculate nexthops using an inactive router
     if (adj->getStatus() == Adjacent::STATUS_INACTIVE) {

@@ -33,7 +33,7 @@ INIT_LOGGER(Lsdb);
 
 Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   : m_face(face)
-  , m_scheduler(face.getIoService())
+  , m_scheduler(face.getIoContext())
   , m_confParam(confParam)
   , m_sync(m_face, keyChain,
            [this] (const auto& routerName, const Lsa::Type& lsaType,
@@ -203,7 +203,7 @@ Lsdb::processInterest(const ndn::Name& name, const ndn::Interest& interest)
   }
   // else the interest is for other router's LSA, serve signed data from LsaSegmentStorage
   else if (auto lsaSegment = m_lsaStorage.find(interest); lsaSegment) {
-    NLSR_LOG_TRACE("Found data in lsa storage. Sending data for " << interest.getName());
+    NLSR_LOG_TRACE("Found data in LSA storage. Sending data for " << interest.getName());
     m_face.put(*lsaSegment);
   }
 }
@@ -256,19 +256,16 @@ Lsdb::installLsa(std::shared_ptr<Lsa> lsa)
 
   auto chkLsa = findLsa(lsa->getOriginRouter(), lsa->getType());
   if (chkLsa == nullptr) {
-    NLSR_LOG_DEBUG("Adding " << lsa->getType() << " LSA");
-    NLSR_LOG_DEBUG(lsa->toString());
+    NLSR_LOG_DEBUG("Adding LSA:\n" << lsa->toString());
 
     m_lsdb.emplace(lsa);
-
     onLsdbModified(lsa, LsdbUpdate::INSTALLED, {}, {});
 
     lsa->setExpiringEventId(scheduleLsaExpiration(lsa, timeToExpire));
   }
   // Else this is a known name LSA, so we are updating it.
   else if (chkLsa->getSeqNo() < lsa->getSeqNo()) {
-    NLSR_LOG_DEBUG("Updating " << lsa->getType() << " LSA:");
-    NLSR_LOG_DEBUG(chkLsa->toString());
+    NLSR_LOG_DEBUG("Updating LSA:\n" << chkLsa->toString());
     chkLsa->setSeqNo(lsa->getSeqNo());
     chkLsa->setExpirationTimePoint(lsa->getExpirationTimePoint());
 
@@ -278,8 +275,7 @@ Lsdb::installLsa(std::shared_ptr<Lsa> lsa)
     }
 
     chkLsa->setExpiringEventId(scheduleLsaExpiration(chkLsa, timeToExpire));
-    NLSR_LOG_DEBUG("Updated " << lsa->getType() << " LSA:");
-    NLSR_LOG_DEBUG(chkLsa->toString());
+    NLSR_LOG_DEBUG("Updated LSA:\n" << chkLsa->toString());
   }
 }
 
@@ -288,8 +284,7 @@ Lsdb::removeLsa(const LsaContainer::index<Lsdb::byName>::type::iterator& lsaIt)
 {
   if (lsaIt != m_lsdb.end()) {
     auto lsaPtr = *lsaIt;
-    NLSR_LOG_DEBUG("Removing " << lsaPtr->getType() << " LSA:");
-    NLSR_LOG_DEBUG(lsaPtr->toString());
+    NLSR_LOG_DEBUG("Removing LSA:\n" << lsaPtr->toString());
     m_lsdb.erase(lsaIt);
     onLsdbModified(lsaPtr, LsdbUpdate::REMOVED, {}, {});
   }
@@ -385,13 +380,11 @@ Lsdb::expireOrRefreshLsa(std::shared_ptr<Lsa> lsa)
     if (lsaPtr->getSeqNo() == lsa->getSeqNo()) {
       if (lsaPtr->getOriginRouter() == m_thisRouterPrefix) {
         NLSR_LOG_DEBUG("Own " << lsaPtr->getType() << " LSA, so refreshing it");
-        NLSR_LOG_DEBUG("Current LSA:");
-        NLSR_LOG_DEBUG(lsaPtr->toString());
+        NLSR_LOG_DEBUG("Current LSA:\n" << lsaPtr->toString());
         lsaPtr->setSeqNo(lsaPtr->getSeqNo() + 1);
         m_sequencingManager.setLsaSeq(lsaPtr->getSeqNo(), lsaPtr->getType());
         lsaPtr->setExpirationTimePoint(getLsaExpirationTimePoint());
-        NLSR_LOG_DEBUG("Updated LSA:");
-        NLSR_LOG_DEBUG(lsaPtr->toString());
+        NLSR_LOG_DEBUG("Updated LSA:\n" << lsaPtr->toString());
         // schedule refreshing event again
         lsaPtr->setExpiringEventId(scheduleLsaExpiration(lsaPtr, m_lsaRefreshTime));
         m_sequencingManager.writeSeqNoToFile();
@@ -490,13 +483,12 @@ Lsdb::onFetchLsaError(uint32_t errorCode, const std::string& msg, const ndn::Nam
       // immediately since at the least the LSA Interest lifetime has elapsed.
       // Otherwise, it is necessary to delay the Interest re-expression to prevent
       // the potential for constant Interest flooding.
-      ndn::time::seconds delay = m_confParam.getLsaInterestLifetime();
-
+      auto delay = m_confParam.getLsaInterestLifetime();
       if (errorCode == ndn::SegmentFetcher::ErrorCode::INTEREST_TIMEOUT) {
-        delay = ndn::time::seconds(0);
+        delay = 0_s;
       }
-      m_scheduler.schedule(delay, std::bind(&Lsdb::expressInterest, this,
-                                            interestName, retransmitNo + 1, /*Multicast FaceID*/0, deadline));
+      m_scheduler.schedule(delay, std::bind(&Lsdb::expressInterest, this, interestName,
+                                            retransmitNo + 1, /*Multicast FaceID*/0, deadline));
     }
   }
 }
@@ -559,7 +551,7 @@ Lsdb::afterFetchLsa(const ndn::ConstBufferPtr& bufferPtr, const ndn::Name& inter
       }
     }
     catch (const std::exception& e) {
-      NLSR_LOG_TRACE("LSA data decoding error :( " << e.what());
+      NLSR_LOG_TRACE("LSA data decoding error: " << e.what());
     }
   }
 }

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -43,9 +43,9 @@ Adjacent
 AdjacencyList::getAdjacent(const ndn::Name& adjName)
 {
   Adjacent adj(adjName);
-  std::list<Adjacent>::iterator it = find(adjName);
+  auto it = find(adjName);
   if (it != m_adjList.end()) {
-    return (*it);
+    return *it;
   }
   return adj;
 }
@@ -60,56 +60,47 @@ AdjacencyList::operator==(const AdjacencyList& adl) const
 
   std::set<Adjacent> ourSet(m_adjList.cbegin(), m_adjList.cend());
   std::set<Adjacent> theirSet(theirList.cbegin(), theirList.cend());
-
   return ourSet == theirSet;
 }
 
 bool
 AdjacencyList::isNeighbor(const ndn::Name& adjName) const
 {
-  std::list<Adjacent>::const_iterator it = find(adjName);
-  if (it == m_adjList.end())
-  {
-    return false;
-  }
-  return true;
+  return find(adjName) != m_adjList.end();
 }
 
 void
 AdjacencyList::incrementTimedOutInterestCount(const ndn::Name& neighbor)
 {
-  std::list<Adjacent>::iterator it = find(neighbor);
-  if (it == m_adjList.end()) {
-    return ;
+  auto it = find(neighbor);
+  if (it != m_adjList.end()) {
+    it->setInterestTimedOutNo(it->getInterestTimedOutNo() + 1);
   }
-  (*it).setInterestTimedOutNo((*it).getInterestTimedOutNo() + 1);
 }
 
 void
-AdjacencyList::setTimedOutInterestCount(const ndn::Name& neighbor,
-                                        uint32_t count)
+AdjacencyList::setTimedOutInterestCount(const ndn::Name& neighbor, uint32_t count)
 {
-  std::list<Adjacent>::iterator it = find(neighbor);
+  auto it = find(neighbor);
   if (it != m_adjList.end()) {
-    (*it).setInterestTimedOutNo(count);
+    it->setInterestTimedOutNo(count);
   }
 }
 
 int32_t
 AdjacencyList::getTimedOutInterestCount(const ndn::Name& neighbor) const
 {
-  std::list<Adjacent>::const_iterator it = find(neighbor);
+  auto it = find(neighbor);
   if (it == m_adjList.end()) {
     return -1;
   }
-  return (*it).getInterestTimedOutNo();
+  return it->getInterestTimedOutNo();
 }
 
 Adjacent::Status
 AdjacencyList::getStatusOfNeighbor(const ndn::Name& neighbor) const
 {
-  std::list<Adjacent>::const_iterator it = find(neighbor);
-
+  auto it = find(neighbor);
   if (it == m_adjList.end()) {
     return Adjacent::STATUS_UNKNOWN;
   }
@@ -121,7 +112,7 @@ AdjacencyList::getStatusOfNeighbor(const ndn::Name& neighbor) const
 void
 AdjacencyList::setStatusOfNeighbor(const ndn::Name& neighbor, Adjacent::Status status)
 {
-  std::list<Adjacent>::iterator it = find(neighbor);
+  auto it = find(neighbor);
   if (it != m_adjList.end()) {
     it->setStatus(status);
   }
@@ -144,8 +135,7 @@ AdjacencyList::isAdjLsaBuildable(const uint32_t interestRetryNo) const
 {
   uint32_t nTimedOutNeighbors = 0;
 
-  for (const Adjacent& adjacency : m_adjList) {
-
+  for (const auto& adjacency : m_adjList) {
     if (adjacency.getStatus() == Adjacent::STATUS_ACTIVE) {
       return true;
     }
@@ -154,12 +144,7 @@ AdjacencyList::isAdjLsaBuildable(const uint32_t interestRetryNo) const
     }
   }
 
-  if (nTimedOutNeighbors == m_adjList.size()) {
-    return true;
-  }
-  else {
-    return false;
-  }
+  return nTimedOutNeighbors == m_adjList.size();
 }
 
 int32_t
@@ -177,54 +162,43 @@ AdjacencyList::getNumOfActiveNeighbor() const
 std::list<Adjacent>::iterator
 AdjacencyList::find(const ndn::Name& adjName)
 {
-  return std::find_if(m_adjList.begin(),
-                      m_adjList.end(),
+  return std::find_if(m_adjList.begin(), m_adjList.end(),
                       std::bind(&Adjacent::compare, _1, std::cref(adjName)));
 }
 
 std::list<Adjacent>::const_iterator
 AdjacencyList::find(const ndn::Name& adjName) const
 {
-  return std::find_if(m_adjList.cbegin(),
-                      m_adjList.cend(),
+  return std::find_if(m_adjList.cbegin(), m_adjList.cend(),
                       std::bind(&Adjacent::compare, _1, std::cref(adjName)));
 }
 
 AdjacencyList::iterator
 AdjacencyList::findAdjacent(const ndn::Name& adjName)
 {
-  return std::find_if(m_adjList.begin(),
-                      m_adjList.end(),
-                      std::bind(&Adjacent::compare,
-                                _1, std::cref(adjName)));
+  return std::find_if(m_adjList.begin(), m_adjList.end(),
+                      std::bind(&Adjacent::compare, _1, std::cref(adjName)));
 }
 
 AdjacencyList::iterator
 AdjacencyList::findAdjacent(uint64_t faceId)
 {
-  return std::find_if(m_adjList.begin(),
-                      m_adjList.end(),
-                      std::bind(&Adjacent::compareFaceId,
-                                _1, faceId));
+  return std::find_if(m_adjList.begin(), m_adjList.end(),
+                      std::bind(&Adjacent::compareFaceId, _1, faceId));
 }
 
 AdjacencyList::iterator
 AdjacencyList::findAdjacent(const ndn::FaceUri& faceUri)
 {
-  return std::find_if(m_adjList.begin(),
-                      m_adjList.end(),
-                      std::bind(&Adjacent::compareFaceUri,
-                                _1, faceUri));
+  return std::find_if(m_adjList.begin(), m_adjList.end(),
+                      std::bind(&Adjacent::compareFaceUri, _1, faceUri));
 }
 
 uint64_t
 AdjacencyList::getFaceId(const ndn::FaceUri& faceUri)
 {
-  std::list<Adjacent>::iterator it = std::find_if(m_adjList.begin(),
-                                                  m_adjList.end(),
-                                                  std::bind(&Adjacent::compareFaceUri,
-                                                            _1, faceUri));
-
+  auto it = std::find_if(m_adjList.begin(), m_adjList.end(),
+                         std::bind(&Adjacent::compareFaceUri, _1, faceUri));
   return it != m_adjList.end() ? it->getFaceId() : 0;
 }
 

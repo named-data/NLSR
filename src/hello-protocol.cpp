@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2023,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -34,7 +34,7 @@ HelloProtocol::HelloProtocol(ndn::Face& face, ndn::KeyChain& keyChain,
                              ConfParameter& confParam, RoutingTable& routingTable,
                              Lsdb& lsdb)
   : m_face(face)
-  , m_scheduler(m_face.getIoService())
+  , m_scheduler(m_face.getIoContext())
   , m_keyChain(keyChain)
   , m_signingInfo(confParam.getSigningInfo())
   , m_confParam(confParam)
@@ -72,8 +72,7 @@ HelloProtocol::expressInterest(const ndn::Name& interestName, uint32_t seconds)
   interest.setCanBePrefix(true);
   m_face.expressInterest(interest,
     std::bind(&HelloProtocol::onContent, this, _1, _2),
-    [this, seconds] (const ndn::Interest& interest, const ndn::lp::Nack& nack)
-    {
+    [this, seconds] (const auto& interest, const auto& nack) {
       NDN_LOG_TRACE("Received Nack with reason: " << nack.getReason());
       NDN_LOG_TRACE("Will treat as timeout in " << 2 * seconds << " seconds");
       m_scheduler.schedule(ndn::time::seconds(2 * seconds),
@@ -89,7 +88,6 @@ void
 HelloProtocol::sendHelloInterest(const ndn::Name& neighbor)
 {
   auto adjacent = m_adjacencyList.findAdjacent(neighbor);
-
   if (adjacent == m_adjacencyList.end()) {
     return;
   }
@@ -119,10 +117,10 @@ HelloProtocol::processInterest(const ndn::Name& name,
   // increment RCV_HELLO_INTEREST
   hpIncrementSignal(Statistics::PacketType::RCV_HELLO_INTEREST);
 
-  NLSR_LOG_DEBUG("Interest Received for Name: " << interestName);
+  NLSR_LOG_DEBUG("Interest received for Name: " << interestName);
   if (interestName.get(-2).toUri() != INFO_COMPONENT) {
-    NLSR_LOG_DEBUG("INFO_COMPONENT not found or interestName: " << interestName
-               << " does not match expression");
+    NLSR_LOG_DEBUG("INFO_COMPONENT not found or Interest Name " << interestName
+                   << " does not match expression");
     return;
   }
 
@@ -130,9 +128,9 @@ HelloProtocol::processInterest(const ndn::Name& name,
   neighbor.wireDecode(interestName.get(-1).blockFromValue());
   NLSR_LOG_DEBUG("Neighbor: " << neighbor);
   if (m_adjacencyList.isNeighbor(neighbor)) {
-    std::shared_ptr<ndn::Data> data = std::make_shared<ndn::Data>();
+    auto data = std::make_shared<ndn::Data>();
     data->setName(ndn::Name(interest.getName()).appendVersion());
-    data->setFreshnessPeriod(ndn::time::seconds(10)); // 10 sec
+    data->setFreshnessPeriod(10_s);
     data->setContent(ndn::make_span(reinterpret_cast<const uint8_t*>(INFO_COMPONENT.data()),
                                     INFO_COMPONENT.size()));
 
@@ -233,8 +231,8 @@ HelloProtocol::onContentValidated(const ndn::Data& data)
     m_adjacencyList.setTimedOutInterestCount(neighbor, 0);
     Adjacent::Status newStatus = m_adjacencyList.getStatusOfNeighbor(neighbor);
 
-    NLSR_LOG_DEBUG("Neighbor : " << neighbor);
-    NLSR_LOG_DEBUG("Old Status: " << oldStatus << " New Status: " << newStatus);
+    NLSR_LOG_DEBUG("Neighbor: " << neighbor);
+    NLSR_LOG_DEBUG("Old Status: " << oldStatus << ", New Status: " << newStatus);
     // change in Adjacency list
     if ((oldStatus - newStatus) != 0) {
       if (m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
@@ -254,7 +252,7 @@ void
 HelloProtocol::onContentValidationFailed(const ndn::Data& data,
                                          const ndn::security::ValidationError& ve)
 {
-  NLSR_LOG_DEBUG("Validation Error: " << ve);
+  NLSR_LOG_DEBUG("Validation error: " << ve);
 }
 
 } // namespace nlsr

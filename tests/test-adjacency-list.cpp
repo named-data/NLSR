@@ -38,7 +38,7 @@ BOOST_AUTO_TEST_CASE(Basic)
   const std::string ADJ_NAME_1 = "testname";
   const std::string ADJ_NAME_2 = "testname2";
 
-//adjacent needed to test adjacency list.
+  // adjacent needed to test adjacency list
   Adjacent adjacent1(ADJ_NAME_1);
   Adjacent adjacent2(ADJ_NAME_2);
 
@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(FindAdjacentByFaceUri)
   AdjacencyList adjList;
   adjList.insert(adj1);
 
-  std::list<Adjacent>::iterator adjIter = adjList.findAdjacent(faceUri);
+  auto adjIter = adjList.findAdjacent(faceUri);
   BOOST_CHECK(adjIter != adjList.end());
 }
 
