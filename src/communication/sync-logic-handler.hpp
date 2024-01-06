@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -28,14 +28,30 @@
 #include "sync-protocol-adapter.hpp"
 #include "test-access-control.hpp"
 
+#include <boost/lexical_cast.hpp>
+
 namespace nlsr {
 
-/*! \brief NLSR-to-ChronoSync interaction point
+struct SyncLogicOptions
+{
+  SyncProtocol syncProtocol;
+  ndn::Name syncPrefix;
+  ndn::Name userPrefix;
+  ndn::time::milliseconds syncInterestLifetime;
+  ndn::Name routerPrefix;
+  HyperbolicState hyperbolicState;
+};
+
+inline ndn::Name
+makeLsaUserPrefix(const ndn::Name& userPrefix, Lsa::Type lsaType)
+{
+  return ndn::Name(userPrefix).append(boost::lexical_cast<std::string>(lsaType));
+}
+
+/*! \brief NLSR-to-sync interaction point
  *
  * This class serves as the abstraction for the syncing portion of
- * NLSR and its components. NLSR has no particular reliance on
- * ChronoSync, except that the NLSR source would need to be modified
- * for use with other sync protocols.
+ * NLSR and its components.
  */
 class SyncLogicHandler
 {
@@ -46,11 +62,12 @@ public:
     using std::runtime_error::runtime_error;
   };
 
-  using IsLsaNew =
-    std::function<bool(const ndn::Name&, const Lsa::Type& lsaType, const uint64_t&, uint64_t/*inFace*/)>;
+  using IsLsaNew = std::function<
+    bool (const ndn::Name& routerName, Lsa::Type lsaType, uint64_t seqNo, uint64_t inFace)
+  >;
 
   SyncLogicHandler(ndn::Face& face, ndn::KeyChain& keyChain,
-                   IsLsaNew isLsaNew, const ConfParameter& conf);
+                   IsLsaNew isLsaNew, const SyncLogicOptions& opts);
 
   /*! \brief Instruct ChronoSync to publish an update.
    *
@@ -62,7 +79,7 @@ public:
    * \sa publishSyncUpdate
    */
   void
-  publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo);
+  publishRoutingUpdate(Lsa::Type type, uint64_t seqNo);
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Callback from Sync protocol
@@ -91,7 +108,8 @@ public:
 
 private:
   IsLsaNew m_isLsaNew;
-  const ConfParameter& m_confParam;
+  ndn::Name m_routerPrefix;
+  HyperbolicState m_hyperbolicState;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Name m_nameLsaUserPrefix;

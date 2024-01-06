@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   cp1.setMaxFacesPerPrefix(50);
 
-  cp1.setHyperbolicState(1);
+  cp1.setHyperbolicState(HYPERBOLIC_STATE_ON);
 
   cp1.setCorR(2.5);
 
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(ConfParameterSettersAndGetters)
 
   BOOST_CHECK_EQUAL(cp1.getMaxFacesPerPrefix(), 50);
 
-  BOOST_CHECK_EQUAL(cp1.getHyperbolicState(), 1);
+  BOOST_CHECK_EQUAL(cp1.getHyperbolicState(), HYPERBOLIC_STATE_ON);
 
   BOOST_CHECK(cp1.getCorTheta() == angles);
 

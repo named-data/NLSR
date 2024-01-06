@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -25,47 +25,57 @@
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-#include <boost/lexical_cast.hpp>
-
-namespace nlsr {
-namespace test {
+namespace nlsr::test {
 
 class SyncLogicFixture : public IoKeyChainFixture
 {
 public:
   SyncLogicFixture()
-    : testIsLsaNew([] (auto&&...) { return true; })
-    , updateNamePrefix(this->conf.getLsaPrefix().toUri() +
-                       this->conf.getSiteName().toUri() +
-                       "/%C1.Router/other-router/")
   {
-    m_keyChain.createIdentity(conf.getRouterPrefix());
+    m_keyChain.createIdentity(opts.routerPrefix);
+  }
+
+  SyncLogicHandler&
+  getSync()
+  {
+    if (m_sync == nullptr) {
+      m_sync.reset(new SyncLogicHandler(face, m_keyChain, testIsLsaNew, opts));
+    }
+    return *m_sync;
   }
 
   void
-  receiveUpdate(const std::string& prefix, uint64_t seqNo)
+  receiveUpdate(const ndn::Name& prefix, uint64_t seqNo)
   {
     this->advanceClocks(ndn::time::milliseconds(1), 10);
     face.sentInterests.clear();
 
     std::vector<psync::MissingDataInfo> updates;
-    updates.push_back({ndn::Name(prefix), 0, seqNo, 0});
-    sync.m_syncLogic.onPSyncUpdate(updates);
+    updates.push_back({prefix, 0, seqNo, 0});
+    getSync().m_syncLogic.onPSyncUpdate(updates);
 
     this->advanceClocks(ndn::time::milliseconds(1), 10);
   }
 
 public:
   ndn::DummyClientFace face{m_io, m_keyChain};
-  ConfParameter conf{face, m_keyChain};
-  DummyConfFileProcessor confProcessor{conf, SyncProtocol::PSYNC};
-  SyncLogicHandler::IsLsaNew testIsLsaNew;
-  SyncLogicHandler sync{face, m_keyChain, testIsLsaNew, conf};
+  SyncLogicHandler::IsLsaNew testIsLsaNew = [] (auto&&...) { return true; };
+  SyncLogicOptions opts{
+    SyncProtocol::PSYNC,
+    ndn::Name("/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION),
+    "/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router",
+    ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT),
+    "/ndn/site/%C1.Router/this-router",
+    HYPERBOLIC_STATE_OFF
+  };
 
-  const std::string updateNamePrefix;
+  ndn::Name otherRouter = "/localhop/ndn/nlsr/LSA/site/%C1.Router/other-router";
   const std::vector<Lsa::Type> lsaTypes{Lsa::Type::NAME,
                                         Lsa::Type::ADJACENCY,
                                         Lsa::Type::COORDINATE};
+
+private:
+  std::unique_ptr<SyncLogicHandler> m_sync;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestSyncLogicHandler, SyncLogicFixture)
@@ -80,11 +90,11 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
   uint64_t syncSeqNo = 1;
 
   for (auto lsaType : {Lsa::Type::NAME, Lsa::Type::ADJACENCY}) {
-    std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
+    auto updateName = makeLsaUserPrefix(otherRouter, lsaType);
 
-    ndn::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
-        BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
+        BOOST_CHECK_EQUAL(updateName, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
         ++nCallbacks;
       });
@@ -101,17 +111,17 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
  */
 BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
 {
-  this->conf.setHyperbolicState(HYPERBOLIC_STATE_ON);
+  opts.hyperbolicState = HYPERBOLIC_STATE_ON;
 
   size_t nCallbacks = 0;
   uint64_t syncSeqNo = 1;
 
   for (auto lsaType : {Lsa::Type::NAME, Lsa::Type::COORDINATE}) {
-    std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
+    auto updateName = makeLsaUserPrefix(otherRouter, lsaType);
 
-    ndn::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
-        BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
+        BOOST_CHECK_EQUAL(updateName, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
         ++nCallbacks;
       });
@@ -128,17 +138,17 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
  */
 BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
 {
-  this->conf.setHyperbolicState(HYPERBOLIC_STATE_DRY_RUN);
+  opts.hyperbolicState = HYPERBOLIC_STATE_DRY_RUN;
 
   size_t nCallbacks = 0;
   uint64_t syncSeqNo = 1;
 
   for (auto lsaType : this->lsaTypes) {
-    std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(lsaType);
+    auto updateName = makeLsaUserPrefix(otherRouter, lsaType);
 
-    ndn::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
-        BOOST_CHECK_EQUAL(ndn::Name{updateName}, routerName);
+        BOOST_CHECK_EQUAL(updateName, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
         ++nCallbacks;
       });
@@ -158,19 +168,14 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
   const uint64_t sequenceNumber = 1;
 
   for (auto lsaType : this->lsaTypes) {
-    // To ensure that we get correctly-separated components, create
-    // and modify a Name to hand off.
-    ndn::Name updateName{this->conf.getLsaPrefix()};
-    updateName.append(this->conf.getSiteName())
-              .append(this->conf.getRouterName())
-              .append(boost::lexical_cast<std::string>(lsaType));
+    auto updateName = makeLsaUserPrefix(opts.routerPrefix, lsaType);
 
-    ndn::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_FAIL("Updates for self should not be emitted!");
       });
 
-    this->receiveUpdate(updateName.toUri(), sequenceNumber);
+    this->receiveUpdate(updateName, sequenceNumber);
   }
 
   // avoid "test case [...] did not check any assertions" message from Boost.Test
@@ -186,15 +191,14 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
   const uint64_t sequenceNumber = 1;
 
   for (auto lsaType : this->lsaTypes) {
-    ndn::Name updateName{this->conf.getSiteName()};
-    updateName.append(this->conf.getRouterName()).append(boost::lexical_cast<std::string>(lsaType));
+    auto updateName = makeLsaUserPrefix("/site/%C1.Router/this-router", lsaType);
 
-    ndn::signal::ScopedConnection connection = this->sync.onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_FAIL("Malformed updates should not be emitted!");
       });
 
-    this->receiveUpdate(updateName.toUri(), sequenceNumber);
+    this->receiveUpdate(updateName, sequenceNumber);
   }
 
   // avoid "test case [...] did not check any assertions" message from Boost.Test
@@ -207,19 +211,18 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
  */
 BOOST_AUTO_TEST_CASE(LsaNotNew)
 {
-  auto testLsaAlwaysFalse = [] (const ndn::Name& routerName, const Lsa::Type& lsaType,
-                                const uint64_t& sequenceNumber, uint64_t incomingFaceId) {
+  testIsLsaNew = [] (const ndn::Name& routerName, const Lsa::Type& lsaType,
+                     const uint64_t& sequenceNumber, uint64_t incomingFaceId) {
     return false;
   };
 
   const uint64_t sequenceNumber = 1;
-  SyncLogicHandler sync{this->face, this->m_keyChain, testLsaAlwaysFalse, this->conf};
-  ndn::signal::ScopedConnection connection = sync.onNewLsa.connect(
+  ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
     [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
       BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
     });
 
-  std::string updateName = this->updateNamePrefix + boost::lexical_cast<std::string>(Lsa::Type::NAME);
+  auto updateName = makeLsaUserPrefix(otherRouter, Lsa::Type::NAME);
   this->receiveUpdate(updateName, sequenceNumber);
 
   // avoid "test case [...] did not check any assertions" message from Boost.Test
@@ -232,19 +235,14 @@ BOOST_AUTO_TEST_CASE(LsaNotNew)
  */
 BOOST_AUTO_TEST_CASE(UpdatePrefix)
 {
-  ndn::Name expectedPrefix = this->conf.getLsaPrefix();
-  expectedPrefix.append(this->conf.getSiteName());
-  expectedPrefix.append(this->conf.getRouterName());
-
-  BOOST_CHECK_EQUAL(this->sync.m_nameLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::NAME)));
-  BOOST_CHECK_EQUAL(this->sync.m_adjLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY)));
-  BOOST_CHECK_EQUAL(this->sync.m_coorLsaUserPrefix,
-                    ndn::Name(expectedPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE)));
+  BOOST_CHECK_EQUAL(getSync().m_nameLsaUserPrefix,
+                    ndn::Name(opts.userPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::NAME)));
+  BOOST_CHECK_EQUAL(getSync().m_adjLsaUserPrefix,
+                    ndn::Name(opts.userPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY)));
+  BOOST_CHECK_EQUAL(getSync().m_coorLsaUserPrefix,
+                    ndn::Name(opts.userPrefix).append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::test

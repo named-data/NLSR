@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -220,7 +220,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
     \param seqNo The sequence number to check.
   */
   bool
-  isLsaNew(const ndn::Name& originRouter, const Lsa::Type& lsaType, uint64_t seqNo) const
+  isLsaNew(const ndn::Name& originRouter, Lsa::Type lsaType, uint64_t seqNo) const
   {
     // Is the name in the LSDB and the supplied seq no is the highest so far
     auto lsaPtr = findLsa(originRouter, lsaType);

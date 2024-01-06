@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,8 +24,6 @@
 #include "logger.hpp"
 #include "utility/name-helper.hpp"
 
-#include <boost/lexical_cast.hpp>
-
 namespace nlsr {
 
 INIT_LOGGER(SyncLogicHandler);
@@ -33,24 +31,22 @@ INIT_LOGGER(SyncLogicHandler);
 const std::string LSA_COMPONENT{"LSA"};
 
 SyncLogicHandler::SyncLogicHandler(ndn::Face& face, ndn::KeyChain& keyChain,
-                                   IsLsaNew isLsaNew, const ConfParameter& conf)
+                                   IsLsaNew isLsaNew, const SyncLogicOptions& opts)
   : m_isLsaNew(std::move(isLsaNew))
-  , m_confParam(conf)
-  , m_nameLsaUserPrefix(ndn::Name(m_confParam.getSyncUserPrefix()).append(boost::lexical_cast<std::string>(Lsa::Type::NAME)))
-  , m_syncLogic(face, keyChain, m_confParam.getSyncProtocol(), m_confParam.getSyncPrefix(),
-                m_nameLsaUserPrefix, m_confParam.getSyncInterestLifetime(),
+  , m_routerPrefix(opts.routerPrefix)
+  , m_hyperbolicState(opts.hyperbolicState)
+  , m_nameLsaUserPrefix(makeLsaUserPrefix(opts.userPrefix, Lsa::Type::NAME))
+  , m_adjLsaUserPrefix(makeLsaUserPrefix(opts.userPrefix, Lsa::Type::ADJACENCY))
+  , m_coorLsaUserPrefix(makeLsaUserPrefix(opts.userPrefix, Lsa::Type::COORDINATE))
+  , m_syncLogic(face, keyChain, opts.syncProtocol, opts.syncPrefix,
+                m_nameLsaUserPrefix, opts.syncInterestLifetime,
                 std::bind(&SyncLogicHandler::processUpdate, this, _1, _2, _3))
 {
-  m_adjLsaUserPrefix = ndn::Name(m_confParam.getSyncUserPrefix())
-                         .append(boost::lexical_cast<std::string>(Lsa::Type::ADJACENCY));
-  m_coorLsaUserPrefix = ndn::Name(m_confParam.getSyncUserPrefix())
-                         .append(boost::lexical_cast<std::string>(Lsa::Type::COORDINATE));
-
-  if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_ON) {
+  if (m_hyperbolicState != HYPERBOLIC_STATE_ON) {
     m_syncLogic.addUserNode(m_adjLsaUserPrefix);
   }
 
-  if (m_confParam.getHyperbolicState() != HYPERBOLIC_STATE_OFF) {
+  if (m_hyperbolicState != HYPERBOLIC_STATE_OFF) {
     m_syncLogic.addUserNode(m_coorLsaUserPrefix);
   }
 }
@@ -83,37 +79,36 @@ SyncLogicHandler::processUpdateFromSync(const ndn::Name& originRouter,
 {
   NLSR_LOG_DEBUG("Origin Router of update: " << originRouter);
 
-  // A router should not try to fetch its own LSA
-  if (originRouter != m_confParam.getRouterPrefix()) {
+  if (originRouter == m_routerPrefix) {
+    // A router should not try to fetch its own LSA
+    return;
+  }
 
-    Lsa::Type lsaType;
-    std::istringstream(updateName.get(updateName.size()-1).toUri()) >> lsaType;
+  auto lsaType = boost::lexical_cast<Lsa::Type>(updateName.get(-1).toUri());
+  NLSR_LOG_DEBUG("Received sync update with higher " << lsaType <<
+                  " sequence number than entry in LSDB");
 
-    NLSR_LOG_DEBUG("Received sync update with higher " << lsaType <<
-                   " sequence number than entry in LSDB");
-
-    if (m_isLsaNew(originRouter, lsaType, seqNo, incomingFaceId)) {
-      if (lsaType == Lsa::Type::ADJACENCY && seqNo != 0 &&
-          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
-        NLSR_LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing " <<
-                       "is enabled. Not going to fetch.");
-        return;
-      }
-
-      if (lsaType == Lsa::Type::COORDINATE && seqNo != 0 &&
-          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
-        NLSR_LOG_ERROR("Got an update for coordinate LSA when link-state " <<
-                       "is enabled. Not going to fetch.");
-        return;
-      }
-
-      onNewLsa(updateName, seqNo, originRouter, incomingFaceId);
+  if (m_isLsaNew(originRouter, lsaType, seqNo, incomingFaceId)) {
+    if (lsaType == Lsa::Type::ADJACENCY && seqNo != 0 &&
+        m_hyperbolicState == HYPERBOLIC_STATE_ON) {
+      NLSR_LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing "
+                      "is enabled. Not going to fetch.");
+      return;
     }
+
+    if (lsaType == Lsa::Type::COORDINATE && seqNo != 0 &&
+        m_hyperbolicState == HYPERBOLIC_STATE_OFF) {
+      NLSR_LOG_ERROR("Got an update for coordinate LSA when link-state "
+                      "is enabled. Not going to fetch.");
+      return;
+    }
+
+    onNewLsa(updateName, seqNo, originRouter, incomingFaceId);
   }
 }
 
 void
-SyncLogicHandler::publishRoutingUpdate(const Lsa::Type& type, const uint64_t& seqNo)
+SyncLogicHandler::publishRoutingUpdate(Lsa::Type type, uint64_t seqNo)
 {
   switch (type) {
   case Lsa::Type::ADJACENCY:

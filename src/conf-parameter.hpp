@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -340,12 +340,12 @@ public:
   }
 
   void
-  setHyperbolicState(int32_t ihc)
+  setHyperbolicState(HyperbolicState ihc)
   {
     m_hyperbolicState = ihc;
   }
 
-  int32_t
+  HyperbolicState
   getHyperbolicState() const
   {
     return m_hyperbolicState;
@@ -517,7 +517,7 @@ private:
 
   uint32_t m_infoInterestInterval;
 
-  int32_t m_hyperbolicState;
+  HyperbolicState m_hyperbolicState;
   double m_corR;
   std::vector<double> m_corTheta;
 

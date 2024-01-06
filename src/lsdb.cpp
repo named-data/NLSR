@@ -36,10 +36,17 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   , m_scheduler(face.getIoContext())
   , m_confParam(confParam)
   , m_sync(m_face, keyChain,
-           [this] (const auto& routerName, const Lsa::Type& lsaType,
-                   uint64_t sequenceNumber, uint64_t incomingFaceId) {
-             return isLsaNew(routerName, lsaType, sequenceNumber);
-           }, m_confParam)
+      [this] (const auto& routerName, Lsa::Type lsaType, uint64_t seqNo, uint64_t) {
+        return isLsaNew(routerName, lsaType, seqNo);
+      },
+      SyncLogicOptions{
+        confParam.getSyncProtocol(),
+        confParam.getSyncPrefix(),
+        confParam.getSyncUserPrefix(),
+        confParam.getSyncInterestLifetime(),
+        confParam.getRouterPrefix(),
+        confParam.getHyperbolicState()
+      })
   , m_lsaRefreshTime(ndn::time::seconds(m_confParam.getLsaRefreshTime()))
   , m_adjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval())
   , m_thisRouterPrefix(m_confParam.getRouterPrefix())

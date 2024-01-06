@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(LinkState)
   BOOST_CHECK_EQUAL(castor.getFaceUri().toString(), "udp4://10.0.0.1:6363");
 
   // Hyperbolic
-  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 0);
+  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), HYPERBOLIC_STATE_OFF);
 
   // FIB
   BOOST_CHECK_EQUAL(conf.getMaxFacesPerPrefix(), 3);
@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(Hyperbolic)
 {
   BOOST_REQUIRE(processConfigurationString(CONFIG_HYPERBOLIC));
 
-  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
+  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), HYPERBOLIC_STATE_ON);
   BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
   std::vector<double> angles{1.45};
   BOOST_CHECK(conf.getCorTheta() == angles);
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(Hyperbolic2)
 {
   BOOST_REQUIRE(processConfigurationString(CONFIG_HYPERBOLIC_ANGLES));
 
-  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), 1);
+  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), HYPERBOLIC_STATE_ON);
   BOOST_CHECK_EQUAL(conf.getCorR(), 123.456);
   std::vector<double> angles{1.45, 2.25};
   BOOST_CHECK(conf.getCorTheta() == angles);
@@ -364,7 +364,7 @@ BOOST_AUTO_TEST_CASE(DefaultValuesHyperbolic)
 
   BOOST_REQUIRE(processConfigurationString(config));
 
-  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), static_cast<int32_t>(HYPERBOLIC_STATE_DEFAULT));
+  BOOST_CHECK_EQUAL(conf.getHyperbolicState(), HYPERBOLIC_STATE_DEFAULT);
 }
 
 BOOST_AUTO_TEST_CASE(OutOfRangeValue)
