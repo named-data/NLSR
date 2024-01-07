@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -84,13 +84,11 @@ BOOST_AUTO_TEST_CASE(Basic)
   activeAdjacency.setStatus(Adjacent::STATUS_ACTIVE);
   activeAdjacencies.insert(activeAdjacency);
 
-  AdjLsa alsa1(routerName, seqNo, testTimePoint,
-               activeAdjacencies.size(), activeAdjacencies);
+  AdjLsa alsa1(routerName, seqNo, testTimePoint, activeAdjacencies);
   BOOST_CHECK_EQUAL(alsa1.getAdl().size(), 1);
   BOOST_CHECK_EQUAL(alsa1.getType(), Lsa::Type::ADJACENCY);
   BOOST_CHECK_EQUAL(alsa1.getSeqNo(), seqNo);
   BOOST_CHECK_EQUAL(alsa1.getExpirationTimePoint(), testTimePoint);
-  BOOST_CHECK_EQUAL(alsa1.getNoLink(), 1);
   BOOST_CHECK(alsa1.getAdl().isNeighbor(activeAdjacency.getName()));
 
   // An AdjLsa initialized with INACTIVE adjacencies should not copy the adjacencies
@@ -99,17 +97,15 @@ BOOST_AUTO_TEST_CASE(Basic)
   inactiveAdjacency.setStatus(Adjacent::STATUS_INACTIVE);
   inactiveAdjacencies.insert(inactiveAdjacency);
 
-  AdjLsa alsa2(routerName, seqNo, testTimePoint,
-               inactiveAdjacencies.size(), inactiveAdjacencies);
+  AdjLsa alsa2(routerName, seqNo, testTimePoint, inactiveAdjacencies);
   BOOST_CHECK_EQUAL(alsa2.getAdl().size(), 0);
 
   // Thus, the two LSAs should not have equal content
-  BOOST_CHECK_EQUAL(alsa1.isEqualContent(alsa2), false);
+  BOOST_CHECK_NE(alsa1, alsa2);
 
   // Create a duplicate of alsa1 which should have equal content
-  AdjLsa alsa3(routerName, seqNo, testTimePoint,
-               activeAdjacencies.size(), activeAdjacencies);
-  BOOST_CHECK(alsa1.isEqualContent(alsa3));
+  AdjLsa alsa3(routerName, seqNo, testTimePoint, activeAdjacencies);
+  BOOST_CHECK_EQUAL(alsa1, alsa3);
 
   auto wire = alsa1.wireEncode();
   BOOST_TEST(wire == ADJ_LSA1, boost::test_tools::per_element());
@@ -144,7 +140,7 @@ BOOST_AUTO_TEST_CASE(IncrementAdjacentNumber)
 
   auto testTimePoint = ndn::time::system_clock::now() + ndn::time::seconds(3600);
 
-  AdjLsa lsa("router1", 12, testTimePoint, adjList.size(), adjList);
+  AdjLsa lsa("router1", 12, testTimePoint, adjList);
 
   std::ostringstream os;
   os << lsa;
@@ -181,9 +177,9 @@ BOOST_AUTO_TEST_CASE(InitializeFromContent)
 
   auto testTimePoint = ndn::time::system_clock::now();
 
-  AdjLsa adjlsa1("router1", 1, testTimePoint, adjList.size(), adjList);
+  AdjLsa adjlsa1("router1", 1, testTimePoint, adjList);
   AdjLsa adjlsa2(adjlsa1.wireEncode());
-  BOOST_CHECK(adjlsa1.isEqualContent(adjlsa2));
+  BOOST_CHECK_EQUAL(adjlsa1, adjlsa2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

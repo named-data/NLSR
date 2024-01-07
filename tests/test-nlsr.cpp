@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -344,7 +344,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
                       10, Adjacent::STATUS_ACTIVE, 0, 256);
 
   AdjLsa ownAdjLsa(conf.getRouterPrefix(), 10,
-                   ndn::time::system_clock::now(), 1, neighbors);
+                   ndn::time::system_clock::now(), neighbors);
   lsdb.installLsa(std::make_shared<AdjLsa>(ownAdjLsa));
 
   // Router that will fail
@@ -353,7 +353,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
 
   AdjLsa failAdjLsa("/ndn/neighborA", 10,
                     ndn::time::system_clock::now() + ndn::time::seconds(3600),
-                    1, failAdjacencies);
+                    failAdjacencies);
 
   lsdb.installLsa(std::make_shared<AdjLsa>(failAdjLsa));
 
@@ -363,7 +363,7 @@ BOOST_AUTO_TEST_CASE(FaceDestroyEvent)
 
   AdjLsa otherAdjLsa("/ndn/neighborB", 10,
                      ndn::time::system_clock::now() + ndn::time::seconds(3600),
-                     1, otherAdjacencies);
+                     otherAdjacencies);
 
   lsdb.installLsa(std::make_shared<AdjLsa>(otherAdjLsa));
 

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,6 +26,8 @@
 #include "adjacent.hpp"
 #include "adjacency-list.hpp"
 
+#include <boost/operators.hpp>
+
 namespace nlsr {
 
 /*!
@@ -35,7 +37,7 @@ namespace nlsr {
                      Adjacency*
 
  */
-class AdjLsa : public Lsa
+class AdjLsa : public Lsa, private boost::equality_comparable<AdjLsa>
 {
 public:
   typedef AdjacencyList::const_iterator const_iterator;
@@ -43,8 +45,7 @@ public:
   AdjLsa() = default;
 
   AdjLsa(const ndn::Name& originR, uint64_t seqNo,
-         const ndn::time::system_clock::time_point& timepoint,
-         uint32_t noLink, AdjacencyList& adl);
+         const ndn::time::system_clock::time_point& timepoint, AdjacencyList& adl);
 
   AdjLsa(const ndn::Block& block);
 
@@ -74,20 +75,11 @@ public:
   }
 
   void
-  addAdjacent(Adjacent adj)
+  addAdjacent(const Adjacent& adj)
   {
     m_wire.reset();
     m_adl.insert(adj);
   }
-
-  uint32_t
-  getNoLink()
-  {
-    return m_noLink;
-  }
-
-  bool
-  isEqualContent(const AdjLsa& alsa) const;
 
   const_iterator
   begin() const
@@ -117,8 +109,16 @@ public:
   std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
   update(const std::shared_ptr<Lsa>& lsa) override;
 
-private:
-  uint32_t m_noLink;
+private: // non-member operators
+  // NOTE: the following "hidden friend" operators are available via
+  //       argument-dependent lookup only and must be defined inline.
+  // boost::equality_comparable provides != operator.
+
+  friend bool
+  operator==(const AdjLsa& lhs, const AdjLsa& rhs)
+  {
+    return lhs.m_adl == rhs.m_adl;
+  }
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   AdjacencyList m_adl;

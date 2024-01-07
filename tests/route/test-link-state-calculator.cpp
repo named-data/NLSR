@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -74,7 +74,7 @@ public:
     adjacencyListA.insert(b);
     adjacencyListA.insert(c);
 
-    AdjLsa adjA(a.getName(), 1, MAX_TIME, 2, adjacencyListA);
+    AdjLsa adjA(a.getName(), 1, MAX_TIME, adjacencyListA);
     lsdb.installLsa(std::make_shared<AdjLsa>(adjA));
 
     // Router B
@@ -85,7 +85,7 @@ public:
     adjacencyListB.insert(a);
     adjacencyListB.insert(c);
 
-    AdjLsa adjB(b.getName(), 1, MAX_TIME, 2, adjacencyListB);
+    AdjLsa adjB(b.getName(), 1, MAX_TIME, adjacencyListB);
     lsdb.installLsa(std::make_shared<AdjLsa>(adjB));
 
     // Router C
@@ -96,7 +96,7 @@ public:
     adjacencyListC.insert(a);
     adjacencyListC.insert(b);
 
-    AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
+    AdjLsa adjC(c.getName(), 1, MAX_TIME, adjacencyListC);
     lsdb.installLsa(std::make_shared<AdjLsa>(adjC));
 
     auto lsaRange = lsdb.getLsdbIterator<AdjLsa>();

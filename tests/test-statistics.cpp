@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -298,7 +298,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
   // adjacency lsa
   ndn::Name adjInterest("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/ADJACENCY/");
   adjInterest.appendNumber(seqNo);
-  AdjLsa aLsa(routerName, seqNo, MAX_TIME, 1, conf.getAdjacencyList());
+  AdjLsa aLsa(routerName, seqNo, MAX_TIME, conf.getAdjacencyList());
   lsdb.installLsa(std::make_shared<AdjLsa>(aLsa));
 
   lsdb.afterFetchLsa(aLsa.wireEncode().getBuffer(), adjInterest);

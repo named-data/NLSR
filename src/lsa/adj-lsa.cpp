@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -25,10 +25,8 @@
 namespace nlsr {
 
 AdjLsa::AdjLsa(const ndn::Name& originRouter, uint64_t seqNo,
-               const ndn::time::system_clock::time_point& timepoint,
-               uint32_t noLink, AdjacencyList& adl)
+               const ndn::time::system_clock::time_point& timepoint, AdjacencyList& adl)
   : Lsa(originRouter, seqNo, timepoint)
-  , m_noLink(noLink)
 {
   for (const auto& adjacent : adl.getAdjList()) {
     if (adjacent.getStatus() == Adjacent::STATUS_ACTIVE) {
@@ -40,12 +38,6 @@ AdjLsa::AdjLsa(const ndn::Name& originRouter, uint64_t seqNo,
 AdjLsa::AdjLsa(const ndn::Block& block)
 {
   wireDecode(block);
-}
-
-bool
-AdjLsa::isEqualContent(const AdjLsa& alsa) const
-{
-  return m_adl == alsa.getAdl();
 }
 
 template<ndn::encoding::Tag TAG>
@@ -143,7 +135,7 @@ std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
 AdjLsa::update(const std::shared_ptr<Lsa>& lsa)
 {
   auto alsa = std::static_pointer_cast<AdjLsa>(lsa);
-  if (!isEqualContent(*alsa)) {
+  if (*this != *alsa) {
     resetAdl();
     for (const auto& adjacent : alsa->getAdl()) {
       addAdjacent(adjacent);

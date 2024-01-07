@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(LsdbSignals)
   connectSignal();
   auto testTimePoint = ndn::time::system_clock::now() + 3600_s;
   ndn::Name router2("/router2");
-  AdjLsa adjLsa(router2, 12, testTimePoint, 2, conf.getAdjacencyList());
+  AdjLsa adjLsa(router2, 12, testTimePoint, conf.getAdjacencyList());
   std::shared_ptr<Lsa> lsaPtr = std::make_shared<AdjLsa>(adjLsa);
   lsdb.installLsa(lsaPtr);
   checkSignalResult(LsdbUpdate::INSTALLED, lsaPtr, {}, {});

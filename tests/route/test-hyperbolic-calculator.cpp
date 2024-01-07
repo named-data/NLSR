@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -69,7 +69,7 @@ public:
     adjacencies.insert(b);
     adjacencies.insert(c);
 
-    AdjLsa adjA(a.getName(), 1, MAX_TIME, 2, adjacencies);
+    AdjLsa adjA(a.getName(), 1, MAX_TIME, adjacencies);
     lsdb.installLsa(std::make_shared<AdjLsa>(adjA));
 
     CoordinateLsa coordA(adjA.getOriginRouter(), 1, MAX_TIME, 16.23, anglesA);
@@ -83,7 +83,7 @@ public:
     adjacencyListB.insert(a);
     adjacencyListB.insert(c);
 
-    AdjLsa adjB(b.getName(), 1, MAX_TIME, 2, adjacencyListB);
+    AdjLsa adjB(b.getName(), 1, MAX_TIME, adjacencyListB);
     lsdb.installLsa(std::make_shared<AdjLsa>(adjB));
 
     CoordinateLsa coordB(adjB.getOriginRouter(), 1, MAX_TIME, 16.59, anglesB);
@@ -97,7 +97,7 @@ public:
     adjacencyListC.insert(a);
     adjacencyListC.insert(b);
 
-    AdjLsa adjC(c.getName(), 1, MAX_TIME, 2, adjacencyListC);
+    AdjLsa adjC(c.getName(), 1, MAX_TIME, adjacencyListC);
     lsdb.installLsa(std::make_shared<AdjLsa>(adjC));
 
     CoordinateLsa coordC(adjC.getOriginRouter(), 1, MAX_TIME, 14.11, anglesC);
