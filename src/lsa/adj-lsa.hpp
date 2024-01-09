@@ -30,23 +30,27 @@
 
 namespace nlsr {
 
-/*!
-   \brief Data abstraction for AdjLsa
-   AdjacencyLsa := ADJACENCY-LSA-TYPE TLV-LENGTH
-                     Lsa
-                     Adjacency*
-
+/**
+ * @brief Represents an LSA of adjacencies of the origin router in link-state mode.
+ *
+ * AdjLsa is encoded as:
+ * @code{.abnf}
+ * AdjLsa = ADJACENCY-LSA-TYPE TLV-LENGTH
+ *            Lsa
+ *            *Adjacency
+ * @endcode
  */
 class AdjLsa : public Lsa, private boost::equality_comparable<AdjLsa>
 {
 public:
-  typedef AdjacencyList::const_iterator const_iterator;
+  using const_iterator = AdjacencyList::const_iterator;
 
   AdjLsa() = default;
 
   AdjLsa(const ndn::Name& originR, uint64_t seqNo,
          const ndn::time::system_clock::time_point& timepoint, AdjacencyList& adl);
 
+  explicit
   AdjLsa(const ndn::Block& block);
 
   Lsa::Type
@@ -103,11 +107,12 @@ public:
   void
   wireDecode(const ndn::Block& wire);
 
-  std::string
-  toString() const override;
-
   std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
   update(const std::shared_ptr<Lsa>& lsa) override;
+
+private:
+  void
+  print(std::ostream& os) const override;
 
 private: // non-member operators
   // NOTE: the following "hidden friend" operators are available via
@@ -125,9 +130,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 };
 
 NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(AdjLsa);
-
-std::ostream&
-operator<<(std::ostream& os, const AdjLsa& lsa);
 
 } // namespace nlsr
 

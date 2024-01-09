@@ -118,6 +118,17 @@ public:
     return std::static_pointer_cast<T>(findLsa(router, T::type()));
   }
 
+  struct ExtractOriginRouter
+  {
+    using result_type = ndn::Name;
+
+    ndn::Name
+    operator()(const Lsa& lsa) const
+    {
+      return lsa.getOriginRouter();
+    }
+  };
+
   struct name_hash {
     int
     operator()(const ndn::Name& name) const {
@@ -143,7 +154,7 @@ public:
         bmi::tag<byName>,
         bmi::composite_key<
           Lsa,
-          bmi::const_mem_fun<Lsa, ndn::Name, &Lsa::getOriginRouterCopy>,
+          ExtractOriginRouter,
           bmi::const_mem_fun<Lsa, Lsa::Type, &Lsa::getType>
         >,
         bmi::composite_key_hash<name_hash, enum_class_hash>

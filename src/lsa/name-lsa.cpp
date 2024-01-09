@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -112,18 +112,14 @@ NameLsa::wireDecode(const ndn::Block& wire)
   m_npl = npl;
 }
 
-std::string
-NameLsa::toString() const
+void
+NameLsa::print(std::ostream& os) const
 {
-  std::ostringstream os;
-  os << getString();
   os << "      Names:\n";
   int i = 0;
   for (const auto& name : m_npl.getNames()) {
     os << "        Name " << i++ << ": " << name << "\n";
   }
-
-  return os.str();
 }
 
 std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
@@ -154,12 +150,6 @@ NameLsa::update(const std::shared_ptr<Lsa>& lsa)
   }
 
   return {updated, namesToAdd, namesToRemove};
-}
-
-std::ostream&
-operator<<(std::ostream& os, const NameLsa& lsa)
-{
-  return os << lsa.toString();
 }
 
 } // namespace nlsr

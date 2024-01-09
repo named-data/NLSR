@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -343,15 +343,16 @@ void
 Nlsrc::recordLsa(const nlsr::Lsa& lsa)
 {
   Router& router = m_routers.emplace(lsa.getOriginRouter(), Router()).first->second;
+  auto lsaString = boost::lexical_cast<std::string>(lsa);
 
   if (lsa.getType() == nlsr::Lsa::Type::ADJACENCY) {
-    router.adjacencyLsaString = lsa.toString();
+    router.adjacencyLsaString = lsaString;
   }
   else if (lsa.getType() == nlsr::Lsa::Type::COORDINATE) {
-    router.coordinateLsaString = lsa.toString();
+    router.coordinateLsaString = lsaString;
   }
   else if (lsa.getType() == nlsr::Lsa::Type::NAME) {
-    router.nameLsaString = lsa.toString();
+    router.nameLsaString = lsaString;
   }
 }
 

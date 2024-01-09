@@ -112,23 +112,18 @@ AdjLsa::wireDecode(const ndn::Block& wire)
   m_adl = adl;
 }
 
-std::string
-AdjLsa::toString() const
+void
+AdjLsa::print(std::ostream& os) const
 {
-  std::ostringstream os;
-  os << getString();
   os << "      Adjacent(s):\n";
 
   int adjacencyIndex = 0;
-
   for (const auto& adjacency : m_adl) {
     os << "        Adjacent " << adjacencyIndex++
        << ": (name=" << adjacency.getName()
        << ", uri="   << adjacency.getFaceUri()
        << ", cost="  << adjacency.getLinkCost() << ")\n";
   }
-
-  return os.str();
 }
 
 std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
@@ -143,12 +138,6 @@ AdjLsa::update(const std::shared_ptr<Lsa>& lsa)
     return {true, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
   }
   return {false, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
-}
-
-std::ostream&
-operator<<(std::ostream& os, const AdjLsa& lsa)
-{
-  return os << lsa.toString();
 }
 
 } // namespace nlsr

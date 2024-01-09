@@ -119,18 +119,14 @@ CoordinateLsa::wireDecode(const ndn::Block& wire)
   m_hyperbolicAngles = angles;
 }
 
-std::string
-CoordinateLsa::toString() const
+void
+CoordinateLsa::print(std::ostream& os) const
 {
-  std::ostringstream os;
-  os << getString();
   os << "      Hyperbolic Radius  : " << m_hyperbolicRadius << "\n";
   int i = 0;
   for (const auto& value : m_hyperbolicAngles) {
     os << "      Hyperbolic Theta " << i++ << " : " << value << "\n";
   }
-
-  return os.str();
 }
 
 std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
@@ -146,12 +142,6 @@ CoordinateLsa::update(const std::shared_ptr<Lsa>& lsa)
     return {true, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
   }
   return {false, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
-}
-
-std::ostream&
-operator<<(std::ostream& os, const CoordinateLsa& lsa)
-{
-  return os << lsa.toString();
 }
 
 } // namespace nlsr

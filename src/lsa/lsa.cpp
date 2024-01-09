@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -98,6 +98,19 @@ Lsa::wireDecode(const ndn::Block& wire)
 }
 
 std::ostream&
+operator<<(std::ostream& os, const Lsa& lsa)
+{
+  auto duration = lsa.m_expirationTimePoint - ndn::time::system_clock::now();
+  os << "    " << lsa.getType() << " LSA:\n"
+     << "      Origin Router      : " << lsa.m_originRouter << "\n"
+     << "      Sequence Number    : " << lsa.m_seqNo << "\n"
+     << "      Expires in         : " << ndn::time::duration_cast<ndn::time::milliseconds>(duration)
+     << "\n";
+  lsa.print(os);
+  return os;
+}
+
+std::ostream&
 operator<<(std::ostream& os, const Lsa::Type& type)
 {
   switch (type) {
@@ -135,19 +148,6 @@ operator>>(std::istream& is, Lsa::Type& type)
     type = Lsa::Type::BASE;
   }
   return is;
-}
-
-std::string
-Lsa::getString() const
-{
-  std::ostringstream os;
-  auto duration = m_expirationTimePoint - ndn::time::system_clock::now();
-  os << "    " << getType() << " LSA:\n"
-     << "      Origin Router      : " << m_originRouter << "\n"
-     << "      Sequence Number    : " << m_seqNo << "\n"
-     << "      Expires in         : " << ndn::time::duration_cast<ndn::time::milliseconds>(duration)
-     << "\n";
-  return os.str();
 }
 
 } // namespace nlsr

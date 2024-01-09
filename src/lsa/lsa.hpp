@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -31,12 +31,16 @@
 
 namespace nlsr {
 
-/*!
-   \brief Data abstraction for Lsa
-   Lsa := LSA-TYPE TLV-LENGTH
-            Name
-            SequenceNumber
-            ExpirationTimePoint
+/**
+ * @brief Represents a Link State Announcement (LSA).
+ *
+ * The base level LSA is encoded as:
+ * @code{.abnf}
+ * Lsa = LSA-TYPE TLV-LENGTH
+ *         Name ; origin router
+ *         SequenceNumber
+ *         ExpirationTime
+ * @endcode
  */
 class Lsa
 {
@@ -55,11 +59,12 @@ public:
   };
 
 protected:
+  Lsa() = default;
+
   Lsa(const ndn::Name& originRouter, uint64_t seqNo,
       ndn::time::system_clock::time_point expirationTimePoint);
 
-  Lsa() = default;
-
+  explicit
   Lsa(const Lsa& lsa);
 
 public:
@@ -88,12 +93,6 @@ public:
     return m_originRouter;
   }
 
-  ndn::Name
-  getOriginRouterCopy() const
-  {
-    return m_originRouter;
-  }
-
   const ndn::time::system_clock::time_point&
   getExpirationTimePoint() const
   {
@@ -113,11 +112,6 @@ public:
     m_expiringEventId = eid;
   }
 
-  /*! Get data common to all LSA types for printing purposes.
-   */
-  virtual std::string
-  toString() const = 0;
-
   virtual std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
   update(const std::shared_ptr<Lsa>& lsa) = 0;
 
@@ -132,8 +126,12 @@ protected:
   void
   wireDecode(const ndn::Block& wire);
 
-  std::string
-  getString() const;
+private:
+  virtual void
+  print(std::ostream& os) const = 0;
+
+  friend std::ostream&
+  operator<<(std::ostream& os, const Lsa& lsa);
 
 PUBLIC_WITH_TESTS_ELSE_PROTECTED:
   ndn::Name m_originRouter;

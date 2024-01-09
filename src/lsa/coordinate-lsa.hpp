@@ -29,12 +29,22 @@
 
 namespace nlsr {
 
-/*!
-   \brief Data abstraction for CoordinateLsa
-   CoordinateLsa := COORDINATE-LSA-TYPE TLV-LENGTH
-                      Lsa
-                      HyperbolicRadius
-                      HyperbolicAngle+
+/**
+ * @brief Represents an LSA of hyperbolic coordinates of the origin router.
+ *
+ * CoordinateLsa is encoded as:
+ * @code{.abnf}
+ * CoordinateLsa = COORDINATE-LSA-TYPE TLV-LENGTH
+ *                   Lsa
+ *                   HyperbolicRadius
+ *                   1*HyperbolicAngle ; theta
+ *
+ * HyperbolicRadius = HYPERBOLIC-RADIUS-TYPE TLV-LENGTH
+ *                      Double ; IEEE754 double precision
+ *
+ * HyperbolicAngle = HYPERBOLIC-ANGLE-TYPE TLV-LENGTH
+ *                     Double ; IEEE754 double precision
+ * @endcode
  */
 class CoordinateLsa : public Lsa, private boost::equality_comparable<CoordinateLsa>
 {
@@ -45,6 +55,7 @@ public:
                 const ndn::time::system_clock::time_point& timepoint,
                 double radius, std::vector<double> angles);
 
+  explicit
   CoordinateLsa(const ndn::Block& block);
 
   Lsa::Type
@@ -95,11 +106,12 @@ public:
   void
   wireDecode(const ndn::Block& wire);
 
-  std::string
-  toString() const override;
-
   std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
   update(const std::shared_ptr<Lsa>& lsa) override;
+
+private:
+  void
+  print(std::ostream& os) const override;
 
 private: // non-member operators
   // NOTE: the following "hidden friend" operators are available via
@@ -121,9 +133,6 @@ private:
 };
 
 NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(CoordinateLsa);
-
-std::ostream&
-operator<<(std::ostream& os, const CoordinateLsa& lsa);
 
 } // namespace nlsr
 

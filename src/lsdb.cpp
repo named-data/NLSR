@@ -142,8 +142,7 @@ Lsdb::scheduleAdjLsaBuild()
 void
 Lsdb::writeLog() const
 {
-  static const Lsa::Type types[] = {Lsa::Type::COORDINATE, Lsa::Type::NAME, Lsa::Type::ADJACENCY};
-  for (const auto& type : types) {
+  for (auto type : {Lsa::Type::COORDINATE, Lsa::Type::NAME, Lsa::Type::ADJACENCY}) {
     if ((type == Lsa::Type::COORDINATE &&
          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) ||
         (type == Lsa::Type::ADJACENCY &&
@@ -154,7 +153,7 @@ Lsdb::writeLog() const
     NLSR_LOG_DEBUG("---------------" << type << " LSDB-------------------");
     auto lsaRange = m_lsdb.get<byType>().equal_range(type);
     for (auto lsaIt = lsaRange.first; lsaIt != lsaRange.second; ++lsaIt) {
-      NLSR_LOG_DEBUG((*lsaIt)->toString());
+      NLSR_LOG_DEBUG(**lsaIt);
     }
   }
 }
@@ -263,7 +262,7 @@ Lsdb::installLsa(std::shared_ptr<Lsa> lsa)
 
   auto chkLsa = findLsa(lsa->getOriginRouter(), lsa->getType());
   if (chkLsa == nullptr) {
-    NLSR_LOG_DEBUG("Adding LSA:\n" << lsa->toString());
+    NLSR_LOG_DEBUG("Adding LSA:\n" << *lsa);
 
     m_lsdb.emplace(lsa);
     onLsdbModified(lsa, LsdbUpdate::INSTALLED, {}, {});
@@ -272,7 +271,7 @@ Lsdb::installLsa(std::shared_ptr<Lsa> lsa)
   }
   // Else this is a known name LSA, so we are updating it.
   else if (chkLsa->getSeqNo() < lsa->getSeqNo()) {
-    NLSR_LOG_DEBUG("Updating LSA:\n" << chkLsa->toString());
+    NLSR_LOG_DEBUG("Updating LSA:\n" << *chkLsa);
     chkLsa->setSeqNo(lsa->getSeqNo());
     chkLsa->setExpirationTimePoint(lsa->getExpirationTimePoint());
 
@@ -282,7 +281,7 @@ Lsdb::installLsa(std::shared_ptr<Lsa> lsa)
     }
 
     chkLsa->setExpiringEventId(scheduleLsaExpiration(chkLsa, timeToExpire));
-    NLSR_LOG_DEBUG("Updated LSA:\n" << chkLsa->toString());
+    NLSR_LOG_DEBUG("Updated LSA:\n" << *chkLsa);
   }
 }
 
@@ -291,7 +290,7 @@ Lsdb::removeLsa(const LsaContainer::index<Lsdb::byName>::type::iterator& lsaIt)
 {
   if (lsaIt != m_lsdb.end()) {
     auto lsaPtr = *lsaIt;
-    NLSR_LOG_DEBUG("Removing LSA:\n" << lsaPtr->toString());
+    NLSR_LOG_DEBUG("Removing LSA:\n" << *lsaPtr);
     m_lsdb.erase(lsaIt);
     onLsdbModified(lsaPtr, LsdbUpdate::REMOVED, {}, {});
   }
@@ -380,17 +379,17 @@ Lsdb::expireOrRefreshLsa(std::shared_ptr<Lsa> lsa)
   // If this name LSA exists in the LSDB
   if (lsaIt != m_lsdb.end()) {
     auto lsaPtr = *lsaIt;
-    NLSR_LOG_DEBUG(lsaPtr->toString());
+    NLSR_LOG_DEBUG(*lsaPtr);
     NLSR_LOG_DEBUG("LSA Exists with seq no: " << lsaPtr->getSeqNo());
     // If its seq no is the one we are expecting.
     if (lsaPtr->getSeqNo() == lsa->getSeqNo()) {
       if (lsaPtr->getOriginRouter() == m_thisRouterPrefix) {
         NLSR_LOG_DEBUG("Own " << lsaPtr->getType() << " LSA, so refreshing it");
-        NLSR_LOG_DEBUG("Current LSA:\n" << lsaPtr->toString());
+        NLSR_LOG_DEBUG("Current LSA:\n" << *lsaPtr);
         lsaPtr->setSeqNo(lsaPtr->getSeqNo() + 1);
         m_sequencingManager.setLsaSeq(lsaPtr->getSeqNo(), lsaPtr->getType());
         lsaPtr->setExpirationTimePoint(getLsaExpirationTimePoint());
-        NLSR_LOG_DEBUG("Updated LSA:\n" << lsaPtr->toString());
+        NLSR_LOG_DEBUG("Updated LSA:\n" << *lsaPtr);
         // schedule refreshing event again
         lsaPtr->setExpiringEventId(scheduleLsaExpiration(lsaPtr, m_lsaRefreshTime));
         m_sequencingManager.writeSeqNoToFile();

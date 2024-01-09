@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -29,11 +29,15 @@
 
 namespace nlsr {
 
-/*!
-   \brief Data abstraction for NameLsa
-   NameLsa := NAME-LSA-TYPE TLV-LENGTH
-                Lsa
-                Name+
+/**
+ * @brief Represents an LSA of name prefixes announced by the origin router.
+ *
+ * NameLsa is encoded as:
+ * @code{.abnf}
+ * NameLsa = NAME-LSA-TYPE TLV-LENGTH
+ *             Lsa
+ *             1*Name
+ * @endcode
  */
 class NameLsa : public Lsa, private boost::equality_comparable<NameLsa>
 {
@@ -44,6 +48,7 @@ public:
           const ndn::time::system_clock::time_point& timepoint,
           const NamePrefixList& npl);
 
+  explicit
   NameLsa(const ndn::Block& block);
 
   Lsa::Type
@@ -94,11 +99,12 @@ public:
   void
   wireDecode(const ndn::Block& wire);
 
-  std::string
-  toString() const override;
-
   std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
   update(const std::shared_ptr<Lsa>& lsa) override;
+
+private:
+  void
+  print(std::ostream& os) const override;
 
 private: // non-member operators
   // NOTE: the following "hidden friend" operators are available via
@@ -116,9 +122,6 @@ private:
 };
 
 NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(NameLsa);
-
-std::ostream&
-operator<<(std::ostream& os, const NameLsa& lsa);
 
 } // namespace nlsr
 
