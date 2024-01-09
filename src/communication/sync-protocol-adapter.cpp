@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -42,45 +42,44 @@ SyncProtocolAdapter::SyncProtocolAdapter(ndn::Face& face,
 {
   switch (m_syncProtocol) {
 #ifdef HAVE_CHRONOSYNC
-  case SyncProtocol::CHRONOSYNC:
-    NDN_LOG_DEBUG("Using ChronoSync");
-    m_chronoSyncLogic = std::make_shared<chronosync::Logic>(face,
-                          syncPrefix,
-                          userPrefix,
-                          [this] (auto&&... args) { onChronoSyncUpdate(std::forward<decltype(args)>(args)...); },
-                          chronosync::Logic::DEFAULT_NAME,
-                          chronosync::Logic::DEFAULT_VALIDATOR,
-                          chronosync::Logic::DEFAULT_RESET_TIMER,
-                          chronosync::Logic::DEFAULT_CANCEL_RESET_TIMER,
-                          chronosync::Logic::DEFAULT_RESET_INTEREST_LIFETIME,
-                          syncInterestLifetime,
-                          chronosync::Logic::DEFAULT_SYNC_REPLY_FRESHNESS,
-                          chronosync::Logic::DEFAULT_RECOVERY_INTEREST_LIFETIME,
-                          FIXED_SESSION);
-    break;
+    case SyncProtocol::CHRONOSYNC:
+      NDN_LOG_DEBUG("Using ChronoSync");
+      m_chronoSyncLogic = std::make_shared<chronosync::Logic>(face,
+                            syncPrefix,
+                            userPrefix,
+                            [this] (auto&&... args) { onChronoSyncUpdate(std::forward<decltype(args)>(args)...); },
+                            chronosync::Logic::DEFAULT_NAME,
+                            chronosync::Logic::DEFAULT_VALIDATOR,
+                            chronosync::Logic::DEFAULT_RESET_TIMER,
+                            chronosync::Logic::DEFAULT_CANCEL_RESET_TIMER,
+                            chronosync::Logic::DEFAULT_RESET_INTEREST_LIFETIME,
+                            syncInterestLifetime,
+                            chronosync::Logic::DEFAULT_SYNC_REPLY_FRESHNESS,
+                            chronosync::Logic::DEFAULT_RECOVERY_INTEREST_LIFETIME,
+                            FIXED_SESSION);
+      break;
 #endif // HAVE_CHRONOSYNC
 #ifdef HAVE_PSYNC
-  case SyncProtocol::PSYNC:
-    NDN_LOG_DEBUG("Using PSync");
-    m_psyncLogic = std::make_shared<psync::FullProducer>(face,
-                     keyChain,
-                     80,
-                     syncPrefix,
-                     userPrefix,
-                     [this] (auto&&... args) { onPSyncUpdate(std::forward<decltype(args)>(args)...); },
-                     syncInterestLifetime);
-    break;
+    case SyncProtocol::PSYNC: {
+      NDN_LOG_DEBUG("Using PSync");
+      psync::FullProducer::Options opts;
+      opts.onUpdate = [this] (auto&&... args) { onPSyncUpdate(std::forward<decltype(args)>(args)...); };
+      opts.syncInterestLifetime = syncInterestLifetime;
+      m_psyncLogic = std::make_shared<psync::FullProducer>(face, keyChain, syncPrefix, opts);
+      m_psyncLogic->addUserNode(userPrefix);
+      break;
+    }
 #endif // HAVE_PSYNC
 #ifdef HAVE_SVS
-  case SyncProtocol::SVS:
-    NDN_LOG_DEBUG("Using SVS");
-    m_svsCore = std::make_shared<ndn::svs::SVSyncCore>(face,
-                    syncPrefix,
-                    [this] (auto&&... args) { onSvsUpdate(std::forward<decltype(args)>(args)...); });
-    break;
+    case SyncProtocol::SVS:
+      NDN_LOG_DEBUG("Using SVS");
+      m_svsCore = std::make_shared<ndn::svs::SVSyncCore>(face,
+                      syncPrefix,
+                      [this] (auto&&... args) { onSvsUpdate(std::forward<decltype(args)>(args)...); });
+      break;
 #endif // HAVE_SVS
-  default:
-    NDN_CXX_UNREACHABLE;
+    default:
+      NDN_CXX_UNREACHABLE;
   }
 }
 
