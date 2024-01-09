@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -21,6 +21,7 @@
 #include "adjacent.hpp"
 #include "logger.hpp"
 #include "tlv-nlsr.hpp"
+#include "utility/numeric.hpp"
 
 namespace nlsr {
 
@@ -158,10 +159,9 @@ Adjacent::wireDecode(const ndn::Block& wire)
 bool
 Adjacent::operator==(const Adjacent& adjacent) const
 {
-  return (m_name == adjacent.getName()) &&
-         (m_faceUri == adjacent.getFaceUri()) &&
-         (std::abs(m_linkCost - adjacent.getLinkCost()) <
-          std::numeric_limits<double>::epsilon());
+  return m_name == adjacent.getName() &&
+         m_faceUri == adjacent.getFaceUri() &&
+         util::diffInEpsilon(m_linkCost, adjacent.getLinkCost());
 }
 
 bool

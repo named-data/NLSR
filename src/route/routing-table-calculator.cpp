@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -496,11 +496,11 @@ HyperbolicRoutingCalculator::getHyperbolicDistance(Lsdb& lsdb, ndn::Name src, nd
     return UNKNOWN_DISTANCE;
   }
 
-  std::vector<double> srcTheta = srcLsa->getCorTheta();
-  std::vector<double> destTheta = destLsa->getCorTheta();
+  std::vector<double> srcTheta = srcLsa->getTheta();
+  std::vector<double> destTheta = destLsa->getTheta();
 
-  double srcRadius = srcLsa->getCorRadius();
-  double destRadius = destLsa->getCorRadius();
+  double srcRadius = srcLsa->getRadius();
+  double destRadius = destLsa->getRadius();
 
   double diffTheta = calculateAngularDistance(srcTheta, destTheta);
 

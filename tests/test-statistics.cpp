@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
   auto coorLsa = lsdb.findLsa<CoordinateLsa>(conf.getRouterPrefix());
 
   seqNo = coorLsa->getSeqNo();
-  coorLsa->setCorTheta({20.0, 30.0});
+  coorLsa->setTheta({20.0, 30.0});
   lsdb.installLsa(coorLsa);
 
   // Receive Adjacency LSA Interest

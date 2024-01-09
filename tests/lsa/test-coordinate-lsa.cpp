@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -94,10 +94,10 @@ BOOST_AUTO_TEST_CASE(Basic)
   CoordinateLsa clsa1("router1", 12, testTimePoint, 2.5, angles1);
   CoordinateLsa clsa2("router1", 12, testTimePoint, 2.5, angles2);
 
-  BOOST_CHECK_CLOSE(clsa1.getCorRadius(), 2.5, 0.0001);
-  BOOST_CHECK(clsa1.getCorTheta() == angles1);
+  BOOST_CHECK_CLOSE(clsa1.getRadius(), 2.5, 0.0001);
+  BOOST_TEST(clsa1.getTheta() == angles1, boost::test_tools::per_element());
 
-  BOOST_CHECK(clsa1.isEqualContent(clsa2));
+  BOOST_CHECK_EQUAL(clsa1, clsa2);
 
   BOOST_CHECK_EQUAL(clsa1.wireEncode(), clsa2.wireEncode());
 
@@ -105,11 +105,11 @@ BOOST_AUTO_TEST_CASE(Basic)
   BOOST_TEST(wire == COORDINATE_LSA1, boost::test_tools::per_element());
 
   std::vector<double> angles3{40.0};
-  clsa1.setCorTheta(angles3);
+  clsa1.setTheta(angles3);
   wire = clsa1.wireEncode();
   BOOST_TEST(wire == COORDINATE_LSA_DIFF_ANGLE, boost::test_tools::per_element());
 
-  clsa1.setCorRadius(2.3);
+  clsa1.setRadius(2.3);
   wire = clsa1.wireEncode();
   BOOST_TEST(wire == COORDINATE_LSA_DIFF_RADIUS, boost::test_tools::per_element());
 

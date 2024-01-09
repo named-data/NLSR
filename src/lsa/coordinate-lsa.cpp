@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -36,24 +36,6 @@ CoordinateLsa::CoordinateLsa(const ndn::Name& originRouter, uint64_t seqNo,
 CoordinateLsa::CoordinateLsa(const ndn::Block& block)
 {
   wireDecode(block);
-}
-
-bool
-CoordinateLsa::isEqualContent(const CoordinateLsa& clsa) const
-{
-  if (clsa.getCorTheta().size() != m_hyperbolicAngles.size()) {
-    return false;
-  }
-
-  std::vector<double> m_angles2 = clsa.getCorTheta();
-  for (unsigned int i = 0; i < clsa.getCorTheta().size(); i++) {
-    if (std::abs(m_hyperbolicAngles[i] - m_angles2[i]) > std::numeric_limits<double>::epsilon()) {
-      return false;
-    }
-  }
-
-  return (std::abs(m_hyperbolicRadius - clsa.getCorRadius()) <
-          std::numeric_limits<double>::epsilon());
 }
 
 template<ndn::encoding::Tag TAG>
@@ -155,10 +137,10 @@ std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
 CoordinateLsa::update(const std::shared_ptr<Lsa>& lsa)
 {
   auto clsa = std::static_pointer_cast<CoordinateLsa>(lsa);
-  if (!isEqualContent(*clsa)) {
-    m_hyperbolicRadius = clsa->getCorRadius();
+  if (*this != *clsa) {
+    m_hyperbolicRadius = clsa->getRadius();
     m_hyperbolicAngles.clear();
-    for (const auto& angle : clsa->getCorTheta()) {
+    for (const auto& angle : clsa->getTheta()) {
       m_hyperbolicAngles.push_back(angle);
     }
     return {true, std::list<ndn::Name>{}, std::list<ndn::Name>{}};

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,6 +23,9 @@
 #define NLSR_LSA_COORDINATE_LSA_HPP
 
 #include "lsa.hpp"
+#include "utility/numeric.hpp"
+
+#include <boost/operators.hpp>
 
 namespace nlsr {
 
@@ -33,7 +36,7 @@ namespace nlsr {
                       HyperbolicRadius
                       HyperbolicAngle+
  */
-class CoordinateLsa : public Lsa
+class CoordinateLsa : public Lsa, private boost::equality_comparable<CoordinateLsa>
 {
 public:
   CoordinateLsa() = default;
@@ -57,33 +60,30 @@ public:
   }
 
   double
-  getCorRadius() const
+  getRadius() const
   {
     return m_hyperbolicRadius;
   }
 
   void
-  setCorRadius(double cr)
+  setRadius(double cr)
   {
     m_wire.reset();
     m_hyperbolicRadius = cr;
   }
 
-  const std::vector<double>
-  getCorTheta() const
+  const std::vector<double>&
+  getTheta() const
   {
     return m_hyperbolicAngles;
   }
 
   void
-  setCorTheta(std::vector<double> ct)
+  setTheta(std::vector<double> ct)
   {
     m_wire.reset();
-    m_hyperbolicAngles = ct;
+    m_hyperbolicAngles = std::move(ct);
   }
-
-  bool
-  isEqualContent(const CoordinateLsa& clsa) const;
 
   template<ndn::encoding::Tag TAG>
   size_t
@@ -100,6 +100,20 @@ public:
 
   std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
   update(const std::shared_ptr<Lsa>& lsa) override;
+
+private: // non-member operators
+  // NOTE: the following "hidden friend" operators are available via
+  //       argument-dependent lookup only and must be defined inline.
+  // boost::equality_comparable provides != operator.
+
+  friend bool
+  operator==(const CoordinateLsa& lhs, const CoordinateLsa& rhs)
+  {
+    return util::diffInEpsilon(lhs.m_hyperbolicRadius, rhs.m_hyperbolicRadius) &&
+           std::equal(lhs.m_hyperbolicAngles.begin(), lhs.m_hyperbolicAngles.end(),
+                      rhs.m_hyperbolicAngles.begin(), rhs.m_hyperbolicAngles.end(),
+                      util::diffInEpsilon);
+  }
 
 private:
   double m_hyperbolicRadius = 0.0;
