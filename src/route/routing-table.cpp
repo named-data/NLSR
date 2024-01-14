@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -130,9 +130,9 @@ RoutingTable::calculateLsRoutingTable()
   Map map;
   auto lsaRange = m_lsdb.getLsdbIterator<AdjLsa>();
   map.createFromAdjLsdb(lsaRange.first, lsaRange.second);
-  map.writeLog();
+  NLSR_LOG_DEBUG(map);
 
-  size_t nRouters = map.getMapSize();
+  size_t nRouters = map.size();
 
   LinkStateRoutingTableCalculator calculator(nRouters);
 
@@ -156,9 +156,9 @@ RoutingTable::calculateHypRoutingTable(bool isDryRun)
   Map map;
   auto lsaRange = m_lsdb.getLsdbIterator<CoordinateLsa>();
   map.createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
-  map.writeLog();
+  NLSR_LOG_DEBUG(map);
 
-  size_t nRouters = map.getMapSize();
+  size_t nRouters = map.size();
 
   HyperbolicRoutingCalculator calculator(nRouters, isDryRun, m_confParam.getRouterPrefix());
 

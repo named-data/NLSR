@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -23,51 +23,45 @@
 #include "adjacent.hpp"
 #include "lsa/lsa.hpp"
 #include "lsdb.hpp"
-#include "logger.hpp"
 
 namespace nlsr {
-
-INIT_LOGGER(route.Map);
 
 void
 Map::addEntry(const ndn::Name& rtrName)
 {
-  MapEntry me {rtrName, m_mappingIndex};
-  if (addEntry(me)) {
-    m_mappingIndex++;
-  }
-}
-
-bool
-Map::addEntry(MapEntry& mpe)
-{
-  return m_entries.insert(mpe).second;
+  int32_t mappingNo = static_cast<int32_t>(m_bimap.size());
+  m_bimap.by<ndn::Name>().insert({rtrName, mappingNo});
 }
 
 std::optional<ndn::Name>
 Map::getRouterNameByMappingNo(int32_t mn) const
 {
-  auto&& mappingNumberView = m_entries.get<detail::byMappingNumber>();
-  auto it = mappingNumberView.find(mn);
-  return it == mappingNumberView.end() ? std::nullopt : std::optional(it->router);
+  auto it = m_bimap.by<MappingNo>().find(mn);
+  if (it == m_bimap.by<MappingNo>().end()) {
+    return std::nullopt;
+  }
+  return it->get<ndn::Name>();
 }
 
 std::optional<int32_t>
 Map::getMappingNoByRouterName(const ndn::Name& rName)
 {
-  auto&& routerNameView = m_entries.get<detail::byRouterName>();
-  auto it = routerNameView.find(rName);
-  return it == routerNameView.end() ? std::nullopt : std::optional(it->mappingNumber);
+  auto it = m_bimap.by<ndn::Name>().find(rName);
+  if (it == m_bimap.by<ndn::Name>().end()) {
+    return std::nullopt;
+  }
+  return it->get<Map::MappingNo>();
 }
 
-void
-Map::writeLog()
+std::ostream&
+operator<<(std::ostream& os, const Map& map)
 {
-  NLSR_LOG_DEBUG("---------------Map----------------------");
-  for (const auto& entry : m_entries.get<detail::byRouterName>()) {
-    NLSR_LOG_DEBUG("MapEntry: ( Router: " << entry.router << " Mapping No: " <<
-                   entry.mappingNumber << " )");
+  os << "---------------Map----------------------";
+  for (const auto& entry : map.m_bimap) {
+    os << "\nMapEntry: ( Router: " << entry.get<ndn::Name>()
+       << " Mapping No: " << entry.get<Map::MappingNo>() << " )";
   }
+  return os;
 }
 
 } // namespace nlsr

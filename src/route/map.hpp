@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -24,48 +24,16 @@
 #include "common.hpp"
 #include "lsa/adj-lsa.hpp"
 
-#include <boost/multi_index_container.hpp>
-#include <boost/multi_index/hashed_index.hpp>
-#include <boost/multi_index/member.hpp>
-#include <boost/multi_index/tag.hpp>
+#include <boost/bimap.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
 
 #include <optional>
 
 namespace nlsr {
 
-struct MapEntry
-{
-  ndn::Name router;
-  int32_t mappingNumber = -1;
-};
-
-namespace detail {
-
-  using namespace boost::multi_index;
-  // Define tags so that we can search by different indices.
-  struct byRouterName {};
-  struct byMappingNumber{};
-  using entryContainer = multi_index_container<
-    MapEntry,
-    indexed_by<
-      hashed_unique<tag<byRouterName>,
-                    member<MapEntry, ndn::Name, &MapEntry::router>,
-                    std::hash<ndn::Name>>,
-      hashed_unique<tag<byMappingNumber>,
-                    member<MapEntry, int32_t, &MapEntry::mappingNumber>>
-      >
-    >;
-
-} // namespace detail
-
 class Map
 {
 public:
-  Map()
-    : m_mappingIndex(0)
-  {
-  }
-
   /*! \brief Add a map entry to this map.
     \param rtrName The name of the router.
 
@@ -114,21 +82,29 @@ public:
   getMappingNoByRouterName(const ndn::Name& rName);
 
   size_t
-  getMapSize() const
+  size() const
   {
-    return m_entries.size();
+    return m_bimap.size();
   }
 
-  void
-  writeLog();
-
 private:
-  bool
-  addEntry(MapEntry& mpe);
+  struct MappingNo;
+  boost::bimap<
+    boost::bimaps::unordered_set_of<
+      boost::bimaps::tagged<ndn::Name, ndn::Name>,
+      std::hash<ndn::Name>
+    >,
+    boost::bimaps::unordered_set_of<
+      boost::bimaps::tagged<int32_t, MappingNo>
+    >
+  > m_bimap;
 
-  int32_t m_mappingIndex;
-  detail::entryContainer m_entries;
+  friend std::ostream&
+  operator<<(std::ostream& os, const Map& map);
 };
+
+std::ostream&
+operator<<(std::ostream& os, const Map& map);
 
 } // namespace nlsr
 

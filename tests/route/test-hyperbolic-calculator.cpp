@@ -109,7 +109,7 @@ public:
 
   void runTest(const double& expectedCost)
   {
-    HyperbolicRoutingCalculator calculator(map.getMapSize(), false, ROUTER_A_NAME);
+    HyperbolicRoutingCalculator calculator(map.size(), false, ROUTER_A_NAME);
     calculator.calculatePath(map, routingTable, lsdb, adjacencies);
 
     RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);

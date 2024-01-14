@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -23,25 +23,38 @@
 #include "route/map.hpp"
 #include "tests/boost-test.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::test {
 
 BOOST_AUTO_TEST_SUITE(TestMap)
 
-BOOST_AUTO_TEST_CASE(MapAddElementAndSize)
+BOOST_AUTO_TEST_CASE(Basic)
 {
   Map map1;
 
-  std::string router1 = "r1";
-  std::string router2 = "r2";
+  ndn::Name name1("/r1");
+  ndn::Name name2("/r2");
+  ndn::Name name3("/r3");
 
-  map1.addEntry(router1);
-  map1.addEntry(router2);
+  map1.addEntry(name1);
+  map1.addEntry(name2);
+  BOOST_CHECK_EQUAL(map1.size(), 2);
 
-  BOOST_CHECK_EQUAL(map1.getMapSize(), 2);
+  std::optional<int32_t> mn1 = map1.getMappingNoByRouterName(name1);
+  std::optional<int32_t> mn2 = map1.getMappingNoByRouterName(name2);
+  BOOST_REQUIRE(mn1.has_value());
+  BOOST_REQUIRE(mn2.has_value());
+  BOOST_CHECK_NE(*mn1, *mn2);
+  BOOST_CHECK_EQUAL(map1.getMappingNoByRouterName(name3).has_value(), false);
+
+  BOOST_CHECK_EQUAL(map1.getRouterNameByMappingNo(*mn1).value_or(ndn::Name()), name1);
+  BOOST_CHECK_EQUAL(map1.getRouterNameByMappingNo(*mn2).value_or(ndn::Name()), name2);
+
+  int32_t mn3 = 3333;
+  BOOST_CHECK_NE(mn3, *mn1);
+  BOOST_CHECK_NE(mn3, *mn2);
+  BOOST_CHECK_EQUAL(map1.getRouterNameByMappingNo(mn3).has_value(), false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::test

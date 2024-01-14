@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_SUITE(TestLinkStateRoutingCalculator, LinkStateCalculatorFixt
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  LinkStateRoutingTableCalculator calculator(map.getMapSize());
+  LinkStateRoutingTableCalculator calculator(map.size());
   calculator.calculatePath(map, routingTable, conf, lsdb);
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
   c->setLinkCost(higherLinkCost);
 
   // Calculation should consider the link between B and C as having cost = higherLinkCost
-  LinkStateRoutingTableCalculator calculator(map.getMapSize());
+  LinkStateRoutingTableCalculator calculator(map.size());
   calculator.calculatePath(map, routingTable, conf, lsdb);
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
@@ -214,7 +214,7 @@ BOOST_AUTO_TEST_CASE(NonAdjacentCost)
   c->setLinkCost(Adjacent::NON_ADJACENT_COST);
 
   // Calculation should consider the link between B and C as down
-  LinkStateRoutingTableCalculator calculator(map.getMapSize());
+  LinkStateRoutingTableCalculator calculator(map.size());
   calculator.calculatePath(map, routingTable, conf, lsdb);
 
   // Router A should be able to get to B through B but not through C
@@ -268,7 +268,7 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCostLink)
   b->setLinkCost(0);
 
   // Calculation should consider 0 link-cost between B and C
-  LinkStateRoutingTableCalculator calculator(map.getMapSize());
+  LinkStateRoutingTableCalculator calculator(map.size());
   calculator.calculatePath(map, routingTable, conf, lsdb);
 
   // Router A should be able to get to B through B and C
