@@ -4,8 +4,8 @@ Getting Started with NLSR
 .. toctree::
 ..
 
-Getting Source
---------------
+Obtaining the Source Code
+-------------------------
 
 - `GitHub NLSR repository <https://github.com/named-data/NLSR>`__
 
@@ -39,7 +39,7 @@ Running
 
 Run nlsr with the following command:
 
-::
+.. code-block:: sh
 
     nlsr
 
@@ -47,7 +47,7 @@ NLSR will look for the default configuration file, ``nlsr.conf``, in the current
 
 You can also run ``nlsr -f`` with the absolute path of the configuration file:
 
-::
+.. code-block:: sh
 
     nlsr -f /usr/local/etc/ndn/nlsr.conf
 

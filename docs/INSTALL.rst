@@ -1,5 +1,5 @@
-NLSR Installation Instructions
-==============================
+Installation Instructions
+=========================
 
 .. toctree::
 ..

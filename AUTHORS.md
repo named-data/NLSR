@@ -10,12 +10,13 @@ If you would like to become a contributor to the official repository, please fol
 * Pedro David Arjona Villicaña <https://github.com/david-arjona>
 * Muktadir R. Chowdhury <https://github.com/alvyC>
 * Damian Coomes <https://github.com/dmcoomes>
-* ***(Maintainer)*** Saurab Dulal <https://dulalsaurab.github.io>
+* ***(Former Maintainer)*** Saurab Dulal <https://dulalsaurab.github.io>
 * Laqin Fan <https://github.com/laqinfan>
 * Simon Fayer <https://github.com/sfayer>
 * ***(Former Maintainer)*** Ashlesh Gawande <https://www.linkedin.com/in/agawande>
 * ***(Former Maintainer)*** Nicholas Gordon <https://github.com/gorgonical>
 * ***(Former Maintainer)*** A. K. M. Mahmudul Hoque <https://sites.google.com/site/akmhoque/home>
+* ***(Maintainer)*** Alexander Lane <https://github.com/awlane>
 * ***(Former Maintainer)*** Vince Lehman <http://vslehman.com>
 * Tianxing Ma <https://github.com/matianxing1992>
 * Spyridon Mastorakis <https://sites.google.com/site/spyridonmastorakis>
