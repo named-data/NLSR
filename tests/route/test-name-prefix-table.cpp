@@ -27,8 +27,7 @@
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 class NamePrefixTableFixture : public IoKeyChainFixture
 {
@@ -76,54 +75,39 @@ BOOST_FIXTURE_TEST_CASE(Bupt, NamePrefixTableFixture)
 
   // This router's Adjacency LSA
   conf.getAdjacencyList().insert(bupt);
-  AdjLsa thisRouterAdjLsa(thisRouter.getName(), 1,
-                          ndn::time::system_clock::now() + 3600_s,
-                          conf.getAdjacencyList());
-
+  AdjLsa thisRouterAdjLsa(thisRouter.getName(), 1, time::system_clock::now() + 3600_s, conf.getAdjacencyList());
   lsdb.installLsa(std::make_shared<AdjLsa>(thisRouterAdjLsa));
 
   // BUPT Adjacency LSA
   AdjacencyList buptAdjacencies;
   buptAdjacencies.insert(thisRouter);
-  AdjLsa buptAdjLsa(buptRouterName, 1,
-                    ndn::time::system_clock::now() + ndn::time::seconds(5),
-                    buptAdjacencies);
-
+  AdjLsa buptAdjLsa(buptRouterName, 1, time::system_clock::now() + 5_s, buptAdjacencies);
   lsdb.installLsa(std::make_shared<AdjLsa>(buptAdjLsa));
 
   // BUPT Name LSA
   ndn::Name buptAdvertisedName("/ndn/cn/edu/bupt");
-
   NamePrefixList buptNames{buptAdvertisedName};
-
-  NameLsa buptNameLsa(buptRouterName, 1, ndn::time::system_clock::now() + ndn::time::seconds(5),
-                      buptNames);
-
+  NameLsa buptNameLsa(buptRouterName, 1, time::system_clock::now() + 5_s, buptNames);
   lsdb.installLsa(std::make_shared<NameLsa>(buptNameLsa));
 
   // Advance clocks to expire LSAs
-  this->advanceClocks(ndn::time::seconds(15));
+  this->advanceClocks(15_s);
 
   // LSA expirations should cause NPT entries to be completely removed
-  NamePrefixTable::const_iterator it = npt.begin();
-  BOOST_REQUIRE(it == npt.end());
+  auto it = npt.begin();
+  BOOST_CHECK(it == npt.end());
 
   // Install new name LSA
-  NameLsa buptNewNameLsa(buptRouterName, 12,
-                         ndn::time::system_clock::now() + ndn::time::seconds(3600),
-                         buptNames);
-
+  NameLsa buptNewNameLsa(buptRouterName, 12, time::system_clock::now() + 3600_s, buptNames);
   lsdb.installLsa(std::make_shared<NameLsa>(buptNewNameLsa));
 
-  this->advanceClocks(ndn::time::seconds(1));
+  this->advanceClocks(1_s);
 
   // Install new adjacency LSA
-  AdjLsa buptNewAdjLsa(buptRouterName, 12,
-                       ndn::time::system_clock::now() + ndn::time::seconds(3600),
-                       buptAdjacencies);
+  AdjLsa buptNewAdjLsa(buptRouterName, 12, time::system_clock::now() + 3600_s, buptAdjacencies);
   lsdb.installLsa(std::make_shared<AdjLsa>(buptNewAdjLsa));
 
-  this->advanceClocks(ndn::time::seconds(1));
+  this->advanceClocks(1_s);
 
   // Each NPT entry should have a destination router
   it = npt.begin();
@@ -168,18 +152,14 @@ BOOST_FIXTURE_TEST_CASE(AddRoutingEntryToNptEntry, NamePrefixTableFixture)
 
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
 
-  NamePrefixTable::NptEntryList::iterator nItr =
-    std::find_if(npt.m_table.begin(),
-                 npt.m_table.end(),
-                 [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
-                   return entry->getNamePrefix() == npte1.getNamePrefix();
-                 });
+  auto nItr = std::find_if(npt.m_table.begin(),
+                           npt.m_table.end(),
+                           [&] (const auto& entry) {
+                             return entry->getNamePrefix() == npte1.getNamePrefix();
+                           });
 
   std::list<std::shared_ptr<RoutingTablePoolEntry>> rtpeList = (*nItr)->getRteList();
-  std::list<std::shared_ptr<RoutingTablePoolEntry>>::iterator rItr =
-    std::find(rtpeList.begin(),
-              rtpeList.end(),
-              rtpePtr);
+  auto rItr = std::find(rtpeList.begin(), rtpeList.end(), rtpePtr);
   BOOST_CHECK_EQUAL(**rItr, *rtpePtr);
 }
 
@@ -195,12 +175,11 @@ BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
 
   npt.removeEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
 
-  NamePrefixTable::NptEntryList::iterator nItr =
-    std::find_if(npt.m_table.begin(),
-                 npt.m_table.end(),
-                 [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
-                   return entry->getNamePrefix() == npte1.getNamePrefix();
-                 });
+  auto nItr = std::find_if(npt.m_table.begin(),
+                           npt.m_table.end(),
+                           [&] (const auto& entry) {
+                             return entry->getNamePrefix() == npte1.getNamePrefix();
+                           });
 
   std::list<std::shared_ptr<RoutingTablePoolEntry>> rtpeList = (*nItr)->getRteList();
 
@@ -215,12 +194,11 @@ BOOST_FIXTURE_TEST_CASE(AddNptEntryPtrToRoutingEntry, NamePrefixTableFixture)
 
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
 
-  NamePrefixTable::NptEntryList::iterator nItr =
-    std::find_if(npt.m_table.begin(),
-                 npt.m_table.end(),
-                 [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
-                   return entry->getNamePrefix() == npte1.getNamePrefix();
-                 });
+  auto nItr = std::find_if(npt.m_table.begin(),
+                           npt.m_table.end(),
+                           [&] (const auto& entry) {
+                             return entry->getNamePrefix() == npte1.getNamePrefix();
+                           });
 
   std::list<std::shared_ptr<RoutingTablePoolEntry>> rtpeList = (*nItr)->getRteList();
 
@@ -247,12 +225,11 @@ BOOST_FIXTURE_TEST_CASE(RemoveNptEntryPtrFromRoutingEntry, NamePrefixTableFixtur
   npt.addEntry(npte2.getNamePrefix(), rte1.getDestination());
   npt.removeEntry(npte2.getNamePrefix(), rte1.getDestination());
 
-  NamePrefixTable::NptEntryList::iterator nItr =
-    std::find_if(npt.m_table.begin(),
-                 npt.m_table.end(),
-                 [&] (const std::shared_ptr<NamePrefixTableEntry>& entry) {
-                   return entry->getNamePrefix() == npte1.getNamePrefix();
-                 });
+  auto nItr = std::find_if(npt.m_table.begin(),
+                           npt.m_table.end(),
+                           [&] (const auto& entry) {
+                             return entry->getNamePrefix() == npte1.getNamePrefix();
+                           });
 
   std::list<std::shared_ptr<RoutingTablePoolEntry>> rtpeList = (*nItr)->getRteList();
 
@@ -314,7 +291,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, NamePrefixTableFixture)
 {
-  auto testTimePoint = ndn::time::system_clock::now();
+  auto testTimePoint = time::system_clock::now();
   NamePrefixList npl1;
   ndn::Name n1("name1");
   ndn::Name n2("name2");
@@ -373,5 +350,4 @@ BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, NamePrefixTableFixture)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

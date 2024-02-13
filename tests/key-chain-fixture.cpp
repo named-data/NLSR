@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  Regents of the University of California,
+ * Copyright (c) 2014-2024,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -29,8 +29,7 @@
 
 #include <boost/filesystem/operations.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 using namespace ndn::security;
 
@@ -104,7 +103,7 @@ KeyChainFixture::addSubCertificate(const ndn::Name& subIdentityName,
 
   auto request = subIdentity.getDefaultKey().getDefaultCertificate();
   ndn::security::MakeCertificateOptions opts;
-  opts.issuerId = ndn::name::Component::fromEscapedString("parent");
+  opts.issuerId = ndn::name::Component::fromUri("parent");
   m_keyChain.makeCertificate(request, ndn::signingByIdentity(issuer), opts);
 
   m_keyChain.setDefaultCertificate(subIdentity.getDefaultKey(), request);
@@ -112,5 +111,4 @@ KeyChainFixture::addSubCertificate(const ndn::Name& subIdentityName,
   return subIdentity;
 }
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

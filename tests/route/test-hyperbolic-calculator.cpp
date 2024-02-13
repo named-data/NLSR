@@ -30,19 +30,15 @@
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
-using ndn::time::system_clock;
-
+constexpr time::system_clock::time_point MAX_TIME = time::system_clock::time_point::max();
 static const ndn::Name ROUTER_A_NAME = "/ndn/router/a";
 static const ndn::Name ROUTER_B_NAME = "/ndn/router/b";
 static const ndn::Name ROUTER_C_NAME = "/ndn/router/c";
 static const ndn::FaceUri ROUTER_A_FACE("udp4://10.0.0.1:6363");
 static const ndn::FaceUri ROUTER_B_FACE("udp4://10.0.0.2:6363");
 static const ndn::FaceUri ROUTER_C_FACE("udp4://10.0.0.3:6363");
-
-constexpr system_clock::time_point MAX_TIME = system_clock::time_point::max();
 
 class HyperbolicCalculatorFixture : public IoKeyChainFixture
 {
@@ -185,5 +181,4 @@ BOOST_AUTO_TEST_CASE(BasicMultipleAngles)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

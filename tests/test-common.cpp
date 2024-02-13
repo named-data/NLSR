@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -22,7 +22,7 @@
 
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 std::shared_ptr<ndn::Data>
 makeData(const ndn::Name& name)
@@ -57,4 +57,4 @@ checkPrefixRegistered(const ndn::DummyClientFace& face, const ndn::Name& prefix)
   BOOST_CHECK(registerCommandEmitted);
 }
 
-} // namespace nlsr::test
+} // namespace nlsr::tests

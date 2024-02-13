@@ -31,10 +31,9 @@
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
-constexpr ndn::time::system_clock::time_point MAX_TIME = ndn::time::system_clock::time_point::max();
+constexpr time::system_clock::time_point MAX_TIME = time::system_clock::time_point::max();
 static const ndn::Name ROUTER_A_NAME = "/ndn/site/%C1.Router/this-router";
 static const ndn::Name ROUTER_B_NAME = "/ndn/site/%C1.Router/b";
 static const ndn::Name ROUTER_C_NAME = "/ndn/site/%C1.Router/c";
@@ -300,5 +299,4 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCostLink)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

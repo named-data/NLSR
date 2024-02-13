@@ -23,7 +23,7 @@
 
 #include "tests/boost-test.hpp"
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 /*
 static void
@@ -134,4 +134,4 @@ BOOST_AUTO_TEST_CASE(InitializeFromContent)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace nlsr::test
+} // namespace nlsr::tests

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,8 +24,7 @@
 
 #include "tests/publisher/publisher-fixture.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 BOOST_FIXTURE_TEST_SUITE(TestDatasetInterestHandler, PublisherFixture)
 
@@ -118,5 +117,4 @@ BOOST_AUTO_TEST_CASE(RouterName)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

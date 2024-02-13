@@ -25,7 +25,7 @@
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 class SyncLogicFixture : public IoKeyChainFixture
 {
@@ -47,14 +47,14 @@ public:
   void
   receiveUpdate(const ndn::Name& prefix, uint64_t seqNo)
   {
-    this->advanceClocks(ndn::time::milliseconds(1), 10);
+    this->advanceClocks(1_ms, 10);
     face.sentInterests.clear();
 
     std::vector<psync::MissingDataInfo> updates;
     updates.push_back({prefix, 0, seqNo, 0});
     getSync().m_syncLogic.onPSyncUpdate(updates);
 
-    this->advanceClocks(ndn::time::milliseconds(1), 10);
+    this->advanceClocks(1_ms, 10);
   }
 
 public:
@@ -64,7 +64,7 @@ public:
     SyncProtocol::PSYNC,
     ndn::Name("/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION),
     "/localhop/ndn/nlsr/LSA/site/%C1.Router/this-router",
-    ndn::time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT),
+    time::milliseconds(SYNC_INTEREST_LIFETIME_DEFAULT),
     "/ndn/site/%C1.Router/this-router",
     HYPERBOLIC_STATE_OFF
   };
@@ -245,4 +245,4 @@ BOOST_AUTO_TEST_CASE(UpdatePrefix)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace nlsr::test
+} // namespace nlsr::tests

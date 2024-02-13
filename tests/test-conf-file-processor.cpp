@@ -29,10 +29,7 @@
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
-namespace nlsr {
-namespace test {
-
-using std::shared_ptr;
+namespace nlsr::tests {
 
 const std::string SECTION_GENERAL =
   "general\n"
@@ -446,5 +443,4 @@ BOOST_AUTO_TEST_CASE(PrefixUpdateValidatorOptional) // Bug #2814
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

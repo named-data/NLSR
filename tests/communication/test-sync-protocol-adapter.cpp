@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -26,8 +26,7 @@
 
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 using ndn::Name;
 
@@ -64,7 +63,7 @@ public:
   Name syncPrefix;
   Name nameLsaUserPrefix;
   Name userPrefixes[2];
-  ndn::time::milliseconds syncInterestLifetime;
+  time::milliseconds syncInterestLifetime;
   std::shared_ptr<ndn::DummyClientFace> faces[2];
   std::shared_ptr<SyncProtocolAdapter> nodes[2];
   std::map<Name, uint64_t> prefixToSeq[2];
@@ -106,5 +105,4 @@ BOOST_FIXTURE_TEST_CASE(Basic, SyncProtocolAdapterFixture)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

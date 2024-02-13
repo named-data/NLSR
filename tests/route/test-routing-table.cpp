@@ -26,8 +26,7 @@
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 class RoutingTableFixture : public IoKeyChainFixture
 {
@@ -122,7 +121,7 @@ BOOST_FIXTURE_TEST_CASE(OutputStream, RoutingTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, RoutingTableFixture)
 {
-  auto testTimePoint = ndn::time::system_clock::now() + 3600_s;
+  auto testTimePoint = time::system_clock::now() + 3600_s;
   ndn::Name router2("/router2");
   AdjLsa adjLsa(router2, 12, testTimePoint, conf.getAdjacencyList());
   std::shared_ptr<Lsa> lsaPtr = std::make_shared<AdjLsa>(adjLsa);
@@ -199,5 +198,4 @@ BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, RoutingTableFixture)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

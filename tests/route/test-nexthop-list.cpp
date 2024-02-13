@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,10 +22,10 @@
 #include "route/nexthop-list.hpp"
 #include "route/nexthop.hpp"
 #include "route/fib.hpp"
+
 #include "tests/boost-test.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 BOOST_AUTO_TEST_SUITE(TestNhl)
 
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(TieBreaker)
   list.addNextHop(hopA);
   list.addNextHop(hopZ);
 
-  NexthopList::iterator it = list.begin();
+  auto it = list.begin();
   BOOST_CHECK_EQUAL(it->getConnectingFaceUri(), hopA.getConnectingFaceUri());
 
   list.clear();
@@ -212,5 +212,4 @@ BOOST_AUTO_TEST_CASE(NextHopListDiffForFibUpdate) // #5179
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

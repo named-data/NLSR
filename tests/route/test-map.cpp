@@ -18,12 +18,13 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \author Ashlesh Gawande <agawande@memphis.edu>
- **/
+ */
 
 #include "route/map.hpp"
+
 #include "tests/boost-test.hpp"
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 BOOST_AUTO_TEST_SUITE(TestMap)
 
@@ -57,4 +58,4 @@ BOOST_AUTO_TEST_CASE(Basic)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace nlsr::test
+} // namespace nlsr::tests

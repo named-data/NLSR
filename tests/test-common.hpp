@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -29,7 +29,7 @@
 #include <ndn-cxx/data.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 /**
  * \brief Create a Data with a null (i.e., empty) signature
@@ -77,6 +77,6 @@ public:
   }
 };
 
-} // namespace nlsr::test
+} // namespace nlsr::tests
 
 #endif // NLSR_TESTS_TEST_COMMON_HPP

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -18,13 +18,13 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  *
  * \author Ashlesh Gawande <agawande@memphis.edu>
- **/
+ */
 
 #include "route/name-prefix-table-entry.hpp"
+
 #include "tests/boost-test.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 BOOST_AUTO_TEST_SUITE(TestNpte)
 
@@ -39,18 +39,13 @@ BOOST_AUTO_TEST_CASE(AddRoutingTableEntry)
 {
   NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr2", 0);
-  std::shared_ptr<RoutingTablePoolEntry> rtpePtr
-    = std::make_shared<RoutingTablePoolEntry>(rtpe1);
+  auto rtpePtr = std::make_shared<RoutingTablePoolEntry>(rtpe1);
 
   BOOST_CHECK_EQUAL(npte1.m_rteList.size(), 0);
   npte1.addRoutingTableEntry(rtpePtr);
   BOOST_CHECK_EQUAL(npte1.m_rteList.size(), 1);
 
-  std::list<std::shared_ptr<RoutingTablePoolEntry>>::iterator itr =
-    std::find(npte1.m_rteList.begin(),
-              npte1.m_rteList.end(),
-              rtpePtr);
-
+  auto itr = std::find(npte1.m_rteList.begin(), npte1.m_rteList.end(), rtpePtr);
   BOOST_CHECK_EQUAL(rtpePtr, *itr);
 }
 
@@ -58,8 +53,7 @@ BOOST_AUTO_TEST_CASE(RemoveRoutingTableEntry)
 {
   NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr2", 0);
-  std::shared_ptr<RoutingTablePoolEntry> rtpePtr
-    = std::make_shared<RoutingTablePoolEntry>(rtpe1);
+  auto rtpePtr = std::make_shared<RoutingTablePoolEntry>(rtpe1);
 
   npte1.addRoutingTableEntry(rtpePtr);
   npte1.removeRoutingTableEntry(rtpePtr);
@@ -91,5 +85,4 @@ BOOST_AUTO_TEST_CASE(EqualsOperatorOneObjOneName)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

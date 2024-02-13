@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -19,10 +19,10 @@
  */
 
 #include "route/nexthop.hpp"
+
 #include "tests/boost-test.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 BOOST_AUTO_TEST_SUITE(TestNexthop)
 
@@ -32,13 +32,13 @@ static const ndn::FaceUri faceUri2("udp4://192.168.3.2:6363");
 static double
 getHyperbolicAdjustedDecimal(unsigned int i)
 {
-  return static_cast<double>(i)/(10*NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR);
+  return static_cast<double>(i)/(10 * NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR);
 }
 
 static uint64_t
 applyHyperbolicFactorAndRound(double d)
 {
-  return round(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR*d);
+  return round(NextHop::HYPERBOLIC_COST_ADJUSTMENT_FACTOR * d);
 }
 
 BOOST_AUTO_TEST_CASE(LinkStateSetAndGet)
@@ -158,5 +158,4 @@ BOOST_AUTO_TEST_CASE(OutputStream)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

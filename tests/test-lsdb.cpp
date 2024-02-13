@@ -32,8 +32,7 @@
 
 #include <unistd.h>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 class LsdbFixture : public IoKeyChainFixture
 {
@@ -464,5 +463,4 @@ BOOST_AUTO_TEST_CASE(LsdbSignals)
 
 BOOST_AUTO_TEST_SUITE_END() // TestLsdb
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

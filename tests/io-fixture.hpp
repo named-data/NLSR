@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  Regents of the University of California,
+ * Copyright (c) 2014-2024,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -30,7 +30,7 @@
 
 #include <boost/asio/io_context.hpp>
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 class IoFixture : public ClockFixture
 {
@@ -48,6 +48,6 @@ protected:
   boost::asio::io_context m_io;
 };
 
-} // namespace nlsr::test
+} // namespace nlsr::tests
 
 #endif // NLSR_TESTS_IO_FIXTURE_HPP

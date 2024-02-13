@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  Regents of the University of California,
+ * Copyright (c) 2014-2024,  Regents of the University of California,
  *                           Arizona Board of Regents,
  *                           Colorado State University,
  *                           University Pierre & Marie Curie, Sorbonne University,
@@ -29,7 +29,7 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 /**
  * @brief A fixture providing an in-memory KeyChain.
@@ -95,6 +95,6 @@ private:
   std::vector<std::string> m_certFiles;
 };
 
-} // namespace nlsr::test
+} // namespace nlsr::tests
 
 #endif // NLSR_TESTS_KEY_CHAIN_FIXTURE_HPP

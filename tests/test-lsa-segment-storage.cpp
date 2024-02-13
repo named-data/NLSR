@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -27,8 +27,7 @@
 #include <ndn-cxx/ims/in-memory-storage-fifo.hpp>
 #include <ndn-cxx/util/segmenter.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 class LsaSegmentStorageFixture : public IoKeyChainFixture
 {
@@ -142,5 +141,4 @@ BOOST_AUTO_TEST_CASE(Basic)
 
 BOOST_AUTO_TEST_SUITE_END() // TestLsaSegmentStorage
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

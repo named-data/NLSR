@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -19,10 +19,10 @@
  */
 
 #include "route/routing-table-entry.hpp"
+
 #include "tests/boost-test.hpp"
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 BOOST_AUTO_TEST_SUITE(TestRoutingTableEntry)
 
@@ -155,5 +155,4 @@ BOOST_AUTO_TEST_CASE(OutputStream)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

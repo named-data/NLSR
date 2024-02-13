@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -31,10 +31,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
-namespace nlsr {
-namespace test {
-
-using std::shared_ptr;
+namespace nlsr::tests {
 
 class CertificateStoreFixture : public IoKeyChainFixture
 {
@@ -221,7 +218,7 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
   lsaDataName.appendSegment(0);
 
   ndn::Data data(lsaDataName);
-  data.setFreshnessPeriod(ndn::time::seconds(10));
+  data.setFreshnessPeriod(10_s);
   NameLsa nameLsa;
   data.setContent(nameLsa.wireEncode());
   data.setFinalBlock(lsaDataName[-1]);
@@ -230,7 +227,7 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
   m_keyChain.sign(data, conf.m_signingInfo);
   face.put(data);
 
-  this->advanceClocks(ndn::time::milliseconds(1));
+  this->advanceClocks(1_ms);
 
   // Make NLSR validate data signed by its own key
   conf.getValidator().validate(data,
@@ -253,5 +250,4 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

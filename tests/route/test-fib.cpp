@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -28,8 +28,7 @@
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/util/dummy-client-face.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 static const ndn::Name router1Name = "/ndn/router1";
 static const ndn::Name router2Name = "/ndn/router2";
@@ -112,7 +111,7 @@ BOOST_AUTO_TEST_CASE(NextHopsAdd)
 
   ndn::nfd::ControlParameters extractedParameters;
   ndn::Name::Component verb;
-  std::vector<ndn::Interest>::iterator it = interests.begin();
+  auto it = interests.begin();
 
   extractRibCommandParameters(*it, verb, extractedParameters);
 
@@ -151,7 +150,7 @@ BOOST_AUTO_TEST_CASE(NextHopsNoChange)
 
   ndn::nfd::ControlParameters extractedParameters;
   ndn::Name::Component verb;
-  std::vector<ndn::Interest>::iterator it = interests.begin();
+  auto it = interests.begin();
 
   extractRibCommandParameters(*it, verb, extractedParameters);
 
@@ -192,7 +191,7 @@ BOOST_AUTO_TEST_CASE(NextHopsRemoveAll)
 
   ndn::nfd::ControlParameters extractedParameters;
   ndn::Name::Component verb;
-  std::vector<ndn::Interest>::iterator it = interests.begin();
+  auto it = interests.begin();
 
   extractRibCommandParameters(*it, verb, extractedParameters);
 
@@ -227,7 +226,7 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixes)
 
   ndn::nfd::ControlParameters extractedParameters;
   ndn::Name::Component verb;
-  std::vector<ndn::Interest>::iterator it = interests.begin();
+  auto it = interests.begin();
 
   extractRibCommandParameters(*it, verb, extractedParameters);
 
@@ -279,7 +278,7 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
 
   ndn::nfd::ControlParameters extractedParameters;
   ndn::Name::Component verb;
-  std::vector<ndn::Interest>::iterator it = interests.begin();
+  auto it = interests.begin();
 
   extractRibCommandParameters(*it, verb, extractedParameters);
 
@@ -388,5 +387,4 @@ BOOST_AUTO_TEST_CASE(PrefixWithdrawalFibUpdateBug) // #5179
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests

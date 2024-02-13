@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,7 +23,7 @@
 
 #include "tests/boost-test.hpp"
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 BOOST_AUTO_TEST_SUITE(TestNameLsa)
 
@@ -160,4 +160,4 @@ BOOST_AUTO_TEST_CASE(Update)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace nlsr::test
+} // namespace nlsr::tests

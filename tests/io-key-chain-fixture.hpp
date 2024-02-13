@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -25,12 +25,12 @@
 #include "tests/key-chain-fixture.hpp"
 #include "tests/io-fixture.hpp"
 
-namespace nlsr::test {
+namespace nlsr::tests {
 
 class IoKeyChainFixture : public IoFixture, public KeyChainFixture
 {
 };
 
-} // namespace nlsr::test
+} // namespace nlsr::tests
 
 #endif // NLSR_TESTS_IO_KEY_CHAIN_FIXTURE_HPP

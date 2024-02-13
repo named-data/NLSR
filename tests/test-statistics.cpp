@@ -29,8 +29,7 @@
 
 #include <boost/lexical_cast.hpp>
 
-namespace nlsr {
-namespace test {
+namespace nlsr::tests {
 
 class StatisticsFixture : public IoKeyChainFixture
 {
@@ -329,5 +328,4 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveData)
 
 BOOST_AUTO_TEST_SUITE_END()
 
-} // namespace test
-} // namespace nlsr
+} // namespace nlsr::tests
