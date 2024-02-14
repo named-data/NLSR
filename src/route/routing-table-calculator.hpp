@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -29,7 +29,7 @@
 
 namespace nlsr {
 
-class Map;
+class NameMap;
 class RoutingTable;
 
 class RoutingTableCalculator
@@ -55,13 +55,13 @@ protected:
     \param pMap The map to populate with the adj. data.
   */
   void
-  makeAdjMatrix(const Lsdb& lsdb, Map& pMap);
+  makeAdjMatrix(const Lsdb& lsdb, NameMap& pMap);
 
   /*! \brief Writes a formated adjacent matrix to DEBUG log
     \param map The map containing adjacent matrix data
   */
   void
-  writeAdjMatrixLog(const Map& map) const;
+  writeAdjMatrixLog(const NameMap& map) const;
 
   /*! \brief Returns how many links a router in the matrix has.
     \param sRouter The router to count the links of.
@@ -131,7 +131,7 @@ public:
   }
 
   void
-  calculatePath(Map& pMap, RoutingTable& rt, ConfParameter& confParam,
+  calculatePath(NameMap& pMap, RoutingTable& rt, ConfParameter& confParam,
                 const Lsdb& lsdb);
 
 private:
@@ -167,7 +167,7 @@ private:
 
   void
   addAllLsNextHopsToRoutingTable(AdjacencyList& adjacencies, RoutingTable& rt,
-                                 Map& pMap, uint32_t sourceRouter);
+                                 NameMap& pMap, uint32_t sourceRouter);
 
   /*! \brief Determines a destination's next hop.
     \param dest The router whose next hop we want to determine.
@@ -207,7 +207,7 @@ public:
   }
 
   void
-  calculatePath(Map& map, RoutingTable& rt, Lsdb& lsdb, AdjacencyList& adjacencies);
+  calculatePath(NameMap& map, RoutingTable& rt, Lsdb& lsdb, AdjacencyList& adjacencies);
 
 private:
   double

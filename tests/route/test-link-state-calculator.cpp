@@ -25,7 +25,7 @@
 #include "adjacent.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
-#include "route/map.hpp"
+#include "route/name-map.hpp"
 #include "route/routing-table.hpp"
 
 #include "tests/io-key-chain-fixture.hpp"
@@ -99,7 +99,7 @@ public:
     lsdb.installLsa(std::make_shared<AdjLsa>(adjC));
 
     auto lsaRange = lsdb.getLsdbIterator<AdjLsa>();
-    map.createFromAdjLsdb(lsaRange.first, lsaRange.second);
+    map = NameMap::createFromAdjLsdb(lsaRange.first, lsaRange.second);
   }
 
 public:
@@ -107,7 +107,7 @@ public:
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
-  Map map;
+  NameMap map;
 
   RoutingTable& routingTable;
   Lsdb& lsdb;

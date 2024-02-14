@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -38,21 +38,6 @@ namespace nlsr {
 using namespace ndn::time_literals;
 
 constexpr ndn::time::seconds TIME_ALLOWED_FOR_CANONIZATION = 4_s;
-
-template<typename T, typename = void>
-struct is_iterator
-{
-  static constexpr bool value = false;
-};
-
-/*! Use C++11 iterator_traits to check if some type is an iterator
- */
-template<typename T>
-struct is_iterator<T, std::enable_if_t<!std::is_same_v<
-  typename std::iterator_traits<T>::value_type, void>>>
-{
-  static constexpr bool value = true;
-};
 
 } // namespace nlsr
 

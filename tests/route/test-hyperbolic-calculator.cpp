@@ -24,7 +24,7 @@
 #include "adjacency-list.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
-#include "route/map.hpp"
+#include "route/name-map.hpp"
 #include "route/routing-table.hpp"
 
 #include "tests/io-key-chain-fixture.hpp"
@@ -100,7 +100,7 @@ public:
     lsdb.installLsa(std::make_shared<CoordinateLsa>(coordC));
 
     auto lsaRange = lsdb.getLsdbIterator<CoordinateLsa>();
-    map.createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
+    map = NameMap::createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
   }
 
   void runTest(const double& expectedCost)
@@ -150,7 +150,7 @@ public:
   ndn::DummyClientFace face;
   ConfParameter conf;
   Nlsr nlsr;
-  Map map;
+  NameMap map;
 
   RoutingTable& routingTable;
   AdjacencyList& adjacencies;

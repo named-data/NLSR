@@ -20,7 +20,7 @@
  * \author Ashlesh Gawande <agawande@memphis.edu>
  */
 
-#include "route/map.hpp"
+#include "route/name-map.hpp"
 
 #include "tests/boost-test.hpp"
 
@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_SUITE(TestMap)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  Map map1;
+  NameMap map1;
 
   ndn::Name name1("/r1");
   ndn::Name name2("/r2");

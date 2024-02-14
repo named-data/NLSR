@@ -21,7 +21,7 @@
 
 #include "routing-table-calculator.hpp"
 #include "lsdb.hpp"
-#include "map.hpp"
+#include "name-map.hpp"
 #include "nexthop.hpp"
 #include "nlsr.hpp"
 #include "logger.hpp"
@@ -63,7 +63,7 @@ RoutingTableCalculator::initMatrix()
 }
 
 void
-RoutingTableCalculator::makeAdjMatrix(const Lsdb& lsdb, Map& pMap)
+RoutingTableCalculator::makeAdjMatrix(const Lsdb& lsdb, NameMap& pMap)
 {
   // For each LSA represented in the map
   auto lsaRange = lsdb.getLsdbIterator<AdjLsa>();
@@ -120,7 +120,7 @@ RoutingTableCalculator::makeAdjMatrix(const Lsdb& lsdb, Map& pMap)
 }
 
 void
-RoutingTableCalculator::writeAdjMatrixLog(const Map& map) const
+RoutingTableCalculator::writeAdjMatrixLog(const NameMap& map) const
 {
   if (!ndn_cxx_getLogger().isLevelEnabled(ndn::util::LogLevel::DEBUG)) {
     return;
@@ -232,7 +232,7 @@ RoutingTableCalculator::freeLinksCosts()
 }
 
 void
-LinkStateRoutingTableCalculator::calculatePath(Map& pMap, RoutingTable& rt,
+LinkStateRoutingTableCalculator::calculatePath(NameMap& pMap, RoutingTable& rt,
                                                ConfParameter& confParam,
                                                const Lsdb& lsdb)
 {
@@ -327,7 +327,7 @@ LinkStateRoutingTableCalculator::doDijkstraPathCalculation(int sourceRouter)
 
 void
 LinkStateRoutingTableCalculator::addAllLsNextHopsToRoutingTable(AdjacencyList& adjacencies,
-                                                                RoutingTable& rt, Map& pMap,
+                                                                RoutingTable& rt, NameMap& pMap,
                                                                 uint32_t sourceRouter)
 {
   NLSR_LOG_DEBUG("LinkStateRoutingTableCalculator::addAllNextHopsToRoutingTable Called");
@@ -426,7 +426,7 @@ void LinkStateRoutingTableCalculator::freeDistance()
 }
 
 void
-HyperbolicRoutingCalculator::calculatePath(Map& map, RoutingTable& rt,
+HyperbolicRoutingCalculator::calculatePath(NameMap& map, RoutingTable& rt,
                                            Lsdb& lsdb, AdjacencyList& adjacencies)
 {
   NLSR_LOG_TRACE("Calculating hyperbolic paths");

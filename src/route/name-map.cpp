@@ -18,7 +18,7 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "map.hpp"
+#include "name-map.hpp"
 #include "nlsr.hpp"
 #include "adjacent.hpp"
 #include "lsa/lsa.hpp"
@@ -27,14 +27,14 @@
 namespace nlsr {
 
 void
-Map::addEntry(const ndn::Name& rtrName)
+NameMap::addEntry(const ndn::Name& rtrName)
 {
   int32_t mappingNo = static_cast<int32_t>(m_bimap.size());
   m_bimap.by<ndn::Name>().insert({rtrName, mappingNo});
 }
 
 std::optional<ndn::Name>
-Map::getRouterNameByMappingNo(int32_t mn) const
+NameMap::getRouterNameByMappingNo(int32_t mn) const
 {
   auto it = m_bimap.by<MappingNo>().find(mn);
   if (it == m_bimap.by<MappingNo>().end()) {
@@ -44,22 +44,22 @@ Map::getRouterNameByMappingNo(int32_t mn) const
 }
 
 std::optional<int32_t>
-Map::getMappingNoByRouterName(const ndn::Name& rName)
+NameMap::getMappingNoByRouterName(const ndn::Name& rtrName) const
 {
-  auto it = m_bimap.by<ndn::Name>().find(rName);
+  auto it = m_bimap.by<ndn::Name>().find(rtrName);
   if (it == m_bimap.by<ndn::Name>().end()) {
     return std::nullopt;
   }
-  return it->get<Map::MappingNo>();
+  return it->get<MappingNo>();
 }
 
 std::ostream&
-operator<<(std::ostream& os, const Map& map)
+operator<<(std::ostream& os, const NameMap& map)
 {
-  os << "---------------Map----------------------";
+  os << "---------------NameMap---------------";
   for (const auto& entry : map.m_bimap) {
     os << "\nMapEntry: ( Router: " << entry.get<ndn::Name>()
-       << " Mapping No: " << entry.get<Map::MappingNo>() << " )";
+       << " Mapping No: " << entry.get<NameMap::MappingNo>() << " )";
   }
   return os;
 }

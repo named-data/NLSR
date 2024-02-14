@@ -20,7 +20,7 @@
 
 #include "routing-table.hpp"
 #include "nlsr.hpp"
-#include "map.hpp"
+#include "name-map.hpp"
 #include "conf-parameter.hpp"
 #include "routing-table-calculator.hpp"
 #include "routing-table-entry.hpp"
@@ -127,9 +127,8 @@ RoutingTable::calculateLsRoutingTable()
 
   clearRoutingTable();
 
-  Map map;
   auto lsaRange = m_lsdb.getLsdbIterator<AdjLsa>();
-  map.createFromAdjLsdb(lsaRange.first, lsaRange.second);
+  auto map = NameMap::createFromAdjLsdb(lsaRange.first, lsaRange.second);
   NLSR_LOG_DEBUG(map);
 
   size_t nRouters = map.size();
@@ -153,9 +152,8 @@ RoutingTable::calculateHypRoutingTable(bool isDryRun)
     clearRoutingTable();
   }
 
-  Map map;
   auto lsaRange = m_lsdb.getLsdbIterator<CoordinateLsa>();
-  map.createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
+  auto map = NameMap::createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
   NLSR_LOG_DEBUG(map);
 
   size_t nRouters = map.size();
