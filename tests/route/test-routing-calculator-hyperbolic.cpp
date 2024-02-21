@@ -19,7 +19,7 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "route/routing-table-calculator.hpp"
+#include "route/routing-calculator.hpp"
 
 #include "adjacency-list.hpp"
 #include "lsdb.hpp"
@@ -105,8 +105,7 @@ public:
 
   void runTest(const double& expectedCost)
   {
-    HyperbolicRoutingCalculator calculator(map.size(), false, ROUTER_A_NAME);
-    calculator.calculatePath(map, routingTable, lsdb, adjacencies);
+    calculateHyperbolicRoutingPath(map, routingTable, lsdb, adjacencies, ROUTER_A_NAME, false);
 
     RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
 
@@ -157,7 +156,7 @@ public:
   Lsdb& lsdb;
 };
 
-BOOST_FIXTURE_TEST_SUITE(TestHyperbolicRoutingCalculator, HyperbolicCalculatorFixture)
+BOOST_FIXTURE_TEST_SUITE(TestRoutingCalculatorHyperbolic, HyperbolicCalculatorFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {

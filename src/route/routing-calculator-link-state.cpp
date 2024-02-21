@@ -19,28 +19,185 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "routing-table-calculator.hpp"
-#include "lsdb.hpp"
+#include "routing-calculator.hpp"
 #include "name-map.hpp"
 #include "nexthop.hpp"
-#include "nlsr.hpp"
-#include "logger.hpp"
-#include "adjacent.hpp"
 
-#include <cmath>
+#include "adjacent.hpp"
+#include "logger.hpp"
+#include "nlsr.hpp"
+
 #include <boost/lexical_cast.hpp>
-#include <ndn-cxx/util/logger.hpp>
 
 namespace nlsr {
 
-INIT_LOGGER(route.RoutingTableCalculator);
+INIT_LOGGER(route.RoutingCalculatorLinkState);
+
+class RoutingTableCalculator
+{
+public:
+  RoutingTableCalculator(size_t nRouters)
+  {
+    m_nRouters = nRouters;
+  }
+
+protected:
+  /*! \brief Allocate the space needed for the adj. matrix. */
+  void
+  allocateAdjMatrix();
+
+  /*! \brief set NON_ADJACENT_COST i.e. -12345 to every cell of the matrix to
+    ensure that the memory is safe. This is also to incorporate zero cost links */
+  void
+  initMatrix();
+
+  /*! \brief Constructs an adj. matrix to calculate with.
+    \param lsdb Reference to the Lsdb
+    \param pMap The map to populate with the adj. data.
+  */
+  void
+  makeAdjMatrix(const Lsdb& lsdb, NameMap& pMap);
+
+  /*! \brief Writes a formated adjacent matrix to DEBUG log
+    \param map The map containing adjacent matrix data
+  */
+  void
+  writeAdjMatrixLog(const NameMap& map) const;
+
+  /*! \brief Returns how many links a router in the matrix has.
+    \param sRouter The router to count the links of.
+  */
+  int
+  getNumOfLinkfromAdjMatrix(int sRouter);
+
+  void
+  freeAdjMatrix();
+  /*! \brief Adjust a link cost in the adj. matrix
+    \param source The source router whose adjacency to adjust.
+    \param link The adjacency of the source to adjust.
+    \param linkCost The cost to change to.
+  */
+  void
+  adjustAdMatrix(int source, int link, double linkCost);
+
+  /*! \brief Populates temp. variables with the link costs for some router.
+    \param source The router whose values are to be adjusted.
+    \param links An integer pointer array for the link mappingNos.
+    \param linkCosts A double pointer array that stores the link costs.
+
+    Obtains a sparse list of adjacencies and link costs for some
+    router. Since this is sparse, that means while generating these
+    arrays, if there is no adjacency at i in the matrix, these
+    temporary variables will not contain a NON_ADJACENT_COST (-12345) at i,
+    but rather will contain the values for the next valid adjacency.
+  */
+  void
+  getLinksFromAdjMatrix(int* links, double* linkCosts, int source);
+
+  /*! Allocates an array large enough to hold multipath calculation temps. */
+  void
+  allocateLinks();
+
+  void
+  allocateLinkCosts();
+
+  void
+  freeLinks();
+
+  void
+  freeLinksCosts();
+
+  void
+  setNoLink(int nl)
+  {
+    vNoLink = nl;
+  }
+
+protected:
+  double** adjMatrix;
+  size_t m_nRouters;
+
+  int vNoLink;
+  int* links;
+  double* linkCosts;
+
+};
+
+class LinkStateRoutingTableCalculator: public RoutingTableCalculator
+{
+public:
+  LinkStateRoutingTableCalculator(size_t nRouters)
+    : RoutingTableCalculator(nRouters)
+  {
+  }
+
+  void
+  calculatePath(NameMap& pMap, RoutingTable& rt, ConfParameter& confParam,
+                const Lsdb& lsdb);
+
+private:
+  /*! \brief Performs a Dijkstra's calculation over the adjacency matrix.
+    \param sourceRouter The origin router to compute paths from.
+  */
+  void
+  doDijkstraPathCalculation(int sourceRouter);
+
+  /*! \brief Sort the elements of a list.
+    \param Q The array that contains the elements to sort.
+    \param dist The array that contains the distances.
+    \param start The first element in the list to sort.
+    \param element The last element in the list to sort through.
+
+    Sorts the list based on distance. The distances are indexed by
+    their mappingNo in dist. Currently uses an insertion sort.
+
+    The cost between two nodes can be zero or greater than zero.
+
+  */
+  void
+  sortQueueByDistance(int* Q, double* dist, int start, int element);
+
+  /*! \brief Returns whether an element has been visited yet.
+    \param Q The list of elements to look through.
+    \param u The element to check.
+    \param start The start of list to look through.
+    \param element The end of the list to look through.
+  */
+  int
+  isNotExplored(int* Q, int u, int start, int element);
+
+  void
+  addAllLsNextHopsToRoutingTable(AdjacencyList& adjacencies, RoutingTable& rt,
+                                 NameMap& pMap, uint32_t sourceRouter);
+
+  /*! \brief Determines a destination's next hop.
+    \param dest The router whose next hop we want to determine.
+    \param source The router to determine a next path to.
+  */
+  int
+  getLsNextHop(int dest, int source);
+
+  void
+  allocateParent();
+
+  void
+  allocateDistance();
+
+  void
+  freeParent();
+
+  void
+  freeDistance();
+
+private:
+  int* m_parent;
+  double* m_distance;
+};
 
 constexpr int EMPTY_PARENT = -12345;
 constexpr double INF_DISTANCE = 2147483647;
 constexpr int NO_MAPPING_NUM = -1;
 constexpr int NO_NEXT_HOP = -12345;
-constexpr double UNKNOWN_DISTANCE = -1.0;
-constexpr double UNKNOWN_RADIUS   = -1.0;
 
 void
 RoutingTableCalculator::allocateAdjMatrix()
@@ -426,209 +583,11 @@ void LinkStateRoutingTableCalculator::freeDistance()
 }
 
 void
-HyperbolicRoutingCalculator::calculatePath(NameMap& map, RoutingTable& rt,
-                                           Lsdb& lsdb, AdjacencyList& adjacencies)
+calculateLinkStateRoutingPath(NameMap& map, RoutingTable& rt, ConfParameter& confParam,
+                              const Lsdb& lsdb)
 {
-  NLSR_LOG_TRACE("Calculating hyperbolic paths");
-
-  auto thisRouter = map.getMappingNoByRouterName(m_thisRouterName);
-
-  // Iterate over directly connected neighbors
-  std::list<Adjacent> neighbors = adjacencies.getAdjList();
-  for (auto adj = neighbors.begin(); adj != neighbors.end(); ++adj) {
-
-    // Don't calculate nexthops using an inactive router
-    if (adj->getStatus() == Adjacent::STATUS_INACTIVE) {
-      NLSR_LOG_TRACE(adj->getName() << " is inactive; not using it as a nexthop");
-      continue;
-    }
-
-    ndn::Name srcRouterName = adj->getName();
-
-    // Don't calculate nexthops for this router to other routers
-    if (srcRouterName == m_thisRouterName) {
-      continue;
-    }
-
-    // Install nexthops for this router to the neighbor; direct neighbors have a 0 cost link
-    addNextHop(srcRouterName, adj->getFaceUri(), 0, rt);
-
-    auto src = map.getMappingNoByRouterName(srcRouterName);
-    if (!src) {
-      NLSR_LOG_WARN(adj->getName() << " does not exist in the router map!");
-      continue;
-    }
-
-    // Get hyperbolic distance from direct neighbor to every other router
-    for (int dest = 0; dest < static_cast<int>(m_nRouters); ++dest) {
-      // Don't calculate nexthops to this router or from a router to itself
-      if (thisRouter && dest != *thisRouter && dest != *src) {
-
-        auto destRouterName = map.getRouterNameByMappingNo(dest);
-        if (destRouterName) {
-          double distance = getHyperbolicDistance(lsdb, srcRouterName, *destRouterName);
-
-          // Could not compute distance
-          if (distance == UNKNOWN_DISTANCE) {
-            NLSR_LOG_WARN("Could not calculate hyperbolic distance from " << srcRouterName
-                           << " to " << *destRouterName);
-            continue;
-          }
-          addNextHop(*destRouterName, adj->getFaceUri(), distance, rt);
-        }
-      }
-    }
-  }
-}
-
-double
-HyperbolicRoutingCalculator::getHyperbolicDistance(Lsdb& lsdb, ndn::Name src, ndn::Name dest)
-{
-  NLSR_LOG_TRACE("Calculating hyperbolic distance from " << src << " to " << dest);
-
-  double distance = UNKNOWN_DISTANCE;
-
-  auto srcLsa  = lsdb.findLsa<CoordinateLsa>(src);
-  auto destLsa = lsdb.findLsa<CoordinateLsa>(dest);
-
-  // Coordinate LSAs do not exist for these routers
-  if (srcLsa == nullptr || destLsa == nullptr) {
-    return UNKNOWN_DISTANCE;
-  }
-
-  std::vector<double> srcTheta = srcLsa->getTheta();
-  std::vector<double> destTheta = destLsa->getTheta();
-
-  double srcRadius = srcLsa->getRadius();
-  double destRadius = destLsa->getRadius();
-
-  double diffTheta = calculateAngularDistance(srcTheta, destTheta);
-
-  if (srcRadius == UNKNOWN_RADIUS || destRadius == UNKNOWN_RADIUS ||
-      diffTheta == UNKNOWN_DISTANCE) {
-    return UNKNOWN_DISTANCE;
-  }
-
-  // double r_i, double r_j, double delta_theta, double zeta = 1 (default)
-  distance = calculateHyperbolicDistance(srcRadius, destRadius, diffTheta);
-
-  NLSR_LOG_TRACE("Distance from " << src << " to " << dest << " is " << distance);
-
-  return distance;
-}
-
-double
-HyperbolicRoutingCalculator::calculateAngularDistance(std::vector<double> angleVectorI,
-                                                      std::vector<double> angleVectorJ)
-{
-  // It is not possible for angle vector size to be zero as ensured by conf-file-processor
-
-  // https://en.wikipedia.org/wiki/N-sphere#Spherical_coordinates
-
-  // Check if two vector lengths are the same
-  if (angleVectorI.size() != angleVectorJ.size()) {
-    NLSR_LOG_ERROR("Angle vector sizes do not match");
-    return UNKNOWN_DISTANCE;
-  }
-
-  // Check if all angles are within the [0, PI] and [0, 2PI] ranges
-  if (angleVectorI.size() > 1) {
-    for (unsigned int k = 0; k < angleVectorI.size() - 1; k++) {
-      if ((angleVectorI[k] > M_PI && angleVectorI[k] < 0.0) ||
-          (angleVectorJ[k] > M_PI && angleVectorJ[k] < 0.0)) {
-        NLSR_LOG_ERROR("Angle outside [0, PI]");
-        return UNKNOWN_DISTANCE;
-      }
-    }
-  }
-
-  if (angleVectorI[angleVectorI.size()-1] > 2.*M_PI ||
-      angleVectorI[angleVectorI.size()-1] < 0.0) {
-    NLSR_LOG_ERROR("Angle not within [0, 2PI]");
-    return UNKNOWN_DISTANCE;
-  }
-
-  if (angleVectorI[angleVectorI.size()-1] > 2.*M_PI ||
-      angleVectorI[angleVectorI.size()-1] < 0.0) {
-    NLSR_LOG_ERROR("Angle not within [0, 2PI]");
-    return UNKNOWN_DISTANCE;
-  }
-
-  // deltaTheta = arccos(vectorI . vectorJ) -> do the inner product
-  double innerProduct = 0.0;
-
-  // Calculate x0 of the vectors
-  double x0i = std::cos(angleVectorI[0]);
-  double x0j = std::cos(angleVectorJ[0]);
-
-  // Calculate xn of the vectors
-  double xni = std::sin(angleVectorI[angleVectorI.size() - 1]);
-  double xnj = std::sin(angleVectorJ[angleVectorJ.size() - 1]);
-
-  // Do the aggregation of the (n-1) coordinates (if there is more than one angle)
-  // i.e contraction of all (n-1)-dimensional angular coordinates to one variable
-  for (unsigned int k = 0; k < angleVectorI.size() - 1; k++) {
-    xni *= std::sin(angleVectorI[k]);
-    xnj *= std::sin(angleVectorJ[k]);
-  }
-  innerProduct += (x0i * x0j) + (xni * xnj);
-
-  // If d > 1
-  if (angleVectorI.size() > 1) {
-    for (unsigned int m = 1; m < angleVectorI.size(); m++) {
-      // calculate euclidean coordinates given the angles and assuming R_sphere = 1
-      double xmi = std::cos(angleVectorI[m]);
-      double xmj = std::cos(angleVectorJ[m]);
-      for (unsigned int l = 0; l < m; l++) {
-        xmi *= std::sin(angleVectorI[l]);
-        xmj *= std::sin(angleVectorJ[l]);
-      }
-      innerProduct += xmi * xmj;
-    }
-  }
-
-  // ArcCos of the inner product gives the angular distance
-  // between two points on a d-dimensional sphere
-  return std::acos(innerProduct);
-}
-
-double
-HyperbolicRoutingCalculator::calculateHyperbolicDistance(double rI, double rJ,
-                                                         double deltaTheta)
-{
-  if (deltaTheta == UNKNOWN_DISTANCE) {
-    return UNKNOWN_DISTANCE;
-  }
-
-  // Usually, we set zeta = 1 in all experiments
-  double zeta = 1;
-
-  if (deltaTheta <= 0.0 || rI <= 0.0 || rJ <= 0.0) {
-    NLSR_LOG_ERROR("Delta theta or rI or rJ is <= 0");
-    NLSR_LOG_ERROR("Please make sure that no two nodes have the exact same HR coordinates");
-    return UNKNOWN_DISTANCE;
-  }
-
-  double xij = (1. / zeta) * std::acosh(std::cosh(zeta*rI) * std::cosh(zeta*rJ) -
-               std::sinh(zeta*rI)*std::sinh(zeta*rJ)*std::cos(deltaTheta));
-  return xij;
-}
-
-void
-HyperbolicRoutingCalculator::addNextHop(const ndn::Name& dest, const ndn::FaceUri& faceUri,
-                                        double cost, RoutingTable& rt)
-{
-  NextHop hop(faceUri, cost);
-  hop.setHyperbolic(true);
-
-  NLSR_LOG_TRACE("Calculated " << hop << " for destination: " << dest);
-
-  if (m_isDryRun) {
-    rt.addNextHopToDryTable(dest, hop);
-  }
-  else {
-    rt.addNextHop(dest, hop);
-  }
+  LinkStateRoutingTableCalculator calculator(map.size());
+  calculator.calculatePath(map, rt, confParam, lsdb);
 }
 
 } // namespace nlsr

@@ -19,7 +19,7 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "route/routing-table-calculator.hpp"
+#include "route/routing-calculator.hpp"
 
 #include "adjacency-list.hpp"
 #include "adjacent.hpp"
@@ -113,12 +113,11 @@ public:
   Lsdb& lsdb;
 };
 
-BOOST_FIXTURE_TEST_SUITE(TestLinkStateRoutingCalculator, LinkStateCalculatorFixture)
+BOOST_FIXTURE_TEST_SUITE(TestRoutingCalculatorLinkState, LinkStateCalculatorFixture)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-  LinkStateRoutingTableCalculator calculator(map.size());
-  calculator.calculatePath(map, routingTable, conf, lsdb);
+  calculateLinkStateRoutingPath(map, routingTable, conf, lsdb);
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
   BOOST_REQUIRE(entryB != nullptr);
@@ -165,8 +164,7 @@ BOOST_AUTO_TEST_CASE(Asymmetric)
   c->setLinkCost(higherLinkCost);
 
   // Calculation should consider the link between B and C as having cost = higherLinkCost
-  LinkStateRoutingTableCalculator calculator(map.size());
-  calculator.calculatePath(map, routingTable, conf, lsdb);
+  calculateLinkStateRoutingPath(map, routingTable, conf, lsdb);
 
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
   BOOST_REQUIRE(entryB != nullptr);
@@ -213,8 +211,7 @@ BOOST_AUTO_TEST_CASE(NonAdjacentCost)
   c->setLinkCost(Adjacent::NON_ADJACENT_COST);
 
   // Calculation should consider the link between B and C as down
-  LinkStateRoutingTableCalculator calculator(map.size());
-  calculator.calculatePath(map, routingTable, conf, lsdb);
+  calculateLinkStateRoutingPath(map, routingTable, conf, lsdb);
 
   // Router A should be able to get to B through B but not through C
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);
@@ -267,8 +264,7 @@ BOOST_AUTO_TEST_CASE(AsymmetricZeroCostLink)
   b->setLinkCost(0);
 
   // Calculation should consider 0 link-cost between B and C
-  LinkStateRoutingTableCalculator calculator(map.size());
-  calculator.calculatePath(map, routingTable, conf, lsdb);
+  calculateLinkStateRoutingPath(map, routingTable, conf, lsdb);
 
   // Router A should be able to get to B through B and C
   RoutingTableEntry* entryB = routingTable.findRoutingTableEntry(ROUTER_B_NAME);

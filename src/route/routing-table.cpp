@@ -19,12 +19,13 @@
  */
 
 #include "routing-table.hpp"
-#include "nlsr.hpp"
 #include "name-map.hpp"
-#include "conf-parameter.hpp"
-#include "routing-table-calculator.hpp"
+#include "routing-calculator.hpp"
 #include "routing-table-entry.hpp"
+
+#include "conf-parameter.hpp"
 #include "logger.hpp"
+#include "nlsr.hpp"
 #include "tlv-nlsr.hpp"
 
 namespace nlsr {
@@ -131,11 +132,7 @@ RoutingTable::calculateLsRoutingTable()
   auto map = NameMap::createFromAdjLsdb(lsaRange.first, lsaRange.second);
   NLSR_LOG_DEBUG(map);
 
-  size_t nRouters = map.size();
-
-  LinkStateRoutingTableCalculator calculator(nRouters);
-
-  calculator.calculatePath(map, *this, m_confParam, m_lsdb);
+  calculateLinkStateRoutingPath(map, *this, m_confParam, m_lsdb);
 
   NLSR_LOG_DEBUG("Calling Update NPT With new Route");
   afterRoutingChange(m_rTable);
@@ -156,11 +153,8 @@ RoutingTable::calculateHypRoutingTable(bool isDryRun)
   auto map = NameMap::createFromCoordinateLsdb(lsaRange.first, lsaRange.second);
   NLSR_LOG_DEBUG(map);
 
-  size_t nRouters = map.size();
-
-  HyperbolicRoutingCalculator calculator(nRouters, isDryRun, m_confParam.getRouterPrefix());
-
-  calculator.calculatePath(map, *this, m_lsdb, m_confParam.getAdjacencyList());
+  calculateHyperbolicRoutingPath(map, *this, m_lsdb, m_confParam.getAdjacencyList(),
+                                 m_confParam.getRouterPrefix(), isDryRun);
 
   if (!isDryRun) {
     NLSR_LOG_DEBUG("Calling Update NPT With new Route");
