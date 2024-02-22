@@ -401,8 +401,11 @@ LinkStateRoutingTableCalculator::calculatePath(NameMap& pMap, RoutingTable& rt,
   auto sourceRouter = pMap.getMappingNoByRouterName(confParam.getRouterPrefix());
   allocateParent(); // These two matrices are used in Dijkstra's algorithm.
   allocateDistance(); //
-  // We only bother to do the calculation if we have a router by that name.
-  if (sourceRouter && confParam.getMaxFacesPerPrefix() == 1) {
+
+  if (!sourceRouter) {
+    // We cannot do the calculation if we don't have a router by that name.
+  }
+  else if (confParam.getMaxFacesPerPrefix() == 1) {
     // In the single path case we can simply run Dijkstra's algorithm.
     doDijkstraPathCalculation(*sourceRouter);
     // Inform the routing table of the new next hops.
