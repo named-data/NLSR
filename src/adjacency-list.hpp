@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -84,7 +84,7 @@ public:
   getNumOfActiveNeighbor() const;
 
   Adjacent
-  getAdjacent(const ndn::Name& adjName);
+  getAdjacent(const ndn::Name& adjName) const;
 
   bool
   operator==(const AdjacencyList& adl) const;

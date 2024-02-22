@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -40,7 +40,7 @@ AdjacencyList::insert(const Adjacent& adjacent)
 }
 
 Adjacent
-AdjacencyList::getAdjacent(const ndn::Name& adjName)
+AdjacencyList::getAdjacent(const ndn::Name& adjName) const
 {
   Adjacent adj(adjName);
   auto it = find(adjName);
