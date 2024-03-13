@@ -1,6 +1,6 @@
 # -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
 """
-Copyright (c) 2014-2023,  The University of Memphis,
+Copyright (c) 2014-2024,  The University of Memphis,
                           Regents of the University of California,
                           Arizona Board of Regents.
 
@@ -31,7 +31,7 @@ def options(opt):
     opt.load(['compiler_cxx', 'gnu_dirs'])
     opt.load(['default-compiler-flags',
               'coverage', 'sanitizers', 'boost',
-              'doxygen', 'sphinx_build'],
+              'doxygen', 'sphinx'],
              tooldir=['.waf-tools'])
 
     optgrp = opt.add_option_group('NLSR Options')
@@ -57,7 +57,7 @@ def options(opt):
 def configure(conf):
     conf.load(['compiler_cxx', 'gnu_dirs',
                'default-compiler-flags', 'boost',
-               'doxygen', 'sphinx_build'])
+               'doxygen', 'sphinx'])
 
     conf.env.WITH_TESTS = conf.options.with_tests
 
