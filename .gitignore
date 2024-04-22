@@ -1,22 +1,8 @@
-# Emacs
+# Backup files
 *~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-.\#*
-
-# Visual Studio Code
-.vscode/
-
-# KDevelop
-*.kdev*
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
+*.bak
+*.orig
+*.rej
 
 # Waf build system
 /build/
@@ -27,6 +13,22 @@
 # Compiled python code
 __pycache__/
 *.py[cod]
+
+# Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+.\#*
+
+# Visual Studio Code
+.vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
 
 # Other
 /VERSION.info
