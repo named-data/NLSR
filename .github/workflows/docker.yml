@@ -1,0 +1,19 @@
+name: Docker
+on:
+  push:
+    tags:
+      - 'NLSR-*'
+  schedule:
+    # twice a month
+    - cron: '20 9 5,20 * *'
+  workflow_dispatch:
+
+permissions:
+  packages: write
+  id-token: write
+
+jobs:
+  nlsr:
+    uses: named-data/actions/.github/workflows/docker-image.yml@v1
+    with:
+      name: nlsr
