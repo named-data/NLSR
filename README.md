@@ -3,6 +3,7 @@
 ![Latest version](https://img.shields.io/github/v/tag/named-data/NLSR?label=Latest%20version)
 ![Language](https://img.shields.io/badge/C%2B%2B-17-blue)
 [![CI](https://github.com/named-data/NLSR/actions/workflows/ci.yml/badge.svg)](https://github.com/named-data/NLSR/actions/workflows/ci.yml)
+[![Docker](https://github.com/named-data/NLSR/actions/workflows/docker.yml/badge.svg)](https://github.com/named-data/NLSR/actions/workflows/docker.yml)
 [![Docs](https://github.com/named-data/NLSR/actions/workflows/docs.yml/badge.svg)](https://github.com/named-data/NLSR/actions/workflows/docs.yml)
 
 > [!TIP]
@@ -20,7 +21,7 @@ multiple faces for each reachable name prefix in a single authoritative domain. 
 will continue to evolve over time to include neighbor discovery and to become a full
 fledged inter-domain routing protocol for NDN.
 
-NLSR was mainly developed by members of the NSF-sponsored [NDN project team](
+NLSR was mainly developed by members of the NSF-sponsored [NDN project](
 https://named-data.net/project/participants/). See [`AUTHORS.md`](AUTHORS.md) for details.
 
 ## Source releases
