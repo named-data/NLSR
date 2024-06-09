@@ -54,7 +54,8 @@ COPY --link --from=build /usr/bin/nlsrc /usr/bin/
 COPY --link --from=build /etc/ndn/nlsr.conf.sample /config/nlsr.conf
 
 RUN --mount=from=build,source=/deps,target=/deps \
-    apt-get install -Uy --no-install-recommends $(cat /deps/nlsr) \
+    apt-get install -Uy --no-install-recommends \
+        $(cat /deps/nlsr) \
     && apt-get distclean
 
 ENV HOME=/config
