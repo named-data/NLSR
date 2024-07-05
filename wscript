@@ -94,8 +94,11 @@ def configure(conf):
                        uselib_store='SVS', pkg_config_path=pkg_config_path)
 
     if not any((conf.options.with_chronosync, conf.options.with_psync, conf.options.with_svs)):
-        conf.fatal('Cannot compile without any Sync protocol. '
+        conf.fatal('Cannot compile without any Sync protocol.\n'
                    'Specify at least one of --with-psync or --with-svs or --with-chronosync')
+
+    if conf.env.WITH_TESTS and not conf.options.with_psync:
+        conf.fatal('--with-tests requires --with-psync')
 
     conf.check_compiler_flags()
 

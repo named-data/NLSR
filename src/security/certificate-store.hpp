@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,20 +22,20 @@
 #ifndef NLSR_CERTIFICATE_STORE_HPP
 #define NLSR_CERTIFICATE_STORE_HPP
 
-#include "common.hpp"
-#include "test-access-control.hpp"
-#include "lsdb.hpp"
-
+#include <ndn-cxx/face.hpp>
 #include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/mgmt/nfd/controller.hpp>
 #include <ndn-cxx/security/certificate.hpp>
 #include <ndn-cxx/security/validator-config.hpp>
+#include <ndn-cxx/util/signal/scoped-connection.hpp>
 
 namespace nlsr {
+
 class ConfParameter;
+class Lsdb;
+
 namespace security {
 
-/*! \brief Store certificates for names
+/*! \brief Store certificates for names.
  *
  * Stores certificates that this router claims to be authoritative
  * for. That is, this stores only the certificates that we will reply
@@ -70,10 +70,7 @@ public:
   void
   publishCertFromCache(const ndn::Name& keyName);
 
-  void
-  afterFetcherSignalEmitted(const ndn::Data& lsaSegment);
-
-PUBLIC_WITH_TESTS_ELSE_PRIVATE:
+private:
   const ndn::security::Certificate*
   findByKeyName(const ndn::Name& keyName) const;
 
@@ -81,10 +78,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   findByCertName(const ndn::Name& certName) const;
 
   void
-  clear();
-
-  void
-  setInterestFilter(const ndn::Name& prefix, const bool loopback = false);
+  setInterestFilter(const ndn::Name& prefix);
 
   void
   registerKeyPrefixes();
@@ -99,12 +93,11 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   registrationFailed(const ndn::Name& name);
 
 private:
-  typedef std::map<ndn::Name, ndn::security::Certificate> CertMap;
-  CertMap m_certificates;
+  std::map<ndn::Name, ndn::security::Certificate> m_certificates;
   ndn::Face& m_face;
   ConfParameter& m_confParam;
   ndn::security::ValidatorConfig& m_validator;
-  ndn::signal::ScopedConnection m_afterSegmentValidatedConnection;
+  ndn::signal::ScopedConnection m_afterSegmentValidatedConn;
 };
 
 } // namespace security

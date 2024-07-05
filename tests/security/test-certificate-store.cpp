@@ -85,7 +85,6 @@ public:
     advanceClocks(20_ms);
   }
 
-public:
   void
   checkForInterest(ndn::Name& interstName)
   {
@@ -99,8 +98,8 @@ public:
     BOOST_CHECK(didFindInterest);
   }
 
+protected:
   ndn::DummyClientFace face;
-
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
 
@@ -223,29 +222,23 @@ BOOST_AUTO_TEST_CASE(SegmentValidatedSignal)
   data.setContent(nameLsa.wireEncode());
   data.setFinalBlock(lsaDataName[-1]);
 
-  // Sign data with this NLSR's key (in real it would be different NLSR)
-  m_keyChain.sign(data, conf.m_signingInfo);
-  face.put(data);
+  // Test with unsigned data first (lacks KeyLocator).
+  // This should not happen during normal operations, but CertificateStore
+  // should still be able to handle invalid packets without crashing
+  lsdb.emitSegmentValidatedSignal(data);
 
-  this->advanceClocks(1_ms);
+  // Sign data with this NLSR's key (in reality it would be a different NLSR)
+  m_keyChain.sign(data, conf.m_signingInfo);
 
   // Make NLSR validate data signed by its own key
   conf.getValidator().validate(data,
-                                 [] (const ndn::Data&) { BOOST_CHECK(true); },
-                                 [] (const ndn::Data&, const ndn::security::ValidationError& e) {
-                                   BOOST_ERROR(e);
-                                 });
+                               [] (const auto&) { BOOST_CHECK(true); },
+                               [] (const auto&, const auto& err) { BOOST_ERROR(err); });
 
   lsdb.emitSegmentValidatedSignal(data);
   auto certName = data.getSignatureInfo().getKeyLocator().getName();
   auto keyName = ndn::security::extractKeyNameFromCertName(certName);
   BOOST_CHECK(certStore.find(keyName) != nullptr);
-
-  // testing a callback after segment validation signal from lsdb
-  ndn::signal::ScopedConnection connection = lsdb.afterSegmentValidatedSignal.connect(
-  [&] (const ndn::Data& lsaSegment) {
-    BOOST_CHECK_EQUAL(lsaSegment.getName(), data.getName());
-  });
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,6 +22,7 @@
 #include "certificate-store.hpp"
 #include "conf-parameter.hpp"
 #include "logger.hpp"
+#include "lsdb.hpp"
 
 #include <ndn-cxx/util/io.hpp>
 #include <fstream>
@@ -43,15 +44,26 @@ CertificateStore::CertificateStore(ndn::Face& face, ConfParameter& confParam, Ls
 
   registerKeyPrefixes();
 
-  m_afterSegmentValidatedConnection = lsdb.afterSegmentValidatedSignal.connect(
-    [this] (const ndn::Data& data) { afterFetcherSignalEmitted(data); });
+  m_afterSegmentValidatedConn = lsdb.afterSegmentValidatedSignal.connect([this] (const auto& data) {
+    const auto kl = data.getKeyLocator();
+    if (!kl || kl->getType() != ndn::tlv::Name) {
+      NLSR_LOG_TRACE("Cannot determine KeyLocator Name for: " << data.getName());
+    }
+    else if (const auto klName = kl->getName(); !find(klName)) {
+      NLSR_LOG_TRACE("Publishing certificate for: " << klName);
+      publishCertFromCache(klName);
+    }
+    else {
+      NLSR_LOG_TRACE("Certificate is already in the store: " << klName);
+    }
+  });
 }
 
 void
 CertificateStore::insert(const ndn::security::Certificate& certificate)
 {
   m_certificates[certificate.getKeyName()] = certificate;
-  NLSR_LOG_TRACE("Certificate inserted successfully");
+  NLSR_LOG_TRACE("Certificate inserted successfully\n" << certificate);
 }
 
 const ndn::security::Certificate*
@@ -81,15 +93,9 @@ CertificateStore::findByCertName(const ndn::Name& certName) const
 }
 
 void
-CertificateStore::clear()
+CertificateStore::setInterestFilter(const ndn::Name& prefix)
 {
-  m_certificates.clear();
-}
-
-void
-CertificateStore::setInterestFilter(const ndn::Name& prefix, bool loopback)
-{
-  m_face.setInterestFilter(ndn::InterestFilter(prefix).allowLoopback(loopback),
+  m_face.setInterestFilter(ndn::InterestFilter(prefix).allowLoopback(false),
                            std::bind(&CertificateStore::onKeyInterest, this, _1, _2),
                            std::bind(&CertificateStore::onKeyPrefixRegSuccess, this, _1),
                            std::bind(&CertificateStore::registrationFailed, this, _1),
@@ -134,28 +140,28 @@ CertificateStore::registerKeyPrefixes()
 void
 CertificateStore::onKeyInterest(const ndn::Name&, const ndn::Interest& interest)
 {
-  NLSR_LOG_DEBUG("Got interest for certificate. Interest: " << interest.getName());
+  NLSR_LOG_TRACE("Got certificate Interest: " << interest.getName());
 
   const auto* cert = find(interest.getName());
-
   if (!cert) {
-    NLSR_LOG_TRACE("Certificate is not found for: " << interest);
+    NLSR_LOG_DEBUG("Certificate not found for: " << interest.getName());
     return;
   }
+
   m_face.put(*cert);
 }
 
 void
 CertificateStore::onKeyPrefixRegSuccess(const ndn::Name& name)
 {
-  NLSR_LOG_DEBUG("KEY prefix: " << name << " registration is successful");
+  NLSR_LOG_DEBUG("Prefix registered successfully: " << name);
 }
 
 void
 CertificateStore::registrationFailed(const ndn::Name& name)
 {
-  NLSR_LOG_ERROR("Failed to register prefix " << name);
-  NDN_THROW(std::runtime_error("Prefix registration failed"));
+  NLSR_LOG_ERROR("Failed to register prefix: " << name);
+  NDN_THROW(std::runtime_error("Prefix registration failed: " + name.toUri()));
 }
 
 void
@@ -165,7 +171,6 @@ CertificateStore::publishCertFromCache(const ndn::Name& keyName)
 
   if (cert) {
     insert(*cert);
-    NLSR_LOG_TRACE(*cert);
     ndn::Name certName = ndn::security::extractKeyNameFromCertName(cert->getName());
     NLSR_LOG_TRACE("Setting interest filter for: " << certName);
 
@@ -178,20 +183,7 @@ CertificateStore::publishCertFromCache(const ndn::Name& keyName)
   }
   else {
     // Happens for root cert
-    NLSR_LOG_TRACE("Cert for " << keyName << " was not found in the Validator's cache. ");
-  }
-}
-
-void
-CertificateStore::afterFetcherSignalEmitted(const ndn::Data& lsaSegment)
-{
-  const auto keyName = lsaSegment.getSignatureInfo().getKeyLocator().getName();
-  if (!find(keyName)) {
-    NLSR_LOG_TRACE("Publishing certificate for: " << keyName);
-    publishCertFromCache(keyName);
-  }
-  else {
-    NLSR_LOG_TRACE("Certificate is already in the store: " << keyName);
+    NLSR_LOG_TRACE("Cert for " << keyName << " was not found in the Validator's cache");
   }
 }
 

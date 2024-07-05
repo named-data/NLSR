@@ -39,7 +39,7 @@ public:
   getSync()
   {
     if (m_sync == nullptr) {
-      m_sync.reset(new SyncLogicHandler(face, m_keyChain, testIsLsaNew, opts));
+      m_sync = std::make_unique<SyncLogicHandler>(face, m_keyChain, testIsLsaNew, opts);
     }
     return *m_sync;
   }
@@ -50,9 +50,11 @@ public:
     this->advanceClocks(1_ms, 10);
     face.sentInterests.clear();
 
+#ifdef HAVE_PSYNC
     std::vector<psync::MissingDataInfo> updates;
     updates.push_back({prefix, 0, seqNo, 0});
     getSync().m_syncLogic.onPSyncUpdate(updates);
+#endif
 
     this->advanceClocks(1_ms, 10);
   }
