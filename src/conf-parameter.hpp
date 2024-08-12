@@ -531,7 +531,7 @@ private:
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   // must be incremented when breaking changes are made to sync
-  static constexpr uint64_t SYNC_VERSION = 11;
+  static constexpr uint64_t SYNC_VERSION = 12;
 
   AdjacencyList m_adjl;
   NamePrefixList m_npl;

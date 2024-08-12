@@ -9,6 +9,13 @@ Release History
 
    release-notes/*
 
+* **NLSR version 24.08**
+  \| :doc:`Release Notes <release-notes/release-notes-24.08>`
+  \| `GitHub <https://github.com/named-data/NLSR/releases/tag/NLSR-24.08>`__
+  \| `Source download <https://github.com/named-data/NLSR/releases/download/NLSR-24.08/nlsr-24.08.tar.xz>`__
+  (`checksum <https://github.com/named-data/NLSR/releases/download/NLSR-24.08/nlsr-24.08.tar.xz.sha256>`__)
+  \| `Documentation <https://docs.named-data.net/NLSR/24.08/>`__
+
 * **NLSR version 0.7.0**
   (:doc:`Release Notes <release-notes/release-notes-0.7.0>`,
   `GitHub <https://github.com/named-data/NLSR/releases/tag/NLSR-0.7.0>`__,

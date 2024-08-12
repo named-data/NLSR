@@ -23,21 +23,13 @@
 
 namespace nlsr {
 
-/** NLSR version follows Semantic Versioning 2.0.0 specification
- *  http://semver.org/
- */
+// NLSR version version follows Calendar Versioning (https://calver.org/)
+// based on the year and month of the release, followed by an optional "patch" number,
+// i.e., `YY.0M[.MICRO (integer without a leading zero)]` using CalVer notation.
 
 // To change version number, modify VERSION variable in top-level wscript.
 
-/** \brief NLSR version represented as an integer
- *
- *  MAJOR*1000000 + MINOR*1000 + PATCH
- */
-#define NLSR_VERSION @VERSION@
-
-/** \brief NLSR version represented as a string
- *
- *  MAJOR.MINOR.PATCH
+/** \brief NLSR version represented as a string in the CalVer format
  */
 #define NLSR_VERSION_STRING "@VERSION_STRING@"
 
@@ -51,18 +43,11 @@ namespace nlsr {
  *
  * When NLSR is built not from git, NLSR_VERSION_BUILD_STRING equals NLSR_VERSION_STRING
  *
- * MAJOR.MINOR.PATCH(-release-candidate-tag)(-(number-of-commits-since-tag)-COMMIT-HASH)
+ * YY.0M[.MICRO](-release-candidate-tag)(-(number-of-commits-since-tag)-COMMIT-HASH)
  *
- * Example, 0.1.0-rc1-1-g5c86570
+ * Example: 20.01.1-rc1-1-g5c86570
  */
 #define NLSR_VERSION_BUILD_STRING "@VERSION_BUILD@"
-
-/// MAJOR version
-#define NLSR_VERSION_MAJOR @VERSION_MAJOR@
-/// MINOR version
-#define NLSR_VERSION_MINOR @VERSION_MINOR@
-/// PATCH version
-#define NLSR_VERSION_PATCH @VERSION_PATCH@
 
 } // namespace nlsr
 

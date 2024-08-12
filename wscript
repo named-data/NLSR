@@ -23,7 +23,7 @@ import os
 import subprocess
 from waflib import Context, Logs, Utils
 
-VERSION = '0.7.0'
+VERSION = '24.08'
 APPNAME = 'nlsr'
 GIT_TAG_PREFIX = 'NLSR-'
 
@@ -69,7 +69,7 @@ def configure(conf):
     conf.find_program(['pkgconf', 'pkg-config'], var='PKGCONFIG')
 
     pkg_config_path = os.environ.get('PKG_CONFIG_PATH', f'{conf.env.LIBDIR}/pkgconfig')
-    conf.check_cfg(package='libndn-cxx', args=['libndn-cxx >= 0.8.1', '--cflags', '--libs'],
+    conf.check_cfg(package='libndn-cxx', args=['libndn-cxx >= 0.9.0', '--cflags', '--libs'],
                    uselib_store='NDN_CXX', pkg_config_path=pkg_config_path)
 
     conf.check_boost(lib='filesystem', mt=True)
@@ -82,11 +82,11 @@ def configure(conf):
         conf.check_boost(lib='unit_test_framework', mt=True, uselib_store='BOOST_TESTS')
 
     if conf.options.with_chronosync:
-        conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.5.5', '--cflags', '--libs'],
+        conf.check_cfg(package='ChronoSync', args=['ChronoSync >= 0.5.6', '--cflags', '--libs'],
                        uselib_store='CHRONOSYNC', pkg_config_path=pkg_config_path)
 
     if conf.options.with_psync:
-        conf.check_cfg(package='PSync', args=['PSync >= 0.4.0', '--cflags', '--libs'],
+        conf.check_cfg(package='PSync', args=['PSync >= 0.5.0', '--cflags', '--libs'],
                        uselib_store='PSYNC', pkg_config_path=pkg_config_path)
 
     if conf.options.with_svs:
@@ -123,13 +123,7 @@ def build(bld):
         target='src/version.hpp',
         install_path=None,
         VERSION_STRING=VERSION_BASE,
-        VERSION_BUILD=VERSION,
-        VERSION=int(VERSION_SPLIT[0]) * 1000000 +
-                int(VERSION_SPLIT[1]) * 1000 +
-                int(VERSION_SPLIT[2]),
-        VERSION_MAJOR=VERSION_SPLIT[0],
-        VERSION_MINOR=VERSION_SPLIT[1],
-        VERSION_PATCH=VERSION_SPLIT[2])
+        VERSION_BUILD=VERSION)
 
     bld.objects(
         target='nlsr-objects',
