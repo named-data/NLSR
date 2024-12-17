@@ -29,11 +29,11 @@
 #include <ndn-cxx/security/interest-signer.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
 
 namespace nlsr::tests {
 
@@ -50,7 +50,7 @@ public:
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
     , namePrefixList(conf.getNamePrefixList())
-    , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
+    , SITE_CERT_PATH(std::filesystem::current_path() / "site.cert")
   {
     // Site cert
     siteIdentity = m_keyChain.createIdentity(siteIdentityName);
@@ -139,7 +139,7 @@ public:
   Nlsr nlsr;
   NamePrefixList& namePrefixList;
 
-  const boost::filesystem::path SITE_CERT_PATH;
+  const std::filesystem::path SITE_CERT_PATH;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestPrefixUpdateProcessor, PrefixUpdateFixture)

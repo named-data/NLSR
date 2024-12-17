@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2024,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -29,15 +29,15 @@
 #include <ndn-cxx/util/io.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <boost/filesystem.hpp>
 #include <boost/property_tree/info_parser.hpp>
 
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
-namespace bf = boost::filesystem;
-
 namespace nlsr {
+
+namespace fs = std::filesystem;
 
 template <class T>
 class ConfigurationVariable
@@ -330,14 +330,14 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
     return false;
   }
 
+  // state-dir
   try {
-    std::string stateDir = section.get<std::string>("state-dir");
-    if (bf::exists(stateDir)) {
-      if (bf::is_directory(stateDir)) {
+    fs::path stateDir(section.get<std::string>("state-dir"));
+    if (fs::exists(stateDir)) {
+      if (fs::is_directory(stateDir)) {
         // copying nlsr.conf file to a user-defined directory for possible modification
-        std::string conFileDynamic = (bf::path(stateDir) / "nlsr.conf").string();
-
-        if (m_confFileName == conFileDynamic) {
+        auto conFileDynamic = stateDir / "nlsr.conf";
+        if (m_confFileName == conFileDynamic.string()) {
           std::cerr << "Please use nlsr.conf stored at another location "
                     << "or change the state-dir in the configuration." << std::endl;
           std::cerr << "The file at " << conFileDynamic <<
@@ -347,45 +347,39 @@ ConfFileProcessor::processConfSectionGeneral(const ConfigSection& section)
           return false;
         }
 
-        m_confParam.setConfFileNameDynamic(conFileDynamic);
+        m_confParam.setConfFileNameDynamic(conFileDynamic.string());
         try {
-          bf::copy_file(m_confFileName, conFileDynamic,
-#if BOOST_VERSION >= 107400
-                        bf::copy_options::overwrite_existing
-#else
-                        bf::copy_option::overwrite_if_exists
-#endif
-                        );
+          fs::copy_file(m_confFileName, conFileDynamic, fs::copy_options::overwrite_existing);
         }
-        catch (const bf::filesystem_error& e) {
-          std::cerr << "Error copying conf file to the state directory: " << e.what() << std::endl;
+        catch (const fs::filesystem_error& e) {
+          std::cerr << "Error copying conf file to state-dir: " << e.what() << std::endl;
           return false;
         }
 
-        std::string testFileName = (bf::path(stateDir) / "test.seq").string();
-        std::ofstream testOutFile(testFileName);
-        if (testOutFile) {
-          m_confParam.setStateFileDir(stateDir);
+        auto testFilePath = stateDir / "test.seq";
+        std::ofstream testFile(testFilePath);
+        if (testFile) {
+          m_confParam.setStateFileDir(stateDir.string());
         }
         else {
-          std::cerr << "NLSR does not have read/write permission on the state directory" << std::endl;
+          std::cerr << "NLSR does not have read/write permission on state-dir" << std::endl;
           return false;
         }
-        testOutFile.close();
-        remove(testFileName.c_str());
+        testFile.close();
+        fs::remove(testFilePath);
       }
       else {
-        std::cerr << "Provided path '" << stateDir << "' is not a directory" << std::endl;
+        std::cerr << "Provided state-dir " << stateDir << " is not a directory" << std::endl;
         return false;
       }
     }
     else {
-      std::cerr << "Provided state directory '" << stateDir << "' does not exist" << std::endl;
+      std::cerr << "Provided state-dir " << stateDir << " does not exist" << std::endl;
       return false;
     }
   }
   catch (const std::exception& ex) {
-    std::cerr << "You must configure state directory" << std::endl;
+    std::cerr << "You must configure state-dir" << std::endl;
     std::cerr << ex.what() << std::endl;
     return false;
   }
@@ -654,20 +648,19 @@ ConfFileProcessor::processConfSectionSecurity(const ConfigSection& section)
         return false;
       }
 
-      std::string file = it->second.data();
-      bf::path certfilePath = absolute(file, bf::path(m_confFileName).parent_path());
-      std::ifstream ifs(certfilePath.string());
+      fs::path certPath = fs::canonical(fs::path(m_confFileName).parent_path() / it->second.data());
+      std::ifstream ifs(certPath);
 
       ndn::security::Certificate idCert;
       try {
         idCert = ndn::io::loadTlv<ndn::security::Certificate>(ifs);
       }
       catch (const std::exception& e) {
-        std::cerr << "Error: Cannot load cert-to-publish '" << file << "': " << e.what() << std::endl;
+        std::cerr << "Error: Cannot load cert-to-publish " << certPath << ": " << e.what() << std::endl;
         return false;
       }
 
-      m_confParam.addCertPath(certfilePath.string());
+      m_confParam.addCertPath(certPath.string());
       m_confParam.loadCertToValidator(idCert);
     }
   }

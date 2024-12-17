@@ -30,9 +30,9 @@
 #include <ndn-cxx/security/interest-signer.hpp>
 #include <ndn-cxx/security/signing-helpers.hpp>
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/property_tree/info_parser.hpp>
+
+#include <filesystem>
 
 namespace nlsr::tests {
 
@@ -49,7 +49,7 @@ public:
     , conf(face, m_keyChain, testConfFile)
     , confProcessor(conf)
     , nlsr(face, m_keyChain, conf)
-    , SITE_CERT_PATH(boost::filesystem::current_path() / std::string("site.cert"))
+    , SITE_CERT_PATH(std::filesystem::current_path() / "site.cert")
     , counter(0)
   {
     std::ifstream source("nlsr.conf", std::ios::binary);
@@ -69,6 +69,7 @@ public:
     std::ifstream inputFile;
     inputFile.open(testConfFile);
     BOOST_REQUIRE(inputFile.is_open());
+
     bpt::ptree pt;
     bpt::read_info(inputFile, pt);
     // Loads section and file name
@@ -164,7 +165,7 @@ public:
   ConfParameter conf;
   DummyConfFileProcessor confProcessor;
   Nlsr nlsr;
-  const boost::filesystem::path SITE_CERT_PATH;
+  const std::filesystem::path SITE_CERT_PATH;
   ndn::Name sessionTime;
   int counter;
 };

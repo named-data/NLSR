@@ -72,7 +72,7 @@ def configure(conf):
     conf.check_cfg(package='libndn-cxx', args=['libndn-cxx >= 0.9.0', '--cflags', '--libs'],
                    uselib_store='NDN_CXX', pkg_config_path=pkg_config_path)
 
-    conf.check_boost(lib='filesystem', mt=True)
+    conf.check_boost()
     if conf.env.BOOST_VERSION_NUMBER < 107100:
         conf.fatal('The minimum supported version of Boost is 1.71.0.\n'
                    'Please upgrade your distribution or manually install a newer version of Boost.\n'

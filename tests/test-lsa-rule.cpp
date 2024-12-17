@@ -25,11 +25,11 @@
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/info_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+
+#include <filesystem>
 
 namespace nlsr::tests {
 
@@ -48,7 +48,7 @@ public:
     , confProcessor(confParam, SyncProtocol::PSYNC, HYPERBOLIC_STATE_OFF,
                     "/ndn/", "/edu/test-site", "/%C1.Router/router1")
     , lsdb(face, m_keyChain, confParam)
-    , ROOT_CERT_PATH(boost::filesystem::current_path() / std::string("root.cert"))
+    , ROOT_CERT_PATH(std::filesystem::current_path() / "root.cert")
   {
     rootId = m_keyChain.createIdentity(rootIdName);
     siteIdentity = addSubCertificate(siteIdentityName, rootId);
@@ -92,7 +92,7 @@ public:
   DummyConfFileProcessor confProcessor;
   Lsdb lsdb;
 
-  const boost::filesystem::path ROOT_CERT_PATH;
+  const std::filesystem::path ROOT_CERT_PATH;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestLsaDataValidation, LsaRuleFixture)

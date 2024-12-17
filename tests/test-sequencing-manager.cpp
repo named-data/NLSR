@@ -23,8 +23,9 @@
 
 #include "tests/boost-test.hpp"
 
-#include <boost/filesystem/operations.hpp>
+#include <filesystem>
 #include <fstream>
+#include <system_error>
 
 namespace nlsr::tests {
 
@@ -33,22 +34,17 @@ using namespace ndn;
 class SequencingManagerFixture
 {
 public:
-  SequencingManagerFixture()
-    : m_seqManager("/tmp", HYPERBOLIC_STATE_OFF)
-  {
-  }
-
   ~SequencingManagerFixture()
   {
-    boost::filesystem::remove(seqFile);
+    std::error_code ec;
+    std::filesystem::remove(m_seqFile, ec); // ignore error
   }
 
   void
   writeToFile(const std::string& testSeq)
   {
-    std::ofstream outputFile(seqFile, std::ofstream::trunc);
+    std::ofstream outputFile(m_seqFile, std::ofstream::trunc);
     outputFile << testSeq;
-    outputFile.close();
   }
 
   void
@@ -66,8 +62,10 @@ public:
   }
 
 public:
-  std::string seqFile = "/tmp/nlsrSeqNo.txt";
-  SequencingManager m_seqManager;
+  SequencingManager m_seqManager{"/tmp", HYPERBOLIC_STATE_OFF};
+
+private:
+  std::filesystem::path m_seqFile{"/tmp/nlsrSeqNo.txt"};
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestSequencingManager, SequencingManagerFixture)

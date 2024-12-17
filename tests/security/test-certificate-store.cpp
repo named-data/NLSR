@@ -26,10 +26,10 @@
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
 
-#include <boost/filesystem/operations.hpp>
-#include <boost/filesystem/path.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/info_parser.hpp>
+
+#include <filesystem>
 
 namespace nlsr::tests {
 
@@ -50,7 +50,7 @@ public:
     , nlsr(face, m_keyChain, conf)
     , lsdb(nlsr.getLsdb())
     , certStore(face, conf, lsdb)
-    , ROOT_CERT_PATH(boost::filesystem::current_path() / "root.cert")
+    , ROOT_CERT_PATH(std::filesystem::current_path() / "root.cert")
   {
     rootId = m_keyChain.createIdentity(rootIdName);
     siteIdentity = addSubCertificate(siteIdentityName, rootId);
@@ -112,7 +112,7 @@ protected:
   ndn::security::Certificate certificate;
   ndn::Name certificateKey;
   security::CertificateStore certStore;
-  const boost::filesystem::path ROOT_CERT_PATH;
+  const std::filesystem::path ROOT_CERT_PATH;
 };
 
 BOOST_FIXTURE_TEST_SUITE(TestCertificateStore, CertificateStoreFixture)
