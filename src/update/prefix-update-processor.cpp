@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,16 +23,15 @@
 #include "logger.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
+#include "prefix-update-commands.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
 #include <boost/algorithm/string.hpp>
-#include <algorithm>
 #include <fstream>
 
-namespace nlsr {
-namespace update {
+namespace nlsr::update {
 
 INIT_LOGGER(update.PrefixUpdateProcessor);
 
@@ -67,14 +66,12 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
 
   m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("advertise"),
     makeAuthorization(),
-    std::bind(&PrefixUpdateProcessor::validateParameters<AdvertisePrefixCommand>,
-                this, _1),
+    [] (const auto& p) { return validateParameters<AdvertisePrefixCommand>(p); },
     std::bind(&PrefixUpdateProcessor::advertiseAndInsertPrefix, this, _1, _2, _3, _4));
 
   m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("withdraw"),
     makeAuthorization(),
-    std::bind(&PrefixUpdateProcessor::validateParameters<WithdrawPrefixCommand>,
-                this, _1),
+    [] (const auto& p) { return validateParameters<WithdrawPrefixCommand>(p); },
     std::bind(&PrefixUpdateProcessor::withdrawAndRemovePrefix, this, _1, _2, _3, _4));
 }
 
@@ -193,5 +190,4 @@ PrefixUpdateProcessor::afterWithdraw(const ndn::Name& prefix)
   return addOrDeletePrefix(prefix, false);
 }
 
-} // namespace update
-} // namespace nlsr
+} // namespace nlsr::update

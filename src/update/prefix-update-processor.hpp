@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,14 +23,12 @@
 #define NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
 
 #include "manager-base.hpp"
-#include "prefix-update-commands.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
 
 #include <boost/property_tree/ptree.hpp>
 
-namespace nlsr {
-namespace update {
+namespace nlsr::update {
 
 using ConfigSection = boost::property_tree::ptree;
 
@@ -93,7 +91,6 @@ private:
   const std::string& m_confFileNameDynamic;
 };
 
-} // namespace update
-} // namespace nlsr
+} // namespace nlsr::update
 
 #endif // NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP

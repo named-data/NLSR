@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2021,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -21,8 +21,7 @@
 
 #include "nfd-rib-command-processor.hpp"
 
-namespace nlsr {
-namespace update {
+namespace nlsr::update {
 
 NfdRibCommandProcessor::NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher,
                                                NamePrefixList& namePrefixList,
@@ -31,14 +30,13 @@ NfdRibCommandProcessor::NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher
 {
   m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("register"),
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&NfdRibCommandProcessor::validateParameters<NfdRibRegisterCommand>, this, _1),
+    [] (const auto& p) { return validateParameters<ndn::nfd::RibRegisterCommand>(p); },
     std::bind(&NfdRibCommandProcessor::advertiseAndInsertPrefix, this, _1, _2, _3, _4));
 
   m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("unregister"),
     ndn::mgmt::makeAcceptAllAuthorization(),
-    std::bind(&NfdRibCommandProcessor::validateParameters<NfdRibUnregisterCommand>, this, _1),
+    [] (const auto& p) { return validateParameters<ndn::nfd::RibUnregisterCommand>(p); },
     std::bind(&NfdRibCommandProcessor::withdrawAndRemovePrefix, this, _1, _2, _3, _4));
 }
 
-} // namespace update
-} // namespace nlsr
+} // namespace nlsr::update

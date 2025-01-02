@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,20 +17,14 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
-#ifndef UPDATE_NFD_RIB_COMMAND_PROCESSOR_HPP
-#define UPDATE_NFD_RIB_COMMAND_PROCESSOR_HPP
+#ifndef NLSR_UPDATE_NFD_RIB_COMMAND_PROCESSOR_HPP
+#define NLSR_UPDATE_NFD_RIB_COMMAND_PROCESSOR_HPP
 
 #include "manager-base.hpp"
-#include "route/fib.hpp"
-#include "nfd-rib-commands.hpp"
 
-#include <ndn-cxx/encoding/tlv-nfd.hpp>
-
-
-namespace nlsr {
-namespace update {
+namespace nlsr::update {
 
 class NfdRibCommandProcessor : public CommandManagerBase
 {
@@ -40,7 +34,6 @@ public:
                          Lsdb& lsdb);
 };
 
-} // namespace update
-} // namespace nlsr
+} // namespace nlsr::update
 
-#endif // UPDATE_NFD_RIB_COMMAND_PROCESSOR_HPP
+#endif // NLSR_UPDATE_NFD_RIB_COMMAND_PROCESSOR_HPP

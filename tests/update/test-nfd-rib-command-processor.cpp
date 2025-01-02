@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,7 +20,6 @@
  */
 
 #include "update/nfd-rib-command-processor.hpp"
-#include "adjacency-list.hpp"
 #include "conf-parameter.hpp"
 #include "nlsr.hpp"
 
@@ -98,8 +97,8 @@ public:
 };
 
 using Commands = boost::mp11::mp_list<
-  update::NfdRibRegisterCommand,
-  update::NfdRibUnregisterCommand
+  ndn::nfd::RibRegisterCommand,
+  ndn::nfd::RibUnregisterCommand
 >;
 
 BOOST_FIXTURE_TEST_SUITE(TestNfdRibCommandProcessor, NfdRibCommandProcessorFixture)
@@ -115,16 +114,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(ValidateParametersSuccess, NfdRibCommand, Commands
 BOOST_AUTO_TEST_CASE_TEMPLATE(ValidateParametersFailure, NfdRibCommand, Commands)
 {
   ndn::nfd::ControlParameters parameters;
-  parameters.setName("/test/prefixA").setCost(10);
+  parameters.setName("/test/prefixA").setMtu(500);
 
-  bool wasValidated = true;
-  try {
-    processor.validateParameters<NfdRibCommand>(parameters);
-  }
-  catch (...) {
-    wasValidated = false;
-  }
-  BOOST_CHECK(!wasValidated);
+  BOOST_CHECK_THROW(processor.validateParameters<NfdRibCommand>(parameters), std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE(OnReceiveInterestRegisterCommand)

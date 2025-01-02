@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -22,16 +22,14 @@
 #ifndef NLSR_MANAGER_BASE_HPP
 #define NLSR_MANAGER_BASE_HPP
 
+#include "lsdb.hpp"
 #include "name-prefix-list.hpp"
 #include "test-access-control.hpp"
-#include "lsdb.hpp"
-#include "nfd-rib-commands.hpp"
-#include "prefix-update-commands.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/interest.hpp>
-#include <ndn-cxx/mgmt/nfd/control-command.hpp>
 #include <ndn-cxx/mgmt/dispatcher.hpp>
+#include <ndn-cxx/mgmt/nfd/control-command.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
@@ -56,19 +54,19 @@ public:
     using std::runtime_error::runtime_error;
   };
 
+protected:
   ManagerBase(ndn::mgmt::Dispatcher& m_dispatcher, const std::string& module);
 
-protected:
-  /*! \brief generate the relative prefix for a handler by appending the verb name to the module name
+  /*! \brief Generate the relative prefix for a handler by appending the verb name to the module name.
    */
   ndn::PartialName
   makeRelPrefix(const std::string& verb) const;
 
 PUBLIC_WITH_TESTS_ELSE_PROTECTED:
-  /*! \brief validate the parameters for a given command
-    */
+  /*! \brief Validate the parameters for a given command.
+   */
   template<typename T>
-  bool
+  static bool
   validateParameters(const ndn::mgmt::ControlParameters& parameters)
   {
     const auto* castParams = dynamic_cast<const ndn::nfd::ControlParameters*>(&parameters);
