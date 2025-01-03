@@ -79,7 +79,7 @@ ndn::mgmt::Authorization
 PrefixUpdateProcessor::makeAuthorization()
 {
   return [=] (const ndn::Name& prefix, const ndn::Interest& interest,
-              const ndn::mgmt::ControlParameters* params,
+              const ndn::mgmt::ControlParametersBase* params,
               const ndn::mgmt::AcceptContinuation& accept,
               const ndn::mgmt::RejectContinuation& reject) {
     m_validator.validate(interest,

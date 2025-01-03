@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2019,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,33 +17,28 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "prefix-update-commands.hpp"
 
-namespace nlsr {
-namespace update {
+namespace nlsr::update {
 
-WithdrawPrefixCommand::WithdrawPrefixCommand()
-  : ControlCommand("nlsr", "withdraw")
-{
-  m_requestValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
-  m_responseValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
+const AdvertisePrefixCommand::RequestFormat AdvertisePrefixCommand::s_requestFormat =
+    RequestFormat()
+    .required(ndn::nfd::CONTROL_PARAMETER_NAME)
+    .optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
+const AdvertisePrefixCommand::ResponseFormat AdvertisePrefixCommand::s_responseFormat =
+    ResponseFormat()
+    .required(ndn::nfd::CONTROL_PARAMETER_NAME)
+    .optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
 
-  m_requestValidator.optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
-  m_responseValidator.optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
-}
+const WithdrawPrefixCommand::RequestFormat WithdrawPrefixCommand::s_requestFormat =
+    RequestFormat()
+    .required(ndn::nfd::CONTROL_PARAMETER_NAME)
+    .optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
+const WithdrawPrefixCommand::ResponseFormat WithdrawPrefixCommand::s_responseFormat =
+    ResponseFormat()
+    .required(ndn::nfd::CONTROL_PARAMETER_NAME)
+    .optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
 
-AdvertisePrefixCommand::AdvertisePrefixCommand()
-  : ControlCommand("nlsr", "advertise")
-{
-  m_requestValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
-  m_responseValidator.required(ndn::nfd::CONTROL_PARAMETER_NAME);
-
-  m_requestValidator.optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
-  m_responseValidator.optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
-
-}
-
-} // namespace update
-} // namespace nlsr
+} // namespace nlsr::update

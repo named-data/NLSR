@@ -65,18 +65,14 @@ protected:
 PUBLIC_WITH_TESTS_ELSE_PROTECTED:
   /*! \brief Validate the parameters for a given command.
    */
-  template<typename T>
+  template<typename Command>
   static bool
-  validateParameters(const ndn::mgmt::ControlParameters& parameters)
+  validateParameters(const ndn::mgmt::ControlParametersBase& parameters)
   {
-    const auto* castParams = dynamic_cast<const ndn::nfd::ControlParameters*>(&parameters);
-    BOOST_ASSERT(castParams != nullptr);
-
-    T command;
     try {
-      command.validateRequest(*castParams);
+      Command::validateRequest(dynamic_cast<const ndn::nfd::ControlParameters&>(parameters));
     }
-    catch (const ndn::nfd::ControlCommand::ArgumentError&) {
+    catch (const ndn::nfd::ArgumentError&) {
       throw;
     }
     catch (const std::exception& e) {
@@ -110,7 +106,7 @@ public:
   void
   advertiseAndInsertPrefix(const ndn::Name& prefix,
                            const ndn::Interest& interest,
-                           const ndn::mgmt::ControlParameters& parameters,
+                           const ndn::mgmt::ControlParametersBase& parameters,
                            const ndn::mgmt::CommandContinuation& done);
 
   /*! \brief remove desired name prefix from the advertised name prefix list
@@ -119,7 +115,7 @@ public:
   void
   withdrawAndRemovePrefix(const ndn::Name& prefix,
                           const ndn::Interest& interest,
-                          const ndn::mgmt::ControlParameters& parameters,
+                          const ndn::mgmt::ControlParametersBase& parameters,
                           const ndn::mgmt::CommandContinuation& done);
 
   /*! \brief save an advertised prefix to the nlsr configuration file

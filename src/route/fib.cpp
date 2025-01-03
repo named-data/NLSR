@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -23,6 +23,8 @@
 #include "conf-parameter.hpp"
 #include "logger.hpp"
 #include "nexthop-list.hpp"
+
+#include <ndn-cxx/mgmt/nfd/control-command.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -198,8 +200,7 @@ Fib::registerPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri,
     NLSR_LOG_DEBUG("Registering prefix: " << faceParameters.getName() << " faceUri: " << faceUri);
     m_controller.start<ndn::nfd::RibRegisterCommand>(faceParameters,
       std::bind(&Fib::onRegistrationSuccess, this, _1, faceUri),
-      std::bind(&Fib::onRegistrationFailure, this, _1,
-                faceParameters, faceUri, times));
+      std::bind(&Fib::onRegistrationFailure, this, _1, faceParameters, faceUri, times));
   }
   else {
     NLSR_LOG_WARN("Error: No Face Id for face uri: " << faceUri);
@@ -264,8 +265,8 @@ Fib::unregisterPrefix(const ndn::Name& namePrefix, const ndn::FaceUri& faceUri)
                        " Face Id: " << commandSuccessResult.getFaceId());
       },
       [] (const ndn::nfd::ControlResponse& response) {
-        NLSR_LOG_DEBUG("Failed in unregistering name" << ": " << response.getText() <<
-                 " (code: " << response.getCode() << ")");
+        NLSR_LOG_DEBUG("Failed in unregistering name: " << response.getText() <<
+                       " (code " << response.getCode() << ")");
       });
   }
 }
@@ -279,9 +280,8 @@ Fib::setStrategy(const ndn::Name& name, const ndn::Name& strategy, uint32_t coun
     .setStrategy(strategy);
 
   m_controller.start<ndn::nfd::StrategyChoiceSetCommand>(parameters,
-                                                         std::bind(&Fib::onSetStrategySuccess, this, _1),
-                                                         std::bind(&Fib::onSetStrategyFailure, this, _1,
-                                                                   parameters, count));
+    std::bind(&Fib::onSetStrategySuccess, this, _1),
+    std::bind(&Fib::onSetStrategyFailure, this, _1, parameters, count));
 }
 
 void
@@ -292,7 +292,7 @@ Fib::onSetStrategySuccess(const ndn::nfd::ControlParameters& commandSuccessResul
 }
 
 void
-Fib::onSetStrategyFailure(const ndn::nfd::ControlResponse& response,
+Fib::onSetStrategyFailure(const ndn::nfd::ControlResponse&,
                           const ndn::nfd::ControlParameters& parameters,
                           uint32_t count)
 {

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -53,11 +53,10 @@ CommandManagerBase::CommandManagerBase(ndn::mgmt::Dispatcher& dispatcher,
 void
 CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
                                              const ndn::Interest& interest,
-                                             const ndn::mgmt::ControlParameters& parameters,
+                                             const ndn::mgmt::ControlParametersBase& parameters,
                                              const ndn::mgmt::CommandContinuation& done)
 {
-  const ndn::nfd::ControlParameters& castParams =
-    static_cast<const ndn::nfd::ControlParameters&>(parameters);
+  const auto& castParams = static_cast<const ndn::nfd::ControlParameters&>(parameters);
 
   // Only build a Name LSA if the added name is new
   if (m_namePrefixList.insert(castParams.getName())) {
@@ -95,11 +94,10 @@ CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
 void
 CommandManagerBase::withdrawAndRemovePrefix(const ndn::Name& prefix,
                                             const ndn::Interest& interest,
-                                            const ndn::mgmt::ControlParameters& parameters,
+                                            const ndn::mgmt::ControlParametersBase& parameters,
                                             const ndn::mgmt::CommandContinuation& done)
 {
-  const ndn::nfd::ControlParameters& castParams =
-    static_cast<const ndn::nfd::ControlParameters&>(parameters);
+  const auto& castParams = static_cast<const ndn::nfd::ControlParameters&>(parameters);
 
   // Only build a Name LSA if the added name is new
   if (m_namePrefixList.erase(castParams.getName())) {

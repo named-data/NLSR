@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2017,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,10 +17,10 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 /*! \file
- * Define parameters for commands to manipulate advertised name prefixes
+ * Define parameters for commands to manipulate advertised name prefixes.
  *
  * These classes serve to define what parameters are required for
  * Prefix Update commands. We assume these commands are secure because
@@ -36,22 +36,18 @@
 
 #include <ndn-cxx/mgmt/nfd/control-command.hpp>
 
-namespace nlsr {
-namespace update {
+namespace nlsr::update {
 
-class WithdrawPrefixCommand : public ndn::nfd::ControlCommand
+class AdvertisePrefixCommand : public ndn::nfd::ControlCommand<AdvertisePrefixCommand>
 {
-public:
-  WithdrawPrefixCommand();
+  NDN_CXX_CONTROL_COMMAND(AdvertisePrefixCommand, "nlsr", "advertise");
 };
 
-class AdvertisePrefixCommand : public ndn::nfd::ControlCommand
+class WithdrawPrefixCommand : public ndn::nfd::ControlCommand<WithdrawPrefixCommand>
 {
-public:
-  AdvertisePrefixCommand();
+  NDN_CXX_CONTROL_COMMAND(WithdrawPrefixCommand, "nlsr", "withdraw");
 };
 
-} // namespace update
-} // namespace nlsr
+} // namespace nlsr::update
 
 #endif // NLSR_UPDATE_PREFIX_UPDATE_COMMANDS_HPP
