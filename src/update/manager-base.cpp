@@ -34,12 +34,6 @@ ManagerBase::ManagerBase(ndn::mgmt::Dispatcher& dispatcher,
 {
 }
 
-ndn::PartialName
-ManagerBase::makeRelPrefix(const std::string& verb) const
-{
-  return ndn::PartialName(m_module).append(verb);
-}
-
 CommandManagerBase::CommandManagerBase(ndn::mgmt::Dispatcher& dispatcher,
                                       NamePrefixList& namePrefixList,
                                       Lsdb& lsdb,
@@ -51,16 +45,14 @@ CommandManagerBase::CommandManagerBase(ndn::mgmt::Dispatcher& dispatcher,
 }
 
 void
-CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
-                                             const ndn::Interest& interest,
-                                             const ndn::mgmt::ControlParametersBase& parameters,
+CommandManagerBase::advertiseAndInsertPrefix(const ndn::mgmt::ControlParametersBase& parameters,
                                              const ndn::mgmt::CommandContinuation& done)
 {
   const auto& castParams = static_cast<const ndn::nfd::ControlParameters&>(parameters);
 
   // Only build a Name LSA if the added name is new
   if (m_namePrefixList.insert(castParams.getName())) {
-    NLSR_LOG_INFO("Advertising name: " << castParams.getName() << "\n");
+    NLSR_LOG_INFO("Advertising name: " << castParams.getName());
     m_lsdb.buildAndInstallOwnNameLsa();
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
       NLSR_LOG_INFO("Saving name to the configuration file ");
@@ -77,7 +69,7 @@ CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
   else {
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
       // Save an already advertised prefix
-      NLSR_LOG_INFO("Saving an already advertised name: " << castParams.getName() << "\n");
+      NLSR_LOG_INFO("Saving an already advertised name: " << castParams.getName());
       if (afterAdvertise(castParams.getName()) == true) {
         return done(ndn::nfd::ControlResponse(205, "OK").setBody(parameters.wireEncode()));
       }
@@ -92,16 +84,14 @@ CommandManagerBase::advertiseAndInsertPrefix(const ndn::Name& prefix,
 }
 
 void
-CommandManagerBase::withdrawAndRemovePrefix(const ndn::Name& prefix,
-                                            const ndn::Interest& interest,
-                                            const ndn::mgmt::ControlParametersBase& parameters,
+CommandManagerBase::withdrawAndRemovePrefix(const ndn::mgmt::ControlParametersBase& parameters,
                                             const ndn::mgmt::CommandContinuation& done)
 {
   const auto& castParams = static_cast<const ndn::nfd::ControlParameters&>(parameters);
 
   // Only build a Name LSA if the added name is new
   if (m_namePrefixList.erase(castParams.getName())) {
-    NLSR_LOG_INFO("Withdrawing/Removing name: " << castParams.getName() << "\n");
+    NLSR_LOG_INFO("Withdrawing/Removing name: " << castParams.getName());
     m_lsdb.buildAndInstallOwnNameLsa();
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
       if (afterWithdraw(castParams.getName()) == true) {
@@ -117,7 +107,7 @@ CommandManagerBase::withdrawAndRemovePrefix(const ndn::Name& prefix,
   else {
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
       // Delete an already withdrawn prefix
-      NLSR_LOG_INFO("Deleting an already withdrawn name: " << castParams.getName() << "\n");
+      NLSR_LOG_INFO("Deleting an already withdrawn name: " << castParams.getName());
       if (afterWithdraw(castParams.getName()) == true) {
         return done(ndn::nfd::ControlResponse(205, "OK").setBody(parameters.wireEncode()));
       }

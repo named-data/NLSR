@@ -28,15 +28,13 @@ NfdRibCommandProcessor::NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher
                                                Lsdb& lsdb)
   : CommandManagerBase(dispatcher, namePrefixList, lsdb, "rib")
 {
-  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("register"),
+  m_dispatcher.addControlCommand<ndn::nfd::RibRegisterCommand>(
     ndn::mgmt::makeAcceptAllAuthorization(),
-    [] (const auto& p) { return validateParameters<ndn::nfd::RibRegisterCommand>(p); },
-    std::bind(&NfdRibCommandProcessor::advertiseAndInsertPrefix, this, _1, _2, _3, _4));
+    std::bind(&NfdRibCommandProcessor::advertiseAndInsertPrefix, this, _3, _4));
 
-  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("unregister"),
+  m_dispatcher.addControlCommand<ndn::nfd::RibUnregisterCommand>(
     ndn::mgmt::makeAcceptAllAuthorization(),
-    [] (const auto& p) { return validateParameters<ndn::nfd::RibUnregisterCommand>(p); },
-    std::bind(&NfdRibCommandProcessor::withdrawAndRemovePrefix, this, _1, _2, _3, _4));
+    std::bind(&NfdRibCommandProcessor::withdrawAndRemovePrefix, this, _3, _4));
 }
 
 } // namespace nlsr::update

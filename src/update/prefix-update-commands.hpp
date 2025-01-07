@@ -40,12 +40,12 @@ namespace nlsr::update {
 
 class AdvertisePrefixCommand : public ndn::nfd::ControlCommand<AdvertisePrefixCommand>
 {
-  NDN_CXX_CONTROL_COMMAND("nlsr", "advertise");
+  NDN_CXX_CONTROL_COMMAND("prefix-update", "advertise");
 };
 
 class WithdrawPrefixCommand : public ndn::nfd::ControlCommand<WithdrawPrefixCommand>
 {
-  NDN_CXX_CONTROL_COMMAND("nlsr", "withdraw");
+  NDN_CXX_CONTROL_COMMAND("prefix-update", "withdraw");
 };
 
 } // namespace nlsr::update

@@ -24,7 +24,6 @@
 
 #include "lsdb.hpp"
 #include "name-prefix-list.hpp"
-#include "test-access-control.hpp"
 
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/interest.hpp>
@@ -34,7 +33,6 @@
 #include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
 #include <boost/noncopyable.hpp>
-#include <iostream>
 #include <optional>
 
 namespace nlsr {
@@ -57,31 +55,6 @@ public:
 protected:
   ManagerBase(ndn::mgmt::Dispatcher& m_dispatcher, const std::string& module);
 
-  /*! \brief Generate the relative prefix for a handler by appending the verb name to the module name.
-   */
-  ndn::PartialName
-  makeRelPrefix(const std::string& verb) const;
-
-PUBLIC_WITH_TESTS_ELSE_PROTECTED:
-  /*! \brief Validate the parameters for a given command.
-   */
-  template<typename Command>
-  static bool
-  validateParameters(const ndn::mgmt::ControlParametersBase& parameters)
-  {
-    try {
-      Command::validateRequest(dynamic_cast<const ndn::nfd::ControlParameters&>(parameters));
-    }
-    catch (const ndn::nfd::ArgumentError&) {
-      throw;
-    }
-    catch (const std::exception& e) {
-      std::cerr << e.what() << std::endl;
-      return false;
-    }
-    return true;
-  }
-
 protected:
   ndn::mgmt::Dispatcher& m_dispatcher;
 
@@ -100,26 +73,22 @@ public:
   virtual
   ~CommandManagerBase() = default;
 
-  /*! \brief add desired name prefix to the advertised name prefix list
+  /*! \brief Add desired name prefix to the advertised name prefix list
    *         or insert a prefix into the FIB if parameters is valid.
    */
   void
-  advertiseAndInsertPrefix(const ndn::Name& prefix,
-                           const ndn::Interest& interest,
-                           const ndn::mgmt::ControlParametersBase& parameters,
+  advertiseAndInsertPrefix(const ndn::mgmt::ControlParametersBase& parameters,
                            const ndn::mgmt::CommandContinuation& done);
 
-  /*! \brief remove desired name prefix from the advertised name prefix list
+  /*! \brief Remove desired name prefix from the advertised name prefix list
    *         or remove a prefix from the FIB if parameters is valid.
    */
   void
-  withdrawAndRemovePrefix(const ndn::Name& prefix,
-                          const ndn::Interest& interest,
-                          const ndn::mgmt::ControlParametersBase& parameters,
+  withdrawAndRemovePrefix(const ndn::mgmt::ControlParametersBase& parameters,
                           const ndn::mgmt::CommandContinuation& done);
 
-  /*! \brief save an advertised prefix to the nlsr configuration file
-   *         returns bool from the overridden function while nullopt here
+  /*! \brief Save an advertised prefix to the nlsr configuration file.
+   *  \return bool from the overridden function while nullopt here
    */
   virtual std::optional<bool>
   afterAdvertise(const ndn::Name& prefix)
@@ -127,8 +96,8 @@ public:
     return std::nullopt;
   }
 
-  /*! \brief save an advertised prefix to the nlsr configuration file
-   *         returns bool from the overridden function while nullopt here
+  /*! \brief Save an advertised prefix to the nlsr configuration file.
+   *  \return bool from the overridden function while nullopt here
    */
   virtual std::optional<bool>
   afterWithdraw(const ndn::Name& prefix)

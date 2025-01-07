@@ -27,7 +27,6 @@
 #include "tests/test-common.hpp"
 
 #include <boost/lexical_cast.hpp>
-#include <boost/mp11/list.hpp>
 
 namespace nlsr::tests {
 
@@ -53,7 +52,7 @@ public:
   void
   sendCommand(ndn::Name prefix, const ndn::nfd::ControlParameters& parameters)
   {
-    ndn::Interest interest(prefix.append(ndn::tlv::GenericNameComponent, parameters.wireEncode()));
+    ndn::Interest interest(prefix.append(parameters.wireEncode()));
     face.receive(interest);
     this->advanceClocks(ndn::time::milliseconds(10), 10);
   }
@@ -76,13 +75,9 @@ public:
     sendInterestForPublishedData();
 
     const ndn::Name& lsaPrefix = conf.getLsaPrefix();
-
-    const auto& it = std::find_if(face.sentData.begin(), face.sentData.end(),
-      [&] (const ndn::Data& data) {
-        return lsaPrefix.isPrefixOf(data.getName());
-      });
-
-    return (it != face.sentData.end());
+    auto it = std::find_if(face.sentData.begin(), face.sentData.end(),
+                           [&] (const auto& data) { return lsaPrefix.isPrefixOf(data.getName()); });
+    return it != face.sentData.end();
   }
 
 public:
@@ -96,28 +91,7 @@ public:
   uint64_t nameLsaSeqNoBeforeInterest;
 };
 
-using Commands = boost::mp11::mp_list<
-  ndn::nfd::RibRegisterCommand,
-  ndn::nfd::RibUnregisterCommand
->;
-
 BOOST_FIXTURE_TEST_SUITE(TestNfdRibCommandProcessor, NfdRibCommandProcessorFixture)
-
-BOOST_AUTO_TEST_CASE_TEMPLATE(ValidateParametersSuccess, NfdRibCommand, Commands)
-{
-  ndn::nfd::ControlParameters parameters;
-  parameters.setName("/test/prefixA");
-
-  BOOST_CHECK(processor.validateParameters<NfdRibCommand>(parameters));
-}
-
-BOOST_AUTO_TEST_CASE_TEMPLATE(ValidateParametersFailure, NfdRibCommand, Commands)
-{
-  ndn::nfd::ControlParameters parameters;
-  parameters.setName("/test/prefixA").setMtu(500);
-
-  BOOST_CHECK_THROW(processor.validateParameters<NfdRibCommand>(parameters), std::invalid_argument);
-}
 
 BOOST_AUTO_TEST_CASE(OnReceiveInterestRegisterCommand)
 {

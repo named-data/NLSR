@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -161,11 +161,11 @@ Nlsr::registerPrefix(const ndn::Name& prefix)
 {
   m_face.registerPrefix(prefix,
     [] (const ndn::Name& name) {
-      NLSR_LOG_DEBUG("Successfully registered prefix: " << name);
+      NLSR_LOG_DEBUG("Successfully registered prefix " << name);
     },
     [] (const ndn::Name& name, const std::string& reason) {
-      NLSR_LOG_ERROR("ERROR: Failed to register prefix " << name << " in local hub's daemon");
-      NDN_THROW(Error("Error: Prefix registration failed: " + reason));
+      NLSR_LOG_ERROR("Failed to register prefix " << name << " (" << reason << ")");
+      NDN_THROW(Error("Prefix registration failed: " + reason));
     });
 }
 

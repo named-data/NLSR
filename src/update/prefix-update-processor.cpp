@@ -22,11 +22,9 @@
 #include "prefix-update-processor.hpp"
 #include "logger.hpp"
 #include "lsdb.hpp"
-#include "nlsr.hpp"
 #include "prefix-update-commands.hpp"
 
 #include <ndn-cxx/face.hpp>
-#include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <fstream>
@@ -61,18 +59,13 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
   , m_validator(validator)
   , m_confFileNameDynamic(configFileName)
 {
-  NLSR_LOG_DEBUG("Setting dispatcher to capture Interests for: "
-    << ndn::Name(Nlsr::LOCALHOST_PREFIX).append("prefix-update"));
-
-  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("advertise"),
+  m_dispatcher.addControlCommand<AdvertisePrefixCommand>(
     makeAuthorization(),
-    [] (const auto& p) { return validateParameters<AdvertisePrefixCommand>(p); },
-    std::bind(&PrefixUpdateProcessor::advertiseAndInsertPrefix, this, _1, _2, _3, _4));
+    std::bind(&PrefixUpdateProcessor::advertiseAndInsertPrefix, this, _3, _4));
 
-  m_dispatcher.addControlCommand<ndn::nfd::ControlParameters>(makeRelPrefix("withdraw"),
+  m_dispatcher.addControlCommand<WithdrawPrefixCommand>(
     makeAuthorization(),
-    [] (const auto& p) { return validateParameters<WithdrawPrefixCommand>(p); },
-    std::bind(&PrefixUpdateProcessor::withdrawAndRemovePrefix, this, _1, _2, _3, _4));
+    std::bind(&PrefixUpdateProcessor::withdrawAndRemovePrefix, this, _3, _4));
 }
 
 ndn::mgmt::Authorization
@@ -84,7 +77,6 @@ PrefixUpdateProcessor::makeAuthorization()
               const ndn::mgmt::RejectContinuation& reject) {
     m_validator.validate(interest,
       [accept] (const ndn::Interest& request) {
-
         auto signer1 = getSignerFromTag(request);
         std::string signer = signer1.value_or("*");
         NLSR_LOG_DEBUG("accept " << request.getName() << " signer=" << signer);
@@ -92,7 +84,7 @@ PrefixUpdateProcessor::makeAuthorization()
       },
       [reject] (const ndn::Interest& request, const ndn::security::ValidationError& error) {
         NLSR_LOG_DEBUG("reject " << request.getName() << " signer=" <<
-                        getSignerFromTag(request).value_or("?") << ' ' << error);
+                       getSignerFromTag(request).value_or("?") << ' ' << error);
         reject(ndn::mgmt::RejectReply::STATUS403);
       });
   };
@@ -120,7 +112,6 @@ PrefixUpdateProcessor::checkForPrefixInFile(const std::string prefix)
       return true;
     }
   }
-  fp.close();
   return false;
 }
 
