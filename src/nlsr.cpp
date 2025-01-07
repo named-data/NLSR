@@ -27,6 +27,7 @@
 #include <cstdio>
 #include <unistd.h>
 
+#include <ndn-cxx/mgmt/nfd/control-command.hpp>
 #include <ndn-cxx/mgmt/nfd/status-dataset.hpp>
 #include <ndn-cxx/net/face-uri.hpp>
 

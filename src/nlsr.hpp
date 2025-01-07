@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -185,10 +185,6 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   DatasetInterestHandler m_datasetHandler;
 
 private:
-  /*! \brief Where NLSR stores certificates it claims to be
-   * authoritative for. Usually the router certificate.
-   */
-
   ndn::nfd::Controller m_controller;
   ndn::nfd::Controller m_faceDatasetController;
 

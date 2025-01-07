@@ -19,31 +19,23 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef NLSR_MANAGER_BASE_HPP
-#define NLSR_MANAGER_BASE_HPP
+#ifndef NLSR_UPDATE_COMMAND_PROCESSOR_HPP
+#define NLSR_UPDATE_COMMAND_PROCESSOR_HPP
 
 #include "lsdb.hpp"
 #include "name-prefix-list.hpp"
 
-#include <ndn-cxx/face.hpp>
-#include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/mgmt/dispatcher.hpp>
-#include <ndn-cxx/mgmt/nfd/control-command.hpp>
 #include <ndn-cxx/mgmt/nfd/control-parameters.hpp>
-#include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
 #include <boost/noncopyable.hpp>
 #include <optional>
 
-namespace nlsr {
-
-class Lsdb;
-
-namespace update {
+namespace nlsr::update {
 
 enum { PREFIX_FLAG = 1 };
 
-class ManagerBase : boost::noncopyable
+class CommandProcessor : boost::noncopyable
 {
 public:
   class Error : public std::runtime_error
@@ -52,26 +44,12 @@ public:
     using std::runtime_error::runtime_error;
   };
 
-protected:
-  ManagerBase(ndn::mgmt::Dispatcher& m_dispatcher, const std::string& module);
-
-protected:
-  ndn::mgmt::Dispatcher& m_dispatcher;
-
-private:
-  std::string m_module;
-};
-
-class CommandManagerBase : public ManagerBase
-{
-public:
-  CommandManagerBase(ndn::mgmt::Dispatcher& m_dispatcher,
-                     NamePrefixList& m_namePrefixList,
-                     Lsdb& lsdb,
-                     const std::string& module);
+  CommandProcessor(ndn::mgmt::Dispatcher& m_dispatcher,
+                   NamePrefixList& m_namePrefixList,
+                   Lsdb& lsdb);
 
   virtual
-  ~CommandManagerBase() = default;
+  ~CommandProcessor() = 0;
 
   /*! \brief Add desired name prefix to the advertised name prefix list
    *         or insert a prefix into the FIB if parameters is valid.
@@ -106,11 +84,11 @@ public:
   }
 
 protected:
+  ndn::mgmt::Dispatcher& m_dispatcher;
   NamePrefixList& m_namePrefixList;
   Lsdb& m_lsdb;
 };
 
-} // namespace update
-} // namespace nlsr
+} // namespace nlsr::update
 
-#endif // NLSR_MANAGER_BASE_HPP
+#endif // NLSR_UPDATE_COMMAND_PROCESSOR_HPP

@@ -22,7 +22,7 @@
 #ifndef NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
 #define NLSR_UPDATE_PREFIX_UPDATE_PROCESSOR_HPP
 
-#include "manager-base.hpp"
+#include "command-processor.hpp"
 
 #include <ndn-cxx/security/key-chain.hpp>
 
@@ -32,7 +32,7 @@ namespace nlsr::update {
 
 using ConfigSection = boost::property_tree::ptree;
 
-class PrefixUpdateProcessor : public CommandManagerBase
+class PrefixUpdateProcessor : public CommandProcessor
 {
 public:
   PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,

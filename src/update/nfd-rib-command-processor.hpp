@@ -22,11 +22,11 @@
 #ifndef NLSR_UPDATE_NFD_RIB_COMMAND_PROCESSOR_HPP
 #define NLSR_UPDATE_NFD_RIB_COMMAND_PROCESSOR_HPP
 
-#include "manager-base.hpp"
+#include "command-processor.hpp"
 
 namespace nlsr::update {
 
-class NfdRibCommandProcessor : public CommandManagerBase
+class NfdRibCommandProcessor : public CommandProcessor
 {
 public:
   NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher,

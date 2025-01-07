@@ -21,10 +21,7 @@
 
 #include "prefix-update-processor.hpp"
 #include "logger.hpp"
-#include "lsdb.hpp"
 #include "prefix-update-commands.hpp"
-
-#include <ndn-cxx/face.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <fstream>
@@ -55,16 +52,18 @@ PrefixUpdateProcessor::PrefixUpdateProcessor(ndn::mgmt::Dispatcher& dispatcher,
                                              ndn::security::ValidatorConfig& validator,
                                              NamePrefixList& namePrefixList,
                                              Lsdb& lsdb, const std::string& configFileName)
-  : CommandManagerBase(dispatcher, namePrefixList, lsdb, "prefix-update")
+  : CommandProcessor(dispatcher, namePrefixList, lsdb)
   , m_validator(validator)
   , m_confFileNameDynamic(configFileName)
 {
   m_dispatcher.addControlCommand<AdvertisePrefixCommand>(
     makeAuthorization(),
+    // the first and second arguments are ignored since the handler does not need them
     std::bind(&PrefixUpdateProcessor::advertiseAndInsertPrefix, this, _3, _4));
 
   m_dispatcher.addControlCommand<WithdrawPrefixCommand>(
     makeAuthorization(),
+    // the first and second arguments are ignored since the handler does not need them
     std::bind(&PrefixUpdateProcessor::withdrawAndRemovePrefix, this, _3, _4));
 }
 

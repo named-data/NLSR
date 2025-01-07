@@ -21,19 +21,23 @@
 
 #include "nfd-rib-command-processor.hpp"
 
+#include <ndn-cxx/mgmt/nfd/control-command.hpp>
+
 namespace nlsr::update {
 
 NfdRibCommandProcessor::NfdRibCommandProcessor(ndn::mgmt::Dispatcher& dispatcher,
                                                NamePrefixList& namePrefixList,
                                                Lsdb& lsdb)
-  : CommandManagerBase(dispatcher, namePrefixList, lsdb, "rib")
+  : CommandProcessor(dispatcher, namePrefixList, lsdb)
 {
   m_dispatcher.addControlCommand<ndn::nfd::RibRegisterCommand>(
     ndn::mgmt::makeAcceptAllAuthorization(),
+    // the first and second arguments are ignored since the handler does not need them
     std::bind(&NfdRibCommandProcessor::advertiseAndInsertPrefix, this, _3, _4));
 
   m_dispatcher.addControlCommand<ndn::nfd::RibUnregisterCommand>(
     ndn::mgmt::makeAcceptAllAuthorization(),
+    // the first and second arguments are ignored since the handler does not need them
     std::bind(&NfdRibCommandProcessor::withdrawAndRemovePrefix, this, _3, _4));
 }
 

@@ -19,34 +19,29 @@
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "manager-base.hpp"
+#include "command-processor.hpp"
 #include "logger.hpp"
 
-namespace nlsr {
-namespace update {
+#include <ndn-cxx/mgmt/nfd/control-response.hpp>
 
-INIT_LOGGER(update.PrefixCommandProcessor);
+namespace nlsr::update {
 
-ManagerBase::ManagerBase(ndn::mgmt::Dispatcher& dispatcher,
-                         const std::string& module)
+INIT_LOGGER(update.CommandProcessor);
+
+CommandProcessor::CommandProcessor(ndn::mgmt::Dispatcher& dispatcher,
+                                   NamePrefixList& namePrefixList,
+                                   Lsdb& lsdb)
   : m_dispatcher(dispatcher)
-  , m_module(module)
-{
-}
-
-CommandManagerBase::CommandManagerBase(ndn::mgmt::Dispatcher& dispatcher,
-                                      NamePrefixList& namePrefixList,
-                                      Lsdb& lsdb,
-                                      const std::string& module)
-  : ManagerBase(dispatcher, module)
   , m_namePrefixList(namePrefixList)
   , m_lsdb(lsdb)
 {
 }
 
+CommandProcessor::~CommandProcessor() = default;
+
 void
-CommandManagerBase::advertiseAndInsertPrefix(const ndn::mgmt::ControlParametersBase& parameters,
-                                             const ndn::mgmt::CommandContinuation& done)
+CommandProcessor::advertiseAndInsertPrefix(const ndn::mgmt::ControlParametersBase& parameters,
+                                           const ndn::mgmt::CommandContinuation& done)
 {
   const auto& castParams = static_cast<const ndn::nfd::ControlParameters&>(parameters);
 
@@ -84,8 +79,8 @@ CommandManagerBase::advertiseAndInsertPrefix(const ndn::mgmt::ControlParametersB
 }
 
 void
-CommandManagerBase::withdrawAndRemovePrefix(const ndn::mgmt::ControlParametersBase& parameters,
-                                            const ndn::mgmt::CommandContinuation& done)
+CommandProcessor::withdrawAndRemovePrefix(const ndn::mgmt::ControlParametersBase& parameters,
+                                          const ndn::mgmt::CommandContinuation& done)
 {
   const auto& castParams = static_cast<const ndn::nfd::ControlParameters&>(parameters);
 
@@ -121,5 +116,4 @@ CommandManagerBase::withdrawAndRemovePrefix(const ndn::mgmt::ControlParametersBa
   }
 }
 
-} // namespace update
-} // namespace nlsr
+} // namespace nlsr::update
