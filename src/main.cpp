@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -88,7 +88,6 @@ main(int argc, char** argv)
     face.processEvents();
   }
   catch (const std::exception& e) {
-    nlsr.getFib().clean();
     std::cerr << "FATAL: " << boost::diagnostic_information(e) << std::endl;
     return 1;
   }

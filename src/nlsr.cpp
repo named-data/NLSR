@@ -78,6 +78,7 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
       m_lsdb)
   , m_statsCollector(m_lsdb, m_helloProtocol)
   , m_faceMonitor(m_face)
+  , m_terminateSignals(face.getIoContext(), SIGINT, SIGTERM)
 {
   NLSR_LOG_DEBUG("Initializing Nlsr");
 
@@ -107,6 +108,10 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
       neighbor.setLinkCost(0);
     }
   }
+
+  m_terminateSignals.async_wait([this] (auto&&... args) {
+    terminate(std::forward<decltype(args)>(args)...);
+  });
 }
 
 void
@@ -363,6 +368,15 @@ Nlsr::enableIncomingFaceIdIndication()
       NLSR_LOG_WARN("Failed to enable incoming face id indication feature: " <<
                     "(code: " << cr.getCode() << ", reason: " << cr.getText() << ")");
     });
+}
+
+void
+Nlsr::terminate(const boost::system::error_code& error, int signalNo)
+{
+  if (error)
+    return;
+  NLSR_LOG_INFO("Caught signal " << signalNo << " (" << ::strsignal(signalNo) << "), exiting...");
+  m_face.getIoContext().stop();
 }
 
 } // namespace nlsr

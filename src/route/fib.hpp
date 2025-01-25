@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -89,17 +89,6 @@ public:
    */
   void
   update(const ndn::Name& name, const NexthopList& allHops);
-
-  /*! \brief Remove all entries from the FIB.
-   *
-   * This method is called before terminating NLSR to minimize the
-   * time NFD spends routing on now-invalid information. This is not
-   * strictly necessary, because eventually those prefix registrations
-   * will expire, but cleaning up after ourselves improves
-   * performance.
-   */
-  void
-  clean();
 
   void
   setEntryRefreshTime(int32_t fert)

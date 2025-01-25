@@ -48,6 +48,7 @@
 #include <ndn-cxx/security/key-chain.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 
+#include <boost/asio/signal_set.hpp>
 namespace nlsr {
 
 class Nlsr
@@ -157,6 +158,9 @@ private:
   void
   enableIncomingFaceIdIndication();
 
+  void
+  terminate(const boost::system::error_code& error, int signalNo);
+
 public:
   static inline const ndn::Name LOCALHOST_PREFIX{"/localhost/nlsr"};
 
@@ -196,6 +200,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
 private:
   ndn::nfd::FaceMonitor m_faceMonitor;
+  boost::asio::signal_set m_terminateSignals;
 };
 
 } // namespace nlsr

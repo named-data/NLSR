@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
-/**
- * Copyright (c) 2014-2020,  The University of Memphis,
+/*
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -17,7 +17,7 @@
  *
  * You should have received a copy of the GNU General Public License along with
  * NLSR, e.g., in COPYING.md file.  If not, see <http://www.gnu.org/licenses/>.
- **/
+ */
 
 #include "sequencing-manager.hpp"
 #include "logger.hpp"
@@ -43,13 +43,13 @@ void
 SequencingManager::writeSeqNoToFile() const
 {
   writeLog();
-  std::ofstream outputFile(m_seqFileNameWithPath.c_str());
-  std::ostringstream os;
-  os << "NameLsaSeq " << std::to_string(m_nameLsaSeq) << "\n"
-     << "AdjLsaSeq "  << std::to_string(m_adjLsaSeq)  << "\n"
-     << "CorLsaSeq "  << std::to_string(m_corLsaSeq);
-  outputFile << os.str();
+  std::string tempPath = m_seqFileNameWithPath + ".tmp";
+  std::ofstream outputFile(tempPath.c_str());
+  outputFile << "NameLsaSeq " << m_nameLsaSeq << "\n"
+             << "AdjLsaSeq "  << m_adjLsaSeq  << "\n"
+             << "CorLsaSeq "  << m_corLsaSeq;
   outputFile.close();
+  std::filesystem::rename(tempPath, m_seqFileNameWithPath);
 }
 
 void

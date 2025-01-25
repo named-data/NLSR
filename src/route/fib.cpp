@@ -153,17 +153,6 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
   }
 }
 
-void
-Fib::clean()
-{
-  NLSR_LOG_DEBUG("Clean called");
-  for (const auto& it : m_table) {
-    for (const auto& hop : it.second.nexthopSet) {
-      unregisterPrefix(it.second.name, hop.getConnectingFaceUri());
-    }
-  }
-}
-
 unsigned int
 Fib::getNumberOfFacesForName(const NexthopList& nextHopList)
 {
