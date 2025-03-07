@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -67,8 +67,8 @@ public:
   void
   checkSignalResult(LsdbUpdate updateType,
                     const std::shared_ptr<Lsa>& lsaPtr,
-                    const std::list<ndn::Name>& namesToAdd,
-                    const std::list<ndn::Name>& namesToRemove)
+                    const std::list<PrefixInfo>& namesToAdd,
+                    const std::list<PrefixInfo>& namesToRemove)
   {
     BOOST_CHECK(updateHappened);
     BOOST_CHECK_EQUAL(lsaPtrCheck->getOriginRouter(), lsaPtr->getOriginRouter());
@@ -101,8 +101,8 @@ public:
   Lsdb lsdb;
 
   LsdbUpdate updateTypeCheck = LsdbUpdate::INSTALLED;
-  std::list<ndn::Name> namesToAddCheck;
-  std::list<ndn::Name> namesToRemoveCheck;
+  std::list<PrefixInfo> namesToAddCheck;
+  std::list<PrefixInfo> namesToRemoveCheck;
   std::shared_ptr<Lsa> lsaPtrCheck = nullptr;
   bool updateHappened = false;
 };
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(LsdbSegmentedData)
 
   int nPrefixes = 0;
   while (nameLsa->wireEncode().size() < ndn::MAX_NDN_PACKET_SIZE) {
-    nameLsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
+    nameLsa->addName(PrefixInfo(ndn::Name(prefix).appendNumber(++nPrefixes), 0));
     break;
   }
   lsdb.installLsa(nameLsa);
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(SegmentLsaData)
 
   int nPrefixes = 0;
   while (lsa->wireEncode().size() < ndn::MAX_NDN_PACKET_SIZE) {
-    lsa->addName(ndn::Name(prefix).appendNumber(++nPrefixes));
+    lsa->addName(PrefixInfo(ndn::Name(prefix).appendNumber(++nPrefixes), 0));
   }
   lsdb.installLsa(lsa);
 
@@ -266,7 +266,7 @@ BOOST_AUTO_TEST_CASE(ReceiveSegmentedLsaData)
   ndn::Name prefix("/prefix/");
 
   for (int nPrefixes = 0; nPrefixes < 3; ++nPrefixes) {
-    lsa.addName(ndn::Name(prefix).appendNumber(nPrefixes));
+    lsa.addName(PrefixInfo(ndn::Name(prefix).appendNumber(nPrefixes), 0));
   }
 
   ndn::Name interestName("/localhop/ndn/nlsr/LSA/cs/%C1.Router/router1/NAME/");
@@ -439,7 +439,7 @@ BOOST_AUTO_TEST_CASE(LsdbSignals)
   NameLsa nameLsa2(router2, 14, testTimePoint, npl2);
   lsaPtr = std::make_shared<NameLsa>(nameLsa2);
   lsdb.installLsa(lsaPtr);
-  checkSignalResult(LsdbUpdate::UPDATED, lsaPtr, {"name3"}, {"name1"});
+  checkSignalResult(LsdbUpdate::UPDATED, lsaPtr, {PrefixInfo(ndn::Name("/name3"), 0)}, {PrefixInfo(ndn::Name("/name1"), 0)});
 
   lsdb.removeLsa(lsaPtrCheck->getOriginRouter(), Lsa::Type::NAME);
   checkSignalResult(LsdbUpdate::REMOVED, lsaPtr, {}, {});

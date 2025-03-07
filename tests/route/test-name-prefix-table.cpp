@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -20,6 +20,7 @@
  */
 
 #include "route/name-prefix-table.hpp"
+#include "name-prefix-list.hpp"
 #include "route/fib.hpp"
 #include "route/routing-table.hpp"
 #include "lsdb.hpp"
@@ -295,10 +296,12 @@ BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, NamePrefixTableFixture)
   NamePrefixList npl1;
   ndn::Name n1("name1");
   ndn::Name n2("name2");
+  PrefixInfo p1 = PrefixInfo(n1, 0);
+  PrefixInfo p2 = PrefixInfo(n2, 0);
   ndn::Name router1("/router1/1");
 
-  npl1.insert(n1);
-  npl1.insert(n2);
+  npl1.insert(p1);
+  npl1.insert(p2);
 
   NameLsa nlsa1(router1, 12, testTimePoint, npl1);
   std::shared_ptr<Lsa> lsaPtr = std::make_shared<NameLsa>(nlsa1);
@@ -311,10 +314,11 @@ BOOST_FIXTURE_TEST_CASE(UpdateFromLsdb, NamePrefixTableFixture)
   BOOST_CHECK(isNameInNpt(n2));
 
   ndn::Name n3("name3");
+  PrefixInfo p3 = PrefixInfo(n3, 0);
   auto nlsa = std::static_pointer_cast<NameLsa>(lsaPtr);
-  nlsa->removeName(n2);
-  nlsa->addName(n3);
-  npt.updateFromLsdb(lsaPtr, LsdbUpdate::UPDATED, {n3}, {n2});
+  nlsa->removeName(p2);
+  nlsa->addName(p3);
+  npt.updateFromLsdb(lsaPtr, LsdbUpdate::UPDATED, {p3}, {p2});
   BOOST_CHECK(isNameInNpt(n1));
   BOOST_CHECK(!isNameInNpt(n2)); // Removed
   BOOST_CHECK(isNameInNpt(n3));

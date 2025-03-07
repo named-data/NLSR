@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -36,6 +36,69 @@
 
 namespace nlsr {
 
+class PrefixInfo : private boost::equality_comparable<PrefixInfo>
+{
+public:
+  class Error : public ndn::tlv::Error
+  {
+  public:
+    using ndn::tlv::Error::Error;
+  };
+
+  PrefixInfo() = default;
+
+  PrefixInfo(const ndn::Block& block)
+  {
+    wireDecode(block);
+  }
+
+  PrefixInfo(const ndn::Name& name, double cost)
+    : m_prefixName(name),
+      m_prefixCost(cost)
+  {
+  }
+
+  const ndn::Name& getName() const
+  {
+    return m_prefixName;
+  }
+
+  double getCost() const
+  {
+    return m_prefixCost;
+  }
+
+  template<ndn::encoding::Tag TAG>
+  size_t
+  wireEncode(ndn::EncodingImpl<TAG>& block) const;
+
+  const ndn::Block&
+  wireEncode() const;
+
+  void
+  wireDecode(const ndn::Block& wire);
+
+private:
+  friend bool
+  operator==(const PrefixInfo& lhs, const PrefixInfo& rhs)
+  {
+    return (lhs.getName() == rhs.getName()) && (lhs.getCost() == rhs.getCost());
+  }
+
+  friend std::ostream&
+  operator<<(std::ostream& os, const PrefixInfo& info)
+  {
+    os << "Prefix Info: (" << info.getName() << ", " << info.getCost() << ")\n";
+    return os;
+  }
+
+private:
+  ndn::Name m_prefixName;
+  double m_prefixCost;
+
+  mutable ndn::Block m_wire;
+};
+
 class NamePrefixList : private boost::equality_comparable<NamePrefixList>
 {
 public:
@@ -49,7 +112,10 @@ public:
       \retval false Name and source combination already exists.
    */
   bool
-  insert(const ndn::Name& name, const std::string& source = "");
+  insert(const ndn::Name& name, const std::string& source = "", double cost = 0);
+
+  bool
+  insert(const PrefixInfo& nameCost);
 
   /*! \brief Deletes name and source combination
       \retval true Name and source combination is deleted.
@@ -64,8 +130,14 @@ public:
     return m_namesSources.size();
   }
 
+  const PrefixInfo&
+  getPrefixInfoForName(const ndn::Name& name) const;
+
   std::list<ndn::Name>
   getNames() const;
+
+  std::list<PrefixInfo>
+  getPrefixInfo() const;
 
 #ifdef WITH_TESTS
   /*! Returns the sources that this name has.
@@ -89,15 +161,25 @@ private: // non-member operators
   friend bool
   operator==(const NamePrefixList& lhs, const NamePrefixList& rhs)
   {
-    return lhs.getNames() == rhs.getNames();
+    return lhs.getPrefixInfo() == rhs.getPrefixInfo();
   }
 
+  struct PrefixInfoSource
+  {
+    std::set<std::string> sources;
+    // Because NFD only readvertises each prefix once, this will be the first cost
+    // announced via NFD
+    PrefixInfo costObj;
+  };
+
 private:
-  std::map<ndn::Name, std::set<std::string>> m_namesSources;
+  std::map<ndn::Name, PrefixInfoSource> m_namesSources;
 
   friend std::ostream&
   operator<<(std::ostream& os, const NamePrefixList& list);
 };
+
+NDN_CXX_DECLARE_WIRE_ENCODE_INSTANTIATIONS(PrefixInfo);
 
 } // namespace nlsr
 

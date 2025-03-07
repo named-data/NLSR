@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2020,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -24,6 +24,7 @@
 
 #include "routing-table-pool-entry.hpp"
 #include "test-access-control.hpp"
+#include "nexthop.hpp"
 
 #include <list>
 #include <utility>
@@ -76,6 +77,12 @@ public:
 
   const NexthopList&
   getNexthopList() const
+  {
+    return m_nexthopList;
+  }
+
+  NexthopList&
+  getNexthopListForModification()
   {
     return m_nexthopList;
   }

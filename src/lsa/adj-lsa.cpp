@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -126,7 +126,7 @@ AdjLsa::print(std::ostream& os) const
   }
 }
 
-std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
+std::tuple<bool, std::list<PrefixInfo>, std::list<PrefixInfo>>
 AdjLsa::update(const std::shared_ptr<Lsa>& lsa)
 {
   auto alsa = std::static_pointer_cast<AdjLsa>(lsa);
@@ -135,9 +135,9 @@ AdjLsa::update(const std::shared_ptr<Lsa>& lsa)
     for (const auto& adjacent : alsa->getAdl()) {
       addAdjacent(adjacent);
     }
-    return {true, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
+    return {true, std::list<PrefixInfo>{}, std::list<PrefixInfo>{}};
   }
-  return {false, std::list<ndn::Name>{}, std::list<ndn::Name>{}};
+  return {false, std::list<PrefixInfo>{}, std::list<PrefixInfo>{}};
 }
 
 } // namespace nlsr

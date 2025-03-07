@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -41,12 +41,16 @@ public:
     std::unordered_map<ndn::Name, std::shared_ptr<RoutingTablePoolEntry>>;
   using NptEntryList = std::list<std::shared_ptr<NamePrefixTableEntry>>;
   using const_iterator = NptEntryList::const_iterator;
+  using DestNameKey = std::tuple<ndn::Name, ndn::Name>;
 
   NamePrefixTable(const ndn::Name& ownRouterName, Fib& fib, RoutingTable& routingTable,
                   AfterRoutingChange& afterRoutingChangeSignal,
                   Lsdb::AfterLsdbModified& afterLsdbModifiedSignal);
 
   ~NamePrefixTable();
+
+  NexthopList
+  adjustNexthopCosts(const NexthopList& nhlist, const ndn::Name& nameToCheck, const ndn::Name& destRouterName);
 
   /*! \brief Add, update, or remove Names according to the Lsdb update
     \param lsa The LSA class pointer
@@ -56,8 +60,8 @@ public:
    */
   void
   updateFromLsdb(std::shared_ptr<Lsa> lsa, LsdbUpdate updateType,
-                 const std::list<ndn::Name>& namesToAdd,
-                 const std::list<ndn::Name>& namesToRemove);
+                 const std::list<nlsr::PrefixInfo>& namesToAdd,
+                 const std::list<nlsr::PrefixInfo>& namesToRemove);
 
   /*! \brief Adds a destination to the specified name prefix.
     \param name The name prefix
@@ -143,6 +147,7 @@ private:
   RoutingTable& m_routingTable;
   ndn::signal::Connection m_afterRoutingChangeConnection;
   ndn::signal::Connection m_afterLsdbModified;
+  std::map<std::tuple<ndn::Name, ndn::Name>, double> m_nexthopCost;
 };
 
 inline NamePrefixTable::const_iterator

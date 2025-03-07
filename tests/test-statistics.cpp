@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,6 +23,7 @@
 #include "hello-protocol.hpp"
 #include "lsdb.hpp"
 #include "nlsr.hpp"
+#include "name-prefix-list.hpp"
 
 #include "tests/io-key-chain-fixture.hpp"
 #include "tests/test-common.hpp"
@@ -249,7 +250,7 @@ BOOST_AUTO_TEST_CASE(LsdbReceiveInterestSendData)
 
   seqNo = nameLsa->getSeqNo();
 
-  nameLsa->addName(ndn::Name("/ndn/name"));
+  nameLsa->addName(PrefixInfo(ndn::Name("/ndn/name"), 0));
   lsdb.installLsa(nameLsa);
 
   // Receive Name LSA Interest

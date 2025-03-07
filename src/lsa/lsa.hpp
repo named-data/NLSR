@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -23,11 +23,13 @@
 #define NLSR_LSA_LSA_HPP
 
 #include "common.hpp"
+#include "name-prefix-list.hpp"
 #include "test-access-control.hpp"
 
 #include <ndn-cxx/util/scheduler.hpp>
 
 #include <list>
+
 
 namespace nlsr {
 
@@ -112,7 +114,7 @@ public:
     m_expiringEventId = eid;
   }
 
-  virtual std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
+  virtual std::tuple<bool, std::list<PrefixInfo>, std::list<PrefixInfo>>
   update(const std::shared_ptr<Lsa>& lsa) = 0;
 
   virtual const ndn::Block&

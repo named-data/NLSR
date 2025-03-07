@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(Insert_Erase)
 
 /*
   Two NamePrefixLists will be considered equal if they contain the
-  same names. Sources for names are ignored.
+  same names with the same costs. Sources for names are ignored.
  */
 BOOST_AUTO_TEST_CASE(OperatorEquals)
 {
@@ -129,6 +129,15 @@ BOOST_AUTO_TEST_CASE(OperatorEquals)
 
   list2.erase(name3, "C0");
   BOOST_CHECK_NE(list1, list2);
+
+  list2.insert(name3, "C0");
+  list1.insert(PrefixInfo(name1, 10));
+  list1.insert(PrefixInfo(name2, 20));
+  BOOST_CHECK_NE(list1, list2);
+
+  list2.insert(PrefixInfo(name1, 10));
+  list2.insert(PrefixInfo(name2, 20));
+  BOOST_CHECK_EQUAL(list1, list2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

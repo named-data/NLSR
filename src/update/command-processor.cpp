@@ -50,7 +50,8 @@ CommandProcessor::advertiseAndInsertPrefix(const ndn::mgmt::ControlParametersBas
                             ? responseParams.getFaceId() : m_defaultResponseFaceId;
   responseParams.setFaceId(responseFaceId);
   // Only build a Name LSA if the added name is new
-  if (m_namePrefixList.insert(castParams.getName())) {
+  double castParamCost = (castParams.hasCost() ? castParams.getCost() : 0);
+  if (m_namePrefixList.insert(castParams.getName(), "", castParamCost)) {
     NLSR_LOG_INFO("Advertising name: " << castParams.getName());
     m_lsdb.buildAndInstallOwnNameLsa();
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {

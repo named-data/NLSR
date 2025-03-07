@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2022,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -46,6 +46,7 @@ enum {
   NextHop                     = 143,
   RoutingTable                = 144,
   RoutingTableEntry           = 145,
+  PrefixInfo                  = 146
 };
 
 } // namespace nlsr::tlv

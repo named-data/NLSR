@@ -84,6 +84,9 @@ issue, use the command ``ndnsec set-default``. Example::
 
   ndnsec set-default /ndn/a-site/%C1.Operator/op
 
+Support for adding prefix costs is currently only implemented via readvertisement;
+this functionality will be added in a future release.
+
 Exit Status
 -----------
 

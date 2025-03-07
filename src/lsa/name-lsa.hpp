@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -76,17 +76,17 @@ public:
   }
 
   void
-  addName(const ndn::Name& name)
+  addName(const PrefixInfo& name)
   {
     m_wire.reset();
     m_npl.insert(name);
   }
 
   void
-  removeName(const ndn::Name& name)
+  removeName(const PrefixInfo& name)
   {
     m_wire.reset();
-    m_npl.erase(name);
+    m_npl.erase(name.getName());
   }
 
   template<ndn::encoding::Tag TAG>
@@ -99,7 +99,7 @@ public:
   void
   wireDecode(const ndn::Block& wire);
 
-  std::tuple<bool, std::list<ndn::Name>, std::list<ndn::Name>>
+  std::tuple<bool, std::list<PrefixInfo>, std::list<PrefixInfo>>
   update(const std::shared_ptr<Lsa>& lsa) override;
 
 private:

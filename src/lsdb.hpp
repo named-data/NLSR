@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -335,7 +335,7 @@ public:
   ndn::signal::Signal<Lsdb, Statistics::PacketType> lsaIncrementSignal;
   ndn::signal::Signal<Lsdb, ndn::Data> afterSegmentValidatedSignal;
   using AfterLsdbModified = ndn::signal::Signal<Lsdb, std::shared_ptr<Lsa>, LsdbUpdate,
-                                                std::list<ndn::Name>, std::list<ndn::Name>>;
+                                                std::list<nlsr::PrefixInfo>, std::list<nlsr::PrefixInfo>>;
   AfterLsdbModified onLsdbModified;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
