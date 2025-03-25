@@ -118,17 +118,17 @@ should be run as root:
 
        $ dnf list --installed openssl-devel
 
-#. pkgconf that replaces pkg-config
-
-   ::
-
-       $ dnf list --installed pkgconf*
-
 #. Boost libraries version 1.71.0 or later
 
    ::
 
        $ dnf list --installed boost-devel
+
+#. pkgconf
+
+   ::
+
+       $ dnf list --installed pkgconf
 
 #. git
 
@@ -159,7 +159,7 @@ should be run as root:
 
    ::
 
-       $ pip install sphinx sphinxcontrib-doxylink
+       $ python3 -m pip install -r docs/requirements.txt
 
 2.2 Downloading and installing ndn-cxx
 --------------------------------------
