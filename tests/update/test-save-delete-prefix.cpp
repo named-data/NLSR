@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(PrefixStillSavedAfterJustWithdrawn)
   face.receive(advertiseWithdraw("/prefix/to/save", "advertise", true));
   this->advanceClocks(ndn::time::milliseconds(10));
   BOOST_REQUIRE(counter == 1);
-  BOOST_CHECK_EQUAL(getResponseCode(), 406);
+  BOOST_CHECK_EQUAL(getResponseCode(), 500);
   face.sentData.clear();
 
   // only withdraw

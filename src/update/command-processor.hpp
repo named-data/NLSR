@@ -65,28 +65,33 @@ public:
   withdrawAndRemovePrefix(const ndn::mgmt::ControlParametersBase& parameters,
                           const ndn::mgmt::CommandContinuation& done);
 
-  /*! \brief Save an advertised prefix to the nlsr configuration file.
-   *  \return bool from the overridden function while nullopt here
+  /*! \brief Processing after advertise command delegated to subclass.
+   *         This is always treated as successful if not implemented.
+   *  \return tuple {bool indicating success/failure, message string}.
    */
-  virtual std::optional<bool>
+  virtual std::tuple<bool, std::string>
   afterAdvertise(const ndn::Name& prefix)
   {
-    return std::nullopt;
+    return {true, "OK"};
   }
 
-  /*! \brief Save an advertised prefix to the nlsr configuration file.
-   *  \return bool from the overridden function while nullopt here
+  /*! \brief Processing after withdraw command delegated to subclass.
+   *         This is always treated as successful if not implemented.
+   *  \return tuple {bool indicating success/failure, message string}.
    */
-  virtual std::optional<bool>
+  virtual std::tuple<bool, std::string>
   afterWithdraw(const ndn::Name& prefix)
   {
-    return std::nullopt;
+    return {true, "OK"};
   }
 
 protected:
   ndn::mgmt::Dispatcher& m_dispatcher;
   NamePrefixList& m_namePrefixList;
   Lsdb& m_lsdb;
+
+private:
+  const uint64_t m_defaultResponseFaceId = 1;
 };
 
 } // namespace nlsr::update

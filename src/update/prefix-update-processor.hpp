@@ -57,13 +57,19 @@ public:
   /*! \brief Add or delete an advertise or withdrawn prefix to the nlsr
    * configuration file
    */
-  bool
+  std::tuple<bool, std::string>
   addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix);
 
-  std::optional<bool>
+  /*! \brief Save an advertised prefix to the nlsr configuration file.
+   *  \return tuple {bool indicating success/failure, message string}.
+   */
+  std::tuple<bool, std::string>
   afterAdvertise(const ndn::Name& prefix) override;
 
-  std::optional<bool>
+  /*! \brief Remove an advertised prefix from the nlsr configuration file.
+   *  \return tuple {bool indicating success/failure, message string}.
+   */
+  std::tuple<bool, std::string>
   afterWithdraw(const ndn::Name& prefix) override;
 
   /*! \brief Check if a prefix exists in the nlsr configuration file */

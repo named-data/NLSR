@@ -114,7 +114,7 @@ PrefixUpdateProcessor::checkForPrefixInFile(const std::string prefix)
   return false;
 }
 
-bool
+std::tuple<bool, std::string>
 PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix)
 {
   std::string value = " prefix " + prefix.toUri();
@@ -124,14 +124,14 @@ PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix
   std::fstream input(m_confFileNameDynamic, input.in);
   if (!input.good() || !input.is_open()) {
     NLSR_LOG_ERROR("Failed to open configuration file for parsing");
-    return false;
+    return {false, "Failed to open configuration file for parsing"};
   }
 
   if (addPrefix) {
     //check if prefix already exist in the nlsr configuration file
     if (checkForPrefixInFile(value)) {
       NLSR_LOG_ERROR("Prefix already exists in the configuration file");
-      return false;
+      return {false, "Prefix already exists in the configuration file"};
     }
     while (!input.eof()) {
       getline(input, line);
@@ -147,7 +147,7 @@ PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix
   else {
     if (!checkForPrefixInFile(value)) {
       NLSR_LOG_ERROR("Prefix doesn't exists in the configuration file");
-      return false;
+      return {false, "Prefix doesn't exists in the configuration file"};
     }
     boost::trim(value);
     while (!input.eof()) {
@@ -165,16 +165,16 @@ PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix
   std::ofstream output(m_confFileNameDynamic);
   output << fileString;
   output.close();
-  return true;
+  return {true, "OK"};
 }
 
-std::optional<bool>
+std::tuple<bool, std::string>
 PrefixUpdateProcessor::afterAdvertise(const ndn::Name& prefix)
 {
   return addOrDeletePrefix(prefix, true);
 }
 
-std::optional<bool>
+std::tuple<bool, std::string>
 PrefixUpdateProcessor::afterWithdraw(const ndn::Name& prefix)
 {
   return addOrDeletePrefix(prefix, false);
