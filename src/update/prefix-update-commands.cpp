@@ -26,10 +26,12 @@ namespace nlsr::update {
 const AdvertisePrefixCommand::RequestFormat AdvertisePrefixCommand::s_requestFormat =
     RequestFormat()
     .required(ndn::nfd::CONTROL_PARAMETER_NAME)
+    .optional(ndn::nfd::CONTROL_PARAMETER_COST)
     .optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
 const AdvertisePrefixCommand::ResponseFormat AdvertisePrefixCommand::s_responseFormat =
     ResponseFormat()
     .required(ndn::nfd::CONTROL_PARAMETER_NAME)
+    .optional(ndn::nfd::CONTROL_PARAMETER_COST)
     .optional(ndn::nfd::CONTROL_PARAMETER_FLAGS);
 
 const WithdrawPrefixCommand::RequestFormat WithdrawPrefixCommand::s_requestFormat =

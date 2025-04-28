@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -110,8 +110,8 @@ const std::string SECTION_FIB =
 const std::string SECTION_ADVERTISING =
   "advertising\n"
   "{\n"
-  "  prefix /ndn/edu/memphis/cs/netlab\n"
-  "  prefix /ndn/edu/memphis/sports/basketball\n"
+  "  /ndn/edu/memphis/cs/netlab 0\n"
+  "  /ndn/edu/memphis/sports/basketball 0\n"
   "}\n";
 
 // NEED TO TEST SECURITY SECTION SUCH AS LOADING CERTIFICATE

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -82,14 +82,14 @@ Nlsrc::printUsage() const
            display routing table status
        status
            display all NLSR status (lsdb & routingtable)
-       advertise <name>
-           advertise a name prefix through NLSR
-       advertise <name> save
-           advertise and save the name prefix to the conf file
+       advertise <name> [cost <cost>]
+           advertise a name prefix with optionally set cost through NLSR
+       advertise <name> [cost <cost>] save
+           advertise and save the name prefix and cost to the stateful conf file
        withdraw <name>
            remove a name prefix advertised through NLSR
        withdraw <name> delete
-           withdraw and delete the name prefix from the conf file
+           withdraw and delete the name prefix from the stateful conf file
 )EOT");
   boost::algorithm::replace_all_copy(std::ostream_iterator<char>(std::cout),
                                      help, "@NLSRC@", m_programName);
@@ -166,17 +166,39 @@ Nlsrc::dispatch(ndn::span<std::string> subcommand)
   if (subcommand.size() == 0) {
     return false;
   }
-
+  bool saveValue = false;
   if (subcommand[0] == "advertise") {
     switch (subcommand.size()) {
       case 2:
-        advertiseName(subcommand[1], false);
+        advertiseName(subcommand[1], false, 0);
         return true;
       case 3:
         if (subcommand[2] != "save") {
           return false;
         }
-        advertiseName(subcommand[1], true);
+        saveValue = true;
+        advertiseName(subcommand[1], saveValue, 0);
+        return true;
+      case 5:
+        if (subcommand[4] != "save") {
+          return false;
+        }
+        saveValue = true;
+        [[fallthrough]];
+      case 4:
+        if (subcommand[2] != "cost") {
+          return false;
+        }
+        uint64_t costValue = 0;
+        try {
+          costValue = std::stoi(subcommand[3]);
+        }
+        catch (const std::exception& e) {
+          std::cerr << "ERROR: Invalid cost given to advertise command" << std::endl;
+          m_exitCode = 1;
+          return false;
+        }
+        advertiseName(subcommand[1], saveValue, costValue);
         return true;
     }
     return false;
@@ -221,11 +243,11 @@ Nlsrc::runNextStep()
 }
 
 void
-Nlsrc::advertiseName(ndn::Name name, bool wantSave)
+Nlsrc::advertiseName(ndn::Name name, bool wantSave, uint64_t cost)
 {
   std::string info = (wantSave ? "(Save: " : "(Advertise: ") + name.toUri() + ")";
   ndn::Name::Component verb("advertise");
-  sendNamePrefixUpdate(name, verb, info, wantSave);
+  sendNamePrefixUpdate(name, verb, info, wantSave, cost);
 }
 
 void
@@ -240,12 +262,17 @@ void
 Nlsrc::sendNamePrefixUpdate(const ndn::Name& name,
                             const ndn::Name::Component& verb,
                             const std::string& info,
-                            bool flag)
+                            bool flag,
+                            uint64_t cost)
 {
   ndn::nfd::ControlParameters parameters;
   parameters.setName(name);
   if (flag) {
     parameters.setFlags(1);
+  }
+
+  if (verb.toUri() == "advertise" and cost > 0) {
+    parameters.setCost(cost);
   }
 
   auto paramWire = parameters.wireEncode();

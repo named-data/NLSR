@@ -56,7 +56,7 @@ CommandProcessor::advertiseAndInsertPrefix(const ndn::mgmt::ControlParametersBas
     m_lsdb.buildAndInstallOwnNameLsa();
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
       NLSR_LOG_INFO("Saving name to the configuration file ");
-      auto [afterAdvertiseReturn, afterAdvertiseMessage] = afterAdvertise(castParams.getName());
+      auto [afterAdvertiseReturn, afterAdvertiseMessage] = afterAdvertise(castParams.getName(), castParamCost);
       if (afterAdvertiseReturn) {
         return done(ndn::nfd::ControlResponse(205, afterAdvertiseMessage).setBody(responseParams.wireEncode()));
       }
@@ -71,7 +71,7 @@ CommandProcessor::advertiseAndInsertPrefix(const ndn::mgmt::ControlParametersBas
     if (castParams.hasFlags() && castParams.getFlags() == PREFIX_FLAG) {
       // Save an already advertised prefix
       NLSR_LOG_INFO("Saving an already advertised name: " << castParams.getName());
-      auto [afterAdvertiseReturn, afterAdvertiseMessage] = afterAdvertise(castParams.getName());
+      auto [afterAdvertiseReturn, afterAdvertiseMessage] = afterAdvertise(castParams.getName(), castParamCost);
       if (afterAdvertiseReturn) {
         return done(ndn::nfd::ControlResponse(205, afterAdvertiseMessage).setBody(responseParams.wireEncode()));
       }

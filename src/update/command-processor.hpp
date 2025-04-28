@@ -70,7 +70,7 @@ public:
    *  \return tuple {bool indicating success/failure, message string}.
    */
   virtual std::tuple<bool, std::string>
-  afterAdvertise(const ndn::Name& prefix)
+  afterAdvertise(const ndn::Name& prefix, uint64_t cost)
   {
     return {true, "OK"};
   }

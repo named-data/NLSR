@@ -58,13 +58,13 @@ public:
    * configuration file
    */
   std::tuple<bool, std::string>
-  addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix);
+  addOrDeletePrefix(const ndn::Name& prefix, uint64_t cost, bool addPrefix);
 
   /*! \brief Save an advertised prefix to the nlsr configuration file.
    *  \return tuple {bool indicating success/failure, message string}.
    */
   std::tuple<bool, std::string>
-  afterAdvertise(const ndn::Name& prefix) override;
+  afterAdvertise(const ndn::Name& prefix, uint64_t cost) override;
 
   /*! \brief Remove an advertised prefix from the nlsr configuration file.
    *  \return tuple {bool indicating success/failure, message string}.

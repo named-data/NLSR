@@ -22,6 +22,7 @@
 #include "prefix-update-processor.hpp"
 #include "logger.hpp"
 #include "prefix-update-commands.hpp"
+#include "utility/boost-info-editor.hpp"
 
 #include <boost/algorithm/string.hpp>
 #include <fstream>
@@ -115,33 +116,25 @@ PrefixUpdateProcessor::checkForPrefixInFile(const std::string prefix)
 }
 
 std::tuple<bool, std::string>
-PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix)
+PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, uint64_t cost, bool addPrefix)
 {
-  std::string value = " prefix " + prefix.toUri();
-  std::string fileString;
-  std::string line;
-  std::string trimedLine;
+  std::string section = "advertising." + prefix.toUri();
+  std::string value = "    " + prefix.toUri() + " " + std::to_string(cost);
   std::fstream input(m_confFileNameDynamic, input.in);
   if (!input.good() || !input.is_open()) {
     NLSR_LOG_ERROR("Failed to open configuration file for parsing");
     return {false, "Failed to open configuration file for parsing"};
   }
-
+  input.close();
   if (addPrefix) {
     //check if prefix already exist in the nlsr configuration file
     if (checkForPrefixInFile(value)) {
       NLSR_LOG_ERROR("Prefix already exists in the configuration file");
       return {false, "Prefix already exists in the configuration file"};
     }
-    while (!input.eof()) {
-      getline(input, line);
-      if (!line.empty()) {
-        fileString.append(line + "\n");
-        if (line == "advertising") {
-          getline(input, line);
-          fileString.append(line + "\n" + value + "\n");
-        }
-      }
+    if (!util::boost_info_editor::put(m_confFileNameDynamic, section, std::to_string(cost))) {
+      NLSR_LOG_ERROR("Unable to save changes to configuration file");
+      return {false, "Unable to save changes to configuration file"};
     }
   }
   else {
@@ -149,35 +142,25 @@ PrefixUpdateProcessor::addOrDeletePrefix(const ndn::Name& prefix, bool addPrefix
       NLSR_LOG_ERROR("Prefix doesn't exists in the configuration file");
       return {false, "Prefix doesn't exists in the configuration file"};
     }
-    boost::trim(value);
-    while (!input.eof()) {
-      getline(input, line);
-      if (!line.empty()) {
-        std::string trimLine = line;
-        boost::trim(trimLine);
-        if (trimLine != value) {
-          fileString.append(line + "\n");
-        }
-      }
+    if (!util::boost_info_editor::remove(m_confFileNameDynamic, section)) {
+      NLSR_LOG_ERROR("Unable to save changes to configuration file");
+      return {false, "Unable to save changes to configuration file"};
     }
   }
-  input.close();
-  std::ofstream output(m_confFileNameDynamic);
-  output << fileString;
-  output.close();
+
   return {true, "OK"};
 }
 
 std::tuple<bool, std::string>
-PrefixUpdateProcessor::afterAdvertise(const ndn::Name& prefix)
+PrefixUpdateProcessor::afterAdvertise(const ndn::Name& prefix, uint64_t cost)
 {
-  return addOrDeletePrefix(prefix, true);
+  return addOrDeletePrefix(prefix, cost, true);
 }
 
 std::tuple<bool, std::string>
 PrefixUpdateProcessor::afterWithdraw(const ndn::Name& prefix)
 {
-  return addOrDeletePrefix(prefix, false);
+  return addOrDeletePrefix(prefix, 0, false);
 }
 
 } // namespace nlsr::update

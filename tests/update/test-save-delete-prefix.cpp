@@ -123,7 +123,7 @@ public:
     // counter helps to check if multiple prefix of same name exists on conf file
     counter = 0;
     for (const auto& section : m_savePrefix.get_child("advertising")) {
-      auto b = section.second.get_value<std::string>();
+      auto b = section.first.data();
       if (b == prefixName) {
         counter++;
       }

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2023,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -86,7 +86,7 @@ private:
    *
    */
   void
-  advertiseName(ndn::Name name, bool wantSave);
+  advertiseName(ndn::Name name, bool wantSave, uint64_t cost = 0);
 
   /**
    * \brief Removes a name prefix from NLSR's Name LSA
@@ -102,7 +102,8 @@ private:
   sendNamePrefixUpdate(const ndn::Name& name,
                        const ndn::Name::Component& verb,
                        const std::string& info,
-                       bool saveFlag);
+                       bool saveFlag,
+                       uint64_t cost = 0);
 
   void
   onControlResponse(const std::string& info, const ndn::Data& data);

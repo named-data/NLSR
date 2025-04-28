@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -30,6 +30,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/property_tree/info_parser.hpp>
+#include <boost/property_tree/exceptions.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -501,8 +502,8 @@ ConfFileProcessor::processConfSectionNeighbors(const ConfigSection& section)
           m_confParam.getAdjacencyList().insert(adj);
         }
         else {
-          std::cerr << " Wrong command format ! [name /nbr/name/ \n face-uri /uri\n]";
-          std::cerr << " or bad URI format" << std::endl;
+          std::cerr << "No neighbor name found or bad URI format! Expected:\n"
+                    << " name [neighbor router name]\n face-uri [face uri]\n link-cost [link cost] OPTIONAL" << std::endl;
         }
       }
       catch (const std::exception& ex) {
@@ -605,23 +606,27 @@ bool
 ConfFileProcessor::processConfSectionAdvertising(const ConfigSection& section)
 {
   for (const auto& tn : section) {
-   if (tn.first == "prefix") {
      try {
-       ndn::Name namePrefix(tn.second.data());
+       ndn::Name namePrefix(tn.first.data());
        if (!namePrefix.empty()) {
-         m_confParam.getNamePrefixList().insert(namePrefix);
+         m_confParam.getNamePrefixList().insert(namePrefix, "", tn.second.get_value<uint64_t>());
        }
        else {
-         std::cerr << " Wrong command format ! [prefix /name/prefix] or bad URI" << std::endl;
+         std::cerr << " Wrong format or bad URI!\nExpected [name in ndn URI format] [cost],"
+                   << " got prefix: " << tn.first.data() << " cost:" << tn.second.data() << std::endl;
          return false;
        }
+     }
+     catch (const boost::property_tree::ptree_bad_data& ex) {
+       //Catches errors from get_value above
+       std::cerr << "Invalid cost format; only integers are allowed" << std::endl;
+       return false;
      }
      catch (const std::exception& ex) {
        std::cerr << ex.what() << std::endl;
        return false;
      }
     }
-  }
   return true;
 }
 
