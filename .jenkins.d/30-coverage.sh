@@ -26,9 +26,9 @@ lcov \
     --capture \
     --directory . \
     --include "$PWD/src/*" \
-    --ignore-errors count,inconsistent \
     --branch-coverage \
     --rc no_exception_branch=1 \
+    --ignore-errors inconsistent,mismatch,mismatch \
     --output-file build/coverage.info
 
 genhtml \
@@ -39,5 +39,6 @@ genhtml \
     --missed \
     --show-proportion \
     --title "NLSR $(cat VERSION.info)" \
+    --ignore-errors inconsistent,inconsistent \
     --output-directory build/lcov \
     build/coverage.info
