@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(NextHopsAdd)
   hops.addNextHop(hop1);
   hops.addNextHop(hop2);
 
-  fib.update("/ndn/name", hops);
+  fib.update("/ndn/name", hops, ndn::nfd::ROUTE_FLAG_CAPTURE);
   face.processEvents(ndn::time::milliseconds(-1));
 
   // Should register faces 1 and 2 for /ndn/name
@@ -136,13 +136,13 @@ BOOST_AUTO_TEST_CASE(NextHopsNoChange)
   oldHops.addNextHop(hop1);
   oldHops.addNextHop(hop2);
 
-  fib.update("/ndn/name", oldHops);
+  fib.update("/ndn/name", oldHops, ndn::nfd::ROUTE_FLAG_CAPTURE);
   face.processEvents(ndn::time::milliseconds(-1));
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
   interests.clear();
 
-  fib.update("/ndn/name", oldHops);
+  fib.update("/ndn/name", oldHops, ndn::nfd::ROUTE_FLAG_CAPTURE);
   face.processEvents(ndn::time::milliseconds(-1));
 
   // Should register face 1 and 2 for /ndn/name
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(NextHopsRemoveAll)
   oldHops.addNextHop(hop1);
   oldHops.addNextHop(hop2);
 
-  fib.update("/ndn/name", oldHops);
+  fib.update("/ndn/name", oldHops, ndn::nfd::ROUTE_FLAG_CAPTURE);
   face.processEvents(ndn::time::milliseconds(-1));
 
   BOOST_REQUIRE_EQUAL(interests.size(), 2);
@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(NextHopsRemoveAll)
 
   NexthopList empty;
 
-  fib.update("/ndn/name", empty);
+  fib.update("/ndn/name", empty, ndn::nfd::ROUTE_FLAG_CAPTURE);
   face.processEvents(ndn::time::milliseconds(-1));
 
   // Should unregister faces 1 and 2 for /ndn/name
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixes)
   hops.addNextHop(hop2);
   hops.addNextHop(hop3);
 
-  fib.update("/ndn/name", hops);
+  fib.update("/ndn/name", hops, ndn::nfd::ROUTE_FLAG_CAPTURE);
   face.processEvents(ndn::time::milliseconds(-1));
 
   // Should only register faces 1 and 2 for /ndn/name
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   hops.addNextHop(hop1);
   hops.addNextHop(hop2);
 
-  fib.update("/ndn/name", hops);
+  fib.update("/ndn/name", hops, ndn::nfd::ROUTE_FLAG_CAPTURE);
   face.processEvents(ndn::time::milliseconds(-1));
 
   // FIB
@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(NextHopsMaxPrefixesAfterRecalculation)
   NextHop hop3(router3FaceUri, 5);
   hops.addNextHop(hop3);
 
-  fib.update("/ndn/name", hops);
+  fib.update("/ndn/name", hops, ndn::nfd::ROUTE_FLAG_CAPTURE);
   face.processEvents(ndn::time::milliseconds(-1));
 
   // To maintain a max 2 face requirement, face 3 should be registered and face 2 should be
@@ -309,7 +309,8 @@ BOOST_FIXTURE_TEST_CASE(ScheduleFibEntryRefresh, FibFixture)
   int origSeqNo = fe.seqNo;
   fib.m_table.emplace(name1, std::move(fe));
 
-  fib.scheduleEntryRefresh(fe, [&] (auto& entry) { BOOST_CHECK_EQUAL(origSeqNo + 1, entry.seqNo); });
+  fib.scheduleEntryRefresh(fe, true,
+                           [&] (auto& entry, bool captureFlag) { BOOST_CHECK_EQUAL(origSeqNo + 1, entry.seqNo); });
   this->advanceClocks(ndn::time::milliseconds(10), 1);
 
   // avoid "test case [...] did not check any assertions" message from Boost.Test
@@ -325,7 +326,7 @@ BOOST_AUTO_TEST_CASE(ShouldNotRefreshNeighborRoute) // #4799
   hops.addNextHop(hop1);
 
   // Simulate update for this neighbor from name prefix table
-  fib.update(router1Name, hops);
+  fib.update(router1Name, hops, ndn::nfd::ROUTE_FLAG_CAPTURE);
   this->advanceClocks(ndn::time::seconds(1));
 
   // Should not send the register interest
@@ -355,21 +356,21 @@ BOOST_AUTO_TEST_CASE(PrefixWithdrawalFibUpdateBug) // #5179
   nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.13:6363"), 28));
   nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.9:6363"), 38));
   nhl1.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.26:6363"), 44));
-  fib.update("/test", nhl1);
+  fib.update("/test", nhl1, ndn::nfd::ROUTE_FLAG_CAPTURE);
 
   // Memphis advertises /test
   NexthopList nhl2;
   nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.9:6363"), 21));
   nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.13:6363"), 26));
   nhl2.addNextHop(NextHop(ndn::FaceUri("udp4://10.0.0.26:6363"), 42));
-  fib.update("/test", nhl2);
+  fib.update("/test", nhl2, ndn::nfd::ROUTE_FLAG_CAPTURE);
 
   advanceClocks(10_ms);
   face.sentInterests.clear();
   // Memphis withdraws /test
   // NamePrefixTable calls this saying we need to install the Wu routes
   // instead of the existing Memphis' cheaper routes
-  fib.update("/test", nhl1);
+  fib.update("/test", nhl1, ndn::nfd::ROUTE_FLAG_CAPTURE);
 
   advanceClocks(10_ms);
   int numRegister = 0;

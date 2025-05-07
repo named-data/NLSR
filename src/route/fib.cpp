@@ -60,7 +60,7 @@ Fib::remove(const ndn::Name& name)
 }
 
 void
-Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, const NextHopsUriSortedSet& hopsToAdd)
+Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, const NextHopsUriSortedSet& hopsToAdd, uint64_t routeFlags)
 {
   const ndn::Name& name = entry.name;
 
@@ -77,13 +77,13 @@ Fib::addNextHopsToFibEntryAndNfd(FibEntry& entry, const NextHopsUriSortedSet& ho
       registerPrefix(name, ndn::FaceUri(hop.getConnectingFaceUri()),
                      hop.getRouteCostAsAdjustedInteger(),
                      ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
-                     ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+                     routeFlags, 0);
     }
   }
 }
 
 void
-Fib::update(const ndn::Name& name, const NexthopList& allHops)
+Fib::update(const ndn::Name& name, const NexthopList& allHops, uint64_t routeFlags)
 {
   NLSR_LOG_DEBUG("Fib::update called");
 
@@ -107,7 +107,7 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
 
     FibEntry entry;
     entry.name = name;
-    addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
+    addNextHopsToFibEntryAndNfd(entry, hopsToAdd, routeFlags);
 
     entryIt = m_table.try_emplace(name, std::move(entry)).first;
   }
@@ -123,7 +123,7 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
     }
 
     FibEntry& entry = entryIt->second;
-    addNextHopsToFibEntryAndNfd(entry, hopsToAdd);
+    addNextHopsToFibEntryAndNfd(entry, hopsToAdd, routeFlags);
 
     std::set<NextHop, NextHopUriSortedComparator> hopsToRemove;
     std::set_difference(entry.nexthopSet.begin(), entry.nexthopSet.end(),
@@ -149,7 +149,8 @@ Fib::update(const ndn::Name& name, const NexthopList& allHops)
   if (entryIt != m_table.end() &&
       !entryIt->second.refreshEventId &&
       isNotNeighbor(entryIt->second.name)) {
-    scheduleEntryRefresh(entryIt->second, [this] (FibEntry& entry) { scheduleLoop(entry); });
+    scheduleEntryRefresh(entryIt->second, routeFlags,
+                         [this] (FibEntry& entry, uint64_t routeFlags) { scheduleLoop(entry, routeFlags); });
   }
 }
 
@@ -293,7 +294,7 @@ Fib::onSetStrategyFailure(const ndn::nfd::ControlResponse&,
 }
 
 void
-Fib::scheduleEntryRefresh(FibEntry& entry, const AfterRefreshCallback& refreshCallback)
+Fib::scheduleEntryRefresh(FibEntry& entry, uint64_t routeFlags, const AfterRefreshCallback& refreshCallback)
 {
   NLSR_LOG_DEBUG("Scheduling refresh for " << entry.name <<
                  " Seq Num: " << entry.seqNo <<
@@ -301,23 +302,22 @@ Fib::scheduleEntryRefresh(FibEntry& entry, const AfterRefreshCallback& refreshCa
 
   entry.refreshEventId = m_scheduler.schedule(ndn::time::seconds(m_refreshTime),
                                               std::bind(&Fib::refreshEntry, this,
-                                                        entry.name, refreshCallback));
+                                                        entry.name, routeFlags, refreshCallback));
 }
 
 void
-Fib::scheduleLoop(FibEntry& entry)
+Fib::scheduleLoop(FibEntry& entry, uint64_t routeFlags)
 {
-  scheduleEntryRefresh(entry, std::bind(&Fib::scheduleLoop, this, _1));
+  scheduleEntryRefresh(entry, routeFlags, std::bind(&Fib::scheduleLoop, this, _1, _2));
 }
 
 void
-Fib::refreshEntry(const ndn::Name& name, AfterRefreshCallback refreshCb)
+Fib::refreshEntry(const ndn::Name& name, uint64_t routeFlags, AfterRefreshCallback refreshCb)
 {
   auto it = m_table.find(name);
   if (it == m_table.end()) {
     return;
   }
-
   FibEntry& entry = it->second;
   NLSR_LOG_DEBUG("Refreshing " << entry.name << " Seq Num: " << entry.seqNo);
 
@@ -328,10 +328,10 @@ Fib::refreshEntry(const ndn::Name& name, AfterRefreshCallback refreshCb)
                    ndn::FaceUri(hop.getConnectingFaceUri()),
                    hop.getRouteCostAsAdjustedInteger(),
                    ndn::time::seconds(m_refreshTime + GRACE_PERIOD),
-                   ndn::nfd::ROUTE_FLAG_CAPTURE, 0);
+                   routeFlags, 0);
   }
 
-  refreshCb(entry);
+  refreshCb(entry, routeFlags);
 }
 
 void

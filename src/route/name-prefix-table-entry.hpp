@@ -38,8 +38,9 @@ public:
   {
   }
 
-  NamePrefixTableEntry(const ndn::Name& namePrefix)
+  NamePrefixTableEntry(const ndn::Name& namePrefix, uint64_t routeFlags)
     : m_namePrefix(namePrefix)
+    , m_flags(routeFlags)
     , m_nexthopList()
   {
   }
@@ -87,6 +88,18 @@ public:
     return m_nexthopList;
   }
 
+  void
+  setFlags(uint64_t flags)
+  {
+    m_flags = flags;
+  }
+
+  uint64_t
+  getFlags() const
+  {
+    return m_flags;
+  }
+
   /*! \brief Collect all next-hops that are advertised by this entry's
    * routing entries.
    */
@@ -114,6 +127,7 @@ public:
 
 private:
   ndn::Name m_namePrefix;
+  uint64_t m_flags;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   std::list<std::shared_ptr<RoutingTablePoolEntry>> m_rteList;

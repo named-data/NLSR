@@ -66,6 +66,7 @@ public:
   /*! \brief Adds a destination to the specified name prefix.
     \param name The name prefix
     \param destRouter The destination router prefix
+    \param routeFlags Route inheritance flags from NFD
 
     This method adds a router to a name prefix table entry. If the
     name prefix table entry does not exist, it is created. The method
@@ -77,7 +78,7 @@ public:
     notified of the change to the NPT entry, too.
    */
   void
-  addEntry(const ndn::Name& name, const ndn::Name& destRouter);
+  addEntry(const ndn::Name& name, const ndn::Name& destRouter, uint64_t routeFlags = ndn::nfd::ROUTE_FLAG_CAPTURE);
 
   /*! \brief Removes a destination from a name prefix table entry.
     \param name The name prefix

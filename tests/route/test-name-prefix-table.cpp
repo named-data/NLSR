@@ -149,7 +149,7 @@ BOOST_FIXTURE_TEST_CASE(AddRoutingEntryToNptEntry, NamePrefixTableFixture)
 {
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr1", 0);
   std::shared_ptr<RoutingTablePoolEntry> rtpePtr = npt.addRtpeToPool(rtpe1);
-  NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr2", ndn::nfd::ROUTE_FLAG_CAPTURE);
 
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
 
@@ -168,7 +168,7 @@ BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
 {
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr1", 0);
 
-  NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr2", ndn::nfd::ROUTE_FLAG_CAPTURE);
   npt.m_table.push_back(std::make_shared<NamePrefixTableEntry>(npte1));
 
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
@@ -190,7 +190,7 @@ BOOST_FIXTURE_TEST_CASE(RemoveRoutingEntryFromNptEntry, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(AddNptEntryPtrToRoutingEntry, NamePrefixTableFixture)
 {
-  NamePrefixTableEntry npte1("/ndn/memphis/rtr2");
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr2", ndn::nfd::ROUTE_FLAG_CAPTURE);
   npt.m_table.push_back(std::make_shared<NamePrefixTableEntry>(npte1));
 
   npt.addEntry("/ndn/memphis/rtr2", "/ndn/memphis/rtr1");
@@ -215,8 +215,8 @@ BOOST_FIXTURE_TEST_CASE(AddNptEntryPtrToRoutingEntry, NamePrefixTableFixture)
 
 BOOST_FIXTURE_TEST_CASE(RemoveNptEntryPtrFromRoutingEntry, NamePrefixTableFixture)
 {
-  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
-  NamePrefixTableEntry npte2("/ndn/memphis/rtr2");
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1", ndn::nfd::ROUTE_FLAG_CAPTURE);
+  NamePrefixTableEntry npte2("/ndn/memphis/rtr2", ndn::nfd::ROUTE_FLAG_CAPTURE);
   RoutingTableEntry rte1("/ndn/memphis/destination1");
   npt.m_table.push_back(std::make_shared<NamePrefixTableEntry>(npte1));
   npt.m_table.push_back(std::make_shared<NamePrefixTableEntry>(npte2));
@@ -254,7 +254,7 @@ BOOST_FIXTURE_TEST_CASE(RoutingTableUpdate, NamePrefixTableFixture)
   NextHop hop1{ndn::FaceUri("upd4://10.0.0.1"), 0};
   NextHop hop2{ndn::FaceUri("upd4://10.0.0.2"), 1};
   NextHop hop3{ndn::FaceUri("upd4://10.0.0.3"), 2};
-  const NamePrefixTableEntry entry1{"/ndn/router1"};
+  const NamePrefixTableEntry entry1{"/ndn/router1", true};
   npt.addEntry(entry1.getNamePrefix(), destination);
 
   rt.addNextHop(destination, hop1);

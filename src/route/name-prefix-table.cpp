@@ -78,7 +78,8 @@ NamePrefixTable::updateFromLsdb(std::shared_ptr<Lsa> lsa, LsdbUpdate updateType,
       for (const auto &prefix : nlsa->getNpl().getPrefixInfo()) {
         if (prefix.getName() != m_ownRouterName) {
           m_nexthopCost[DestNameKey(lsa->getOriginRouter(), prefix.getName())] = prefix.getCost();
-          addEntry(prefix.getName(), lsa->getOriginRouter());
+          // Don't use capture flag on advertised prefixes...
+          addEntry(prefix.getName(), lsa->getOriginRouter(), ndn::nfd::ROUTE_FLAG_CHILD_INHERIT);
         }
       }
     }
@@ -91,7 +92,8 @@ NamePrefixTable::updateFromLsdb(std::shared_ptr<Lsa> lsa, LsdbUpdate updateType,
     for (const auto &prefix : namesToAdd) {
       if (prefix.getName() != m_ownRouterName) {
         m_nexthopCost[DestNameKey(lsa->getOriginRouter(), prefix.getName())] = prefix.getCost();
-        addEntry(prefix.getName(), lsa->getOriginRouter());
+        // Don't use capture flag on advertised prefixes...
+        addEntry(prefix.getName(), lsa->getOriginRouter(), ndn::nfd::ROUTE_FLAG_CHILD_INHERIT);
       }
     }
 
@@ -129,7 +131,7 @@ NamePrefixTable::adjustNexthopCosts(const NexthopList& nhlist, const ndn::Name& 
 }
 
 void
-NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
+NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter, uint64_t routeFlags)
 {
   // Check if the advertised name prefix is in the table already.
   auto nameItr = std::find_if(m_table.begin(), m_table.end(),
@@ -169,7 +171,8 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
   if (nameItr == m_table.end()) {
     NLSR_LOG_DEBUG("Adding origin: " << rtpePtr->getDestination()
                    << " to a new name prefix: " << name);
-    npte = std::make_shared<NamePrefixTableEntry>(name);
+
+    npte = std::make_shared<NamePrefixTableEntry>(name, ndn::nfd::ROUTE_FLAG_CHILD_INHERIT);
     npte->addRoutingTableEntry(rtpePtr);
     npte->generateNhlfromRteList();
     m_table.push_back(npte);
@@ -177,7 +180,7 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
     // If this entry has next hops, we need to inform the FIB
     if (npte->getNexthopList().size() > 0) {
       NLSR_LOG_TRACE("Updating FIB with next hops for " << npte->getNamePrefix());
-      m_fib.update(name, adjustNexthopCosts(npte->getNexthopList(), name, destRouter));
+      m_fib.update(name, adjustNexthopCosts(npte->getNexthopList(), name, destRouter), npte->getFlags());
     }
     // The routing table may recalculate and add a routing table entry
     // with no next hops to replace an existing routing table entry. In
@@ -193,13 +196,16 @@ NamePrefixTable::addEntry(const ndn::Name& name, const ndn::Name& destRouter)
   else {
     npte = *nameItr;
     NLSR_LOG_TRACE("Adding origin: " << rtpePtr->getDestination() <<
-                   " to existing prefix: " << **nameItr);
-    (*nameItr)->addRoutingTableEntry(rtpePtr);
-    (*nameItr)->generateNhlfromRteList();
-
-    if ((*nameItr)->getNexthopList().size() > 0) {
-      NLSR_LOG_TRACE("Updating FIB with next hops for " << (**nameItr));
-      m_fib.update(name, adjustNexthopCosts((*nameItr)->getNexthopList(), name, destRouter));
+                   " to existing prefix: " << *npte);
+    // We should not downgrade the capture flag to child-inherit unless there are no nexthops
+    if (npte->getFlags() != routeFlags && npte->getNexthopList().size() == 0) {
+      npte->setFlags(routeFlags);
+    }
+    npte->addRoutingTableEntry(rtpePtr);
+    npte->generateNhlfromRteList();
+    if (npte->getNexthopList().size() > 0) {
+      NLSR_LOG_TRACE("Updating FIB with next hops for " << *npte);
+      m_fib.update(name, adjustNexthopCosts(npte->getNexthopList(), name, destRouter), npte->getFlags());
     }
     else {
       NLSR_LOG_TRACE(npte->getNamePrefix() << " has no next hops; removing from FIB");
@@ -233,12 +239,13 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
   auto nameItr = std::find_if(m_table.begin(), m_table.end(),
                               [&] (const auto& entry) { return entry->getNamePrefix() == name; });
   if (nameItr != m_table.end()) {
+    std::shared_ptr<NamePrefixTableEntry> npte = *nameItr;
     NLSR_LOG_TRACE("Removing origin: " << rtpePtr->getDestination()
                    << " from prefix: " << **nameItr);
 
     // Rather than iterating through the whole list periodically, just
     // delete them here if they have no references.
-    if ((*nameItr)->removeRoutingTableEntry(rtpePtr) == 0) {
+    if (npte->removeRoutingTableEntry(rtpePtr) == 0) {
       deleteRtpeFromPool(rtpePtr);
     }
 
@@ -257,17 +264,17 @@ NamePrefixTable::removeEntry(const ndn::Name& name, const ndn::Name& destRouter)
     //   Prefix Table. Once a new Name LSA advertises this prefix, a
     //   new entry for the prefix will be created.
     //
-    if ((*nameItr)->getRteListSize() == 0) {
-      NLSR_LOG_TRACE(**nameItr << " has no routing table entries;"
+    if (npte->getRteListSize() == 0) {
+      NLSR_LOG_TRACE(*npte << " has no routing table entries;"
                      << " removing from table and FIB");
       m_table.erase(nameItr);
       m_fib.remove(name);
     }
     else {
-      NLSR_LOG_TRACE(**nameItr << " has other routing table entries;"
+      NLSR_LOG_TRACE(*npte << " has other routing table entries;"
                      << " updating FIB with next hops");
       (*nameItr)->generateNhlfromRteList();
-      m_fib.update(name, adjustNexthopCosts((*nameItr)->getNexthopList(), name, destRouter));
+      m_fib.update(name, adjustNexthopCosts(npte->getNexthopList(), name, destRouter), npte->getFlags());
     }
   }
   else {
@@ -295,7 +302,7 @@ NamePrefixTable::updateWithNewRoute(const std::list<RoutingTableEntry>& entries)
       poolEntry->setNexthopList(sourceEntry->getNexthopList());
       for (const auto& nameEntry : poolEntry->namePrefixTableEntries) {
         auto nameEntryFullPtr = nameEntry.second.lock();
-        addEntry(nameEntryFullPtr->getNamePrefix(), poolEntry->getDestination());
+        addEntry(nameEntryFullPtr->getNamePrefix(), poolEntry->getDestination(), nameEntryFullPtr->getFlags());
       }
     }
     else if (sourceEntry == entries.end()) {
@@ -303,7 +310,7 @@ NamePrefixTable::updateWithNewRoute(const std::list<RoutingTableEntry>& entries)
       poolEntry->getNexthopList().clear();
       for (const auto& nameEntry : poolEntry->namePrefixTableEntries) {
         auto nameEntryFullPtr = nameEntry.second.lock();
-        addEntry(nameEntryFullPtr->getNamePrefix(), poolEntry->getDestination());
+        addEntry(nameEntryFullPtr->getNamePrefix(), poolEntry->getDestination(), nameEntryFullPtr->getFlags());
       }
     }
     else {

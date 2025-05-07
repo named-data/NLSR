@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2025,  The University of Memphis,
  *                           Regents of the University of California
  *
  * This file is part of NLSR (Named-data Link State Routing).
@@ -30,14 +30,14 @@ BOOST_AUTO_TEST_SUITE(TestNpte)
 
 BOOST_AUTO_TEST_CASE(NpteConstructorAndNamePrefix)
 {
-  NamePrefixTableEntry npte1("/ndn/memphis.edu/cs");
+  NamePrefixTableEntry npte1("/ndn/memphis.edu/cs", ndn::nfd::ROUTE_FLAG_CAPTURE);
 
   BOOST_CHECK_EQUAL(npte1.getNamePrefix(), "/ndn/memphis.edu/cs");
 }
 
 BOOST_AUTO_TEST_CASE(AddRoutingTableEntry)
 {
-  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1", ndn::nfd::ROUTE_FLAG_CAPTURE);
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr2", 0);
   auto rtpePtr = std::make_shared<RoutingTablePoolEntry>(rtpe1);
 
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(AddRoutingTableEntry)
 
 BOOST_AUTO_TEST_CASE(RemoveRoutingTableEntry)
 {
-  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1", ndn::nfd::ROUTE_FLAG_CAPTURE);
   RoutingTablePoolEntry rtpe1("/ndn/memphis/rtr2", 0);
   auto rtpePtr = std::make_shared<RoutingTablePoolEntry>(rtpe1);
 
@@ -70,15 +70,15 @@ BOOST_AUTO_TEST_CASE(RemoveRoutingTableEntry)
 
 BOOST_AUTO_TEST_CASE(EqualsOperatorTwoObj)
 {
-  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
-  NamePrefixTableEntry npte2("/ndn/memphis/rtr1");
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1", ndn::nfd::ROUTE_FLAG_CAPTURE);
+  NamePrefixTableEntry npte2("/ndn/memphis/rtr1", ndn::nfd::ROUTE_FLAG_CAPTURE);
 
   BOOST_CHECK_EQUAL(npte1, npte2);
 }
 
 BOOST_AUTO_TEST_CASE(EqualsOperatorOneObjOneName)
 {
-  NamePrefixTableEntry npte1("/ndn/memphis/rtr1");
+  NamePrefixTableEntry npte1("/ndn/memphis/rtr1", ndn::nfd::ROUTE_FLAG_CAPTURE);
 
   BOOST_CHECK_EQUAL(npte1, "/ndn/memphis/rtr1");
 }

@@ -41,7 +41,7 @@ struct FibEntry
   NextHopsUriSortedSet nexthopSet;
 };
 
-using AfterRefreshCallback = std::function<void(FibEntry&)>;
+using AfterRefreshCallback = std::function<void(FibEntry&, uint64_t)>;
 
 class AdjacencyList;
 class ConfParameter;
@@ -86,9 +86,10 @@ public:
    *
    * \param name The name prefix that the next-hops apply to
    * \param allHops A complete list of next-hops to associate with name.
+   * \param routeFlags Route inheritance flags
    */
   void
-  update(const ndn::Name& name, const NexthopList& allHops);
+  update(const ndn::Name& name, const NexthopList& allHops, uint64_t routeFlags);
 
   void
   setEntryRefreshTime(int32_t fert)
@@ -145,7 +146,7 @@ private:
    * \sa Fib::removeOldNextHopsFromFibEntryAndNfd
    */
   void
-  addNextHopsToFibEntryAndNfd(FibEntry& entry, const NextHopsUriSortedSet& hopsToAdd);
+  addNextHopsToFibEntryAndNfd(FibEntry& entry, const NextHopsUriSortedSet& hopsToAdd, uint64_t routeFlags);
 
   unsigned int
   getNumberOfFacesForName(const NexthopList& nextHopList);
@@ -194,18 +195,18 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
    * \sa Fib::scheduleLoop
    */
   void
-  scheduleEntryRefresh(FibEntry& entry, const AfterRefreshCallback& refreshCb);
+  scheduleEntryRefresh(FibEntry& entry, uint64_t routeFlags, const AfterRefreshCallback& refreshCb);
 
 private:
   /*! \brief Continue the entry refresh cycle.
    */
   void
-  scheduleLoop(FibEntry& entry);
+  scheduleLoop(FibEntry& entry, uint64_t routeFlags);
 
   /*! \brief Refreshes an entry in NFD.
    */
   void
-  refreshEntry(const ndn::Name& name, AfterRefreshCallback refreshCb);
+  refreshEntry(const ndn::Name& name, uint64_t routeFlags, AfterRefreshCallback refreshCb);
 
 public:
   static inline const ndn::Name MULTICAST_STRATEGY{"/localhost/nfd/strategy/multicast"};
