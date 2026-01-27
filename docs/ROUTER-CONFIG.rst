@@ -1,9 +1,6 @@
 Router Configuration
 ====================
 
-.. toctree::
-..
-
 Example network and sample configuration
 ----------------------------------------
 
@@ -43,7 +40,7 @@ Step 1. Ensuring nfd is running
 
 Type the following in the terminal:
 
-::
+.. code-block:: sh
 
     nfd-status
 
@@ -268,9 +265,9 @@ Step 4: Running NLSR on /ndn/memphis.edu/router1
 
 Assuming the configuration file is saved as ``nlsr.conf``, type the following to run nlsr:
 
-::
+.. code-block:: sh
 
-    $ nlsr -f nlsr.conf
+    nlsr -f nlsr.conf
 
 NLSR will look for nlsr.conf in the current directory. If nlsr.conf is not in the current
 directory, please provide the absolute path with the file name as the value. If

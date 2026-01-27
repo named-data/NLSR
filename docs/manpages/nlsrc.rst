@@ -7,8 +7,7 @@ Usage
 ::
 
     nlsrc [-h | -V]
-    nlsrc [-R <router prefix> [-c <nlsr.conf path> | -k]] COMMAND [<Command Options>]
-
+    nlsrc [-R <router prefix> [-c <nlsr.conf path> | -k]] COMMAND [<command options>]
 
 Description
 -----------
@@ -39,39 +38,39 @@ Options
 ``COMMAND``
 
   ``lsdb``
-    Retrieve LSDB status information
+    Retrieve LSDB status information.
 
   ``routing``
-    Retrieve routing table status information
+    Retrieve routing table status information.
 
   ``status``
-    Retrieve LSDB status and routing table status information
+    Retrieve LSDB status and routing table status information.
 
   ``advertise``
-    Add a Name prefix to be advertised by NLSR
+    Add a Name prefix to be advertised by NLSR.
 
     ``advertise <name>``
 
       ``name``
-        The Name prefix to be advertised
+        The Name prefix to be advertised.
 
     ``advertise <name> save``
 
       ``save``
-        Advertise a prefix and also save it to the nlsr.conf file residing in the state-dir for the next start of NLSR that operator may copy and use for the next start of NLSR
+        Advertise a prefix and also save it to the nlsr.conf file residing in the state-dir for the next start of NLSR that operator may copy and use for the next start of NLSR.
 
   ``withdraw``
-    Remove a Name prefix advertised through NLSR
+    Remove a Name prefix advertised through NLSR.
 
     ``withdraw <name>``
 
       ``name``
-        The Name prefix to be withdrawn
+        The Name prefix to be withdrawn.
 
     ``withdraw <name> delete``
 
       ``delete``
-        Withdraw a prefix and also delete it from the nlsr.conf file residing in the state-dir
+        Withdraw a prefix and also delete it from the nlsr.conf file residing in the state-dir.
 
 Notes
 -----
@@ -82,7 +81,7 @@ If default identity is not set as operator, the user will be presented with the
 error message: "Name prefix update error (code: 403)". To remedy this
 issue, use the command ``ndnsec set-default``. Example::
 
-  ndnsec set-default /ndn/a-site/%C1.Operator/op
+    ndnsec set-default /ndn/a-site/%C1.Operator/op
 
 Support for adding prefix costs is currently only implemented via readvertisement;
 this functionality will be added in a future release.
@@ -90,8 +89,11 @@ this functionality will be added in a future release.
 Exit Status
 -----------
 
-nlsrc exits with one of the following values::
+0
+    Success.
 
-  0     nlsrc exited successfully
-  1     generic error
-  2     bad command line
+1
+    Generic error.
+
+2
+    Malformed command line.

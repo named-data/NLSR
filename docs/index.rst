@@ -3,7 +3,6 @@ NLSR: Named Data Link State Routing Protocol
 
 .. toctree::
    :hidden:
-   :maxdepth: 2
 
    GETTING-STARTED
    INSTALL

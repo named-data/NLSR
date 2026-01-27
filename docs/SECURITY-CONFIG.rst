@@ -1,9 +1,6 @@
 Security Configuration
 =======================
 
-.. toctree::
-..
-
 The trust model of NLSR is semi-hierarchical. An example certificate signing hierarchy is:
 
 ::

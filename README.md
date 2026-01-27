@@ -1,4 +1,10 @@
+<div align="center">
+
+[<img alt height="65" src="docs/ndn-logo.svg"/>](https://named-data.net/)
+
 # NLSR: Named Data Link State Routing Protocol
+
+</div>
 
 ![Latest version](https://img.shields.io/github/v/tag/named-data/NLSR?label=Latest%20version)
 ![Language](https://img.shields.io/badge/C%2B%2B-17-blue)

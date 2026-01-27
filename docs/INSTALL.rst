@@ -1,9 +1,6 @@
 Installation Instructions
 =========================
 
-.. toctree::
-..
-
 Prerequisites
 -------------
 
@@ -15,13 +12,13 @@ Prerequisites
 - PSync library [optional but recommended, enabled by default]
 
   Download the PSync library and build it according to the instructions available at
-  https://github.com/named-data/PSync#build
+  https://github.com/named-data/PSync#installation
 
 - ChronoSync library [optional, deprecated]
 
   For testing purposes, NLSR can be optionally built with ChronoSync support. Download
   the ChronoSync library and build it according to the instructions available at
-  https://github.com/named-data/ChronoSync#build
+  https://github.com/named-data/ChronoSync#installation
 
 - SVS library [optional]
 

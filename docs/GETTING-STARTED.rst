@@ -1,18 +1,15 @@
 Getting Started with NLSR
 =========================
 
-.. toctree::
-..
-
 Obtaining the Source Code
 -------------------------
 
-- `GitHub NLSR repository <https://github.com/named-data/NLSR>`__
+See `GitHub NLSR repository <https://github.com/named-data/NLSR>`__.
 
 Installation
 ------------
 
-:doc:`INSTALL`
+See :doc:`INSTALL`.
 
 Important Notes About Configuration
 -----------------------------------
