@@ -118,7 +118,7 @@ should be run as root:
 
        $ dnf list --installed openssl-devel
 
-#. Boost libraries version 1.71.0 or later
+#. Boost libraries version 1.74.0 or later
 
    ::
 
