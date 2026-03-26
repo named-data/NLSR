@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2025,  The University of Memphis,
+ * Copyright (c) 2014-2026,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -29,6 +29,7 @@
 #include "lsa/coordinate-lsa.hpp"
 #include "lsa/adj-lsa.hpp"
 #include "sequencing-manager.hpp"
+#include "signals.hpp"
 #include "statistics.hpp"
 #include "test-access-control.hpp"
 
@@ -81,6 +82,21 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   /*! \brief Builds a cor. LSA for this router and installs it into the LSDB. */
   void
   buildAndInstallOwnCoordinateLsa();
+
+  /*! \brief Determine which kind of LSA was updated and fetch it.
+   *
+   * If the received update is for our own router then the network
+   * is telling us that we are recovering from a sequence file corruption.
+   * So we use the sequence number provided in this update as a base
+   * and publish a new update.
+   *
+   * Otherwise if the update is for another router we inspect the update to determine
+   * which kind of LSA the update is for and expresses interest for the correct LSA
+   * type.
+   */
+  void
+  processUpdateFromSync(const ndn::Name& updateName, uint64_t seqNo,
+                        const ndn::Name& originRouter, uint64_t incomingFaceId);
 
 public:
   /*! \brief Schedules a build of this router's LSA. */
@@ -337,6 +353,7 @@ public:
   using AfterLsdbModified = ndn::signal::Signal<Lsdb, std::shared_ptr<Lsa>, LsdbUpdate,
                                                 std::list<nlsr::PrefixInfo>, std::list<nlsr::PrefixInfo>>;
   AfterLsdbModified onLsdbModified;
+  OnLsaUpdate onNewLsa;
 
 PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   ndn::Face& m_face;
@@ -357,7 +374,7 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
 
   SequencingManager m_sequencingManager;
 
-  ndn::signal::ScopedConnection m_onNewLsaConnection;
+  ndn::signal::ScopedConnection m_onSyncUpdate;
 
   std::set<std::shared_ptr<ndn::SegmentFetcher>> m_fetchers;
   ndn::Segmenter m_segmenter;

@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2026,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -62,12 +62,8 @@ public:
     using std::runtime_error::runtime_error;
   };
 
-  using IsLsaNew = std::function<
-    bool (const ndn::Name& routerName, Lsa::Type lsaType, uint64_t seqNo, uint64_t inFace)
-  >;
-
   SyncLogicHandler(ndn::Face& face, ndn::KeyChain& keyChain,
-                   IsLsaNew isLsaNew, const SyncLogicOptions& opts);
+                   const SyncLogicOptions& opts);
 
   /*! \brief Instruct ChronoSync to publish an update.
    *
@@ -91,23 +87,10 @@ PUBLIC_WITH_TESTS_ELSE_PRIVATE:
   void
   processUpdate(const ndn::Name& updateName, uint64_t highSeq, uint64_t incomingFaceId);
 
-  /*! \brief Determine which kind of LSA was updated and fetch it.
-   *
-   * Checks that the received update is not from us, which can happen,
-   * and then inspects the update to determine which kind of LSA the
-   * update is for. Finally, it expresses interest for the correct LSA
-   * type.
-   * \throws SyncUpdate::Error If the sync update doesn't look like a sync LSA update.
-   */
-  void
-  processUpdateFromSync(const ndn::Name& originRouter,
-                        const ndn::Name& updateName, uint64_t seqNo, uint64_t incomingFaceId);
-
 public:
-  OnNewLsa onNewLsa;
+  OnSyncUpdate onSyncUpdate;
 
 private:
-  IsLsaNew m_isLsaNew;
   ndn::Name m_routerPrefix;
   HyperbolicState m_hyperbolicState;
 

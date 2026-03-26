@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2025,  The University of Memphis,
+ * Copyright (c) 2014-2026,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -47,7 +47,7 @@ Nlsr::Nlsr(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   , m_namePrefixTable(confParam.getRouterPrefix(), m_fib, m_routingTable,
                       m_routingTable.afterRoutingChange, m_lsdb.onLsdbModified)
   , m_helloProtocol(m_face, keyChain, confParam, m_routingTable, m_lsdb)
-  , m_onNewLsaConnection(m_lsdb.getSync().onNewLsa.connect(
+  , m_onNewLsaConnection(m_lsdb.onNewLsa.connect(
       [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
               const ndn::Name& originRouter, uint64_t incomingFaceId) {
         registerStrategyForCerts(originRouter);

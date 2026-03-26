@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2026,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -39,7 +39,7 @@ public:
   getSync()
   {
     if (m_sync == nullptr) {
-      m_sync = std::make_unique<SyncLogicHandler>(face, m_keyChain, testIsLsaNew, opts);
+      m_sync = std::make_unique<SyncLogicHandler>(face, m_keyChain, opts);
     }
     return *m_sync;
   }
@@ -61,7 +61,6 @@ public:
 
 public:
   ndn::DummyClientFace face{m_io, m_keyChain};
-  SyncLogicHandler::IsLsaNew testIsLsaNew = [] (auto&&...) { return true; };
   SyncLogicOptions opts{
     SyncProtocol::PSYNC,
     ndn::Name("/ndn/nlsr/sync").appendVersion(ConfParameter::SYNC_VERSION),
@@ -94,7 +93,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherLS)
   for (auto lsaType : {Lsa::Type::NAME, Lsa::Type::ADJACENCY}) {
     auto updateName = makeLsaUserPrefix(otherRouter, lsaType);
 
-    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onSyncUpdate.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_CHECK_EQUAL(updateName, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
@@ -121,7 +120,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHR)
   for (auto lsaType : {Lsa::Type::NAME, Lsa::Type::COORDINATE}) {
     auto updateName = makeLsaUserPrefix(otherRouter, lsaType);
 
-    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onSyncUpdate.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_CHECK_EQUAL(updateName, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
@@ -148,7 +147,7 @@ BOOST_AUTO_TEST_CASE(UpdateForOtherHRDry)
   for (auto lsaType : this->lsaTypes) {
     auto updateName = makeLsaUserPrefix(otherRouter, lsaType);
 
-    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onSyncUpdate.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_CHECK_EQUAL(updateName, routerName);
         BOOST_CHECK_EQUAL(sequenceNumber, syncSeqNo);
@@ -172,7 +171,7 @@ BOOST_AUTO_TEST_CASE(NoUpdateForSelf)
   for (auto lsaType : this->lsaTypes) {
     auto updateName = makeLsaUserPrefix(opts.routerPrefix, lsaType);
 
-    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onSyncUpdate.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_FAIL("Updates for self should not be emitted!");
       });
@@ -195,37 +194,13 @@ BOOST_AUTO_TEST_CASE(MalformedUpdate)
   for (auto lsaType : this->lsaTypes) {
     auto updateName = makeLsaUserPrefix("/site/%C1.Router/this-router", lsaType);
 
-    ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
+    ndn::signal::ScopedConnection connection = getSync().onSyncUpdate.connect(
       [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
         BOOST_FAIL("Malformed updates should not be emitted!");
       });
 
     this->receiveUpdate(updateName, sequenceNumber);
   }
-
-  // avoid "test case [...] did not check any assertions" message from Boost.Test
-  BOOST_CHECK(true);
-}
-
-/* Tests that when SyncLogicHandler receives an update for an LSA with
-   details that do not appear to be new, it will *not* emit to its
-   signal those LSA details.
- */
-BOOST_AUTO_TEST_CASE(LsaNotNew)
-{
-  testIsLsaNew = [] (const ndn::Name& routerName, const Lsa::Type& lsaType,
-                     const uint64_t& sequenceNumber, uint64_t incomingFaceId) {
-    return false;
-  };
-
-  const uint64_t sequenceNumber = 1;
-  ndn::signal::ScopedConnection connection = getSync().onNewLsa.connect(
-    [&] (const auto& routerName, uint64_t sequenceNumber, const auto& originRouter, uint64_t incomingFaceId) {
-      BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
-    });
-
-  auto updateName = makeLsaUserPrefix(otherRouter, Lsa::Type::NAME);
-  this->receiveUpdate(updateName, sequenceNumber);
 
   // avoid "test case [...] did not check any assertions" message from Boost.Test
   BOOST_CHECK(true);

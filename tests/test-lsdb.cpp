@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2025,  The University of Memphis,
+ * Copyright (c) 2014-2026,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -459,6 +459,51 @@ BOOST_AUTO_TEST_CASE(LsdbSignals)
 
   lsdb.removeLsa(lsaPtrCheck->getOriginRouter(), Lsa::Type::COORDINATE);
   checkSignalResult(LsdbUpdate::REMOVED, lsaPtr, {}, {});
+}
+
+BOOST_AUTO_TEST_CASE(SyncUpdateForOtherRouter)
+{
+  auto testTimePoint = ndn::time::system_clock::now() + 3600_s;
+  ndn::Name router2("/router2");
+
+  NamePrefixList npl1{"name1", "name2"};
+  NameLsa nameLsa(router2, 12, testTimePoint, npl1);
+  auto lsaPtr = std::make_shared<NameLsa>(nameLsa);
+  lsdb.installLsa(lsaPtr);
+
+  int update = 0;
+  auto conn = lsdb.onNewLsa.connect(
+    [&] (const auto& routerName, uint64_t sequenceNumber,
+         const auto& originRouter, uint64_t incomingFaceId) {
+      BOOST_FAIL("An update for an LSA with non-new sequence number should not emit!");
+      update += 1;
+    });
+
+  ndn::Name updateName("/localhop/ndn/nlsr/LSA/site/router2/NAME");
+  lsdb.processUpdateFromSync(updateName, 11, router2, 260);
+  BOOST_CHECK_EQUAL(update, 0);
+
+  conn.disconnect();
+  lsdb.onNewLsa.connect(
+    [&] (const auto& routerName, uint64_t sequenceNumber,
+         const auto& originRouter, uint64_t incomingFaceId) {
+      BOOST_CHECK_EQUAL(sequenceNumber, 13);
+      update += 1;
+    });
+
+  lsdb.processUpdateFromSync(updateName, 13, router2, 260);
+  BOOST_CHECK_EQUAL(update, 1);
+}
+
+BOOST_AUTO_TEST_CASE(SyncUpdateForOwnRouter)
+{
+  ndn::Name updateName("/localhop/ndn/nlsr/LSA/site/this-router/NAME");
+  ndn::Name originRouter("/ndn/site/%C1.Router/this-router");
+  uint64_t origSeqNo = lsdb.m_sequencingManager.getNameLsaSeq();
+  uint64_t newSeqNo = origSeqNo + 100;
+
+  lsdb.processUpdateFromSync(updateName, newSeqNo, originRouter, 260);
+  BOOST_CHECK_EQUAL(lsdb.m_sequencingManager.getNameLsaSeq(), newSeqNo + 1);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // TestLsdb

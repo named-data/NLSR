@@ -1,6 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2014-2024,  The University of Memphis,
+ * Copyright (c) 2014-2026,  The University of Memphis,
  *                           Regents of the University of California,
  *                           Arizona Board of Regents.
  *
@@ -36,9 +36,6 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   , m_scheduler(face.getIoContext())
   , m_confParam(confParam)
   , m_sync(m_face, keyChain,
-      [this] (const auto& routerName, Lsa::Type lsaType, uint64_t seqNo, uint64_t) {
-        return isLsaNew(routerName, lsaType, seqNo);
-      },
       SyncLogicOptions{
         confParam.getSyncProtocol(),
         confParam.getSyncPrefix(),
@@ -51,12 +48,10 @@ Lsdb::Lsdb(ndn::Face& face, ndn::KeyChain& keyChain, ConfParameter& confParam)
   , m_adjLsaBuildInterval(m_confParam.getAdjLsaBuildInterval())
   , m_thisRouterPrefix(m_confParam.getRouterPrefix())
   , m_sequencingManager(m_confParam.getStateFileDir(), m_confParam.getHyperbolicState())
-  , m_onNewLsaConnection(m_sync.onNewLsa.connect(
+  , m_onSyncUpdate(m_sync.onSyncUpdate.connect(
       [this] (const ndn::Name& updateName, uint64_t sequenceNumber,
               const ndn::Name& originRouter, uint64_t incomingFaceId) {
-        ndn::Name lsaInterest{updateName};
-        lsaInterest.appendNumber(sequenceNumber);
-        expressInterest(lsaInterest, 0, incomingFaceId);
+        processUpdateFromSync(updateName, sequenceNumber, originRouter, incomingFaceId);
       }))
   , m_segmenter(keyChain, m_confParam.getSigningInfo())
   , m_segmentFifo(100)
@@ -86,6 +81,63 @@ Lsdb::~Lsdb()
 {
   for (const auto& fetcher : m_fetchers) {
     fetcher->stop();
+  }
+}
+
+void
+Lsdb::processUpdateFromSync(const ndn::Name& updateName, uint64_t seqNo,
+                            const ndn::Name& originRouter, uint64_t incomingFaceId)
+{
+  NLSR_LOG_DEBUG("Origin Router of update: " << originRouter << " seq: " << seqNo);
+  auto lsaType = boost::lexical_cast<Lsa::Type>(updateName.get(-1).toUri());
+
+  if (originRouter == m_thisRouterPrefix) {
+    NLSR_LOG_TRACE("Received sync update for own router");
+    // Other routers might be telling us that they have higher sequence number
+    // than what we started with because of our sequence file corruption
+    // So we adapt that sequence number
+    if (isLsaNew(originRouter, lsaType, seqNo)) {
+      if (lsaType == Lsa::Type::NAME) {
+        m_sequencingManager.setNameLsaSeq(seqNo);
+        buildAndInstallOwnNameLsa();
+      }
+      if (lsaType == Lsa::Type::ADJACENCY &&
+          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+        m_sequencingManager.setAdjLsaSeq(seqNo);
+        buildAndInstallOwnAdjLsa();
+      }
+      if (lsaType == Lsa::Type::COORDINATE &&
+          m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+        m_sequencingManager.setCorLsaSeq(seqNo);
+        buildAndInstallOwnCoordinateLsa();
+      }
+    }
+    // A router should not try to fetch its own LSA
+    return;
+  }
+
+  NLSR_LOG_DEBUG("Received sync update with higher " << lsaType << " sequence number than entry in LSDB");
+
+  if (isLsaNew(originRouter, lsaType, seqNo)) {
+    if (lsaType == Lsa::Type::ADJACENCY && seqNo != 0 &&
+        m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_ON) {
+      NLSR_LOG_ERROR("Got an update for adjacency LSA when hyperbolic routing "
+                      "is enabled. Not going to fetch.");
+      return;
+    }
+
+    if (lsaType == Lsa::Type::COORDINATE && seqNo != 0 &&
+        m_confParam.getHyperbolicState() == HYPERBOLIC_STATE_OFF) {
+      NLSR_LOG_ERROR("Got an update for coordinate LSA when link-state "
+                      "is enabled. Not going to fetch.");
+      return;
+    }
+
+    onNewLsa(updateName, seqNo, originRouter, incomingFaceId);
+
+    ndn::Name lsaInterest{updateName};
+    lsaInterest.appendNumber(seqNo);
+    expressInterest(lsaInterest, 0, incomingFaceId);
   }
 }
 
